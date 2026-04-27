@@ -1,0 +1,291 @@
+<%- include('../partials/header', { title: 'Neuer Pledge' }) %>
+<%- include('../partials/nav') %>
+
+<main class="page-content">
+  <div class="page-container page-narrow">
+    <div class="page-header">
+      <h1 class="page-title">Neuen Pledge anlegen</h1>
+      <p class="page-subtitle">In 4 Schritten zum ersten Sponsoring</p>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="steps-indicator">
+      <div class="step-ind active" data-step="1"><span>1</span> Verein</div>
+      <div class="step-ind" data-step="2"><span>2</span> Mannschaft</div>
+      <div class="step-ind" data-step="3"><span>3</span> Trigger</div>
+      <div class="step-ind" data-step="4"><span>4</span> Bestätigung</div>
+    </div>
+
+    <!-- Step 1: Verein suchen -->
+    <div class="step-content" id="step-1">
+      <div class="card">
+        <h2>Schritt 1: Verein suchen</h2>
+        <div class="search-box">
+          <input type="text" id="verein-search" placeholder="Vereinsname suchen, z.B. SV Schriesheim..." class="search-input">
+          <button onclick="searchVerein()" class="btn btn-primary" id="search-btn">Suchen</button>
+        </div>
+        <div id="search-results" class="search-results"></div>
+      </div>
+    </div>
+
+    <!-- Step 2: Mannschaft wählen -->
+    <div class="step-content" id="step-2" style="display:none">
+      <div class="card">
+        <h2>Schritt 2: Mannschaft wählen</h2>
+        <p id="selected-verein-name" class="selected-info"></p>
+        <div id="team-list" class="team-list"></div>
+        <button onclick="goStep(1)" class="btn btn-outline">← Zurück</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Trigger konfigurieren -->
+    <div class="step-content" id="step-3" style="display:none">
+      <div class="card">
+        <h2>Schritt 3: Triggers & Budget</h2>
+        <p id="selected-team-name" class="selected-info"></p>
+
+        <h3 class="subsection-title">Trigger auswählen</h3>
+        <div class="triggers-config" id="triggers-config">
+          <% 
+          const triggerTypes = [
+            { key: 'SIEG', label: '🏆 Sieg', desc: 'Wenn die Mannschaft gewinnt' },
+            { key: 'NIEDERLAGE', label: '😔 Niederlage', desc: 'Auch Niederlagen sponsern' },
+            { key: 'UNENTSCHIEDEN', label: '🤝 Unentschieden', desc: 'Bei einem Remis' },
+            { key: 'ZU_NULL', label: '🛡️ Zu-Null-Sieg', desc: 'Sieg ohne Gegentor' },
+            { key: 'TOR_GESAMT', label: '⚽ Pro Tor (gesamt)', desc: 'Für jedes Tor der Mannschaft' },
+            { key: 'TOR_SPIELER', label: '🎯 Tor von Spieler X', desc: 'Für Tore eines bestimmten Spielers' },
+            { key: 'HATTRICK', label: '🔥 Hattrick', desc: '3+ Tore von einem Spieler' },
+            { key: 'COMEBACK_SIEG', label: '💪 Comeback-Sieg', desc: 'Halbzeit hinten, am Ende vorne' },
+            { key: 'AUSWAERTSSIEG', label: '✈️ Auswärtssieg', desc: 'Sieg beim Gegner' },
+            { key: 'HEIMSIEG', label: '🏠 Heimsieg', desc: 'Sieg im eigenen Stadion' },
+            { key: 'SIEG_DIFF_2', label: '📈 Sieg mit 2+ Toren', desc: 'Mindestens 2 Tore Unterschied' },
+            { key: 'SIEG_DIFF_3', label: '📈 Sieg mit 3+ Toren', desc: 'Mindestens 3 Tore Unterschied' },
+          ]; 
+          %>
+          <% triggerTypes.forEach(t => { %>
+            <div class="trigger-config-row" data-type="<%= t.key %>">
+              <label class="trigger-toggle">
+                <input type="checkbox" class="trigger-checkbox" value="<%= t.key %>" onchange="toggleTrigger(this)">
+                <span class="trigger-label">
+                  <strong><%= t.label %></strong>
+                  <small><%= t.desc %></small>
+                </span>
+              </label>
+              <div class="trigger-amount-wrap" style="display:none">
+                <input type="number" class="trigger-amount" placeholder="Betrag in €" min="0.50" step="0.10">
+                <% if (t.key === 'TOR_SPIELER') { %>
+                  <input type="text" class="trigger-player" placeholder="Spielername">
+                <% } %>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+
+        <h3 class="subsection-title">Budget-Cap</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Max. pro Monat (optional)</label>
+            <input type="number" id="max-monat" placeholder="z.B. 50" min="1" step="1" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Max. pro Saison (optional)</label>
+            <input type="number" id="max-saison" placeholder="z.B. 200" min="1" step="1" class="form-input">
+          </div>
+        </div>
+
+        <h3 class="subsection-title">Zeitraum (optional)</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Start</label>
+            <input type="date" id="start-date" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Ende</label>
+            <input type="date" id="end-date" class="form-input">
+          </div>
+        </div>
+
+        <div id="pledge-preview" class="pledge-preview" style="display:none">
+          <h4>📊 Vorschau</h4>
+          <p id="preview-text"></p>
+        </div>
+
+        <div class="btn-row">
+          <button onclick="goStep(2)" class="btn btn-outline">← Zurück</button>
+          <button onclick="goStep(4)" class="btn btn-primary" id="step3-next">Weiter</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Bestätigung & Zahlung -->
+    <div class="step-content" id="step-4" style="display:none">
+      <div class="card">
+        <h2>Schritt 4: Bestätigung</h2>
+
+        <div class="pledge-summary" id="pledge-summary"></div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="agb-check">
+            Ich akzeptiere die <a href="/datenschutz" target="_blank">Datenschutzerklärung</a> und AGB
+          </label>
+        </div>
+
+        <div id="create-error" class="alert alert-error" style="display:none"></div>
+        <div id="create-success" class="alert alert-success" style="display:none"></div>
+
+        <div class="btn-row">
+          <button onclick="goStep(3)" class="btn btn-outline">← Zurück</button>
+          <button onclick="createPledge()" class="btn btn-primary" id="create-btn">Pledge anlegen ✅</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+let selectedVerein = null;
+let selectedTeam = null;
+
+async function searchVerein() {
+  const q = document.getElementById('verein-search').value.trim();
+  if (!q) return;
+  const btn = document.getElementById('search-btn');
+  btn.disabled = true; btn.textContent = 'Suche...';
+  const res = await fetch(`/api/crawler/search?q=${encodeURIComponent(q)}`);
+  const data = await res.json();
+  btn.disabled = false; btn.textContent = 'Suchen';
+  const el = document.getElementById('search-results');
+  if (!data.length) { el.innerHTML = '<p class="empty-small">Keine Vereine gefunden.</p>'; return; }
+  el.innerHTML = data.map(v => `
+    <div class="search-result-item" onclick="selectVerein(${JSON.stringify(v).replace(/"/g, '&quot;')})">
+      <strong>${v.name}</strong>
+    </div>
+  `).join('');
+}
+
+async function selectVerein(v) {
+  selectedVerein = v;
+  document.getElementById('selected-verein-name').textContent = `Verein: ${v.name}`;
+  goStep(2);
+  const res = await fetch(`/api/crawler/teams?vereinId=${v.vereinId}&slug=${v.slug}`);
+  const teams = await res.json();
+  const el = document.getElementById('team-list');
+  if (!teams.length) { el.innerHTML = '<p class="empty-small">Keine Mannschaften gefunden.</p>'; return; }
+  el.innerHTML = teams.map(t => `
+    <div class="team-select-item" onclick='selectTeam(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+      <strong>${t.name}</strong>
+      <span>Saison ${t.saison.slice(0,2)}/20${t.saison.slice(2)}</span>
+    </div>
+  `).join('');
+}
+
+function selectTeam(t) {
+  selectedTeam = t;
+  document.getElementById('selected-team-name').textContent = `Mannschaft: ${t.name}`;
+  goStep(3);
+}
+
+function toggleTrigger(cb) {
+  const wrap = cb.closest('.trigger-config-row').querySelector('.trigger-amount-wrap');
+  wrap.style.display = cb.checked ? 'flex' : 'none';
+  updatePreview();
+}
+
+function updatePreview() {
+  const triggers = getSelectedTriggers();
+  const preview = document.getElementById('pledge-preview');
+  const text = document.getElementById('preview-text');
+  if (!triggers.length) { preview.style.display = 'none'; return; }
+  preview.style.display = 'block';
+  const lines = triggers.map(t => `${t.type}${t.spielerName ? ' (' + t.spielerName + ')' : ''}: ${(t.betragCent/100).toFixed(2)}€`);
+  text.innerHTML = lines.join('<br>');
+}
+
+function getSelectedTriggers() {
+  const result = [];
+  document.querySelectorAll('.trigger-checkbox:checked').forEach(cb => {
+    const row = cb.closest('.trigger-config-row');
+    const amountEl = row.querySelector('.trigger-amount');
+    const amount = parseFloat(amountEl?.value || 0);
+    if (!amount || amount < 0.5) return;
+    const trigger = { type: cb.value, betragCent: Math.round(amount * 100) };
+    const playerEl = row.querySelector('.trigger-player');
+    if (playerEl?.value) { trigger.spielerName = playerEl.value; }
+    result.push(trigger);
+  });
+  return result;
+}
+
+function goStep(n) {
+  document.querySelectorAll('.step-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.step-ind').forEach((el, i) => {
+    el.classList.toggle('active', i < n);
+    el.classList.toggle('current', i + 1 === n);
+  });
+  document.getElementById('step-' + n).style.display = 'block';
+  if (n === 4) buildSummary();
+  window.scrollTo(0, 0);
+}
+
+function buildSummary() {
+  const triggers = getSelectedTriggers();
+  const maxMonat = document.getElementById('max-monat').value;
+  const maxSaison = document.getElementById('max-saison').value;
+  const html = `
+    <div class="summary-row"><strong>Mannschaft:</strong> ${selectedTeam?.name || '-'}</div>
+    <div class="summary-row"><strong>Trigger:</strong><ul>${triggers.map(t => `<li>${t.type}${t.spielerName ? ' – ' + t.spielerName : ''}: ${(t.betragCent/100).toFixed(2)}€</li>`).join('')}</ul></div>
+    ${maxMonat ? `<div class="summary-row"><strong>Budget-Cap/Monat:</strong> ${maxMonat}€</div>` : ''}
+    ${maxSaison ? `<div class="summary-row"><strong>Budget-Cap/Saison:</strong> ${maxSaison}€</div>` : ''}
+  `;
+  document.getElementById('pledge-summary').innerHTML = html;
+}
+
+async function createPledge() {
+  if (!document.getElementById('agb-check').checked) {
+    document.getElementById('create-error').textContent = 'Bitte AGB akzeptieren.';
+    document.getElementById('create-error').style.display = 'block';
+    return;
+  }
+  const triggers = getSelectedTriggers();
+  if (!triggers.length) {
+    document.getElementById('create-error').textContent = 'Mindestens einen Trigger mit Betrag konfigurieren.';
+    document.getElementById('create-error').style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('create-btn');
+  btn.disabled = true; btn.textContent = 'Wird angelegt...';
+
+  const body = {
+    teamId: selectedTeam?.teamId,
+    triggers,
+    maxProMonatCent: document.getElementById('max-monat').value ? Math.round(parseFloat(document.getElementById('max-monat').value) * 100) : null,
+    maxProSaisonCent: document.getElementById('max-saison').value ? Math.round(parseFloat(document.getElementById('max-saison').value) * 100) : null,
+    startDate: document.getElementById('start-date').value || null,
+    endDate: document.getElementById('end-date').value || null,
+  };
+
+  const res = await fetch('/api/pledges', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+
+  if (res.ok) {
+    document.getElementById('create-success').textContent = 'Pledge erfolgreich angelegt! Weiterleitung...';
+    document.getElementById('create-success').style.display = 'block';
+    setTimeout(() => window.location.href = '/sponsor/pledges', 1500);
+  } else {
+    document.getElementById('create-error').textContent = data.error || 'Fehler beim Anlegen.';
+    document.getElementById('create-error').style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Pledge anlegen ✅';
+  }
+}
+
+document.getElementById('verein-search').addEventListener('keydown', e => { if (e.key === 'Enter') searchVerein(); });
+document.querySelectorAll('.trigger-amount, .trigger-player').forEach(el => el.addEventListener('input', updatePreview));
+</script>
+
+<%- include('../partials/footer') %>

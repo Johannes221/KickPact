@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KickPact Crawler</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    h1 { font-size: 1.6rem; font-weight: 700; color: #22c55e; margin-bottom: 6px; }
+    h2 { font-size: 1rem; font-weight: 600; color: #94a3b8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: .05em; }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .row { display: flex; gap: 10px; margin-bottom: 16px; }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+    }
+    input[type="text"]:focus { outline: none; border-color: #22c55e; }
+    button {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      background: #22c55e;
+      color: #0f172a;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background .15s;
+      white-space: nowrap;
+    }
+    button:hover { background: #16a34a; }
+    button:disabled { background: #374151; color: #6b7280; cursor: not-allowed; }
+    .btn-secondary {
+      background: #334155;
+      color: #e2e8f0;
+    }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+    .list-section { margin-bottom: 16px; }
+    .radio-list { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
+    .radio-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .radio-item:hover { border-color: #22c55e; }
+    .radio-item input { accent-color: #22c55e; }
+    .match-list { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; }
+    .match-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .match-item:hover { border-color: #22c55e; }
+    .match-item input { accent-color: #22c55e; }
+    .match-score {
+      font-weight: 700;
+      color: #22c55e;
+      min-width: 42px;
+      text-align: center;
+    }
+    .match-date { color: #64748b; font-size: .82rem; min-width: 80px; }
+    .match-teams { flex: 1; font-size: .9rem; }
+    .status-bar {
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      font-size: .85rem;
+      color: #94a3b8;
+      margin-bottom: 12px;
+      min-height: 38px;
+    }
+    .status-bar.loading { color: #fbbf24; border-color: #fbbf24; }
+    .status-bar.success { color: #22c55e; border-color: #22c55e; }
+    .status-bar.error { color: #ef4444; border-color: #ef4444; }
+    .json-output {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Menlo', 'Monaco', monospace;
+      font-size: .78rem;
+      color: #a5f3fc;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    .trigger-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: .8rem;
+      font-weight: 600;
+    }
+    .badge.on { background: #15803d; color: #dcfce7; }
+    .badge.off { background: #374151; color: #6b7280; }
+    .events-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .events-table th { text-align: left; padding: 6px 10px; color: #64748b; font-weight: 600; border-bottom: 1px solid #334155; }
+    .events-table td { padding: 6px 10px; border-bottom: 1px solid #1e293b; }
+    .events-table tr:last-child td { border-bottom: none; }
+    .event-tor { color: #22c55e; font-weight: 700; }
+    .event-sub { color: #fbbf24; }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #334155; border-top-color: #22c55e; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .section-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .hidden { display: none !important; }
+    .score-box { display: inline-flex; align-items: center; gap: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 4px 14px; }
+    .score-num { font-size: 1.8rem; font-weight: 800; color: #22c55e; }
+    .score-sep { font-size: 1.4rem; color: #475569; }
+    .match-header { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+    .team-names { font-size: 1rem; font-weight: 600; }
+    .ht-result { font-size: .8rem; color: #64748b; }
+  </style>
+</head>
+<body>
+  <h1>🟢 KickPact Crawler</h1>
+  <p style="color:#64748b;margin-bottom:20px;font-size:.9rem;">fußball.de Spieldaten → KickPact Events</p>
+
+  <!-- Step 1: Search -->
+  <div class="card">
+    <h2>1. Verein suchen</h2>
+    <div class="row">
+      <input type="text" id="searchInput" placeholder="z.B. Dossenheim" value="Dossenheim"/>
+      <button id="searchBtn" onclick="searchVerein()">Suchen</button>
+    </div>
+    <div id="searchStatus" class="status-bar hidden"></div>
+    <div id="vereinList" class="list-section hidden">
+      <h2>Gefundene Vereine</h2>
+      <div class="radio-list" id="vereinRadios"></div>
+      <div class="section-actions">
+        <button class="btn-secondary" onclick="loadTeams()">Mannschaften laden</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Teams -->
+  <div class="card hidden" id="teamsCard">
+    <h2>2. Mannschaft wählen</h2>
+    <div id="teamsStatus" class="status-bar hidden"></div>
+    <div class="radio-list" id="teamRadios"></div>
+    <div class="section-actions">
+      <button class="btn-secondary" onclick="loadMatches()">Spiele laden</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Matches -->
+  <div class="card hidden" id="matchesCard">
+    <h2>3. Letzte Spiele</h2>
+    <div id="matchesStatus" class="status-bar hidden"></div>
+    <div class="match-list" id="matchList"></div>
+    <div class="section-actions">
+      <button onclick="crawlSelectedMatch()">Spiel crawlen</button>
+      <button class="btn-secondary" onclick="crawlAllMatches()">Alle crawlen</button>
+    </div>
+    <div id="crawlAllStatus" class="status-bar hidden" style="margin-top:12px;"></div>
+  </div>
+
+  <!-- Step 4: Result -->
+  <div class="card hidden" id="resultCard">
+    <h2>4. Ergebnis</h2>
+    <div id="resultHeader" class="match-header"></div>
+    <div id="triggerBadges" class="trigger-badges"></div>
+    <table class="events-table" id="eventsTable">
+      <thead><tr><th>Min.</th><th>Typ</th><th>Details</th><th>Mannschaft</th></tr></thead>
+      <tbody id="eventsBody"></tbody>
+    </table>
+    <div style="margin-top:16px;">
+      <h2>Raw JSON</h2>
+      <div class="json-output" id="jsonOutput"></div>
+    </div>
+  </div>
+
+  <script>
+    let state = {
+      vereine: [],
+      selectedVerein: null,
+      teams: [],
+      selectedTeam: null,
+      matches: [],
+      selectedMatch: null,
+      pollInterval: null
+    };
+
+    function setStatus(id, msg, type = '') {
+      const el = document.getElementById(id);
+      el.className = 'status-bar' + (type ? ' ' + type : '');
+      el.classList.remove('hidden');
+      el.innerHTML = type === 'loading' ? `<span class="spinner"></span>${msg}` : msg;
+    }
+
+    function hideStatus(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    async function searchVerein() {
+      const q = document.getElementById('searchInput').value.trim();
+      if (!q) return;
+      document.getElementById('searchBtn').disabled = true;
+      setStatus('searchStatus', 'Suche läuft...', 'loading');
+      document.getElementById('vereinList').classList.add('hidden');
+
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Fehler bei Suche');
+        state.vereine = data;
+        renderVereine(data);
+        setStatus('searchStatus', `${data.length} Vereine gefunden.`, 'success');
+      } catch (e) {
+        setStatus('searchStatus', 'Fehler: ' + e.message, 'error');
+      } finally {
+        document.getElementById('searchBtn').disabled = false;
+      }
+    }
+
+    function renderVereine(vereine) {
+      const container = document.getElementById('vereinRadios');
+      container.innerHTML = '';
+      vereine.forEach((v, i) => {
+        const label = document.createElement('label');
+        label.className = 'radio-item';
+        label.innerHTML = `<input type="radio" name="verein" value="${i}" ${i === 0 ? 'checked' : ''}/> ${v.name || v.slug}`;
+        container.appendChild(label);
+      });
+      document.getElementById('vereinList').classList.remove('hidden');
+      if (vereine.length > 0) state.selectedVerein = vereine[0];
+      container.querySelectorAll('input').forEach((inp, i) => {
+        inp.addEventListener('change', () => { state.selectedVerein = vereine[i]; });
+      });
+    }
+
+    async function loadTeams() {
+      if (!state.selectedVerein) return;
+      const v = state.selectedVerein;
+      setStatus('searchStatus', 'Lade Mannschaften...', 'loading');
+      document.getElementById('teamsCard').classList.add('hidden');
+
+      try {
+        const res = await fetch(`/api/teams?vereinId=${v.vereinId}&slug=${v.slug}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Fehler');
+        state.teams = data;
+        renderTeams(data);
+        setStatus('searchStatus', `${data.length} Mannschaften geladen.`, 'success');
+        document.getElementById('teamsCard').classList.remove('hidden');
+      } catch (e) {
+        setStatus('searchStatus', 'Fehler: ' + e.message, 'error');
+      }
+    }
+
+    function renderTeams(teams) {
+      const container = document.getElementById('teamRadios');
+      container.innerHTML = '';
+      teams.forEach((t, i) => {
+        const label = document.createElement('label');
+        label.className = 'radio-item';
+        label.innerHTML = `<input type="radio" name="team" value="${i}" ${i === 0 ? 'checked' : ''}/> ${t.name || t.slug}`;
+        container.appendChild(label);
+      });
+      if (teams.length > 0) state.selectedTeam = teams[0];
+      container.querySelectorAll('input').forEach((inp, i) => {
+        inp.addEventListener('change', () => { state.selectedTeam = teams[i]; });
+      });
+    }
+
+    async function loadMatches() {
+      if (!state.selectedTeam) return;
+      const t = state.selectedTeam;
+      setStatus('teamsStatus', 'Lade Spiele...', 'loading');
+      document.getElementById('matchesCard').classList.add('hidden');
+
+      try {
+        const res = await fetch(`/api/matches?teamId=${t.teamId}&slug=${t.slug}&saison=${t.saison || '2526'}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Fehler');
+        state.matches = data;
+        renderMatches(data);
+        setStatus('teamsStatus', `${data.length} Spiele gefunden.`, 'success');
+        document.getElementById('matchesCard').classList.remove('hidden');
+      } catch (e) {
+        setStatus('teamsStatus', 'Fehler: ' + e.message, 'error');
+      }
+    }
+
+    function renderMatches(matches) {
+      const container = document.getElementById('matchList');
+      container.innerHTML = '';
+      matches.forEach((m, i) => {
+        const item = document.createElement('label');
+        item.className = 'match-item';
+        const score = m.ergebnis ? `<span class="match-score">${m.ergebnis}</span>` : '<span class="match-score" style="color:#475569">–</span>';
+        const teams = [m.heim, m.gast].filter(Boolean).join(' vs ') || m.slug;
+        item.innerHTML = `
+          <input type="radio" name="match" value="${i}" ${i === 0 ? 'checked' : ''}/>
+          <span class="match-date">${m.datum || '–'}</span>
+          <span class="match-teams">${teams}</span>
+          ${score}
+        `;
+        container.appendChild(item);
+      });
+      if (matches.length > 0) state.selectedMatch = matches[0];
+      container.querySelectorAll('input').forEach((inp, i) => {
+        inp.addEventListener('change', () => { state.selectedMatch = matches[i]; });
+      });
+    }
+
+    async function crawlSelectedMatch() {
+      if (!state.selectedMatch) return;
+      const m = state.selectedMatch;
+      setStatus('matchesStatus', `Crawle Spiel ${m.spielId}...`, 'loading');
+      document.getElementById('resultCard').classList.add('hidden');
+
+      try {
+        const res = await fetch(`/api/match?spielId=${m.spielId}&slug=${m.slug}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Fehler');
+        data.datum = m.datum;
+        if (!data.heim) data.heim = m.heim;
+        if (!data.gast) data.gast = m.gast;
+        renderResult(data);
+        setStatus('matchesStatus', 'Crawl abgeschlossen.', 'success');
+      } catch (e) {
+        setStatus('matchesStatus', 'Fehler: ' + e.message, 'error');
+      }
+    }
+
+    async function crawlAllMatches() {
+      if (!state.selectedTeam) return;
+      const t = state.selectedTeam;
+      const statusEl = document.getElementById('crawlAllStatus');
+      statusEl.classList.remove('hidden');
+      setStatus('crawlAllStatus', 'Starte Komplett-Crawl...', 'loading');
+
+      await fetch(`/api/crawl-all?teamId=${t.teamId}&slug=${t.slug}&saison=${t.saison || '2526'}`);
+
+      if (state.pollInterval) clearInterval(state.pollInterval);
+      state.pollInterval = setInterval(async () => {
+        const res = await fetch('/api/status');
+        const s = await res.json();
+        if (s.done) {
+          clearInterval(state.pollInterval);
+          if (s.error) {
+            setStatus('crawlAllStatus', 'Fehler: ' + s.error, 'error');
+          } else {
+            setStatus('crawlAllStatus', s.progress, 'success');
+            document.getElementById('jsonOutput').textContent = JSON.stringify(s.result, null, 2);
+            document.getElementById('resultCard').classList.remove('hidden');
+          }
+        } else {
+          setStatus('crawlAllStatus', s.progress || 'Läuft...', 'loading');
+        }
+      }, 2000);
+    }
+
+    function renderResult(data) {
+      const card = document.getElementById('resultCard');
+      card.classList.remove('hidden');
+
+      const header = document.getElementById('resultHeader');
+      const heim = data.heim || '–';
+      const gast = data.gast || '–';
+      const eh = data.ergebnis?.heim ?? '?';
+      const eg = data.ergebnis?.gast ?? '?';
+      const ht = data.halbzeit ? `HZ: ${data.halbzeit.heim}:${data.halbzeit.gast}` : '';
+      header.innerHTML = `
+        <div class="team-names">${heim} vs ${gast}</div>
+        <div style="display:flex;align-items:center;gap:16px;margin-top:8px;">
+          <div class="score-box">
+            <span class="score-num">${eh}</span>
+            <span class="score-sep">:</span>
+            <span class="score-num">${eg}</span>
+          </div>
+          ${ht ? `<span class="ht-result">${ht}</span>` : ''}
+          ${data.datum ? `<span class="ht-result">${data.datum}</span>` : ''}
+        </div>
+      `;
+
+      const triggers = data.kickpactTrigger || {};
+      const badgeContainer = document.getElementById('triggerBadges');
+      badgeContainer.innerHTML = '';
+      const badges = [
+        { key: 'sieg', label: 'Sieg (Gast)' },
+        { key: 'niederlage', label: 'Niederlage' },
+        { key: 'unentschieden', label: 'Unentschieden' },
+        { key: 'zuNull', label: 'Zu Null' },
+        { key: 'hattrick', label: 'Hattrick' },
+        { key: 'comebackSieg', label: 'Comeback-Sieg' },
+      ];
+      badges.forEach(b => {
+        const span = document.createElement('span');
+        span.className = 'badge ' + (triggers[b.key] ? 'on' : 'off');
+        span.textContent = (triggers[b.key] ? '✓ ' : '✗ ') + b.label;
+        badgeContainer.appendChild(span);
+      });
+      if (triggers.toreDifferenz !== undefined) {
+        const span = document.createElement('span');
+        span.className = 'badge ' + (triggers.toreDifferenz >= 3 ? 'on' : 'off');
+        span.textContent = `Diff: ${triggers.toreDifferenz}`;
+        badgeContainer.appendChild(span);
+      }
+
+      const tbody = document.getElementById('eventsBody');
+      tbody.innerHTML = '';
+      (data.events || []).forEach(ev => {
+        const tr = document.createElement('tr');
+        if (ev.typ === 'TOR') {
+          tr.innerHTML = `
+            <td>${ev.minute ?? '?'}'</td>
+            <td class="event-tor">⚽ TOR</td>
+            <td>${ev.spielerName || ev.spielerId}</td>
+            <td>${ev.mannschaft}</td>
+          `;
+        } else if (ev.typ === 'AUSWECHSLUNG') {
+          tr.innerHTML = `
+            <td>${ev.minute ?? '?'}'</td>
+            <td class="event-sub">🔄 WECHSEL</td>
+            <td>${ev.raus?.name || '?'} → ${ev.rein?.name || '?'}</td>
+            <td>–</td>
+          `;
+        }
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('jsonOutput').textContent = JSON.stringify(data, null, 2);
+    }
+
+    document.getElementById('searchInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') searchVerein();
+    });
+  </script>
+</body>
+</html>

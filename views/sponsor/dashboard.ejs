@@ -1,0 +1,120 @@
+<%- include('../partials/header', { title: 'Sponsor Dashboard' }) %>
+<%- include('../partials/nav') %>
+
+<main class="dashboard-page">
+  <div class="page-container">
+    <div class="page-header">
+      <h1 class="page-title">Hallo, <%= user.name %> 👋</h1>
+      <a href="/sponsor/pledge/neu" class="btn btn-primary">+ Neuer Pledge</a>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-card-icon">📋</div>
+        <div class="stat-card-value"><%= pledges.length %></div>
+        <div class="stat-card-label">Aktive Pledges</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon">💰</div>
+        <div class="stat-card-value"><%= (pendingCent / 100).toFixed(2).replace('.', ',') %>€</div>
+        <div class="stat-card-label">Ausstehend diesen Monat</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon">🔔</div>
+        <div class="stat-card-value"><%= pendingEvents.length %></div>
+        <div class="stat-card-label">Events zur Bestätigung</div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="dashboard-main">
+        <!-- Aktive Pledges -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Meine Pledges</h2>
+            <a href="/sponsor/pledges" class="link-more">Alle anzeigen →</a>
+          </div>
+          <% if (pledges.length === 0) { %>
+            <div class="empty-state">
+              <p>Noch keine aktiven Pledges.</p>
+              <a href="/sponsor/pledge/neu" class="btn btn-primary btn-sm">Ersten Pledge anlegen</a>
+            </div>
+          <% } else { %>
+            <div class="pledges-list">
+              <% pledges.forEach(p => { %>
+                <a href="/sponsor/pledge/<%= p._id %>" class="pledge-row">
+                  <div class="pledge-row-team">
+                    <strong><%= p.teamId?.name || 'Unbekannte Mannschaft' %></strong>
+                    <span class="pledge-row-club"><%= p.clubId?.name || '' %></span>
+                  </div>
+                  <div class="pledge-row-triggers">
+                    <%= p.triggers.length %> Trigger
+                  </div>
+                  <div class="pledge-row-status">
+                    <span class="badge badge-<%= p.status === 'active' ? 'green' : 'gray' %>"><%= p.status %></span>
+                  </div>
+                </a>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+
+        <!-- Letzte Rechnungen -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Letzte Abrechnungen</h2>
+            <a href="/sponsor/rechnungen" class="link-more">Alle anzeigen →</a>
+          </div>
+          <% if (recentCharges.length === 0) { %>
+            <div class="empty-state">Noch keine Abrechnungen.</div>
+          <% } else { %>
+            <table class="data-table">
+              <thead><tr><th>Monat</th><th>Mannschaft</th><th>Betrag</th><th>Status</th></tr></thead>
+              <tbody>
+                <% recentCharges.forEach(c => { %>
+                  <tr>
+                    <td><%= c.monat %></td>
+                    <td><%= c.teamId?.name || '-' %></td>
+                    <td><%= (c.gesamtCent / 100).toFixed(2).replace('.', ',') %>€</td>
+                    <td><span class="badge badge-<%= c.status === 'charged' ? 'green' : c.status === 'failed' ? 'red' : 'yellow' %>"><%= c.status %></span></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="dashboard-sidebar">
+        <!-- Schnelllinks -->
+        <div class="card">
+          <h3 class="card-title-sm">Schnelllinks</h3>
+          <div class="quick-links">
+            <a href="/sponsor/pledge/neu" class="quick-link">⚡ Neuer Pledge</a>
+            <a href="/sponsor/rechnungen" class="quick-link">📄 Rechnungen</a>
+            <a href="/sponsor/events/manuell" class="quick-link">🔔 Manuelle Events</a>
+            <a href="/sponsor/profil" class="quick-link">👤 Profil & Zahlung</a>
+          </div>
+        </div>
+
+        <!-- Pending Events -->
+        <% if (pendingEvents.length > 0) { %>
+          <div class="card card-warning">
+            <h3 class="card-title-sm">🔔 Events zur Bestätigung</h3>
+            <% pendingEvents.forEach(e => { %>
+              <div class="pending-event-row">
+                <strong><%= e.typ %></strong>
+                <span><%= e.spielerName || 'Unbekannt' %></span>
+                <span class="pending-team"><%= e.teamId?.name %></span>
+              </div>
+            <% }) %>
+            <a href="/sponsor/events/manuell" class="btn btn-outline btn-sm btn-full">Jetzt antworten</a>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

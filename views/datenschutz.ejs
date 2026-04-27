@@ -1,0 +1,30 @@
+<%- include('partials/header', { title: 'Datenschutz' }) %>
+<%- include('partials/nav') %>
+
+<main class="page-content">
+  <div class="page-container page-narrow">
+    <h1 class="page-title">Datenschutzerklärung</h1>
+
+    <div class="card prose">
+      <h2>1. Verantwortlicher</h2>
+      <p>KickPact, vertreten durch den Betreiber. Kontakt: datenschutz@kickpact.de</p>
+
+      <h2>2. Erhobene Daten</h2>
+      <p>Wir erheben Name, E-Mail-Adresse, Zahlungsinformationen (via Stripe) sowie Nutzungsdaten der Plattform.</p>
+
+      <h2>3. Spielerdaten von fußball.de</h2>
+      <p>Spielernamen und Spielergebnisse werden von der öffentlich zugänglichen Plattform fußball.de automatisch abgerufen. Diese Daten sind öffentlich zugänglich und werden nur zum Zweck der Pledge-Abrechnung genutzt.</p>
+
+      <h2>4. Stripe</h2>
+      <p>Zahlungen werden über Stripe Inc. abgewickelt. Deine Zahlungsdaten werden direkt von Stripe verarbeitet und nicht auf unseren Servern gespeichert. Stripe Privacy Policy: <a href="https://stripe.com/de/privacy" target="_blank">stripe.com/de/privacy</a></p>
+
+      <h2>5. Deine Rechte</h2>
+      <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung deiner Daten. Kontaktiere uns unter datenschutz@kickpact.de</p>
+
+      <h2>6. Cookies</h2>
+      <p>Wir nutzen ein HTTP-only Cookie zur Authentifizierung (JWT). Es werden keine Tracking-Cookies eingesetzt.</p>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

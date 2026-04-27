@@ -1,0 +1,86 @@
+<%- include('../partials/header', { title: 'Pledge Details' }) %>
+<%- include('../partials/nav') %>
+
+<main class="page-content">
+  <div class="page-container page-narrow">
+    <div class="breadcrumb">
+      <a href="/sponsor/pledges">Pledges</a> › <span><%= pledge.teamId?.name %></span>
+    </div>
+
+    <div class="page-header">
+      <h1 class="page-title">Pledge: <%= pledge.teamId?.name %></h1>
+      <span class="badge badge-<%= pledge.status === 'active' ? 'green' : pledge.status === 'paused' ? 'yellow' : 'gray' %> badge-lg">
+        <%= pledge.status %>
+      </span>
+    </div>
+
+    <div class="card">
+      <h2>Trigger</h2>
+      <div class="triggers-detail">
+        <% pledge.triggers.forEach(t => { %>
+          <div class="trigger-detail-row">
+            <span class="trigger-type-label"><%= t.type %><%= t.spielerName ? ' – ' + t.spielerName : '' %></span>
+            <span class="trigger-amount-label"><%= (t.betragCent / 100).toFixed(2).replace('.', ',') %>€</span>
+          </div>
+        <% }) %>
+      </div>
+
+      <div class="detail-grid">
+        <% if (pledge.maxProMonatCent) { %>
+          <div class="detail-item">
+            <label>Budget-Cap / Monat</label>
+            <span><%= (pledge.maxProMonatCent / 100).toFixed(2).replace('.', ',') %>€</span>
+          </div>
+        <% } %>
+        <% if (pledge.maxProSaisonCent) { %>
+          <div class="detail-item">
+            <label>Budget-Cap / Saison</label>
+            <span><%= (pledge.maxProSaisonCent / 100).toFixed(2).replace('.', ',') %>€</span>
+          </div>
+        <% } %>
+        <% if (pledge.startDate) { %>
+          <div class="detail-item">
+            <label>Startet</label>
+            <span><%= new Date(pledge.startDate).toLocaleDateString('de-DE') %></span>
+          </div>
+        <% } %>
+        <% if (pledge.endDate) { %>
+          <div class="detail-item">
+            <label>Endet</label>
+            <span><%= new Date(pledge.endDate).toLocaleDateString('de-DE') %></span>
+          </div>
+        <% } %>
+        <div class="detail-item">
+          <label>Angelegt am</label>
+          <span><%= new Date(pledge.createdAt).toLocaleDateString('de-DE') %></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <% if (pledge.status === 'active') { %>
+        <button onclick="updateStatus('paused')" class="btn btn-outline">Pausieren</button>
+      <% } else if (pledge.status === 'paused') { %>
+        <button onclick="updateStatus('active')" class="btn btn-primary">Reaktivieren</button>
+      <% } %>
+      <% if (pledge.status !== 'cancelled') { %>
+        <button onclick="updateStatus('cancelled')" class="btn btn-danger">Kündigen</button>
+      <% } %>
+    </div>
+  </div>
+</main>
+
+<script>
+async function updateStatus(status) {
+  if (status === 'cancelled' && !confirm('Pledge wirklich kündigen?')) return;
+  const res = await fetch('/api/pledges/<%= pledge._id %>', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  if (res.ok) window.location.reload();
+  else alert('Fehler beim Aktualisieren.');
+}
+</script>
+
+<%- include('../partials/footer') %>

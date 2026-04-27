@@ -1,0 +1,84 @@
+<%- include('../partials/header', { title: 'Profil' }) %>
+<%- include('../partials/nav') %>
+
+<main class="page-content">
+  <div class="page-container page-narrow">
+    <h1 class="page-title">Mein Profil</h1>
+
+    <div class="card">
+      <h2>Kontodaten</h2>
+      <div class="detail-grid">
+        <div class="detail-item"><label>Name</label><span><%= userDoc.name %></span></div>
+        <div class="detail-item"><label>E-Mail</label><span><%= userDoc.email %></span></div>
+        <div class="detail-item"><label>Rolle</label><span><%= userDoc.role %></span></div>
+        <div class="detail-item"><label>Mitglied seit</label><span><%= new Date(userDoc.createdAt).toLocaleDateString('de-DE') %></span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Zahlungsmittel</h2>
+      <div id="payment-methods-list">
+        <p class="loading-text">Lade Zahlungsmittel...</p>
+      </div>
+      <% if (stripePublishableKey) { %>
+        <button onclick="addPaymentMethod()" class="btn btn-outline" id="add-pm-btn">+ Zahlungsmittel hinzufügen</button>
+        <div id="stripe-setup-container" style="display:none; margin-top: 1rem;">
+          <div id="payment-element"></div>
+          <button onclick="confirmSetup()" class="btn btn-primary" style="margin-top:1rem" id="confirm-pm-btn">Speichern</button>
+        </div>
+      <% } else { %>
+        <p class="text-muted">Stripe nicht konfiguriert.</p>
+      <% } %>
+    </div>
+  </div>
+</main>
+
+<% if (stripePublishableKey) { %>
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+const stripe = Stripe('<%= stripePublishableKey %>');
+let elements, paymentElement;
+
+async function loadPaymentMethods() {
+  const res = await fetch('/api/stripe/payment-methods');
+  const data = await res.json();
+  const el = document.getElementById('payment-methods-list');
+  if (!data.methods?.length) {
+    el.innerHTML = '<p class="text-muted">Noch keine Zahlungsmittel hinterlegt.</p>';
+  } else {
+    el.innerHTML = data.methods.map(m =>
+      `<div class="pm-row">💳 **** **** **** ${m.card.last4} (${m.card.brand}) – ${m.card.exp_month}/${m.card.exp_year}</div>`
+    ).join('');
+  }
+}
+loadPaymentMethods();
+
+async function addPaymentMethod() {
+  document.getElementById('stripe-setup-container').style.display = 'block';
+  document.getElementById('add-pm-btn').style.display = 'none';
+  const res = await fetch('/api/stripe/setup-intent', { method: 'POST' });
+  const data = await res.json();
+  elements = stripe.elements({ clientSecret: data.clientSecret });
+  paymentElement = elements.create('payment');
+  paymentElement.mount('#payment-element');
+}
+
+async function confirmSetup() {
+  const btn = document.getElementById('confirm-pm-btn');
+  btn.disabled = true; btn.textContent = 'Speichern...';
+  const { error } = await stripe.confirmSetup({
+    elements,
+    confirmParams: { return_url: window.location.href },
+    redirect: 'if_required',
+  });
+  if (error) {
+    alert(error.message);
+    btn.disabled = false; btn.textContent = 'Speichern';
+  } else {
+    window.location.reload();
+  }
+}
+</script>
+<% } %>
+
+<%- include('../partials/footer') %>

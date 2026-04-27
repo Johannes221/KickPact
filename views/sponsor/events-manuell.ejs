@@ -1,0 +1,60 @@
+<%- include('../partials/header', { title: 'Manuelle Events' }) %>
+<%- include('../partials/nav') %>
+
+<main class="page-content">
+  <div class="page-container">
+    <h1 class="page-title">Manuelle Events</h1>
+    <p class="page-subtitle">Events, die von deinen Mannschaften manuell eingetragen wurden und deine Bestätigung benötigen.</p>
+
+    <% if (events.length === 0) { %>
+      <div class="empty-state-large">
+        <div class="empty-icon">✅</div>
+        <h2>Alles erledigt!</h2>
+        <p>Keine ausstehenden Events zur Bestätigung.</p>
+      </div>
+    <% } else { %>
+      <div class="events-list">
+        <% events.forEach(ev => { %>
+          <div class="manual-event-card">
+            <div class="event-card-header">
+              <span class="event-type-badge"><%= ev.typ %></span>
+              <span class="event-team"><%= ev.teamId?.name %></span>
+              <span class="event-date"><%= new Date(ev.createdAt).toLocaleDateString('de-DE') %></span>
+            </div>
+            <div class="event-card-body">
+              <% if (ev.spielerName) { %><p>Spieler: <strong><%= ev.spielerName %></strong></p><% } %>
+              <% if (ev.minute) { %><p>Minute: <strong><%= ev.minute %>'</strong></p><% } %>
+            </div>
+            <%
+              const myApproval = ev.sponsorApprovals?.find(a => a.sponsorId?.toString() === user.id);
+            %>
+            <div class="event-card-actions">
+              <% if (!myApproval || myApproval.approved === null || myApproval.approved === undefined) { %>
+                <button onclick="respond('<%= ev._id %>', true)" class="btn btn-primary btn-sm">✅ Bestätigen</button>
+                <button onclick="respond('<%= ev._id %>', false)" class="btn btn-outline btn-sm">❌ Ablehnen</button>
+              <% } else { %>
+                <span class="badge badge-<%= myApproval.approved ? 'green' : 'red' %>">
+                  <%= myApproval.approved ? 'Bestätigt' : 'Abgelehnt' %>
+                </span>
+              <% } %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<script>
+async function respond(id, approved) {
+  const res = await fetch(`/api/manual-events/${id}/sponsor-confirm`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ approved }),
+  });
+  if (res.ok) window.location.reload();
+  else alert('Fehler beim Antworten.');
+}
+</script>
+
+<%- include('../partials/footer') %>

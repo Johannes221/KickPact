@@ -1,0 +1,94 @@
+<%- include('../partials/header', { title: team.name }) %>
+<%- include('../partials/nav') %>
+
+<main class="page-content">
+  <div class="page-container">
+    <div class="breadcrumb">
+      <a href="/club/mannschaften">Mannschaften</a> › <span><%= team.name %></span>
+    </div>
+
+    <div class="page-header">
+      <h1 class="page-title">👕 <%= team.name %></h1>
+      <button onclick="triggerCrawl('<%= team._id %>')" class="btn btn-outline">🔄 Crawlen</button>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="dashboard-main">
+        <div class="card">
+          <h2>Letzte Spiele</h2>
+          <% if (matches.length === 0) { %>
+            <div class="empty-state">Noch keine Spiele gecrawlt.</div>
+          <% } else { %>
+            <table class="data-table">
+              <thead><tr><th>Datum</th><th>Heim</th><th>Gast</th><th>Ergebnis</th><th>Trigger</th></tr></thead>
+              <tbody>
+                <% matches.forEach(m => { %>
+                  <tr>
+                    <td><%= m.datum %></td>
+                    <td><%= m.heim %></td>
+                    <td><%= m.gast %></td>
+                    <td>
+                      <span class="match-score <%= m.kickpactTrigger?.sieg ? 'score-win' : m.kickpactTrigger?.niederlage ? 'score-loss' : 'score-draw' %>">
+                        <%= m.ergebnis ? m.ergebnis.heim + ':' + m.ergebnis.gast : '-' %>
+                      </span>
+                    </td>
+                    <td class="trigger-chips-cell">
+                      <% if (m.kickpactTrigger?.sieg) { %><span class="chip chip-green">Sieg</span><% } %>
+                      <% if (m.kickpactTrigger?.zuNull) { %><span class="chip chip-blue">Zu-Null</span><% } %>
+                      <% if (m.kickpactTrigger?.hattrick) { %><span class="chip chip-orange">Hattrick</span><% } %>
+                      <% if (m.kickpactTrigger?.comebackSieg) { %><span class="chip chip-purple">Comeback</span><% } %>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="dashboard-sidebar">
+        <div class="card">
+          <h3 class="card-title-sm">Aktive Sponsoren</h3>
+          <% if (pledges.length === 0) { %>
+            <p class="text-muted">Noch keine Sponsoren.</p>
+          <% } else { %>
+            <% pledges.slice(0, 8).forEach(p => { %>
+              <div class="sponsor-row">
+                <span class="sponsor-name"><%= p.sponsorId?.name %></span>
+                <span class="sponsor-triggers"><%= p.triggers.length %> Trigger</span>
+              </div>
+            <% }) %>
+            <% if (pledges.length > 8) { %>
+              <a href="/club/sponsoren" class="link-more">+<%= pledges.length - 8 %> mehr →</a>
+            <% } %>
+          <% } %>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title-sm">Info</h3>
+          <div class="detail-grid">
+            <div class="detail-item"><label>Saison</label><span><%= team.saison %></span></div>
+            <div class="detail-item"><label>fußball.de ID</label><span class="text-mono"><%= team.fussballDeTeamId || '–' %></span></div>
+            <% if (team.lastCrawled) { %>
+              <div class="detail-item"><label>Letzter Crawl</label><span><%= new Date(team.lastCrawled).toLocaleString('de-DE') %></span></div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+async function triggerCrawl(teamId) {
+  const res = await fetch('/api/crawler/crawl-team', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ teamId }),
+  });
+  if (res.ok) alert('Crawl gestartet!');
+  else alert('Fehler.');
+}
+</script>
+
+<%- include('../partials/footer') %>

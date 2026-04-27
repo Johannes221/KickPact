@@ -1,0 +1,60 @@
+<%- include('../partials/header', { title: 'Rechnungen' }) %>
+<%- include('../partials/nav') %>
+
+<main class="page-content">
+  <div class="page-container">
+    <h1 class="page-title">Meine Abrechnungen</h1>
+
+    <% if (charges.length === 0) { %>
+      <div class="empty-state-large">
+        <div class="empty-icon">📄</div>
+        <h2>Noch keine Abrechnungen</h2>
+        <p>Abrechnungen erscheinen hier am 1. jedes Monats.</p>
+      </div>
+    <% } else { %>
+      <div class="card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Monat</th>
+              <th>Mannschaft</th>
+              <th>Verein</th>
+              <th>Events</th>
+              <th>Betrag</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% charges.forEach(c => { %>
+              <tr>
+                <td><strong><%= c.monat %></strong></td>
+                <td><%= c.teamId?.name || '-' %></td>
+                <td><%= c.clubId?.name || '-' %></td>
+                <td><%= c.events.length %> Events</td>
+                <td><strong><%= (c.gesamtCent / 100).toFixed(2).replace('.', ',') %>€</strong></td>
+                <td>
+                  <span class="badge badge-<%= c.status === 'charged' ? 'green' : c.status === 'failed' ? 'red' : 'yellow' %>">
+                    <%= c.status %>
+                  </span>
+                </td>
+              </tr>
+              <% if (c.events.length > 0) { %>
+                <tr class="events-detail-row">
+                  <td colspan="6">
+                    <div class="events-collapse">
+                      <% c.events.forEach(ev => { %>
+                        <span class="event-chip"><%= ev.eventBeschreibung %> → <%= (ev.betragCent / 100).toFixed(2).replace('.', ',') %>€</span>
+                      <% }) %>
+                    </div>
+                  </td>
+                </tr>
+              <% } %>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

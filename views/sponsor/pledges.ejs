@@ -1,0 +1,52 @@
+<%- include('../partials/header', { title: 'Meine Pledges' }) %>
+<%- include('../partials/nav') %>
+
+<main class="page-content">
+  <div class="page-container">
+    <div class="page-header">
+      <h1 class="page-title">Meine Pledges</h1>
+      <a href="/sponsor/pledge/neu" class="btn btn-primary">+ Neuer Pledge</a>
+    </div>
+
+    <% if (pledges.length === 0) { %>
+      <div class="empty-state-large">
+        <div class="empty-icon">📋</div>
+        <h2>Noch keine Pledges</h2>
+        <p>Lege deinen ersten Pledge an und unterstütze deine Lieblingsmannschaft.</p>
+        <a href="/sponsor/pledge/neu" class="btn btn-primary">Ersten Pledge anlegen</a>
+      </div>
+    <% } else { %>
+      <div class="pledges-grid">
+        <% pledges.forEach(p => { %>
+          <div class="pledge-card">
+            <div class="pledge-card-header">
+              <div>
+                <h3 class="pledge-card-team"><%= p.teamId?.name || 'Unbekannte Mannschaft' %></h3>
+                <p class="pledge-card-club"><%= p.clubId?.name || '' %></p>
+              </div>
+              <span class="badge badge-<%= p.status === 'active' ? 'green' : p.status === 'paused' ? 'yellow' : 'gray' %>">
+                <%= p.status %>
+              </span>
+            </div>
+            <div class="pledge-card-triggers">
+              <% p.triggers.forEach(t => { %>
+                <div class="trigger-pill">
+                  <span><%= t.type %><%= t.spielerName ? ' (' + t.spielerName + ')' : '' %></span>
+                  <strong><%= (t.betragCent / 100).toFixed(2).replace('.', ',') %>€</strong>
+                </div>
+              <% }) %>
+            </div>
+            <div class="pledge-card-footer">
+              <% if (p.maxProMonatCent) { %>
+                <span class="pledge-cap">Cap: <%= (p.maxProMonatCent / 100).toFixed(0) %>€/Monat</span>
+              <% } %>
+              <a href="/sponsor/pledge/<%= p._id %>" class="btn btn-outline btn-sm">Details</a>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>
