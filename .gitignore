@@ -1,6 +1,32 @@
+# deps
 node_modules/
-dist/
+
+# next
+.next/
+out/
+
+# env
 .env
+.env.local
+.env*.local
+
+# logs
 *.log
+npm-debug.log*
+
+# test
+coverage/
+
+# editor
+.vscode/
+.idea/
 .DS_Store
-.vite/
+
+# drizzle (lokale snapshots)
+drizzle/meta/_journal.json.bak
+
+# legacy (alter April-Code, nur lokal als Referenz)
+reference/
+
+# inngest dev
+.inngest/
