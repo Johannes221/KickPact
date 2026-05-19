@@ -146,3 +146,73 @@ describe("evaluateTriggers — match-level outcomes", () => {
     expect(evaluateTriggers(match, [r])).toHaveLength(0);
   });
 });
+
+describe("evaluateTriggers — comeback_win", () => {
+  it("erzeugt Charge wenn zur HZ hinten + am Ende vorne", () => {
+    const match = loadFixture("comeback-win"); // HZ 0:2, FT 3:2
+    const r = rule({ triggerType: "comeback_win", amountCents: 1500 });
+    const charges = evaluateTriggers(match, [r]);
+    expect(charges).toHaveLength(1);
+  });
+
+  it("erzeugt 0 bei normalem Sieg ohne Halbzeitrückstand", () => {
+    const match = loadFixture("win-with-goals"); // HZ 2:0
+    const r = rule({ triggerType: "comeback_win", amountCents: 1500 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(0);
+  });
+
+  it("erzeugt 0 wenn Halbzeit-Daten fehlen", () => {
+    const match: MatchInput = {
+      ...loadFixture("comeback-win"),
+      halbzeitHeim: null,
+      halbzeitGast: null
+    };
+    const r = rule({ triggerType: "comeback_win", amountCents: 1500 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(0);
+  });
+});
+
+describe("evaluateTriggers — hattrick", () => {
+  it("erzeugt 1 Charge wenn ein Spieler ≥3 Tore", () => {
+    const match = loadFixture("hattrick"); // Schmidt 3 Tore
+    const r = rule({ triggerType: "hattrick", amountCents: 2500 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(1);
+  });
+
+  it("erzeugt 1 Charge auch wenn 2 Spieler je 3 Tore (Rule fires einmal pro Match)", () => {
+    const match: MatchInput = {
+      ...loadFixture("hattrick"),
+      events: [
+        ...loadFixture("hattrick").events,
+        { id: "x1", type: "tor", minute: 70, side: "heim", playerName: "Maier", playerId: "p_maier", source: "scraped" },
+        { id: "x2", type: "tor", minute: 85, side: "heim", playerName: "Maier", playerId: "p_maier", source: "scraped" }
+      ]
+    };
+    const r = rule({ triggerType: "hattrick", amountCents: 2500 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(1);
+  });
+
+  it("erzeugt 0 wenn kein Spieler ≥3 Tore", () => {
+    const match = loadFixture("win-with-goals"); // Schmidt 2 Tore, Maier 1
+    const r = rule({ triggerType: "hattrick", amountCents: 2500 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(0);
+  });
+
+  it("hattrick zählt nur Tore der eigenen Mannschaft", () => {
+    const match: MatchInput = {
+      id: "synthetic_ht_opp",
+      teamSide: "heim",
+      ergebnisHeim: 0,
+      ergebnisGast: 3,
+      halbzeitHeim: 0,
+      halbzeitGast: 2,
+      events: [
+        { id: "g1", type: "tor", minute: 10, side: "gast", playerName: "X", playerId: "p_x", source: "scraped" },
+        { id: "g2", type: "tor", minute: 30, side: "gast", playerName: "X", playerId: "p_x", source: "scraped" },
+        { id: "g3", type: "tor", minute: 60, side: "gast", playerName: "X", playerId: "p_x", source: "scraped" }
+      ]
+    };
+    const r = rule({ triggerType: "hattrick", amountCents: 2500 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(0);
+  });
+});

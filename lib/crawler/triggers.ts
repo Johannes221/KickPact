@@ -102,6 +102,10 @@ function evaluateRule(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[
       return outcome(match, rule, isDraw);
     case "clean_sheet":
       return outcome(match, rule, isCleanSheet);
+    case "comeback_win":
+      return outcome(match, rule, isComebackWin);
+    case "hattrick":
+      return outcome(match, rule, isHattrick);
     default:
       return [];
   }
@@ -185,4 +189,35 @@ function outcome(
       requiresApproval: false
     }
   ];
+}
+
+function ownHalftime(m: MatchInput): number | null {
+  if (m.halbzeitHeim === null || m.halbzeitGast === null) return null;
+  return m.teamSide === "heim" ? m.halbzeitHeim : m.halbzeitGast;
+}
+
+function opponentHalftime(m: MatchInput): number | null {
+  if (m.halbzeitHeim === null || m.halbzeitGast === null) return null;
+  return m.teamSide === "heim" ? m.halbzeitGast : m.halbzeitHeim;
+}
+
+function isComebackWin(m: MatchInput): boolean {
+  if (!isWin(m)) return false;
+  const ownHT = ownHalftime(m);
+  const oppHT = opponentHalftime(m);
+  if (ownHT === null || oppHT === null) return false;
+  return ownHT < oppHT;
+}
+
+function isHattrick(m: MatchInput): boolean {
+  const goalsByPlayer = new Map<string, number>();
+  for (const e of m.events) {
+    if (e.type !== "tor" || e.side !== m.teamSide) continue;
+    const key = e.playerId ?? e.playerName ?? "unknown";
+    goalsByPlayer.set(key, (goalsByPlayer.get(key) ?? 0) + 1);
+  }
+  for (const count of goalsByPlayer.values()) {
+    if (count >= 3) return true;
+  }
+  return false;
 }
