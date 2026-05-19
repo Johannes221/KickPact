@@ -356,3 +356,47 @@ describe("evaluateTriggers — manual triggers", () => {
     expect(evaluateTriggers(match, [r])).toHaveLength(1);
   });
 });
+
+describe("evaluateTriggers — multiple pledge-rules in einem Match", () => {
+  it("aggregiert Charges aus 4 unterschiedlichen Rules korrekt", () => {
+    const match = loadFixture("comeback-win"); // heim 3:2, HZ 0:2; Schmidt 2 Tore, Maier 1, Weber/Becker gegnerische Tore
+
+    const goalTotal = rule({ id: "rA", triggerType: "goal_total", amountCents: 500 });
+    const winRule = rule({ id: "rB", triggerType: "win", amountCents: 1000 });
+    const comeback = rule({ id: "rC", triggerType: "comeback_win", amountCents: 2000 });
+    const schmidtGoals = rule({
+      id: "rD",
+      triggerType: "goal_by_player",
+      triggerParams: { playerId: "p_schmidt" },
+      amountCents: 300
+    });
+
+    const charges = evaluateTriggers(match, [goalTotal, winRule, comeback, schmidtGoals]);
+
+    // 3 Tore (heim) → 3 goal_total + 1 win + 1 comeback_win + 2 Schmidt-Tore = 7 charges
+    expect(charges).toHaveLength(7);
+
+    const total = charges.reduce((acc, c) => acc + c.amountCents, 0);
+    expect(total).toBe(3 * 500 + 1000 + 2000 + 2 * 300);
+  });
+
+  it("zwei Rules mit unterschiedlichen Caps werden unabhängig gekappt", () => {
+    const match = loadFixture("hattrick"); // 4 Tore heim, Schmidt 3, Maier 1
+    const allGoals = rule({
+      id: "rA",
+      triggerType: "goal_total",
+      amountCents: 500,
+      perMatchCapCents: 1000 // → 2 charges (1000 ≤ cap), 3. würde 1500 > 1000 sein → stop
+    });
+    const schmidtGoals = rule({
+      id: "rB",
+      triggerType: "goal_by_player",
+      triggerParams: { playerId: "p_schmidt" },
+      amountCents: 400,
+      perMatchCapCents: 1000 // 2 charges (800 ≤ 1000), 3. wäre 1200 > 1000 → stop
+    });
+    const charges = evaluateTriggers(match, [allGoals, schmidtGoals]);
+    expect(charges.filter((c) => c.pledgeRuleId === "rA")).toHaveLength(2);
+    expect(charges.filter((c) => c.pledgeRuleId === "rB")).toHaveLength(2);
+  });
+});
