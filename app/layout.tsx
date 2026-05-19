@@ -1,4 +1,18 @@
 import "./globals.css";
+import { Inter, Anton } from "next/font/google";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap"
+});
+
+const anton = Anton({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap"
+});
 
 export const metadata = {
   title: "KickPact",
@@ -7,8 +21,8 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="de">
-      <body>{children}</body>
+    <html lang="de" className={`${inter.variable} ${anton.variable}`}>
+      <body className="font-sans">{children}</body>
     </html>
   );
 }
