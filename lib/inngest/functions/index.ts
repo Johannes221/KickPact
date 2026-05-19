@@ -1,2 +1,3 @@
-// Funktionen werden in Phase E + F registriert
-export const functions: never[] = [];
+import { crawlMatches } from "./crawl-matches";
+
+export const functions = [crawlMatches];
