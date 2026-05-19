@@ -5,11 +5,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        accent: { DEFAULT: "#FF5722", muted: "#FFE0B2" }
+        // Brand
+        accent: {
+          DEFAULT: "#01C457", // Primary green — sampled from logo
+          dark: "#00563A",
+          muted: "#D8F5E5"
+        },
+        brand: {
+          primary: "#01C457",
+          "dark-green": "#00563A",
+          "night-navy": "#1A1A2E",
+          "alert-red": "#FF3127",
+          "off-white": "#F5F8F5",
+          neutral: "#CDD2D1"
+        }
       },
       fontFamily: {
-        display: ["var(--font-display)", "Anton", "sans-serif"],
-        sans: ["var(--font-sans)", "Inter", "sans-serif"]
+        display: ["var(--font-display)", "Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"]
       }
     }
   },

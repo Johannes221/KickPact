@@ -1,18 +1,18 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export const metadata = { title: "KickPact — Sponsoring, das mitfiebert" };
+export const metadata = { title: "KickPact — Mehr als ein Spiel" };
 
 export default function LandingPage() {
   return (
     <main className="mx-auto max-w-5xl px-6">
       <section className="py-24">
-        <h1 className="font-display text-6xl md:text-8xl tracking-wide leading-none">
+        <h1 className="font-display font-black text-6xl md:text-8xl tracking-tight leading-[0.95] text-brand-night-navy">
           Sponsoring,
           <br />
           <span className="text-accent">das mitfiebert.</span>
         </h1>
-        <p className="mt-6 max-w-2xl text-xl text-neutral-600">
+        <p className="mt-6 max-w-2xl text-xl text-brand-night-navy/70">
           Familie, Freunde und lokale Unternehmen unterstützen deine Mannschaft mit
           performance-basierten Versprechen — 5 € pro Tor, 10 € pro Sieg, 20 € pro
           Comeback. KickPact rechnet jedes Spiel automatisch ab.
@@ -25,12 +25,12 @@ export default function LandingPage() {
             <Link href="/login">Ich bin schon dabei</Link>
           </Button>
         </div>
-        <p className="mt-4 text-sm text-neutral-500">
+        <p className="mt-4 text-sm text-brand-night-navy/60">
           Weniger als 1 € pro Spieler im Monat.
         </p>
       </section>
 
-      <section className="grid gap-6 border-t border-neutral-200 py-16 md:grid-cols-3">
+      <section className="grid gap-6 border-t border-brand-neutral/40 py-16 md:grid-cols-3">
         <Feature
           title="Automatisch"
           body="Spielergebnisse werden direkt von Fußball.de gescraped. Tore, Siege, Comebacks — alles wird vollautomatisch erkannt und abgerechnet."
@@ -45,9 +45,9 @@ export default function LandingPage() {
         />
       </section>
 
-      <section className="border-t border-neutral-200 py-8 text-sm text-neutral-500">
-        <Link href="/status" className="hover:underline">
-          System-Status &amp; Live-Demo
+      <section className="border-t border-brand-neutral/40 py-8 text-sm text-brand-night-navy/60">
+        <Link href="/status" className="hover:text-accent">
+          System-Status &amp; Live-Demo →
         </Link>
       </section>
     </main>
@@ -57,8 +57,10 @@ export default function LandingPage() {
 function Feature({ title, body }: { title: string; body: string }) {
   return (
     <div>
-      <h3 className="font-display text-2xl tracking-wide">{title}</h3>
-      <p className="mt-2 text-neutral-600">{body}</p>
+      <h3 className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
+        {title}
+      </h3>
+      <p className="mt-2 text-brand-night-navy/70">{body}</p>
     </div>
   );
 }
