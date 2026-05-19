@@ -363,6 +363,21 @@ Saison-Ende-Cron (für jede Saison-Periode definiert):
 
 Trial: 30 Tage für die **erste** aktivierte Mannschaft.
 
+### 8.5 Marketing-Hooks (Microcopy für Landing, Onboarding, Sales)
+
+Konkrete, einprägsame Positionierungssätze, die in Hero-Sections, Pricing-Tabellen, Sponsor-Einladungslinks und Sales-Konversationen wiederholt werden.
+
+**Pricing-Anker für Vereine:**
+- **"Weniger als 1 € pro Spieler im Monat."**
+  - Math-Check: Basic 9 € / 15+ Spieler = 0,60 €/Spieler · Pro 19 € / 22+ Spieler = 0,86 €/Spieler
+  - Typischer Herren-/Junioren-Kader = 18–25 Spieler → Aussage hält bei Basic immer, bei Pro fast immer
+  - Verwendung: Pricing-Seite Hero, Vereins-Onboarding-Schritt 2, Sales-Pitch
+
+**Weitere Slots — TBD** (mit Johannes in nächster Session):
+- Sponsor-Pitch ("Sponsoring, das mitfiebert" / "Anfeuern, das zählt")
+- Hauptseiten-Hero ("Das Versprechen, das Tore wert ist" / "Wenn Spielentscheidungen Geld bewegen")
+- Verein-Pitch (warum nicht klassisches Trikot-Sponsoring — Performance-Bezug, mehr Sponsoren, niedrigere Eintrittsbarriere)
+
 ## 9. Stack-Setup (Folder-Struktur)
 
 ```
