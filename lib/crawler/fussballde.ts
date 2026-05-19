@@ -130,7 +130,96 @@ export async function getSpiele(
   slug: string,
   saison: string
 ): Promise<SpielListItem[]> {
-  throw new Error("not implemented");
+  return withPage(async (page) => {
+    const url = `https://www.fussball.de/mannschaft/${slug}/-/saison/${saison}/team-id/${teamId}#!/`;
+    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+    await page.waitForTimeout(2000);
+
+    const ajaxUrl = `https://www.fussball.de/ajax.team.prev.games/-/mode/PAGE/team-id/${teamId}`;
+    try {
+      await page.goto(ajaxUrl, { waitUntil: "networkidle", timeout: 20000 });
+      await page.waitForTimeout(1500);
+    } catch {
+      // fallback: bleiben auf Main-Page
+    }
+
+    const raw = await page.evaluate(() => {
+      const results: Array<{
+        spielId: string;
+        slug: string;
+        datum: string;
+        heim: string;
+        gast: string;
+        ergebnis: string;
+        vergangen: boolean;
+        url: string;
+      }> = [];
+      const seen = new Set<string>();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const parseDatum = (d: string): Date | null => {
+        const parts = d.split(".");
+        if (parts.length !== 3) return null;
+        const year = parts[2].length === 2 ? "20" + parts[2] : parts[2];
+        return new Date(`${year}-${parts[1]}-${parts[0]}`);
+      };
+
+      const allTrs = [...document.querySelectorAll("tr")];
+      let currentDatum = "";
+      allTrs.forEach((tr) => {
+        if (tr.classList.contains("row-headline") || tr.classList.contains("row-competition")) {
+          const txt = tr.textContent?.replace(/\s+/g, " ").trim() || "";
+          const dm = txt.match(/(\d{2}\.\d{2}\.\d{4})/);
+          const dm2 = txt.match(/(\d{2}\.\d{2}\.\d{2})(?!\d)/);
+          if (dm) currentDatum = dm[1];
+          else if (dm2) currentDatum = dm2[1];
+          return;
+        }
+
+        const link = tr.querySelector<HTMLAnchorElement>('a[href*="/spiel/"]');
+        if (!link) return;
+        const href = link.href || "";
+        const m = href.match(/\/spiel\/([^/]+)\/-\/spiel\/([A-Z0-9]+)/);
+        if (!m || seen.has(m[2])) return;
+        if (!currentDatum) return;
+
+        const matchDate = parseDatum(currentDatum);
+        if (!matchDate || matchDate >= today) return;
+        seen.add(m[2]);
+
+        const tds = [...tr.querySelectorAll("td")].map((td) =>
+          (td.textContent || "").replace(/\s+/g, " ").trim()
+        );
+        const teamTds = tds.filter((t) => t && t !== ":" && t !== "Zum Spiel");
+
+        results.push({
+          spielId: m[2],
+          slug: m[1],
+          datum: currentDatum,
+          heim: teamTds[0] || "",
+          gast: teamTds[1] || "",
+          ergebnis: "",
+          vergangen: true,
+          url: href
+        });
+      });
+
+      return results;
+    });
+
+    raw.sort((a, b) => {
+      const parse = (d: string): number => {
+        const p = d.split(".");
+        if (p.length !== 3) return 0;
+        const y = p[2].length === 2 ? "20" + p[2] : p[2];
+        return new Date(`${y}-${p[1]}-${p[0]}`).getTime();
+      };
+      return parse(b.datum) - parse(a.datum);
+    });
+
+    return raw;
+  });
 }
 
 export async function getSpielDetails(
