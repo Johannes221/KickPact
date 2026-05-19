@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: Anton, sans-serif;
+  --font-sans: Inter, sans-serif;
+}
+
+html, body { height: 100%; }
+body { @apply bg-white text-neutral-900 antialiased; }
