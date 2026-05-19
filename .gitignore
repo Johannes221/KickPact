@@ -30,3 +30,6 @@ reference/
 
 # inngest dev
 .inngest/
+
+# typescript incremental build cache
+*.tsbuildinfo
