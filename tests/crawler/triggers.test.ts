@@ -216,3 +216,57 @@ describe("evaluateTriggers — hattrick", () => {
     expect(evaluateTriggers(match, [r])).toHaveLength(0);
   });
 });
+
+describe("evaluateTriggers — goal_diff_min", () => {
+  it("erzeugt Charge wenn Tordifferenz ≥ min_diff", () => {
+    const match = loadFixture("clean-sheet"); // 2:0 → diff 2
+    const r = rule({
+      triggerType: "goal_diff_min",
+      triggerParams: { minDiff: 2 },
+      amountCents: 800
+    });
+    expect(evaluateTriggers(match, [r])).toHaveLength(1);
+  });
+
+  it("erzeugt 0 wenn unter min_diff", () => {
+    const match = loadFixture("win-with-goals"); // 3:1 → diff 2
+    const r = rule({
+      triggerType: "goal_diff_min",
+      triggerParams: { minDiff: 3 },
+      amountCents: 800
+    });
+    expect(evaluateTriggers(match, [r])).toHaveLength(0);
+  });
+
+  it("min_diff feuert NICHT bei Niederlage (nur bei Sieg)", () => {
+    const match: MatchInput = { ...loadFixture("win-with-goals"), teamSide: "gast" }; // gast verliert 1:3
+    const r = rule({
+      triggerType: "goal_diff_min",
+      triggerParams: { minDiff: 2 },
+      amountCents: 800
+    });
+    expect(evaluateTriggers(match, [r])).toHaveLength(0);
+  });
+});
+
+describe("evaluateTriggers — goals_scored_min", () => {
+  it("erzeugt Charge wenn eigene Tore ≥ min_goals", () => {
+    const match = loadFixture("hattrick"); // 4 Tore heim
+    const r = rule({
+      triggerType: "goals_scored_min",
+      triggerParams: { minGoals: 4 },
+      amountCents: 1200
+    });
+    expect(evaluateTriggers(match, [r])).toHaveLength(1);
+  });
+
+  it("erzeugt 0 wenn unter min_goals", () => {
+    const match = loadFixture("win-with-goals"); // 3 Tore heim
+    const r = rule({
+      triggerType: "goals_scored_min",
+      triggerParams: { minGoals: 5 },
+      amountCents: 1200
+    });
+    expect(evaluateTriggers(match, [r])).toHaveLength(0);
+  });
+});

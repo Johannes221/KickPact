@@ -106,6 +106,16 @@ function evaluateRule(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[
       return outcome(match, rule, isComebackWin);
     case "hattrick":
       return outcome(match, rule, isHattrick);
+    case "goal_diff_min":
+      return outcome(match, rule, (m) => {
+        const minDiff = Number(rule.triggerParams.minDiff ?? 0);
+        return isWin(m) && ownScore(m) - opponentScore(m) >= minDiff;
+      });
+    case "goals_scored_min":
+      return outcome(match, rule, (m) => {
+        const minGoals = Number(rule.triggerParams.minGoals ?? 0);
+        return ownScore(m) >= minGoals;
+      });
     default:
       return [];
   }
