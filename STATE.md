@@ -10,10 +10,14 @@
 - **Aktiver Plan:** Plan 2 (Auth + Onboarding)
 - **Plan-Datei:** [docs/superpowers/plans/2026-05-19-kickpact-plan-2-auth-onboarding.md](docs/superpowers/plans/2026-05-19-kickpact-plan-2-auth-onboarding.md)
 - **Phase:** A (Auth Foundation)
-- **Nächster Task:** Task 1 (Better Auth installieren + konfigurieren)
+- **Nächster Task:** Task 3 (Google OAuth — optional, kann gehen oder skippen)
 - **Status:** ready
-- **Letzter Lauf:** noch nicht
+- **Letzter Lauf:** 2026-05-19 21:25 (manuell)
 - **Blocker:** keine
+
+## Bekannte Limitierungen
+
+- **Resend-Test-Key:** kann aktuell nur an `dattonius99@gmail.com` senden (Smoketest verifiziert). Für echte Sponsor-E-Mails muss eine Domain bei https://resend.com/domains verifiziert werden → MAIL_FROM auf `noreply@<verified-domain>` updaten. Plan-6-Punkt vor Pilot-Launch.
 
 ## Plan-Übersicht & Fortschritt
 
@@ -51,3 +55,5 @@
 |---|---|---|---|---|
 | 2026-05-19 | 1 | A–F | 29 | ✅ done (29 commits) |
 | 2026-05-19 | 2 | — | — | autopilot armed |
+| 2026-05-19 21:22 | 2 | A | 1 | ✅ DONE (`9b33aa0` better-auth install) |
+| 2026-05-19 21:25 | 2 | A | 2 | ✅ DONE_WITH_CONCERNS (`fb1db7b` magic-link via Resend, Domain-Verification später nötig) |
