@@ -1,0 +1,15 @@
+{
+  "id": "match_ht_001",
+  "teamSide": "heim",
+  "ergebnisHeim": 4,
+  "ergebnisGast": 1,
+  "halbzeitHeim": 2,
+  "halbzeitGast": 1,
+  "events": [
+    { "id": "e1", "type": "tor", "minute": 5, "side": "heim", "playerName": "Schmidt", "playerId": "p_schmidt", "source": "scraped" },
+    { "id": "e2", "type": "tor", "minute": 18, "side": "gast", "playerName": "Weber", "playerId": "p_weber", "source": "scraped" },
+    { "id": "e3", "type": "tor", "minute": 42, "side": "heim", "playerName": "Schmidt", "playerId": "p_schmidt", "source": "scraped" },
+    { "id": "e4", "type": "tor", "minute": 65, "side": "heim", "playerName": "Schmidt", "playerId": "p_schmidt", "source": "scraped" },
+    { "id": "e5", "type": "tor", "minute": 82, "side": "heim", "playerName": "Maier", "playerId": "p_maier", "source": "scraped" }
+  ]
+}

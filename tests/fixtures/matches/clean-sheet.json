@@ -1,0 +1,12 @@
+{
+  "id": "match_cs_001",
+  "teamSide": "heim",
+  "ergebnisHeim": 2,
+  "ergebnisGast": 0,
+  "halbzeitHeim": 1,
+  "halbzeitGast": 0,
+  "events": [
+    { "id": "e1", "type": "tor", "minute": 33, "side": "heim", "playerName": "Schmidt", "playerId": "p_schmidt", "source": "scraped" },
+    { "id": "e2", "type": "tor", "minute": 71, "side": "heim", "playerName": "Maier", "playerId": "p_maier", "source": "scraped" }
+  ]
+}
