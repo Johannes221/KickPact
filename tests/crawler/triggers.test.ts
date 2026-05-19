@@ -88,3 +88,61 @@ describe("evaluateTriggers — goal_by_player", () => {
     expect(evaluateTriggers(match, [r])).toHaveLength(0);
   });
 });
+
+describe("evaluateTriggers — match-level outcomes", () => {
+  it("win erzeugt 1× Charge bei Sieg", () => {
+    const match = loadFixture("win-with-goals"); // heim 3:1
+    const r = rule({ triggerType: "win", amountCents: 1000 });
+    const charges = evaluateTriggers(match, [r]);
+    expect(charges).toHaveLength(1);
+    expect(charges[0].matchEventId).toBeNull();
+    expect(charges[0].amountCents).toBe(1000);
+  });
+
+  it("win erzeugt 0× Charge bei Unentschieden", () => {
+    const match = loadFixture("draw-no-goals");
+    const r = rule({ triggerType: "win", amountCents: 1000 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(0);
+  });
+
+  it("draw erzeugt 1× Charge bei Unentschieden", () => {
+    const match = loadFixture("draw-no-goals");
+    const r = rule({ triggerType: "draw", amountCents: 200 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(1);
+  });
+
+  it("loss erzeugt 1× Charge bei Niederlage (teamSide ist gast in einem heim-Sieg)", () => {
+    const match = loadFixture("win-with-goals");
+    match.teamSide = "gast"; // gast verliert 1:3
+    const r = rule({ triggerType: "loss", amountCents: 100 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(1);
+  });
+
+  it("clean_sheet erzeugt 1× Charge bei Sieg + 0 Gegentore", () => {
+    const match = loadFixture("clean-sheet"); // heim 2:0
+    const r = rule({ triggerType: "clean_sheet", amountCents: 500 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(1);
+  });
+
+  it("clean_sheet erzeugt 0× Charge wenn Gegentor", () => {
+    const match = loadFixture("win-with-goals"); // heim 3:1
+    const r = rule({ triggerType: "clean_sheet", amountCents: 500 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(0);
+  });
+
+  it("clean_sheet erzeugt 0× Charge bei Niederlage 0:1", () => {
+    const match: MatchInput = {
+      id: "synthetic_0_1",
+      teamSide: "heim",
+      ergebnisHeim: 0,
+      ergebnisGast: 1,
+      halbzeitHeim: 0,
+      halbzeitGast: 0,
+      events: [
+        { id: "e1", type: "tor", minute: 50, side: "gast", playerName: "X", playerId: "p_x", source: "scraped" }
+      ]
+    };
+    const r = rule({ triggerType: "clean_sheet", amountCents: 500 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(0);
+  });
+});

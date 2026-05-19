@@ -94,6 +94,14 @@ function evaluateRule(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[
       return goalTotal(match, rule);
     case "goal_by_player":
       return goalByPlayer(match, rule);
+    case "win":
+      return outcome(match, rule, isWin);
+    case "loss":
+      return outcome(match, rule, isLoss);
+    case "draw":
+      return outcome(match, rule, isDraw);
+    case "clean_sheet":
+      return outcome(match, rule, isCleanSheet);
     default:
       return [];
   }
@@ -134,4 +142,47 @@ function goalByPlayer(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[
       amountCents: rule.amountCents,
       requiresApproval: false
     }));
+}
+
+function ownScore(match: MatchInput): number {
+  return match.teamSide === "heim" ? match.ergebnisHeim : match.ergebnisGast;
+}
+
+function opponentScore(match: MatchInput): number {
+  return match.teamSide === "heim" ? match.ergebnisGast : match.ergebnisHeim;
+}
+
+function isWin(m: MatchInput): boolean {
+  return ownScore(m) > opponentScore(m);
+}
+
+function isLoss(m: MatchInput): boolean {
+  return ownScore(m) < opponentScore(m);
+}
+
+function isDraw(m: MatchInput): boolean {
+  return ownScore(m) === opponentScore(m);
+}
+
+function isCleanSheet(m: MatchInput): boolean {
+  return isWin(m) && opponentScore(m) === 0;
+}
+
+function outcome(
+  match: MatchInput,
+  rule: PledgeRuleInput,
+  predicate: (m: MatchInput) => boolean
+): ChargeProposal[] {
+  if (!predicate(match)) return [];
+  return [
+    {
+      pledgeId: rule.pledgeId,
+      pledgeRuleId: rule.id,
+      matchId: match.id,
+      matchEventId: null,
+      triggerType: rule.triggerType,
+      amountCents: rule.amountCents,
+      requiresApproval: false
+    }
+  ];
 }
