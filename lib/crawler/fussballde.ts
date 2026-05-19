@@ -222,9 +222,169 @@ export async function getSpiele(
   });
 }
 
+const playerNameCache = new Map<string, string>();
+
+function extractPlayerIdFromUrl(url: string): string | null {
+  const m = url.match(/\/(?:player-id|userid)\/([A-Z0-9]+)/i);
+  return m ? m[1] : null;
+}
+
+async function resolvePlayerName(page: Page, playerUrl: string): Promise<string> {
+  const id = extractPlayerIdFromUrl(playerUrl);
+  if (!id) return playerUrl;
+  if (playerNameCache.has(id)) return playerNameCache.get(id)!;
+
+  try {
+    await page.goto(playerUrl, { waitUntil: "networkidle", timeout: 20000 });
+    await page.waitForTimeout(1000);
+    const name = await page.evaluate(() => {
+      const title = document.title;
+      const m = title.match(/^(.+?)\s*(?:Basisprofil|Profil|\|)/i);
+      if (m) return m[1].trim();
+      return title.split("|")[0].trim();
+    });
+    playerNameCache.set(id, name || id);
+    return playerNameCache.get(id)!;
+  } catch {
+    playerNameCache.set(id, id);
+    return id;
+  }
+}
+
 export async function getSpielDetails(
   spielId: string,
   slug: string
 ): Promise<SpielDetails> {
-  throw new Error("not implemented");
+  return withPage(async (page) => {
+    const url = `https://www.fussball.de/spiel/${slug || "spiel"}/-/spiel/${spielId}#!/`;
+    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+    await page.waitForTimeout(3000);
+
+    const raw = await page.evaluate(() => {
+      const result = {
+        heim: "",
+        gast: "",
+        ergebnisHeim: 0,
+        ergebnisGast: 0,
+        halbzeitHeim: null as number | null,
+        halbzeitGast: null as number | null,
+        rawEvents: [] as Array<{
+          typ: "TOR" | "AUSWECHSLUNG";
+          minute: number | null;
+          side: "heim" | "gast" | "unbekannt";
+          playerLinks: string[];
+        }>,
+        spielerUrls: [] as string[]
+      };
+
+      result.heim =
+        document.querySelector(".team-home .team-name")?.textContent?.replace(/\s+/g, " ").trim() ??
+        "";
+      result.gast =
+        document.querySelector(".team-away .team-name")?.textContent?.replace(/\s+/g, " ").trim() ??
+        "";
+
+      const matchCourse = document.querySelector(".match-course");
+      const rowEvents = matchCourse ? [...matchCourse.querySelectorAll(".row-event")] : [];
+      rowEvents.forEach((row) => {
+        const isRight = row.classList.contains("event-right");
+        const isLeft = row.classList.contains("event-left");
+        const minuteText = row
+          .querySelector(".valign-inner")
+          ?.textContent?.replace(/\s+/g, "")
+          .replace("'", "")
+          .trim();
+        const isGoal = row.querySelector(".hexagon.green") !== null;
+        const isSubstitute = row.querySelector(".icon-substitute") !== null;
+        const playerLinks = [
+          ...row.querySelectorAll<HTMLAnchorElement>('a[href*="spielerprofil"]')
+        ]
+          .map((a) => a.href)
+          .filter((h) => h.includes("/player-id/") || h.includes("/userid/"));
+
+        const side: "heim" | "gast" | "unbekannt" = isRight
+          ? "gast"
+          : isLeft
+            ? "heim"
+            : "unbekannt";
+        const minute = minuteText ? parseInt(minuteText, 10) : null;
+
+        if ((isGoal || isSubstitute) && playerLinks.length > 0) {
+          result.rawEvents.push({
+            typ: isGoal ? "TOR" : "AUSWECHSLUNG",
+            minute,
+            side,
+            playerLinks
+          });
+          playerLinks.forEach((u) => {
+            if (!result.spielerUrls.includes(u)) result.spielerUrls.push(u);
+          });
+        }
+      });
+
+      const goals = result.rawEvents.filter((e) => e.typ === "TOR");
+      result.ergebnisHeim = goals.filter((g) => g.side === "heim").length;
+      result.ergebnisGast = goals.filter((g) => g.side === "gast").length;
+
+      const firstHalfGoals = goals.filter((g) => g.minute !== null && g.minute <= 45);
+      result.halbzeitHeim = firstHalfGoals.filter((g) => g.side === "heim").length;
+      result.halbzeitGast = firstHalfGoals.filter((g) => g.side === "gast").length;
+
+      return result;
+    });
+
+    // Resolve player names sequentially (cached)
+    for (const u of raw.spielerUrls) {
+      const id = extractPlayerIdFromUrl(u);
+      if (!id || playerNameCache.has(id)) continue;
+      await page.waitForTimeout(800);
+      await resolvePlayerName(page, u);
+    }
+
+    // Build typed events
+    const events: ScrapedEvent[] = raw.rawEvents.map((ev) => {
+      if (ev.typ === "TOR" && ev.playerLinks[0]) {
+        const id = extractPlayerIdFromUrl(ev.playerLinks[0]);
+        return {
+          typ: "TOR",
+          minute: ev.minute,
+          side: ev.side,
+          spielerId: id ?? undefined,
+          spielerName: id ? (playerNameCache.get(id) ?? id) : undefined
+        };
+      }
+      if (ev.typ === "AUSWECHSLUNG" && ev.playerLinks.length >= 2) {
+        const reinId = extractPlayerIdFromUrl(ev.playerLinks[0]);
+        const rausId = extractPlayerIdFromUrl(ev.playerLinks[1]);
+        return {
+          typ: "AUSWECHSLUNG",
+          minute: ev.minute,
+          side: ev.side,
+          rein: {
+            id: reinId ?? "",
+            name: reinId ? (playerNameCache.get(reinId) ?? reinId) : ""
+          },
+          raus: {
+            id: rausId ?? "",
+            name: rausId ? (playerNameCache.get(rausId) ?? rausId) : ""
+          }
+        };
+      }
+      return { typ: ev.typ, minute: ev.minute, side: ev.side };
+    });
+
+    events.sort((a, b) => (a.minute ?? 999) - (b.minute ?? 999));
+
+    return {
+      spielId,
+      heim: raw.heim,
+      gast: raw.gast,
+      ergebnis: { heim: raw.ergebnisHeim, gast: raw.ergebnisGast },
+      halbzeit:
+        raw.halbzeitHeim !== null && raw.halbzeitGast !== null
+          ? { heim: raw.halbzeitHeim, gast: raw.halbzeitGast }
+          : null,
+      events
+    };
+  });
 }

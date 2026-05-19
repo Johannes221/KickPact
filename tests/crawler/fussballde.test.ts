@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { searchVereine, getMannschaften, getSpiele } from "@/lib/crawler/fussballde";
+import { searchVereine, getMannschaften, getSpiele, getSpielDetails } from "@/lib/crawler/fussballde";
 
 // Smoke-Tests gegen live Fußball.de. Werden NICHT im normalen Lauf ausgeführt.
 // Manuell starten mit: RUN_CRAWLER_SMOKE=1 npm test -- fussballde
@@ -44,4 +44,21 @@ describe("getSpiele — live smoke", () => {
       });
     }
   }, 120_000);
+});
+
+describe("getSpielDetails — live smoke", () => {
+  itSmoke("liefert Match-Details (Ergebnis + Events) für ein echtes vergangenes Spiel", async () => {
+    const vereine = await searchVereine("Heidelberg");
+    const v = vereine[0];
+    const mannschaften = await getMannschaften(v.vereinId, v.slug);
+    const m = mannschaften[0];
+    const spiele = await getSpiele(m.teamId, m.slug, m.saison);
+    if (spiele.length === 0) return; // skip wenn Mannschaft noch nicht gespielt hat
+    const first = spiele[0];
+    const details = await getSpielDetails(first.spielId, first.slug);
+    expect(details.spielId).toBe(first.spielId);
+    expect(typeof details.ergebnis.heim).toBe("number");
+    expect(typeof details.ergebnis.gast).toBe("number");
+    expect(Array.isArray(details.events)).toBe(true);
+  }, 180_000);
 });
