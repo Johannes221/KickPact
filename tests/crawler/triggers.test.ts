@@ -270,3 +270,89 @@ describe("evaluateTriggers — goals_scored_min", () => {
     expect(evaluateTriggers(match, [r])).toHaveLength(0);
   });
 });
+
+describe("evaluateTriggers — manual triggers", () => {
+  it("special_goal feuert pro manuell-gemeldetem Spezialtor (mit subtype-filter)", () => {
+    const match: MatchInput = {
+      id: "synthetic_special",
+      teamSide: "heim",
+      ergebnisHeim: 3,
+      ergebnisGast: 0,
+      halbzeitHeim: 1,
+      halbzeitGast: 0,
+      events: [
+        { id: "s1", type: "spezial", subtype: "kopfball",  minute: 12, side: "heim", playerName: "S", playerId: "p_s", source: "manual" },
+        { id: "s2", type: "spezial", subtype: "hackentor", minute: 45, side: "heim", playerName: "M", playerId: "p_m", source: "manual" },
+        { id: "s3", type: "spezial", subtype: "kopfball",  minute: 70, side: "heim", playerName: "S", playerId: "p_s", source: "manual" }
+      ]
+    };
+    const r = rule({
+      triggerType: "special_goal",
+      triggerParams: { subtype: "kopfball" },
+      amountCents: 1000
+    });
+    const charges = evaluateTriggers(match, [r]);
+    expect(charges).toHaveLength(2);
+    charges.forEach((c) => {
+      expect(c.requiresApproval).toBe(true);
+      expect(c.matchEventId).not.toBeNull();
+    });
+  });
+
+  it("special_goal ignoriert Events der Gegenseite", () => {
+    const match: MatchInput = {
+      id: "syn_opp",
+      teamSide: "heim",
+      ergebnisHeim: 0,
+      ergebnisGast: 1,
+      halbzeitHeim: 0,
+      halbzeitGast: 1,
+      events: [
+        { id: "x", type: "spezial", subtype: "kopfball", minute: 20, side: "gast", playerName: "G", playerId: "p_g", source: "manual" }
+      ]
+    };
+    const r = rule({ triggerType: "special_goal", triggerParams: { subtype: "kopfball" }, amountCents: 500 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(0);
+  });
+
+  it("yellow_card / red_card feuern pro karte-Event mit subtype", () => {
+    const match: MatchInput = {
+      id: "syn_cards",
+      teamSide: "heim",
+      ergebnisHeim: 1,
+      ergebnisGast: 1,
+      halbzeitHeim: 0,
+      halbzeitGast: 0,
+      events: [
+        { id: "k1", type: "karte", subtype: "gelb", minute: 30, side: "heim", playerName: "A", playerId: "p_a", source: "manual" },
+        { id: "k2", type: "karte", subtype: "rot",  minute: 80, side: "heim", playerName: "B", playerId: "p_b", source: "manual" }
+      ]
+    };
+    const yellow = rule({ triggerType: "yellow_card", amountCents: 100 });
+    const red = rule({ triggerType: "red_card", amountCents: 500 });
+    const charges = evaluateTriggers(match, [yellow, red]);
+    expect(charges.filter((c) => c.triggerType === "yellow_card")).toHaveLength(1);
+    expect(charges.filter((c) => c.triggerType === "red_card")).toHaveLength(1);
+    expect(charges.every((c) => c.requiresApproval)).toBe(true);
+  });
+
+  it("custom feuert pro Event mit type=spezial + matching subtype-Pattern", () => {
+    const match: MatchInput = {
+      id: "syn_custom",
+      teamSide: "heim",
+      ergebnisHeim: 2,
+      ergebnisGast: 0,
+      halbzeitHeim: 1,
+      halbzeitGast: 0,
+      events: [
+        { id: "c1", type: "spezial", subtype: "bizeps-tor", minute: 50, side: "heim", playerName: "X", playerId: "p_x", source: "manual" }
+      ]
+    };
+    const r = rule({
+      triggerType: "custom",
+      triggerParams: { subtype: "bizeps-tor" },
+      amountCents: 200
+    });
+    expect(evaluateTriggers(match, [r])).toHaveLength(1);
+  });
+});

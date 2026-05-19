@@ -116,6 +116,18 @@ function evaluateRule(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[
         const minGoals = Number(rule.triggerParams.minGoals ?? 0);
         return ownScore(m) >= minGoals;
       });
+    case "special_goal":
+      return manualEvents(match, rule, "spezial", rule.triggerParams.subtype as string | undefined);
+    case "yellow_card":
+      return manualEvents(match, rule, "karte", "gelb");
+    case "red_card":
+      return manualEvents(match, rule, "karte", "rot");
+    case "assist":
+      return manualEvents(match, rule, "spezial", "assist");
+    case "man_of_match":
+      return manualEvents(match, rule, "spezial", "man_of_match");
+    case "custom":
+      return manualEvents(match, rule, "spezial", rule.triggerParams.subtype as string | undefined);
     default:
       return [];
   }
@@ -230,4 +242,29 @@ function isHattrick(m: MatchInput): boolean {
     if (count >= 3) return true;
   }
   return false;
+}
+
+function manualEvents(
+  match: MatchInput,
+  rule: PledgeRuleInput,
+  type: MatchEventInput["type"],
+  subtype: string | undefined
+): ChargeProposal[] {
+  return match.events
+    .filter(
+      (e) =>
+        e.source === "manual" &&
+        e.side === match.teamSide &&
+        e.type === type &&
+        (subtype === undefined || e.subtype === subtype)
+    )
+    .map((event) => ({
+      pledgeId: rule.pledgeId,
+      pledgeRuleId: rule.id,
+      matchId: match.id,
+      matchEventId: event.id,
+      triggerType: rule.triggerType,
+      amountCents: rule.amountCents,
+      requiresApproval: true
+    }));
 }
