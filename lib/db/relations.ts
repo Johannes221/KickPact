@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import { users, sessions, accounts } from "./schema/auth";
+import { sponsorInvitations } from "./schema/invitations";
 import { clubs, clubMemberships, teams, players } from "./schema/clubs";
 import { sponsors } from "./schema/sponsors";
 import { pledges, pledgeRules } from "./schema/pledges";
@@ -117,4 +118,9 @@ export const teamLicensesRelations = relations(teamLicenses, ({ one }) => ({
     references: [subscriptions.clubId]
   }),
   team: one(teams, { fields: [teamLicenses.teamId], references: [teams.id] })
+}));
+
+export const sponsorInvitationsRelations = relations(sponsorInvitations, ({ one }) => ({
+  team: one(teams, { fields: [sponsorInvitations.teamId], references: [teams.id] }),
+  createdBy: one(users, { fields: [sponsorInvitations.createdByUserId], references: [users.id] })
 }));

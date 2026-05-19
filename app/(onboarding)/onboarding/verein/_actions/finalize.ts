@@ -1,0 +1,112 @@
+"use server";
+
+import slugify from "slugify";
+import { z } from "zod";
+import { db } from "@/lib/db/client";
+import { clubs, teams, clubMemberships, subscriptions, teamLicenses } from "@/lib/db/schema";
+import { requireUser } from "@/lib/auth/session";
+import { createInvitation } from "@/lib/db/queries/invitations";
+
+const finalizeSchema = z.object({
+  verein: z.object({
+    name: z.string(),
+    vereinId: z.string(),
+    slug: z.string()
+  }),
+  team: z.object({
+    name: z.string(),
+    teamId: z.string(),
+    slug: z.string(),
+    saison: z.string()
+  }),
+  stammdaten: z.object({
+    contactName: z.string(),
+    street: z.string(),
+    zip: z.string(),
+    city: z.string(),
+    isSmallBusiness: z.boolean(),
+    taxId: z.string().optional(),
+    iban: z.string()
+  }),
+  plan: z.enum(["basic", "pro"])
+});
+
+export async function finalizeOnboarding(input: z.infer<typeof finalizeSchema>) {
+  const user = await requireUser();
+  const parsed = finalizeSchema.parse(input);
+
+  // Slug aus Verein-Name (eindeutig) + 4-char-Suffix für Konflikt-Vermeidung
+  const baseSlug = slugify(parsed.verein.name, { lower: true, strict: true, trim: true });
+  const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+
+  const result = await db.transaction(async (tx) => {
+    const [club] = await tx
+      .insert(clubs)
+      .values({
+        slug,
+        name: parsed.verein.name,
+        ort: parsed.stammdaten.city,
+        fussballdeVereinId: parsed.verein.vereinId,
+        taxId: parsed.stammdaten.taxId || null,
+        isSmallBusiness: parsed.stammdaten.isSmallBusiness,
+        addressJson: {
+          street: parsed.stammdaten.street,
+          zip: parsed.stammdaten.zip,
+          city: parsed.stammdaten.city,
+          country: "DE"
+        },
+        iban: parsed.stammdaten.iban
+      })
+      .returning();
+
+    await tx.insert(clubMemberships).values({
+      userId: user.id,
+      clubId: club.id,
+      role: "admin"
+    });
+
+    const [team] = await tx
+      .insert(teams)
+      .values({
+        clubId: club.id,
+        name: parsed.team.name,
+        saison: parsed.team.saison,
+        fussballdeTeamId: parsed.team.teamId,
+        fussballdeSlug: parsed.team.slug,
+        isActive: true
+      })
+      .returning();
+
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + 30);
+
+    await tx.insert(subscriptions).values({
+      clubId: club.id,
+      stripeCustomerId: `placeholder_${club.id}`,
+      stripeSubscriptionId: null,
+      status: "trialing",
+      trialEndsAt: trialEnd
+    });
+
+    await tx.insert(teamLicenses).values({
+      subscriptionClubId: club.id,
+      teamId: team.id,
+      plan: parsed.plan,
+      stripeSubscriptionItemId: null,
+      status: "trialing"
+    });
+
+    return { club, team };
+  });
+
+  const invitation = await createInvitation({
+    teamId: result.team.id,
+    createdByUserId: user.id
+  });
+
+  return {
+    clubSlug: result.club.slug,
+    teamId: result.team.id,
+    invitationToken: invitation.token
+  };
+}
