@@ -20,6 +20,15 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET!,
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3003",
   trustedOrigins: [process.env.BETTER_AUTH_URL ?? "http://localhost:3003"],
+  socialProviders:
+    process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? {
+          google: {
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET
+          }
+        }
+      : undefined,
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {
