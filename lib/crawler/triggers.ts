@@ -69,5 +69,69 @@ export function evaluateTriggers(
   match: MatchInput,
   rules: PledgeRuleInput[]
 ): ChargeProposal[] {
-  throw new Error("not implemented");
+  const proposals: ChargeProposal[] = [];
+
+  for (const r of rules) {
+    const ruleProposals = evaluateRule(match, r);
+
+    // Per-match-cap: emit charges in order, stop emitting once full charge would exceed cap.
+    let emittedSum = 0;
+    for (const p of ruleProposals) {
+      const wouldExceed =
+        r.perMatchCapCents !== null && emittedSum + p.amountCents > r.perMatchCapCents;
+      if (wouldExceed) break;
+      proposals.push(p);
+      emittedSum += p.amountCents;
+    }
+  }
+
+  return proposals;
+}
+
+function evaluateRule(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[] {
+  switch (rule.triggerType) {
+    case "goal_total":
+      return goalTotal(match, rule);
+    case "goal_by_player":
+      return goalByPlayer(match, rule);
+    default:
+      return [];
+  }
+}
+
+function ownGoals(match: MatchInput): MatchEventInput[] {
+  return match.events.filter((e) => e.type === "tor" && e.side === match.teamSide);
+}
+
+function goalTotal(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[] {
+  return ownGoals(match).map((event) => ({
+    pledgeId: rule.pledgeId,
+    pledgeRuleId: rule.id,
+    matchId: match.id,
+    matchEventId: event.id,
+    triggerType: rule.triggerType,
+    amountCents: rule.amountCents,
+    requiresApproval: false
+  }));
+}
+
+function goalByPlayer(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[] {
+  const targetId = rule.triggerParams.playerId as string | undefined;
+  const targetName = rule.triggerParams.playerName as string | undefined;
+
+  return ownGoals(match)
+    .filter((e) => {
+      if (targetId) return e.playerId === targetId;
+      if (targetName) return e.playerName === targetName;
+      return false;
+    })
+    .map((event) => ({
+      pledgeId: rule.pledgeId,
+      pledgeRuleId: rule.id,
+      matchId: match.id,
+      matchEventId: event.id,
+      triggerType: rule.triggerType,
+      amountCents: rule.amountCents,
+      requiresApproval: false
+    }));
 }
