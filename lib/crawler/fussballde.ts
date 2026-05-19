@@ -60,14 +60,69 @@ async function withPage<T>(fn: (page: Page) => Promise<T>): Promise<T> {
 }
 
 export async function searchVereine(suchbegriff: string): Promise<VereinHit[]> {
-  throw new Error("not implemented");
+  return withPage(async (page) => {
+    const url = `https://www.fussball.de/suche/-/text/${encodeURIComponent(suchbegriff)}/restriction/-1#!/`;
+    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+    await page.waitForTimeout(2000);
+
+    return await page.evaluate(() => {
+      const results: Array<{
+        name: string;
+        slug: string;
+        vereinId: string;
+        url: string;
+      }> = [];
+      const seen = new Set<string>();
+      document.querySelectorAll<HTMLAnchorElement>('a[href*="/verein/"]').forEach((link) => {
+        const href = link.href || link.getAttribute("href") || "";
+        const m = href.match(/\/verein\/([^/]+)\/-\/id\/([A-Z0-9]+)/);
+        if (m && !seen.has(m[2])) {
+          seen.add(m[2]);
+          const name = link.textContent?.replace(/\s+/g, " ").trim() || m[1];
+          results.push({ name, slug: m[1], vereinId: m[2], url: href });
+        }
+      });
+      return results;
+    });
+  });
 }
 
 export async function getMannschaften(
   vereinId: string,
   slug: string
 ): Promise<MannschaftHit[]> {
-  throw new Error("not implemented");
+  return withPage(async (page) => {
+    const url = `https://www.fussball.de/verein/${slug}/-/id/${vereinId}#!/`;
+    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+    await page.waitForTimeout(2000);
+
+    return await page.evaluate(() => {
+      const results: Array<{
+        name: string;
+        slug: string;
+        saison: string;
+        teamId: string;
+        url: string;
+      }> = [];
+      const seen = new Set<string>();
+      document.querySelectorAll<HTMLAnchorElement>('a[href*="/mannschaft/"]').forEach((link) => {
+        const href = link.href || link.getAttribute("href") || "";
+        const m = href.match(/\/mannschaft\/([^/]+)\/-\/saison\/(\d+)\/team-id\/([A-Z0-9]+)/);
+        if (m && !seen.has(m[3])) {
+          seen.add(m[3]);
+          const name = link.textContent?.replace(/\s+/g, " ").trim() || m[1];
+          results.push({
+            name,
+            slug: m[1],
+            saison: m[2],
+            teamId: m[3],
+            url: href
+          });
+        }
+      });
+      return results;
+    });
+  });
 }
 
 export async function getSpiele(
