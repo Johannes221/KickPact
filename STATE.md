@@ -9,10 +9,10 @@
 - **Branch:** `phase-b-auth-onboarding`
 - **Aktiver Plan:** Plan 2 (Auth + Onboarding)
 - **Plan-Datei:** [docs/superpowers/plans/2026-05-19-kickpact-plan-2-auth-onboarding.md](docs/superpowers/plans/2026-05-19-kickpact-plan-2-auth-onboarding.md)
-- **Phase:** D (Vereins-Onboarding-Wizard)
-- **Nächster Task:** Task 9 (Wizard-Shell + Progress-Component)
-- **Status:** ready
-- **Letzter Lauf:** 2026-05-19 21:50 (manuell)
+- **Phase:** **PLAN 2 KOMPLETT** ✅
+- **Nächster Schritt:** Plan 3 schreiben (Match-UI + Manual Events + Approval-Inbox) — wartet auf User-Trigger
+- **Status:** plan-2-done — bereit für Review + Merge zu main + Plan 3
+- **Letzter Lauf:** 2026-05-19 (manuell durchgezogen)
 - **Blocker:** keine
 
 ## Bekannte Limitierungen
