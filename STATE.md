@@ -9,10 +9,10 @@
 - **Branch:** `phase-b-auth-onboarding`
 - **Aktiver Plan:** Plan 2 (Auth + Onboarding)
 - **Plan-Datei:** [docs/superpowers/plans/2026-05-19-kickpact-plan-2-auth-onboarding.md](docs/superpowers/plans/2026-05-19-kickpact-plan-2-auth-onboarding.md)
-- **Phase:** A (Auth Foundation)
-- **Nächster Task:** Task 3 (Google OAuth — optional, kann gehen oder skippen)
+- **Phase:** D (Vereins-Onboarding-Wizard)
+- **Nächster Task:** Task 9 (Wizard-Shell + Progress-Component)
 - **Status:** ready
-- **Letzter Lauf:** 2026-05-19 21:25 (manuell)
+- **Letzter Lauf:** 2026-05-19 21:50 (manuell)
 - **Blocker:** keine
 
 ## Bekannte Limitierungen
@@ -57,3 +57,9 @@
 | 2026-05-19 | 2 | — | — | autopilot armed |
 | 2026-05-19 21:22 | 2 | A | 1 | ✅ DONE (`9b33aa0` better-auth install) |
 | 2026-05-19 21:25 | 2 | A | 2 | ✅ DONE_WITH_CONCERNS (`fb1db7b` magic-link via Resend, Domain-Verification später nötig) |
+| 2026-05-19 21:32 | 2 | A | 3 | ✅ DONE (`9a996e1` Google OAuth conditional, disabled until keys set) |
+| 2026-05-19 21:36 | 2 | A | 4 | ✅ DONE (`a161090` session + scope helpers) |
+| 2026-05-19 21:42 | 2 | B | 5 | ✅ DONE (`5126cbe` 11 shadcn components + Toaster) |
+| 2026-05-19 21:46 | 2 | B | 6 | ✅ DONE (`789e947` app header with auth-aware menu) |
+| 2026-05-19 21:50 | 2 | C | 7 | ✅ DONE (`387cfc7` /login + /signup + /verify pages) |
+| 2026-05-19 21:53 | 2 | C | 8 | ✅ DONE (`b01b4b8` marketing landing, status moved to /status) |
