@@ -456,12 +456,12 @@ R2_BUCKET, R2_ACCESS_KEY, R2_SECRET   # für PDF-Storage (alternativ Vercel Blob
 
 ### 9.2 Deploy
 
-- **Vercel** für Next.js (Production + Preview deployments)
-- **Neon** für Postgres (Production + Branching für Preview-Envs)
-- **Inngest Cloud** für Jobs (Production + Dev mit lokalem Inngest-Dev-Server)
+- **Hetzner via Coolify** für Next.js (Production-App + ggf. Preview-Branches als separate Coolify-Apps, analog zum Horizon-Estates-Staging-Setup)
+- **Neon** für Postgres (gemanagt; Branching für Preview-Envs ist Killer-Feature; falls später Datenhoheit/Self-Host-Argument stärker wird, ist Migration nach Hetzner-Postgres via Drizzle trivial — nur `DATABASE_URL` ändern)
+- **Inngest Cloud** für Jobs (Production + Dev mit lokalem Inngest-Dev-Server; alternativ Self-Host auf Coolify möglich, aber Free-Tier reicht)
 - **Resend** für Mail
 - **Stripe** Test → Live nach Pilot
-- **R2 oder Vercel Blob** für PDF-Storage
+- **Cloudflare R2** für PDF-Storage (S3-API, kostenlose Egress; alternativ Hetzner Storage Box wenn Datenhoheit-Argument)
 
 ## 10. Test-Strategie
 
