@@ -10,10 +10,12 @@
 - **Aktiver Plan:** Plan 2 (Auth + Onboarding)
 - **Plan-Datei:** [docs/superpowers/plans/2026-05-19-kickpact-plan-2-auth-onboarding.md](docs/superpowers/plans/2026-05-19-kickpact-plan-2-auth-onboarding.md)
 - **Phase:** **PLAN 2 KOMPLETT** ✅
-- **Nächster Schritt:** Plan 3 schreiben (Match-UI + Manual Events + Approval-Inbox) — wartet auf User-Trigger
-- **Status:** plan-2-done — bereit für Review + Merge zu main + Plan 3
-- **Letzter Lauf:** 2026-05-19 (manuell durchgezogen)
-- **Blocker:** keine
+- **Nächster Schritt:** PR #1 mergen → STATE.md auf Plan 3 / Status=ready setzen → Autopilot schreibt + implementiert Plan 3
+- **Status:** plan-2-done — PR offen, Issue #2 zur Review
+- **PR:** https://github.com/Johannes221/KickPact/pull/1
+- **Issue:** https://github.com/Johannes221/KickPact/issues/2
+- **Letzter Lauf:** Autopilot-Iteration (PR + Issue erstellt)
+- **Blocker:** keine — Autopilot pausiert weil Status ≠ ready
 
 ## Bekannte Limitierungen
 
