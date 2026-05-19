@@ -9,9 +9,9 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio",
+    "db:generate": "dotenv -e .env.local -- drizzle-kit generate",
+    "db:migrate": "dotenv -e .env.local -- drizzle-kit migrate",
+    "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
     "inngest:dev": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest"
   },
   "dependencies": {
@@ -36,6 +36,7 @@
     "@types/react-dom": "19.0.0",
     "@vitest/coverage-v8": "2.1.5",
     "autoprefixer": "10.4.20",
+    "dotenv-cli": "^11.0.0",
     "drizzle-kit": "0.28.1",
     "inngest-cli": "^1.19.4",
     "postcss": "8.4.49",
