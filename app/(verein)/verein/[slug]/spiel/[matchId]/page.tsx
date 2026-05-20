@@ -4,6 +4,7 @@ import { assertClubAccess } from "@/lib/auth/scope";
 import { getMatchById, listMatchEvents } from "@/lib/db/queries/matches";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MatchEventsList } from "./_components/match-events-list";
+import { ManualEventEditor } from "./_components/manual-event-editor";
 
 export const metadata = { title: "Spiel · KickPact" };
 
@@ -88,16 +89,10 @@ export default async function MatchDetailPage({
         <MatchEventsList events={events} />
       </section>
 
-      {/* Manual-Event-Editor Placeholder (Task 5 baut den richtigen Editor) */}
-      <div className="rounded-lg border border-dashed border-brand-neutral/60 bg-brand-off-white p-6 text-sm text-brand-night-navy/60">
-        <p>
-          <strong className="text-brand-night-navy">Spezial-Event nachpflegen</strong> — Kopfballtor,
-          Hackentor, Karten etc.
-        </p>
-        <p className="mt-1 text-xs">
-          Editor kommt in Plan 3 Task 5 (Manual Event Editor). Aktuell read-only.
-        </p>
-      </div>
+      {/* Manual-Event-Editor */}
+      <section className="flex justify-center pt-4">
+        <ManualEventEditor matchId={match.id} />
+      </section>
     </div>
   );
 }
