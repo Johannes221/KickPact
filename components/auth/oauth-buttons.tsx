@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -15,14 +16,24 @@ interface OAuthButtonsProps {
 /**
  * Google + Apple Sign-in-Buttons. Werden nur gerendert wenn die zugehörigen
  * Credentials in den Env-Vars hinterlegt sind (Server-prüfung in der parent
- * Page). Lokal/im Dev sieht der User nur die aktiven Provider.
+ * Page).
+ *
+ * Wichtig: Wenn ein Einladungs-Token (`?invitation=<token>`) in der URL
+ * steht, wird der nach OAuth-Auth direkt ins Sponsor-Onboarding mitgeführt —
+ * sonst landet der User auf einem leeren `/sponsor` Dashboard ohne Profil.
  */
 export function OAuthButtons({ mode, enabled }: OAuthButtonsProps) {
+  const params = useSearchParams();
+  const invitationToken = params.get("invitation");
   const [pending, setPending] = useState<"google" | "apple" | null>(null);
 
   if (!enabled.google && !enabled.apple) return null;
 
-  const callbackURL = mode === "signup" ? "/onboarding/verein/1" : "/sponsor";
+  const callbackURL = invitationToken
+    ? `/sponsor/onboarding?invitation=${invitationToken}`
+    : mode === "signup"
+      ? "/onboarding/verein/1"
+      : "/sponsor";
 
   async function handleSocial(provider: "google" | "apple") {
     setPending(provider);

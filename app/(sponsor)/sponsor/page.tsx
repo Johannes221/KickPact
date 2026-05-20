@@ -19,11 +19,28 @@ export default async function SponsorDashboard() {
 
   if (!sponsor) {
     return (
-      <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6">
-        <p className="text-brand-night-navy">Du hast noch kein Sponsor-Profil.</p>
-        <p className="mt-2 text-sm text-brand-night-navy/60">
-          Folge einer Einladung von einem Verein, um zu starten.
-        </p>
+      <div className="space-y-4 md:space-y-6">
+        <div className="rounded-2xl border border-accent/30 bg-accent/5 p-5 md:p-7">
+          <div className="text-3xl md:text-4xl mb-3">⚽</div>
+          <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+            Willkommen bei KickPact!
+          </h2>
+          <p className="mt-2 text-sm md:text-base text-brand-night-navy/70">
+            Um eine Mannschaft zu unterstützen, brauchst du einen{" "}
+            <strong>Einladungslink</strong>. Den bekommst du direkt von der Mannschaft
+            (Trainer, Teamleiter, Eltern) — meist per WhatsApp, Mail oder über die
+            Vereins-Website.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-5 md:p-7">
+          <div className="text-xs uppercase tracking-[0.15em] font-bold text-accent-dark">
+            Bald verfügbar
+          </div>
+          <p className="mt-2 text-sm md:text-base text-brand-night-navy/80">
+            <strong>Verein-Suche für Sponsoren</strong> — direkt nach Mannschaften
+            suchen und um eine Sponsoring-Möglichkeit anfragen. Coming soon.
+          </p>
+        </div>
       </div>
     );
   }

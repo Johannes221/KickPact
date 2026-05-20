@@ -46,26 +46,40 @@ export function HeaderUserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="gap-2">
+        <Button variant="ghost" className="gap-2 rounded-full">
           <Avatar className="h-7 w-7">
-            <AvatarFallback className="bg-oklch(0.205 0 0) text-xs text-white">
+            <AvatarFallback className="bg-brand-night-navy text-xs text-white font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
-          <span className="hidden md:inline">{session.user.name ?? session.user.email}</span>
+          <span className="hidden md:inline max-w-[12rem] truncate">{session.user.name ?? session.user.email}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>
-          <div className="text-xs text-neutral-500">Angemeldet als</div>
-          <div className="truncate">{session.user.email}</div>
+      {/* Explizite weiße bg + dunkler Text — ohne diese override greift
+          das shadcn-default mit oklch(..) Syntax, die Tailwind v3.4 nicht
+          parsed → Dropdown wirkt durchsichtig auf dem Foto-Hintergrund. */}
+      <DropdownMenuContent
+        align="end"
+        className="w-64 bg-white text-brand-night-navy border border-brand-neutral/40 shadow-lg"
+      >
+        <DropdownMenuLabel className="px-3 py-2">
+          <div className="text-[0.65rem] font-semibold uppercase tracking-wider text-neutral-500">
+            Angemeldet als
+          </div>
+          <div className="mt-0.5 truncate font-medium text-brand-night-navy">
+            {session.user.email}
+          </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
+        <DropdownMenuSeparator className="bg-brand-neutral/40" />
+        <DropdownMenuItem
+          asChild
+          className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
+        >
           <Link href="/sponsor">Sponsor-Dashboard</Link>
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="bg-brand-neutral/40" />
         <DropdownMenuItem
+          className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
           onSelect={async () => {
             await signOut();
             router.push("/");

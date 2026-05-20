@@ -41,7 +41,7 @@ export function StammdatenStep() {
     next.set("city", values.city);
     next.set("isSmallBusiness", String(values.isSmallBusiness));
     if (values.taxId) next.set("taxId", values.taxId);
-    next.set("iban", values.iban);
+    if (values.iban) next.set("iban", values.iban);
     router.push(`/onboarding/verein/4?${next.toString()}`);
   }
 
@@ -130,11 +130,12 @@ export function StammdatenStep() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <FormLabel className="text-sm font-semibold text-brand-night-navy">
-                    Kleinunternehmer (§19 UStG)
+                    Kleinunternehmer (§19 UStG) <span className="text-xs font-normal text-brand-night-navy/50">— optional</span>
                   </FormLabel>
                   <FormDescription className="text-xs text-brand-night-navy/60">
-                    Aktiviert lassen, wenn dein Verein nicht USt-pflichtig ist. Wir setzen
-                    dann den §19-Hinweis auf die Sponsoren-Rechnungen.
+                    Aktiviert lassen, wenn deine Mannschaft nicht USt-pflichtig ist. Wir
+                    setzen dann den §19-Hinweis auf die Sponsoren-Rechnungen. Kannst du
+                    auch später im Dashboard ändern.
                   </FormDescription>
                 </div>
                 <FormControl>
@@ -172,13 +173,15 @@ export function StammdatenStep() {
           />
         )}
 
-        {/* IBAN */}
+        {/* IBAN — optional */}
         <FormField
           control={form.control}
           name="iban"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm font-semibold text-brand-night-navy">IBAN</FormLabel>
+              <FormLabel className="text-sm font-semibold text-brand-night-navy">
+                IBAN <span className="text-xs font-normal text-brand-night-navy/50">— optional, kann später ergänzt werden</span>
+              </FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -187,7 +190,9 @@ export function StammdatenStep() {
                 />
               </FormControl>
               <FormDescription className="text-xs text-brand-night-navy/60">
-                Wir nehmen kein Geld an — die IBAN steht nur auf der Rechnung an deine Sponsoren.
+                Wird nur auf den Sponsoren-Rechnungen abgedruckt — vertraulich behandelt.
+                KickPact nimmt nie Geld an. Du kannst die IBAN auch später im Dashboard
+                eintragen, bevor die erste Rechnung rausgeht.
               </FormDescription>
               <FormMessage />
             </FormItem>

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { MagicLinkForm } from "@/components/auth/magic-link-form";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
@@ -25,7 +26,9 @@ export default function SignupPage() {
         <CardContent>
           {anyOauth && (
             <>
-              <OAuthButtons mode="signup" enabled={oauthEnabled} />
+              <Suspense fallback={<div className="h-20" />}>
+                <OAuthButtons mode="signup" enabled={oauthEnabled} />
+              </Suspense>
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-neutral-200" />
@@ -36,7 +39,9 @@ export default function SignupPage() {
               </div>
             </>
           )}
-          <MagicLinkForm mode="signup" />
+          <Suspense fallback={<div className="h-32" />}>
+            <MagicLinkForm mode="signup" />
+          </Suspense>
           <p className="mt-6 text-sm text-neutral-500">
             Schon dabei?{" "}
             <Link href="/login" className="font-medium text-accent hover:underline">

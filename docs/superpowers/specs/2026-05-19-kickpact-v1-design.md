@@ -356,6 +356,31 @@ Saison-Ende-Cron (für jede Saison-Periode definiert):
   - Mail an Verein-Admin: Saison-Report (Total gesammelt, Top-Sponsoren, etc.)
 ```
 
+### 6.10 Sponsor-Side: aktive Mannschafts-Suche (v1.1)
+
+Aktuell kommen Sponsoren ausschließlich über einen Einladungslink rein. Nächste
+Iteration: Sponsor kann selbst aktiv suchen.
+
+```
+/sponsor/discover
+  → Suchfeld nach Mannschaft / Verein / Region
+  → Liste aller KickPact-aktiven Mannschaften die "Discoverable" markiert sind
+  → Filter: Liga, Region, Junioren/Senioren, Damen/Herren, Sponsoring-Status
+  → Klick auf Mannschaft → öffentliches Mini-Profil (Name, Liga, Kader-Größe,
+    letzte 5 Spiele, akzeptiert-neue-Sponsoren-Toggle)
+  → Button "Sponsoring anfragen" → Nachricht an Mannschafts-Admin
+  → Admin nimmt an oder lehnt ab → bei Annahme: Auto-Einladungs-Link
+```
+
+DB-Erweiterungen:
+- `teams.discoverable` (boolean, default false) — Mannschaft kann aktiv neue
+  Sponsoren empfangen
+- `sponsor_inquiries` (Tabelle): `id`, `sponsor_user_id`, `team_id`,
+  `status`, `message`, `created_at`, `responded_at`
+- `sponsors.user_id` ist bereits ein 1:N-Mapping (ein User ↔ ein Sponsor-Profil
+  ↔ N Pledges in N Mannschaften). Multi-Tenant funktioniert also Out-of-the-box;
+  Sponsor-Dashboard listet alle Pledges über alle Mannschaften.
+
 ## 7. Auth & Berechtigung
 
 - **Provider:** Better Auth (Magic Link, Google OAuth)

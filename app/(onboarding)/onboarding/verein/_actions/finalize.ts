@@ -26,7 +26,8 @@ const finalizeSchema = z.object({
     city: z.string(),
     isSmallBusiness: z.boolean(),
     taxId: z.string().optional(),
-    iban: z.string()
+    // IBAN beim Onboarding optional — Verein kann sie später ergänzen.
+    iban: z.string().optional()
   }),
   plan: z.enum(["basic", "pro"])
 });
@@ -55,7 +56,7 @@ export async function finalizeOnboarding(input: z.infer<typeof finalizeSchema>) 
           city: parsed.stammdaten.city,
           country: "DE"
         },
-        iban: parsed.stammdaten.iban
+        iban: parsed.stammdaten.iban || null
       })
       .returning();
 
