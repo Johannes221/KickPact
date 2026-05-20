@@ -56,11 +56,13 @@ export async function getAppleClientSecret(): Promise<string> {
   return secret;
 }
 
+/**
+ * Detect whether Apple Sign-in is fully configured for runtime use.
+ *
+ * Runtime needs APPLE_CLIENT_ID + APPLE_CLIENT_SECRET (the pre-signed JWT).
+ * The four signing inputs (TEAM_ID, KEY_ID, PRIVATE_KEY) are only required
+ * for the scripts/generate-apple-jwt.mjs flow.
+ */
 export function isAppleConfigured(): boolean {
-  return Boolean(
-    process.env.APPLE_TEAM_ID &&
-      process.env.APPLE_KEY_ID &&
-      process.env.APPLE_CLIENT_ID &&
-      process.env.APPLE_PRIVATE_KEY
-  );
+  return Boolean(process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET);
 }

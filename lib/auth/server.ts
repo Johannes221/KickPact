@@ -5,7 +5,6 @@ import { db } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema/auth";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { magicLinkEmail } from "@/lib/mail/templates/magic-link";
-import { getAppleClientSecret, isAppleConfigured } from "@/lib/auth/apple-client-secret";
 
 // Social-Provider werden konditional registriert, damit fehlende Credentials
 // nicht den Server-Boot blocken — z.B. lokal kann man ohne Apple-Keys arbeiten.
@@ -19,12 +18,14 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   };
 }
 
-if (isAppleConfigured()) {
+// Apple Sign-in: clientSecret ist ein vor-generiertes ES256-JWT (max 6 Monate gültig).
+// Erzeugt von scripts/generate-apple-jwt.mjs aus APPLE_TEAM_ID/KEY_ID/CLIENT_ID + .p8.
+// Wird statisch via APPLE_CLIENT_SECRET in den ENV gehalten — kein Build-Time-Crypto-Aufruf,
+// keine top-level-await Issues mit Next.js Page-Data-Collection.
+if (process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET) {
   socialProviders.apple = {
-    clientId: process.env.APPLE_CLIENT_ID!,
-    // Apple verlangt ein signiertes ES256-JWT als clientSecret (max 6 Monate).
-    // Wir generieren es beim Boot frisch aus dem .p8-Key.
-    clientSecret: await getAppleClientSecret(),
+    clientId: process.env.APPLE_CLIENT_ID,
+    clientSecret: process.env.APPLE_CLIENT_SECRET,
     appBundleIdentifier: process.env.APPLE_BUNDLE_ID
   };
 }
