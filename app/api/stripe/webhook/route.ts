@@ -1,0 +1,143 @@
+import { NextRequest, NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import type Stripe from "stripe";
+import { getStripe, getStripeWebhookSecret, isStripeConfigured } from "@/lib/stripe/client";
+import { db } from "@/lib/db/client";
+import { subscriptions } from "@/lib/db/schema";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+/**
+ * Stripe → KickPact Webhook.
+ *
+ * Verarbeitet:
+ * - customer.subscription.created / updated / deleted → subscription Status sync
+ * - invoice.paid → Verlängerung bestätigt
+ * - invoice.payment_failed → Status past_due
+ *
+ * Wichtig: signature-Verifikation mit STRIPE_WEBHOOK_SECRET — kein
+ * unauthenticated Write in die DB.
+ */
+export async function POST(req: NextRequest) {
+  if (!isStripeConfigured()) {
+    return NextResponse.json({ error: "stripe-not-configured" }, { status: 503 });
+  }
+
+  const sig = req.headers.get("stripe-signature");
+  if (!sig) {
+    return NextResponse.json({ error: "missing-signature" }, { status: 400 });
+  }
+
+  const rawBody = await req.text();
+  const stripe = getStripe();
+  let event: Stripe.Event;
+  try {
+    event = stripe.webhooks.constructEvent(rawBody, sig, getStripeWebhookSecret());
+  } catch (err) {
+    console.error("[stripe-webhook] signature verification failed:", err);
+    return NextResponse.json({ error: "invalid-signature" }, { status: 400 });
+  }
+
+  try {
+    switch (event.type) {
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const sub = event.data.object as Stripe.Subscription;
+        const clubId = (sub.metadata?.clubId as string) ?? null;
+        if (!clubId) {
+          console.warn("[stripe-webhook] subscription without clubId metadata", sub.id);
+          break;
+        }
+        await db
+          .update(subscriptions)
+          .set({
+            stripeSubscriptionId: sub.id,
+            status: mapStripeStatus(sub.status),
+            trialEndsAt: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
+            currentPeriodEnd: extractCurrentPeriodEnd(sub),
+            updatedAt: new Date()
+          })
+          .where(eq(subscriptions.clubId, clubId));
+        break;
+      }
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as Stripe.Subscription;
+        const clubId = (sub.metadata?.clubId as string) ?? null;
+        if (!clubId) break;
+        await db
+          .update(subscriptions)
+          .set({ status: "cancelled", updatedAt: new Date() })
+          .where(eq(subscriptions.clubId, clubId));
+        break;
+      }
+      case "invoice.payment_failed": {
+        const inv = event.data.object as Stripe.Invoice;
+        const customerId =
+          typeof inv.customer === "string" ? inv.customer : inv.customer?.id;
+        if (!customerId) break;
+        await db
+          .update(subscriptions)
+          .set({ status: "past_due", updatedAt: new Date() })
+          .where(eq(subscriptions.stripeCustomerId, customerId));
+        break;
+      }
+      case "invoice.paid": {
+        const inv = event.data.object as Stripe.Invoice;
+        const customerId =
+          typeof inv.customer === "string" ? inv.customer : inv.customer?.id;
+        if (!customerId) break;
+        await db
+          .update(subscriptions)
+          .set({ status: "active", updatedAt: new Date() })
+          .where(eq(subscriptions.stripeCustomerId, customerId));
+        break;
+      }
+      default:
+        // Unhandled event type — return 200 so Stripe doesn't retry forever
+        break;
+    }
+    return NextResponse.json({ received: true });
+  } catch (err) {
+    console.error("[stripe-webhook] handler error", err);
+    return NextResponse.json({ error: "handler-failure" }, { status: 500 });
+  }
+}
+
+function mapStripeStatus(
+  s: Stripe.Subscription.Status
+): "trialing" | "active" | "past_due" | "cancelled" | "incomplete" {
+  switch (s) {
+    case "trialing":
+      return "trialing";
+    case "active":
+      return "active";
+    case "past_due":
+      return "past_due";
+    case "canceled":
+    case "incomplete_expired":
+    case "unpaid":
+      return "cancelled";
+    case "incomplete":
+    case "paused":
+    default:
+      return "incomplete";
+  }
+}
+
+function extractCurrentPeriodEnd(sub: Stripe.Subscription): Date | null {
+  // current_period_end ist seit API 2024-12-something kein Top-Level mehr.
+  // Bei multi-item Subscriptions liegt es auf items.data[*].current_period_end.
+  // Wir nehmen den ersten Item-Eintrag, fallback null.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const item = sub.items?.data?.[0] as any;
+  if (item?.current_period_end && typeof item.current_period_end === "number") {
+    return new Date(item.current_period_end * 1000);
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const legacy = (sub as any).current_period_end;
+  if (typeof legacy === "number") {
+    return new Date(legacy * 1000);
+  }
+  return null;
+}
