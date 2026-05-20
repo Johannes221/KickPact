@@ -15,6 +15,13 @@
       "when": 1779222343818,
       "tag": "0001_supreme_mockingbird",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779263617835,
+      "tag": "0002_familiar_dreadnoughts",
+      "breakpoints": true
     }
   ]
 }
