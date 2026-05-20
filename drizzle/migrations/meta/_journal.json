@@ -29,6 +29,13 @@
       "when": 1779278336924,
       "tag": "0003_lumpy_black_panther",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779278937498,
+      "tag": "0004_tired_wilson_fisk",
+      "breakpoints": true
     }
   ]
 }

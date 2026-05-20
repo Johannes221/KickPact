@@ -6,8 +6,13 @@ import {
   matches,
   charges
 } from "@/lib/db/schema";
-import type { PledgeRuleInput } from "@/lib/crawler/triggers";
+import { isSeasonTrigger } from "@/lib/db/schema/pledges";
+import type { PledgeRuleInput, TriggerType } from "@/lib/crawler/triggers";
 
+/**
+ * Lädt pro-Spiel Pledge-Rules für die `evaluate-match` Pipeline.
+ * Filtert Saison-Trigger explizit raus — die laufen über `evaluate-season`.
+ */
 export async function loadActivePledgeRulesForTeam(
   teamId: string,
   asOf: Date
@@ -32,14 +37,18 @@ export async function loadActivePledgeRulesForTeam(
       )
     );
 
-  return rows.map((r) => ({
-    id: r.ruleId,
-    pledgeId: r.pledgeId,
-    triggerType: r.triggerType,
-    triggerParams: (r.triggerParams ?? {}) as Record<string, unknown>,
-    amountCents: r.amountCents,
-    perMatchCapCents: r.perMatchCapCents
-  }));
+  return rows
+    .filter((r) => !isSeasonTrigger(r.triggerType))
+    .map((r) => ({
+      id: r.ruleId,
+      pledgeId: r.pledgeId,
+      // Safe cast: oben filtern wir die Saison-Trigger raus, alles was übrig
+      // bleibt sind die TriggerType der match-pipeline.
+      triggerType: r.triggerType as TriggerType,
+      triggerParams: (r.triggerParams ?? {}) as Record<string, unknown>,
+      amountCents: r.amountCents,
+      perMatchCapCents: r.perMatchCapCents
+    }));
 }
 
 export async function getMatch(matchId: string) {

@@ -25,8 +25,17 @@ export const charges = pgTable(
     pledgeRuleId: text("pledge_rule_id")
       .notNull()
       .references(() => pledgeRules.id, { onDelete: "cascade" }),
-    matchId: text("match_id").notNull().references(() => matches.id, { onDelete: "cascade" }),
+    /**
+     * matchId ist NULL für Saison-Wetten-Charges (die fallen erst am Saison-Ende an,
+     * nicht pro Spiel). Per-Spiel-Charges haben hier weiterhin eine matchId.
+     */
+    matchId: text("match_id").references(() => matches.id, { onDelete: "cascade" }),
     matchEventId: text("match_event_id").references(() => matchEvents.id, { onDelete: "set null" }),
+    /**
+     * Für Saison-Charges: welche Saison gemeint ist. Format wie teams.saison
+     * ("2025/26"). Garantiert Idempotenz bei evaluate-season-Re-Runs.
+     */
+    saison: text("saison"),
     triggerType: triggerTypeEnum("trigger_type").notNull(),
     amountCents: integer("amount_cents").notNull(),
     status: chargeStatusEnum("status").notNull().default("confirmed"),
@@ -41,7 +50,11 @@ export const charges = pgTable(
       .where(sql`${t.matchEventId} IS NOT NULL`),
     uniqueMatchTrigger: uniqueIndex("charges_unique_match_trigger_idx")
       .on(t.pledgeRuleId, t.matchId, t.triggerType)
-      .where(sql`${t.matchEventId} IS NULL`)
+      .where(sql`${t.matchEventId} IS NULL AND ${t.matchId} IS NOT NULL`),
+    // Saison-Charge: 1× pro pledge_rule + saison
+    uniqueSeason: uniqueIndex("charges_unique_season_idx")
+      .on(t.pledgeRuleId, t.saison)
+      .where(sql`${t.saison} IS NOT NULL`)
   })
 );
 

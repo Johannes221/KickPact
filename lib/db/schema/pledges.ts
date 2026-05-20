@@ -8,6 +8,7 @@ import { teams } from "./clubs";
 export const pledgeStatusEnum = pgEnum("pledge_status", ["active", "paused", "ended"]);
 
 export const triggerTypeEnum = pgEnum("trigger_type", [
+  // Per-Spiel Auto-Trigger (von Fußball.de)
   "goal_total",
   "goal_by_player",
   "win",
@@ -18,13 +19,41 @@ export const triggerTypeEnum = pgEnum("trigger_type", [
   "hattrick",
   "goal_diff_min",
   "goals_scored_min",
+  // Per-Spiel manuelle Trigger (Mannschaft meldet, Sponsor bestätigt)
   "special_goal",
   "yellow_card",
   "red_card",
   "assist",
   "man_of_match",
-  "custom"
+  "custom",
+  // Saison-Wetten (1× pro Saison, evaluiert am Saison-Ende)
+  "season_promotion",
+  "season_no_relegation",
+  "season_table_position",
+  "season_champion",
+  "season_cup_round",
+  "season_custom"
 ]);
+
+/**
+ * Klassifiziert ob ein Trigger pro Spiel feuern soll oder erst am Saison-Ende.
+ * Wird vom Inngest-Job evaluate-match (pro Match) bzw. evaluate-season (1×)
+ * genutzt.
+ */
+export const SEASON_TRIGGERS = [
+  "season_promotion",
+  "season_no_relegation",
+  "season_table_position",
+  "season_champion",
+  "season_cup_round",
+  "season_custom"
+] as const;
+
+export type SeasonTriggerType = (typeof SEASON_TRIGGERS)[number];
+
+export function isSeasonTrigger(t: string): t is SeasonTriggerType {
+  return (SEASON_TRIGGERS as readonly string[]).includes(t);
+}
 
 export const pledges = pgTable(
   "pledges",
