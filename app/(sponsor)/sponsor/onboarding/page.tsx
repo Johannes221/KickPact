@@ -14,6 +14,10 @@ export default async function SponsorOnboardingPage() {
       <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
         Kurze Frage: Bist du Familie/Freund oder Unternehmen?
       </p>
+      <p className="mt-3 rounded-md border border-brand-neutral/40 bg-brand-off-white px-3 py-2 text-xs md:text-sm text-brand-night-navy/70">
+        👨‍👩‍👧 Junioren-Spieler im Verein? Familie + Verwandte kannst du als
+        Sub-Sponsoren listen — eine Rechnung, automatische Aufteilung.
+      </p>
       <div className="mt-6 md:mt-10">
         <Suspense fallback={<div className="text-brand-night-navy/60">Lade…</div>}>
           <SponsorTypeForm />

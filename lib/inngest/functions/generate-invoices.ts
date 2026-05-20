@@ -177,6 +177,11 @@ export const generateInvoices = inngest.createFunction(
                       }
                     : null
                 },
+                proxies:
+                  spRow.sponsor.pledgeProxiesJson &&
+                  spRow.sponsor.pledgeProxiesJson.length > 0
+                    ? spRow.sponsor.pledgeProxiesJson
+                    : undefined,
                 items: group.items.map((it) => ({
                   matchDate: typeof it.matchDate === "string" ? new Date(it.matchDate) : it.matchDate,
                   matchLabel: `${it.heimName} ${it.ergebnisHeim ?? "—"}:${it.ergebnisGast ?? "—"} ${it.gastName}`,

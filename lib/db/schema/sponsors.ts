@@ -21,6 +21,9 @@ export const sponsors = pgTable(
       country: string;
     } | null>(),
     businessTaxId: text("business_tax_id"),
+    pledgeProxiesJson: jsonb("pledge_proxies_json").$type<
+      Array<{ name: string; sharePercent: number; note?: string }> | null
+    >(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({

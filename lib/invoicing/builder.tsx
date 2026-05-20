@@ -62,6 +62,31 @@ const s = StyleSheet.create({
   },
   totalAmount: { color: "#01C457" },
   ustNote: { marginTop: 24, fontSize: 9, color: "#525252", lineHeight: 1.5, maxWidth: 360 },
+  proxyBox: {
+    marginTop: 18,
+    padding: 10,
+    borderWidth: 0.5,
+    borderColor: "#CDD2D1",
+    borderRadius: 4
+  },
+  proxyTitle: {
+    fontSize: 9,
+    fontWeight: 700,
+    color: "#1A1A2E",
+    marginBottom: 6,
+    textTransform: "uppercase",
+    letterSpacing: 0.4
+  },
+  proxyRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 2,
+    fontSize: 9
+  },
+  proxyName: { flex: 1, color: "#1A1A2E" },
+  proxyShare: { width: 60, textAlign: "right", color: "#525252" },
+  proxyAmount: { width: 70, textAlign: "right", color: "#1A1A2E" },
+  proxyNote: { marginTop: 6, fontSize: 8, color: "#525252", lineHeight: 1.4 },
   footer: {
     position: "absolute",
     bottom: 36,
@@ -100,6 +125,12 @@ export interface InvoiceData {
     triggerLabel: string;
     amountCents: number;
   }[];
+  /**
+   * Eltern-Proxy: optionale interne Aufgliederung der Rechnungssumme
+   * (z.B. Eltern verwalten Beitrag für Oma + Onkel + Patentanten).
+   * Keine eigene Auth/Charge — reines Display-Detail.
+   */
+  proxies?: Array<{ name: string; sharePercent: number; note?: string }>;
 }
 
 function eur(cents: number): string {
@@ -214,6 +245,29 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
             Gemäß § 19 UStG wird keine Umsatzsteuer ausgewiesen. Die Beträge sind als
             Bruttobeträge zu verstehen.
           </Text>
+        ) : null}
+
+        {/* Eltern-Proxy: interne Aufgliederung (rein informativ) */}
+        {data.proxies && data.proxies.length > 0 ? (
+          <View style={s.proxyBox} wrap={false}>
+            <Text style={s.proxyTitle}>Diese Rechnung wird intern aufgeteilt:</Text>
+            {data.proxies.slice(0, 10).map((p, idx) => (
+              <View key={idx} style={s.proxyRow}>
+                <Text style={s.proxyName}>
+                  {p.name}
+                  {p.note ? ` · ${p.note}` : ""}
+                </Text>
+                <Text style={s.proxyShare}>{p.sharePercent} %</Text>
+                <Text style={s.proxyAmount}>
+                  {eur(Math.round((total * p.sharePercent) / 100))}
+                </Text>
+              </View>
+            ))}
+            <Text style={s.proxyNote}>
+              Diese Aufteilung ist eine interne Notiz des Sponsors — die
+              Rechnungs-Gesamtsumme wird zwischen Sponsor und Verein abgerechnet.
+            </Text>
+          </View>
         ) : null}
 
         {/* Footer */}
