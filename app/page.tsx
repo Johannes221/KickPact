@@ -34,16 +34,14 @@ const PHOTOS = {
 export default function LandingPage() {
   return (
     <main>
-      {/* HERO
-          Mobile-Layout: Foto füllt oberes Drittel sichtbar, Gradient fadet
-          weich zu Weiß, dann Text auf weißem Untergrund. Foto bleibt sichtbar
-          und wirkt — Text ist trotzdem messerscharf lesbar.
-          Desktop: Foto füllt komplett, Gradient zieht von links nach rechts
-          weiß aus, Text sitzt linksbündig ohne Kasten. */}
+      {/* HERO — Adressat: die MANNSCHAFT (sie registriert sich, lädt
+          Sponsoren ein). Tonalität: Spaß, Gemeinschaft, Ansporn — nicht
+          "Geld Geld Geld". Geld kommt später (Pricing/Stories) zur Sprache.
+          Mobile: Foto kompakter (32vh statt 38vh) + object-position top damit
+          der jubelnde Spieler & die Faust besser im Bild bleiben.
+          Desktop: Foto full-bleed, Gradient links → rechts. */}
       <section className="relative w-full overflow-hidden bg-white">
-        {/* Foto-Hintergrund: Mobile fixierte Höhe (oberes Drittel),
-            Desktop full-bleed durch absolute inset-0 */}
-        <div className="relative md:absolute md:inset-0 h-[38vh] min-h-[260px] max-h-[400px] md:h-full md:min-h-0 md:max-h-none">
+        <div className="relative md:absolute md:inset-0 h-[32vh] min-h-[220px] max-h-[340px] md:h-full md:min-h-0 md:max-h-none">
           <Image
             src={PHOTOS.teamHero}
             alt="Amateur-Fußballmannschaft jubelt nach Torerfolg"
@@ -51,10 +49,11 @@ export default function LandingPage() {
             priority
             sizes="100vw"
             className="object-cover animate-ken-burns"
-            style={{ objectPosition: "65% center" }}
+            style={{ objectPosition: "center 30%" }}
           />
-          {/* Mobile: weicher Übergang zu Weiß am unteren Foto-Rand */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white md:hidden" />
+          {/* Mobile: dunklerer Top-Overlay damit das weiße Header-Logo lesbar
+              bleibt, unten weicher Fade nach Weiß für den Text-Bereich. */}
+          <div className="absolute inset-0 md:hidden bg-gradient-to-b from-brand-night-navy/35 via-transparent via-30% to-white" />
           {/* Desktop: stark links deckend weiß bis ~50%, dann fade out nach rechts */}
           <div
             className="absolute inset-0 hidden md:block"
@@ -65,38 +64,35 @@ export default function LandingPage() {
           />
         </div>
 
-        {/* Content: Mobile direkt unter dem Foto, Desktop absolut über dem Foto */}
         <div className="relative z-10 mx-auto max-w-6xl px-5 md:px-6 md:absolute md:inset-0 md:flex md:flex-col md:justify-center md:pt-16">
           <div className="max-w-xl md:max-w-2xl pt-6 pb-10 md:pt-0 md:pb-0 relative">
             <span className="animate-fade-up inline-flex w-fit items-center rounded-full bg-accent/15 px-3 py-1 text-[0.6rem] md:text-xs font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30 backdrop-blur-sm">
-              Kick · Pact · Impact
+              Für eure Mannschaft
             </span>
             <h1 className="animate-fade-up delay-1 mt-3 md:mt-4 font-display font-black text-[2rem] leading-[1.05] sm:text-4xl md:text-5xl lg:text-6xl tracking-tight text-brand-night-navy">
-              Wenn die Jungs jubeln,
+              Spielen. Jubeln.
               <br />
-              <span className="text-accent">jubelst du mit.</span>
+              <span className="text-accent">Mehr draus machen.</span>
             </h1>
             <p className="animate-fade-up delay-2 mt-3 md:mt-5 text-sm md:text-lg text-brand-night-navy/85 leading-relaxed">
-              <strong className="text-brand-night-navy">Du wählst die Beträge selbst —</strong>{" "}
-              ob 1 € pro Tor von der Tante oder 100 € fürs Aufstiegsspiel. Vom Bambini bis zur
-              ersten Herren. KickPact rechnet jedes Spiel und jede Saison automatisch ab.
+              KickPact verbindet eure Mannschaft mit allen, die euch sehen wollen — Familie,
+              Freunde, der Bäcker um die Ecke. Sie fiebern bei jedem Spiel mit. Jeder Erfolg
+              zählt. Und nebenbei wächst die Mannschaftskasse — ganz ohne nervige Akquise.
             </p>
             <div className="animate-fade-up delay-3 mt-5 md:mt-6 flex flex-col sm:flex-row gap-3">
               <Button variant="accent" size="lg" asChild className="w-full sm:w-auto">
-                <Link href="/signup">Mannschaft anlegen · 30 Tage gratis</Link>
+                <Link href="/signup">Mannschaft anmelden · 30 Tage gratis</Link>
               </Button>
               <Button variant="outline" size="lg" asChild className="w-full sm:w-auto bg-white/80">
                 <Link href="/login">Ich bin schon dabei</Link>
               </Button>
             </div>
             <p className="animate-fade-up delay-4 mt-3 text-[0.7rem] md:text-sm text-brand-night-navy/60">
-              Frei wählbar pro Trigger — von 50 Cent bis 500 €. Auch Saison-Wetten: Aufstieg, Klassenerhalt, Top-5.
+              In 90 Sekunden online. Sponsoren kommen per Einladungslink — Familie, Stammtisch, lokale Firmen.
             </p>
           </div>
         </div>
 
-        {/* Desktop-Höhe: Foto + Content nehmen sich gegenseitig, container
-            braucht eine min-Höhe damit das absolute Layout funktioniert */}
         <div className="hidden md:block md:h-svh md:min-h-[640px] md:max-h-[920px]" aria-hidden />
       </section>
 
@@ -124,8 +120,8 @@ export default function LandingPage() {
               Mannschaft trifft <span className="text-accent">Sponsor.</span>
             </h2>
             <p className="mt-2 text-sm md:text-base text-brand-night-navy/70">
-              Performance-Sponsoring funktioniert nur wenn beide Seiten profitieren. Hier ist
-              warum Mannschaften und Sponsoren KickPact lieben — auf einen Blick.
+              Damit Sponsoring richtig Spaß macht, muss es für beide Seiten passen.
+              Hier was Mannschaften und Sponsoren an KickPact lieben — auf einen Blick.
             </p>
           </div>
 
@@ -164,14 +160,14 @@ export default function LandingPage() {
                   Für die Mannschaft
                 </div>
                 <h3 className="mt-1.5 font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
-                  Mehr Geld pro Saison.
+                  Mehr Bock auf jeden Spieltag.
                 </h3>
                 <ul className="mt-3 space-y-2 text-xs md:text-sm text-brand-night-navy/80">
-                  <BenefitLi>5–10× mehr Sponsoren als klassisch</BenefitLi>
-                  <BenefitLi>Keine Akquise — Einladungslink reicht</BenefitLi>
-                  <BenefitLi>USt-konforme Rechnungen automatisch</BenefitLi>
-                  <BenefitLi>Jede Mannschaft eigenständig — keine Vorstands-Politik</BenefitLi>
-                  <BenefitLi>Trainer meldet Spezial-Events am Handy</BenefitLi>
+                  <BenefitLi>Familie & Stammtisch fiebern bei jedem Spiel mit</BenefitLi>
+                  <BenefitLi>Keine Akquise — ein Einladungslink reicht</BenefitLi>
+                  <BenefitLi>Mannschaftskasse wächst nebenbei — automatisch</BenefitLi>
+                  <BenefitLi>Eigenständig, ohne Vorstands-Politik</BenefitLi>
+                  <BenefitLi>Spezial-Events meldet der Trainer per Handy</BenefitLi>
                 </ul>
               </div>
             </div>
@@ -356,9 +352,9 @@ export default function LandingPage() {
               Nicht nur pro Spiel. <span className="text-accent">Pro Saison.</span>
             </h2>
             <p className="mt-2 text-sm md:text-base text-brand-night-navy/70">
-              Wettet auf das große Ziel: Aufstieg, Klassenerhalt, Tabellenplatz. Saison-Ende
-              → wenn das Ziel erreicht wird, geht der Betrag an die Mannschaftskasse. Wenn nicht: nix.
-              Echtes Performance-Sponsoring auf Saisons-Ebene.
+              Eure Saison-Story braucht Spannung? Sponsoren setzen auf das große Ziel —
+              Aufstieg, Klassenerhalt, Tabellenplatz. Klappt&apos;s? Mannschaftskasse füllt sich.
+              Klappt&apos;s nicht? Auch okay — kein Risiko für Sponsoren.
             </p>
           </div>
           <div className="mt-6 md:mt-8 grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">

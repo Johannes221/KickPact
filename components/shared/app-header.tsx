@@ -32,9 +32,35 @@ export function AppHeader() {
             : "bg-transparent border-b border-transparent"
         )}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-          <Logo variant="full" />
-          <HeaderUserMenu />
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 md:px-6 py-3">
+          {/* Hero hat Mobile-only einen dunklen Top-Overlay (Foto füllt
+              komplett), Desktop hat einen weißen Gradient links wo das
+              Logo sitzt. Lösung: zwei Logo-Renders, einer mobile-inverted,
+              einer desktop-normal. Beide Image-Tags pre-cachen sich gegenseitig. */}
+          {isLanding && !scrolled ? (
+            <>
+              <div className="md:hidden">
+                <Logo variant="full" inverted />
+              </div>
+              <div className="hidden md:block">
+                <Logo variant="full" />
+              </div>
+            </>
+          ) : (
+            <Logo variant="full" />
+          )}
+          {/* Buttons rechts: Mobile liegt auf dunklem Foto-Overlay → weiße
+              Schrift; Desktop liegt auf transparentem Foto-Bereich → braucht
+              einen dezenten weißen Pill-Backdrop für Lesbarkeit. */}
+          <div
+            className={cn(
+              isLanding &&
+                !scrolled &&
+                "[&_a]:text-white [&_a:hover]:text-white md:rounded-full md:bg-white/85 md:backdrop-blur-md md:ring-1 md:ring-white/40 md:shadow-sm md:[&_a]:text-brand-night-navy md:[&_a:hover]:text-brand-night-navy"
+            )}
+          >
+            <HeaderUserMenu />
+          </div>
         </div>
       </header>
       {/* Spacer auf Nicht-Landing-Pages, damit Content nicht unter dem
