@@ -12,65 +12,88 @@ import { RolesTabs } from "./_components/roles-tabs";
 
 export const metadata = { title: "KickPact — Mehr als ein Spiel" };
 
-// Verifizierte Unsplash-Photos (CC0-equivalent, Source: unsplash.com)
+// Verifizierte Football-Photos (Source: unsplash.com, alle visuell geprüft)
 const PHOTOS = {
-  heroTeam: "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d", // football team huddle
-  celebration: "https://images.unsplash.com/photo-1517466787929-bc90951d0974", // celebration
-  kids: "https://images.unsplash.com/photo-1606925797300-0b35e9d1794e", // youth football
-  match: "https://images.unsplash.com/photo-1551958219-acbc608c6377", // amateur match
-  trainer: "https://images.unsplash.com/photo-1543326727-cf6c39e8f84c", // training
-  pact: "https://images.unsplash.com/photo-1574629810360-7efbbe195018", // huddle close
-  squad: "https://images.unsplash.com/photo-1517649763962-0c623066013b" // squad
+  // Action-Match (zwei Spieler im Zweikampf, hell, sonnig)
+  matchAction: "https://images.unsplash.com/photo-1543326727-cf6c39e8f84c",
+  // Einzelner Spieler beim Schuss (sonnig, freundlich)
+  playerKick: "https://images.unsplash.com/photo-1517466787929-bc90951d0974",
+  // Drei Bälle auf Rasen (bright, technisch)
+  balls: "https://images.unsplash.com/photo-1551958219-acbc608c6377",
+  // Fuß am Ball (sportlich, fokussiert)
+  football: "https://images.unsplash.com/photo-1574629810360-7efbbe195018",
+  // Jugendspieler + Ball (Jugendfußball-Detail)
+  youth: "https://images.unsplash.com/photo-1606925797300-0b35e9d1794e"
 };
 
 export default function LandingPage() {
   return (
     <main>
-      {/* HERO mit Background-Image */}
-      <section className="relative overflow-hidden bg-brand-night-navy">
-        <div className="absolute inset-0">
-          <Image
-            src={`${PHOTOS.heroTeam}?auto=format&fit=crop&w=2400&q=80`}
-            alt="Amateur-Fußballmannschaft im Huddle vor dem Anpfiff"
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center opacity-40"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-night-navy/95 via-brand-night-navy/80 to-brand-night-navy/40" />
-        </div>
+      {/* HERO — light theme, photo on right */}
+      <section className="bg-white relative overflow-hidden">
+        {/* dezenter grüner Akzent-Blob im Hintergrund */}
+        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-accent/10 blur-3xl" aria-hidden />
+        <div className="absolute top-40 -left-32 h-72 w-72 rounded-full bg-accent/5 blur-3xl" aria-hidden />
 
-        <div className="relative mx-auto max-w-6xl px-6 pt-24 pb-28 md:pt-32 md:pb-36">
-          <span className="inline-flex items-center rounded-full bg-accent/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-accent ring-1 ring-accent/30">
-            Performance-Sponsoring für den Amateurfußball
-          </span>
-          <h1 className="mt-6 font-display font-black text-6xl md:text-8xl tracking-tight leading-[0.95] text-white">
-            Wenn die Jungs jubeln,
-            <br />
-            <span className="text-accent">jubelst du mit.</span>
-          </h1>
-          <p className="mt-6 max-w-2xl text-xl text-white/85">
-            Familie, Freunde und lokale Unternehmen versprechen Beträge an
-            Spielereignisse. <strong className="text-white">3 € wenn Schmidt ein Tor schießt.</strong>{" "}
-            <strong className="text-white">10 € pro Sieg.</strong>{" "}
-            <strong className="text-white">20 € pro Comeback.</strong> KickPact
-            rechnet jedes Spiel automatisch ab.
-          </p>
-          <div className="mt-10 flex flex-wrap gap-3">
-            <Button variant="accent" size="lg" asChild>
-              <Link href="/signup">Verein anlegen · 30 Tage gratis</Link>
-            </Button>
-            <Button
-              size="lg"
-              asChild
-              className="border border-white/30 bg-white/10 text-white backdrop-blur hover:bg-white/20"
-            >
-              <Link href="/login">Ich bin schon dabei</Link>
-            </Button>
+        <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-28 grid gap-12 md:grid-cols-12 items-center">
+          {/* Text-Block */}
+          <div className="md:col-span-7">
+            <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-accent-dark ring-1 ring-accent/20">
+              Performance-Sponsoring für den Amateurfußball
+            </span>
+            <h1 className="mt-6 font-display font-black text-5xl md:text-7xl lg:text-8xl tracking-tight leading-[0.95] text-brand-night-navy">
+              Wenn die Jungs jubeln,
+              <br />
+              <span className="text-accent">jubelst du mit.</span>
+            </h1>
+            <p className="mt-6 max-w-xl text-lg md:text-xl text-brand-night-navy/75">
+              Familie, Freunde und lokale Unternehmen versprechen Beträge an
+              Spielereignisse.{" "}
+              <strong className="text-brand-night-navy">3 € wenn Schmidt ein Tor schießt.</strong>{" "}
+              <strong className="text-brand-night-navy">10 € pro Sieg.</strong>{" "}
+              <strong className="text-brand-night-navy">20 € pro Comeback.</strong> KickPact
+              rechnet jedes Spiel automatisch ab.
+            </p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Button variant="accent" size="lg" asChild>
+                <Link href="/signup">Verein anlegen · 30 Tage gratis</Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild>
+                <Link href="/login">Ich bin schon dabei</Link>
+              </Button>
+            </div>
+            <p className="mt-4 text-sm text-brand-night-navy/55">
+              Ab 9 € pro Monat — weniger als 1 € pro Spieler.
+            </p>
           </div>
-          <p className="mt-4 text-sm text-white/65">
-            Ab 9 € pro Monat — weniger als 1 € pro Spieler.
-          </p>
+
+          {/* Photo-Block (rechts, gestapelt mit Akzent-Card unten) */}
+          <div className="md:col-span-5">
+            <div className="relative">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-3xl shadow-2xl ring-1 ring-brand-neutral/30">
+                <Image
+                  src={`${PHOTOS.matchAction}?auto=format&fit=crop&w=1200&q=85`}
+                  alt="Zwei Amateur-Fußballspieler im Zweikampf an einem sonnigen Spieltag"
+                  fill
+                  priority
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                  className="object-cover"
+                />
+              </div>
+              {/* schwebende Stat-Card */}
+              <div className="absolute -bottom-6 -left-6 md:-left-10 rounded-2xl bg-accent text-white shadow-2xl px-5 py-4 max-w-[220px]">
+                <div className="text-xs uppercase tracking-widest font-bold opacity-80">
+                  Letzte Saison
+                </div>
+                <div className="mt-1 font-display font-black text-2xl tracking-tight">
+                  4 300 € / Verein
+                </div>
+                <div className="mt-1 text-xs opacity-80">
+                  Ø über 10 Sponsoren · 18 Spiele
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -105,22 +128,22 @@ export default function LandingPage() {
 
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             <StoryCard
-              image={PHOTOS.kids}
-              imageAlt="Junge Fußballerin nach Tor-Jubel"
+              image={PHOTOS.youth}
+              imageAlt="Junger Fußballer im Schuss am Ball"
               kicker="Tante Erna · Familie"
               headline="3 € wenn Schmidt ein Tor schießt."
               body="Sie ist Patentante. Schmidt ist 13, spielt B-Jugend. Sie schaut jedes Spiel, jubelt am lautesten. Letzte Saison waren&apos;s 87 €. Schmidt hat&apos;s gewusst — und 4 Mal nach dem Tor zu ihr in die Tribüne gewinkt."
             />
             <StoryCard
-              image={PHOTOS.match}
-              imageAlt="Amateur-Fußballspieler im Zweikampf"
+              image={PHOTOS.playerKick}
+              imageAlt="Amateur-Fußballer beim Schuss"
               kicker="Bäckerei Müller · Business"
               headline="50 € pro Comeback-Sieg."
               body="Stefan vom Bäcker an der Ecke. Hatte früher Trikot-Sponsoring für 500 € pauschal. Jetzt: nur wenn die Jungs richtig liefern. Comeback gegen Eintracht? 50 € fließen. Über die Saison kommen 600 € rein. Steuerlich absetzbar."
             />
             <StoryCard
-              image={PHOTOS.celebration}
-              imageAlt="Fußballmannschaft beim Torjubel"
+              image={PHOTOS.balls}
+              imageAlt="Fußbälle auf grünem Rasen vor dem Anpfiff"
               kicker="Onkel Tom · Familie"
               headline="10 € pro Kopfballtor."
               body="Spezial-Wette von Tom für seinen Neffen. Trainer meldet's nach dem Spiel im Bus per Smartphone, Tom bestätigt per Klick. Auf der Saison-Rechnung steht jedes Kopfballtor mit Datum, Spiel und Minute."
@@ -161,12 +184,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* TRIGGER-BEISPIELE — jetzt mit Bild-Streifen oberhalb */}
+      {/* TRIGGER-BEISPIELE — mit Bild-Streifen oberhalb */}
       <section className="bg-brand-night-navy text-white">
         <div className="relative h-48 md:h-56 overflow-hidden">
           <Image
-            src={`${PHOTOS.pact}?auto=format&fit=crop&w=2400&q=80`}
-            alt="Fußballmannschaft im Huddle"
+            src={`${PHOTOS.football}?auto=format&fit=crop&w=2400&q=80`}
+            alt="Fußball auf dem Rasen vor dem Anstoß"
             fill
             sizes="100vw"
             className="object-cover object-center opacity-60"
@@ -326,36 +349,30 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FINAL CTA mit Background-Image */}
-      <section className="relative overflow-hidden bg-brand-night-navy">
+      {/* FINAL CTA — bright + accent gradient */}
+      <section className="relative overflow-hidden bg-white">
         <div className="absolute inset-0">
-          <Image
-            src={`${PHOTOS.squad}?auto=format&fit=crop&w=2400&q=80`}
-            alt="Fußballmannschaft auf dem Platz"
-            fill
-            sizes="100vw"
-            className="object-cover object-center opacity-30"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-brand-night-navy via-brand-night-navy/85 to-brand-night-navy/60" />
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-white to-accent/10" aria-hidden />
+          <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-accent/15 blur-3xl" aria-hidden />
+          <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-accent/10 blur-3xl" aria-hidden />
         </div>
-        <div className="relative mx-auto max-w-3xl px-6 py-28 text-center text-white">
-          <h2 className="font-display font-black text-4xl md:text-6xl tracking-tight">
+        <div className="relative mx-auto max-w-4xl px-6 py-24 text-center">
+          <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-accent-dark ring-1 ring-accent/20">
+            Pilot-Vereine starten jetzt
+          </span>
+          <h2 className="mt-6 font-display font-black text-4xl md:text-6xl tracking-tight text-brand-night-navy">
             Bereit, mehr aus
             <br />
             <span className="text-accent">jedem Spiel</span> zu machen?
           </h2>
-          <p className="mt-4 text-white/80 text-lg max-w-xl mx-auto">
+          <p className="mt-4 text-brand-night-navy/70 text-lg max-w-xl mx-auto">
             30 Tage gratis. Kein Vertrag. Kein Risiko für deinen Verein.
           </p>
           <div className="mt-10 flex flex-wrap gap-3 justify-center">
             <Button variant="accent" size="lg" asChild>
               <Link href="/signup">Verein anlegen</Link>
             </Button>
-            <Button
-              size="lg"
-              asChild
-              className="border border-white/30 bg-transparent text-white hover:bg-white/10"
-            >
+            <Button variant="outline" size="lg" asChild>
               <Link href="/login">Login</Link>
             </Button>
           </div>
