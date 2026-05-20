@@ -32,9 +32,11 @@ const PHOTOS = {
 export default function LandingPage() {
   return (
     <main>
-      {/* HERO — full-bleed unter transparentem Header, ken-burns Background */}
+      {/* HERO — full-bleed unter transparentem Header, ken-burns Background.
+          Text liegt in einem Glass-Panel (backdrop-blur + bg-white/65), damit
+          Lesbarkeit unabhängig vom Foto-Inhalt + Viewport-Crop garantiert ist. */}
       <section className="relative w-full overflow-hidden bg-brand-night-navy h-svh min-h-[640px] max-h-[920px]">
-        {/* Background: echtes Mannschaftsfoto mit KickPact-Trikots, jubelnd */}
+        {/* Background: echtes Mannschaftsfoto */}
         <div className="absolute inset-0">
           <Image
             src={PHOTOS.teamHero}
@@ -45,38 +47,41 @@ export default function LandingPage() {
             className="object-cover animate-ken-burns"
             style={{ objectPosition: "65% center" }}
           />
-          {/* Gradient overlay: links komplett deckend weiß für Lesbarkeit,
-              rechts (Jubel-Hauptmotiv) ungeblockt sichtbar. */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/85 via-40% to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-white/20" />
+          {/* Sehr dezenter Gradient-Wash: gibt dem Foto mehr Atmosphäre,
+              Lesbarkeit kommt aus dem Glass-Panel selbst. */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-transparent to-transparent md:from-white/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-white/30 via-transparent to-white/10" />
         </div>
 
         {/* Content: linksbündig, vertikal zentriert */}
         <div className="relative z-10 mx-auto max-w-6xl px-6 h-full flex flex-col justify-center pt-16">
-          <span className="animate-fade-up inline-flex w-fit items-center rounded-full bg-accent/15 px-3 py-1 text-[0.65rem] md:text-xs font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30 backdrop-blur-sm">
-            Kick · Pact · Impact
-          </span>
-          <h1 className="animate-fade-up delay-1 mt-4 md:mt-5 font-display font-black text-4xl md:text-5xl lg:text-6xl tracking-tight leading-[1.02] text-brand-night-navy max-w-3xl">
-            Wenn die Jungs jubeln,
-            <br />
-            <span className="text-accent">jubelst du mit.</span>
-          </h1>
-          <p className="animate-fade-up delay-2 mt-4 md:mt-5 max-w-xl text-base md:text-lg text-brand-night-navy/85 leading-relaxed">
-            <strong className="text-brand-night-navy">Du wählst die Beträge selbst.</strong>{" "}
-            Zum Beispiel: 3 € wenn Schmidt trifft. 10 € pro Sieg. 20 € pro Comeback. KickPact
-            rechnet jedes Spiel automatisch ab.
-          </p>
-          <div className="animate-fade-up delay-3 mt-6 md:mt-7 flex flex-wrap gap-3">
-            <Button variant="accent" size="lg" asChild>
-              <Link href="/signup">Verein anlegen · 30 Tage gratis</Link>
-            </Button>
-            <Button variant="outline" size="lg" asChild className="bg-white/70 backdrop-blur">
-              <Link href="/login">Ich bin schon dabei</Link>
-            </Button>
+          {/* Glass-Panel — robuste Lesbarkeit über jedem Foto */}
+          <div className="animate-fade-up max-w-2xl rounded-3xl bg-white/75 backdrop-blur-xl ring-1 ring-white/60 shadow-2xl shadow-black/10 px-6 py-7 md:px-8 md:py-9">
+            <span className="inline-flex w-fit items-center rounded-full bg-accent/15 px-3 py-1 text-[0.65rem] md:text-xs font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30">
+              Kick · Pact · Impact
+            </span>
+            <h1 className="animate-fade-up delay-1 mt-3 md:mt-4 font-display font-black text-4xl md:text-5xl lg:text-6xl tracking-tight leading-[1.02] text-brand-night-navy">
+              Wenn die Jungs jubeln,
+              <br />
+              <span className="text-accent">jubelst du mit.</span>
+            </h1>
+            <p className="animate-fade-up delay-2 mt-4 md:mt-5 text-base md:text-lg text-brand-night-navy/85 leading-relaxed">
+              <strong className="text-brand-night-navy">Du wählst die Beträge selbst.</strong>{" "}
+              Zum Beispiel: 3 € wenn Schmidt trifft. 10 € pro Sieg. 20 € pro Comeback. KickPact
+              rechnet jedes Spiel automatisch ab.
+            </p>
+            <div className="animate-fade-up delay-3 mt-5 md:mt-6 flex flex-wrap gap-3">
+              <Button variant="accent" size="lg" asChild>
+                <Link href="/signup">Verein anlegen · 30 Tage gratis</Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild className="bg-white/80">
+                <Link href="/login">Ich bin schon dabei</Link>
+              </Button>
+            </div>
+            <p className="animate-fade-up delay-4 mt-3 text-xs md:text-sm text-brand-night-navy/60">
+              Frei wählbar pro Trigger — von 50 Cent bis 500 € pro Event.
+            </p>
           </div>
-          <p className="animate-fade-up delay-4 mt-3 text-xs md:text-sm text-brand-night-navy/60">
-            Frei wählbar pro Trigger — von 50 Cent bis 500 € pro Event.
-          </p>
         </div>
       </section>
 
