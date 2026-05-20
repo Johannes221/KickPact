@@ -13,7 +13,7 @@ import {
   eventApprovals
 } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertClubWriteAccess } from "@/lib/auth/scope";
 import {
   evaluateTriggers,
   type MatchInput,
@@ -51,8 +51,8 @@ export async function addManualEvent(input: AddManualEventInput) {
     .limit(1);
   if (!target) throw new Error("Match nicht gefunden");
 
-  // Permission: mindestens trainer
-  await assertClubAccess(target.club.slug, "trainer");
+  // Permission: mindestens trainer + Subscription darf nicht read-only sein
+  await assertClubWriteAccess(target.club.slug, "trainer");
 
   // Bestimme teamSide (welche Seite ist die gesponserte Mannschaft?)
   // Heuristik: first significant word of team name in heim_name → heim

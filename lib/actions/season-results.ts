@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { seasonResults, teams, clubs } from "@/lib/db/schema";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertClubWriteAccess } from "@/lib/auth/scope";
 import { inngest } from "@/lib/inngest/client";
 
 const schema = z.object({
@@ -33,7 +33,7 @@ export async function setSeasonResult(input: z.infer<typeof schema>) {
     .where(eq(teams.id, parsed.teamId))
     .limit(1);
   if (!team) throw new Error("Mannschaft nicht gefunden");
-  await assertClubAccess(team.clubSlug, "admin");
+  await assertClubWriteAccess(team.clubSlug, "admin");
 
   // upsert
   const existing = await db

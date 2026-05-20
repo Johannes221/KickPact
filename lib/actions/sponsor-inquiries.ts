@@ -13,7 +13,8 @@ import {
   users
 } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertClubWriteAccess } from "@/lib/auth/scope";
+import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { createId } from "@paralleldrive/cuid2";
 
@@ -40,6 +41,14 @@ export async function createSponsorInquiry(input: { teamId: string; message?: st
   if (!teamRow) throw new Error("Mannschaft nicht gefunden");
   if (!teamRow.team.discoverable) {
     throw new Error("Diese Mannschaft akzeptiert aktuell keine direkten Anfragen");
+  }
+
+  // Read-Only-Verein darf keine neuen Anfragen annehmen.
+  const gate = await getSubscriptionGate(teamRow.club.id);
+  if (gate.isReadOnly) {
+    throw new Error(
+      "Diese Mannschaft ist aktuell pausiert. Sponsoring ist wieder möglich, sobald das Abo reaktiviert wurde."
+    );
   }
 
   // Prevent duplicate pending inquiry
@@ -136,7 +145,7 @@ export async function respondToInquiry(input: {
     .where(eq(sponsorInquiries.id, parsed.inquiryId))
     .limit(1);
   if (!row) throw new Error("Anfrage nicht gefunden");
-  await assertClubAccess(row.club.slug, "admin");
+  await assertClubWriteAccess(row.club.slug, "admin");
 
   if (row.inquiry.status !== "pending") {
     throw new Error("Diese Anfrage wurde bereits beantwortet");
@@ -231,7 +240,7 @@ export async function setTeamDiscoverable(input: {
     .where(eq(teams.id, input.teamId))
     .limit(1);
   if (!teamRow) throw new Error("Mannschaft nicht gefunden");
-  await assertClubAccess(teamRow.clubSlug, "admin");
+  await assertClubWriteAccess(teamRow.clubSlug, "admin");
 
   await db
     .update(teams)

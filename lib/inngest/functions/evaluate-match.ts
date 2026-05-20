@@ -8,6 +8,7 @@ import {
   getMonthlyChargedCents,
   getPledgeMonthlyCap
 } from "@/lib/db/queries/evaluation";
+import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 
 export const evaluateMatch = inngest.createFunction(
   { id: "evaluate-match", concurrency: { limit: 4 } },
@@ -23,6 +24,18 @@ export const evaluateMatch = inngest.createFunction(
       if (!t) throw new Error(`team ${teamId} not found`);
       return { m, events, t };
     });
+
+    // Read-Only-Gate: keine neuen Charges für pausierte Vereine.
+    const gate = await step.run("gate-check", () =>
+      getSubscriptionGate(matchData.t.clubId)
+    );
+    if (gate.isReadOnly) {
+      logger.info("skipped because club is read-only", {
+        clubId: matchData.t.clubId,
+        teamId
+      });
+      return { proposals: 0, inserted: 0, cappedOrSkipped: 0, skippedReadOnly: true };
+    }
 
     // Determine teamSide via name-matching: take first significant word of team name,
     // check if heim_name contains it (case-insensitive)

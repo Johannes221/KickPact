@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { invoices, clubs, sponsors } from "@/lib/db/schema";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertClubAccess, assertClubWriteAccess } from "@/lib/auth/scope";
 import { requireUser } from "@/lib/auth/session";
 import { getDownloadUrl } from "@/lib/invoicing/storage";
 
@@ -21,7 +21,7 @@ export async function markInvoicePaid(invoiceId: string) {
     .where(eq(invoices.id, invoiceId))
     .limit(1);
   if (!row) throw new Error("Rechnung nicht gefunden");
-  await assertClubAccess(row.clubSlug, "admin");
+  await assertClubWriteAccess(row.clubSlug, "admin");
 
   await db
     .update(invoices)

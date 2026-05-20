@@ -2,10 +2,11 @@
 
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { pledges, pledgeRules, sponsors } from "@/lib/db/schema";
+import { pledges, pledgeRules, sponsors, teams } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { pledgeInputSchema, type PledgeInput } from "@/lib/validations/pledge";
 import { findInvitationByToken, markInvitationUsed } from "@/lib/db/queries/invitations";
+import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 
 const MANUAL_TRIGGERS = new Set([
   "special_goal",
@@ -37,6 +38,23 @@ export async function createPledge(input: PledgeInput) {
   }
   if (invitation.status === "revoked") {
     throw new Error("Einladung wurde vom Verein zurückgezogen.");
+  }
+
+  // Read-Only-Gate: Mannschaft → Club → Subscription. Wir lassen Sponsoren keinen
+  // neuen Pledge anlegen, wenn der Verein im Read-Only-Modus ist.
+  const [teamRow] = await db
+    .select({ clubId: teams.clubId })
+    .from(teams)
+    .where(eq(teams.id, invitation.teamId))
+    .limit(1);
+  if (!teamRow) {
+    throw new Error("Mannschaft zur Einladung nicht gefunden.");
+  }
+  const gate = await getSubscriptionGate(teamRow.clubId);
+  if (gate.isReadOnly) {
+    throw new Error(
+      "Diese Mannschaft ist aktuell pausiert. Sponsoring ist wieder möglich, sobald das Abo reaktiviert wurde."
+    );
   }
 
   // Saison-Ende vereinfacht: 30. Juni des Saison-Endjahrs

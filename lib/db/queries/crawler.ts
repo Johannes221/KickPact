@@ -10,6 +10,7 @@ import type { SpielDetails, SpielListItem } from "@/lib/crawler/fussballde";
 
 export interface ActiveTeam {
   id: string;
+  clubId: string;
   fussballdeTeamId: string;
   fussballdeSlug: string;
   saison: string;
@@ -19,6 +20,7 @@ export async function getActiveTeams(): Promise<ActiveTeam[]> {
   const rows = await db
     .select({
       id: teams.id,
+      clubId: teams.clubId,
       fussballdeTeamId: teams.fussballdeTeamId,
       fussballdeSlug: teams.fussballdeSlug,
       saison: teams.saison
@@ -29,6 +31,7 @@ export async function getActiveTeams(): Promise<ActiveTeam[]> {
     .filter((r) => r.fussballdeTeamId !== null && r.fussballdeSlug !== null)
     .map((r) => ({
       id: r.id,
+      clubId: r.clubId,
       fussballdeTeamId: r.fussballdeTeamId!,
       fussballdeSlug: r.fussballdeSlug!,
       saison: r.saison

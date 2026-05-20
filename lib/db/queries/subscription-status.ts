@@ -2,34 +2,47 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { subscriptions } from "@/lib/db/schema";
 
+export type SubscriptionStatus =
+  | "trialing"
+  | "active"
+  | "past_due"
+  | "cancelled"
+  | "incomplete";
+
 export type SubscriptionGate = {
-  status: "trialing" | "active" | "past_due" | "cancelled" | "incomplete" | "missing";
+  status: SubscriptionStatus | "missing";
   isReadOnly: boolean;
   daysUntilReadOnly: number | null;
   trialEndsAt: Date | null;
   pastDueSince: Date | null;
 };
 
-const GRACE_PERIOD_DAYS = 7;
+/**
+ * Minimaler Row-Shape, der vom Mapper gebraucht wird. So bleibt
+ * `gateFromSubscription` von der konkreten Drizzle-Tabellen-Typ-Definition
+ * entkoppelt und damit testbar.
+ */
+export type SubscriptionRowForGate = {
+  status: SubscriptionStatus;
+  trialEndsAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date | null;
+};
+
+export const GRACE_PERIOD_DAYS = 7;
 
 /**
- * Liefert den App-relevanten Subscription-Status für einen Club.
+ * Pure-Function-Variante des Gates: erhält einen (gemockt-baren) Subscription-Row
+ * und liefert das Gate. Wird von `getSubscriptionGate` benutzt + ist in Tests
+ * isoliert prüfbar (kein DB-Hit).
  *
- * - `missing`: kein Subscription-Eintrag → Trial wurde noch nicht gestartet
- * - `trialing` / `active`: alles okay, isReadOnly=false
- * - `past_due`: 7d-Grace-Period, isReadOnly=true wenn Grace überschritten
- * - `cancelled`: isReadOnly=true sofort
- *
- * Wird vom Vereins-Layout aufgerufen um einen Banner anzuzeigen und ggf.
- * Aktionen zu blockieren.
+ * @param sub  Subscription-Row oder null wenn nicht vorhanden
+ * @param now  injizierbare "now" für deterministische Tests (defaults to Date.now)
  */
-export async function getSubscriptionGate(clubId: string): Promise<SubscriptionGate> {
-  const [sub] = await db
-    .select()
-    .from(subscriptions)
-    .where(eq(subscriptions.clubId, clubId))
-    .limit(1);
-
+export function gateFromSubscription(
+  sub: SubscriptionRowForGate | null,
+  now: Date = new Date()
+): SubscriptionGate {
   if (!sub) {
     return {
       status: "missing",
@@ -54,7 +67,7 @@ export async function getSubscriptionGate(clubId: string): Promise<SubscriptionG
     // Wir kennen den genauen Past-Due-Start nicht direkt, nehmen updatedAt als Proxy.
     const since = sub.updatedAt ?? sub.createdAt;
     const daysOverdue = since
-      ? Math.floor((Date.now() - new Date(since).getTime()) / (1000 * 60 * 60 * 24))
+      ? Math.floor((now.getTime() - new Date(since).getTime()) / (1000 * 60 * 60 * 24))
       : 0;
     const isReadOnly = daysOverdue > GRACE_PERIOD_DAYS;
     return {
@@ -83,4 +96,25 @@ export async function getSubscriptionGate(clubId: string): Promise<SubscriptionG
     trialEndsAt: null,
     pastDueSince: null
   };
+}
+
+/**
+ * Liefert den App-relevanten Subscription-Status für einen Club.
+ *
+ * - `missing`: kein Subscription-Eintrag → Trial wurde noch nicht gestartet
+ * - `trialing` / `active`: alles okay, isReadOnly=false
+ * - `past_due`: 7d-Grace-Period, isReadOnly=true wenn Grace überschritten
+ * - `cancelled`: isReadOnly=true sofort
+ *
+ * Wird vom Vereins-Layout aufgerufen um einen Banner anzuzeigen und ggf.
+ * Aktionen zu blockieren (siehe `assertClubWriteAccess`).
+ */
+export async function getSubscriptionGate(clubId: string): Promise<SubscriptionGate> {
+  const [sub] = await db
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.clubId, clubId))
+    .limit(1);
+
+  return gateFromSubscription(sub ?? null);
 }
