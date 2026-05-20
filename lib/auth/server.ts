@@ -5,6 +5,29 @@ import { db } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema/auth";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { magicLinkEmail } from "@/lib/mail/templates/magic-link";
+import { getAppleClientSecret, isAppleConfigured } from "@/lib/auth/apple-client-secret";
+
+// Social-Provider werden konditional registriert, damit fehlende Credentials
+// nicht den Server-Boot blocken — z.B. lokal kann man ohne Apple-Keys arbeiten.
+type SocialProviders = NonNullable<Parameters<typeof betterAuth>[0]["socialProviders"]>;
+const socialProviders: SocialProviders = {};
+
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  socialProviders.google = {
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET
+  };
+}
+
+if (isAppleConfigured()) {
+  socialProviders.apple = {
+    clientId: process.env.APPLE_CLIENT_ID!,
+    // Apple verlangt ein signiertes ES256-JWT als clientSecret (max 6 Monate).
+    // Wir generieren es beim Boot frisch aus dem .p8-Key.
+    clientSecret: await getAppleClientSecret(),
+    appBundleIdentifier: process.env.APPLE_BUNDLE_ID
+  };
+}
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -20,15 +43,7 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET!,
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3003",
   trustedOrigins: [process.env.BETTER_AUTH_URL ?? "http://localhost:3003"],
-  socialProviders:
-    process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-      ? {
-          google: {
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET
-          }
-        }
-      : undefined,
+  socialProviders: Object.keys(socialProviders).length > 0 ? socialProviders : undefined,
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {
