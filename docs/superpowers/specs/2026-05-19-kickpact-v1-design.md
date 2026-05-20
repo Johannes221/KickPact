@@ -304,9 +304,33 @@ Verein-Admin: /verein/[slug]/abrechnungen → "Als bezahlt markieren"
 
 ### 6.8 KickPact-Abo
 
+**Pricing-Modell (3 Plans):**
+
+| Plan | Preis | Scope | Verwaltung |
+|---|---|---|---|
+| Mannschaft Basic | 9 €/Mannschaft/Monat | eine Mannschaft, bis 20 Sponsoren | Trainer/Betreuer eigenständig |
+| Mannschaft Pro | 19 €/Mannschaft/Monat | eine Mannschaft, unlimited Sponsoren, Saison-Wetten, Custom-Trigger | Trainer/Betreuer eigenständig |
+| Vereinslizenz | 49 €/Verein/Monat | **alle Mannschaften des Vereins**, alle Pro-Features | Master-Admin verwaltet zentral |
+
+Default-Sprache: Onboarding/UI sagt "Mannschaft anlegen", weil jede Mannschaft
+bei KickPact eigenständig ist (eigene Sponsoren, eigene Pledges, eigene
+Rechnungen). Nur bei der Vereinslizenz gibt es einen `club.master_admin_user_id`
+der alle Mannschafts-Lizenzen unter einer Subscription bündelt.
+
+**Vereinslizenz-spezifika:**
+- DB: `team_licenses.parent_club_license_id` (nullable) — wenn gesetzt, ist
+  diese Team-Lizenz Teil einer Vereinslizenz und wird nicht einzeln berechnet.
+- Stripe: eine Subscription pro Verein mit Item "vereinslizenz" (49 €/Monat
+  flat). Einzelne Mannschafts-Items entfallen, solange Vereinslizenz aktiv ist.
+- UI: Vereinslizenz-Inhaber bekommt ein zusätzliches `/verein/[slug]/admin`
+  Cockpit mit Übersicht aller Mannschaften, Konsolidierter Rechnungs-Liste,
+  und Sponsor-Cross-Listing (welcher Sponsor unterstützt welche Teams).
+
+**Trial + Lifecycle:**
+
 ```
-30d Trial pro erster aktivierter Mannschaft.
-Vor Trial-Ende (7d, 3d, 1d): Reminder-Mail an Verein-Admin.
+30d Trial pro erster aktivierter Mannschaft (auch bei Vereinslizenz).
+Vor Trial-Ende (7d, 3d, 1d): Reminder-Mail an Mannschafts-/Master-Admin.
 Stripe Checkout im Onboarding bereitgestellt, kann jederzeit aktiviert werden.
 Stripe-Webhook: subscription / item-events → team_licenses.status update
 Bei past_due / cancelled:

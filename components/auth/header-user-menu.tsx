@@ -29,7 +29,7 @@ export function HeaderUserMenu() {
           <Link href="/login">Login</Link>
         </Button>
         <Button variant="default" size="sm" asChild className="text-xs sm:text-sm px-2.5 sm:px-3">
-          <Link href="/signup">Verein anlegen</Link>
+          <Link href="/signup">Mannschaft anlegen</Link>
         </Button>
       </div>
     );

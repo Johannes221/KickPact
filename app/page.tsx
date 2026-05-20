@@ -25,7 +25,10 @@ const PHOTOS = {
   // Mixed-Ages Team in weißen KickPact-Trikots
   teamWhiteMixed: "/brand/photos/team-white-mixed.png",
   // U17 / Jugend-Mannschaft in weißen KickPact-Trikots, Jubelszene auf Kunstrasen
-  teamYouth: "/brand/photos/team-youth.png"
+  teamYouth: "/brand/photos/team-youth.png",
+  // Spieler #21 (weißes Trikot) und Sponsor (Nexora-Polo) reichen sich am
+  // Spielfeldrand die Hand — Connection zwischen Mannschaft + Förderer.
+  playerAndSponsor: "/brand/photos/player-and-sponsor.png"
 };
 
 export default function LandingPage() {
@@ -80,7 +83,7 @@ export default function LandingPage() {
             </p>
             <div className="animate-fade-up delay-3 mt-5 md:mt-6 flex flex-col sm:flex-row gap-3">
               <Button variant="accent" size="lg" asChild className="w-full sm:w-auto">
-                <Link href="/signup">Verein anlegen · 30 Tage gratis</Link>
+                <Link href="/signup">Mannschaft anlegen · 30 Tage gratis</Link>
               </Button>
               <Button variant="outline" size="lg" asChild className="w-full sm:w-auto bg-white/80">
                 <Link href="/login">Ich bin schon dabei</Link>
@@ -106,6 +109,72 @@ export default function LandingPage() {
           <p className="mt-2 text-white/60 text-xs md:text-sm">Wähle deine Rolle.</p>
           <div className="mt-5 md:mt-6">
             <RolesTabs />
+          </div>
+        </div>
+      </section>
+
+      {/* BENEFITS — Foto Spieler<>Sponsor + zwei Spalten */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-16">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.6rem] md:text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent-dark">
+              Beide Seiten gewinnen
+            </span>
+            <h2 className="mt-3 font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
+              Mannschaft trifft <span className="text-accent">Sponsor.</span>
+            </h2>
+            <p className="mt-2 text-sm md:text-base text-brand-night-navy/70">
+              Performance-Sponsoring funktioniert nur wenn beide Seiten profitieren. Hier ist
+              warum Mannschaften und Sponsoren KickPact lieben — auf einen Blick.
+            </p>
+          </div>
+
+          <div className="mt-6 md:mt-10 grid gap-6 md:gap-10 lg:grid-cols-[1.1fr_1fr] items-center">
+            {/* Foto — auf Mobile oberhalb, auf Desktop rechts */}
+            <div className="relative aspect-[3/2] md:aspect-[4/3] lg:aspect-[3/2] rounded-2xl overflow-hidden order-first lg:order-last">
+              <Image
+                src={PHOTOS.playerAndSponsor}
+                alt="Spieler und Sponsor reichen sich am Spielfeldrand die Hand"
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover object-center"
+              />
+              <div className="absolute inset-0 bg-gradient-to-tr from-accent/20 via-transparent to-transparent" />
+            </div>
+
+            {/* Benefits-Liste — 2 Spalten Sponsor + Mannschaft */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:order-first">
+              <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-4 md:p-5">
+                <div className="text-xs uppercase tracking-[0.15em] font-bold text-accent-dark">
+                  Für Sponsoren
+                </div>
+                <h3 className="mt-1.5 font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+                  Du zahlst nur was passiert.
+                </h3>
+                <ul className="mt-3 space-y-2 text-xs md:text-sm text-brand-night-navy/80">
+                  <BenefitLi>Beträge frei wählbar — 50 Cent oder 500 €</BenefitLi>
+                  <BenefitLi>Optionaler Monats-Cap, nie Überraschungen</BenefitLi>
+                  <BenefitLi>Steuerlich absetzbar als Werbeleistung</BenefitLi>
+                  <BenefitLi>Live mitfiebern, jedes Tor zählt</BenefitLi>
+                  <BenefitLi>Jederzeit kündbar zum Saisons-Ende</BenefitLi>
+                </ul>
+              </div>
+              <div className="rounded-2xl border border-accent/40 bg-accent/5 p-4 md:p-5">
+                <div className="text-xs uppercase tracking-[0.15em] font-bold text-accent-dark">
+                  Für die Mannschaft
+                </div>
+                <h3 className="mt-1.5 font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+                  Mehr Geld pro Saison.
+                </h3>
+                <ul className="mt-3 space-y-2 text-xs md:text-sm text-brand-night-navy/80">
+                  <BenefitLi>5–10× mehr Sponsoren als klassisch</BenefitLi>
+                  <BenefitLi>Keine Akquise — Einladungslink reicht</BenefitLi>
+                  <BenefitLi>USt-konforme Rechnungen automatisch</BenefitLi>
+                  <BenefitLi>Jede Mannschaft eigenständig — keine Vorstands-Politik</BenefitLi>
+                  <BenefitLi>Trainer meldet Spezial-Events am Handy</BenefitLi>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -154,7 +223,7 @@ export default function LandingPage() {
               imageAlt="TSV-Abtswind-Mannschaft jubelt in grünen Trikots"
               kicker="Opa Heinz · Saison-Wette · Seine Wahl"
               headline="200 € wenn der Aufstieg klappt."
-              body="Heinz fiebert seit 40 Jahren mit. Er hat 200 € auf den Aufstieg gesetzt und 5 € pro Kopfballtor seines Enkels. Saisonende → Rechnung, Geld geht an den Verein."
+              body="Heinz fiebert seit 40 Jahren mit. Er hat 200 € auf den Aufstieg gesetzt und 5 € pro Kopfballtor seines Enkels. Saisonende → Rechnung, Geld geht in die Mannschaftskasse."
             />
           </div>
           <p className="mt-6 md:mt-8 text-xs md:text-sm text-brand-night-navy/60 text-center max-w-2xl mx-auto">
@@ -175,8 +244,8 @@ export default function LandingPage() {
         <div className="mt-6 md:mt-8 grid gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Step
             num="01"
-            title="Verein anlegen"
-            body="Magic-Link per Mail, Wizard sucht dich auf Fußball.de, wählt Mannschaft + Plan. Dauert 90 Sekunden."
+            title="Mannschaft anlegen"
+            body="Magic-Link per Mail, Wizard sucht deine Mannschaft auf Fußball.de, wählt Plan. Dauert 90 Sekunden. Verein mit mehreren Teams? → Vereinslizenz."
           />
           <Step
             num="02"
@@ -191,7 +260,7 @@ export default function LandingPage() {
           <Step
             num="04"
             title="Monats-Rechnung"
-            body="Am Monatsersten wandert eine PDF-Rechnung an jeden Sponsor. Verein zieht das Geld selbst ein — KickPact bleibt Tool."
+            body="Am Monatsersten wandert eine PDF-Rechnung an jeden Sponsor. Mannschaft/Verein zieht das Geld selbst ein — KickPact bleibt Tool."
           />
         </div>
       </section>
@@ -270,7 +339,7 @@ export default function LandingPage() {
               <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Auto (Fußball.de)
             </span>
             <span className="inline-flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-white/60" /> Verein meldet + Sponsor bestätigt
+              <span className="h-1.5 w-1.5 rounded-full bg-white/60" /> Mannschaft meldet + Sponsor bestätigt
             </span>
           </p>
         </div>
@@ -288,7 +357,7 @@ export default function LandingPage() {
             </h2>
             <p className="mt-2 text-sm md:text-base text-brand-night-navy/70">
               Wettet auf das große Ziel: Aufstieg, Klassenerhalt, Tabellenplatz. Saison-Ende
-              → wenn das Ziel erreicht wird, geht der Betrag an den Verein. Wenn nicht: nix.
+              → wenn das Ziel erreicht wird, geht der Betrag an die Mannschaftskasse. Wenn nicht: nix.
               Echtes Performance-Sponsoring auf Saisons-Ebene.
             </p>
           </div>
@@ -304,7 +373,7 @@ export default function LandingPage() {
           </div>
           <p className="mt-5 md:mt-6 text-xs md:text-sm text-brand-night-navy/70 max-w-2xl">
             Tabellen-Stände kommen direkt von Fußball.de, sobald die Saison gewertet ist.
-            Custom-Ziele werden vom Verein gemeldet und vom Sponsor bestätigt — gleicher
+            Custom-Ziele werden von der Mannschaft gemeldet und vom Sponsor bestätigt — gleicher
             Trust-Mechanismus wie bei Spezial-Events.
           </p>
         </div>
@@ -316,19 +385,19 @@ export default function LandingPage() {
           Faire <span className="text-accent">Preise.</span>
         </h2>
         <p className="mt-2 text-brand-night-navy/60 text-xs md:text-sm">
-          Pro Mannschaft. 30 Tage gratis. Monatlich kündbar.
+          Pro Mannschaft eigenständig — oder eine Vereinslizenz für alle Teams. 30 Tage gratis. Monatlich kündbar.
         </p>
-        <div className="mt-6 md:mt-8 grid gap-4 md:gap-6 md:grid-cols-2">
+        <div className="mt-6 md:mt-8 grid gap-4 md:gap-6 md:grid-cols-3">
           <PriceCard
             plan="Basic"
             price="9 €"
             unit="/ Mannschaft / Monat"
             features={[
-              "Bis zu 20 Sponsoren pro Mannschaft",
+              "Eine Mannschaft, eigenständig verwaltet",
+              "Bis zu 20 Sponsoren",
               "Alle 10 Auto-Trigger (Tor, Sieg, Comeback, …)",
-              "Alle 6 Manuelle Trigger (Spezial-Tor, Karten, …)",
-              "Monatliche PDF-Rechnung",
-              "Tenant-Dashboard"
+              "Alle 6 Manuelle Trigger",
+              "Monatliche PDF-Rechnung"
             ]}
           />
           <PriceCard
@@ -339,16 +408,30 @@ export default function LandingPage() {
             features={[
               "Alles aus Basic",
               "Unlimited Sponsoren",
-              "Vereins-Logo auf PDF-Rechnungen",
+              "Mannschafts-Logo auf PDF-Rechnungen",
               'Custom Trigger-Texte (z.B. "Bizeps-Tor")',
-              "CSV-Export aller Charges",
-              "Sponsor-Stats-Widgets"
+              "Saison-Wetten (Aufstieg, Klassenerhalt, …)",
+              "CSV-Export + Sponsor-Stats"
+            ]}
+          />
+          <PriceCard
+            plan="Vereinslizenz"
+            price="49 €"
+            unit="/ Verein / Monat"
+            features={[
+              "Alle Mannschaften des Vereins inklusive",
+              "Master-Admin verwaltet alle Teams zentral",
+              "Pro-Features für jedes Team",
+              "Konsolidierte Vereins-Rechnung & USt-Abrechnung",
+              "Übergreifende Sponsor-Übersicht",
+              "Lohnt ab ~3 Mannschaften"
             ]}
           />
         </div>
         <p className="mt-6 md:mt-8 text-xs md:text-sm text-brand-night-navy/60">
-          Typischer Kader hat 18–25 Spieler — das macht{" "}
-          <strong>0,36 – 1,06 € pro Spieler/Monat.</strong>
+          Typischer Kader hat 18–25 Spieler — Basic/Pro entsprechen{" "}
+          <strong>0,36 – 1,06 € pro Spieler/Monat.</strong> Die Vereinslizenz lohnt sich
+          spätestens, wenn dein Verein 3 oder mehr aktive Mannschaften unter KickPact hat.
         </p>
       </section>
 
@@ -359,6 +442,10 @@ export default function LandingPage() {
             Häufige <span className="text-accent">Fragen</span>
           </h2>
           <Accordion type="single" collapsible className="mt-5 md:mt-6">
+            <FaqItem
+              q="Mannschaft oder Verein — was ist der Unterschied?"
+              a={'Jede Mannschaft ist bei KickPact eigenständig. Trainer/Betreuer melden sich für ihre Mannschaft an, verwalten Sponsoren und Pledges selbst — keine Vorstands-Politik. Hat dein Verein mehrere Teams (Herren, Jugend, Damen, Senioren) und einen Master-Admin der alles zentral steuern soll, gibt es die Vereinslizenz: 49 €/Monat all-in für alle Mannschaften des Vereins, mit konsolidierter Rechnung und übergreifender Sponsor-Übersicht.'}
+            />
             <FaqItem
               q="Sind die Beträge irgendwie vorgegeben?"
               a="Nein. Beträge sind komplett frei wählbar — von 0,50 € bis 500 € pro Event. Familie nimmt oft 1–5 €/Tor, Unternehmen 25–100 €/Sieg. Im Pledge-Wizard siehst du eine Worst-Case-Hochrechnung, damit du nicht überraschend mehr zahlst als gedacht. Plus optionaler Monats-Cap."
@@ -381,7 +468,7 @@ export default function LandingPage() {
             />
             <FaqItem
               q="Was passiert wenn meine Mannschaft schlecht spielt?"
-              a="Sponsoren zahlen weniger. Das ist genau die Idee von Performance-Sponsoring. Im Worst Case (kein Tor, keine Siege) bekommt der Verein gar nichts — aber dann gibt&apos;s auch nichts zu feiern."
+              a="Sponsoren zahlen weniger. Das ist genau die Idee von Performance-Sponsoring. Im Worst Case (kein Tor, keine Siege) bekommt die Mannschaftskasse gar nichts — aber dann gibt&apos;s auch nichts zu feiern."
             />
             <FaqItem
               q="Wie verhindere ich, dass ein Sponsor von einer hohen Rechnung überrascht wird?"
@@ -420,11 +507,11 @@ export default function LandingPage() {
             <span className="text-accent">Impact pro Spiel?</span>
           </h2>
           <p className="mt-3 text-sm md:text-base text-brand-night-navy/70 max-w-xl mx-auto">
-            30 Tage gratis. Kein Vertrag. Kein Risiko für deinen Verein.
+            30 Tage gratis. Kein Vertrag. Kein Risiko für deine Mannschaft.
           </p>
           <div className="mt-6 md:mt-7 flex flex-col sm:flex-row gap-3 justify-center">
             <Button variant="accent" size="lg" asChild className="w-full sm:w-auto">
-              <Link href="/signup">Verein anlegen</Link>
+              <Link href="/signup">Mannschaft anlegen</Link>
             </Button>
             <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
               <Link href="/login">Login</Link>
@@ -443,6 +530,25 @@ export default function LandingPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function BenefitLi({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex gap-2">
+      <svg
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0 text-accent mt-0.5"
+      >
+        <path
+          fillRule="evenodd"
+          d="M16.704 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.296-7.293a1 1 0 011.414 0z"
+          clipRule="evenodd"
+        />
+      </svg>
+      <span>{children}</span>
+    </li>
   );
 }
 

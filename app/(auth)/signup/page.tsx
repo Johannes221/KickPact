@@ -4,7 +4,7 @@ import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAppleConfigured } from "@/lib/auth/apple-client-secret";
 
-export const metadata = { title: "Verein anlegen · KickPact" };
+export const metadata = { title: "Mannschaft anlegen · KickPact" };
 
 export default function SignupPage() {
   const oauthEnabled = {
@@ -17,9 +17,9 @@ export default function SignupPage() {
     <main className="mx-auto max-w-md px-6 py-16">
       <Card>
         <CardHeader>
-          <CardTitle className="font-display text-3xl tracking-wide">Verein anlegen</CardTitle>
+          <CardTitle className="font-display text-2xl md:text-3xl tracking-wide">Mannschaft anlegen</CardTitle>
           <CardDescription>
-            Du legst KickPact für deinen Verein an und kannst dann Sponsoren einladen. 30 Tage gratis testen.
+            Du legst KickPact für deine Mannschaft an und kannst dann Sponsoren einladen. 30 Tage gratis testen. Für ganze Vereine: Vereinslizenz wählbar.
           </CardDescription>
         </CardHeader>
         <CardContent>
