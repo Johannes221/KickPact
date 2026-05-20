@@ -13,86 +13,98 @@ import { RolesTabs } from "./_components/roles-tabs";
 export const metadata = { title: "KickPact — Mehr als ein Spiel" };
 
 // Echte Mannschaftsfotos mit KickPact-Branding (lokale Assets).
-// Hinweis: team-hero.png ist ein Mockup mit aufgebranntem K-Wasserzeichen —
-// nur als Marketing-Visual im Trigger-Banner sinnvoll, NICHT als Hero-Background.
 const PHOTOS = {
-  // Hero: SG Reichenbach #9 mit erhobener Faust, Team-Umarmung —
-  // sauberes Jubelfoto ohne Overlay, perfekt für "Wenn die Jungs jubeln".
+  // Hero: SG Reichenbach #9 mit erhobener Faust, sauberes Jubelfoto
   teamHero: "/brand/photos/team-celebration.png",
-  // Mannschaft in KickPact-Trikots (schwarz/grün), Jubelumarmung — Story-Card
+  // Mannschaft in KickPact-Trikots (schwarz/grün), Jubelumarmung — Story
   teamCelebration: "/brand/photos/team-branded-line.png",
   // TSV Abtswind, grüne Trikots, Torjubel
   teamGreen: "/brand/photos/team-green.png",
-  // Marketing-Mockup mit aufgebranntem "K KICKPACT" — als Trigger-Banner-Visual
+  // Marketing-Mockup mit aufgebranntem "K KICKPACT" — Trigger-Banner-Visual
   teamBrandedLine: "/brand/photos/team-hero.png",
   // Mixed-Ages Team in weißen KickPact-Trikots
-  teamWhiteMixed: "/brand/photos/team-white-mixed.png"
+  teamWhiteMixed: "/brand/photos/team-white-mixed.png",
+  // U17 / Jugend-Mannschaft in weißen KickPact-Trikots, Jubelszene auf Kunstrasen
+  teamYouth: "/brand/photos/team-youth.png"
 };
 
 export default function LandingPage() {
   return (
     <main>
-      {/* HERO — full-bleed unter transparentem Header, ken-burns Background.
-          Text liegt in einem Glass-Panel (backdrop-blur + bg-white/65), damit
-          Lesbarkeit unabhängig vom Foto-Inhalt + Viewport-Crop garantiert ist. */}
-      <section className="relative w-full overflow-hidden bg-brand-night-navy h-svh min-h-[640px] max-h-[920px]">
-        {/* Background: echtes Mannschaftsfoto */}
-        <div className="absolute inset-0">
+      {/* HERO
+          Mobile-Layout: Foto füllt oberes Drittel sichtbar, Gradient fadet
+          weich zu Weiß, dann Text auf weißem Untergrund. Foto bleibt sichtbar
+          und wirkt — Text ist trotzdem messerscharf lesbar.
+          Desktop: Foto füllt komplett, Gradient zieht von links nach rechts
+          weiß aus, Text sitzt linksbündig ohne Kasten. */}
+      <section className="relative w-full overflow-hidden bg-white">
+        {/* Foto-Hintergrund: Mobile fixierte Höhe (oberes Drittel),
+            Desktop full-bleed durch absolute inset-0 */}
+        <div className="relative md:absolute md:inset-0 h-[38vh] min-h-[260px] max-h-[400px] md:h-full md:min-h-0 md:max-h-none">
           <Image
             src={PHOTOS.teamHero}
-            alt="Amateur-Fußballmannschaft jubelt nach Torerfolg, Spieler mit Faust nach oben"
+            alt="Amateur-Fußballmannschaft jubelt nach Torerfolg"
             fill
             priority
             sizes="100vw"
             className="object-cover animate-ken-burns"
             style={{ objectPosition: "65% center" }}
           />
-          {/* Sehr dezenter Gradient-Wash: gibt dem Foto mehr Atmosphäre,
-              Lesbarkeit kommt aus dem Glass-Panel selbst. */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-transparent to-transparent md:from-white/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-white/30 via-transparent to-white/10" />
+          {/* Mobile: weicher Übergang zu Weiß am unteren Foto-Rand */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white md:hidden" />
+          {/* Desktop: stark links deckend weiß bis ~50%, dann fade out nach rechts */}
+          <div
+            className="absolute inset-0 hidden md:block"
+            style={{
+              background:
+                "linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0.98) 32%, rgba(255,255,255,0.7) 48%, rgba(255,255,255,0) 70%)"
+            }}
+          />
         </div>
 
-        {/* Content: linksbündig, vertikal zentriert */}
-        <div className="relative z-10 mx-auto max-w-6xl px-6 h-full flex flex-col justify-center pt-16">
-          {/* Glass-Panel — robuste Lesbarkeit über jedem Foto */}
-          <div className="animate-fade-up max-w-2xl rounded-3xl bg-white/75 backdrop-blur-xl ring-1 ring-white/60 shadow-2xl shadow-black/10 px-6 py-7 md:px-8 md:py-9">
-            <span className="inline-flex w-fit items-center rounded-full bg-accent/15 px-3 py-1 text-[0.65rem] md:text-xs font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30">
+        {/* Content: Mobile direkt unter dem Foto, Desktop absolut über dem Foto */}
+        <div className="relative z-10 mx-auto max-w-6xl px-5 md:px-6 md:absolute md:inset-0 md:flex md:flex-col md:justify-center md:pt-16">
+          <div className="max-w-xl md:max-w-2xl pt-6 pb-10 md:pt-0 md:pb-0 relative">
+            <span className="animate-fade-up inline-flex w-fit items-center rounded-full bg-accent/15 px-3 py-1 text-[0.6rem] md:text-xs font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30 backdrop-blur-sm">
               Kick · Pact · Impact
             </span>
-            <h1 className="animate-fade-up delay-1 mt-3 md:mt-4 font-display font-black text-4xl md:text-5xl lg:text-6xl tracking-tight leading-[1.02] text-brand-night-navy">
+            <h1 className="animate-fade-up delay-1 mt-3 md:mt-4 font-display font-black text-[2rem] leading-[1.05] sm:text-4xl md:text-5xl lg:text-6xl tracking-tight text-brand-night-navy">
               Wenn die Jungs jubeln,
               <br />
               <span className="text-accent">jubelst du mit.</span>
             </h1>
-            <p className="animate-fade-up delay-2 mt-4 md:mt-5 text-base md:text-lg text-brand-night-navy/85 leading-relaxed">
-              <strong className="text-brand-night-navy">Du wählst die Beträge selbst.</strong>{" "}
-              Zum Beispiel: 3 € wenn Schmidt trifft. 10 € pro Sieg. 20 € pro Comeback. KickPact
-              rechnet jedes Spiel automatisch ab.
+            <p className="animate-fade-up delay-2 mt-3 md:mt-5 text-sm md:text-lg text-brand-night-navy/85 leading-relaxed">
+              <strong className="text-brand-night-navy">Du wählst die Beträge selbst —</strong>{" "}
+              ob 1 € pro Tor von der Tante oder 100 € fürs Aufstiegsspiel. Vom Bambini bis zur
+              ersten Herren. KickPact rechnet jedes Spiel und jede Saison automatisch ab.
             </p>
-            <div className="animate-fade-up delay-3 mt-5 md:mt-6 flex flex-wrap gap-3">
-              <Button variant="accent" size="lg" asChild>
+            <div className="animate-fade-up delay-3 mt-5 md:mt-6 flex flex-col sm:flex-row gap-3">
+              <Button variant="accent" size="lg" asChild className="w-full sm:w-auto">
                 <Link href="/signup">Verein anlegen · 30 Tage gratis</Link>
               </Button>
-              <Button variant="outline" size="lg" asChild className="bg-white/80">
+              <Button variant="outline" size="lg" asChild className="w-full sm:w-auto bg-white/80">
                 <Link href="/login">Ich bin schon dabei</Link>
               </Button>
             </div>
-            <p className="animate-fade-up delay-4 mt-3 text-xs md:text-sm text-brand-night-navy/60">
-              Frei wählbar pro Trigger — von 50 Cent bis 500 € pro Event.
+            <p className="animate-fade-up delay-4 mt-3 text-[0.7rem] md:text-sm text-brand-night-navy/60">
+              Frei wählbar pro Trigger — von 50 Cent bis 500 €. Auch Saison-Wetten: Aufstieg, Klassenerhalt, Top-5.
             </p>
           </div>
         </div>
+
+        {/* Desktop-Höhe: Foto + Content nehmen sich gegenseitig, container
+            braucht eine min-Höhe damit das absolute Layout funktioniert */}
+        <div className="hidden md:block md:h-svh md:min-h-[640px] md:max-h-[920px]" aria-hidden />
       </section>
 
       {/* ROLES TABS */}
       <section className="border-y border-brand-neutral/40 bg-brand-night-navy text-white">
-        <div className="mx-auto max-w-6xl px-6 py-14">
-          <h2 className="font-display font-black text-3xl md:text-4xl tracking-tight">
+        <div className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-14">
+          <h2 className="font-display font-black text-2xl md:text-4xl tracking-tight">
             Was bringt&apos;s <span className="text-accent">dir?</span>
           </h2>
-          <p className="mt-2 text-white/60 text-sm">Wähle deine Rolle.</p>
-          <div className="mt-6">
+          <p className="mt-2 text-white/60 text-xs md:text-sm">Wähle deine Rolle.</p>
+          <div className="mt-5 md:mt-6">
             <RolesTabs />
           </div>
         </div>
@@ -100,27 +112,35 @@ export default function LandingPage() {
 
       {/* ECHTE GESCHICHTEN — Image-driven Testimonial-Style */}
       <section className="bg-brand-off-white">
-        <div className="mx-auto max-w-6xl px-6 py-16">
+        <div className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-16">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent-dark">
+            <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.6rem] md:text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent-dark">
               Echte Geschichten · Beträge frei gewählt
             </span>
-            <h2 className="mt-3 font-display font-black text-3xl md:text-4xl tracking-tight text-brand-night-navy">
+            <h2 className="mt-3 font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
               Sponsoring, das <span className="text-accent">eine Geschichte erzählt.</span>
             </h2>
-            <p className="mt-2 text-brand-night-navy/70">
-              Keine Plakate, keine Trikot-Werbung. Sondern Menschen, die mitfiebern —
-              jeder mit seinem eigenen Betrag, frei gewählt. Drei Beispiele aus dem echten Leben:
+            <p className="mt-2 text-sm md:text-base text-brand-night-navy/70">
+              Keine Plakate, keine Trikot-Werbung. Sondern Menschen, die mitfiebern — von der
+              Bambini-Tante bis zum Bäcker um die Ecke. Jeder mit seinem eigenen Betrag, frei
+              gewählt. Vier Beispiele aus dem echten Leben:
             </p>
           </div>
 
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
+          <div className="mt-6 md:mt-8 grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <StoryCard
+              image={PHOTOS.teamYouth}
+              imageAlt="Jugend-Mannschaft in weißen KickPact-Trikots jubelt nach Tor"
+              kicker="Familie Weber · Jugend · Eltern verwalten"
+              headline="2 € pro Tor in der C-Jugend."
+              body={'Linus spielt U15. Mama hat den Sponsor-Account für die ganze Familie übernommen — Oma, Onkel, Patentante zahlen alle ein, sie behält den Überblick. So funktioniert Familien-Sponsoring auch für Junioren ohne eigene Mail.'}
+            />
             <StoryCard
               image={PHOTOS.teamWhiteMixed}
               imageAlt="Mannschaft in weißen KickPact-Trikots jubelt nach Tor"
               kicker="Tante Erna · Familie · Ihre Wahl"
               headline="3 € wenn Schmidt ein Tor schießt."
-              body="Sie ist Patentante. Schmidt ist 13, spielt B-Jugend. Sie hat sich für 3 € pro Tor entschieden — könnten auch 1 € oder 20 € sein. Letzte Saison waren&apos;s 87 €. Schmidt hat&apos;s gewusst — und 4 Mal nach dem Tor zu ihr in die Tribüne gewinkt."
+              body={'Sie ist Patentante. Schmidt ist 13, spielt B-Jugend. Sie hat sich für 3 €/Tor entschieden — könnten auch 1 € oder 20 € sein. Letzte Saison waren’s 87 €. Schmidt hat’s gewusst — und 4 Mal nach dem Tor zu ihr gewinkt.'}
             />
             <StoryCard
               image={PHOTOS.teamCelebration}
@@ -132,12 +152,12 @@ export default function LandingPage() {
             <StoryCard
               image={PHOTOS.teamGreen}
               imageAlt="TSV-Abtswind-Mannschaft jubelt in grünen Trikots"
-              kicker="Onkel Tom · Familie · Seine Wahl"
-              headline="10 € pro Kopfballtor."
-              body="Toms Spezial-Wette für seinen Neffen. Hat 10 € gewählt — andere geben 5 € oder 25 €. Trainer meldet&apos;s im Bus per Smartphone, Tom bestätigt. Saison-Rechnung listet jedes Kopfballtor mit Datum + Minute."
+              kicker="Opa Heinz · Saison-Wette · Seine Wahl"
+              headline="200 € wenn der Aufstieg klappt."
+              body="Heinz fiebert seit 40 Jahren mit. Er hat 200 € auf den Aufstieg gesetzt und 5 € pro Kopfballtor seines Enkels. Saisonende → Rechnung, Geld geht an den Verein."
             />
           </div>
-          <p className="mt-8 text-sm text-brand-night-navy/60 text-center max-w-2xl mx-auto">
+          <p className="mt-6 md:mt-8 text-xs md:text-sm text-brand-night-navy/60 text-center max-w-2xl mx-auto">
             <strong>Du legst deinen Betrag selbst fest.</strong> Pro Trigger einzeln, mit optionalem
             Monats-Cap, jederzeit anpassbar. Es gibt keine Mindest-Pledge-Höhe.
           </p>
@@ -145,14 +165,14 @@ export default function LandingPage() {
       </section>
 
       {/* SO GEHT'S */}
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="font-display font-black text-3xl md:text-4xl tracking-tight text-brand-night-navy">
+      <section className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-16">
+        <h2 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
           So geht&apos;s <span className="text-accent">in 4 Schritten</span>
         </h2>
-        <p className="mt-2 text-brand-night-navy/60 text-sm">
+        <p className="mt-2 text-brand-night-navy/60 text-xs md:text-sm">
           Onboarding bis erste Rechnung: ~5 Minuten plus 4 Wochen Saison.
         </p>
-        <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-6 md:mt-8 grid gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Step
             num="01"
             title="Verein anlegen"
@@ -178,7 +198,7 @@ export default function LandingPage() {
 
       {/* TRIGGER-BEISPIELE — kompakter Bild-Streifen oberhalb */}
       <section className="bg-brand-night-navy text-white">
-        <div className="relative h-32 md:h-40 overflow-hidden">
+        <div className="relative h-24 md:h-40 overflow-hidden">
           <Image
             src={PHOTOS.teamBrandedLine}
             alt="Mannschaft in KickPact-Trikots jubelt in der Reihe"
@@ -188,15 +208,15 @@ export default function LandingPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-brand-night-navy/30 via-brand-night-navy/20 to-brand-night-navy" />
         </div>
-        <div className="mx-auto max-w-6xl px-6 py-14 -mt-12 relative">
-          <h2 className="font-display font-black text-3xl md:text-4xl tracking-tight">
+        <div className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-14 -mt-8 md:-mt-12 relative">
+          <h2 className="font-display font-black text-2xl md:text-4xl tracking-tight">
             Was kann ein <span className="text-accent">Pledge</span> sein?
           </h2>
-          <p className="mt-2 text-white/80 max-w-2xl text-sm">
-            16 Trigger-Typen — vom simplen Tor bis zum Lieblings-Stürmer-Bonus.{" "}
+          <p className="mt-2 text-white/80 max-w-2xl text-xs md:text-sm">
+            Vom simplen Tor bis zum Saison-Aufstieg.{" "}
             <strong className="text-white">Beträge unten sind nur Beispiele — du wählst pro Trigger frei zwischen 0,50 € und 500 €.</strong>
           </p>
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 md:mt-8 grid gap-2.5 md:gap-3 grid-cols-2 lg:grid-cols-4">
             <TriggerCard
               emoji="⚽"
               name="Pro Tor"
@@ -245,9 +265,9 @@ export default function LandingPage() {
               examples={["Bizeps-Tor · Trainer-Trinkrunde"]}
             />
           </div>
-          <p className="mt-6 text-xs text-white/50">
-            <span className="inline-flex items-center gap-1 mr-3">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Auto (von Fußball.de)
+          <p className="mt-5 md:mt-6 text-[0.7rem] md:text-xs text-white/50 flex flex-wrap gap-x-3 gap-y-1">
+            <span className="inline-flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Auto (Fußball.de)
             </span>
             <span className="inline-flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-white/60" /> Verein meldet + Sponsor bestätigt
@@ -256,15 +276,49 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* SAISON-WETTEN — eigene Section, Light-Hintergrund, Akzent-Pop */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-accent/10 via-white to-accent/5">
+        <div className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-16">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center rounded-full bg-accent/15 px-3 py-1 text-[0.6rem] md:text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30">
+              Neu · Saison-Wetten
+            </span>
+            <h2 className="mt-3 font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
+              Nicht nur pro Spiel. <span className="text-accent">Pro Saison.</span>
+            </h2>
+            <p className="mt-2 text-sm md:text-base text-brand-night-navy/70">
+              Wettet auf das große Ziel: Aufstieg, Klassenerhalt, Tabellenplatz. Saison-Ende
+              → wenn das Ziel erreicht wird, geht der Betrag an den Verein. Wenn nicht: nix.
+              Echtes Performance-Sponsoring auf Saisons-Ebene.
+            </p>
+          </div>
+          <div className="mt-6 md:mt-8 grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
+            <SeasonBetCard emoji="⬆️" name="Aufstieg" example="z.B. 200 €" detail="Wenn am Saison-Ende Platz 1 oder 2" />
+            <SeasonBetCard emoji="🛟" name="Klassenerhalt" example="z.B. 100 €" detail="Wenn nicht abgestiegen" highlight />
+            <SeasonBetCard emoji="🥇" name="Top 5" example="z.B. 75 €" detail="Wenn End-Tabellenplatz 1–5" />
+            <SeasonBetCard emoji="🎯" name="Platz 5–9" example="z.B. 50 €" detail="Solides Mittelfeld" />
+            <SeasonBetCard emoji="👑" name="Meister" example="z.B. 500 €" detail="Nur wenn Tabellenführer am Saisons-Ende" />
+            <SeasonBetCard emoji="🏆" name="Pokal-Halbfinale" example="z.B. 150 €" detail="Wenn HF im Verbands-/Kreispokal erreicht" />
+            <SeasonBetCard emoji="📉" name="Kein Abstieg" example="z.B. 80 €" detail="Sicherheits-Polster Variante" />
+            <SeasonBetCard emoji="🎺" name="Custom-Ziel" example="frei wählbar" detail={'z.B. "20 Tore mehr als letzte Saison"'} />
+          </div>
+          <p className="mt-5 md:mt-6 text-xs md:text-sm text-brand-night-navy/70 max-w-2xl">
+            Tabellen-Stände kommen direkt von Fußball.de, sobald die Saison gewertet ist.
+            Custom-Ziele werden vom Verein gemeldet und vom Sponsor bestätigt — gleicher
+            Trust-Mechanismus wie bei Spezial-Events.
+          </p>
+        </div>
+      </section>
+
       {/* PRICING */}
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="font-display font-black text-3xl md:text-4xl tracking-tight text-brand-night-navy">
+      <section className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-16">
+        <h2 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
           Faire <span className="text-accent">Preise.</span>
         </h2>
-        <p className="mt-2 text-brand-night-navy/60 text-sm">
+        <p className="mt-2 text-brand-night-navy/60 text-xs md:text-sm">
           Pro Mannschaft. 30 Tage gratis. Monatlich kündbar.
         </p>
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
+        <div className="mt-6 md:mt-8 grid gap-4 md:gap-6 md:grid-cols-2">
           <PriceCard
             plan="Basic"
             price="9 €"
@@ -292,7 +346,7 @@ export default function LandingPage() {
             ]}
           />
         </div>
-        <p className="mt-8 text-sm text-brand-night-navy/60">
+        <p className="mt-6 md:mt-8 text-xs md:text-sm text-brand-night-navy/60">
           Typischer Kader hat 18–25 Spieler — das macht{" "}
           <strong>0,36 – 1,06 € pro Spieler/Monat.</strong>
         </p>
@@ -300,14 +354,22 @@ export default function LandingPage() {
 
       {/* FAQ */}
       <section className="bg-brand-off-white border-y border-brand-neutral/40">
-        <div className="mx-auto max-w-3xl px-6 py-14">
-          <h2 className="font-display font-black text-3xl md:text-4xl tracking-tight text-brand-night-navy">
+        <div className="mx-auto max-w-3xl px-5 md:px-6 py-10 md:py-14">
+          <h2 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
             Häufige <span className="text-accent">Fragen</span>
           </h2>
-          <Accordion type="single" collapsible className="mt-6">
+          <Accordion type="single" collapsible className="mt-5 md:mt-6">
             <FaqItem
               q="Sind die Beträge irgendwie vorgegeben?"
               a="Nein. Beträge sind komplett frei wählbar — von 0,50 € bis 500 € pro Event. Familie nimmt oft 1–5 €/Tor, Unternehmen 25–100 €/Sieg. Im Pledge-Wizard siehst du eine Worst-Case-Hochrechnung, damit du nicht überraschend mehr zahlst als gedacht. Plus optionaler Monats-Cap."
+            />
+            <FaqItem
+              q="Wie funktionieren die Saison-Wetten?"
+              a={'Saison-Wetten sind Pledges, die nicht pro Spiel sondern erst am Saisons-Ende abrechnen — z.B. 200 € für Aufstieg, 100 € für Klassenerhalt, 50 € für Platz 1–5. KickPact liest die End-Tabelle von Fußball.de aus; wenn das Ziel erreicht wurde, geht der volle Betrag an den Verein. Wenn nicht, zahlt der Sponsor nichts.'}
+            />
+            <FaqItem
+              q="Funktioniert das auch für Junioren-Mannschaften?"
+              a={'Ja. Solange die Mannschaft auf Fußball.de gelistet ist, scrapt unser Crawler die Spielergebnisse. Bei Junioren kannst du einen Elternteil als Sponsor-Manager hinterlegen — er sammelt Pledges von Oma, Onkel, Freunden und behält den Überblick, ohne dass jeder eine eigene Mail-Adresse braucht. Familien-Sponsoring auch ohne Smartphone für Linus aus der C-Jugend.'}
             />
             <FaqItem
               q="Sind die Beträge für den Sponsor steuerlich absetzbar?"
@@ -324,10 +386,6 @@ export default function LandingPage() {
             <FaqItem
               q="Wie verhindere ich, dass ein Sponsor von einer hohen Rechnung überrascht wird?"
               a='Jeder Pledge kann einen optionalen Monats-Cap haben (z.B. "maximal 50 € pro Monat egal was passiert"). Wir empfehlen das aktiv im Pledge-Wizard. Außerdem zeigt KickPact dem Sponsor immer eine Worst-Case-Schätzung.'
-            />
-            <FaqItem
-              q="Funktioniert das auch für Junioren-Mannschaften?"
-              a="Ja. Solange die Mannschaft auf Fußball.de gelistet ist, scrapt unser Crawler die Spielergebnisse. Junioren-Mannschaften sind oft sogar besonders dankbar für Familien-Sponsoring."
             />
             <FaqItem
               q="Was, wenn der Trainer einen Spezial-Event falsch meldet?"
@@ -349,26 +407,26 @@ export default function LandingPage() {
       <section className="relative overflow-hidden bg-white">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-white to-accent/10" aria-hidden />
-          <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-accent/15 blur-3xl" aria-hidden />
-          <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-accent/10 blur-3xl" aria-hidden />
+          <div className="absolute top-0 right-0 h-72 md:h-96 w-72 md:w-96 rounded-full bg-accent/15 blur-3xl" aria-hidden />
+          <div className="absolute bottom-0 left-0 h-56 md:h-72 w-56 md:w-72 rounded-full bg-accent/10 blur-3xl" aria-hidden />
         </div>
-        <div className="relative mx-auto max-w-3xl px-6 py-16 text-center">
-          <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/20">
+        <div className="relative mx-auto max-w-3xl px-5 md:px-6 py-12 md:py-16 text-center">
+          <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.6rem] md:text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/20">
             Kick · Pact · Impact
           </span>
-          <h2 className="mt-4 font-display font-black text-3xl md:text-5xl tracking-tight text-brand-night-navy">
+          <h2 className="mt-3 md:mt-4 font-display font-black text-[1.75rem] sm:text-3xl md:text-5xl leading-[1.05] tracking-tight text-brand-night-navy">
             Bereit für mehr
             <br />
             <span className="text-accent">Impact pro Spiel?</span>
           </h2>
-          <p className="mt-3 text-brand-night-navy/70 max-w-xl mx-auto">
+          <p className="mt-3 text-sm md:text-base text-brand-night-navy/70 max-w-xl mx-auto">
             30 Tage gratis. Kein Vertrag. Kein Risiko für deinen Verein.
           </p>
-          <div className="mt-7 flex flex-wrap gap-3 justify-center">
-            <Button variant="accent" size="lg" asChild>
+          <div className="mt-6 md:mt-7 flex flex-col sm:flex-row gap-3 justify-center">
+            <Button variant="accent" size="lg" asChild className="w-full sm:w-auto">
               <Link href="/signup">Verein anlegen</Link>
             </Button>
-            <Button variant="outline" size="lg" asChild>
+            <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
               <Link href="/login">Login</Link>
             </Button>
           </div>
@@ -376,7 +434,7 @@ export default function LandingPage() {
       </section>
 
       {/* MINI-FOOTER */}
-      <section className="mx-auto max-w-6xl px-6 py-10 text-sm text-brand-night-navy/60">
+      <section className="mx-auto max-w-6xl px-5 md:px-6 py-6 md:py-10 text-xs md:text-sm text-brand-night-navy/60">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link href="/status" className="hover:text-accent">
             System-Status &amp; Live-Demo →
@@ -391,12 +449,12 @@ export default function LandingPage() {
 function Step({ num, title, body }: { num: string; title: string; body: string }) {
   return (
     <Card className="border-brand-neutral/40 shadow-none hover:border-accent/40 transition-colors">
-      <CardContent className="p-6">
-        <div className="font-mono text-xs text-accent font-bold tracking-widest">{num}</div>
-        <h3 className="mt-3 font-display font-black text-xl tracking-tight text-brand-night-navy">
+      <CardContent className="p-4 md:p-6">
+        <div className="font-mono text-[0.7rem] md:text-xs text-accent font-bold tracking-widest">{num}</div>
+        <h3 className="mt-2 md:mt-3 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
           {title}
         </h3>
-        <p className="mt-2 text-sm text-brand-night-navy/70 leading-relaxed">{body}</p>
+        <p className="mt-1.5 md:mt-2 text-xs md:text-sm text-brand-night-navy/70 leading-relaxed">{body}</p>
       </CardContent>
     </Card>
   );
@@ -422,18 +480,18 @@ function StoryCard({
           src={image}
           alt={imageAlt}
           fill
-          sizes="(max-width: 768px) 100vw, 33vw"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           className="object-cover object-center group-hover:scale-[1.03] transition-transform duration-500"
         />
       </div>
-      <div className="p-6">
-        <div className="text-xs uppercase tracking-[0.15em] text-accent-dark font-bold">
+      <div className="p-4 md:p-6">
+        <div className="text-[0.65rem] md:text-xs uppercase tracking-[0.15em] text-accent-dark font-bold">
           {kicker}
         </div>
-        <h3 className="mt-3 font-display font-black text-xl tracking-tight text-brand-night-navy">
+        <h3 className="mt-2 md:mt-3 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
           {headline}
         </h3>
-        <p className="mt-3 text-sm text-brand-night-navy/70 leading-relaxed">{body}</p>
+        <p className="mt-2 md:mt-3 text-xs md:text-sm text-brand-night-navy/70 leading-relaxed">{body}</p>
       </div>
     </article>
   );
@@ -455,14 +513,14 @@ function TriggerCard({
   return (
     <div
       className={
-        "rounded-lg border p-4 transition-colors " +
+        "rounded-lg border p-3 md:p-4 transition-colors " +
         (highlight
           ? "border-accent bg-accent/10"
           : "border-white/15 bg-white/5 hover:border-accent/40")
       }
     >
       <div className="flex items-start justify-between">
-        <div className="text-2xl">{emoji}</div>
+        <div className="text-xl md:text-2xl">{emoji}</div>
         <span
           className={
             "h-1.5 w-1.5 mt-2 rounded-full " + (auto ? "bg-accent" : "bg-white/60")
@@ -470,10 +528,44 @@ function TriggerCard({
           title={auto ? "Auto" : "Manuell"}
         />
       </div>
-      <div className="mt-3 font-display font-black text-sm tracking-tight text-white">
+      <div className="mt-2 md:mt-3 font-display font-black text-xs md:text-sm tracking-tight text-white">
         {name}
       </div>
-      <div className="mt-1 text-xs text-white/70">{examples.join(" · ")}</div>
+      <div className="mt-1 text-[0.65rem] md:text-xs text-white/70 leading-snug">{examples.join(" · ")}</div>
+    </div>
+  );
+}
+
+function SeasonBetCard({
+  emoji,
+  name,
+  example,
+  detail,
+  highlight = false
+}: {
+  emoji: string;
+  name: string;
+  example: string;
+  detail: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={
+        "rounded-xl border p-3 md:p-4 transition-colors " +
+        (highlight
+          ? "border-accent bg-accent/10"
+          : "border-brand-neutral/40 bg-white hover:border-accent/50")
+      }
+    >
+      <div className="flex items-center justify-between">
+        <div className="text-xl md:text-2xl">{emoji}</div>
+        <div className="text-[0.65rem] md:text-xs font-bold text-accent-dark">{example}</div>
+      </div>
+      <div className="mt-2 md:mt-3 font-display font-black text-sm md:text-base tracking-tight text-brand-night-navy">
+        {name}
+      </div>
+      <div className="mt-1 text-[0.65rem] md:text-xs text-brand-night-navy/60 leading-snug">{detail}</div>
     </div>
   );
 }
@@ -494,33 +586,33 @@ function PriceCard({
   return (
     <div
       className={
-        "rounded-2xl border p-8 " +
+        "rounded-2xl border p-6 md:p-8 " +
         (highlight ? "border-accent bg-accent/5" : "border-brand-neutral/40 bg-white")
       }
     >
       <div className="flex items-baseline justify-between">
-        <h3 className="font-display font-black text-3xl tracking-tight text-brand-night-navy">
+        <h3 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
           {plan}
         </h3>
         {highlight && (
-          <span className="rounded-full bg-accent text-white text-[0.6rem] uppercase tracking-widest font-bold px-2 py-1">
+          <span className="rounded-full bg-accent text-white text-[0.55rem] md:text-[0.6rem] uppercase tracking-widest font-bold px-2 py-1">
             empfohlen
           </span>
         )}
       </div>
-      <div className="mt-6 flex items-baseline gap-2">
-        <span className="font-display font-black text-5xl tracking-tight text-brand-night-navy">
+      <div className="mt-4 md:mt-6 flex items-baseline gap-2">
+        <span className="font-display font-black text-4xl md:text-5xl tracking-tight text-brand-night-navy">
           {price}
         </span>
-        <span className="text-sm text-brand-night-navy/60">{unit}</span>
+        <span className="text-xs md:text-sm text-brand-night-navy/60">{unit}</span>
       </div>
-      <ul className="mt-6 space-y-2.5 text-sm">
+      <ul className="mt-4 md:mt-6 space-y-2 md:space-y-2.5 text-xs md:text-sm">
         {features.map((f) => (
           <li key={f} className="flex gap-2 text-brand-night-navy/80">
             <svg
               viewBox="0 0 20 20"
               fill="currentColor"
-              className="h-5 w-5 flex-shrink-0 text-accent"
+              className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0 text-accent mt-0.5"
             >
               <path
                 fillRule="evenodd"
@@ -532,7 +624,7 @@ function PriceCard({
           </li>
         ))}
       </ul>
-      <div className="mt-8">
+      <div className="mt-6 md:mt-8">
         <Button
           variant={highlight ? "accent" : "outline"}
           className="w-full"
