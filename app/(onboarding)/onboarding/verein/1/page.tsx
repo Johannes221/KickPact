@@ -10,7 +10,7 @@ const STEPS = [
 
 export default function Step1Page() {
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 md:space-y-10">
       <WizardProgress steps={STEPS} currentStep={1} />
       <SearchStep />
     </div>

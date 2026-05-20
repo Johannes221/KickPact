@@ -11,7 +11,7 @@ const STEPS = [
 
 export default function Step2Page() {
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 md:space-y-10">
       <WizardProgress steps={STEPS} currentStep={2} />
       <Suspense fallback={<div className="text-brand-night-navy/60">Lade…</div>}>
         <TeamPlanStep />

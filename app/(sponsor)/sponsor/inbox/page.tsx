@@ -9,12 +9,12 @@ export default async function SponsorInboxPage() {
   const pending = await listPendingForSponsor(user.id);
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <div className="mb-10">
-        <h1 className="font-display font-black text-4xl md:text-5xl tracking-tight text-brand-night-navy">
+    <div className="mx-auto max-w-3xl">
+      <div className="mb-6 md:mb-10">
+        <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
           Inbox
         </h1>
-        <p className="mt-2 text-brand-night-navy/60">
+        <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
           {pending.length === 0
             ? "Keine ausstehenden Events."
             : `${pending.length} ${pending.length === 1 ? "Event" : "Events"} zur Bestätigung.`}
@@ -22,9 +22,9 @@ export default async function SponsorInboxPage() {
       </div>
 
       {pending.length === 0 ? (
-        <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-8 text-center">
-          <div className="text-4xl mb-3">🎉</div>
-          <p className="text-brand-night-navy/70">
+        <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 md:p-8 text-center">
+          <div className="text-3xl md:text-4xl mb-2 md:mb-3">🎉</div>
+          <p className="text-sm md:text-base text-brand-night-navy/70">
             Alles erledigt! Vereine melden ein Spezial-Event und du kriegst hier eine Anfrage.
           </p>
         </div>
@@ -35,6 +35,6 @@ export default async function SponsorInboxPage() {
           ))}
         </div>
       )}
-    </main>
+    </div>
   );
 }

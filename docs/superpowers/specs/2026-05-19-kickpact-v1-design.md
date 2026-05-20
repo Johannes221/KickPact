@@ -168,6 +168,26 @@ erDiagram
 | `man_of_match` | — | 1× pro Spiel wenn Spieler X "Spieler des Spiels" |
 | `custom` | beliebig | Verein nennt es selber (z.B. "Bizeps-Tor von Schmidt") |
 
+**Saison-Wetten (1× pro Saison, evaluiert am Saison-Ende):**
+
+Saison-Wetten sind Pledges, die nicht pro Spiel feuern, sondern erst wenn die
+Saison gewertet wurde. Charge entsteht 1× pro `(pledge_rule, saison)` mit Status
+`pending` bis zur Auswertung, dann `confirmed` (Ziel erreicht) oder `cancelled`
+(verfehlt).
+
+| `trigger_type` | Params | Beschreibung |
+|---|---|---|
+| `season_promotion` | — | Aufstieg (Platz 1 oder 2, Liga-abhängig) |
+| `season_no_relegation` | — | Klassenerhalt |
+| `season_table_position` | `min_pos`, `max_pos` (z.B. 1–5, 5–9) | End-Tabellenplatz innerhalb Range |
+| `season_champion` | — | Tabellenführer am Saisons-Ende |
+| `season_cup_round` | `min_round` (z.B. "halbfinale") | Verbands-/Kreispokal-Runde mindestens erreicht |
+| `season_custom` | `goal_text` | Verein meldet manuell + Sponsor bestätigt (z.B. "20 Tore mehr als letzte Saison") |
+
+Auto-Evaluation: Inngest-Job `evaluate-season` läuft 24h nach offiziellem
+Saisons-Ende (Fußball.de-Saisonkalender), liest End-Tabelle, erzeugt Charges.
+Manuelle Saison-Wetten landen wie `special_goal` in der Approval-Inbox.
+
 ### 5.4 Approval-Lifecycle
 
 - Manual Event wird gemeldet → `event_approval.status = pending`, `expires_at = saison_ende(team)`, `Charge.status = pending_approval`
@@ -201,6 +221,20 @@ Landing → "Verein anlegen"
   → Sponsor-Typ wählen (familie / business → zusätzliche Felder)
   → Pledge-Setup-Wizard (siehe 6.3)
 ```
+
+**Eltern-als-Sponsor-Manager (Junioren-Use-Case):**
+
+Bei Jugend-Mannschaften haben die eigentlichen "Spender" (Oma, Onkel, Patentanten)
+oft keine eigene Mail-Adresse oder Lust, die App einzurichten. Lösung:
+ein Elternteil legt **ein** Sponsor-Konto an, der `sponsors`-Datensatz erhält
+ein optionales Array `pledge_proxies`: `[{name, contribution_amount_cents, note}]`.
+Auf der Rechnung erscheint dann eine Aufgliederung "davon: Oma 30€, Onkel Klaus 50€",
+und der Elternteil verteilt das eingenommene Geld privat.
+
+DB-Erweiterung:
+- `sponsors.pledge_proxies_json` (nullable JSONB) — nur befüllt wenn dieser
+  Sponsor als Manager für mehrere Personen agiert. Optional. Hat keine
+  Auswirkung auf den Trigger-/Charge-Mechanismus, ist reines Rechnungs-Detail.
 
 ### 6.3 Pledge-Setup (Sponsor)
 

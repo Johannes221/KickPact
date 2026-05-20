@@ -7,18 +7,18 @@ export const metadata = { title: "Pledge anlegen · KickPact" };
 export default async function NewPledgePage() {
   await requireUser();
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
-      <h1 className="font-display font-black text-4xl md:text-5xl tracking-tight text-brand-night-navy">
+    <div className="mx-auto max-w-4xl">
+      <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
         Pledge <span className="text-accent">aufbauen</span>
       </h1>
-      <p className="mt-2 text-brand-night-navy/60 max-w-2xl">
+      <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60 max-w-2xl">
         Wähle Trigger, leg Beträge fest. Wir zeigen dir live, worauf du dich maximal einlässt.
       </p>
-      <div className="mt-10">
+      <div className="mt-6 md:mt-10">
         <Suspense fallback={<div className="text-brand-night-navy/60">Lade…</div>}>
           <PledgeBuilder />
         </Suspense>
       </div>
-    </main>
+    </div>
   );
 }

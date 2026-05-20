@@ -24,11 +24,11 @@ export function HeaderUserMenu() {
 
   if (!session?.user) {
     return (
-      <div className="flex gap-2">
-        <Button variant="ghost" asChild>
+      <div className="flex gap-1.5 sm:gap-2">
+        <Button variant="ghost" size="sm" asChild className="text-xs sm:text-sm px-2.5 sm:px-3">
           <Link href="/login">Login</Link>
         </Button>
-        <Button variant="default" asChild>
+        <Button variant="default" size="sm" asChild className="text-xs sm:text-sm px-2.5 sm:px-3">
           <Link href="/signup">Verein anlegen</Link>
         </Button>
       </div>

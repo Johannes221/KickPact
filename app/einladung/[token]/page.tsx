@@ -31,7 +31,7 @@ export default async function InvitationPage({
 
   if (!invitation) {
     return (
-      <main className="mx-auto max-w-md px-6 py-16">
+      <main className="mx-auto max-w-md px-5 md:px-6 py-10 md:py-16">
         <Card className="border-brand-neutral/40">
           <CardHeader>
             <CardTitle className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
@@ -53,7 +53,7 @@ export default async function InvitationPage({
 
   if (invitation.status === "revoked") {
     return (
-      <main className="mx-auto max-w-md px-6 py-16">
+      <main className="mx-auto max-w-md px-5 md:px-6 py-10 md:py-16">
         <Card className="border-brand-neutral/40">
           <CardHeader>
             <CardTitle className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
@@ -72,21 +72,21 @@ export default async function InvitationPage({
   const isLoggedIn = !!session?.user;
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
+    <main className="mx-auto max-w-2xl px-5 md:px-6 py-10 md:py-16">
       <div className="text-center">
-        <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-accent-dark">
+        <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.65rem] md:text-xs font-semibold uppercase tracking-[0.15em] text-accent-dark">
           Sponsor-Einladung
         </span>
-        <h1 className="mt-6 font-display font-black text-4xl md:text-5xl tracking-tight text-brand-night-navy">
+        <h1 className="mt-4 md:mt-6 font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
           {invitation.clubName}
         </h1>
-        <p className="mt-2 text-brand-night-navy/60">
+        <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
           lädt dich ein, die <strong className="text-brand-night-navy">{invitation.teamName}</strong> zu unterstützen.
         </p>
       </div>
 
-      <Card className="mt-10 border-brand-neutral/40">
-        <CardContent className="pt-6">
+      <Card className="mt-6 md:mt-10 border-brand-neutral/40">
+        <CardContent className="pt-5 md:pt-6">
           <p className="text-sm text-brand-night-navy/80 leading-relaxed">
             Lege einen Pledge an — z.B. <em>5 € pro Tor</em> oder <em>10 € pro Sieg</em>. Du
             zahlst nur, wenn die Mannschaft auch wirklich performt. Am Monatsende bekommst

@@ -66,18 +66,18 @@ export default async function PledgeDetailPage({
   const rules = await db.select().from(pledgeRules).where(eq(pledgeRules.pledgeId, id));
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
+    <div className="mx-auto max-w-3xl">
       <div>
         <Link href="/sponsor" className="text-sm text-brand-night-navy/60 hover:text-accent">
           ← Sponsor-Dashboard
         </Link>
-        <h1 className="mt-3 font-display font-black text-4xl md:text-5xl tracking-tight text-brand-night-navy">
+        <h1 className="mt-2 md:mt-3 font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
           {pledge.teamName}
         </h1>
-        <p className="mt-1 text-brand-night-navy/60">{pledge.clubName}</p>
+        <p className="mt-1 text-sm md:text-base text-brand-night-navy/60">{pledge.clubName}</p>
       </div>
 
-      <div className="mt-10 grid gap-4 md:grid-cols-3">
+      <div className="mt-6 md:mt-10 grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-3">
         <StatCard label="Status" value={pledge.status} />
         <StatCard
           label="Laufzeit"
@@ -89,10 +89,10 @@ export default async function PledgeDetailPage({
         />
       </div>
 
-      <h2 className="mt-12 font-display font-black text-2xl tracking-tight text-brand-night-navy">
+      <h2 className="mt-8 md:mt-12 font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
         Trigger-Regeln
       </h2>
-      <ul className="mt-4 space-y-2">
+      <ul className="mt-3 md:mt-4 space-y-2">
         {rules.map((r) => (
           <li
             key={r.id}
@@ -120,14 +120,14 @@ export default async function PledgeDetailPage({
         ))}
       </ul>
 
-      <div className="mt-10 rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6">
+      <div className="mt-6 md:mt-10 rounded-lg border border-brand-neutral/40 bg-brand-off-white p-4 md:p-6">
         <p className="text-sm text-brand-night-navy/70">
           Pledge ist <strong>{pledge.status}</strong>. Bei jedem neuen Spiel der Mannschaft
           erzeugt KickPact automatisch Charges nach diesen Regeln. Eine Approval-Inbox für
           Spezial-Events + Monats-Rechnungen kommt in Plan 3 + 4.
         </p>
       </div>
-    </main>
+    </div>
   );
 }
 

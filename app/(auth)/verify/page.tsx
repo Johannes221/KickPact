@@ -5,10 +5,10 @@ export const metadata = { title: "E-Mail prüfen · KickPact" };
 
 export default function VerifyPage() {
   return (
-    <main className="mx-auto max-w-md px-6 py-16">
+    <main className="mx-auto max-w-md px-5 md:px-6 py-10 md:py-16">
       <Card>
         <CardHeader>
-          <CardTitle className="font-display text-3xl tracking-wide">
+          <CardTitle className="font-display text-2xl md:text-3xl tracking-wide">
             Check deine Mails
           </CardTitle>
           <CardDescription>

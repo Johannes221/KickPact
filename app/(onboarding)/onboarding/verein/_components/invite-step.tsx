@@ -86,7 +86,7 @@ export function InviteStep() {
     <div className="space-y-6">
       <Card className="border-accent/40 bg-accent/5">
         <CardHeader>
-          <CardTitle className="font-display font-black text-3xl tracking-tight text-brand-night-navy">
+          <CardTitle className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
             🎉 Geschafft!
           </CardTitle>
           <p className="text-brand-night-navy/70">

@@ -22,15 +22,15 @@ export default async function ClubDashboard({
     .limit(10);
 
   return (
-    <div className="space-y-10">
-      <div className="grid gap-4 md:grid-cols-3">
+    <div className="space-y-6 md:space-y-10">
+      <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-3">
         <StatCard label="Mannschaften" value={String(teamRows.length)} />
         <StatCard label="Aktive Sponsoren" value="—" hint="kommt mit Plan 3" />
         <StatCard label="Spiele ausgewertet" value="—" hint="kommt mit Plan 3" />
       </div>
 
       <section>
-        <h2 className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
           Mannschaften
         </h2>
         <ul className="mt-4 space-y-2">
@@ -53,7 +53,7 @@ export default async function ClubDashboard({
       </section>
 
       <section>
-        <h2 className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
           Einladungslinks
         </h2>
         {invitations.length === 0 ? (
@@ -96,7 +96,7 @@ function StatCard({ label, value, hint }: { label: string; value: string; hint?:
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="font-display font-black text-3xl tracking-tight text-brand-night-navy">
+        <div className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
           {value}
         </div>
         {hint && <div className="text-xs text-brand-night-navy/40 mt-1">{hint}</div>}

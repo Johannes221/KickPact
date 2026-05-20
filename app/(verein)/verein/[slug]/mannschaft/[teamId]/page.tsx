@@ -33,12 +33,12 @@ export default async function TeamDetailPage({
   const matches = await listMatchesForTeam(team.id, 30);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 md:space-y-8">
       <div>
         <Link href={`/verein/${slug}`} className="text-sm text-brand-night-navy/60 hover:text-accent">
           ← Vereins-Dashboard
         </Link>
-        <h2 className="mt-2 font-display font-black text-3xl tracking-tight text-brand-night-navy">
+        <h2 className="mt-1.5 md:mt-2 font-display font-black text-xl md:text-3xl tracking-tight text-brand-night-navy break-words">
           {team.name}
         </h2>
         <p className="text-sm text-brand-night-navy/60">Saison {team.saison}</p>
