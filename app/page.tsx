@@ -29,8 +29,8 @@ const PHOTOS = {
 export default function LandingPage() {
   return (
     <main>
-      {/* HERO — first-fold, photo-dominant, animated background, compact text */}
-      <section className="relative w-full overflow-hidden bg-brand-night-navy h-[calc(100svh-65px)] min-h-[560px] max-h-[860px]">
+      {/* HERO — full-bleed unter transparentem Header, ken-burns Background */}
+      <section className="relative w-full overflow-hidden bg-brand-night-navy h-svh min-h-[640px] max-h-[920px]">
         {/* Background: animated football photo */}
         <div className="absolute inset-0">
           <Image
@@ -41,13 +41,13 @@ export default function LandingPage() {
             sizes="100vw"
             className="object-cover object-center animate-ken-burns"
           />
-          {/* Gradient overlay für Lesbarkeit — bright but readable */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent" />
+          {/* Gradient overlay: links lesbar, rechts Photo dominant */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/55 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-white/30 via-transparent to-white/30" />
         </div>
 
-        {/* Content: linksbündig, vertikal zentriert, compact spacing */}
-        <div className="relative z-10 mx-auto max-w-6xl px-6 h-full flex flex-col justify-center">
+        {/* Content: linksbündig, vertikal zentriert */}
+        <div className="relative z-10 mx-auto max-w-6xl px-6 h-full flex flex-col justify-center pt-16">
           <span className="animate-fade-up inline-flex w-fit items-center rounded-full bg-accent/15 px-3 py-1 text-[0.65rem] md:text-xs font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30 backdrop-blur-sm">
             Kick · Pact · Impact
           </span>
@@ -57,9 +57,9 @@ export default function LandingPage() {
             <span className="text-accent">jubelst du mit.</span>
           </h1>
           <p className="animate-fade-up delay-2 mt-4 md:mt-5 max-w-xl text-base md:text-lg text-brand-night-navy/85 leading-relaxed">
-            <strong className="text-brand-night-navy">3 €</strong> wenn Schmidt trifft.{" "}
-            <strong className="text-brand-night-navy">10 €</strong> pro Sieg.{" "}
-            <strong className="text-brand-night-navy">20 €</strong> pro Comeback. KickPact rechnet jedes Spiel automatisch ab.
+            <strong className="text-brand-night-navy">Du wählst die Beträge selbst.</strong>{" "}
+            Zum Beispiel: 3 € wenn Schmidt trifft. 10 € pro Sieg. 20 € pro Comeback. KickPact
+            rechnet jedes Spiel automatisch ab.
           </p>
           <div className="animate-fade-up delay-3 mt-6 md:mt-7 flex flex-wrap gap-3">
             <Button variant="accent" size="lg" asChild>
@@ -70,7 +70,7 @@ export default function LandingPage() {
             </Button>
           </div>
           <p className="animate-fade-up delay-4 mt-3 text-xs md:text-sm text-brand-night-navy/60">
-            Ab 9 € pro Monat — weniger als 1 € pro Spieler.
+            Frei wählbar pro Trigger — von 50 Cent bis 500 € pro Event.
           </p>
         </div>
       </section>
@@ -93,14 +93,14 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6 py-16">
           <div className="max-w-2xl">
             <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent-dark">
-              Echte Geschichten · Echter Impact
+              Echte Geschichten · Beträge frei gewählt
             </span>
             <h2 className="mt-3 font-display font-black text-3xl md:text-4xl tracking-tight text-brand-night-navy">
               Sponsoring, das <span className="text-accent">eine Geschichte erzählt.</span>
             </h2>
             <p className="mt-2 text-brand-night-navy/70">
               Keine Plakate, keine Trikot-Werbung. Sondern Menschen, die mitfiebern —
-              weil ihr Versprechen mit jedem Tor ein bisschen mehr wert wird.
+              jeder mit seinem eigenen Betrag, frei gewählt. Drei Beispiele aus dem echten Leben:
             </p>
           </div>
 
@@ -108,25 +108,29 @@ export default function LandingPage() {
             <StoryCard
               image={PHOTOS.youth}
               imageAlt="Junger Fußballer im Schuss am Ball"
-              kicker="Tante Erna · Familie"
+              kicker="Tante Erna · Familie · Ihre Wahl"
               headline="3 € wenn Schmidt ein Tor schießt."
-              body="Sie ist Patentante. Schmidt ist 13, spielt B-Jugend. Sie schaut jedes Spiel, jubelt am lautesten. Letzte Saison waren&apos;s 87 €. Schmidt hat&apos;s gewusst — und 4 Mal nach dem Tor zu ihr in die Tribüne gewinkt."
+              body="Sie ist Patentante. Schmidt ist 13, spielt B-Jugend. Sie hat sich für 3 € pro Tor entschieden — könnten auch 1 € oder 20 € sein. Letzte Saison waren&apos;s 87 €. Schmidt hat&apos;s gewusst — und 4 Mal nach dem Tor zu ihr in die Tribüne gewinkt."
             />
             <StoryCard
               image={PHOTOS.playerKick}
               imageAlt="Amateur-Fußballer beim Schuss"
-              kicker="Bäckerei Müller · Business"
+              kicker="Bäckerei Müller · Business · Sein Setup"
               headline="50 € pro Comeback-Sieg."
-              body="Stefan vom Bäcker an der Ecke. Hatte früher Trikot-Sponsoring für 500 € pauschal. Jetzt: nur wenn die Jungs richtig liefern. Comeback gegen Eintracht? 50 € fließen. Über die Saison kommen 600 € rein. Steuerlich absetzbar."
+              body="Stefan vom Bäcker hat sich bewusst für 50 €/Comeback entschieden — selten genug, dass es nicht ausartet. Über die Saison kommen ~600 € rein. Steuerlich absetzbar als Werbeleistung."
             />
             <StoryCard
               image={PHOTOS.balls}
               imageAlt="Fußbälle auf grünem Rasen vor dem Anpfiff"
-              kicker="Onkel Tom · Familie"
+              kicker="Onkel Tom · Familie · Seine Wahl"
               headline="10 € pro Kopfballtor."
-              body="Spezial-Wette von Tom für seinen Neffen. Trainer meldet's nach dem Spiel im Bus per Smartphone, Tom bestätigt per Klick. Auf der Saison-Rechnung steht jedes Kopfballtor mit Datum, Spiel und Minute."
+              body="Toms Spezial-Wette für seinen Neffen. Hat 10 € gewählt — andere geben 5 € oder 25 €. Trainer meldet&apos;s im Bus per Smartphone, Tom bestätigt. Saison-Rechnung listet jedes Kopfballtor mit Datum + Minute."
             />
           </div>
+          <p className="mt-8 text-sm text-brand-night-navy/60 text-center max-w-2xl mx-auto">
+            <strong>Du legst deinen Betrag selbst fest.</strong> Pro Trigger einzeln, mit optionalem
+            Monats-Cap, jederzeit anpassbar. Es gibt keine Mindest-Pledge-Höhe.
+          </p>
         </div>
       </section>
 
@@ -178,45 +182,46 @@ export default function LandingPage() {
           <h2 className="font-display font-black text-3xl md:text-4xl tracking-tight">
             Was kann ein <span className="text-accent">Pledge</span> sein?
           </h2>
-          <p className="mt-2 text-white/70 max-w-2xl text-sm">
-            16 Trigger-Typen — vom simplen Tor bis zum spieler-spezifischen Lieblings-Stürmer-Bonus. Jeder Trigger = mehr Impact pro Spieltag.
+          <p className="mt-2 text-white/80 max-w-2xl text-sm">
+            16 Trigger-Typen — vom simplen Tor bis zum Lieblings-Stürmer-Bonus.{" "}
+            <strong className="text-white">Beträge unten sind nur Beispiele — du wählst pro Trigger frei zwischen 0,50 € und 500 €.</strong>
           </p>
           <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <TriggerCard
               emoji="⚽"
               name="Pro Tor"
-              examples={["5 € · 10 €"]}
+              examples={["z.B. 5 € · 10 € · 25 €"]}
               auto
             />
             <TriggerCard
               emoji="💚"
               name="Pro Spieler-Tor"
-              examples={["3 € wenn Schmidt trifft"]}
+              examples={["z.B. 3 € wenn Schmidt trifft"]}
               auto
               highlight
             />
             <TriggerCard
               emoji="🏆"
               name="Pro Sieg"
-              examples={["10 € · 50 €"]}
+              examples={["z.B. 10 € · 25 € · 50 €"]}
               auto
             />
             <TriggerCard
               emoji="🛡️"
               name="Pro Zu-Null"
-              examples={["5 € · 15 €"]}
+              examples={["z.B. 5 € · 15 € · 30 €"]}
               auto
             />
             <TriggerCard
               emoji="🔥"
               name="Pro Comeback"
-              examples={["20 € · 50 €"]}
+              examples={["z.B. 20 € · 50 € · 100 €"]}
               auto
             />
             <TriggerCard
               emoji="🎯"
               name="Pro Hattrick"
-              examples={["25 € · 100 €"]}
+              examples={["z.B. 25 € · 50 € · 100 €"]}
               auto
             />
             <TriggerCard
@@ -290,6 +295,10 @@ export default function LandingPage() {
             Häufige <span className="text-accent">Fragen</span>
           </h2>
           <Accordion type="single" collapsible className="mt-6">
+            <FaqItem
+              q="Sind die Beträge irgendwie vorgegeben?"
+              a="Nein. Beträge sind komplett frei wählbar — von 0,50 € bis 500 € pro Event. Familie nimmt oft 1–5 €/Tor, Unternehmen 25–100 €/Sieg. Im Pledge-Wizard siehst du eine Worst-Case-Hochrechnung, damit du nicht überraschend mehr zahlst als gedacht. Plus optionaler Monats-Cap."
+            />
             <FaqItem
               q="Sind die Beträge für den Sponsor steuerlich absetzbar?"
               a="Bei Unternehmens-Sponsoren: ja, als Werbeleistung. KickPact erzeugt eine ordentliche Vereins-Rechnung mit USt-ID (oder §19-Kleinunternehmer-Hinweis). Bei Privatpersonen (Familie, Freunde) gilt der allgemeine Status — keine Steuervorteile, aber auch keine Pflichten."
