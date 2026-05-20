@@ -173,19 +173,19 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="border-b border-neutral-200 bg-white">
         <div className="mx-auto max-w-5xl px-6 py-16">
-          <div className="flex items-baseline gap-4">
-            <h1 className="font-display text-6xl tracking-wide">KickPact</h1>
+          <div className="flex items-baseline gap-4 flex-wrap">
+            <h1 className="font-display text-5xl md:text-6xl tracking-wide">KickPact</h1>
             <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-accent">
-              Plan 1 · Foundation
+              Beta · Staging
             </span>
           </div>
-          <p className="mt-3 text-lg text-neutral-600">
-            Performance-basiertes Sponsoring im Amateurfußball. Foundation läuft —
-            Trigger-Engine, Crawler und Daten-Pipeline sind live.
+          <p className="mt-3 text-base md:text-lg text-neutral-600">
+            Performance-basiertes Sponsoring im Amateurfußball. Plan 1–5 implementiert —
+            Auth, Onboarding, Match-Pipeline, Invoicing, Saison-Wetten + Sponsor-Discover live.
           </p>
           <p className="mt-1 text-sm text-neutral-400">
-            Diese Seite ist nur ein Status-Dashboard. Die richtige UI (Onboarding,
-            Vereins-Dashboard, Sponsor-Inbox) kommt in Plan 2 – 6.
+            Diese Seite ist ein Live-Status-Dashboard (Counts, Trigger-Engine-Demo).
+            Production-Domain kommt mit Stripe-Live-Keys.
           </p>
         </div>
       </section>
@@ -198,19 +198,19 @@ export default async function HomePage() {
             label="Postgres (Neon)"
             value={dbResult.ok ? "online" : "offline"}
             ok={dbResult.ok}
-            hint={dbResult.ok ? "19 Tabellen, 14 Enums" : dbResult.error}
+            hint={dbResult.ok ? "21 Tabellen, 17 Enums (incl. Saison + Discover)" : dbResult.error}
           />
           <StatusCard
             label="Trigger-Engine"
-            value="32 Tests · 97,8 % Coverage"
+            value="54 Tests passing"
             ok={true}
-            hint="16 Trigger-Types, alle TDD-validated"
+            hint="22 Trigger-Types (16 match + 6 season), alle TDD-validated"
           />
           <StatusCard
             label="Inngest-Jobs"
-            value="2 registriert"
+            value="6 registriert"
             ok={true}
-            hint="crawl-matches (cron 6h) · evaluate-match (on match/finished)"
+            hint="crawl-matches · evaluate-match · approval-reminders · generate-invoices (monatlich) · season-end-reminders · evaluate-season"
           />
         </div>
       </section>
@@ -350,24 +350,36 @@ export default async function HomePage() {
               Foundation, Schema, Engine, Crawler, Inngest-Pipeline
             </li>
             <li>
-              <span className="font-mono text-xs text-neutral-400">Plan 2</span> Better
-              Auth + Verein-Onboarding + Sponsor-Onboarding + Pledge-Setup
+              <span className="font-mono text-xs text-accent">✓ Plan 2</span> Better
+              Auth (Magic-Link + Google + Apple), Onboarding, Pledge-Setup
             </li>
             <li>
-              <span className="font-mono text-xs text-neutral-400">Plan 3</span>{" "}
+              <span className="font-mono text-xs text-accent">✓ Plan 3</span>{" "}
               Vereins-Dashboard, Match-Detail, Manual-Event-Editor, Approval-Inbox
             </li>
             <li>
-              <span className="font-mono text-xs text-neutral-400">Plan 4</span>{" "}
-              Invoicing (PDF + Mail), Saison-Ende-Flow
+              <span className="font-mono text-xs text-accent">✓ Plan 4</span>{" "}
+              Invoicing (PDF + Mail), Saison-Ende-Reminder
             </li>
             <li>
-              <span className="font-mono text-xs text-neutral-400">Plan 5</span>{" "}
-              Stripe-Abo, Grace-Period, Read-Only-Mode
+              <span className="font-mono text-xs text-accent">✓ Plan 5 (A)</span>{" "}
+              Stripe-Abo Skeleton, Checkout-Page, Webhook (Keys-Setup pending)
+            </li>
+            <li>
+              <span className="font-mono text-xs text-accent">✓ Extra</span>{" "}
+              Saison-Wetten (DB + evaluate-season Cron + Pledge-Builder + Trainer-Form)
+            </li>
+            <li>
+              <span className="font-mono text-xs text-accent">✓ Extra</span>{" "}
+              Sponsor-Discover (öffentliche Mannschafts-Suche + Inquiry-Flow)
+            </li>
+            <li>
+              <span className="font-mono text-xs text-neutral-400">Plan 5 (B)</span>{" "}
+              Past-Due-Read-Only, Trial-Reminder, Vereinslizenz-Subsumption
             </li>
             <li>
               <span className="font-mono text-xs text-neutral-400">Plan 6</span>{" "}
-              Marketing-Site, Brand mit ui-ux-pro-max, E2E, Hetzner-Deploy
+              Production-Domain (kickpact.com), DSGVO/Impressum, E2E
             </li>
           </ul>
         </div>

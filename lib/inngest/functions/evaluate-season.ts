@@ -124,8 +124,9 @@ export const evaluateSeason = inngest.createFunction(
 
 /**
  * Prüft ob ein Saison-Trigger gemäß dem End-Ergebnis hit ist.
+ * Exportiert für Unit-Tests.
  */
-function isTriggerHit(
+export function isTriggerHit(
   trigger: SeasonTriggerType,
   params: Record<string, unknown>,
   result: typeof seasonResults.$inferSelect
