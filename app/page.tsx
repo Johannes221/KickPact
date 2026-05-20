@@ -12,18 +12,18 @@ import { RolesTabs } from "./_components/roles-tabs";
 
 export const metadata = { title: "KickPact — Mehr als ein Spiel" };
 
-// Verifizierte Football-Photos (Source: unsplash.com, alle visuell geprüft)
+// Echte Mannschaftsfotos mit KickPact-Branding (lokale Assets)
 const PHOTOS = {
-  // Action-Match (zwei Spieler im Zweikampf, hell, sonnig)
-  matchAction: "https://images.unsplash.com/photo-1543326727-cf6c39e8f84c",
-  // Einzelner Spieler beim Schuss (sonnig, freundlich)
-  playerKick: "https://images.unsplash.com/photo-1517466787929-bc90951d0974",
-  // Drei Bälle auf Rasen (bright, technisch)
-  balls: "https://images.unsplash.com/photo-1551958219-acbc608c6377",
-  // Fuß am Ball (sportlich, fokussiert)
-  football: "https://images.unsplash.com/photo-1574629810360-7efbbe195018",
-  // Jugendspieler + Ball (Jugendfußball-Detail)
-  youth: "https://images.unsplash.com/photo-1606925797300-0b35e9d1794e"
+  // Hero: Team in KickPact-Trikots, Captain mit Faust nach oben — jubelnd
+  teamHero: "/brand/photos/team-hero.png",
+  // SG Reichenbach feiert nach Tor — schwarz, emotional
+  teamCelebration: "/brand/photos/team-celebration.png",
+  // TSV Abtswind, grüne Trikots, Torjubel
+  teamGreen: "/brand/photos/team-green.png",
+  // Team in schwarz-grün KickPact-Trikots, Line-Up jubelnd
+  teamBrandedLine: "/brand/photos/team-branded-line.png",
+  // Mixed-Ages Team in weißen KickPact-Trikots
+  teamWhiteMixed: "/brand/photos/team-white-mixed.png"
 };
 
 export default function LandingPage() {
@@ -31,11 +31,11 @@ export default function LandingPage() {
     <main>
       {/* HERO — full-bleed unter transparentem Header, ken-burns Background */}
       <section className="relative w-full overflow-hidden bg-brand-night-navy h-svh min-h-[640px] max-h-[920px]">
-        {/* Background: animated football photo */}
+        {/* Background: echtes Mannschaftsfoto mit KickPact-Trikots, jubelnd */}
         <div className="absolute inset-0">
           <Image
-            src={`${PHOTOS.matchAction}?auto=format&fit=crop&w=2400&q=85`}
-            alt="Amateur-Fußballspieler im Zweikampf bei sonnigem Wetter"
+            src={PHOTOS.teamHero}
+            alt="Amateur-Fußballmannschaft in KickPact-Trikots jubelt mit der Faust nach oben"
             fill
             priority
             sizes="100vw"
@@ -106,22 +106,22 @@ export default function LandingPage() {
 
           <div className="mt-8 grid gap-6 md:grid-cols-3">
             <StoryCard
-              image={PHOTOS.youth}
-              imageAlt="Junger Fußballer im Schuss am Ball"
+              image={PHOTOS.teamWhiteMixed}
+              imageAlt="Mannschaft in weißen KickPact-Trikots jubelt nach Tor"
               kicker="Tante Erna · Familie · Ihre Wahl"
               headline="3 € wenn Schmidt ein Tor schießt."
               body="Sie ist Patentante. Schmidt ist 13, spielt B-Jugend. Sie hat sich für 3 € pro Tor entschieden — könnten auch 1 € oder 20 € sein. Letzte Saison waren&apos;s 87 €. Schmidt hat&apos;s gewusst — und 4 Mal nach dem Tor zu ihr in die Tribüne gewinkt."
             />
             <StoryCard
-              image={PHOTOS.playerKick}
-              imageAlt="Amateur-Fußballer beim Schuss"
+              image={PHOTOS.teamCelebration}
+              imageAlt="SG-Reichenbach-Mannschaft umarmt sich nach Tor"
               kicker="Bäckerei Müller · Business · Sein Setup"
               headline="50 € pro Comeback-Sieg."
               body="Stefan vom Bäcker hat sich bewusst für 50 €/Comeback entschieden — selten genug, dass es nicht ausartet. Über die Saison kommen ~600 € rein. Steuerlich absetzbar als Werbeleistung."
             />
             <StoryCard
-              image={PHOTOS.balls}
-              imageAlt="Fußbälle auf grünem Rasen vor dem Anpfiff"
+              image={PHOTOS.teamGreen}
+              imageAlt="TSV-Abtswind-Mannschaft jubelt in grünen Trikots"
               kicker="Onkel Tom · Familie · Seine Wahl"
               headline="10 € pro Kopfballtor."
               body="Toms Spezial-Wette für seinen Neffen. Hat 10 € gewählt — andere geben 5 € oder 25 €. Trainer meldet&apos;s im Bus per Smartphone, Tom bestätigt. Saison-Rechnung listet jedes Kopfballtor mit Datum + Minute."
@@ -170,13 +170,13 @@ export default function LandingPage() {
       <section className="bg-brand-night-navy text-white">
         <div className="relative h-32 md:h-40 overflow-hidden">
           <Image
-            src={`${PHOTOS.football}?auto=format&fit=crop&w=2400&q=80`}
-            alt="Fußball auf dem Rasen vor dem Anstoß"
+            src={PHOTOS.teamBrandedLine}
+            alt="Mannschaft in KickPact-Trikots jubelt in der Reihe"
             fill
             sizes="100vw"
-            className="object-cover object-center opacity-60"
+            className="object-cover object-center opacity-70"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-night-navy/40 via-brand-night-navy/20 to-brand-night-navy" />
+          <div className="absolute inset-0 bg-gradient-to-b from-brand-night-navy/30 via-brand-night-navy/20 to-brand-night-navy" />
         </div>
         <div className="mx-auto max-w-6xl px-6 py-14 -mt-12 relative">
           <h2 className="font-display font-black text-3xl md:text-4xl tracking-tight">
@@ -409,7 +409,7 @@ function StoryCard({
     <article className="group rounded-2xl bg-white border border-brand-neutral/40 overflow-hidden hover:border-accent/40 transition-colors">
       <div className="relative aspect-[4/3] overflow-hidden">
         <Image
-          src={`${image}?auto=format&fit=crop&w=900&q=80`}
+          src={image}
           alt={imageAlt}
           fill
           sizes="(max-width: 768px) 100vw, 33vw"

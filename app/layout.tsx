@@ -1,8 +1,9 @@
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { Inter, Montserrat_Alternates } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shared/app-header";
 
+// Body / UI: Inter (broad latin coverage, weight 400-900)
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "900"],
@@ -10,11 +11,14 @@ const inter = Inter({
   display: "swap"
 });
 
-// Display = Inter Black (weight 900). Setting same variable used by sans;
-// `.font-display` is differentiated by weight + letter-spacing, not family.
-const interDisplay = Inter({
+// Display / Headlines: Montserrat Alternates — geometrische Sans mit
+// alternativen Buchstaben-Formen, kommt dem KickPact-Wordmark-Stil
+// (kantig, geometrisch, modern) am nächsten unter den Google Fonts.
+// Alternativen für Test: Orbitron (zu futuristisch), Russo One (zu schmal),
+// Sora Black (clean aber generisch), Bebas Neue (zu condensed).
+const displayFont = Montserrat_Alternates({
   subsets: ["latin"],
-  weight: ["900"],
+  weight: ["700", "800", "900"],
   variable: "--font-display",
   display: "swap"
 });
@@ -26,7 +30,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="de" className={`${inter.variable} ${interDisplay.variable}`}>
+    <html lang="de" className={`${inter.variable} ${displayFont.variable}`}>
       <body className="font-sans bg-brand-off-white text-brand-night-navy">
         <AppHeader />
         {children}
