@@ -9,6 +9,7 @@ import {
   AccordionTrigger
 } from "@/components/ui/accordion";
 import { RolesTabs } from "./_components/roles-tabs";
+import { RotatingTrigger } from "@/components/landing/rotating-trigger";
 
 export const metadata = { title: "KickPact — Mehr als ein Spiel" };
 
@@ -73,8 +74,11 @@ export default function LandingPage() {
             <span className="animate-fade-up inline-flex w-fit items-center rounded-full bg-accent/15 px-3 py-1 text-[0.6rem] md:text-xs font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30 backdrop-blur-sm">
               Performance-Sponsoring · Amateurfußball
             </span>
-            <h1 className="animate-fade-up delay-1 mt-3 md:mt-4 font-display font-black text-[2rem] leading-[1.05] sm:text-4xl md:text-5xl lg:text-6xl tracking-tight text-brand-night-navy">
-              Jedes Tor füllt die <span className="text-accent">Mannschaftskasse.</span>
+            <h1 className="animate-fade-up delay-1 mt-3 md:mt-4 font-display font-black text-[2rem] leading-[1.1] sm:text-4xl md:text-5xl lg:text-6xl tracking-tight text-brand-night-navy">
+              <span className="block">
+                <RotatingTrigger />
+              </span>
+              füllt die <span className="text-accent">Mannschaftskasse.</span>
             </h1>
             <p className="animate-fade-up delay-2 mt-3 md:mt-5 text-sm md:text-lg text-brand-night-navy/85 leading-relaxed">
               Familie, Opa, der Bäcker um die Ecke — oder ein lokaler Sponsor. Jeder wählt

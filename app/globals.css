@@ -34,3 +34,21 @@ body { @apply bg-white text-neutral-900 antialiased; }
 .animate-fade-up.delay-2 { animation-delay: 0.16s; }
 .animate-fade-up.delay-3 { animation-delay: 0.24s; }
 .animate-fade-up.delay-4 { animation-delay: 0.32s; }
+
+/* Rotating-Trigger: Wort fliegt von unten rein, Emoji poppt mit
+   leichtem Overshoot rein. Wird beim React-key-change neu getriggert. */
+@keyframes trigger-fly {
+  0%   { transform: translateY(55%); opacity: 0; filter: blur(2px); }
+  40%  { transform: translateY(-6%); opacity: 1; filter: blur(0); }
+  100% { transform: translateY(0); opacity: 1; filter: blur(0); }
+}
+@keyframes trigger-pop {
+  0%   { transform: scale(0.4) rotate(-12deg); opacity: 0; }
+  60%  { transform: scale(1.2) rotate(6deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.animate-trigger-fly { animation: trigger-fly 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) both; }
+.animate-trigger-pop { animation: trigger-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-trigger-fly, .animate-trigger-pop { animation: none; }
+}
