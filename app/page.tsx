@@ -12,16 +12,19 @@ import { RolesTabs } from "./_components/roles-tabs";
 
 export const metadata = { title: "KickPact — Mehr als ein Spiel" };
 
-// Echte Mannschaftsfotos mit KickPact-Branding (lokale Assets)
+// Echte Mannschaftsfotos mit KickPact-Branding (lokale Assets).
+// Hinweis: team-hero.png ist ein Mockup mit aufgebranntem K-Wasserzeichen —
+// nur als Marketing-Visual im Trigger-Banner sinnvoll, NICHT als Hero-Background.
 const PHOTOS = {
-  // Hero: Team in KickPact-Trikots, Captain mit Faust nach oben — jubelnd
-  teamHero: "/brand/photos/team-hero.png",
-  // SG Reichenbach feiert nach Tor — schwarz, emotional
-  teamCelebration: "/brand/photos/team-celebration.png",
+  // Hero: SG Reichenbach #9 mit erhobener Faust, Team-Umarmung —
+  // sauberes Jubelfoto ohne Overlay, perfekt für "Wenn die Jungs jubeln".
+  teamHero: "/brand/photos/team-celebration.png",
+  // Mannschaft in KickPact-Trikots (schwarz/grün), Jubelumarmung — Story-Card
+  teamCelebration: "/brand/photos/team-branded-line.png",
   // TSV Abtswind, grüne Trikots, Torjubel
   teamGreen: "/brand/photos/team-green.png",
-  // Team in schwarz-grün KickPact-Trikots, Line-Up jubelnd
-  teamBrandedLine: "/brand/photos/team-branded-line.png",
+  // Marketing-Mockup mit aufgebranntem "K KICKPACT" — als Trigger-Banner-Visual
+  teamBrandedLine: "/brand/photos/team-hero.png",
   // Mixed-Ages Team in weißen KickPact-Trikots
   teamWhiteMixed: "/brand/photos/team-white-mixed.png"
 };
@@ -35,15 +38,17 @@ export default function LandingPage() {
         <div className="absolute inset-0">
           <Image
             src={PHOTOS.teamHero}
-            alt="Amateur-Fußballmannschaft in KickPact-Trikots jubelt mit der Faust nach oben"
+            alt="Amateur-Fußballmannschaft jubelt nach Torerfolg, Spieler mit Faust nach oben"
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center animate-ken-burns"
+            className="object-cover animate-ken-burns"
+            style={{ objectPosition: "65% center" }}
           />
-          {/* Gradient overlay: links lesbar, rechts Photo dominant */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/55 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-white/30 via-transparent to-white/30" />
+          {/* Gradient overlay: links komplett deckend weiß für Lesbarkeit,
+              rechts (Jubel-Hauptmotiv) ungeblockt sichtbar. */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/85 via-40% to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-white/20" />
         </div>
 
         {/* Content: linksbündig, vertikal zentriert */}
