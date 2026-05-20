@@ -67,28 +67,35 @@ export default function LandingPage() {
         <div className="relative z-10 mx-auto max-w-6xl px-5 md:px-6 md:absolute md:inset-0 md:flex md:flex-col md:justify-center md:pt-16">
           <div className="max-w-xl md:max-w-2xl pt-6 pb-10 md:pt-0 md:pb-0 relative">
             <span className="animate-fade-up inline-flex w-fit items-center rounded-full bg-accent/15 px-3 py-1 text-[0.6rem] md:text-xs font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30 backdrop-blur-sm">
-              Für eure Mannschaft
+              Performance-Sponsoring · Amateurfußball
             </span>
             <h1 className="animate-fade-up delay-1 mt-3 md:mt-4 font-display font-black text-[2rem] leading-[1.05] sm:text-4xl md:text-5xl lg:text-6xl tracking-tight text-brand-night-navy">
-              Spielen. Jubeln.
-              <br />
-              <span className="text-accent">Mehr draus machen.</span>
+              Jedes Tor füllt die <span className="text-accent">Mannschaftskasse.</span>
             </h1>
             <p className="animate-fade-up delay-2 mt-3 md:mt-5 text-sm md:text-lg text-brand-night-navy/85 leading-relaxed">
-              KickPact verbindet eure Mannschaft mit allen, die euch sehen wollen — Familie,
-              Freunde, der Bäcker um die Ecke. Sie fiebern bei jedem Spiel mit. Jeder Erfolg
-              zählt. Und nebenbei wächst die Mannschaftskasse — ganz ohne nervige Akquise.
+              Familie, Opa, der Bäcker um die Ecke — oder ein lokaler Sponsor. Jeder wählt
+              seinen eigenen Betrag pro Spielereignis. KickPact zählt Tore, Siege, Aufstiege
+              und rechnet automatisch ab. <strong>100 % geht direkt an eure Mannschaft.</strong>
             </p>
+
+            {/* Beispiel-Chips: sofort verständlich wie ein Pledge aussieht */}
+            <div className="animate-fade-up delay-2 mt-4 md:mt-5 flex flex-wrap gap-1.5 md:gap-2">
+              <PledgeChip emoji="⚽" amount="3 €" label="pro Tor" />
+              <PledgeChip emoji="🏆" amount="50 €" label="pro Sieg" />
+              <PledgeChip emoji="⬆️" amount="200 €" label="pro Aufstieg" />
+              <PledgeChip emoji="✏️" amount="frei wählbar" muted />
+            </div>
+
             <div className="animate-fade-up delay-3 mt-5 md:mt-6 flex flex-col sm:flex-row gap-3">
               <Button variant="accent" size="lg" asChild className="w-full sm:w-auto">
-                <Link href="/signup">Mannschaft anmelden · 30 Tage gratis</Link>
+                <Link href="/signup">Mannschaft anlegen · 30 Tage gratis</Link>
               </Button>
               <Button variant="outline" size="lg" asChild className="w-full sm:w-auto bg-white/80">
                 <Link href="/login">Ich bin schon dabei</Link>
               </Button>
             </div>
             <p className="animate-fade-up delay-4 mt-3 text-[0.7rem] md:text-sm text-brand-night-navy/60">
-              In 90 Sekunden online. Sponsoren kommen per Einladungslink — Familie, Stammtisch, lokale Firmen.
+              In 90 Sekunden online. Kein Vertrag. Kein Risiko für deine Mannschaft.
             </p>
           </div>
         </div>
@@ -148,11 +155,11 @@ export default function LandingPage() {
                   Du zahlst nur was passiert.
                 </h3>
                 <ul className="mt-3 space-y-2 text-xs md:text-sm text-brand-night-navy/80">
-                  <BenefitLi>Beträge frei wählbar — 50 Cent oder 500 €</BenefitLi>
+                  <BenefitLi>Beträge frei wählbar — 50 Cent bis 500 € pro Event</BenefitLi>
+                  <BenefitLi><strong>100 % gehen direkt an die Mannschaft</strong> — KickPact zwackt nichts ab</BenefitLi>
                   <BenefitLi>Optionaler Monats-Cap, nie Überraschungen</BenefitLi>
                   <BenefitLi>Steuerlich absetzbar als Werbeleistung</BenefitLi>
                   <BenefitLi>Live mitfiebern, jedes Tor zählt</BenefitLi>
-                  <BenefitLi>Jederzeit kündbar zum Saisons-Ende</BenefitLi>
                 </ul>
               </div>
               <div className="rounded-2xl border border-accent/40 bg-accent/5 p-4 md:p-5">
@@ -163,15 +170,16 @@ export default function LandingPage() {
                   Mehr Bock auf jeden Spieltag.
                 </h3>
                 <ul className="mt-3 space-y-2 text-xs md:text-sm text-brand-night-navy/80">
-                  <BenefitLi>Familie & Stammtisch fiebern bei jedem Spiel mit</BenefitLi>
-                  <BenefitLi>Keine Akquise — ein Einladungslink reicht</BenefitLi>
-                  <BenefitLi>Mannschaftskasse wächst nebenbei — automatisch</BenefitLi>
-                  <BenefitLi>Eigenständig, ohne Vorstands-Politik</BenefitLi>
-                  <BenefitLi>Spezial-Events meldet der Trainer per Handy</BenefitLi>
+                  <BenefitLi>Onboarding in 90 Sekunden, ein Einladungslink für alle Sponsoren</BenefitLi>
+                  <BenefitLi>Familie, Stammtisch + lokale Firmen — alle in einem System</BenefitLi>
+                  <BenefitLi>Mannschaftskasse wächst automatisch, Rechnung zum Monatsersten</BenefitLi>
+                  <BenefitLi>Performance-Ansporn: jedes Tor zählt direkt</BenefitLi>
+                  <BenefitLi>Eigenständig — keine Vorstands-Politik</BenefitLi>
                 </ul>
               </div>
             </div>
           </div>
+          <InlineCTA caption="Holt euch das Sponsor-Netzwerk." />
         </div>
       </section>
 
@@ -226,6 +234,7 @@ export default function LandingPage() {
             <strong>Du legst deinen Betrag selbst fest.</strong> Pro Trigger einzeln, mit optionalem
             Monats-Cap, jederzeit anpassbar. Es gibt keine Mindest-Pledge-Höhe.
           </p>
+          <InlineCTA caption="Bereit für eure eigene Story?" />
         </div>
       </section>
 
@@ -372,34 +381,48 @@ export default function LandingPage() {
             Custom-Ziele werden von der Mannschaft gemeldet und vom Sponsor bestätigt — gleicher
             Trust-Mechanismus wie bei Spezial-Events.
           </p>
+          <InlineCTA caption="Wettet eure Saison-Story." />
         </div>
       </section>
 
       {/* PRICING */}
       <section className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-16">
-        <h2 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
-          Faire <span className="text-accent">Preise.</span>
-        </h2>
-        <p className="mt-2 text-brand-night-navy/60 text-xs md:text-sm">
-          Pro Mannschaft eigenständig — oder eine Vereinslizenz für alle Teams. 30 Tage gratis. Monatlich kündbar.
-        </p>
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+          <div>
+            <h2 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
+              Faire <span className="text-accent">Preise.</span>
+            </h2>
+            <p className="mt-2 text-brand-night-navy/60 text-xs md:text-sm max-w-xl">
+              Pro Mannschaft eigenständig — oder Vereinslizenz für alle Teams.
+              <strong className="text-brand-night-navy"> Erste 30 Tage gratis.</strong>{" "}
+              Monatlich kündbar. KickPact zwackt nie was vom Sponsoren-Geld ab.
+            </p>
+          </div>
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1.5 text-[0.7rem] md:text-xs font-bold uppercase tracking-[0.15em] text-accent-dark ring-1 ring-accent/30">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+            30 Tage gratis testen
+          </span>
+        </div>
         <div className="mt-6 md:mt-8 grid gap-4 md:gap-6 md:grid-cols-3">
           <PriceCard
             plan="Basic"
             price="9 €"
             unit="/ Mannschaft / Monat"
+            perPlayer="0,36 – 0,50 € pro Spieler/Monat"
             features={[
               "Eine Mannschaft, eigenständig verwaltet",
               "Bis zu 20 Sponsoren",
               "Alle 10 Auto-Trigger (Tor, Sieg, Comeback, …)",
-              "Alle 6 Manuelle Trigger",
-              "Monatliche PDF-Rechnung"
+              "Alle 6 manuelle Trigger",
+              "Monatliche PDF-Rechnung",
+              "30 Tage gratis · monatlich kündbar"
             ]}
           />
           <PriceCard
             plan="Pro"
             price="19 €"
             unit="/ Mannschaft / Monat"
+            perPlayer="0,76 – 1,06 € pro Spieler/Monat"
             highlight
             features={[
               "Alles aus Basic",
@@ -407,27 +430,27 @@ export default function LandingPage() {
               "Mannschafts-Logo auf PDF-Rechnungen",
               'Custom Trigger-Texte (z.B. "Bizeps-Tor")',
               "Saison-Wetten (Aufstieg, Klassenerhalt, …)",
-              "CSV-Export + Sponsor-Stats"
+              "30 Tage gratis · monatlich kündbar"
             ]}
           />
           <PriceCard
             plan="Vereinslizenz"
             price="49 €"
             unit="/ Verein / Monat"
+            perPlayer="bei 4 Teams à 22 Spielern: ~0,56 € pro Spieler"
             features={[
               "Alle Mannschaften des Vereins inklusive",
               "Master-Admin verwaltet alle Teams zentral",
               "Pro-Features für jedes Team",
-              "Konsolidierte Vereins-Rechnung & USt-Abrechnung",
+              "Konsolidierte Vereins-Rechnung",
               "Übergreifende Sponsor-Übersicht",
               "Lohnt ab ~3 Mannschaften"
             ]}
           />
         </div>
         <p className="mt-6 md:mt-8 text-xs md:text-sm text-brand-night-navy/60">
-          Typischer Kader hat 18–25 Spieler — Basic/Pro entsprechen{" "}
-          <strong>0,36 – 1,06 € pro Spieler/Monat.</strong> Die Vereinslizenz lohnt sich
-          spätestens, wenn dein Verein 3 oder mehr aktive Mannschaften unter KickPact hat.
+          Typischer Amateur-Kader hat 18–25 Spieler. Sponsoren-Geld geht zu 100 % an die Mannschaft;
+          KickPact verdient ausschließlich am Abo.
         </p>
       </section>
 
@@ -526,6 +549,66 @@ export default function LandingPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function InlineCTA({
+  caption,
+  variant = "default"
+}: {
+  caption: string;
+  variant?: "default" | "dark";
+}) {
+  const isDark = variant === "dark";
+  return (
+    <div
+      className={
+        "mt-8 md:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 text-center sm:text-left"
+      }
+    >
+      <p
+        className={
+          "text-sm md:text-base font-semibold " +
+          (isDark ? "text-white" : "text-brand-night-navy")
+        }
+      >
+        {caption}
+      </p>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Button variant="accent" size="lg" asChild className="w-full sm:w-auto">
+          <Link href="/signup">Jetzt loslegen · 30 Tage gratis</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function PledgeChip({
+  emoji,
+  amount,
+  label,
+  muted = false
+}: {
+  emoji: string;
+  amount: string;
+  label?: string;
+  muted?: boolean;
+}) {
+  return (
+    <span
+      className={
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs md:text-sm font-medium ring-1 backdrop-blur-sm " +
+        (muted
+          ? "bg-white/60 ring-brand-neutral/60 text-brand-night-navy/70"
+          : "bg-white/85 ring-accent/30 text-brand-night-navy")
+      }
+    >
+      <span className="text-sm md:text-base leading-none">{emoji}</span>
+      <strong className={muted ? "font-semibold" : "font-bold text-accent-dark"}>
+        {amount}
+      </strong>
+      {label && <span className="text-brand-night-navy/70">{label}</span>}
+    </span>
   );
 }
 
@@ -676,12 +759,14 @@ function PriceCard({
   plan,
   price,
   unit,
+  perPlayer,
   features,
   highlight
 }: {
   plan: string;
   price: string;
   unit: string;
+  perPlayer?: string;
   features: string[];
   highlight?: boolean;
 }) {
@@ -708,6 +793,11 @@ function PriceCard({
         </span>
         <span className="text-xs md:text-sm text-brand-night-navy/60">{unit}</span>
       </div>
+      {perPlayer && (
+        <p className="mt-1.5 text-[0.7rem] md:text-xs font-semibold text-accent-dark">
+          ≈ {perPlayer}
+        </p>
+      )}
       <ul className="mt-4 md:mt-6 space-y-2 md:space-y-2.5 text-xs md:text-sm">
         {features.map((f) => (
           <li key={f} className="flex gap-2 text-brand-night-navy/80">
