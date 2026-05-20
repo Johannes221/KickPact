@@ -549,10 +549,21 @@ export default function LandingPage() {
 
       {/* MINI-FOOTER */}
       <section className="mx-auto max-w-6xl px-5 md:px-6 py-6 md:py-10 text-xs md:text-sm text-brand-night-navy/60">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
           <Link href="/status" className="hover:text-accent">
             System-Status &amp; Live-Demo →
           </Link>
+          <nav className="flex flex-col md:flex-row gap-2 md:gap-4">
+            <Link href="/impressum" className="hover:text-accent">
+              Impressum
+            </Link>
+            <Link href="/datenschutz" className="hover:text-accent">
+              Datenschutz
+            </Link>
+            <Link href="/agb" className="hover:text-accent">
+              AGB
+            </Link>
+          </nav>
           <span>© {new Date().getFullYear()} KickPact</span>
         </div>
       </section>

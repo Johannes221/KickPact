@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
 
 export default async function SponsorLayout({
@@ -14,6 +15,21 @@ export default async function SponsorLayout({
         </h1>
       </div>
       {children}
+
+      <footer className="mt-12 md:mt-16 pt-6 border-t border-brand-neutral/40 text-xs text-brand-night-navy/50 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+        <nav className="flex flex-wrap gap-3 md:gap-4">
+          <Link href="/impressum" className="hover:text-accent">
+            Impressum
+          </Link>
+          <Link href="/datenschutz" className="hover:text-accent">
+            Datenschutz
+          </Link>
+          <Link href="/agb" className="hover:text-accent">
+            AGB
+          </Link>
+        </nav>
+        <span>© {new Date().getFullYear()} KickPact</span>
+      </footer>
     </main>
   );
 }
