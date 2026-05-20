@@ -33,13 +33,25 @@ export const auth = betterAuth({
     magicLink({
       sendMagicLink: async ({ email, url }) => {
         const mail = magicLinkEmail({ url, email });
-        await resend.emails.send({
+        const result = await resend.emails.send({
           from: MAIL_FROM,
           to: email,
           subject: mail.subject,
           html: mail.html,
           text: mail.text
         });
+        // Resend's SDK returnt { data, error } — wirft NICHT bei API-Fehlern.
+        // Wir müssen das selbst tun, sonst sieht der User "Check deine Mails"
+        // obwohl die Mail nie verschickt wurde (z.B. Sandbox-Limit).
+        if (result.error) {
+          console.error("[magicLink] Resend send failed:", {
+            from: MAIL_FROM,
+            to: email,
+            error: result.error
+          });
+          throw new Error(`Magic-Link-Mail konnte nicht verschickt werden: ${result.error.message}`);
+        }
+        console.log("[magicLink] sent", { to: email, id: result.data?.id });
       },
       expiresIn: 60 * 15
     })
