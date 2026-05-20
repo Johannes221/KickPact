@@ -34,11 +34,15 @@ export default async function SponsorDashboard() {
         </div>
         <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-5 md:p-7">
           <div className="text-xs uppercase tracking-[0.15em] font-bold text-accent-dark">
-            Bald verfügbar
+            Aktiv suchen
           </div>
           <p className="mt-2 text-sm md:text-base text-brand-night-navy/80">
-            <strong>Verein-Suche für Sponsoren</strong> — direkt nach Mannschaften
-            suchen und um eine Sponsoring-Möglichkeit anfragen. Coming soon.
+            Du kennst noch keine Mannschaft? Such selbst auf{" "}
+            <a href="/sponsor/discover" className="font-semibold text-accent-dark underline">
+              KickPact Discover
+            </a>{" "}
+            — Mannschaften die für neue Sponsoren offen sind, mit einem Klick eine Anfrage
+            senden.
           </p>
         </div>
       </div>

@@ -57,13 +57,24 @@ export const teams = pgTable(
     fussballdeTeamId: text("fussballde_team_id"),
     fussballdeSlug: text("fussballde_slug"),
     isActive: boolean("is_active").notNull().default(true),
+    /**
+     * Sponsor-Discover (Spec §6.10): wenn true, erscheint die Mannschaft in
+     * der öffentlichen Sponsor-Suche. Mannschafts-Admins können das im
+     * Dashboard ein-/ausschalten.
+     */
+    discoverable: boolean("discoverable").notNull().default(false),
+    /**
+     * Kurze Beschreibung für das öffentliche Discover-Profil (max ~280 chars).
+     */
+    publicTagline: text("public_tagline"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({
     clubSaisonIdx: index("teams_club_saison_idx").on(t.clubId, t.saison),
     fussballdeIdx: uniqueIndex("teams_fussballde_idx")
       .on(t.fussballdeTeamId, t.saison)
-      .where(sql`${t.fussballdeTeamId} IS NOT NULL`)
+      .where(sql`${t.fussballdeTeamId} IS NOT NULL`),
+    discoverableIdx: index("teams_discoverable_idx").on(t.discoverable).where(sql`${t.discoverable} = true`)
   })
 );
 
