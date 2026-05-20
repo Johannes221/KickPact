@@ -1,8 +1,17 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, desc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { teams, sponsorInvitations, sponsors, pledges, users } from "@/lib/db/schema";
+import {
+  teams,
+  sponsorInvitations,
+  sponsors,
+  pledges,
+  users,
+  sponsorInquiries
+} from "@/lib/db/schema";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { SponsorsManager } from "./_components/sponsors-manager";
+import { InquiriesInbox } from "./_components/inquiries-inbox";
+import { DiscoverabilityPanel } from "./_components/discoverability-panel";
 
 export const metadata = { title: "Sponsoren · KickPact" };
 
@@ -49,8 +58,34 @@ export default async function SponsorenPage({
         .where(eq(teams.clubId, club.id))
     : [];
 
+  // Pending Discover-Anfragen für die Teams dieses Vereins
+  const inquiries =
+    teamIds.length > 0
+      ? await db
+          .select({
+            id: sponsorInquiries.id,
+            teamId: sponsorInquiries.teamId,
+            teamName: teams.name,
+            status: sponsorInquiries.status,
+            message: sponsorInquiries.message,
+            createdAt: sponsorInquiries.createdAt,
+            sponsorEmail: users.email,
+            sponsorName: users.name
+          })
+          .from(sponsorInquiries)
+          .innerJoin(teams, eq(sponsorInquiries.teamId, teams.id))
+          .innerJoin(users, eq(sponsorInquiries.sponsorUserId, users.id))
+          .where(
+            and(
+              inArray(sponsorInquiries.teamId, teamIds),
+              eq(sponsorInquiries.status, "pending")
+            )
+          )
+          .orderBy(desc(sponsorInquiries.createdAt))
+      : [];
+
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 md:space-y-10">
       <SponsorsManager
         clubSlug={slug}
         teams={teamRows.map((t) => ({ id: t.id, name: t.name }))}
@@ -64,28 +99,51 @@ export default async function SponsorenPage({
         }))}
       />
 
+      {/* Sponsor-Inquiries (Discover) — Inbox-Sektion */}
+      {inquiries.length > 0 && (
+        <InquiriesInbox
+          inquiries={inquiries.map((i) => ({
+            ...i,
+            createdAt: i.createdAt,
+            sponsorName: i.sponsorName ?? null
+          }))}
+        />
+      )}
+
+      {/* Discoverability-Toggle pro Team */}
+      <DiscoverabilityPanel
+        teams={teamRows.map((t) => ({
+          id: t.id,
+          name: t.name,
+          discoverable: t.discoverable,
+          publicTagline: t.publicTagline ?? ""
+        }))}
+      />
+
       <section>
-        <h2 className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
           Aktive Sponsoren ({activeSponsors.length})
         </h2>
         {activeSponsors.length === 0 ? (
           <p className="mt-3 text-sm text-brand-night-navy/60">
-            Noch keine. Über Einladungslinks oben werben.
+            Noch keine. Über Einladungslinks oben werben oder Discover aktivieren.
           </p>
         ) : (
-          <ul className="mt-4 space-y-2">
+          <ul className="mt-3 md:mt-4 space-y-2">
             {activeSponsors.map((s, i) => (
               <li
                 key={`${s.sponsorId}-${i}`}
-                className="rounded-lg border border-brand-neutral/40 bg-white p-4 flex items-center justify-between gap-3"
+                className="rounded-lg border border-brand-neutral/40 bg-white p-3 md:p-4 flex items-center justify-between gap-3"
               >
-                <div>
-                  <div className="font-semibold text-brand-night-navy">{s.displayName}</div>
-                  <div className="text-xs text-brand-night-navy/50 mt-0.5">
+                <div className="min-w-0">
+                  <div className="font-semibold text-sm md:text-base text-brand-night-navy truncate">
+                    {s.displayName}
+                  </div>
+                  <div className="text-xs text-brand-night-navy/50 mt-0.5 truncate">
                     {s.userEmail} · <span className="capitalize">{s.type}</span> · {s.teamName}
                   </div>
                 </div>
-                <div className="text-xs uppercase tracking-widest font-semibold text-accent-dark">
+                <div className="text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold text-accent-dark shrink-0">
                   {s.pledgeStatus}
                 </div>
               </li>
