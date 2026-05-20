@@ -4,3 +4,33 @@
 
 html, body { height: 100%; }
 body { @apply bg-white text-neutral-900 antialiased; }
+
+/* Ken-Burns Slow-Zoom für Hero-Background */
+@keyframes ken-burns {
+  0%   { transform: scale(1.04) translate3d(0, 0, 0); }
+  50%  { transform: scale(1.12) translate3d(-1.5%, -1%, 0); }
+  100% { transform: scale(1.04) translate3d(0, 0, 0); }
+}
+
+.animate-ken-burns {
+  animation: ken-burns 22s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ken-burns {
+    animation: none;
+    transform: scale(1.04);
+  }
+}
+
+/* Sanft eingeblendet (für Hero-Inhalt) */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.6s ease-out both; }
+.animate-fade-up.delay-1 { animation-delay: 0.08s; }
+.animate-fade-up.delay-2 { animation-delay: 0.16s; }
+.animate-fade-up.delay-3 { animation-delay: 0.24s; }
+.animate-fade-up.delay-4 { animation-delay: 0.32s; }
