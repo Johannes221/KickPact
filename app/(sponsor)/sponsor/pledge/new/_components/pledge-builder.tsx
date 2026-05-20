@@ -34,16 +34,26 @@ type TriggerDef = {
   manual?: boolean;
 };
 
-const TRIGGER_LIBRARY: TriggerDef[] = [
-  { type: "goal_total", label: "Pro Tor", emoji: "⚽", description: "Für jedes Tor der eigenen Mannschaft", defaultEur: 5 },
-  { type: "win", label: "Pro Sieg", emoji: "🏆", description: "Einmal pro gewonnenem Spiel", defaultEur: 10 },
-  { type: "clean_sheet", label: "Pro Zu-Null-Sieg", emoji: "🛡️", description: "Gewonnen + 0 Gegentore", defaultEur: 5 },
-  { type: "comeback_win", label: "Pro Comeback-Sieg", emoji: "🔥", description: "Halbzeit hinten, am Ende vorne", defaultEur: 20 },
-  { type: "hattrick", label: "Pro Hattrick", emoji: "🎯", description: "1 Spieler ≥3 Tore in einem Spiel", defaultEur: 25 },
-  { type: "goal_by_player", label: "Tore von Spieler X", emoji: "💎", description: "Wähle deinen Lieblings-Spieler", defaultEur: 3 },
-  { type: "special_goal", label: "Spezial-Tor", emoji: "🎭", description: "Kopfball, Hackentor, Elfmeter — Verein meldet, du bestätigst", defaultEur: 10, manual: true },
-  { type: "goals_scored_min", label: "Mind. X Tore", emoji: "🎉", description: "z.B. ab 5 Toren pro Spiel", defaultEur: 30 },
-  { type: "goal_diff_min", label: "Hoher Sieg (Diff ≥X)", emoji: "💪", description: "z.B. Tordifferenz ≥3", defaultEur: 15 }
+type TriggerCategory = "match" | "season";
+
+const TRIGGER_LIBRARY: (TriggerDef & { category: TriggerCategory })[] = [
+  // Pro Spiel
+  { category: "match", type: "goal_total", label: "Pro Tor", emoji: "⚽", description: "Für jedes Tor der eigenen Mannschaft", defaultEur: 5 },
+  { category: "match", type: "win", label: "Pro Sieg", emoji: "🏆", description: "Einmal pro gewonnenem Spiel", defaultEur: 10 },
+  { category: "match", type: "clean_sheet", label: "Pro Zu-Null-Sieg", emoji: "🛡️", description: "Gewonnen + 0 Gegentore", defaultEur: 5 },
+  { category: "match", type: "comeback_win", label: "Pro Comeback-Sieg", emoji: "🔥", description: "Halbzeit hinten, am Ende vorne", defaultEur: 20 },
+  { category: "match", type: "hattrick", label: "Pro Hattrick", emoji: "🎯", description: "1 Spieler ≥3 Tore in einem Spiel", defaultEur: 25 },
+  { category: "match", type: "goal_by_player", label: "Tore von Spieler X", emoji: "💎", description: "Wähle deinen Lieblings-Spieler", defaultEur: 3 },
+  { category: "match", type: "special_goal", label: "Spezial-Tor", emoji: "🎭", description: "Kopfball, Hackentor, Elfmeter — Verein meldet, du bestätigst", defaultEur: 10, manual: true },
+  { category: "match", type: "goals_scored_min", label: "Mind. X Tore", emoji: "🎉", description: "z.B. ab 5 Toren pro Spiel", defaultEur: 30 },
+  { category: "match", type: "goal_diff_min", label: "Hoher Sieg (Diff ≥X)", emoji: "💪", description: "z.B. Tordifferenz ≥3", defaultEur: 15 },
+  // Pro Saison — feuert 1× am Saisons-Ende
+  { category: "season", type: "season_promotion", label: "Aufstieg", emoji: "⬆️", description: "1× wenn die Mannschaft aufsteigt", defaultEur: 200 },
+  { category: "season", type: "season_no_relegation", label: "Klassenerhalt", emoji: "🛟", description: "1× wenn nicht abgestiegen", defaultEur: 100 },
+  { category: "season", type: "season_champion", label: "Meister-Titel", emoji: "👑", description: "1× wenn Tabellenplatz 1 am Saisons-Ende", defaultEur: 300 },
+  { category: "season", type: "season_table_position", label: "Endplatz im Bereich", emoji: "🥇", description: "z.B. Platz 1–5 (Range im Params)", defaultEur: 75 },
+  { category: "season", type: "season_cup_round", label: "Pokal-Runde", emoji: "🏆", description: "z.B. Halbfinale erreicht — Verein meldet, du bestätigst", defaultEur: 150, manual: true },
+  { category: "season", type: "season_custom", label: "Eigenes Saison-Ziel", emoji: "🎺", description: "z.B. '20 Tore mehr als letzte Saison' — Verein meldet, du bestätigst", defaultEur: 50, manual: true }
 ];
 
 export function PledgeBuilder() {
@@ -118,20 +128,42 @@ export function PledgeBuilder() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-        {/* Trigger-Library */}
+        {/* Trigger-Library — gruppiert nach Pro-Spiel + Pro-Saison */}
         <section className="space-y-4">
           <Label className="text-sm font-semibold uppercase tracking-widest text-brand-night-navy/50">
             1.  Welche Trigger soll dein Pledge haben?
           </Label>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {TRIGGER_LIBRARY.map((t) => (
-              <TriggerToggle
-                key={t.type}
-                def={t}
-                enabled={enabled.has(t.type)}
-                onToggle={() => toggleTrigger(t.type)}
-              />
-            ))}
+
+          <div>
+            <h4 className="text-xs uppercase tracking-widest font-bold text-accent-dark mb-2 md:mb-3">
+              ⚽ Pro Spiel
+            </h4>
+            <div className="grid gap-2.5 md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {TRIGGER_LIBRARY.filter((t) => t.category === "match").map((t) => (
+                <TriggerToggle
+                  key={t.type}
+                  def={t}
+                  enabled={enabled.has(t.type)}
+                  onToggle={() => toggleTrigger(t.type)}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-5 md:mt-6">
+            <h4 className="text-xs uppercase tracking-widest font-bold text-accent-dark mb-2 md:mb-3">
+              🏆 Pro Saison <span className="ml-1 text-brand-night-navy/40 font-normal normal-case tracking-normal">— 1× am Saison-Ende</span>
+            </h4>
+            <div className="grid gap-2.5 md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {TRIGGER_LIBRARY.filter((t) => t.category === "season").map((t) => (
+                <TriggerToggle
+                  key={t.type}
+                  def={t}
+                  enabled={enabled.has(t.type)}
+                  onToggle={() => toggleTrigger(t.type)}
+                />
+              ))}
+            </div>
           </div>
         </section>
 

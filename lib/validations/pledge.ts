@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const TRIGGER_TYPES = [
+  // pro Spiel
   "goal_total",
   "win",
   "clean_sheet",
@@ -9,10 +10,17 @@ export const TRIGGER_TYPES = [
   "goal_by_player",
   "special_goal",
   "goals_scored_min",
-  "goal_diff_min"
+  "goal_diff_min",
+  // pro Saison
+  "season_promotion",
+  "season_no_relegation",
+  "season_table_position",
+  "season_champion",
+  "season_cup_round",
+  "season_custom"
 ] as const;
 
-export type TriggerType = typeof TRIGGER_TYPES[number];
+export type TriggerType = (typeof TRIGGER_TYPES)[number];
 
 export const pledgeRuleInputSchema = z.object({
   triggerType: z.enum(TRIGGER_TYPES),
