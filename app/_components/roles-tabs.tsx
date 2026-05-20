@@ -10,96 +10,95 @@ export function RolesTabs() {
       <TabsList className="bg-white/10 border border-white/20 p-1 h-auto">
         <TabsTrigger
           value="verein"
-          className="data-[state=active]:bg-accent data-[state=active]:text-white text-white/70 px-6 py-2.5 font-semibold"
+          className="data-[state=active]:bg-accent data-[state=active]:text-white text-white/70 px-4 sm:px-6 py-2.5 font-semibold text-xs sm:text-sm"
         >
-          🏟️  Du bist Verein
+          ⚽  Du bist Mannschaft
         </TabsTrigger>
         <TabsTrigger
           value="sponsor"
-          className="data-[state=active]:bg-accent data-[state=active]:text-white text-white/70 px-6 py-2.5 font-semibold"
+          className="data-[state=active]:bg-accent data-[state=active]:text-white text-white/70 px-4 sm:px-6 py-2.5 font-semibold text-xs sm:text-sm"
         >
           💚  Du bist Sponsor
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="verein" className="mt-8">
-        <div className="grid gap-10 md:grid-cols-5">
-          <div className="md:col-span-3 space-y-5">
-            <h3 className="font-display font-black text-3xl md:text-4xl tracking-tight">
-              Aus jedem Spiel <span className="text-accent">echtes Sponsoring</span>.
+      <TabsContent value="verein" className="mt-6 md:mt-8">
+        <div className="grid gap-6 md:gap-10 md:grid-cols-5">
+          <div className="md:col-span-3 space-y-4 md:space-y-5">
+            <h3 className="font-display font-black text-xl md:text-3xl lg:text-4xl tracking-tight">
+              Aus jedem Spiel <span className="text-accent">eure Mannschaftskasse</span>.
             </h3>
-            <p className="text-white/80 leading-relaxed">
+            <p className="text-white/80 leading-relaxed text-sm md:text-base">
               Klassisches Trikot-Sponsoring ist mühsam: einmal verkaufen, dann Stille. Mit
-              KickPact wird jeder Spieltag zur Sponsoren-Touchpoint — und dein Verein
-              bekommt nicht 1× im Jahr ein Trikot bezahlt, sondern jede Saison über deine
-              Performance Geld rein.
+              KickPact wird jeder Spieltag zur Sponsoren-Touchpoint — und eure Mannschaft
+              bekommt nicht 1× im Jahr ein Trikot bezahlt, sondern jede Saison über eure
+              Performance Geld direkt in die eigene Kasse.
             </p>
-            <ul className="space-y-3 text-white/80">
+            <ul className="space-y-2.5 md:space-y-3 text-white/80 text-sm md:text-base">
               <Bullet>
-                Vereins-Onboarding in 90 Sekunden — wir finden dich auf Fußball.de.
+                Mannschafts-Onboarding in 90 Sekunden — wir finden euch auf Fußball.de.
               </Bullet>
               <Bullet>
-                Sponsoren über einen Einladungslink — Familie, Freunde, Trikot-Sponsoren,
-                Stammtisch. Alle in einem System.
+                Sponsoren über einen Einladungslink — Familie, Freunde, Stammtisch,
+                lokale Firmen. Alle in einem System.
               </Bullet>
               <Bullet>
-                Vollautomatische Auswertung jedes Spiels — du machst nichts außer
-                Spezial-Events nach dem Schlusspfiff melden (30 Sek am Smartphone).
+                Vollautomatische Auswertung jedes Spiels — ihr macht nichts außer
+                Spezial-Events nach Schlusspfiff melden (30 Sek am Smartphone).
               </Bullet>
               <Bullet>
-                PDF-Rechnungen mit Vereins-Briefkopf + USt — fertig zum Versenden.
+                Geld geht direkt an eure Mannschaftskasse — nicht in den Vereins-Topf.
+                Mehrere Teams im Verein? Vereinslizenz wählen.
               </Bullet>
             </ul>
             <div className="flex flex-wrap gap-3 pt-2">
               <Button variant="accent" size="lg" asChild>
-                <Link href="/signup">Verein anlegen · 30 Tage gratis</Link>
+                <Link href="/signup">Mannschaft anlegen · 30 Tage gratis</Link>
               </Button>
             </div>
           </div>
           <div className="md:col-span-2">
             <ExampleCard
-              title="Beispiel-Saison"
-              subtitle="1. Herren · 18 Spiele"
+              title="Beispiel-Pledges"
+              subtitle="1. Herren · so könnte's aussehen"
               lines={[
-                { label: "Tante Erna", value: "5 € pro Tor · 10 € pro Sieg" },
-                { label: "Bäckerei Müller", value: "20 € pro Comeback · 50 € pro Sieg" },
-                { label: "Onkel Tom", value: "10 € pro Spezial-Tor" },
-                { label: "8 weitere Sponsoren", value: "diverse Pledges" }
+                { label: "Tante Erna", value: "5 €/Tor · 10 €/Sieg" },
+                { label: "Bäckerei Müller", value: "20 €/Comeback · 50 €/Sieg" },
+                { label: "Opa Heinz", value: "200 € auf Aufstieg" },
+                { label: "Onkel Tom", value: "10 €/Spezial-Tor" }
               ]}
-              total="≈ 4.300 € / Saison"
-              hint="Bei ⌀ 2 Toren pro Spiel & 60% Win-Quote"
+              total="Pledges frei wählbar"
+              hint="Jeder Sponsor wählt selbst — von 50 Cent bis 500 € pro Event"
             />
           </div>
         </div>
       </TabsContent>
 
-      <TabsContent value="sponsor" className="mt-8">
-        <div className="grid gap-10 md:grid-cols-5">
-          <div className="md:col-span-3 space-y-5">
-            <h3 className="font-display font-black text-3xl md:text-4xl tracking-tight">
+      <TabsContent value="sponsor" className="mt-6 md:mt-8">
+        <div className="grid gap-6 md:gap-10 md:grid-cols-5">
+          <div className="md:col-span-3 space-y-4 md:space-y-5">
+            <h3 className="font-display font-black text-xl md:text-3xl lg:text-4xl tracking-tight">
               Jedes Tor wird zum <span className="text-accent">geilen Moment</span>.
             </h3>
-            <p className="text-white/80 leading-relaxed">
-              Du willst den Verein deines Sohnes, deiner Tochter oder die Mannschaft aus
+            <p className="text-white/80 leading-relaxed text-sm md:text-base">
+              Du willst die Mannschaft deines Sohnes, deiner Tochter oder das Team aus
               der Nachbarschaft unterstützen — aber 200 € einmal überweisen ist langweilig.
               Du willst mitfiebern. Mit KickPact versprichst du Beträge an Spielereignisse.
-              Je besser sie spielen, desto mehr fließt.
+              Je besser sie spielen, desto mehr fließt — direkt in ihre Mannschaftskasse.
             </p>
-            <ul className="space-y-3 text-white/80">
+            <ul className="space-y-2.5 md:space-y-3 text-white/80 text-sm md:text-base">
               <Bullet>
-                Frei wählbare Pledges — von „5 € pro Tor" bis „50 € pro Comeback-Sieg" ist
+                Frei wählbare Pledges — von „1 € pro Tor" bis „50 € pro Comeback-Sieg" ist
                 alles drin.
               </Bullet>
               <Bullet>
-                Sicher mit Cap: optional „max 50 € pro Monat" — du behältst die Kontrolle,
-                egal wie geil die Mannschaft drauf ist.
+                Sicher mit Cap: optional „max 50 € pro Monat" — du behältst die Kontrolle.
               </Bullet>
               <Bullet>
-                Spezial-Events bestätigst du selbst (Verein meldet, du klickst „Bestätigen"
-                oder „Bestreiten").
+                100 % geht direkt an die Mannschaft — KickPact zwackt nichts ab.
               </Bullet>
               <Bullet>
-                Als Unternehmen: ordentliche Rechnung vom Verein — steuerlich absetzbar als
+                Als Unternehmen: ordentliche Rechnung — steuerlich absetzbar als
                 Werbeleistung.
               </Bullet>
             </ul>
@@ -108,7 +107,7 @@ export function RolesTabs() {
                 <Link href="/login">Einladungslink bekommen? Login →</Link>
               </Button>
               <p className="text-xs text-white/50 pt-3 w-full">
-                Sponsoren werden vom Verein eingeladen — keine direkte Anmeldung nötig.
+                Sponsoren werden von der Mannschaft eingeladen — keine direkte Anmeldung nötig.
               </p>
             </div>
           </div>
@@ -172,8 +171,8 @@ function ExampleCard({
           </li>
         ))}
       </ul>
-      <div className="mt-5 pt-4 border-t border-white/20">
-        <div className="font-display font-black text-2xl tracking-tight text-accent">
+      <div className="mt-4 md:mt-5 pt-3 md:pt-4 border-t border-white/20">
+        <div className="font-display font-black text-lg md:text-2xl tracking-tight text-accent">
           {total}
         </div>
         {hint && <p className="mt-1 text-xs text-white/50">{hint}</p>}

@@ -34,14 +34,12 @@ const PHOTOS = {
 export default function LandingPage() {
   return (
     <main>
-      {/* HERO — Adressat: die MANNSCHAFT (sie registriert sich, lädt
-          Sponsoren ein). Tonalität: Spaß, Gemeinschaft, Ansporn — nicht
-          "Geld Geld Geld". Geld kommt später (Pricing/Stories) zur Sprache.
-          Mobile: Foto kompakter (32vh statt 38vh) + object-position top damit
-          der jubelnde Spieler & die Faust besser im Bild bleiben.
-          Desktop: Foto full-bleed, Gradient links → rechts. */}
+      {/* HERO — Foto + Headline. Auf Mobile ist das Foto als "Hero-Image"
+          mit aspect-ratio + rounded-bottom dargestellt für softeren visuellen
+          Übergang zum Text-Bereich. Auf Desktop bleibt es full-bleed mit
+          Gradient links. */}
       <section className="relative w-full overflow-hidden bg-white">
-        <div className="relative md:absolute md:inset-0 h-[32vh] min-h-[220px] max-h-[340px] md:h-full md:min-h-0 md:max-h-none">
+        <div className="relative md:absolute md:inset-0 aspect-[5/4] md:aspect-auto md:h-full md:min-h-0 md:max-h-none overflow-hidden md:rounded-none">
           <Image
             src={PHOTOS.teamHero}
             alt="Amateur-Fußballmannschaft jubelt nach Torerfolg"
@@ -49,11 +47,17 @@ export default function LandingPage() {
             priority
             sizes="100vw"
             className="object-cover animate-ken-burns"
-            style={{ objectPosition: "center 30%" }}
+            style={{ objectPosition: "center 28%" }}
           />
-          {/* Mobile: dunklerer Top-Overlay damit das weiße Header-Logo lesbar
-              bleibt, unten weicher Fade nach Weiß für den Text-Bereich. */}
-          <div className="absolute inset-0 md:hidden bg-gradient-to-b from-brand-night-navy/35 via-transparent via-30% to-white" />
+          {/* Mobile: dezenter Top-Wash für Header-Lesbarkeit + langer
+              weicher Bottom-Fade zu Weiß (kein harter Cut mehr). */}
+          <div
+            className="absolute inset-0 md:hidden"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(26,26,46,0.35) 0%, rgba(26,26,46,0.05) 15%, rgba(255,255,255,0) 55%, rgba(255,255,255,0.85) 88%, rgba(255,255,255,1) 100%)"
+            }}
+          />
           {/* Desktop: stark links deckend weiß bis ~50%, dann fade out nach rechts */}
           <div
             className="absolute inset-0 hidden md:block"
@@ -65,7 +69,7 @@ export default function LandingPage() {
         </div>
 
         <div className="relative z-10 mx-auto max-w-6xl px-5 md:px-6 md:absolute md:inset-0 md:flex md:flex-col md:justify-center md:pt-16">
-          <div className="max-w-xl md:max-w-2xl pt-6 pb-10 md:pt-0 md:pb-0 relative">
+          <div className="max-w-xl md:max-w-2xl -mt-8 md:mt-0 pb-10 md:pb-0 relative">
             <span className="animate-fade-up inline-flex w-fit items-center rounded-full bg-accent/15 px-3 py-1 text-[0.6rem] md:text-xs font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30 backdrop-blur-sm">
               Performance-Sponsoring · Amateurfußball
             </span>
@@ -91,7 +95,7 @@ export default function LandingPage() {
                 <Link href="/signup">Mannschaft anlegen · 30 Tage gratis</Link>
               </Button>
               <Button variant="outline" size="lg" asChild className="w-full sm:w-auto bg-white/80">
-                <Link href="/login">Ich bin schon dabei</Link>
+                <Link href="/login">Zum Dashboard</Link>
               </Button>
             </div>
             <p className="animate-fade-up delay-4 mt-3 text-[0.7rem] md:text-sm text-brand-night-navy/60">
@@ -220,7 +224,7 @@ export default function LandingPage() {
               imageAlt="SG-Reichenbach-Mannschaft umarmt sich nach Tor"
               kicker="Bäckerei Müller · Business · Sein Setup"
               headline="50 € pro Comeback-Sieg."
-              body="Stefan vom Bäcker hat sich bewusst für 50 €/Comeback entschieden — selten genug, dass es nicht ausartet. Über die Saison kommen ~600 € rein. Steuerlich absetzbar als Werbeleistung."
+              body="Stefan vom Bäcker hat sich bewusst für 50 €/Comeback entschieden — selten genug, dass es nicht ausartet. Steuerlich absetzbar als Werbeleistung, und jedes Comeback-Erlebnis ist ein Aufhänger für ein Kunden-Gespräch."
             />
             <StoryCard
               image={PHOTOS.teamGreen}
