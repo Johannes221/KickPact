@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
+import { teams, seasonResults } from "@/lib/db/schema";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { listMatchesForTeam } from "@/lib/db/queries/matches";
 import { Card, CardContent } from "@/components/ui/card";
+import { SeasonResultForm } from "./_components/season-result-form";
 
 export const metadata = { title: "Mannschaft · KickPact" };
 
@@ -31,6 +32,11 @@ export default async function TeamDetailPage({
   }
 
   const matches = await listMatchesForTeam(team.id, 30);
+  const [seasonResult] = await db
+    .select()
+    .from(seasonResults)
+    .where(and(eq(seasonResults.teamId, team.id), eq(seasonResults.saison, team.saison)))
+    .limit(1);
 
   return (
     <div className="space-y-5 md:space-y-8">
@@ -43,6 +49,23 @@ export default async function TeamDetailPage({
         </h2>
         <p className="text-sm text-brand-night-navy/60">Saison {team.saison}</p>
       </div>
+
+      <SeasonResultForm
+        teamId={team.id}
+        saison={team.saison}
+        current={
+          seasonResult
+            ? {
+                finalPosition: seasonResult.finalPosition,
+                teamsInLeague: seasonResult.teamsInLeague,
+                promoted: seasonResult.promoted,
+                relegated: seasonResult.relegated,
+                cupRoundReached: seasonResult.cupRoundReached,
+                customNotes: seasonResult.customNotes
+              }
+            : null
+        }
+      />
 
       <section>
         <div className="flex items-baseline justify-between gap-3 mb-4">
