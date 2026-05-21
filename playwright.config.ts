@@ -1,22 +1,21 @@
-import { defineConfig } from "@playwright/test";
-
-const runE2E = process.env.RUN_E2E === "1";
+import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  timeout: 60 * 1000,
+  timeout: 30_000,
+  retries: 0,
   use: {
-    baseURL: "http://localhost:3000",
-    headless: true,
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
+    trace: "on-first-retry",
     screenshot: "only-on-failure"
   },
-  // Only spin up the dev server when E2E tests are actually enabled
-  webServer: runE2E
-    ? {
-        command: "npm run dev",
-        url: "http://localhost:3000",
-        reuseExistingServer: !process.env.CI,
-        timeout: 180 * 1000
-      }
-    : undefined
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] }
+    }
+  ],
+  // Kein webServer hier — Tests müssen gegen laufende App laufen
+  // Für CI: PLAYWRIGHT_BASE_URL setzen
+  reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]]
 });
