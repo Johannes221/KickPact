@@ -50,7 +50,9 @@ export async function findMatchByFussballdeId(
 }
 
 function parseDateDdMmYyyy(s: string): Date {
-  const [dd, mm, yyyy] = s.split(".");
+  const [dd, mm, yy] = s.split(".");
+  // fussball.de liefert manchmal 2-stellige Jahre ("10.05.26" statt "10.05.2026")
+  const yyyy = yy.length === 2 ? "20" + yy : yy;
   return new Date(`${yyyy}-${mm}-${dd}T12:00:00Z`);
 }
 
@@ -93,7 +95,7 @@ export async function insertMatchWithEvents(args: {
         type: "tor",
         side: ev.side === "unbekannt" ? "heim" : ev.side,
         playerName: ev.spielerName,
-        playerId,
+        playerId: playerId ?? undefined,
         source: "scraped"
       });
       newEventCount++;
@@ -106,7 +108,7 @@ export async function insertMatchWithEvents(args: {
         subtype: "ein",
         side: ev.side === "unbekannt" ? "heim" : ev.side,
         playerName: ev.rein.name,
-        playerId: reinId,
+        playerId: reinId ?? undefined,
         source: "scraped"
       });
       const rausId = await upsertPlayer(teamId, ev.raus.id, ev.raus.name);
@@ -117,7 +119,7 @@ export async function insertMatchWithEvents(args: {
         subtype: "aus",
         side: ev.side === "unbekannt" ? "heim" : ev.side,
         playerName: ev.raus.name,
-        playerId: rausId,
+        playerId: rausId ?? undefined,
         source: "scraped"
       });
       newEventCount += 2;
@@ -131,7 +133,10 @@ async function upsertPlayer(
   teamId: string,
   fussballdeId: string,
   name: string
-): Promise<string> {
+): Promise<string | null> {
+  // Leere IDs überspringen (passiert wenn fussball.de kein Player-Profil hat)
+  if (!fussballdeId) return null;
+
   const [existing] = await db
     .select({ id: players.id })
     .from(players)
