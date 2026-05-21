@@ -80,6 +80,23 @@ export default async function VereinLayout({
         </div>
       )}
 
+      {/* Trial-Countdown-Banner */}
+      {gate.status === "trialing" && gate.trialEndsAt && (() => {
+        const daysLeft = Math.max(0, Math.ceil((gate.trialEndsAt!.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+        if (daysLeft > 14) return null;
+        return (
+          <div className="mb-5 md:mb-8 rounded-2xl border border-accent/30 bg-accent/5 p-4 md:p-5">
+            <p className="text-sm text-accent-dark">
+              <strong>Trial läuft noch {daysLeft} {daysLeft === 1 ? "Tag" : "Tage"}.</strong>{" "}
+              Aktiviere dein Abo um ununterbrochenes Sponsoring sicherzustellen.{" "}
+              <Link href={`/verein/${slug}/abo`} className="underline font-semibold">
+                Abo aktivieren →
+              </Link>
+            </p>
+          </div>
+        );
+      })()}
+
       {/* Subscription-Warnbanner */}
       {gate.status === "past_due" && !gate.isReadOnly && (
         <div className="mb-5 md:mb-8 rounded-2xl border border-amber-300 bg-amber-50 p-4 md:p-5">

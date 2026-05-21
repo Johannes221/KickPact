@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { clubMemberships, clubs } from "@/lib/db/schema";
 import { SponsorSubNav } from "./_components/sponsor-sub-nav";
+import { countPendingForSponsor } from "@/lib/db/queries/approvals";
 
 export default async function SponsorLayout({
   children
@@ -18,6 +19,8 @@ export default async function SponsorLayout({
     .from(clubMemberships)
     .innerJoin(clubs, eq(clubMemberships.clubId, clubs.id))
     .where(eq(clubMemberships.userId, user.id));
+
+  const pendingCount = await countPendingForSponsor(user.id);
 
   return (
     <main className="mx-auto max-w-5xl px-5 md:px-6 py-8 md:py-12">
@@ -59,7 +62,7 @@ export default async function SponsorLayout({
           )}
         </div>
 
-        <SponsorSubNav />
+        <SponsorSubNav pendingCount={pendingCount} />
       </div>
 
       {children}

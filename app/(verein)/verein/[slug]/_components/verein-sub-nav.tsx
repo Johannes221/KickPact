@@ -8,7 +8,8 @@ const TABS = [
   { label: "Dashboard", href: "" },         // /verein/[slug]
   { label: "Sponsoren", href: "/sponsoren" },
   { label: "Abrechnungen", href: "/abrechnungen" },
-  { label: "Abo", href: "/abo" }
+  { label: "Abo", href: "/abo" },
+  { label: "Einstellungen", href: "/einstellungen" }
 ];
 
 export function VereinSubNav({ slug }: { slug: string }) {

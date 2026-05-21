@@ -116,10 +116,28 @@ export default async function SponsorDashboard() {
         )}
       </section>
 
-      <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6">
-        <p className="text-sm text-brand-night-navy/70">
-          Approval-Inbox für Spezial-Events und Monats-Rechnungen kommen in Plan 3 + 4.
-        </p>
+      <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-5 md:p-6">
+        <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy mb-3">
+          Schnell-Navigation
+        </h3>
+        <div className="grid grid-cols-2 gap-2">
+          <a
+            href="/sponsor/inbox"
+            className="flex flex-col rounded-lg border border-brand-neutral/40 bg-white p-3 hover:border-accent/40 transition-colors"
+          >
+            <span className="text-xl">📬</span>
+            <span className="mt-1 text-sm font-semibold text-brand-night-navy">Inbox</span>
+            <span className="text-xs text-brand-night-navy/50">Offene Approvals</span>
+          </a>
+          <a
+            href="/sponsor/rechnungen"
+            className="flex flex-col rounded-lg border border-brand-neutral/40 bg-white p-3 hover:border-accent/40 transition-colors"
+          >
+            <span className="text-xl">🧾</span>
+            <span className="mt-1 text-sm font-semibold text-brand-night-navy">Rechnungen</span>
+            <span className="text-xs text-brand-night-navy/50">Monats-PDFs</span>
+          </a>
+        </div>
       </div>
     </div>
   );
