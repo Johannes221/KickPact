@@ -65,25 +65,20 @@ export async function searchVereine(suchbegriff: string): Promise<VereinHit[]> {
     await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForTimeout(2000);
 
-    return await page.evaluate(() => {
-      const results: Array<{
-        name: string;
-        slug: string;
-        vereinId: string;
-        url: string;
-      }> = [];
-      const seen = new Set<string>();
-      document.querySelectorAll<HTMLAnchorElement>('a[href*="/verein/"]').forEach((link) => {
-        const href = link.href || link.getAttribute("href") || "";
-        const m = href.match(/\/verein\/([^/]+)\/-\/id\/([A-Z0-9]+)/);
+    return await page.evaluate(`(function() {
+      var results = [];
+      var seen = new Set();
+      document.querySelectorAll('a[href*="/verein/"]').forEach(function(link) {
+        var href = link.href || link.getAttribute("href") || "";
+        var m = href.match(/\\/verein\\/([^/]+)\\/-\\/id\\/([A-Z0-9]+)/);
         if (m && !seen.has(m[2])) {
           seen.add(m[2]);
-          const name = link.textContent?.replace(/\s+/g, " ").trim() || m[1];
-          results.push({ name, slug: m[1], vereinId: m[2], url: href });
+          var name = (link.textContent || "").replace(/\\s+/g, " ").trim() || m[1];
+          results.push({ name: name, slug: m[1], vereinId: m[2], url: href });
         }
       });
       return results;
-    });
+    })()`) as VereinHit[];
   });
 }
 
@@ -96,32 +91,20 @@ export async function getMannschaften(
     await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForTimeout(2000);
 
-    return await page.evaluate(() => {
-      const results: Array<{
-        name: string;
-        slug: string;
-        saison: string;
-        teamId: string;
-        url: string;
-      }> = [];
-      const seen = new Set<string>();
-      document.querySelectorAll<HTMLAnchorElement>('a[href*="/mannschaft/"]').forEach((link) => {
-        const href = link.href || link.getAttribute("href") || "";
-        const m = href.match(/\/mannschaft\/([^/]+)\/-\/saison\/(\d+)\/team-id\/([A-Z0-9]+)/);
+    return await page.evaluate(`(function() {
+      var results = [];
+      var seen = new Set();
+      document.querySelectorAll('a[href*="/mannschaft/"]').forEach(function(link) {
+        var href = link.href || link.getAttribute("href") || "";
+        var m = href.match(/\\/mannschaft\\/([^/]+)\\/-\\/saison\\/(\\d+)\\/team-id\\/([A-Z0-9]+)/);
         if (m && !seen.has(m[3])) {
           seen.add(m[3]);
-          const name = link.textContent?.replace(/\s+/g, " ").trim() || m[1];
-          results.push({
-            name,
-            slug: m[1],
-            saison: m[2],
-            teamId: m[3],
-            url: href
-          });
+          var name = (link.textContent || "").replace(/\\s+/g, " ").trim() || m[1];
+          results.push({ name: name, slug: m[1], saison: m[2], teamId: m[3], url: href });
         }
       });
       return results;
-    });
+    })()`) as MannschaftHit[];
   });
 }
 
@@ -143,55 +126,42 @@ export async function getSpiele(
       // fallback: bleiben auf Main-Page
     }
 
-    const raw = await page.evaluate(() => {
-      const results: Array<{
-        spielId: string;
-        slug: string;
-        datum: string;
-        heim: string;
-        gast: string;
-        ergebnis: string;
-        vergangen: boolean;
-        url: string;
-      }> = [];
-      const seen = new Set<string>();
-      const today = new Date();
+    const raw: Array<{spielId: string; slug: string; datum: string; heim: string; gast: string; ergebnis: string; vergangen: boolean; url: string}> = await page.evaluate(`(function() {
+      var results = [];
+      var seen = new Set();
+      var today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const parseDatum = (d: string): Date | null => {
-        const parts = d.split(".");
-        if (parts.length !== 3) return null;
-        const year = parts[2].length === 2 ? "20" + parts[2] : parts[2];
-        return new Date(`${year}-${parts[1]}-${parts[0]}`);
-      };
-
-      const allTrs = [...document.querySelectorAll("tr")];
-      let currentDatum = "";
-      allTrs.forEach((tr) => {
+      var allTrs = Array.from(document.querySelectorAll("tr"));
+      var currentDatum = "";
+      allTrs.forEach(function(tr) {
         if (tr.classList.contains("row-headline") || tr.classList.contains("row-competition")) {
-          const txt = tr.textContent?.replace(/\s+/g, " ").trim() || "";
-          const dm = txt.match(/(\d{2}\.\d{2}\.\d{4})/);
-          const dm2 = txt.match(/(\d{2}\.\d{2}\.\d{2})(?!\d)/);
+          var txt = (tr.textContent || "").replace(/\\s+/g, " ").trim();
+          var dm = txt.match(/(\\d{2}\\.\\d{2}\\.\\d{4})/);
+          var dm2 = txt.match(/(\\d{2}\\.\\d{2}\\.\\d{2})(?!\\d)/);
           if (dm) currentDatum = dm[1];
           else if (dm2) currentDatum = dm2[1];
           return;
         }
 
-        const link = tr.querySelector<HTMLAnchorElement>('a[href*="/spiel/"]');
+        var link = tr.querySelector('a[href*="/spiel/"]');
         if (!link) return;
-        const href = link.href || "";
-        const m = href.match(/\/spiel\/([^/]+)\/-\/spiel\/([A-Z0-9]+)/);
+        var href = link.href || "";
+        var m = href.match(/\\/spiel\\/([^/]+)\\/-\\/spiel\\/([A-Z0-9]+)/);
         if (!m || seen.has(m[2])) return;
         if (!currentDatum) return;
 
-        const matchDate = parseDatum(currentDatum);
+        var parts = currentDatum.split(".");
+        if (parts.length !== 3) return;
+        var yr = parts[2].length === 2 ? "20" + parts[2] : parts[2];
+        var matchDate = new Date(yr + "-" + parts[1] + "-" + parts[0]);
         if (!matchDate || matchDate >= today) return;
         seen.add(m[2]);
 
-        const tds = [...tr.querySelectorAll("td")].map((td) =>
-          (td.textContent || "").replace(/\s+/g, " ").trim()
-        );
-        const teamTds = tds.filter((t) => t && t !== ":" && t !== "Zum Spiel");
+        var tds = Array.from(tr.querySelectorAll("td")).map(function(td) {
+          return (td.textContent || "").replace(/\\s+/g, " ").trim();
+        });
+        var teamTds = tds.filter(function(t) { return t && t !== ":" && t !== "Zum Spiel"; });
 
         results.push({
           spielId: m[2],
@@ -206,7 +176,7 @@ export async function getSpiele(
       });
 
       return results;
-    });
+    })()`)
 
     raw.sort((a, b) => {
       const parse = (d: string): number => {
@@ -237,12 +207,12 @@ async function resolvePlayerName(page: Page, playerUrl: string): Promise<string>
   try {
     await page.goto(playerUrl, { waitUntil: "networkidle", timeout: 20000 });
     await page.waitForTimeout(1000);
-    const name = await page.evaluate(() => {
-      const title = document.title;
-      const m = title.match(/^(.+?)\s*(?:Basisprofil|Profil|\|)/i);
+    const name = await page.evaluate(`(function() {
+      var title = document.title;
+      var m = title.match(/^(.+?)\\s*(?:Basisprofil|Profil|\\|)/i);
       if (m) return m[1].trim();
       return title.split("|")[0].trim();
-    });
+    })()`) as string
     playerNameCache.set(id, name || id);
     return playerNameCache.get(id)!;
   } catch {
@@ -260,78 +230,57 @@ export async function getSpielDetails(
     await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForTimeout(3000);
 
-    const raw = await page.evaluate(() => {
-      const result = {
+    const raw = await page.evaluate(`(function() {
+      var result = {
         heim: "",
         gast: "",
         ergebnisHeim: 0,
         ergebnisGast: 0,
-        halbzeitHeim: null as number | null,
-        halbzeitGast: null as number | null,
-        rawEvents: [] as Array<{
-          typ: "TOR" | "AUSWECHSLUNG";
-          minute: number | null;
-          side: "heim" | "gast" | "unbekannt";
-          playerLinks: string[];
-        }>,
-        spielerUrls: [] as string[]
+        halbzeitHeim: null,
+        halbzeitGast: null,
+        rawEvents: [],
+        spielerUrls: []
       };
 
-      result.heim =
-        document.querySelector(".team-home .team-name")?.textContent?.replace(/\s+/g, " ").trim() ??
-        "";
-      result.gast =
-        document.querySelector(".team-away .team-name")?.textContent?.replace(/\s+/g, " ").trim() ??
-        "";
+      var heimEl = document.querySelector(".team-home .team-name");
+      result.heim = heimEl ? (heimEl.textContent || "").replace(/\\s+/g, " ").trim() : "";
+      var gastEl = document.querySelector(".team-away .team-name");
+      result.gast = gastEl ? (gastEl.textContent || "").replace(/\\s+/g, " ").trim() : "";
 
-      const matchCourse = document.querySelector(".match-course");
-      const rowEvents = matchCourse ? [...matchCourse.querySelectorAll(".row-event")] : [];
-      rowEvents.forEach((row) => {
-        const isRight = row.classList.contains("event-right");
-        const isLeft = row.classList.contains("event-left");
-        const minuteText = row
-          .querySelector(".valign-inner")
-          ?.textContent?.replace(/\s+/g, "")
-          .replace("'", "")
-          .trim();
-        const isGoal = row.querySelector(".hexagon.green") !== null;
-        const isSubstitute = row.querySelector(".icon-substitute") !== null;
-        const playerLinks = [
-          ...row.querySelectorAll<HTMLAnchorElement>('a[href*="spielerprofil"]')
-        ]
-          .map((a) => a.href)
-          .filter((h) => h.includes("/player-id/") || h.includes("/userid/"));
+      var matchCourse = document.querySelector(".match-course");
+      var rowEvents = matchCourse ? Array.from(matchCourse.querySelectorAll(".row-event")) : [];
+      rowEvents.forEach(function(row) {
+        var isRight = row.classList.contains("event-right");
+        var isLeft = row.classList.contains("event-left");
+        var valignEl = row.querySelector(".valign-inner");
+        var minuteText = valignEl ? (valignEl.textContent || "").replace(/\\s+/g, "").replace("'", "").trim() : null;
+        var isGoal = row.querySelector(".hexagon.green") !== null;
+        var isSubstitute = row.querySelector(".icon-substitute") !== null;
+        var playerLinks = Array.from(row.querySelectorAll('a[href*="spielerprofil"]'))
+          .map(function(a) { return a.href; })
+          .filter(function(h) { return h.includes("/player-id/") || h.includes("/userid/"); });
 
-        const side: "heim" | "gast" | "unbekannt" = isRight
-          ? "gast"
-          : isLeft
-            ? "heim"
-            : "unbekannt";
-        const minute = minuteText ? parseInt(minuteText, 10) : null;
+        var side = isRight ? "gast" : isLeft ? "heim" : "unbekannt";
+        var minute = minuteText ? parseInt(minuteText, 10) : null;
 
         if ((isGoal || isSubstitute) && playerLinks.length > 0) {
-          result.rawEvents.push({
-            typ: isGoal ? "TOR" : "AUSWECHSLUNG",
-            minute,
-            side,
-            playerLinks
-          });
-          playerLinks.forEach((u) => {
+          result.rawEvents.push({ typ: isGoal ? "TOR" : "AUSWECHSLUNG", minute: minute, side: side, playerLinks: playerLinks });
+          playerLinks.forEach(function(u) {
             if (!result.spielerUrls.includes(u)) result.spielerUrls.push(u);
           });
         }
       });
 
-      const goals = result.rawEvents.filter((e) => e.typ === "TOR");
-      result.ergebnisHeim = goals.filter((g) => g.side === "heim").length;
-      result.ergebnisGast = goals.filter((g) => g.side === "gast").length;
+      var goals = result.rawEvents.filter(function(e) { return e.typ === "TOR"; });
+      result.ergebnisHeim = goals.filter(function(g) { return g.side === "heim"; }).length;
+      result.ergebnisGast = goals.filter(function(g) { return g.side === "gast"; }).length;
 
-      const firstHalfGoals = goals.filter((g) => g.minute !== null && g.minute <= 45);
-      result.halbzeitHeim = firstHalfGoals.filter((g) => g.side === "heim").length;
-      result.halbzeitGast = firstHalfGoals.filter((g) => g.side === "gast").length;
+      var firstHalfGoals = goals.filter(function(g) { return g.minute !== null && g.minute <= 45; });
+      result.halbzeitHeim = firstHalfGoals.filter(function(g) { return g.side === "heim"; }).length;
+      result.halbzeitGast = firstHalfGoals.filter(function(g) { return g.side === "gast"; }).length;
 
       return result;
-    });
+    })()`) as { heim: string; gast: string; ergebnisHeim: number; ergebnisGast: number; halbzeitHeim: number | null; halbzeitGast: number | null; rawEvents: Array<{typ: string; minute: number | null; side: "heim" | "gast" | "unbekannt"; playerLinks: string[]}>; spielerUrls: string[] }
 
     // Resolve player names sequentially (cached)
     for (const u of raw.spielerUrls) {
@@ -370,7 +319,7 @@ export async function getSpielDetails(
           }
         };
       }
-      return { typ: ev.typ, minute: ev.minute, side: ev.side };
+      return { typ: ev.typ as "TOR" | "AUSWECHSLUNG", minute: ev.minute, side: ev.side };
     });
 
     events.sort((a, b) => (a.minute ?? 999) - (b.minute ?? 999));
