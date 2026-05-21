@@ -367,3 +367,50 @@ export async function getSpielDetails(
     };
   });
 }
+
+export interface KaderPlayer {
+  name: string;
+  spielerId?: string;
+}
+
+export async function getKader(
+  teamId: string,
+  slug: string,
+  saison: string
+): Promise<KaderPlayer[]> {
+  return withPage(async (page) => {
+    const url = `https://www.fussball.de/mannschaft/${slug}/-/saison/${saison}/team-id/${teamId}#!/`;
+    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+    await page.waitForTimeout(2000);
+
+    return await page.evaluate(`(function() {
+      var players = [];
+      var seen = new Set();
+
+      // Strategy 1: kader table rows with player profile links
+      document.querySelectorAll('a[href*="spielerprofil"]').forEach(function(link) {
+        var href = link.href || link.getAttribute("href") || "";
+        var idMatch = href.match(/\\/(?:player-id|userid)\\/([A-Z0-9]+)/i);
+        var id = idMatch ? idMatch[1] : null;
+        if (id && seen.has(id)) return;
+        var name = (link.textContent || "").replace(/\\s+/g, " ").trim();
+        if (name.length < 2) return;
+        if (id) seen.add(id);
+        players.push({ name: name, spielerId: id || undefined });
+      });
+
+      // Strategy 2: .column-name cells in kader tables (fallback if links have no text)
+      if (players.length === 0) {
+        document.querySelectorAll('.column-name').forEach(function(cell) {
+          var name = (cell.textContent || "").replace(/\\s+/g, " ").trim();
+          if (name.length > 1 && !seen.has(name)) {
+            seen.add(name);
+            players.push({ name: name });
+          }
+        });
+      }
+
+      return players;
+    })()`) as KaderPlayer[];
+  });
+}
