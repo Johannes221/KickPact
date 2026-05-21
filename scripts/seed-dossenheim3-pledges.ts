@@ -13,6 +13,7 @@ import { pledges, pledgeRules } from "../lib/db/schema/pledges";
 import { matches, matchEvents } from "../lib/db/schema/matches";
 import { charges } from "../lib/db/schema/charges";
 import { evaluateTriggers, type MatchInput } from "../lib/crawler/triggers";
+import { detectTeamSide } from "../lib/crawler/team-side";
 import { loadActivePledgeRulesForTeam, getMonthlyChargedCents } from "../lib/db/queries/evaluation";
 
 const DOSSENHEIM3_TEAM_ID = "ytbng7w893495ncjtog7amce";
@@ -132,21 +133,21 @@ async function main() {
       .from(matchEvents)
       .where(eq(matchEvents.matchId, match.id));
 
+    // teamSide bestimmen (shared utility, handles "Herren - " prefix)
+    const teamSide = detectTeamSide(team.name, match.heimName);
+
     const matchInput: MatchInput = {
-      matchId: match.id,
-      teamId: team.id,
-      datum: match.datum,
+      id: match.id,
+      teamSide,
       ergebnisHeim: match.ergebnisHeim ?? 0,
       ergebnisGast: match.ergebnisGast ?? 0,
       halbzeitHeim: match.halbzeitHeim ?? null,
       halbzeitGast: match.halbzeitGast ?? null,
-      heimName: match.heimName,
-      gastName: match.gastName,
       events: events.map((e) => ({
         id: e.id,
         type: e.type as "tor" | "auswechslung" | "spezial" | "karte",
         subtype: e.subtype ?? undefined,
-        minute: e.minute ?? undefined,
+        minute: e.minute ?? null,
         side: e.side as "heim" | "gast",
         playerName: e.playerName ?? undefined,
         playerId: e.playerId ?? undefined,
@@ -177,11 +178,11 @@ async function main() {
 
       try {
         await db.insert(charges).values({
-          id: createId(),
           pledgeId: result.pledgeId,
-          pledgeRuleId: result.ruleId,
+          pledgeRuleId: result.pledgeRuleId,
           matchId: match.id,
-          matchEventId: null,
+          matchEventId: result.matchEventId,
+          triggerType: result.triggerType,
           amountCents: cappedAmount,
           status: "confirmed",
           confirmedAt: new Date(),
@@ -191,7 +192,7 @@ async function main() {
       } catch (err) {
         const msg = String(err);
         if (!msg.includes("unique") && !msg.includes("duplicate")) {
-          console.error(`  Charge-Fehler für ${result.ruleId}: ${err}`);
+          console.error(`  Charge-Fehler für ${result.pledgeRuleId}: ${err}`);
         }
       }
     }

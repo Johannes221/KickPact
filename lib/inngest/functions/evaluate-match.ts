@@ -3,6 +3,7 @@ import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
 import { matches, matchEvents, teams, charges } from "@/lib/db/schema";
 import { evaluateTriggers, type MatchInput } from "@/lib/crawler/triggers";
+import { detectTeamSide } from "@/lib/crawler/team-side";
 import {
   loadActivePledgeRulesForTeam,
   getMonthlyChargedCents,
@@ -37,11 +38,9 @@ export const evaluateMatch = inngest.createFunction(
       return { proposals: 0, inserted: 0, cappedOrSkipped: 0, skippedReadOnly: true };
     }
 
-    // Determine teamSide via name-matching: take first significant word of team name,
-    // check if heim_name contains it (case-insensitive)
-    const teamFirstWord = matchData.t.name.toLowerCase().split(" ")[0];
-    const heimMatch = matchData.m.heimName.toLowerCase().includes(teamFirstWord);
-    const teamSide: "heim" | "gast" = heimMatch ? "heim" : "gast";
+    // Determine teamSide: uses all significant words (≥5 chars) from team name,
+    // not just first word (which may be a role prefix like "Herren").
+    const teamSide = detectTeamSide(matchData.t.name, matchData.m.heimName);
 
     const input: MatchInput = {
       id: matchData.m.id,

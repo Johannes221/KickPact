@@ -13,12 +13,12 @@ import {
   insertMatchWithEvents,
 } from "../lib/db/queries/crawler";
 import { evaluateTriggers, type MatchInput } from "../lib/crawler/triggers";
+import { detectTeamSide } from "../lib/crawler/team-side";
 import {
   loadActivePledgeRulesForTeam,
   getMonthlyChargedCents,
 } from "../lib/db/queries/evaluation";
-import { charges as chargesTable, pledgeRules as pledgeRulesTable, pledges as pledgesTable } from "../lib/db/schema";
-import { createId } from "@paralleldrive/cuid2";
+import { charges as chargesTable, pledges as pledgesTable } from "../lib/db/schema";
 
 const TEAM_ID_FUSSBALLDE = "02EPKPAL98000000VS5489B1VT0RKM5V";
 const TEAM_SLUG = "fc-sportfreunde-1910-dossenheim-3-fc-sportfr-dossenheim-baden";
@@ -120,22 +120,22 @@ async function main() {
       .from(matchEvents)
       .where(eq(matchEvents.matchId, match.id));
 
+    // teamSide bestimmen (shared utility, handles "Herren - " prefix)
+    const teamSide = detectTeamSide(team.name, match.heimName);
+
     // Als MatchInput formatieren
     const matchInput: MatchInput = {
-      matchId: match.id,
-      teamId: team.id,
-      datum: match.datum,
+      id: match.id,
+      teamSide,
       ergebnisHeim: match.ergebnisHeim ?? 0,
       ergebnisGast: match.ergebnisGast ?? 0,
       halbzeitHeim: match.halbzeitHeim ?? null,
       halbzeitGast: match.halbzeitGast ?? null,
-      heimName: match.heimName,
-      gastName: match.gastName,
       events: events.map((e) => ({
         id: e.id,
         type: e.type as "tor" | "auswechslung" | "spezial" | "karte",
         subtype: e.subtype ?? undefined,
-        minute: e.minute ?? undefined,
+        minute: e.minute ?? null,
         side: e.side as "heim" | "gast",
         playerName: e.playerName ?? undefined,
         playerId: e.playerId ?? undefined,
@@ -148,24 +148,10 @@ async function main() {
     for (const result of results) {
       if (result.amountCents <= 0) continue;
 
-      // Prüfe ob Charge für diese Rule + Match bereits existiert
-      const { charges: chargesSchema } = await import("../lib/db/schema");
-      const existing = await db
-        .select({ id: chargesSchema.id })
-        .from(chargesSchema)
-        .where(
-          eq(chargesSchema.pledgeRuleId, result.ruleId)
-        )
-        .limit(20);
-
-      // Grobcheck: Ist für diese Rule + Match bereits eine Charge?
-      const matchChargeExists = existing.some(() => false); // vereinfacht, echte Prüfung via UNIQUE constraint
-      void matchChargeExists;
-
       // Monthly Cap prüfen
       const matchDate = new Date(match.datum);
       const [pledgeForRule] = await db
-        .select({ id: pledgesTable.id, monthlyCapCents: pledgesTable.monthlyCapCents })
+        .select({ monthlyCapCents: pledgesTable.monthlyCapCents })
         .from(pledgesTable)
         .where(eq(pledgesTable.id, result.pledgeId))
         .limit(1);
@@ -180,11 +166,11 @@ async function main() {
 
       try {
         await db.insert(chargesTable).values({
-          id: createId(),
           pledgeId: result.pledgeId,
-          pledgeRuleId: result.ruleId,
+          pledgeRuleId: result.pledgeRuleId,
           matchId: match.id,
-          matchEventId: null,
+          matchEventId: result.matchEventId,
+          triggerType: result.triggerType,
           amountCents: cappedAmount,
           status: "confirmed",
           confirmedAt: new Date(),
@@ -195,7 +181,7 @@ async function main() {
         // Unique-Constraint → Charge existiert bereits, überspringen
         const msg = String(err);
         if (!msg.includes("unique") && !msg.includes("duplicate")) {
-          console.error(`  Charge-Insert-Fehler für ${result.ruleId}: ${err}`);
+          console.error(`  Charge-Insert-Fehler für ${result.pledgeRuleId}: ${err}`);
         }
       }
     }

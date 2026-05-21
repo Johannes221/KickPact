@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, gte, lt, lte, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   pledges,
@@ -72,8 +72,8 @@ export async function getMonthlyChargedCents(pledgeId: string, asOf: Date): Prom
       and(
         eq(charges.pledgeId, pledgeId),
         gte(charges.createdAt, monthStart),
-        sql`${charges.createdAt} < ${monthEnd}`,
-        sql`${charges.status} IN ('confirmed', 'pending_approval', 'invoiced')`
+        lt(charges.createdAt, monthEnd),
+        inArray(charges.status, ["confirmed", "pending_approval", "invoiced"])
       )
     );
   return row?.total ?? 0;
