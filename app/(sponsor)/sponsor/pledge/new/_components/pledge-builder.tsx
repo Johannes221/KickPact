@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
@@ -15,16 +14,17 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
 } from "@/components/ui/form";
 import {
   pledgeInputSchema,
-  TRIGGER_TYPES,
   type PledgeInput,
-  type TriggerType
+  type TriggerType,
 } from "@/lib/validations/pledge";
 import { createPledge } from "../_actions/create-pledge";
 import { toast } from "sonner";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type TriggerDef = {
   type: TriggerType;
@@ -38,7 +38,6 @@ type TriggerDef = {
 type TriggerCategory = "match" | "season";
 
 const TRIGGER_LIBRARY: (TriggerDef & { category: TriggerCategory })[] = [
-  // Pro Spiel
   { category: "match", type: "goal_total", label: "Pro Tor", emoji: "⚽", description: "Für jedes Tor der eigenen Mannschaft", defaultEur: 5 },
   { category: "match", type: "win", label: "Pro Sieg", emoji: "🏆", description: "Einmal pro gewonnenem Spiel", defaultEur: 10 },
   { category: "match", type: "clean_sheet", label: "Pro Zu-Null-Sieg", emoji: "🛡️", description: "Gewonnen + 0 Gegentore", defaultEur: 5 },
@@ -48,21 +47,27 @@ const TRIGGER_LIBRARY: (TriggerDef & { category: TriggerCategory })[] = [
   { category: "match", type: "special_goal", label: "Spezial-Tor", emoji: "🎭", description: "Kopfball, Hackentor, Elfmeter — Verein meldet, du bestätigst", defaultEur: 10, manual: true },
   { category: "match", type: "goals_scored_min", label: "Mind. X Tore", emoji: "🎉", description: "z.B. ab 5 Toren pro Spiel", defaultEur: 30 },
   { category: "match", type: "goal_diff_min", label: "Hoher Sieg (Diff ≥X)", emoji: "💪", description: "z.B. Tordifferenz ≥3", defaultEur: 15 },
-  // Pro Saison — feuert 1× am Saisons-Ende
   { category: "season", type: "season_promotion", label: "Aufstieg", emoji: "⬆️", description: "1× wenn die Mannschaft aufsteigt", defaultEur: 200 },
   { category: "season", type: "season_no_relegation", label: "Klassenerhalt", emoji: "🛟", description: "1× wenn nicht abgestiegen", defaultEur: 100 },
-  { category: "season", type: "season_champion", label: "Meister-Titel", emoji: "👑", description: "1× wenn Tabellenplatz 1 am Saisons-Ende", defaultEur: 300 },
-  { category: "season", type: "season_table_position", label: "Endplatz im Bereich", emoji: "🥇", description: "z.B. Platz 1–5 (Range im Params)", defaultEur: 75 },
+  { category: "season", type: "season_champion", label: "Meister-Titel", emoji: "👑", description: "1× wenn Tabellenplatz 1 am Saison-Ende", defaultEur: 300 },
+  { category: "season", type: "season_table_position", label: "Endplatz im Bereich", emoji: "🥇", description: "z.B. Platz 1–5 (Range)", defaultEur: 75 },
   { category: "season", type: "season_cup_round", label: "Pokal-Runde", emoji: "🏆", description: "z.B. Halbfinale erreicht — Verein meldet, du bestätigst", defaultEur: 150, manual: true },
-  { category: "season", type: "season_custom", label: "Eigenes Saison-Ziel", emoji: "🎺", description: "z.B. '20 Tore mehr als letzte Saison' — Verein meldet, du bestätigst", defaultEur: 50, manual: true }
+  { category: "season", type: "season_custom", label: "Eigenes Saison-Ziel", emoji: "🎺", description: "Verein meldet, du bestätigst", defaultEur: 50, manual: true },
 ];
+
+type WizardStep = 1 | 2 | 3;
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function PledgeBuilder() {
   const router = useRouter();
   const params = useSearchParams();
   const invitationToken = params.get("invitation");
   const [pending, startTransition] = useTransition();
+  const [step, setStep] = useState<WizardStep>(1);
   const [enabled, setEnabled] = useState<Set<TriggerType>>(new Set(["goal_total", "win"]));
+  const [squadPlayers, setSquadPlayers] = useState<string[]>([]);
+  const [squadLoading, setSquadLoading] = useState(false);
 
   const form = useForm<PledgeInput>({
     resolver: zodResolver(pledgeInputSchema),
@@ -70,17 +75,38 @@ export function PledgeBuilder() {
       invitationToken: invitationToken ?? "",
       rules: [
         { triggerType: "goal_total", amountEur: 5, params: {} },
-        { triggerType: "win", amountEur: 10, params: {} }
+        { triggerType: "win", amountEur: 10, params: {} },
       ],
       monthlyCapEur: undefined,
-      endsAtSaisonEnd: true
-    }
+      endsAtSaisonEnd: true,
+    },
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "rules"
+    name: "rules",
   });
+
+  // Load squad when step 2 is reached and goal_by_player is selected
+  useEffect(() => {
+    if (
+      step === 2 &&
+      enabled.has("goal_by_player") &&
+      squadPlayers.length === 0 &&
+      invitationToken
+    ) {
+      setSquadLoading(true);
+      fetch(`/api/squad?invitationToken=${encodeURIComponent(invitationToken)}`)
+        .then((r) => r.json())
+        .then((data: { players?: string[] }) => {
+          if (data.players) setSquadPlayers(data.players);
+        })
+        .catch(() => {
+          // ignore — player name falls back to text input
+        })
+        .finally(() => setSquadLoading(false));
+    }
+  }, [step, enabled, invitationToken, squadPlayers.length]);
 
   function toggleTrigger(type: TriggerType) {
     const next = new Set(enabled);
@@ -98,13 +124,13 @@ export function PledgeBuilder() {
 
   function onSubmit(values: PledgeInput) {
     if (values.rules.length === 0) {
-      toast.error("Mindestens eine Regel auswählen");
+      toast.error("Mindestens ein Ereignis auswählen");
       return;
     }
     startTransition(async () => {
       try {
         const { pledgeId } = await createPledge(values);
-        toast.success("Pledge ist live 🎉");
+        toast.success("Sponsoring ist live 🎉");
         router.push(`/sponsor/pledge/${pledgeId}`);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Fehler beim Speichern");
@@ -112,11 +138,10 @@ export function PledgeBuilder() {
     });
   }
 
-  // Worst-Case-Berechnung (vereinfachte Heuristik)
   const watchedRules = form.watch("rules");
   const watchedMonthly = form.watch("monthlyCapEur");
   const worstCasePerSaison = estimateWorstCase(watchedRules);
-  const worstCasePerMonth = Math.round(worstCasePerSaison / 9); // 9 Monate Saison
+  const worstCasePerMonth = Math.round(worstCasePerSaison / 9);
 
   if (!invitationToken) {
     return (
@@ -128,66 +153,99 @@ export function PledgeBuilder() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-        {/* Trigger-Library — gruppiert nach Pro-Spiel + Pro-Saison */}
-        <section className="space-y-4">
-          <Label className="text-sm font-semibold uppercase tracking-widest text-brand-night-navy/50">
-            1.  Welche Trigger soll dein Pledge haben?
-          </Label>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <StepIndicator currentStep={step} />
 
-          <div>
-            <h4 className="text-xs uppercase tracking-widest font-bold text-accent-dark mb-2 md:mb-3">
-              ⚽ Pro Spiel
-            </h4>
-            <div className="grid gap-2.5 md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {TRIGGER_LIBRARY.filter((t) => t.category === "match").map((t) => (
-                <TriggerToggle
-                  key={t.type}
-                  def={t}
-                  enabled={enabled.has(t.type)}
-                  onToggle={() => toggleTrigger(t.type)}
-                />
-              ))}
+        {/* ── Step 1: Ereignisse wählen ── */}
+        {step === 1 && (
+          <section className="space-y-6">
+            <div>
+              <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+                Welche Ereignisse sollen zählen?
+              </h2>
+              <p className="mt-1 text-sm text-brand-night-navy/60">
+                Wähle beliebig viele aus — im nächsten Schritt legst du die Beträge fest.
+              </p>
             </div>
-          </div>
 
-          <div className="mt-5 md:mt-6">
-            <h4 className="text-xs uppercase tracking-widest font-bold text-accent-dark mb-2 md:mb-3">
-              🏆 Pro Saison <span className="ml-1 text-brand-night-navy/40 font-normal normal-case tracking-normal">— 1× am Saison-Ende</span>
-            </h4>
-            <div className="grid gap-2.5 md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {TRIGGER_LIBRARY.filter((t) => t.category === "season").map((t) => (
-                <TriggerToggle
-                  key={t.type}
-                  def={t}
-                  enabled={enabled.has(t.type)}
-                  onToggle={() => toggleTrigger(t.type)}
-                />
-              ))}
+            <div>
+              <h4 className="text-xs uppercase tracking-widest font-bold text-accent-dark mb-3">
+                ⚽ Pro Spiel
+              </h4>
+              <div className="grid gap-2.5 md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {TRIGGER_LIBRARY.filter((t) => t.category === "match").map((t) => (
+                  <TriggerToggle
+                    key={t.type}
+                    def={t}
+                    enabled={enabled.has(t.type)}
+                    onToggle={() => toggleTrigger(t.type)}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
 
-        {/* Beträge */}
-        {fields.length > 0 && (
-          <section className="space-y-4">
-            <Label className="text-sm font-semibold uppercase tracking-widest text-brand-night-navy/50">
-              2.  Beträge festlegen
-            </Label>
+            <div>
+              <h4 className="text-xs uppercase tracking-widest font-bold text-accent-dark mb-3">
+                🏆 Pro Saison{" "}
+                <span className="ml-1 text-brand-night-navy/40 font-normal normal-case tracking-normal">
+                  — 1× am Saison-Ende
+                </span>
+              </h4>
+              <div className="grid gap-2.5 md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {TRIGGER_LIBRARY.filter((t) => t.category === "season").map((t) => (
+                  <TriggerToggle
+                    key={t.type}
+                    def={t}
+                    enabled={enabled.has(t.type)}
+                    onToggle={() => toggleTrigger(t.type)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="accent"
+                size="lg"
+                disabled={enabled.size === 0}
+                onClick={() => setStep(2)}
+              >
+                Weiter: Beträge festlegen →
+              </Button>
+            </div>
+          </section>
+        )}
+
+        {/* ── Step 2: Beträge festlegen ── */}
+        {step === 2 && (
+          <section className="space-y-6">
+            <div>
+              <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+                Wie viel pro Ereignis?
+              </h2>
+              <p className="mt-1 text-sm text-brand-night-navy/60">
+                Leg fest, was jedes Ereignis wert ist. Der Spiel-Cap begrenzt pro Spiel.
+              </p>
+            </div>
+
             <div className="space-y-3">
               {fields.map((field, index) => {
                 const def = TRIGGER_LIBRARY.find((t) => t.type === field.triggerType);
                 return (
                   <div
                     key={field.id}
-                    className="flex flex-wrap items-end gap-3 rounded-lg border border-brand-neutral/40 bg-white p-4"
+                    className="flex flex-wrap items-end gap-3 rounded-xl border border-brand-neutral/40 bg-white p-4"
                   >
-                    <div className="flex-1 min-w-[200px]">
+                    <div className="flex-1 min-w-[180px]">
                       <div className="text-sm font-semibold text-brand-night-navy">
-                        {def?.emoji}  {def?.label}
+                        {def?.emoji} {def?.label}
                       </div>
-                      <div className="text-xs text-brand-night-navy/50 mt-0.5">{def?.description}</div>
+                      <div className="text-xs text-brand-night-navy/50 mt-0.5 leading-snug">
+                        {def?.description}
+                      </div>
                     </div>
+
                     <FormField
                       control={form.control}
                       name={`rules.${index}.amountEur`}
@@ -207,6 +265,7 @@ export function PledgeBuilder() {
                         </FormItem>
                       )}
                     />
+
                     <FormField
                       control={form.control}
                       name={`rules.${index}.perMatchCapEur`}
@@ -221,9 +280,7 @@ export function PledgeBuilder() {
                               placeholder="optional"
                               value={field.value ?? ""}
                               onChange={(e) =>
-                                field.onChange(
-                                  e.target.value === "" ? undefined : Number(e.target.value)
-                                )
+                                field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
                               }
                             />
                           </FormControl>
@@ -231,29 +288,56 @@ export function PledgeBuilder() {
                         </FormItem>
                       )}
                     />
+
                     {field.triggerType === "goal_by_player" && (
                       <FormField
                         control={form.control}
                         name={`rules.${index}.params`}
                         render={({ field: pf }) => (
-                          <FormItem className="w-48">
-                            <FormLabel className="text-xs text-brand-night-navy/60">Spieler-Name</FormLabel>
+                          <FormItem className="w-56">
+                            <FormLabel className="text-xs text-brand-night-navy/60">Spieler</FormLabel>
                             <FormControl>
-                              <Input
-                                placeholder="z.B. Schmidt"
-                                value={(pf.value as Record<string, string>)?.player_name ?? ""}
-                                onChange={(e) =>
-                                  pf.onChange({ ...((pf.value as Record<string, unknown>) ?? {}), player_name: e.target.value })
-                                }
-                              />
+                              {squadLoading ? (
+                                <div className="h-10 rounded-md border border-brand-neutral/40 bg-brand-off-white animate-pulse" />
+                              ) : squadPlayers.length > 0 ? (
+                                <select
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                  value={(pf.value as Record<string, string>)?.player_name ?? ""}
+                                  onChange={(e) =>
+                                    pf.onChange({
+                                      ...((pf.value as Record<string, unknown>) ?? {}),
+                                      player_name: e.target.value,
+                                    })
+                                  }
+                                >
+                                  <option value="">Spieler wählen…</option>
+                                  {squadPlayers.map((name) => (
+                                    <option key={name} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <Input
+                                  placeholder="z.B. Schmidt"
+                                  value={(pf.value as Record<string, string>)?.player_name ?? ""}
+                                  onChange={(e) =>
+                                    pf.onChange({
+                                      ...((pf.value as Record<string, unknown>) ?? {}),
+                                      player_name: e.target.value,
+                                    })
+                                  }
+                                />
+                              )}
                             </FormControl>
                             <FormDescription className="text-xs">
-                              Name des Spielers dessen Tore zählen.
+                              Tore dieses Spielers zählen für dein Sponsoring.
                             </FormDescription>
                           </FormItem>
                         )}
                       />
                     )}
+
                     {field.triggerType === "goals_scored_min" && (
                       <FormField
                         control={form.control}
@@ -269,7 +353,10 @@ export function PledgeBuilder() {
                                 placeholder="5"
                                 value={(pf.value as Record<string, number>)?.min_goals ?? ""}
                                 onChange={(e) =>
-                                  pf.onChange({ ...((pf.value as Record<string, unknown>) ?? {}), min_goals: Number(e.target.value) })
+                                  pf.onChange({
+                                    ...((pf.value as Record<string, unknown>) ?? {}),
+                                    min_goals: Number(e.target.value),
+                                  })
                                 }
                               />
                             </FormControl>
@@ -280,13 +367,14 @@ export function PledgeBuilder() {
                         )}
                       />
                     )}
+
                     {field.triggerType === "goal_diff_min" && (
                       <FormField
                         control={form.control}
                         name={`rules.${index}.params`}
                         render={({ field: pf }) => (
                           <FormItem className="w-32">
-                            <FormLabel className="text-xs text-brand-night-navy/60">Min. Tordifferenz</FormLabel>
+                            <FormLabel className="text-xs text-brand-night-navy/60">Min. Tordiff.</FormLabel>
                             <FormControl>
                               <Input
                                 type="number"
@@ -295,17 +383,21 @@ export function PledgeBuilder() {
                                 placeholder="3"
                                 value={(pf.value as Record<string, number>)?.min_diff ?? ""}
                                 onChange={(e) =>
-                                  pf.onChange({ ...((pf.value as Record<string, unknown>) ?? {}), min_diff: Number(e.target.value) })
+                                  pf.onChange({
+                                    ...((pf.value as Record<string, unknown>) ?? {}),
+                                    min_diff: Number(e.target.value),
+                                  })
                                 }
                               />
                             </FormControl>
                             <FormDescription className="text-xs">
-                              Tordifferenz ab der der Betrag fällig wird (z.B. 3 = mind. 3:0 oder 4:1).
+                              Tordiff. ab der der Betrag fällig wird (z.B. 3 = mind. 3:0).
                             </FormDescription>
                           </FormItem>
                         )}
                       />
                     )}
+
                     {field.triggerType === "season_table_position" && (
                       <div className="flex gap-2 items-end">
                         <FormField
@@ -322,7 +414,10 @@ export function PledgeBuilder() {
                                   placeholder="1"
                                   value={(pf.value as Record<string, number>)?.min_pos ?? ""}
                                   onChange={(e) =>
-                                    pf.onChange({ ...((pf.value as Record<string, unknown>) ?? {}), min_pos: Number(e.target.value) })
+                                    pf.onChange({
+                                      ...((pf.value as Record<string, unknown>) ?? {}),
+                                      min_pos: Number(e.target.value),
+                                    })
                                   }
                                 />
                               </FormControl>
@@ -343,7 +438,10 @@ export function PledgeBuilder() {
                                   placeholder="5"
                                   value={(pf.value as Record<string, number>)?.max_pos ?? ""}
                                   onChange={(e) =>
-                                    pf.onChange({ ...((pf.value as Record<string, unknown>) ?? {}), max_pos: Number(e.target.value) })
+                                    pf.onChange({
+                                      ...((pf.value as Record<string, unknown>) ?? {}),
+                                      max_pos: Number(e.target.value),
+                                    })
                                   }
                                 />
                               </FormControl>
@@ -356,134 +454,218 @@ export function PledgeBuilder() {
                 );
               })}
             </div>
+
+            <div className="flex justify-between gap-3">
+              <Button type="button" variant="outline" onClick={() => setStep(1)}>
+                ← Ereignisse ändern
+              </Button>
+              <Button type="button" variant="accent" size="lg" onClick={() => setStep(3)}>
+                Weiter: Zusammenfassung →
+              </Button>
+            </div>
           </section>
         )}
 
-        {/* Monats-Cap + Laufzeit */}
-        <section className="grid gap-6 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="monthlyCapEur"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-semibold text-brand-night-navy">
-                  3.  Monats-Cap (empfohlen)
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="5"
-                    min="0"
-                    placeholder="z.B. 50"
-                    value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
-                    }
-                  />
-                </FormControl>
-                <p className="text-xs text-brand-night-navy/60">
-                  Wir empfehlen einen Cap: Egal wie geil die Mannschaft drauf ist — du zahlst
-                  nie mehr als hier eingetragen.
-                </p>
-                {!watchedMonthly && (
-                  <p className="text-xs text-brand-alert-red mt-1">
-                    ⚠️  Kein Cap = unbegrenzt. Du behältst die Kontrolle nur teilweise.
-                  </p>
-                )}
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="endsAtSaisonEnd"
-            render={({ field }) => (
-              <FormItem className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <FormLabel className="text-sm font-semibold text-brand-night-navy">
-                      Pledge endet zur Saison
-                    </FormLabel>
-                    <p className="text-xs text-brand-night-navy/60 mt-1">
-                      Du musst nach Saison-Ende erneuern. Empfohlen — kein „läuft weiter ohne
-                      mich"-Effekt.
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={field.value}
-                    onChange={(e) => field.onChange(e.target.checked)}
-                    className="h-5 w-5 mt-1 shrink-0 accent-current text-accent"
-                  />
-                </div>
-              </FormItem>
-            )}
-          />
-        </section>
-
-        {/* Monthly-Cap-Warning */}
-        {!watchedMonthly && fields.length > 0 && (
-          <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-            <strong>Kein Monats-Cap gesetzt.</strong> Dein Pledge hat keine Obergrenze pro Monat.
-            Bei einem intensiven Spielmonat (z.B. 4 Spiele) könnten{" "}
-            <strong>{((worstCasePerMonth * 4) / 9).toFixed(0)} €</strong> anfallen.
-            Empfehlung: Setze einen Cap um böse Überraschungen zu vermeiden.
-          </div>
-        )}
-
-        {/* Worst-Case */}
-        <Card className="border-accent/40 bg-accent/5">
-          <CardHeader>
-            <CardTitle className="font-display font-black text-lg tracking-tight text-brand-night-navy">
-              💰  Worst-Case-Hochrechnung
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
-                  Pro Saison
-                </div>
-                <div className="mt-1 font-display font-black text-3xl tracking-tight text-accent">
-                  {watchedMonthly
-                    ? `≤ ${Math.min(worstCasePerSaison, watchedMonthly * 9)} €`
-                    : `≈ ${worstCasePerSaison} €`}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
-                  Pro Monat (geschätzt)
-                </div>
-                <div className="mt-1 font-display font-black text-3xl tracking-tight text-brand-night-navy">
-                  {watchedMonthly ? `≤ ${watchedMonthly} €` : `≈ ${worstCasePerMonth} €`}
-                </div>
-              </div>
+        {/* ── Step 3: Zusammenfassung & aktivieren ── */}
+        {step === 3 && (
+          <section className="space-y-6">
+            <div>
+              <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+                Alles klar?
+              </h2>
+              <p className="mt-1 text-sm text-brand-night-navy/60">
+                Lege deinen Monats-Cap fest und aktiviere dein Sponsoring.
+              </p>
             </div>
-            <p className="mt-4 text-xs text-brand-night-navy/60">
-              Annahme: 18 Saison-Spiele, ⌀ 2 Tore eigene Mannschaft, 50% Sieg-Quote.
-              Konservative Hochrechnung — Realität meistens niedriger.
-            </p>
-          </CardContent>
-        </Card>
 
-        <Button
-          type="submit"
-          variant="accent"
-          size="lg"
-          disabled={pending || fields.length === 0}
-          className="w-full"
-        >
-          {pending ? "Speichere…" : "Pledge aktivieren →"}
-        </Button>
+            <div className="grid gap-6 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="monthlyCapEur"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold text-brand-night-navy">
+                      Monats-Cap (empfohlen)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="5"
+                        min="0"
+                        placeholder="z.B. 50"
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
+                        }
+                      />
+                    </FormControl>
+                    <p className="text-xs text-brand-night-navy/60">
+                      Egal wie geil die Mannschaft drauf ist — du zahlst nie mehr pro Monat.
+                    </p>
+                    {!watchedMonthly && (
+                      <p className="text-xs text-brand-alert-red mt-1">
+                        ⚠️ Kein Cap = unbegrenzt. Empfehlung: Cap setzen.
+                      </p>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="endsAtSaisonEnd"
+                render={({ field }) => (
+                  <FormItem className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <FormLabel className="text-sm font-semibold text-brand-night-navy">
+                          Pledge endet zur Saison
+                        </FormLabel>
+                        <p className="text-xs text-brand-night-navy/60 mt-1">
+                          Empfohlen — kein „läuft weiter ohne mich"-Effekt.
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        className="h-5 w-5 mt-1 shrink-0 accent-current text-accent"
+                      />
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <Card className="border-accent/40 bg-accent/5">
+              <CardHeader>
+                <CardTitle className="font-display font-black text-lg tracking-tight text-brand-night-navy">
+                  💰 Worst-Case-Hochrechnung
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
+                      Pro Saison
+                    </div>
+                    <div className="mt-1 font-display font-black text-3xl tracking-tight text-accent">
+                      {watchedMonthly
+                        ? `≤ ${Math.min(worstCasePerSaison, watchedMonthly * 9)} €`
+                        : `≈ ${worstCasePerSaison} €`}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
+                      Pro Monat (geschätzt)
+                    </div>
+                    <div className="mt-1 font-display font-black text-3xl tracking-tight text-brand-night-navy">
+                      {watchedMonthly ? `≤ ${watchedMonthly} €` : `≈ ${worstCasePerMonth} €`}
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-4 text-xs text-brand-night-navy/60">
+                  Annahme: 18 Saison-Spiele, ⌀ 2 Tore, 50% Sieg-Quote. Konservative Hochrechnung.
+                </p>
+
+                <div className="mt-4 border-t border-accent/20 pt-4">
+                  <div className="text-xs font-semibold uppercase tracking-widest text-brand-night-navy/50 mb-2">
+                    Deine Ereignisse
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {watchedRules.map((r) => {
+                      const def = TRIGGER_LIBRARY.find((t) => t.type === r.triggerType);
+                      return (
+                        <span
+                          key={r.triggerType}
+                          className="inline-flex items-center gap-1 rounded-full bg-white border border-accent/30 px-2.5 py-1 text-xs font-medium text-brand-night-navy"
+                        >
+                          {def?.emoji} {def?.label} — {r.amountEur} €
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-between gap-3">
+              <Button type="button" variant="outline" onClick={() => setStep(2)}>
+                ← Beträge anpassen
+              </Button>
+              <Button
+                type="submit"
+                variant="accent"
+                size="lg"
+                disabled={pending || fields.length === 0}
+                className="flex-1 md:flex-none"
+              >
+                {pending ? "Speichere…" : "Sponsoring aktivieren →"}
+              </Button>
+            </div>
+          </section>
+        )}
       </form>
     </Form>
   );
 }
 
+// ─── Step Indicator ───────────────────────────────────────────────────────────
+
+function StepIndicator({ currentStep }: { currentStep: WizardStep }) {
+  const steps = [
+    { n: 1 as WizardStep, label: "Ereignisse" },
+    { n: 2 as WizardStep, label: "Beträge" },
+    { n: 3 as WizardStep, label: "Aktivieren" },
+  ];
+
+  return (
+    <div className="flex items-center gap-0">
+      {steps.map((s, i) => (
+        <div key={s.n} className="flex items-center">
+          <div className="flex items-center gap-2">
+            <div
+              className={
+                "h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 " +
+                (s.n === currentStep
+                  ? "bg-accent text-white"
+                  : s.n < currentStep
+                  ? "bg-emerald-500 text-white"
+                  : "bg-brand-neutral/30 text-brand-night-navy/40")
+              }
+            >
+              {s.n < currentStep ? "✓" : s.n}
+            </div>
+            <span
+              className={
+                "text-sm font-semibold hidden sm:block " +
+                (s.n === currentStep ? "text-brand-night-navy" : "text-brand-night-navy/40")
+              }
+            >
+              {s.label}
+            </span>
+          </div>
+          {i < steps.length - 1 && (
+            <div
+              className={
+                "w-8 md:w-12 h-0.5 mx-2 " +
+                (s.n < currentStep ? "bg-emerald-400" : "bg-brand-neutral/30")
+              }
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Trigger Toggle ───────────────────────────────────────────────────────────
+
 function TriggerToggle({
   def,
   enabled,
-  onToggle
+  onToggle,
 }: {
   def: TriggerDef;
   enabled: boolean;
@@ -494,7 +676,7 @@ function TriggerToggle({
       type="button"
       onClick={onToggle}
       className={
-        "text-left rounded-lg border p-3 transition-colors " +
+        "text-left rounded-xl border p-3 transition-colors " +
         (enabled
           ? "border-accent bg-accent/5"
           : "border-brand-neutral/40 bg-white hover:border-accent/40")
@@ -504,9 +686,7 @@ function TriggerToggle({
         <span className="text-xl">{def.emoji}</span>
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-sm text-brand-night-navy">{def.label}</div>
-          <div className="text-xs text-brand-night-navy/60 mt-0.5 leading-snug">
-            {def.description}
-          </div>
+          <div className="text-xs text-brand-night-navy/60 mt-0.5 leading-snug">{def.description}</div>
           {def.manual && (
             <div className="mt-1 inline-flex items-center text-[0.6rem] uppercase tracking-widest font-bold text-accent-dark bg-accent/10 px-1.5 py-0.5 rounded">
               Verein meldet
@@ -534,7 +714,11 @@ function TriggerToggle({
   );
 }
 
-function estimateWorstCase(rules: { triggerType: string; amountEur: number; perMatchCapEur?: number }[]): number {
+// ─── Worst Case Helper ────────────────────────────────────────────────────────
+
+function estimateWorstCase(
+  rules: { triggerType: string; amountEur: number; perMatchCapEur?: number }[]
+): number {
   const SAISON_GAMES = 18;
   const AVG_GOALS_PER_GAME = 2;
   const WIN_RATE = 0.5;
