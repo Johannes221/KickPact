@@ -8,7 +8,8 @@ const TABS = [
   { label: "Wetten", href: "/sponsor/pledge" },
   { label: "Inbox", href: "/sponsor/inbox" },
   { label: "Rechnungen", href: "/sponsor/rechnungen" },
-  { label: "Discover", href: "/sponsor/discover" }
+  { label: "Discover", href: "/sponsor/discover" },
+  { label: "Profil", href: "/sponsor/profil" }
 ];
 
 export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
