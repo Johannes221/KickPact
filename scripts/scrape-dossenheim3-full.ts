@@ -16,7 +16,6 @@ import { evaluateTriggers, type MatchInput } from "../lib/crawler/triggers";
 import {
   loadActivePledgeRulesForTeam,
   getMonthlyChargedCents,
-  getPledgeMonthlyCap,
 } from "../lib/db/queries/evaluation";
 import { charges as chargesTable, pledgeRules as pledgeRulesTable, pledges as pledgesTable } from "../lib/db/schema";
 import { createId } from "@paralleldrive/cuid2";
@@ -100,7 +99,7 @@ async function main() {
 
   console.log(`${allMatches.length} Matches total in DB`);
 
-  const pledgeRules = await loadActivePledgeRulesForTeam(team.id);
+  const pledgeRules = await loadActivePledgeRulesForTeam(team.id, new Date());
   console.log(`${pledgeRules.length} aktive Pledge-Rules für dieses Team`);
 
   if (pledgeRules.length === 0) {
@@ -165,7 +164,6 @@ async function main() {
 
       // Monthly Cap prüfen
       const matchDate = new Date(match.datum);
-      const monthKey = `${matchDate.getFullYear()}-${String(matchDate.getMonth() + 1).padStart(2, "0")}`;
       const [pledgeForRule] = await db
         .select({ id: pledgesTable.id, monthlyCapCents: pledgesTable.monthlyCapCents })
         .from(pledgesTable)
@@ -174,7 +172,7 @@ async function main() {
 
       let cappedAmount = result.amountCents;
       if (pledgeForRule?.monthlyCapCents) {
-        const alreadyCharged = await getMonthlyChargedCents(result.pledgeId, monthKey);
+        const alreadyCharged = await getMonthlyChargedCents(result.pledgeId, matchDate);
         const remaining = pledgeForRule.monthlyCapCents - alreadyCharged;
         if (remaining <= 0) continue;
         cappedAmount = Math.min(result.amountCents, remaining);
