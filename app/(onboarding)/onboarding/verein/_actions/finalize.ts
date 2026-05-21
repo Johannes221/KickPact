@@ -2,10 +2,11 @@
 
 import slugify from "slugify";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { clubs, teams, clubMemberships, subscriptions, teamLicenses } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
-import { createInvitation } from "@/lib/db/queries/invitations";
+import { createInvitation, listInvitationsForTeam } from "@/lib/db/queries/invitations";
 
 const finalizeSchema = z.object({
   verein: z.object({
@@ -35,6 +36,47 @@ const finalizeSchema = z.object({
 export async function finalizeOnboarding(input: z.infer<typeof finalizeSchema>) {
   const user = await requireUser();
   const parsed = finalizeSchema.parse(input);
+
+  // ── Idempotenz-Check ──────────────────────────────────────────────────────
+  // Wenn die fussballde_verein_id schon existiert, ist das Onboarding bereits
+  // durchgelaufen (z.B. Page-Reload nach erfolgreichem Speichern). Dann
+  // einfach die vorhandenen Daten zurückliefern statt die DB-Transaktion
+  // nochmal zu versuchen (würde an der Unique-Constraint crashen).
+  if (parsed.verein.vereinId) {
+    const [existing] = await db
+      .select({ id: clubs.id, slug: clubs.slug })
+      .from(clubs)
+      .where(eq(clubs.fussballdeVereinId, parsed.verein.vereinId))
+      .limit(1);
+
+    if (existing) {
+      // Membership prüfen — darf nur der Admin selbst zurückbekommen
+      const [membership] = await db
+        .select()
+        .from(clubMemberships)
+        .where(eq(clubMemberships.clubId, existing.id))
+        .limit(1);
+
+      if (!membership || membership.userId !== user.id) {
+        throw new Error("Dieser Verein ist bereits bei KickPact registriert.");
+      }
+
+      // Team + Einladung holen
+      const [team] = await db
+        .select({ id: teams.id })
+        .from(teams)
+        .where(eq(teams.clubId, existing.id))
+        .limit(1);
+
+      if (!team) throw new Error("Verein gefunden, aber kein Team — bitte Support kontaktieren.");
+
+      const existingInvitations = await listInvitationsForTeam(team.id);
+      const pendingInv = existingInvitations.find((i) => i.status === "pending");
+      const invitation = pendingInv ?? (await createInvitation({ teamId: team.id, createdByUserId: user.id }));
+
+      return { clubSlug: existing.slug, teamId: team.id, invitationToken: invitation.token };
+    }
+  }
 
   // Slug aus Verein-Name (eindeutig) + 4-char-Suffix für Konflikt-Vermeidung
   const baseSlug = slugify(parsed.verein.name, { lower: true, strict: true, trim: true });
