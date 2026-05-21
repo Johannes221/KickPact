@@ -108,76 +108,106 @@ export async function getMannschaften(
   });
 }
 
+/** Shared JS that extracts match rows from fussball.de table HTML */
+const EXTRACT_MATCHES_JS = `(function() {
+  var results = [];
+  var seen = new Set();
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  var allTrs = Array.from(document.querySelectorAll("tr"));
+  var currentDatum = "";
+  allTrs.forEach(function(tr) {
+    if (tr.classList.contains("row-headline") || tr.classList.contains("row-competition")) {
+      var txt = (tr.textContent || "").replace(/\\s+/g, " ").trim();
+      var dm = txt.match(/(\\d{2}\\.\\d{2}\\.\\d{4})/);
+      var dm2 = txt.match(/(\\d{2}\\.\\d{2}\\.\\d{2})(?!\\d)/);
+      if (dm) currentDatum = dm[1];
+      else if (dm2) currentDatum = dm2[1];
+      return;
+    }
+
+    var link = tr.querySelector('a[href*="/spiel/"]');
+    if (!link) return;
+    var href = link.href || "";
+    var m = href.match(/\\/spiel\\/([^/]+)\\/-\\/spiel\\/([A-Z0-9]+)/);
+    if (!m || seen.has(m[2])) return;
+    if (!currentDatum) return;
+
+    var parts = currentDatum.split(".");
+    if (parts.length !== 3) return;
+    var yr = parts[2].length === 2 ? "20" + parts[2] : parts[2];
+    var matchDate = new Date(yr + "-" + parts[1] + "-" + parts[0]);
+    if (!matchDate || matchDate >= today) return;
+    seen.add(m[2]);
+
+    var tds = Array.from(tr.querySelectorAll("td")).map(function(td) {
+      return (td.textContent || "").replace(/\\s+/g, " ").trim();
+    });
+    var teamTds = tds.filter(function(t) { return t && t !== ":" && t !== "Zum Spiel" && t !== "Nichtantritt GAST" && t !== "Nichtantritt HEIM"; });
+
+    results.push({
+      spielId: m[2],
+      slug: m[1],
+      datum: currentDatum,
+      heim: teamTds[0] || "",
+      gast: teamTds[1] || "",
+      ergebnis: "",
+      vergangen: true,
+      url: href
+    });
+  });
+
+  return results;
+})()`;
+
 export async function getSpiele(
   teamId: string,
   slug: string,
   saison: string
 ): Promise<SpielListItem[]> {
   return withPage(async (page) => {
-    const url = `https://www.fussball.de/mannschaft/${slug}/-/saison/${saison}/team-id/${teamId}#!/`;
-    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
-    await page.waitForTimeout(2000);
+    const allResults = new Map<string, SpielListItem>();
 
-    const ajaxUrl = `https://www.fussball.de/ajax.team.prev.games/-/mode/PAGE/team-id/${teamId}`;
-    try {
-      await page.goto(ajaxUrl, { waitUntil: "networkidle", timeout: 20000 });
-      await page.waitForTimeout(1500);
-    } catch {
-      // fallback: bleiben auf Main-Page
+    // Strategy 1: paginate through ajax.team.prev.games with index/0, /1, /2, ...
+    // fussball.de returns ~10 matches per page; try up to 8 pages (≈80 matches, full season)
+    const MAX_PAGES = 8;
+    for (let idx = 0; idx < MAX_PAGES; idx++) {
+      const ajaxUrl = idx === 0
+        ? `https://www.fussball.de/ajax.team.prev.games/-/mode/PAGE/team-id/${teamId}`
+        : `https://www.fussball.de/ajax.team.prev.games/-/mode/PAGE/team-id/${teamId}/index/${idx}`;
+      try {
+        await page.goto(ajaxUrl, { waitUntil: "networkidle", timeout: 20000 });
+        await page.waitForTimeout(800);
+        const pageResults = await page.evaluate(EXTRACT_MATCHES_JS) as SpielListItem[];
+        if (pageResults.length === 0) break; // no more data
+        let newCount = 0;
+        for (const r of pageResults) {
+          if (!allResults.has(r.spielId)) {
+            allResults.set(r.spielId, r);
+            newCount++;
+          }
+        }
+        if (newCount === 0) break; // all duplicates → we've exhausted pages
+      } catch {
+        break;
+      }
     }
 
-    const raw: Array<{spielId: string; slug: string; datum: string; heim: string; gast: string; ergebnis: string; vergangen: boolean; url: string}> = await page.evaluate(`(function() {
-      var results = [];
-      var seen = new Set();
-      var today = new Date();
-      today.setHours(0, 0, 0, 0);
+    // Strategy 2: also scrape the main team page Spielplan (catches any missed by AJAX)
+    try {
+      const mainUrl = `https://www.fussball.de/mannschaft/${slug}/-/saison/${saison}/team-id/${teamId}#!/`;
+      await page.goto(mainUrl, { waitUntil: "networkidle", timeout: 30000 });
+      await page.waitForTimeout(2000);
+      const mainResults = await page.evaluate(EXTRACT_MATCHES_JS) as SpielListItem[];
+      for (const r of mainResults) {
+        if (!allResults.has(r.spielId)) allResults.set(r.spielId, r);
+      }
+    } catch {
+      // ignore
+    }
 
-      var allTrs = Array.from(document.querySelectorAll("tr"));
-      var currentDatum = "";
-      allTrs.forEach(function(tr) {
-        if (tr.classList.contains("row-headline") || tr.classList.contains("row-competition")) {
-          var txt = (tr.textContent || "").replace(/\\s+/g, " ").trim();
-          var dm = txt.match(/(\\d{2}\\.\\d{2}\\.\\d{4})/);
-          var dm2 = txt.match(/(\\d{2}\\.\\d{2}\\.\\d{2})(?!\\d)/);
-          if (dm) currentDatum = dm[1];
-          else if (dm2) currentDatum = dm2[1];
-          return;
-        }
-
-        var link = tr.querySelector('a[href*="/spiel/"]');
-        if (!link) return;
-        var href = link.href || "";
-        var m = href.match(/\\/spiel\\/([^/]+)\\/-\\/spiel\\/([A-Z0-9]+)/);
-        if (!m || seen.has(m[2])) return;
-        if (!currentDatum) return;
-
-        var parts = currentDatum.split(".");
-        if (parts.length !== 3) return;
-        var yr = parts[2].length === 2 ? "20" + parts[2] : parts[2];
-        var matchDate = new Date(yr + "-" + parts[1] + "-" + parts[0]);
-        if (!matchDate || matchDate >= today) return;
-        seen.add(m[2]);
-
-        var tds = Array.from(tr.querySelectorAll("td")).map(function(td) {
-          return (td.textContent || "").replace(/\\s+/g, " ").trim();
-        });
-        var teamTds = tds.filter(function(t) { return t && t !== ":" && t !== "Zum Spiel"; });
-
-        results.push({
-          spielId: m[2],
-          slug: m[1],
-          datum: currentDatum,
-          heim: teamTds[0] || "",
-          gast: teamTds[1] || "",
-          ergebnis: "",
-          vergangen: true,
-          url: href
-        });
-      });
-
-      return results;
-    })()`)
-
+    const raw = Array.from(allResults.values());
     raw.sort((a, b) => {
       const parse = (d: string): number => {
         const p = d.split(".");

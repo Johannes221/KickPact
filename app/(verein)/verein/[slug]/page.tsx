@@ -182,18 +182,19 @@ function RecentMatchesSection({
               </thead>
               <tbody className="divide-y divide-brand-neutral/30">
                 {rows.map((m) => (
-                  <tr key={m.matchId} className="hover:bg-brand-off-white/60">
+                  <tr key={m.matchId} className="relative hover:bg-brand-off-white/60 cursor-pointer">
                     <td className="px-4 py-3 font-mono tabular-nums text-brand-night-navy">
+                      {/* Stretched link: covers the entire row */}
+                      <Link
+                        href={`/verein/${slug}/spiel/${m.matchId}`}
+                        className="absolute inset-0"
+                        aria-label={`${m.heimName} – ${m.gastName}`}
+                      />
                       {formatDate(m.datum)}
                     </td>
                     <td className="px-4 py-3 text-brand-night-navy">{m.teamName}</td>
                     <td className="px-4 py-3 text-brand-night-navy">
-                      <Link
-                        href={`/verein/${slug}/spiel/${m.matchId}`}
-                        className="hover:underline"
-                      >
-                        {m.heimName} – {m.gastName}
-                      </Link>
+                      {m.heimName} – {m.gastName}
                     </td>
                     <td className="px-4 py-3 text-right font-mono tabular-nums font-semibold text-brand-night-navy">
                       {m.ergebnisHeim ?? "–"}:{m.ergebnisGast ?? "–"}
