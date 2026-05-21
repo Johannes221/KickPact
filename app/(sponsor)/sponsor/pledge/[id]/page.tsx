@@ -111,7 +111,7 @@ export default async function PledgeDetailPage({
       </div>
 
       <h2 className="mt-8 md:mt-12 font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
-        Trigger-Regeln
+        Ereignisse
       </h2>
       <ul className="mt-3 md:mt-4 space-y-2">
         {rules.map((r) => (

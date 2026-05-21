@@ -8,7 +8,7 @@ import { findInvitationByToken } from "@/lib/db/queries/invitations";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { PledgeBuilder } from "./_components/pledge-builder";
 
-export const metadata = { title: "Pledge anlegen · KickPact" };
+export const metadata = { title: "Sponsoring einrichten · KickPact" };
 
 export default async function NewPledgePage({
   searchParams
@@ -55,10 +55,10 @@ export default async function NewPledgePage({
   return (
     <div className="mx-auto max-w-4xl">
       <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
-        Pledge <span className="text-accent">aufbauen</span>
+        Sponsoring <span className="text-accent">einrichten</span>
       </h1>
       <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60 max-w-2xl">
-        Wähle Trigger, leg Beträge fest. Wir zeigen dir live, worauf du dich maximal einlässt.
+        Wähle Ereignisse, lege Beträge fest. Wir zeigen dir live, worauf du dich maximal einlässt.
       </p>
       <div className="mt-6 md:mt-10">
         {gateBanner ?? (
