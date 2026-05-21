@@ -1,12 +1,16 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { assertClubAccess } from "@/lib/auth/scope";
-import { getMatchById, listMatchEvents } from "@/lib/db/queries/matches";
+import { getMatchById, listMatchEvents, listMatchCharges } from "@/lib/db/queries/matches";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MatchEventsList } from "./_components/match-events-list";
 import { ManualEventEditor } from "./_components/manual-event-editor";
 
 export const metadata = { title: "Spiel · KickPact" };
+
+function eur(cents: number): string {
+  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+}
 
 export default async function MatchDetailPage({
   params
@@ -17,11 +21,12 @@ export default async function MatchDetailPage({
   await assertClubAccess(slug, "viewer");
 
   const data = await getMatchById(matchId, slug);
-  if (!data) {
-    redirect(`/verein/${slug}`);
-  }
+  if (!data) redirect(`/verein/${slug}`);
 
-  const events = await listMatchEvents(matchId);
+  const [events, chargesData] = await Promise.all([
+    listMatchEvents(matchId),
+    listMatchCharges(matchId)
+  ]);
 
   const { match, team } = data;
   const datumStr = match.datum.toLocaleDateString("de-DE", {
@@ -30,53 +35,177 @@ export default async function MatchDetailPage({
     day: "numeric"
   });
 
+  // Welche Seite ist unser Team?
+  const teamFirstWord = team.name.toLowerCase().split(" ")[0];
+  const isHeim = match.heimName.toLowerCase().includes(teamFirstWord);
+  const unsereSeite = isHeim ? "heim" : "gast";
+  const unsereGoals = isHeim ? (match.ergebnisHeim ?? 0) : (match.ergebnisGast ?? 0);
+  const gegnerGoals = isHeim ? (match.ergebnisGast ?? 0) : (match.ergebnisHeim ?? 0);
+  const result =
+    match.ergebnisHeim === null
+      ? "ausstehend"
+      : unsereGoals > gegnerGoals
+        ? "sieg"
+        : unsereGoals < gegnerGoals
+          ? "niederlage"
+          : "unentschieden";
+
+  const resultColors: Record<string, string> = {
+    sieg: "bg-emerald-100 text-emerald-800",
+    niederlage: "bg-rose-100 text-rose-700",
+    unentschieden: "bg-amber-100 text-amber-800",
+    ausstehend: "bg-neutral-100 text-neutral-600"
+  };
+  const resultLabels: Record<string, string> = {
+    sieg: "Sieg",
+    niederlage: "Niederlage",
+    unentschieden: "Unentschieden",
+    ausstehend: "Noch nicht gespielt"
+  };
+
   return (
     <div className="space-y-8">
-      <div>
-        <Link
-          href={`/verein/${slug}/mannschaft/${team.id}`}
-          className="text-sm text-brand-night-navy/60 hover:text-accent"
-        >
-          ← {team.name}
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm text-brand-night-navy/60">
+        <Link href={`/verein/${slug}`} className="hover:text-accent">
+          ← Dashboard
         </Link>
+        <span>/</span>
+        <span>{team.name}</span>
       </div>
 
       {/* Score-Header */}
       <Card className="border-brand-neutral/40">
-        <CardHeader>
-          <CardTitle className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
-            {datumStr} · Saison {team.saison}
-          </CardTitle>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
+              {datumStr} · Saison {team.saison}
+            </CardTitle>
+            <span
+              className={
+                "text-[0.65rem] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full " +
+                resultColors[result]
+              }
+            >
+              {resultLabels[result]}
+            </span>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between gap-4">
-            <div className="flex-1 text-right">
-              <div className="font-display font-black text-xl tracking-tight text-brand-night-navy">
+            <div className={`flex-1 text-right ${isHeim ? "font-semibold" : ""}`}>
+              <div className="font-display font-black text-xl tracking-tight text-brand-night-navy leading-tight">
                 {match.heimName}
               </div>
-              <div className="text-xs text-brand-night-navy/50 mt-1">Heim</div>
+              <div className="text-xs text-brand-night-navy/50 mt-1">
+                {isHeim ? `← ${team.name}` : "Gastteam"}
+              </div>
             </div>
-            <div className="font-display font-black text-5xl md:text-6xl tracking-tight text-brand-night-navy tabular-nums">
-              {match.ergebnisHeim ?? "—"}
-              <span className="text-brand-night-navy/30 mx-2">:</span>
-              {match.ergebnisGast ?? "—"}
+            <div className="shrink-0 text-center">
+              <div className="font-display font-black text-5xl md:text-6xl tracking-tight text-brand-night-navy tabular-nums">
+                {match.ergebnisHeim ?? "—"}
+                <span className="text-brand-night-navy/30 mx-2">:</span>
+                {match.ergebnisGast ?? "—"}
+              </div>
+              {match.halbzeitHeim !== null && match.halbzeitGast !== null && (
+                <div className="mt-1 text-xs text-brand-night-navy/50 tabular-nums">
+                  HZ {match.halbzeitHeim} : {match.halbzeitGast}
+                </div>
+              )}
             </div>
-            <div className="flex-1">
-              <div className="font-display font-black text-xl tracking-tight text-brand-night-navy">
+            <div className={`flex-1 ${!isHeim ? "font-semibold" : ""}`}>
+              <div className="font-display font-black text-xl tracking-tight text-brand-night-navy leading-tight">
                 {match.gastName}
               </div>
-              <div className="text-xs text-brand-night-navy/50 mt-1">Gast</div>
+              <div className="text-xs text-brand-night-navy/50 mt-1">
+                {!isHeim ? `${team.name} →` : "Heimteam"}
+              </div>
             </div>
           </div>
-          {match.halbzeitHeim !== null && match.halbzeitGast !== null && (
-            <div className="mt-4 text-center text-xs text-brand-night-navy/50 tabular-nums">
-              Halbzeit {match.halbzeitHeim} : {match.halbzeitGast}
-            </div>
-          )}
         </CardContent>
       </Card>
 
-      {/* Events */}
+      {/* ─── CHARGES-SEKTION ─── */}
+      {chargesData.totalCents > 0 ? (
+        <section>
+          <div className="flex items-baseline justify-between gap-3 mb-4">
+            <h2 className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
+              Sponsor-Charges
+            </h2>
+            <span className="font-display font-black text-2xl tracking-tight text-accent">
+              {eur(chargesData.totalCents)}
+            </span>
+          </div>
+
+          {/* Trigger-Breakdown */}
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 mb-4">
+            {chargesData.byTrigger.map((t) => (
+              <div
+                key={t.triggerType}
+                className="rounded-xl border border-brand-neutral/40 bg-white p-3 flex items-center gap-3"
+              >
+                <span className="text-2xl shrink-0">{t.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold text-brand-night-navy/60 uppercase tracking-widest truncate">
+                    {t.label}
+                  </div>
+                  <div className="font-display font-black text-base tracking-tight text-brand-night-navy">
+                    {t.count}× · {eur(t.totalCents)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Sponsor-Breakdown */}
+          <div className="rounded-2xl border border-brand-neutral/40 bg-white overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-brand-off-white text-xs uppercase tracking-wider text-brand-night-navy/60">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold">Sponsor</th>
+                  <th className="px-4 py-3 text-left font-semibold hidden sm:table-cell">Trigger</th>
+                  <th className="px-4 py-3 text-right font-semibold">Betrag</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-neutral/30">
+                {chargesData.bySponsor.map((s) => (
+                  <tr key={s.sponsorDisplayName} className="hover:bg-brand-off-white/60">
+                    <td className="px-4 py-3 font-medium text-brand-night-navy">
+                      {s.sponsorDisplayName}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-brand-night-navy/60 hidden sm:table-cell truncate max-w-[180px]">
+                      {s.triggerSummary}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono tabular-nums font-semibold text-brand-night-navy">
+                      {eur(s.totalCents)}
+                    </td>
+                  </tr>
+                ))}
+                <tr className="bg-brand-off-white">
+                  <td
+                    className="px-4 py-2.5 text-xs uppercase tracking-widest font-bold text-brand-night-navy/50"
+                    colSpan={2}
+                  >
+                    Gesamt
+                  </td>
+                  <td className="px-4 py-2.5 text-right font-display font-black text-base text-accent tabular-nums">
+                    {eur(chargesData.totalCents)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : (
+        match.status === "finished" && (
+          <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-5 text-sm text-brand-night-navy/60">
+            <strong>Keine Charges für dieses Spiel.</strong> Entweder sind noch keine Pledges aktiv oder
+            dieses Spiel hat keinen Trigger ausgelöst.
+          </div>
+        )
+      )}
+
+      {/* ─── SPIELVERLAUF ─── */}
       <section>
         <div className="flex items-baseline justify-between gap-3 mb-4">
           <h2 className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
@@ -86,7 +215,7 @@ export default async function MatchDetailPage({
             {events.length} Event{events.length === 1 ? "" : "s"}
           </span>
         </div>
-        <MatchEventsList events={events} />
+        <MatchEventsList events={events} chargesByEvent={chargesData.rows} />
       </section>
 
       {/* Manual-Event-Editor */}

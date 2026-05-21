@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import type { MatchChargeRow } from "@/lib/db/queries/matches";
+import { TRIGGER_META } from "@/lib/triggers/labels";
 
 type MatchEvent = {
   id: string;
@@ -40,7 +42,26 @@ function eventLabel(type: MatchEvent["type"], subtype: string | null): string {
   return type;
 }
 
-export function MatchEventsList({ events }: { events: MatchEvent[] }) {
+function eur(cents: number): string {
+  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+}
+
+export function MatchEventsList({
+  events,
+  chargesByEvent = []
+}: {
+  events: MatchEvent[];
+  chargesByEvent?: MatchChargeRow[];
+}) {
+  // Build a lookup: matchEventId → charges
+  const eventChargeMap = new Map<string, MatchChargeRow[]>();
+  for (const c of chargesByEvent) {
+    if (!c.matchEventId) continue;
+    const existing = eventChargeMap.get(c.matchEventId) ?? [];
+    existing.push(c);
+    eventChargeMap.set(c.matchEventId, existing);
+  }
+
   if (events.length === 0) {
     return (
       <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60 text-center">
@@ -51,35 +72,66 @@ export function MatchEventsList({ events }: { events: MatchEvent[] }) {
 
   return (
     <ol className="space-y-2">
-      {events.map((e) => (
-        <li
-          key={e.id}
-          className={cn(
-            "flex items-center gap-3 rounded-lg border bg-white px-3 py-2",
-            e.side === "heim"
-              ? "border-accent/30 mr-12"
-              : "border-brand-neutral/40 ml-12"
-          )}
-        >
-          <span className="font-mono text-xs text-brand-night-navy/50 w-10 tabular-nums">
-            {e.minute !== null ? `${e.minute}'` : "—"}
-          </span>
-          <span className="text-xl">{eventEmoji(e.type, e.subtype)}</span>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-brand-night-navy truncate">
-              {eventLabel(e.type, e.subtype)}
+      {events.map((e) => {
+        const eventCharges = eventChargeMap.get(e.id) ?? [];
+        const eventTotal = eventCharges.reduce((s, c) => s + c.amountCents, 0);
+
+        return (
+          <li key={e.id}>
+            <div
+              className={cn(
+                "flex items-center gap-3 rounded-lg border bg-white px-3 py-2",
+                e.side === "heim"
+                  ? "border-accent/30 mr-8 md:mr-16"
+                  : "border-brand-neutral/40 ml-8 md:ml-16"
+              )}
+            >
+              <span className="font-mono text-xs text-brand-night-navy/50 w-10 tabular-nums shrink-0">
+                {e.minute !== null ? `${e.minute}'` : "—"}
+              </span>
+              <span className="text-xl shrink-0">{eventEmoji(e.type, e.subtype)}</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-brand-night-navy truncate">
+                  {eventLabel(e.type, e.subtype)}
+                  {e.playerName && (
+                    <span className="font-normal text-brand-night-navy/60"> · {e.playerName}</span>
+                  )}
+                </div>
+                {/* Charges die durch dieses Event ausgelöst wurden */}
+                {eventCharges.length > 0 && (
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {eventCharges.map((c) => {
+                      const meta = (
+                        TRIGGER_META as Record<string, { label: string; emoji: string } | undefined>
+                      )[c.triggerType];
+                      return (
+                        <span
+                          key={c.chargeId}
+                          className="inline-flex items-center gap-1 rounded-full bg-accent/10 text-accent-dark px-1.5 py-0.5 text-[0.6rem] font-semibold"
+                        >
+                          {meta?.emoji ?? "💚"} {c.sponsorDisplayName} +{eur(c.amountCents)}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {eventTotal > 0 && (
+                  <span className="font-mono tabular-nums text-xs font-semibold text-accent">
+                    +{eur(eventTotal)}
+                  </span>
+                )}
+                {e.source === "manual" && (
+                  <span className="text-[0.6rem] uppercase tracking-widest font-bold text-accent-dark bg-accent/10 px-1.5 py-0.5 rounded">
+                    Manual
+                  </span>
+                )}
+              </div>
             </div>
-            {e.playerName && (
-              <div className="text-xs text-brand-night-navy/60 truncate">{e.playerName}</div>
-            )}
-          </div>
-          {e.source === "manual" && (
-            <span className="text-[0.6rem] uppercase tracking-widest font-bold text-accent-dark bg-accent/10 px-1.5 py-0.5 rounded">
-              Manual
-            </span>
-          )}
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ol>
   );
 }

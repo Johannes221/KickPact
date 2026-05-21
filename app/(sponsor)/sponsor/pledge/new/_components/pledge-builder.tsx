@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -230,6 +231,127 @@ export function PledgeBuilder() {
                         </FormItem>
                       )}
                     />
+                    {field.triggerType === "goal_by_player" && (
+                      <FormField
+                        control={form.control}
+                        name={`rules.${index}.params`}
+                        render={({ field: pf }) => (
+                          <FormItem className="w-48">
+                            <FormLabel className="text-xs text-brand-night-navy/60">Spieler-Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="z.B. Schmidt"
+                                value={(pf.value as Record<string, string>)?.player_name ?? ""}
+                                onChange={(e) =>
+                                  pf.onChange({ ...((pf.value as Record<string, unknown>) ?? {}), player_name: e.target.value })
+                                }
+                              />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Name des Spielers dessen Tore zählen.
+                            </FormDescription>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                    {field.triggerType === "goals_scored_min" && (
+                      <FormField
+                        control={form.control}
+                        name={`rules.${index}.params`}
+                        render={({ field: pf }) => (
+                          <FormItem className="w-32">
+                            <FormLabel className="text-xs text-brand-night-navy/60">Min. Tore</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="2"
+                                max="20"
+                                placeholder="5"
+                                value={(pf.value as Record<string, number>)?.min_goals ?? ""}
+                                onChange={(e) =>
+                                  pf.onChange({ ...((pf.value as Record<string, unknown>) ?? {}), min_goals: Number(e.target.value) })
+                                }
+                              />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Ab wie vielen Toren der Betrag fällig wird.
+                            </FormDescription>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                    {field.triggerType === "goal_diff_min" && (
+                      <FormField
+                        control={form.control}
+                        name={`rules.${index}.params`}
+                        render={({ field: pf }) => (
+                          <FormItem className="w-32">
+                            <FormLabel className="text-xs text-brand-night-navy/60">Min. Tordifferenz</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="2"
+                                max="20"
+                                placeholder="3"
+                                value={(pf.value as Record<string, number>)?.min_diff ?? ""}
+                                onChange={(e) =>
+                                  pf.onChange({ ...((pf.value as Record<string, unknown>) ?? {}), min_diff: Number(e.target.value) })
+                                }
+                              />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Tordifferenz ab der der Betrag fällig wird (z.B. 3 = mind. 3:0 oder 4:1).
+                            </FormDescription>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                    {field.triggerType === "season_table_position" && (
+                      <div className="flex gap-2 items-end">
+                        <FormField
+                          control={form.control}
+                          name={`rules.${index}.params`}
+                          render={({ field: pf }) => (
+                            <FormItem className="w-24">
+                              <FormLabel className="text-xs text-brand-night-navy/60">Platz von</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max="30"
+                                  placeholder="1"
+                                  value={(pf.value as Record<string, number>)?.min_pos ?? ""}
+                                  onChange={(e) =>
+                                    pf.onChange({ ...((pf.value as Record<string, unknown>) ?? {}), min_pos: Number(e.target.value) })
+                                  }
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`rules.${index}.params`}
+                          render={({ field: pf }) => (
+                            <FormItem className="w-24">
+                              <FormLabel className="text-xs text-brand-night-navy/60">bis Platz</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max="30"
+                                  placeholder="5"
+                                  value={(pf.value as Record<string, number>)?.max_pos ?? ""}
+                                  onChange={(e) =>
+                                    pf.onChange({ ...((pf.value as Record<string, unknown>) ?? {}), max_pos: Number(e.target.value) })
+                                  }
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -298,6 +420,16 @@ export function PledgeBuilder() {
             )}
           />
         </section>
+
+        {/* Monthly-Cap-Warning */}
+        {!watchedMonthly && fields.length > 0 && (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+            <strong>Kein Monats-Cap gesetzt.</strong> Dein Pledge hat keine Obergrenze pro Monat.
+            Bei einem intensiven Spielmonat (z.B. 4 Spiele) könnten{" "}
+            <strong>{((worstCasePerMonth * 4) / 9).toFixed(0)} €</strong> anfallen.
+            Empfehlung: Setze einen Cap um böse Überraschungen zu vermeiden.
+          </div>
+        )}
 
         {/* Worst-Case */}
         <Card className="border-accent/40 bg-accent/5">
