@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { createInvitationAction, revokeInvitationAction } from "../_actions/invitations";
 import { toast } from "sonner";
 
@@ -31,6 +32,7 @@ interface Invitation {
   createdAt: Date;
   teamId: string;
   teamName: string;
+  recipientName: string | null;
 }
 
 export function SponsorsManager({
@@ -45,6 +47,7 @@ export function SponsorsManager({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [selectedTeam, setSelectedTeam] = useState(teams[0]?.id ?? "");
+  const [recipientName, setRecipientName] = useState("");
 
   function createNew() {
     if (!selectedTeam) {
@@ -53,8 +56,13 @@ export function SponsorsManager({
     }
     startTransition(async () => {
       try {
-        await createInvitationAction({ clubSlug, teamId: selectedTeam });
+        await createInvitationAction({
+          clubSlug,
+          teamId: selectedTeam,
+          recipientName: recipientName.trim() || undefined
+        });
         toast.success("Einladung erstellt");
+        setRecipientName("");
         router.refresh();
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Fehler");
@@ -87,7 +95,7 @@ export function SponsorsManager({
         Einladungslinks
       </h2>
       <p className="mt-1 text-sm text-brand-night-navy/60">
-        Jeder Link führt Sponsoren in das Onboarding. Pro Mannschaft so viele Links wie du willst.
+        Jeder Link führt Sponsoren ins Onboarding. Pro Mannschaft so viele Links wie du willst.
       </p>
 
       <Card className="mt-5 border-brand-neutral/40">
@@ -96,14 +104,14 @@ export function SponsorsManager({
             Neue Einladung erstellen
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="flex-1 min-w-[200px]">
-              <label className="text-xs text-brand-night-navy/60 font-semibold">
+        <CardContent className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <span className="block text-xs text-brand-night-navy/60 font-semibold mb-1">
                 Für Mannschaft
-              </label>
+              </span>
               <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                <SelectTrigger className="mt-1">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -115,8 +123,22 @@ export function SponsorsManager({
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <span className="block text-xs text-brand-night-navy/60 font-semibold mb-1">
+                Name des Sponsors{" "}
+                <span className="font-normal opacity-60">— optional, für Willkommensgruß</span>
+              </span>
+              <Input
+                placeholder='z.B. "Familie Müller" oder "Bäckerei Schreiber"'
+                value={recipientName}
+                onChange={(e) => setRecipientName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && createNew()}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end">
             <Button variant="accent" onClick={createNew} disabled={pending}>
-              {pending ? "…" : "+ Einladung"}
+              {pending ? "…" : "+ Einladung erstellen"}
             </Button>
           </div>
         </CardContent>
@@ -132,7 +154,7 @@ export function SponsorsManager({
               className="rounded-lg border border-brand-neutral/40 bg-white p-4 flex flex-wrap items-center justify-between gap-3"
             >
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs uppercase tracking-widest font-bold text-brand-night-navy/50">
                     {i.teamName}
                   </span>
@@ -148,6 +170,11 @@ export function SponsorsManager({
                   >
                     {i.status}
                   </span>
+                  {i.recipientName && (
+                    <span className="text-xs text-brand-night-navy/60 italic">
+                      für {i.recipientName}
+                    </span>
+                  )}
                 </div>
                 <div className="mt-1 font-mono text-xs text-brand-night-navy/70 truncate">
                   /einladung/{i.token}

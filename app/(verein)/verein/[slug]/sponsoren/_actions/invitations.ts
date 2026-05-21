@@ -7,13 +7,22 @@ import { createInvitation, revokeInvitation } from "@/lib/db/queries/invitations
 
 const createSchema = z.object({
   clubSlug: z.string().min(1),
-  teamId: z.string().min(1)
+  teamId: z.string().min(1),
+  recipientName: z.string().trim().optional()
 });
 
-export async function createInvitationAction(input: { clubSlug: string; teamId: string }) {
+export async function createInvitationAction(input: {
+  clubSlug: string;
+  teamId: string;
+  recipientName?: string;
+}) {
   const parsed = createSchema.parse(input);
   const { user } = await assertClubWriteAccess(parsed.clubSlug, "admin");
-  const inv = await createInvitation({ teamId: parsed.teamId, createdByUserId: user.id });
+  const inv = await createInvitation({
+    teamId: parsed.teamId,
+    createdByUserId: user.id,
+    recipientName: parsed.recipientName || undefined
+  });
   revalidatePath(`/verein/${parsed.clubSlug}/sponsoren`);
   return { token: inv.token };
 }

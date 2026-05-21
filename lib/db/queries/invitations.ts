@@ -8,11 +8,20 @@ function generateToken(): string {
   return randomBytes(24).toString("base64url");
 }
 
-export async function createInvitation(args: { teamId: string; createdByUserId: string }) {
+export async function createInvitation(args: {
+  teamId: string;
+  createdByUserId: string;
+  recipientName?: string;
+}) {
   const token = generateToken();
   const [row] = await db
     .insert(sponsorInvitations)
-    .values({ teamId: args.teamId, createdByUserId: args.createdByUserId, token })
+    .values({
+      teamId: args.teamId,
+      createdByUserId: args.createdByUserId,
+      token,
+      recipientName: args.recipientName ?? null
+    })
     .returning();
   return row;
 }

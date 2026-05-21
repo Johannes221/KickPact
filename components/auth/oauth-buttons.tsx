@@ -33,7 +33,7 @@ export function OAuthButtons({ mode, enabled }: OAuthButtonsProps) {
     ? `/sponsor/onboarding?invitation=${invitationToken}`
     : mode === "signup"
       ? "/onboarding/verein/1"
-      : "/sponsor";
+      : "/dashboard"; // rollenbasiert weiterleiten
 
   async function handleSocial(provider: "google" | "apple") {
     setPending(provider);

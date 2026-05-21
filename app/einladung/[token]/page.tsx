@@ -19,6 +19,7 @@ export default async function InvitationPage({
     .select({
       id: sponsorInvitations.id,
       status: sponsorInvitations.status,
+      recipientName: sponsorInvitations.recipientName,
       teamName: teams.name,
       clubName: clubs.name,
       clubSlug: clubs.slug
@@ -77,12 +78,28 @@ export default async function InvitationPage({
         <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.65rem] md:text-xs font-semibold uppercase tracking-[0.15em] text-accent-dark">
           Sponsor-Einladung
         </span>
-        <h1 className="mt-4 md:mt-6 font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
-          {invitation.clubName}
-        </h1>
-        <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
-          lädt dich ein, die <strong className="text-brand-night-navy">{invitation.teamName}</strong> zu unterstützen.
-        </p>
+        {invitation.recipientName ? (
+          <>
+            <h1 className="mt-4 md:mt-6 font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
+              Herzlich willkommen,
+              <br />
+              <span className="text-accent">{invitation.recipientName}</span>!
+            </h1>
+            <p className="mt-2 md:mt-3 text-sm md:text-base text-brand-night-navy/60">
+              <strong className="text-brand-night-navy">{invitation.clubName}</strong> lädt dich ein,
+              die <strong className="text-brand-night-navy">{invitation.teamName}</strong> zu unterstützen.
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="mt-4 md:mt-6 font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
+              {invitation.clubName}
+            </h1>
+            <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
+              lädt dich ein, die <strong className="text-brand-night-navy">{invitation.teamName}</strong> zu unterstützen.
+            </p>
+          </>
+        )}
       </div>
 
       <Card className="mt-6 md:mt-10 border-brand-neutral/40">

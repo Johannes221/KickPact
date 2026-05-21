@@ -204,8 +204,11 @@ function FilterSelect({
   onChange: (v: string) => void;
   options: Array<{ value: string; label: string }>;
 }) {
+  // WICHTIG: kein <label> um <Select> wrappen — Radix-Popover bubbled den
+  // Click hoch, <label> feuert den Button nochmal → Dropdown schließt sofort
+  // wieder und der neue Wert "klebt" nicht. Stattdessen: <div> + <span>.
   return (
-    <label className="block">
+    <div>
       <span className="block text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50 mb-1">
         {label}
       </span>
@@ -221,7 +224,7 @@ function FilterSelect({
           ))}
         </SelectContent>
       </Select>
-    </label>
+    </div>
   );
 }
 

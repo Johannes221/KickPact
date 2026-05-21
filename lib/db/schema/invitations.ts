@@ -10,6 +10,8 @@ export const sponsorInvitations = pgTable("sponsor_invitations", {
   token: text("token").notNull().unique(),
   teamId: text("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
   createdByUserId: text("created_by_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  /** Optionaler Name, der auf der Einladungsseite als Willkommensgruß angezeigt wird. */
+  recipientName: text("recipient_name"),
   status: invitationStatusEnum("status").notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   usedAt: timestamp("used_at", { withTimezone: true }),

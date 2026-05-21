@@ -37,6 +37,7 @@ export default async function SponsorenPage({
         .from(sponsorInvitations)
         .innerJoin(teams, eq(sponsorInvitations.teamId, teams.id))
         .where(eq(teams.clubId, club.id))
+        .orderBy(sponsorInvitations.createdAt)
     : [];
 
   // Active sponsors (über pledges -> teamId IN clubTeams)
@@ -95,7 +96,8 @@ export default async function SponsorenPage({
           status: i.inv.status,
           createdAt: i.inv.createdAt,
           teamId: i.team.id,
-          teamName: i.team.name
+          teamName: i.team.name,
+          recipientName: i.inv.recipientName ?? null
         }))}
       />
 

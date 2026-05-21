@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Scrollbar ausblenden für horizontale Sub-Nav Tabs */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 html, body { height: 100%; }
 body { @apply bg-white text-neutral-900 antialiased; }
 

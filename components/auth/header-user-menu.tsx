@@ -13,10 +13,26 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
+interface UserContext {
+  hasSponsor: boolean;
+  clubs: Array<{ slug: string; name: string }>;
+}
 
 export function HeaderUserMenu() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
+  const [ctx, setCtx] = useState<UserContext | null>(null);
+
+  // Kontext laden sobald eingeloggt (clubs + sponsor-status)
+  useEffect(() => {
+    if (!session?.user) { setCtx(null); return; }
+    fetch("/api/user/context")
+      .then((r) => r.json())
+      .then((d) => setCtx(d))
+      .catch(() => {/* silent */});
+  }, [session?.user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isPending) {
     return <div className="h-10 w-24 animate-pulse rounded-md bg-neutral-100" />;
@@ -43,6 +59,8 @@ export function HeaderUserMenu() {
       .join("")
       .toUpperCase() ?? session.user.email[0].toUpperCase();
 
+  const showSponsorLink = ctx === null /* noch ladend */ || ctx.hasSponsor;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -52,10 +70,12 @@ export function HeaderUserMenu() {
               {initials}
             </AvatarFallback>
           </Avatar>
-          <span className="hidden md:inline max-w-[12rem] truncate">{session.user.name ?? session.user.email}</span>
+          <span className="hidden md:inline max-w-[12rem] truncate">
+            {session.user.name ?? session.user.email}
+          </span>
         </Button>
       </DropdownMenuTrigger>
-      {/* Explizite weiße bg + dunkler Text — ohne diese override greift
+      {/* Explizite weiße bg + dunkler Text — ohne diesen Override greift
           das shadcn-default mit oklch(..) Syntax, die Tailwind v3.4 nicht
           parsed → Dropdown wirkt durchsichtig auf dem Foto-Hintergrund. */}
       <DropdownMenuContent
@@ -70,13 +90,35 @@ export function HeaderUserMenu() {
             {session.user.email}
           </div>
         </DropdownMenuLabel>
+
         <DropdownMenuSeparator className="bg-brand-neutral/40" />
-        <DropdownMenuItem
-          asChild
-          className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
-        >
-          <Link href="/sponsor">Sponsor-Dashboard</Link>
-        </DropdownMenuItem>
+
+        {/* Sponsor-Bereich */}
+        {showSponsorLink && (
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
+          >
+            <Link href="/sponsor">
+              <span className="mr-2">⚡</span>Sponsor-Dashboard
+            </Link>
+          </DropdownMenuItem>
+        )}
+
+        {/* Vereins-Bereiche (dynamisch nach API-Call) */}
+        {ctx?.clubs.map((club) => (
+          <DropdownMenuItem
+            key={club.slug}
+            asChild
+            className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
+          >
+            <Link href={`/verein/${club.slug}`}>
+              <span className="mr-2">⚽</span>
+              <span className="truncate">{club.name}</span>
+            </Link>
+          </DropdownMenuItem>
+        ))}
+
         <DropdownMenuSeparator className="bg-brand-neutral/40" />
         <DropdownMenuItem
           className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"

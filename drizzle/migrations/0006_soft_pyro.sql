@@ -1,0 +1,1 @@
+ALTER TABLE "sponsor_invitations" ADD COLUMN "recipient_name" text;

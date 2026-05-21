@@ -32,7 +32,7 @@ export function MagicLinkForm({ mode }: { mode: "login" | "signup" }) {
       ? `/sponsor/onboarding?invitation=${invitationToken}`
       : mode === "signup"
         ? "/onboarding/verein/1"
-        : "/sponsor";
+        : "/dashboard"; // rollenbasiert weiterleiten
 
     const result = await signIn.magicLink({
       email: values.email,
