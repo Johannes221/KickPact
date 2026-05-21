@@ -27,8 +27,15 @@ export async function createPledge(input: PledgeInput) {
     .from(sponsors)
     .where(eq(sponsors.userId, user.id))
     .limit(1);
+  let sponsorId: string;
   if (!sponsor) {
-    throw new Error("Sponsor-Profil fehlt. Bitte erst Sponsor-Onboarding abschließen.");
+    const [created] = await db
+      .insert(sponsors)
+      .values({ userId: user.id, displayName: "", type: "familie" })
+      .returning({ id: sponsors.id });
+    sponsorId = created.id;
+  } else {
+    sponsorId = sponsor.id;
   }
 
   // Einladung auflösen → teamId
@@ -68,7 +75,7 @@ export async function createPledge(input: PledgeInput) {
     const [pledge] = await tx
       .insert(pledges)
       .values({
-        sponsorId: sponsor.id,
+        sponsorId: sponsorId,
         teamId: invitation.teamId,
         status: "active",
         startsAt: now,
