@@ -29,12 +29,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-oklch(1 0 0) group-[.toaster]:text-oklch(0.145 0 0) group-[.toaster]:border-oklch(0.922 0 0) group-[.toaster]:shadow-lg dark:group-[.toaster]:bg-oklch(0.145 0 0) dark:group-[.toaster]:text-oklch(0.985 0 0) dark:group-[.toaster]:border-oklch(1 0 0 / 10%)",
-          description: "group-[.toast]:text-oklch(0.556 0 0) dark:group-[.toast]:text-oklch(0.708 0 0)",
+            "group toast group-[.toaster]:bg-white group-[.toaster]:text-neutral-950 group-[.toaster]:border-neutral-200 group-[.toaster]:shadow-lg",
+          description: "group-[.toast]:text-neutral-500",
           actionButton:
-            "group-[.toast]:bg-oklch(0.205 0 0) group-[.toast]:text-oklch(0.985 0 0) dark:group-[.toast]:bg-oklch(0.922 0 0) dark:group-[.toast]:text-oklch(0.205 0 0)",
+            "group-[.toast]:bg-brand-night-navy group-[.toast]:text-white",
           cancelButton:
-            "group-[.toast]:bg-oklch(0.97 0 0) group-[.toast]:text-oklch(0.556 0 0) dark:group-[.toast]:bg-oklch(0.269 0 0) dark:group-[.toast]:text-oklch(0.708 0 0)",
+            "group-[.toast]:bg-neutral-50 group-[.toast]:text-neutral-500",
         },
       }}
       {...props}
