@@ -1,0 +1,162 @@
+[
+  {
+    "spielId": "02VVCPL67K000000VS5489BTVUKESBFG",
+    "slug": "tsv-handschuhsheim-vfb-st-leon",
+    "datum": "16.05.26",
+    "heim": "TSV Handschuhsheim",
+    "gast": "VfB St. Leon",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-vfb-st-leon/-/spiel/02VVCPL67K000000VS5489BTVUKESBFG"
+  },
+  {
+    "spielId": "02VVCPL6A8000000VS5489BTVUKESBFG",
+    "slug": "sg-hd-kirchheim-2-tsv-handschuhsheim",
+    "datum": "09.05.26",
+    "heim": "SG HD-Kirchheim 2",
+    "gast": "TSV Handschuhsheim",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-2-tsv-handschuhsheim/-/spiel/02VVCPL6A8000000VS5489BTVUKESBFG"
+  },
+  {
+    "spielId": "02VVCPL6IC000000VS5489BTVUKESBFG",
+    "slug": "tsv-handschuhsheim-vfb-1914-leimen",
+    "datum": "02.05.26",
+    "heim": "TSV Handschuhsheim",
+    "gast": "VfB 1914 Leimen",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-vfb-1914-leimen/-/spiel/02VVCPL6IC000000VS5489BTVUKESBFG"
+  },
+  {
+    "spielId": "02VVCPL6O4000000VS5489BTVUKESBFG",
+    "slug": "fc-astoria-walldorf-2-tsv-handschuhsheim",
+    "datum": "18.04.26",
+    "heim": "FC Astoria Walldorf 2",
+    "gast": "TSV Handschuhsheim",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/fc-astoria-walldorf-2-tsv-handschuhsheim/-/spiel/02VVCPL6O4000000VS5489BTVUKESBFG"
+  },
+  {
+    "spielId": "02VVCPL71G000000VS5489BTVUKESBFG",
+    "slug": "fv-nussloch-2-tsv-handschuhsheim",
+    "datum": "14.03.26",
+    "heim": "FV Nußloch 2",
+    "gast": "TSV Handschuhsheim",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/fv-nussloch-2-tsv-handschuhsheim/-/spiel/02VVCPL71G000000VS5489BTVUKESBFG"
+  },
+  {
+    "spielId": "02VVCPL7D4000000VS5489BTVUKESBFG",
+    "slug": "tsv-handschuhsheim-sg-viktoria-mauer",
+    "datum": "07.03.26",
+    "heim": "TSV Handschuhsheim",
+    "gast": "SG Viktoria Mauer",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-sg-viktoria-mauer/-/spiel/02VVCPL7D4000000VS5489BTVUKESBFG"
+  },
+  {
+    "spielId": "02U0BJTEO4000000VS5489BTVUFLAKGJ",
+    "slug": "tsv-handschuhsheim-fc-sportfr-dossenheim",
+    "datum": "28.11.25",
+    "heim": "TSV Handschuhsheim",
+    "gast": "FC Sportfr. Dossenheim",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-fc-sportfr-dossenheim/-/spiel/02U0BJTEO4000000VS5489BTVUFLAKGJ"
+  },
+  {
+    "spielId": "02U52QLP38000000VS5489BTVV378D77",
+    "slug": "vfb-rauenberg-2-tsv-handschuhsheim",
+    "datum": "14.10.2025",
+    "heim": "Di, 14.10.25 | 18:00",
+    "gast": "Pokalspiel",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/vfb-rauenberg-2-tsv-handschuhsheim/-/spiel/02U52QLP38000000VS5489BTVV378D77"
+  },
+  {
+    "spielId": "02S820U5J0000000VS5489B3VSRJVFP8",
+    "slug": "tsg-rohrbach-3-tsv-handschuhsheim",
+    "datum": "05.04.2025",
+    "heim": "Sa, 05.04.25 | 10:00",
+    "gast": "Meisterschaftsspiel",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/tsg-rohrbach-3-tsv-handschuhsheim/-/spiel/02S820U5J0000000VS5489B3VSRJVFP8"
+  },
+  {
+    "spielId": "02S820U5P4000000VS5489B3VSRJVFP8",
+    "slug": "tsv-handschuhsheim-sv-sandhausen-3",
+    "datum": "29.03.2025",
+    "heim": "Sa, 29.03.25 | 13:00",
+    "gast": "Meisterschaftsspiel",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-sv-sandhausen-3/-/spiel/02S820U5P4000000VS5489B3VSRJVFP8"
+  },
+  {
+    "spielId": "02S820U5TC000000VS5489B3VSRJVFP8",
+    "slug": "heidelberger-sc-1-tsv-handschuhsheim",
+    "datum": "22.03.2025",
+    "heim": "Sa, 22.03.25 | 12:30",
+    "gast": "Meisterschaftsspiel",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/heidelberger-sc-1-tsv-handschuhsheim/-/spiel/02S820U5TC000000VS5489B3VSRJVFP8"
+  },
+  {
+    "spielId": "02S820U66S000000VS5489B3VSRJVFP8",
+    "slug": "tsv-handschuhsheim-fc-st-ilgen",
+    "datum": "15.03.2025",
+    "heim": "Sa, 15.03.25 | 13:00",
+    "gast": "Meisterschaftsspiel",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-fc-st-ilgen/-/spiel/02S820U66S000000VS5489B3VSRJVFP8"
+  },
+  {
+    "spielId": "02QIRBTGT0000000VS5489B3VUHJP2M3",
+    "slug": "tsv-handschuhsheim-fc-sportfr-dossenheim-2",
+    "datum": "13.11.2024",
+    "heim": "Mi, 13.11.24 | 17:00",
+    "gast": "Meisterschaftsspiel",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-fc-sportfr-dossenheim-2/-/spiel/02QIRBTGT0000000VS5489B3VUHJP2M3"
+  },
+  {
+    "spielId": "02QIRBTGHK000000VS5489B3VUHJP2M3",
+    "slug": "djk-fc-ziegelhausen-p-2-tsv-handschuhsheim",
+    "datum": "24.10.2024",
+    "heim": "Do, 24.10.24 | 18:00",
+    "gast": "Meisterschaftsspiel",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/djk-fc-ziegelhausen-p-2-tsv-handschuhsheim/-/spiel/02QIRBTGHK000000VS5489B3VUHJP2M3"
+  },
+  {
+    "spielId": "02QIRBTHBC000000VS5489B3VUHJP2M3",
+    "slug": "tsv-handschuhsheim-tsv-wieblingen",
+    "datum": "05.10.2024",
+    "heim": "Sa, 05.10.24 | 13:00",
+    "gast": "Meisterschaftsspiel",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-tsv-wieblingen/-/spiel/02QIRBTHBC000000VS5489B3VUHJP2M3"
+  },
+  {
+    "spielId": "02QIRBTHPS000000VS5489B3VUHJP2M3",
+    "slug": "tsv-handschuhsheim-jsg-schoenau-hirschhorn-neckarsteinach-2",
+    "datum": "21.09.2024",
+    "heim": "Sa, 21.09.24 | 13:00",
+    "gast": "Meisterschaftsspiel",
+    "ergebnis": "",
+    "vergangen": true,
+    "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-jsg-schoenau-hirschhorn-neckarsteinach-2/-/spiel/02QIRBTHPS000000VS5489B3VUHJP2M3"
+  }
+]
