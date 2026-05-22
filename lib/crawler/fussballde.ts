@@ -95,6 +95,30 @@ export interface ScrapedEvent {
   raus?: { id: string; name: string };
 }
 
+/**
+ * Asserts the current page is NOT a captcha / Sicherheitsabfrage page.
+ *
+ * fussball.de blocks aggressive scraping with a soft "Sicherheitsabfrage"
+ * landing page or a reCAPTCHA iframe. If we silently parse such a page we'd
+ * record zero matches/events and mistake them for real "no data" outcomes —
+ * breaking trigger-evaluation downstream. Throw loudly instead so the crawl
+ * job fails, alerts fire, and humans can investigate (rotating IP, slowing
+ * down requests, etc.).
+ *
+ * Exported so unit tests can verify the detection logic against page stubs
+ * and so parser-level negative-case tests can re-use the same helper.
+ */
+export async function assertNotCaptcha(page: Page): Promise<void> {
+  const title = await page.title();
+  if (/sicherheitsabfrage|captcha/i.test(title)) {
+    throw new Error(`Captcha encountered on ${page.url()} — title: "${title}"`);
+  }
+  const hasRecaptcha = await page.locator('iframe[src*="recaptcha"]').count();
+  if (hasRecaptcha > 0) {
+    throw new Error(`Captcha (reCAPTCHA) encountered on ${page.url()}`);
+  }
+}
+
 async function withPage<T>(fn: (page: Page) => Promise<T>): Promise<T> {
   return withRetry(
     async () => {
@@ -119,6 +143,7 @@ export async function searchVereine(suchbegriff: string): Promise<VereinHit[]> {
   return withPage(async (page) => {
     const url = `https://www.fussball.de/suche/-/text/${encodeURIComponent(suchbegriff)}/restriction/-1#!/`;
     await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+    await assertNotCaptcha(page);
     await page.waitForTimeout(2000);
 
     return await page.evaluate(`(function() {
@@ -150,6 +175,7 @@ export async function getMannschaften(
   return withPage(async (page) => {
     const url = `https://www.fussball.de/verein/${slug}/-/id/${vereinId}#!/`;
     await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+    await assertNotCaptcha(page);
     await page.waitForTimeout(2000);
 
     const raw = (await page.evaluate(`(function() {
@@ -255,6 +281,7 @@ export async function getSpiele(
         : `https://www.fussball.de/ajax.team.prev.games/-/mode/PAGE/team-id/${teamId}/index/${idx}`;
       try {
         await page.goto(ajaxUrl, { waitUntil: "networkidle", timeout: 20000 });
+        await assertNotCaptcha(page);
         await page.waitForTimeout(800);
         const pageResults = await page.evaluate(EXTRACT_MATCHES_JS) as SpielListItem[];
         if (pageResults.length === 0) break; // no more data
@@ -266,7 +293,9 @@ export async function getSpiele(
           }
         }
         if (newCount === 0) break; // all duplicates → we've exhausted pages
-      } catch {
+      } catch (err) {
+        // Captcha errors are loud signals — rethrow so the whole crawl fails.
+        if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
         break;
       }
     }
@@ -279,6 +308,7 @@ export async function getSpiele(
         : `https://www.fussball.de/ajax.team.prev.games/-/mode/PAGE/team-id/${teamId}/saison/${saison}/index/${idx}`;
       try {
         await page.goto(ajaxUrl, { waitUntil: "networkidle", timeout: 20000 });
+        await assertNotCaptcha(page);
         await page.waitForTimeout(800);
         const pageResults = await page.evaluate(EXTRACT_MATCHES_JS) as SpielListItem[];
         if (pageResults.length === 0) break;
@@ -290,7 +320,9 @@ export async function getSpiele(
           }
         }
         if (newCount === 0) break;
-      } catch {
+      } catch (err) {
+        // Captcha errors are loud signals — rethrow so the whole crawl fails.
+        if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
         break;
       }
     }
@@ -300,6 +332,7 @@ export async function getSpiele(
     try {
       const mainUrl = `https://www.fussball.de/mannschaft/${slug}/-/saison/${saison}/team-id/${teamId}#!/`;
       await page.goto(mainUrl, { waitUntil: "networkidle", timeout: 30000 });
+      await assertNotCaptcha(page);
       await page.waitForTimeout(2000);
 
       // Extract whatever is currently visible (usually Rückrunde)
@@ -326,8 +359,11 @@ export async function getSpiele(
           if (!allResults.has(r.spielId)) allResults.set(r.spielId, r);
         }
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      // Captcha errors are loud signals — rethrow so the whole crawl fails.
+      if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
+      // ignore other errors (network hiccup on Strategy 2 is OK — we already
+      // have data from Strategy 1)
     }
 
     const raw = Array.from(allResults.values());
@@ -359,6 +395,7 @@ async function resolvePlayerName(page: Page, playerUrl: string): Promise<string>
 
   try {
     await page.goto(playerUrl, { waitUntil: "networkidle", timeout: 20000 });
+    await assertNotCaptcha(page);
     await page.waitForTimeout(1000);
     const name = await page.evaluate(`(function() {
       var title = document.title;
@@ -368,7 +405,9 @@ async function resolvePlayerName(page: Page, playerUrl: string): Promise<string>
     })()`) as string
     playerNameCache.set(id, name || id);
     return playerNameCache.get(id)!;
-  } catch {
+  } catch (err) {
+    // Captcha errors are loud signals — rethrow so the whole crawl fails.
+    if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
     playerNameCache.set(id, id);
     return id;
   }
@@ -381,6 +420,7 @@ export async function getSpielDetails(
   return withPage(async (page) => {
     const url = `https://www.fussball.de/spiel/${slug || "spiel"}/-/spiel/${spielId}#!/`;
     await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+    await assertNotCaptcha(page);
     await page.waitForTimeout(3000);
 
     const raw = await page.evaluate(`(function() {
@@ -504,6 +544,7 @@ export async function getKader(
   return withPage(async (page) => {
     const url = `https://www.fussball.de/mannschaft/${slug}/-/saison/${saison}/team-id/${teamId}#!/`;
     await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+    await assertNotCaptcha(page);
     await page.waitForTimeout(2000);
 
     return await page.evaluate(`(function() {
