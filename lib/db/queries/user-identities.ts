@@ -67,10 +67,10 @@ export async function getUserIdentities(userId: string): Promise<UserIdentities>
 
   const clubIds = clubRows.map((r) => r.clubId);
 
-  const teamCounts =
+  const [teamCounts, sponsorCountsByClub] = await Promise.all([
     clubIds.length === 0
-      ? new Map<string, number>()
-      : await db
+      ? Promise.resolve(new Map<string, number>())
+      : db
           .select({
             clubId: teams.clubId,
             count: sql<number>`count(${teams.id})::int`
@@ -80,12 +80,10 @@ export async function getUserIdentities(userId: string): Promise<UserIdentities>
           .groupBy(teams.clubId)
           .then(
             (rows) => new Map(rows.map((r) => [r.clubId, Number(r.count)]))
-          );
-
-  const sponsorCountsByClub =
+          ),
     clubIds.length === 0
-      ? new Map<string, number>()
-      : await db
+      ? Promise.resolve(new Map<string, number>())
+      : db
           .select({
             clubId: teams.clubId,
             count: sql<number>`count(distinct ${pledges.sponsorId})::int`
@@ -96,7 +94,8 @@ export async function getUserIdentities(userId: string): Promise<UserIdentities>
           .groupBy(teams.clubId)
           .then(
             (rows) => new Map(rows.map((r) => [r.clubId, Number(r.count)]))
-          );
+          )
+  ]);
 
   const clubsResult: UserIdentityClub[] = clubRows.map((r) => ({
     clubId: r.clubId,
@@ -142,24 +141,24 @@ export async function getUserIdentities(userId: string): Promise<UserIdentities>
 
   let sponsorResult: UserIdentitySponsor | null = null;
   if (sponsorRow) {
-    const [pledgeStats] = await db
-      .select({
-        activePledgeCount: sql<number>`count(*) filter (where ${pledges.status} = 'active')::int`
-      })
-      .from(pledges)
-      .where(eq(pledges.sponsorId, sponsorRow.id));
+    const now = new Date();
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
-    const monthStart = new Date();
-    monthStart.setDate(1);
-    monthStart.setHours(0, 0, 0, 0);
-
-    const [chargeStats] = await db
-      .select({
-        thisMonthCents: sql<number>`coalesce(sum(${charges.amountCents}), 0)::int`
-      })
-      .from(charges)
-      .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-      .where(and(eq(pledges.sponsorId, sponsorRow.id), gte(charges.createdAt, monthStart)));
+    const [[pledgeStats], [chargeStats]] = await Promise.all([
+      db
+        .select({
+          activePledgeCount: sql<number>`count(*) filter (where ${pledges.status} = 'active')::int`
+        })
+        .from(pledges)
+        .where(eq(pledges.sponsorId, sponsorRow.id)),
+      db
+        .select({
+          thisMonthCents: sql<number>`coalesce(sum(${charges.amountCents}), 0)::int`
+        })
+        .from(charges)
+        .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+        .where(and(eq(pledges.sponsorId, sponsorRow.id), gte(charges.createdAt, monthStart)))
+    ]);
 
     sponsorResult = {
       id: sponsorRow.id,

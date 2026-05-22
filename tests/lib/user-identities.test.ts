@@ -8,7 +8,9 @@ import {
   clubMemberships,
   teamMemberships,
   sponsors,
-  pledges
+  pledges,
+  pledgeRules,
+  charges
 } from "@/lib/db/schema";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { resetTestDb } from "../setup/db";
@@ -130,5 +132,67 @@ describe("getUserIdentities", () => {
     expect(r.teamOnly).toHaveLength(1);
     expect(r.sponsor).not.toBeNull();
     void pledges;
+  });
+
+  it("computes sponsor stats with active pledges and current-month charges", async () => {
+    const userId = await makeUser("stats");
+    const { teamId } = await makeClubWithTeam("stats");
+
+    const sponsorId = createId();
+    await db.insert(sponsors).values({
+      id: sponsorId,
+      userId,
+      displayName: "Statistik-Sponsor",
+      type: "familie"
+    });
+
+    const oneYear = new Date();
+    oneYear.setFullYear(oneYear.getFullYear() + 1);
+
+    const activePledgeId = createId();
+    await db.insert(pledges).values({
+      id: activePledgeId,
+      sponsorId,
+      teamId,
+      status: "active",
+      startsAt: new Date(),
+      endsAt: oneYear,
+      monthlyCapCents: null
+    });
+    const endedPledgeId = createId();
+    await db.insert(pledges).values({
+      id: endedPledgeId,
+      sponsorId,
+      teamId,
+      status: "ended",
+      startsAt: new Date(),
+      endsAt: oneYear,
+      monthlyCapCents: null
+    });
+
+    // pledge_rule for the active pledge (charges.pledgeRuleId is NOT NULL)
+    const pledgeRuleId = createId();
+    await db.insert(pledgeRules).values({
+      id: pledgeRuleId,
+      pledgeId: activePledgeId,
+      triggerType: "goal_total",
+      amountCents: 750
+    });
+
+    // Charge inside current month (createdAt defaults to now())
+    await db.insert(charges).values({
+      id: createId(),
+      pledgeId: activePledgeId,
+      pledgeRuleId,
+      matchId: null,
+      matchEventId: null,
+      triggerType: "goal_total",
+      amountCents: 750,
+      status: "confirmed"
+    });
+
+    const r = await getUserIdentities(userId);
+    expect(r.sponsor?.activePledgeCount).toBe(1);
+    expect(r.sponsor?.thisMonthCents).toBe(750);
   });
 });
