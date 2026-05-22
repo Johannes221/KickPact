@@ -1,0 +1,108 @@
+{
+  "spielId": "02TP7IA6C0000000VS5489BTVV0LE4BT",
+  "heim": "FC Sportfreunde 1910 Dossenheim 2",
+  "gast": "FG Rohrbach",
+  "ergebnis": {
+    "heim": 3,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 15,
+      "side": "gast",
+      "rein": {
+        "id": "00STLPTBNK000000VV0AG85VVU7JBUEE",
+        "name": "Tobias Schmidt"
+      },
+      "raus": {
+        "id": "00H2L1JF2C000000VTVG0001VSO01V8H",
+        "name": "Constantin Mayer"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 37,
+      "side": "heim",
+      "spielerId": "0130I87T5O000000VV0AG80NVTHNCG26",
+      "spielerName": "Adrian Pöttner"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "026QFHELNC000000VS541L4GVT8V5JLB",
+        "name": "Muhammed Sowe (FG Rohrbach 2012) Spieler"
+      },
+      "raus": {
+        "id": "01026JA9N0000000VV0AG80NVVVUKK8M",
+        "name": "Gian Luca von Contzen"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 58,
+      "side": "heim",
+      "rein": {
+        "id": "02FCONB7OK000000VUM1DNOTVSIG8NIT",
+        "name": "Paul Kauczor (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "00OCKKNU98000000VV0AG83KVU713MQC",
+        "name": "Samuel Ruland"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 74,
+      "side": "gast",
+      "rein": {
+        "id": "02HATI2MA8000000VUM1DNO6VTA5D4OV",
+        "name": "Lukas Zimmermann (FG Rohrbach 2012) Spieler"
+      },
+      "raus": {
+        "id": "01LHOMM718000000VV0AG811VT4V53OP",
+        "name": "Mathis Richter"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 76,
+      "side": "gast",
+      "rein": {
+        "id": "015MPQUENG000000VV0AG811VTJ4NS62",
+        "name": "Holger Flory"
+      },
+      "raus": {
+        "id": "01HNMH628G000000VV0AG811VULQLSU4",
+        "name": "Liam Kohler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 79,
+      "side": "heim",
+      "spielerId": "02Q8UQOPKC000000VUM1D565VUTNCQJ1",
+      "spielerName": "Eliah Beckenbach (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 82,
+      "side": "heim",
+      "spielerId": "02Q8UQOPKC000000VUM1D565VUTNCQJ1",
+      "spielerName": "Eliah Beckenbach (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "gast",
+      "spielerId": "00S0FV5VN4000000VV0AG80NVTI1GQJD",
+      "spielerName": "Fabian Fritz"
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "spielId": "02TNNQ84D0000000VS5489BUVSSD35NB",
+  "heim": "FC Sportfreunde 1910 Dossenheim",
+  "gast": "Spvgg 06 Ketsch",
+  "ergebnis": {
+    "heim": 1,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 57,
+      "side": "gast",
+      "spielerId": "01ITN9G590000000VV0AG811VV0CBE3E",
+      "spielerName": "Abd Al Qayum Yaya"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 62,
+      "side": "heim",
+      "rein": {
+        "id": "02O3BRIQ78000000VUM1DNP9VVAVQIDD",
+        "name": "Janick Boger (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "01GQ6H6DGC000000VV0AG80NVVDQRLBA",
+        "name": "Lars Schätzle"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 62,
+      "side": "heim",
+      "rein": {
+        "id": "01UQTU76AO000000VS541L4HVS9ULU1H",
+        "name": "Jonas Schober (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "02CCL14IM0000000VUM1DNQ5VU0QM86P",
+        "name": "Nicolas Nimmrich Amoros (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "gast",
+      "rein": {
+        "id": "00V3APRIDC000000VV0AG80NVVS3NJQC",
+        "name": "Benjamin Marx"
+      },
+      "raus": {
+        "id": "01BADO8220000000VV0AG811VVM42SHD",
+        "name": "Jakob Schaller"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "gast",
+      "rein": {
+        "id": "00NKATLI2K000000VV0AG85VVUH1CIQU",
+        "name": "Daniel Marzoll"
+      },
+      "raus": {
+        "id": "01ITN9G590000000VV0AG811VV0CBE3E",
+        "name": "Abd Al Qayum Yaya"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 70,
+      "side": "heim",
+      "rein": {
+        "id": "00RE77O9GK000000VV0AG80NVVGDRLAO",
+        "name": "Edin Muharemovic"
+      },
+      "raus": {
+        "id": "00NKAVJ954000000VV0AG85VVUH1CIQU",
+        "name": "Christopher Eppler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 78,
+      "side": "heim",
+      "rein": {
+        "id": "023NJ2VT0K000000VS541L4IVS5UUR4Q",
+        "name": "Fynn Zetzsche (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "013GASR4G8000000VV0AG811VVO0U6BQ",
+        "name": "Maximilian Wolf"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 80,
+      "side": "gast",
+      "rein": {
+        "id": "02KI6GJIN0000000VUM1DNQ9VSC5OQFK",
+        "name": "Landi Kadriu (Spvgg 06 Ketsch) Spieler"
+      },
+      "raus": {
+        "id": "02F4S4QTEO000000VUM1DNPMVTA46ILC",
+        "name": "Leonard Eshun (Spvgg 06 Ketsch) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 85,
+      "side": "heim",
+      "spielerId": "02HNKEVTBG000000VUM1DNOGVTIIQK2E",
+      "spielerName": "Dennis Schnepf (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 86,
+      "side": "gast",
+      "rein": {
+        "id": "017ALSFHM4000000VV0AG811VSQ79T93",
+        "name": "Fabio Wittmann"
+      },
+      "raus": {
+        "id": "01U3Q7DEL4000000VS541L4RVUK5RL2K",
+        "name": "Arbnor Pacaj (Spvgg 06 Ketsch) Spieler"
+      }
+    }
+  ]
+}

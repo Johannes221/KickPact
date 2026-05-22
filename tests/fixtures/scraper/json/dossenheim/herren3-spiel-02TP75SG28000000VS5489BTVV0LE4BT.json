@@ -1,0 +1,165 @@
+{
+  "spielId": "02TP75SG28000000VS5489BTVV0LE4BT",
+  "heim": "RB Heidelberg 2 (flex) zg.",
+  "gast": "FC Sportfreunde 1910 Dossenheim 3",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 12
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 5
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 16,
+      "side": "gast",
+      "spielerId": "00NKB1FI90000000VV0AG85VVUH1CIQU",
+      "spielerName": "Christopher Huber"
+    },
+    {
+      "typ": "TOR",
+      "minute": 22,
+      "side": "gast",
+      "spielerId": "00NKB1FI90000000VV0AG85VVUH1CIQU",
+      "spielerName": "Christopher Huber"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 33,
+      "side": "gast",
+      "rein": {
+        "id": "02U5426FBS000000VUM1D56EVSQLE0P9",
+        "name": "Timon Heckmann (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "02OQH8IADG000000VS5489B8VSMTHVML",
+        "name": "Tian Huang"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 33,
+      "side": "gast",
+      "rein": {
+        "id": "00NQC0Q1K8000000VV0AG83KVV2165A2",
+        "name": "Julien Heckmann"
+      },
+      "raus": {
+        "id": "00SARH8OIS000000VV0AG811VTP102JQ",
+        "name": "Owen Sandrisser"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 33,
+      "side": "heim",
+      "spielerId": "02T3AQMEUK000000VUM1D51VVVFT1L49",
+      "spielerName": "Shawn Brandt (RB Heidelberg) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 36,
+      "side": "gast",
+      "spielerId": "00NKB1FI90000000VV0AG85VVUH1CIQU",
+      "spielerName": "Christopher Huber"
+    },
+    {
+      "typ": "TOR",
+      "minute": 38,
+      "side": "gast",
+      "spielerId": "00NQC0Q1K8000000VV0AG83KVV2165A2",
+      "spielerName": "Julien Heckmann"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 41,
+      "side": "heim",
+      "rein": {
+        "id": "01B1MGVSRC000000VV0AG80NVSOV3GC3",
+        "name": "Mark Dargel"
+      },
+      "raus": {
+        "id": "02T3AQMEUK000000VUM1D51VVVFT1L49",
+        "name": "Shawn Brandt (RB Heidelberg) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 43,
+      "side": "gast",
+      "spielerId": "02U5426FBS000000VUM1D56EVSQLE0P9",
+      "spielerName": "Timon Heckmann (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 46,
+      "side": "heim",
+      "spielerId": "0305ELTPKG000000VS5489C1VT52O25E",
+      "spielerName": "Bashar Mahagna"
+    },
+    {
+      "typ": "TOR",
+      "minute": 51,
+      "side": "gast",
+      "spielerId": "00NKB1FI90000000VV0AG85VVUH1CIQU",
+      "spielerName": "Christopher Huber"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 55,
+      "side": "gast",
+      "rein": {
+        "id": "00UHA7AMVO000000VV0AG811VTN498IG",
+        "name": "Vincent Weishuhn"
+      },
+      "raus": {
+        "id": "00R8M023UK000000VV0AG83KVVSSD2UO",
+        "name": "Vernon Medenilla"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 57,
+      "side": "gast",
+      "spielerId": "00NQC0Q1K8000000VV0AG83KVV2165A2",
+      "spielerName": "Julien Heckmann"
+    },
+    {
+      "typ": "TOR",
+      "minute": 61,
+      "side": "gast",
+      "spielerId": "02U5426FBS000000VUM1D56EVSQLE0P9",
+      "spielerName": "Timon Heckmann (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 63,
+      "side": "gast",
+      "spielerId": "00NQC0Q1K8000000VV0AG83KVV2165A2",
+      "spielerName": "Julien Heckmann"
+    },
+    {
+      "typ": "TOR",
+      "minute": 65,
+      "side": "gast",
+      "spielerId": "02U5426FBS000000VUM1D56EVSQLE0P9",
+      "spielerName": "Timon Heckmann (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 81,
+      "side": "gast",
+      "spielerId": "00UHA7AMVO000000VV0AG811VTN498IG",
+      "spielerName": "Vincent Weishuhn"
+    },
+    {
+      "typ": "TOR",
+      "minute": 87,
+      "side": "gast",
+      "spielerId": "00NQC0Q1K8000000VV0AG83KVV2165A2",
+      "spielerName": "Julien Heckmann"
+    }
+  ]
+}

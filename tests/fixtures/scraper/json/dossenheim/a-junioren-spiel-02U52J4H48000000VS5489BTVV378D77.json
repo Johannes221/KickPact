@@ -1,0 +1,86 @@
+{
+  "spielId": "02U52J4H48000000VS5489BTVV378D77",
+  "heim": "Eberbacher SC",
+  "gast": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
+  "ergebnis": {
+    "heim": 0,
+    "gast": 2
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 25,
+      "side": "gast",
+      "rein": {
+        "id": "030IM61BSS000000VUM1D558VU393I1B",
+        "name": "David Schönenberger (TSV Handschuhsheim) Spieler"
+      },
+      "raus": {
+        "id": "02KAGA3D0O000000VUM1DNPBVUJA22FG",
+        "name": "Petar Kostadinovski (TSV Handschuhsheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 56,
+      "side": "gast",
+      "rein": {
+        "id": "01TB4UAJ8C000000VS54898GVUUJAPN3",
+        "name": "Levi Baur"
+      },
+      "raus": {
+        "id": "02JAQJEB80000000VUM1DNPKVUKO667D",
+        "name": "Jan Gnutzmann (TSV Handschuhsheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 65,
+      "side": "gast",
+      "rein": {
+        "id": "02119QQFQO000000VS54898FVS2RDMCJ",
+        "name": "Karl Bruno Kaeß"
+      },
+      "raus": {
+        "id": "030IM61BSS000000VUM1D558VU393I1B",
+        "name": "David Schönenberger (TSV Handschuhsheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 76,
+      "side": "gast",
+      "spielerId": "02119QQFQO000000VS54898FVS2RDMCJ",
+      "spielerName": "Karl Bruno Kaeß"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 78,
+      "side": "heim"
+    },
+    {
+      "typ": "TOR",
+      "minute": 83,
+      "side": "gast",
+      "spielerId": "02JBFTVUB4000000VUM1DNORVS5NB6V1",
+      "spielerName": "Harry Wakeling (TSV Handschuhsheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 86,
+      "side": "gast",
+      "rein": {
+        "id": "028AKSQVOO000000VS5489B6VTSKHL86",
+        "name": "Hamza Abdullah"
+      },
+      "raus": {
+        "id": "01SNI0M8SC000000VS548984VTF3AS78",
+        "name": "Julian Klimm"
+      }
+    }
+  ]
+}

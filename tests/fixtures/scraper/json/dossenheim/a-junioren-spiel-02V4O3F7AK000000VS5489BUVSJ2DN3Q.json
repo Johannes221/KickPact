@@ -1,0 +1,83 @@
+{
+  "spielId": "02V4O3F7AK000000VS5489BUVSJ2DN3Q",
+  "heim": "Eberbacher SC",
+  "gast": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
+  "ergebnis": {
+    "heim": 1,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim"
+    },
+    {
+      "typ": "TOR",
+      "minute": 46,
+      "side": "heim",
+      "spielerId": "02N9TK0G64000000VUM1DNP1VV5DDGV8",
+      "spielerName": "Cedric Wäsch (Eberbacher SC) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 50,
+      "side": "gast",
+      "spielerId": "02KAGA3D0O000000VUM1DNPBVUJA22FG",
+      "spielerName": "Petar Kostadinovski (TSV Handschuhsheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 56,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 70,
+      "side": "gast",
+      "rein": {
+        "id": "01MENUCHP8000000VV0AG811VVU42C12",
+        "name": "Marc Saxer"
+      },
+      "raus": {
+        "id": "02KAGA3D0O000000VUM1DNPBVUJA22FG",
+        "name": "Petar Kostadinovski (TSV Handschuhsheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 75,
+      "side": "gast",
+      "rein": {
+        "id": "02JBFTVUB4000000VUM1DNORVS5NB6V1",
+        "name": "Harry Wakeling (TSV Handschuhsheim) Spieler"
+      },
+      "raus": {
+        "id": "02JAQJEB80000000VUM1DNPKVUKO667D",
+        "name": "Jan Gnutzmann (TSV Handschuhsheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 75,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 79,
+      "side": "gast",
+      "rein": {
+        "id": "02VR7H49I4000000VS5489C1VSV06J6I",
+        "name": "Carlos Andres Montano Castillo"
+      },
+      "raus": {
+        "id": "02119QQFQO000000VS54898FVS2RDMCJ",
+        "name": "Karl Bruno Kaeß"
+      }
+    }
+  ]
+}

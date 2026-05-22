@@ -1,0 +1,108 @@
+{
+  "spielId": "02TP7IA3PS000000VS5489BTVV0LE4BT",
+  "heim": "FC Sportfreunde 1910 Dossenheim 2",
+  "gast": "FC Hirschhorn",
+  "ergebnis": {
+    "heim": 1,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 2
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 22,
+      "side": "gast",
+      "spielerId": "01OVFBF41O000000VV0AG80NVSHO9FVA",
+      "spielerName": "Felix Bayer"
+    },
+    {
+      "typ": "TOR",
+      "minute": 45,
+      "side": "gast",
+      "spielerId": "01UCDOHM1K000000VS541L4HVSQPDOFN",
+      "spielerName": "Torben Flachs (FC Hirschhorn) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 55,
+      "side": "heim",
+      "rein": {
+        "id": "028AKSQVOO000000VS5489B6VTSKHL86",
+        "name": "Hamza Abdullah"
+      },
+      "raus": {
+        "id": "01CI9LLOBG000000VV0AG811VVO22JEJ",
+        "name": "Marco Henn"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 58,
+      "side": "gast",
+      "spielerId": "01UCDOHM1K000000VS541L4HVSQPDOFN",
+      "spielerName": "Torben Flachs (FC Hirschhorn) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 62,
+      "side": "heim",
+      "rein": {
+        "id": "00SCO3O7Q8000000VV0AG811VV935U8L",
+        "name": "Philip Ochs"
+      },
+      "raus": {
+        "id": "00OCKKNU98000000VV0AG83KVU713MQC",
+        "name": "Samuel Ruland"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 64,
+      "side": "heim",
+      "rein": {
+        "id": "01I8HUBA4S000000VV0AG80NVTFSKJQA",
+        "name": "Karim Meddeb"
+      },
+      "raus": {
+        "id": "0216K25650000000VS541L4KVTIH2O9L",
+        "name": "Manuel Selzer (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 69,
+      "side": "heim",
+      "spielerId": "00SCO3O7Q8000000VV0AG811VV935U8L",
+      "spielerName": "Philip Ochs"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 72,
+      "side": "heim",
+      "rein": {
+        "id": "01TSHTCMP8000000VS541L4FVT6BSJ0N",
+        "name": "Alexander Wingelstern (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "01U2R7OTIO000000VS541L4HVVIJUR1A",
+        "name": "Peter Bender (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 77,
+      "side": "gast",
+      "rein": {
+        "id": "027V5MS0M4000000VS541L4KVTRM1V5M",
+        "name": "Lukas Reinhard (FC Hirschhorn) Spieler"
+      },
+      "raus": {
+        "id": "02G91LB1S4000000VUM1DNPEVVG00SEM",
+        "name": "Joona Straßer (FC Hirschhorn) Spieler"
+      }
+    }
+  ]
+}

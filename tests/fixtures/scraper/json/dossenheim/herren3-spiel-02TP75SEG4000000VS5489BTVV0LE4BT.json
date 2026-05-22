@@ -1,0 +1,182 @@
+{
+  "spielId": "02TP75SEG4000000VS5489BTVV0LE4BT",
+  "heim": "FC Sportfreunde 1910 Dossenheim 3",
+  "gast": "SpG Lobbach 3/​Waldhilsbach 2",
+  "ergebnis": {
+    "heim": 1,
+    "gast": 8
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 7,
+      "side": "gast",
+      "spielerId": "00NKAVAI6G000000VV0AG85VVUH1CIQU",
+      "spielerName": "Andre Rothenberger"
+    },
+    {
+      "typ": "TOR",
+      "minute": 40,
+      "side": "heim",
+      "spielerId": "00NQC0Q1K8000000VV0AG83KVV2165A2",
+      "spielerName": "Julien Heckmann"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 45,
+      "side": "heim",
+      "rein": {
+        "id": "01EUJHA4AK000000VV0AG811VSCA2LJJ",
+        "name": "Laurenz Weishuhn"
+      },
+      "raus": {
+        "id": "00NQC0Q1K8000000VV0AG83KVV2165A2",
+        "name": "Julien Heckmann"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 45,
+      "side": "heim",
+      "rein": {
+        "id": "02Q8UQOPKC000000VUM1D565VUTNCQJ1",
+        "name": "Eliah Beckenbach (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "00R8M023UK000000VV0AG83KVVSSD2UO",
+        "name": "Vernon Medenilla"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 45,
+      "side": "heim",
+      "rein": {
+        "id": "028AKSQVOO000000VS5489B6VTSKHL86",
+        "name": "Hamza Abdullah"
+      },
+      "raus": {
+        "id": "02OQH8IADG000000VS5489B8VSMTHVML",
+        "name": "Tian Huang"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 46,
+      "side": "gast",
+      "spielerId": "00NKAVAI6G000000VV0AG85VVUH1CIQU",
+      "spielerName": "Andre Rothenberger"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "gast",
+      "rein": {
+        "id": "02MFHKM4V4000000VUM1DNO6VSBD9UMK",
+        "name": "Dietmar Wagner (SG-SV Lobbach) Spieler"
+      },
+      "raus": {
+        "id": "00S2OQ2L4O000000VV0AG80NVTI1GQJD",
+        "name": "Janik Berli"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 71,
+      "side": "gast",
+      "spielerId": "02J8IO0BE0000000VUM1DNOOVUNNS1VK",
+      "spielerName": "Simon Jungmann (SG-SV Lobbach) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 73,
+      "side": "gast",
+      "spielerId": "02J8IO0BE0000000VUM1DNOOVUNNS1VK",
+      "spielerName": "Simon Jungmann (SG-SV Lobbach) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 77,
+      "side": "gast",
+      "rein": {
+        "id": "02123LA3E4000000VS541L4JVT1TIPDM",
+        "name": "Florian Krieg (SG-SV Lobbach) Spieler"
+      },
+      "raus": {
+        "id": "010KLE2PSS000000VV0AG811VS586284",
+        "name": "Adrian Steinbrenner"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 77,
+      "side": "gast",
+      "rein": {
+        "id": "00NKB0H27G000000VV0AG85VVUH1CIQU",
+        "name": "Sven Dussel"
+      },
+      "raus": {
+        "id": "01AHL63KP8000000VV0AG80NVU35M1P8",
+        "name": "Jonas Werner"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 77,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAT90IC000000VV0AG85VVUH1CIQU",
+        "name": "Christian Dick"
+      },
+      "raus": {
+        "id": "02J8IO0BE0000000VUM1DNOOVUNNS1VK",
+        "name": "Simon Jungmann (SG-SV Lobbach) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 78,
+      "side": "heim",
+      "rein": {
+        "id": "00UHA7AMVO000000VV0AG811VTN498IG",
+        "name": "Vincent Weishuhn"
+      },
+      "raus": {
+        "id": "02U5426FBS000000VUM1D56EVSQLE0P9",
+        "name": "Timon Heckmann (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 79,
+      "side": "gast",
+      "spielerId": "00S2PBT8FS000000VV0AG80NVTI1GQJD",
+      "spielerName": "Fabian Götz"
+    },
+    {
+      "typ": "TOR",
+      "minute": 81,
+      "side": "gast",
+      "spielerId": "00NKAVAI6G000000VV0AG85VVUH1CIQU",
+      "spielerName": "Andre Rothenberger"
+    },
+    {
+      "typ": "TOR",
+      "minute": 85,
+      "side": "gast",
+      "spielerId": "00NKB0H27G000000VV0AG85VVUH1CIQU",
+      "spielerName": "Sven Dussel"
+    },
+    {
+      "typ": "TOR",
+      "minute": 88,
+      "side": "gast",
+      "spielerId": "02123LA3E4000000VS541L4JVT1TIPDM",
+      "spielerName": "Florian Krieg (SG-SV Lobbach) Spieler"
+    }
+  ]
+}

@@ -13,6 +13,7 @@ import {
   getMannschaften,
   getSpiele,
   getKader,
+  getSpielDetails,
   type VereinHit,
   type MannschaftHit,
   type SpielListItem,
@@ -204,6 +205,33 @@ async function captureSpiele(
   }
 }
 
+async function captureSpielDetails(
+  club: FixtureClub,
+  team: MannschaftHit,
+  teamKey: string,
+  spiele: SpielListItem[],
+): Promise<void> {
+  const sample = spiele.slice(0, 5);
+  for (const spiel of sample) {
+    const jsonRel = `${club.key}/${teamKey}-spiel-${spiel.spielId}.json`;
+    if (!FORCE && (await exists(jsonRel, JSON_ROOT))) {
+      console.log(`    detail ${spiel.spielId}: cached`);
+      continue;
+    }
+    try {
+      const details = await getSpielDetails(spiel.spielId, team.slug);
+      await writeJson(jsonRel, details);
+      await sleep(800);
+      console.log(`    detail ${spiel.spielId}: ${details.events.length} events`);
+    } catch (err) {
+      console.warn(
+        `    ! detail failed ${spiel.spielId}:`,
+        (err as Error).message,
+      );
+    }
+  }
+}
+
 async function captureKader(
   club: FixtureClub,
   team: MannschaftHit,
@@ -290,8 +318,9 @@ async function captureClub(club: FixtureClub): Promise<void> {
       }
       console.log(`  team: ${team.name} (id=${team.teamId})`);
       for (const saison of teamCfg.saisons) {
-        await captureSpiele(club, team, teamCfg.key, saison);
+        const spiele = await captureSpiele(club, team, teamCfg.key, saison);
         await captureKader(club, team, teamCfg.key, saison);
+        await captureSpielDetails(club, team, teamCfg.key, spiele);
       }
     }
   } finally {

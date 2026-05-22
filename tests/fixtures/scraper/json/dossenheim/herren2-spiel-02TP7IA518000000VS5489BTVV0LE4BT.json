@@ -1,0 +1,181 @@
+{
+  "spielId": "02TP7IA518000000VS5489BTVV0LE4BT",
+  "heim": "FC Sportfreunde 1910 Dossenheim 2",
+  "gast": "FC 1986 Sandhausen",
+  "ergebnis": {
+    "heim": 6,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 2,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 5,
+      "side": "heim",
+      "spielerId": "02O3BRIQ78000000VUM1DNP9VVAVQIDD",
+      "spielerName": "Janick Boger (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 13,
+      "side": "heim",
+      "spielerId": "02CCL14IM0000000VUM1DNQ5VU0QM86P",
+      "spielerName": "Nicolas Nimmrich Amoros (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 28,
+      "side": "gast",
+      "rein": {
+        "id": "01VRJSL85G000000VS541L4IVTOB13EA",
+        "name": "Davide Sorce (FC 1986 Sandhausen) Spieler"
+      },
+      "raus": {
+        "id": "00NKB0AHK4000000VV0AG85VVUH1CIQU",
+        "name": "Patrick Claudinon"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "01E0AG6L3C000000VV0AG80NVTBC0IUN",
+        "name": "Tom Rühle"
+      },
+      "raus": {
+        "id": "02CA7QVMJO000000VUM1DNOSVU8S6EE8",
+        "name": "Luis Petitjean (FC 1986 Sandhausen) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "02Q8UQOPKC000000VUM1D565VUTNCQJ1",
+        "name": "Eliah Beckenbach (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "02C856303G000000VUM1DNQVVVUOO4SS",
+        "name": "Oskar Bähr (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "01LT9EGSM8000000VS541L4GVSGOPQ99",
+        "name": "Stefan Vierling (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "0216K25650000000VS541L4KVTIH2O9L",
+        "name": "Manuel Selzer (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 60,
+      "side": "gast",
+      "spielerId": "01KOK82QI8000000VV0AG811VVBESUHI",
+      "spielerName": "Tim Schwöbel"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 61,
+      "side": "heim",
+      "rein": {
+        "id": "01TN7QRR7C000000VS541L4QVUI15085",
+        "name": "Johannes Riehl (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "02TLAUCNMS000000VS5489C2VTEEL5TD",
+        "name": "Finn Wegmüller"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 68,
+      "side": "heim",
+      "rein": {
+        "id": "0130I87T5O000000VV0AG80NVTHNCG26",
+        "name": "Adrian Pöttner"
+      },
+      "raus": {
+        "id": "02O3BRIQ78000000VUM1DNP9VVAVQIDD",
+        "name": "Janick Boger (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 68,
+      "side": "heim",
+      "spielerId": "02O3BRIQ78000000VUM1DNP9VVAVQIDD",
+      "spielerName": "Janick Boger (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 72,
+      "side": "heim",
+      "spielerId": "02Q8UQOPKC000000VUM1D565VUTNCQJ1",
+      "spielerName": "Eliah Beckenbach (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 75,
+      "side": "heim",
+      "rein": {
+        "id": "01EUJHA4AK000000VV0AG811VSCA2LJJ",
+        "name": "Laurenz Weishuhn"
+      },
+      "raus": {
+        "id": "02CCL14IM0000000VUM1DNQ5VU0QM86P",
+        "name": "Nicolas Nimmrich Amoros (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 75,
+      "side": "heim",
+      "spielerId": "01U2R7OTIO000000VS541L4HVVIJUR1A",
+      "spielerName": "Peter Bender (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 76,
+      "side": "gast",
+      "rein": {
+        "id": "02GBJ8CL3K000000VUM1DNPGVS6KA2CF",
+        "name": "Max Bennebach (FC 1986 Sandhausen) Spieler"
+      },
+      "raus": {
+        "id": "0254ED9NUK000000VS541L4FVV0BQBNO",
+        "name": "Bünyamin Kerem Eksioglu (FC 1986 Sandhausen) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 82,
+      "side": "gast",
+      "rein": {
+        "id": "01NPSHGMPK000000VS541L4RVU3JQ89A",
+        "name": "Christopher Jeck (FC 1986 Sandhausen) Spieler"
+      },
+      "raus": {
+        "id": "00NKATQK0K000000VV0AG85VVUH1CIQU",
+        "name": "Sascha Geiss"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "heim",
+      "spielerId": "0130I87T5O000000VV0AG80NVTHNCG26",
+      "spielerName": "Adrian Pöttner"
+    }
+  ]
+}

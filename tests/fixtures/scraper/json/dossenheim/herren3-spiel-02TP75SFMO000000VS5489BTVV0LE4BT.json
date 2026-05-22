@@ -1,0 +1,113 @@
+{
+  "spielId": "02TP75SFMO000000VS5489BTVV0LE4BT",
+  "heim": "FC Sportfreunde 1910 Dossenheim 3",
+  "gast": "Heidelberger SC 3",
+  "ergebnis": {
+    "heim": 0,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "00R7PEVJAK000000VV0AG83KVVSSD2UO",
+        "name": "Moritz Korb"
+      },
+      "raus": {
+        "id": "00R9QN8PKS000000VV0AG85VVUJPKL05",
+        "name": "Jeremias Reisert"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "027VNAS308000000VS5489B6VSNAVHB7",
+        "name": "Julian Kiely"
+      },
+      "raus": {
+        "id": "00NKB11T3O000000VV0AG85VVUH1CIQU",
+        "name": "Julian Löffler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "02PTVTJ0H0000000VS5489B7VTSSNBEC",
+        "name": "Dionysios Antypas"
+      },
+      "raus": {
+        "id": "00RK8IACV4000000VV0AG80NVUB7DSV0",
+        "name": "Jannick Hackl"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "00MC6QOV90000000VV0AG85VVSMHI0R7",
+        "name": "David Nkemjika"
+      },
+      "raus": {
+        "id": "0288C6P08G000000VS541L4HVV8BN5DD",
+        "name": "Johannes Burkhardt (SV Mosbach) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "00NP5CP2S4000000VV0AG85VVTQNFIIH",
+        "name": "Daniel Töttel"
+      },
+      "raus": {
+        "id": "030MU0MBA4000000VUM1D59EVS730NCF",
+        "name": "Tristan Neumann (Heidelberger SC) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "00UHA7AMVO000000VV0AG811VTN498IG",
+        "name": "Vincent Weishuhn"
+      },
+      "raus": {
+        "id": "00R8M023UK000000VV0AG83KVVSSD2UO",
+        "name": "Vernon Medenilla"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "00RRNIAQJO000000VV0AG80NVUADMLIO",
+        "name": "Tim Seefried"
+      },
+      "raus": {
+        "id": "02SJU6711C000000VUM1D53VVTEQRJC2",
+        "name": "Alexander Wissens (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 15,
+      "side": "gast",
+      "spielerId": "01M2GE2E5O000000VS541L4FVSSAPTUH",
+      "spielerName": "Sören Hemmelgarn (Heidelberger SC) Spieler"
+    }
+  ]
+}

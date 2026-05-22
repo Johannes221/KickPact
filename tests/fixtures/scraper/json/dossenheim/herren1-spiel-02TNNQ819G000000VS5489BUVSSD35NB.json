@@ -1,0 +1,167 @@
+{
+  "spielId": "02TNNQ819G000000VS5489BUVSSD35NB",
+  "heim": "FC Victoria Bammental",
+  "gast": "FC Sportfreunde 1910 Dossenheim",
+  "ergebnis": {
+    "heim": 5,
+    "gast": 0
+  },
+  "halbzeit": {
+    "heim": 4,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 11,
+      "side": "heim",
+      "spielerId": "00NKAUJT6O000000VV0AG85VVUH1CIQU",
+      "spielerName": "Dominic Wacknitz"
+    },
+    {
+      "typ": "TOR",
+      "minute": 18,
+      "side": "heim",
+      "spielerId": "00NKATJH7S000000VV0AG85VVUH1CIQU",
+      "spielerName": "Carsten Klein"
+    },
+    {
+      "typ": "TOR",
+      "minute": 38,
+      "side": "heim",
+      "spielerId": "02724SC9TO000000VS541L4FVVP0MQFR",
+      "spielerName": "Hannes Linnebach (FC Victoria Bammental) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 39,
+      "side": "heim",
+      "spielerId": "017EGTVUMO000000VV0AG80NVT880ULB",
+      "spielerName": "Matteo Olaru"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "02O3BRIQ78000000VUM1DNP9VVAVQIDD",
+        "name": "Janick Boger (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "00NKAQIS20000000VV0AG85VVUH1CIQU",
+        "name": "Christian Mühlbauer"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "00Q5QGH4GG000000VV0AG85VVV05E0NJ",
+        "name": "Mats Scheurer"
+      },
+      "raus": {
+        "id": "02CCL14IM0000000VUM1DNQ5VU0QM86P",
+        "name": "Nicolas Nimmrich Amoros (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAS1SDS000000VV0AG85VVUH1CIQU",
+        "name": "Christoph Jüllich"
+      },
+      "raus": {
+        "id": "01MH0AKRG8000001VV0AG13EVSFDFGE6",
+        "name": "Nicolas Jüllich (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAVJ954000000VV0AG85VVUH1CIQU",
+        "name": "Christopher Eppler"
+      },
+      "raus": {
+        "id": "02PEG3INTC000000VUM1D55JVUMFP7DL",
+        "name": "Rafael Ferreira Lopes (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "01LT9EGSM8000000VS541L4GVSGOPQ99",
+        "name": "Stefan Vierling (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "02C856303G000000VUM1DNQVVVUOO4SS",
+        "name": "Oskar Bähr (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 65,
+      "side": "heim",
+      "rein": {
+        "id": "02JI7JAIVO000000VS5489B6VUDBER6I",
+        "name": "Valentino Guillaume"
+      },
+      "raus": {
+        "id": "01TFC4JAG0000000VS541L4RVVA48OB5",
+        "name": "Jan Gutzeit (FC Victoria Bammental) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 75,
+      "side": "heim",
+      "rein": {
+        "id": "02JHJ1FTVS000000VS5489B5VV3DDDE9",
+        "name": "Zidane Laird"
+      },
+      "raus": {
+        "id": "022SIMFSQ8000000VS541L4JVUDM3M71",
+        "name": "Bent Fellmann (FC Victoria Bammental) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 75,
+      "side": "heim",
+      "rein": {
+        "id": "02CGIR6BLS000000VUM1DNOGVU74M4EO",
+        "name": "Finn Söhner (FC Victoria Bammental) Spieler"
+      },
+      "raus": {
+        "id": "00NKATJH7S000000VV0AG85VVUH1CIQU",
+        "name": "Carsten Klein"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 80,
+      "side": "heim",
+      "spielerId": "02724SC9TO000000VS541L4FVVP0MQFR",
+      "spielerName": "Hannes Linnebach (FC Victoria Bammental) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 85,
+      "side": "heim",
+      "rein": {
+        "id": "00NKB01EC0000000VV0AG85VVUH1CIQU",
+        "name": "Marc-Andre Waxmann"
+      },
+      "raus": {
+        "id": "02LRL186AC000000VUM1DNOOVVRLMEH4",
+        "name": "Mario Cancar (FC Victoria Bammental) Spieler"
+      }
+    }
+  ]
+}

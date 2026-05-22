@@ -1,0 +1,57 @@
+{
+  "spielId": "02TS7VGS28000000VS5489BTVTHCTAHT",
+  "heim": "JSG Dossenheim/​ Handschuhsheim",
+  "gast": "TSG Hoffenheim (Juniorinnen)",
+  "ergebnis": {
+    "heim": 1,
+    "gast": 0
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 35,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 36,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 36,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 36,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 36,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 56,
+      "side": "gast"
+    },
+    {
+      "typ": "TOR",
+      "minute": 65,
+      "side": "heim",
+      "spielerId": "02BUSUDLGC000000VS5489B5VTCQV4E8",
+      "spielerName": "Kristof Kapovits"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 68,
+      "side": "gast"
+    }
+  ]
+}

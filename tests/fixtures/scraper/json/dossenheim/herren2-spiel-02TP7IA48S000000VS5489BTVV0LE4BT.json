@@ -1,0 +1,148 @@
+{
+  "spielId": "02TP7IA48S000000VS5489BTVV0LE4BT",
+  "heim": "TSG Rohrbach",
+  "gast": "FC Sportfreunde 1910 Dossenheim 2",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 4
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 3
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 8,
+      "side": "gast",
+      "spielerId": "02Q8UQOPKC000000VUM1D565VUTNCQJ1",
+      "spielerName": "Eliah Beckenbach (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 12,
+      "side": "gast",
+      "spielerId": "02Q8UQOPKC000000VUM1D565VUTNCQJ1",
+      "spielerName": "Eliah Beckenbach (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 25,
+      "side": "heim",
+      "rein": {
+        "id": "01OK69TP60000000VV0AG811VSO4D2IB",
+        "name": "Leonard Storz"
+      },
+      "raus": {
+        "id": "01KM1OHCEO000000VV0AG811VVBESUHI",
+        "name": "Ole Burmeister"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 25,
+      "side": "gast",
+      "spielerId": "02Q8UQOPKC000000VUM1D565VUTNCQJ1",
+      "spielerName": "Eliah Beckenbach (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 32,
+      "side": "heim",
+      "rein": {
+        "id": "02SOASU988000000VS5489B8VTFQQ2T4",
+        "name": "Abdoulaye Camara"
+      },
+      "raus": {
+        "id": "02NHJFRUH8000000VS5489B7VV96IGI5",
+        "name": "Rolando Nowotny"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "01EUJHA4AK000000VV0AG811VSCA2LJJ",
+        "name": "Laurenz Weishuhn"
+      },
+      "raus": {
+        "id": "01CI9LLOBG000000VV0AG811VVO22JEJ",
+        "name": "Marco Henn"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 56,
+      "side": "gast",
+      "rein": {
+        "id": "028AKSQVOO000000VS5489B6VTSKHL86",
+        "name": "Hamza Abdullah"
+      },
+      "raus": {
+        "id": "02Q8UQOPKC000000VUM1D565VUTNCQJ1",
+        "name": "Eliah Beckenbach (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 62,
+      "side": "heim",
+      "rein": {
+        "id": "010D4TN9BC000000VV0AG811VSR576C0",
+        "name": "Kevin Lowack"
+      },
+      "raus": {
+        "id": "02NHA8J5US000000VUM1DNONVSD01VNM",
+        "name": "Jascha Walther (TSG Rohrbach) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 69,
+      "side": "heim",
+      "spielerId": "010D4TN9BC000000VV0AG811VSR576C0",
+      "spielerName": "Kevin Lowack"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 71,
+      "side": "heim",
+      "rein": {
+        "id": "00L546LGNS000000VV0AG85VVV79K56V",
+        "name": "Vitali Brak"
+      },
+      "raus": {
+        "id": "01OK69RK30000000VV0AG811VSO4D2IB",
+        "name": "Ole Steck"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 79,
+      "side": "gast",
+      "rein": {
+        "id": "0216K25650000000VS541L4KVTIH2O9L",
+        "name": "Manuel Selzer (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "00NKB0NHNS000000VV0AG85VVUH1CIQU",
+        "name": "Paul Späth"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 87,
+      "side": "heim",
+      "spielerId": "02TLAUCNMS000000VS5489C2VTEEL5TD",
+      "spielerName": "Finn Wegmüller"
+    },
+    {
+      "typ": "TOR",
+      "minute": 88,
+      "side": "gast",
+      "spielerId": "0130I87T5O000000VV0AG80NVTHNCG26",
+      "spielerName": "Adrian Pöttner"
+    }
+  ]
+}

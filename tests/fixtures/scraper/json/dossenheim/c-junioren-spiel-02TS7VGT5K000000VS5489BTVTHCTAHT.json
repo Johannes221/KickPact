@@ -1,0 +1,146 @@
+{
+  "spielId": "02TS7VGT5K000000VS5489BTVTHCTAHT",
+  "heim": "VfL Kurpfalz Neckarau",
+  "gast": "JSG Dossenheim/​ Handschuhsheim",
+  "ergebnis": {
+    "heim": 5,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 3,
+    "gast": 2
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast"
+    },
+    {
+      "typ": "TOR",
+      "minute": 9,
+      "side": "heim",
+      "spielerId": "02UIB3U2LK000000VUM1D558VVOKNTU2",
+      "spielerName": "Leo Josip Lovric (VfL Kurpfalz Mannheim-Neckarau) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 17,
+      "side": "gast",
+      "spielerId": "02BUSUDLGC000000VS5489B5VTCQV4E8",
+      "spielerName": "Kristof Kapovits"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 18,
+      "side": "gast"
+    },
+    {
+      "typ": "TOR",
+      "minute": 23,
+      "side": "heim",
+      "spielerId": "02NO6BAK88000000VUM1DNO5VVCVBLV6",
+      "spielerName": "Levi Günther (VfL Kurpfalz Mannheim-Neckarau) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 24,
+      "side": "heim",
+      "spielerId": "0280A8QQVS000000VS5489B6VTSKHL86",
+      "spielerName": "Noah Lippmann"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 36,
+      "side": "heim",
+      "rein": {
+        "id": "02V03OF5PG000000VUM1D55CVSB4N874",
+        "name": "Karlo Vukoja (VfL Kurpfalz Mannheim-Neckarau) Spieler"
+      },
+      "raus": {
+        "id": "0280A8QQVS000000VS5489B6VTSKHL86",
+        "name": "Noah Lippmann"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 36,
+      "side": "heim",
+      "rein": {
+        "id": "02803NCEHC000000VS5489B5VTTA2NFG",
+        "name": "Atanasije Spasojevic'"
+      },
+      "raus": {
+        "id": "02C30QQF9C000000VS5489B5VU03RTB8",
+        "name": "Ahmad Ashraf Zarti"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 36,
+      "side": "heim",
+      "rein": {
+        "id": "02LENBNH30000000VUM1DNP0VTD5P3AQ",
+        "name": "Ben Herrmann (VfL Kurpfalz Mannheim-Neckarau) Spieler"
+      },
+      "raus": {
+        "id": "02NO6BAK88000000VUM1DNO5VVCVBLV6",
+        "name": "Levi Günther (VfL Kurpfalz Mannheim-Neckarau) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 36,
+      "side": "heim",
+      "rein": {
+        "id": "020QQQSQ40000000VS54898FVST61D60",
+        "name": "Alessio Montalbano"
+      },
+      "raus": {
+        "id": "02UIB3U2LK000000VUM1D558VVOKNTU2",
+        "name": "Leo Josip Lovric (VfL Kurpfalz Mannheim-Neckarau) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 41,
+      "side": "gast",
+      "spielerId": "02BBJ6IEN4000000VS5489B5VU6NIOO5",
+      "spielerName": "Andrei Sidorov"
+    },
+    {
+      "typ": "TOR",
+      "minute": 52,
+      "side": "gast",
+      "spielerId": "02LR96BNDO000000VS5489B5VVD8CML6",
+      "spielerName": "Shakil Gibreel"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 55,
+      "side": "heim",
+      "rein": {
+        "id": "0220GG60G8000000VS54898FVS1838UL",
+        "name": "Nikola Mitrovic"
+      },
+      "raus": {
+        "id": "02803NCEHC000000VS5489B5VTTA2NFG",
+        "name": "Atanasije Spasojevic'"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 55,
+      "side": "heim",
+      "spielerId": "02V03OF5PG000000VUM1D55CVSB4N874",
+      "spielerName": "Karlo Vukoja (VfL Kurpfalz Mannheim-Neckarau) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 70,
+      "side": "heim",
+      "spielerId": "02C318R3L4000000VS5489B5VU03RTB8",
+      "spielerName": "Giorgio Markus Fioretto"
+    }
+  ]
+}

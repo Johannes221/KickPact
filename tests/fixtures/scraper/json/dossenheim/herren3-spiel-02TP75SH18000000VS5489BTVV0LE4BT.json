@@ -1,0 +1,174 @@
+{
+  "spielId": "02TP75SH18000000VS5489BTVV0LE4BT",
+  "heim": "FC Sportfreunde 1910 Dossenheim 3",
+  "gast": "SpG Schönau 1/​Altneudorf 1/​Neckarsteinach 2",
+  "ergebnis": {
+    "heim": 0,
+    "gast": 6
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 2
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 19,
+      "side": "gast",
+      "spielerId": "02K0Q0QL2K000000VUM1DNP2VU5FKS3G",
+      "spielerName": "Muhammed-Emin Cicek (SpVgg. Neckarsteinach) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 26,
+      "side": "gast",
+      "spielerId": "020M2BMCJ8000000VS54898GVVC40IIQ",
+      "spielerName": "Radwan Al Muhamad"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 31,
+      "side": "heim",
+      "rein": {
+        "id": "00NKB1FI90000000VV0AG85VVUH1CIQU",
+        "name": "Christopher Huber"
+      },
+      "raus": {
+        "id": "02L4FHEV8O000000VUM1DNQHVTF7TL2V",
+        "name": "Valmir Ilazi (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 34,
+      "side": "heim",
+      "rein": {
+        "id": "00NKB0DUP8000000VV0AG85VVUH1CIQU",
+        "name": "Philipp Werle"
+      },
+      "raus": {
+        "id": "02SJU6711C000000VUM1D53VVTEQRJC2",
+        "name": "Alexander Wissens (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 36,
+      "side": "gast",
+      "rein": {
+        "id": "00NKB01U5S000000VV0AG85VVUH1CIQU",
+        "name": "Miron Weiher"
+      },
+      "raus": {
+        "id": "00NKAMV3CC000000VV0AG85VVUH1CIQU",
+        "name": "Thilo Schmitt"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "01BI525VF0000000VV0AG80NVTC301MB",
+        "name": "Redir Saleh Salim"
+      },
+      "raus": {
+        "id": "00NKB0CQVO000000VV0AG85VVUH1CIQU",
+        "name": "Adel Chaabou"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 57,
+      "side": "gast",
+      "spielerId": "00NKAT0D8K000000VV0AG85VVUH1CIQU",
+      "spielerName": "Steffen Dispan"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 62,
+      "side": "heim",
+      "rein": {
+        "id": "00UHA7AMVO000000VV0AG811VTN498IG",
+        "name": "Vincent Weishuhn"
+      },
+      "raus": {
+        "id": "00R8M023UK000000VV0AG83KVVSSD2UO",
+        "name": "Vernon Medenilla"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 65,
+      "side": "gast",
+      "rein": {
+        "id": "00NKB13S94000000VV0AG85VVUH1CIQU",
+        "name": "Peter Iuhas"
+      },
+      "raus": {
+        "id": "00NKASMTR0000000VV0AG85VVUH1CIQU",
+        "name": "Manuel Schupp"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 70,
+      "side": "heim",
+      "rein": {
+        "id": "02Q46V82VS000000VUM1D52LVS6UO569",
+        "name": "Alejandro Acuna de Castro (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "02OQH8IADG000000VS5489B8VSMTHVML",
+        "name": "Tian Huang"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 70,
+      "side": "gast",
+      "spielerId": "02K0Q0QL2K000000VUM1DNP2VU5FKS3G",
+      "spielerName": "Muhammed-Emin Cicek (SpVgg. Neckarsteinach) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 75,
+      "side": "gast",
+      "spielerId": "02K0Q0QL2K000000VUM1DNP2VU5FKS3G",
+      "spielerName": "Muhammed-Emin Cicek (SpVgg. Neckarsteinach) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 78,
+      "side": "gast",
+      "rein": {
+        "id": "02R5S64EMS000000VUM1D56UVVEBD8B4",
+        "name": "Laurin Schmaus (VfB Schönau) Spieler"
+      },
+      "raus": {
+        "id": "01K6V95DR8000000VV0AG80NVU84PO9T",
+        "name": "Gerald Rene Bereiziat"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 78,
+      "side": "gast",
+      "rein": {
+        "id": "02Q5UAIN78000000VS5489B8VT4OTCL7",
+        "name": "Juan Esteban Mora Zepeda"
+      },
+      "raus": {
+        "id": "02K0Q0QL2K000000VUM1DNP2VU5FKS3G",
+        "name": "Muhammed-Emin Cicek (SpVgg. Neckarsteinach) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 86,
+      "side": "gast",
+      "spielerId": "02BNQVCPAO000000VS5489B5VU8L8AAQ",
+      "spielerName": "Lukas Schmidt"
+    }
+  ]
+}

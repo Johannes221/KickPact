@@ -1,0 +1,167 @@
+{
+  "spielId": "02TNNQ82D4000000VS5489BUVSSD35NB",
+  "heim": "FC Sportfreunde 1910 Dossenheim",
+  "gast": "FK Srbija Mannheim",
+  "ergebnis": {
+    "heim": 4,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 23,
+      "side": "gast",
+      "rein": {
+        "id": "00ONJGB288000000VV0AG83KVU9NUQPE",
+        "name": "Anton Markovic"
+      },
+      "raus": {
+        "id": "024J97FJUC000000VS54898FVSACAVFK",
+        "name": "Enis Kajtazovic"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 48,
+      "side": "heim",
+      "spielerId": "00NKB0DP7O000000VV0AG85VVUH1CIQU",
+      "spielerName": "Johannes Wachsmuth"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 50,
+      "side": "gast",
+      "rein": {
+        "id": "00NKB0MC5C000000VV0AG85VVUH1CIQU",
+        "name": "Dragan Peric"
+      },
+      "raus": {
+        "id": "00NKB0T6I0000000VV0AG85VVUH1CIQU",
+        "name": "Marcus Hawk"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 55,
+      "side": "gast",
+      "rein": {
+        "id": "00MC6U6FN4000000VV0AG85VVSMHI0R7",
+        "name": "Aiman Kurt"
+      },
+      "raus": {
+        "id": "01S5MD038G000000VS541L4IVTDPTPGJ",
+        "name": "Goran Lukic (FK Srbija Mannheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 55,
+      "side": "heim",
+      "spielerId": "01MH0AKRG8000001VV0AG13EVSFDFGE6",
+      "spielerName": "Nicolas Jüllich (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 60,
+      "side": "heim",
+      "spielerId": "02C856303G000000VUM1DNQVVVUOO4SS",
+      "spielerName": "Oskar Bähr (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 65,
+      "side": "gast",
+      "spielerId": "02VQ5I3INS000000VS5489C2VS4E4UV0",
+      "spielerName": "David Josheski"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 71,
+      "side": "heim",
+      "rein": {
+        "id": "028DCANOL0000000VS541L4FVUHRV9SL",
+        "name": "Jay Peters (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "02HNKEVTBG000000VUM1DNOGVTIIQK2E",
+        "name": "Dennis Schnepf (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 74,
+      "side": "gast",
+      "rein": {
+        "id": "00MC79A50C000000VV0AG85VVSMHI0R7",
+        "name": "Danko Boskovic"
+      },
+      "raus": {
+        "id": "00MC6U6FN4000000VV0AG85VVSMHI0R7",
+        "name": "Aiman Kurt"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 74,
+      "side": "heim",
+      "rein": {
+        "id": "02PEG3INTC000000VUM1D55JVUMFP7DL",
+        "name": "Rafael Ferreira Lopes (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "02O3BRIQ78000000VUM1DNP9VVAVQIDD",
+        "name": "Janick Boger (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 80,
+      "side": "heim",
+      "rein": {
+        "id": "00RE77O9GK000000VV0AG80NVVGDRLAO",
+        "name": "Edin Muharemovic"
+      },
+      "raus": {
+        "id": "02C856303G000000VUM1DNQVVVUOO4SS",
+        "name": "Oskar Bähr (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 83,
+      "side": "heim",
+      "rein": {
+        "id": "013GASR4G8000000VV0AG811VVO0U6BQ",
+        "name": "Maximilian Wolf"
+      },
+      "raus": {
+        "id": "01GQ6H6DGC000000VV0AG80NVVDQRLBA",
+        "name": "Lars Schätzle"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 85,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAVJ954000000VV0AG85VVUH1CIQU",
+        "name": "Christopher Eppler"
+      },
+      "raus": {
+        "id": "00NKB0DP7O000000VV0AG85VVUH1CIQU",
+        "name": "Johannes Wachsmuth"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 85,
+      "side": "heim",
+      "spielerId": "02PEG3INTC000000VUM1D55JVUMFP7DL",
+      "spielerName": "Rafael Ferreira Lopes (FC Sportfr. Dossenheim) Spieler"
+    }
+  ]
+}

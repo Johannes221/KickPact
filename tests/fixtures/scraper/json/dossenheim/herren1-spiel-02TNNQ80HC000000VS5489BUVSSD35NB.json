@@ -1,0 +1,159 @@
+{
+  "spielId": "02TNNQ80HC000000VS5489BUVSSD35NB",
+  "heim": "FC Sportfreunde 1910 Dossenheim",
+  "gast": "ASC Neuenheim",
+  "ergebnis": {
+    "heim": 0,
+    "gast": 2
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 27,
+      "side": "gast",
+      "rein": {
+        "id": "01PGUUC24O000000VS541L4KVSR764ES",
+        "name": "Fynn Svoboda (ASC Neuenheim) Spieler"
+      },
+      "raus": {
+        "id": "02C1DVI1GC000000VUM1DNPQVSI6B774",
+        "name": "Luca Sanadiradze (ASC Neuenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 36,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAVJ954000000VV0AG85VVUH1CIQU",
+        "name": "Christopher Eppler"
+      },
+      "raus": {
+        "id": "01MH0AKRG8000001VV0AG13EVSFDFGE6",
+        "name": "Nicolas Jüllich (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 61,
+      "side": "heim",
+      "rein": {
+        "id": "02HNKEVTBG000000VUM1DNOGVTIIQK2E",
+        "name": "Dennis Schnepf (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "02O3BRIQ78000000VUM1DNP9VVAVQIDD",
+        "name": "Janick Boger (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 62,
+      "side": "gast",
+      "rein": {
+        "id": "029G5OOUF0000000VS541L4FVUPFTQ3M",
+        "name": "Matthias Wiggers (ASC Neuenheim) Spieler"
+      },
+      "raus": {
+        "id": "0102TFN464000000VV0AG811VTGVH5ON",
+        "name": "Max Zoller"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 65,
+      "side": "gast",
+      "spielerId": "02UVSGNQ3C000000VUM1D51RVUBI948F",
+      "spielerName": "Michel Schwarz (ASC Neuenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 71,
+      "side": "gast",
+      "rein": {
+        "id": "02HFSTQV14000000VUM1DNP3VTIN6SCI",
+        "name": "Henry Leuzinger (ASC Neuenheim) Spieler"
+      },
+      "raus": {
+        "id": "02NJ2767F0000000VUM1DNO5VUB0GVAF",
+        "name": "Petar Draganjac (ASC Neuenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 71,
+      "side": "heim",
+      "rein": {
+        "id": "00RE77O9GK000000VV0AG80NVVGDRLAO",
+        "name": "Edin Muharemovic"
+      },
+      "raus": {
+        "id": "02C856303G000000VUM1DNQVVVUOO4SS",
+        "name": "Oskar Bähr (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 76,
+      "side": "gast",
+      "rein": {
+        "id": "02GAVF7668000000VUM1DNPRVVFQQ8NC",
+        "name": "Esrom Negusse (ASC Neuenheim) Spieler"
+      },
+      "raus": {
+        "id": "01403QLRTS000000VV0AG811VTNAA3BL",
+        "name": "Finn Kölmel"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 76,
+      "side": "gast",
+      "spielerId": "029G5OOUF0000000VS541L4FVUPFTQ3M",
+      "spielerName": "Matthias Wiggers (ASC Neuenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 78,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAS1SDS000000VV0AG85VVUH1CIQU",
+        "name": "Christoph Jüllich"
+      },
+      "raus": {
+        "id": "01GQ6H6DGC000000VV0AG80NVVDQRLBA",
+        "name": "Lars Schätzle"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 82,
+      "side": "gast",
+      "rein": {
+        "id": "02J5J9MH40000000VS5489B5VS688D5H",
+        "name": "Tiago Bianchessi Cetolo"
+      },
+      "raus": {
+        "id": "028TEFR8DG000000VS541L4FVSPMHCES",
+        "name": "Max Stadler (ASC Neuenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 82,
+      "side": "heim",
+      "rein": {
+        "id": "013GASR4G8000000VV0AG811VVO0U6BQ",
+        "name": "Maximilian Wolf"
+      },
+      "raus": {
+        "id": "02CCL14IM0000000VUM1DNQ5VU0QM86P",
+        "name": "Nicolas Nimmrich Amoros (FC Sportfr. Dossenheim) Spieler"
+      }
+    }
+  ]
+}

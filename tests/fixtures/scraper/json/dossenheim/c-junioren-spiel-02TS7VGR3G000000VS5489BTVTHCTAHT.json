@@ -1,0 +1,39 @@
+{
+  "spielId": "02TS7VGR3G000000VS5489BTVTHCTAHT",
+  "heim": "TSG 1862/​09 Weinheim 2",
+  "gast": "JSG Dossenheim/​ Handschuhsheim",
+  "ergebnis": {
+    "heim": 0,
+    "gast": 2
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast"
+    },
+    {
+      "typ": "TOR",
+      "minute": 25,
+      "side": "gast",
+      "spielerId": "02BUSUDLGC000000VS5489B5VTCQV4E8",
+      "spielerName": "Kristof Kapovits"
+    },
+    {
+      "typ": "TOR",
+      "minute": 63,
+      "side": "gast",
+      "spielerId": "02BA8GI9AS000000VS5489B6VTG0LGP0",
+      "spielerName": "Thomas Dittmar"
+    }
+  ]
+}

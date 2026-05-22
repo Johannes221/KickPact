@@ -1,0 +1,164 @@
+{
+  "spielId": "02V4O3F6QO000000VS5489BUVSJ2DN3Q",
+  "heim": "VfB Rauenberg",
+  "gast": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
+  "ergebnis": {
+    "heim": 0,
+    "gast": 5
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 4,
+      "side": "gast",
+      "rein": {
+        "id": "028AKSQVOO000000VS5489B6VTSKHL86",
+        "name": "Hamza Abdullah"
+      },
+      "raus": {
+        "id": "01SNI0M8SC000000VS548984VTF3AS78",
+        "name": "Julian Klimm"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 41,
+      "side": "gast",
+      "spielerId": "02PEG3INTC000000VUM1D55JVUMFP7DL",
+      "spielerName": "Rafael Ferreira Lopes (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "02119QQFQO000000VS54898FVS2RDMCJ",
+        "name": "Karl Bruno Kaeß"
+      },
+      "raus": {
+        "id": "02PEG3INTC000000VUM1D55JVUMFP7DL",
+        "name": "Rafael Ferreira Lopes (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "02K843HLI8000000VUM1DNO6VS8EC5SJ",
+        "name": "Noah Gabriel Schneider (VfB Rauenberg) Spieler"
+      },
+      "raus": {
+        "id": "02JVM929G4000000VUM1DNP9VV3KDD1T",
+        "name": "Bastian Borho (VfB Rauenberg) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "02K76AQ9HS000000VUM1DNR5VVIKJKGN",
+        "name": "Leon Alexander Zellner (VfB Rauenberg) Spieler"
+      },
+      "raus": {
+        "id": "02KBCBLVQK000000VUM1DNPOVUE1A77H",
+        "name": "Til Beigel (VfB Rauenberg) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "02O15RS120000000VUM1DNOAVVP1O9UR",
+        "name": "Jacob Pipp (VfB Rauenberg) Spieler"
+      },
+      "raus": {
+        "id": "022OLMBUOG000000VS54898GVTU6Q3KT",
+        "name": "Maximilian Speck"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 56,
+      "side": "gast",
+      "spielerId": "02CCL14IM0000000VUM1DNQ5VU0QM86P",
+      "spielerName": "Nicolas Nimmrich Amoros (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 57,
+      "side": "heim",
+      "rein": {
+        "id": "01V4PRS1MO000000VS54898GVSG0HJS0",
+        "name": "David Nattrodt"
+      },
+      "raus": {
+        "id": "02N7233MCS000000VUM1DNOVVV24E9BO",
+        "name": "Luis Pompiati (VfB Rauenberg) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 57,
+      "side": "gast",
+      "spielerId": "02CCL14IM0000000VUM1DNQ5VU0QM86P",
+      "spielerName": "Nicolas Nimmrich Amoros (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 62,
+      "side": "gast",
+      "rein": {
+        "id": "01TB4UAJ8C000000VS54898GVUUJAPN3",
+        "name": "Levi Baur"
+      },
+      "raus": {
+        "id": "02CCL14IM0000000VUM1DNQ5VU0QM86P",
+        "name": "Nicolas Nimmrich Amoros (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 62,
+      "side": "gast",
+      "rein": {
+        "id": "02VR7H49I4000000VS5489C1VSV06J6I",
+        "name": "Carlos Andres Montano Castillo"
+      },
+      "raus": {
+        "id": "02JAQJEB80000000VUM1DNPKVUKO667D",
+        "name": "Jan Gnutzmann (TSV Handschuhsheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 64,
+      "side": "gast"
+    },
+    {
+      "typ": "TOR",
+      "minute": 64,
+      "side": "gast",
+      "spielerId": "02FTBTS1S4000000VUM1DNQ0VVE1CMGO",
+      "spielerName": "Simon Stöhr (VfB Rauenberg) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 78,
+      "side": "gast",
+      "spielerId": "02119QQFQO000000VS54898FVS2RDMCJ",
+      "spielerName": "Karl Bruno Kaeß"
+    }
+  ]
+}

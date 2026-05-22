@@ -1,0 +1,140 @@
+{
+  "spielId": "02TNNQ830K000000VS5489BUVSSD35NB",
+  "heim": "SG Kirchardt",
+  "gast": "FC Sportfreunde 1910 Dossenheim",
+  "ergebnis": {
+    "heim": 3,
+    "gast": 0
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 38,
+      "side": "heim",
+      "spielerId": "0131HEO718000000VV0AG811VTU6R87J",
+      "spielerName": "David Reitarow"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "023NJ2VT0K000000VS541L4IVS5UUR4Q",
+        "name": "Fynn Zetzsche (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "01UQTU76AO000000VS541L4HVS9ULU1H",
+        "name": "Jonas Schober (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAS1SDS000000VV0AG85VVUH1CIQU",
+        "name": "Christoph Jüllich"
+      },
+      "raus": {
+        "id": "02C856303G000000VUM1DNQVVVUOO4SS",
+        "name": "Oskar Bähr (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 46,
+      "side": "heim",
+      "spielerId": "0131HEO718000000VV0AG811VTU6R87J",
+      "spielerName": "David Reitarow"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 55,
+      "side": "gast",
+      "rein": {
+        "id": "02PEG3INTC000000VUM1D55JVUMFP7DL",
+        "name": "Rafael Ferreira Lopes (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "016DVF4IGG000000VV0AG80NVU5A0EBU",
+        "name": "Max Bohnenberg"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 68,
+      "side": "heim",
+      "spielerId": "02915NR3R4000000VS541L4GVT2M9MH6",
+      "spielerName": "Michael Baronas (SG Kirchardt) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 72,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAS39BK000000VV0AG85VVUH1CIQU",
+        "name": "Andreas Geier"
+      },
+      "raus": {
+        "id": "00VNVATGUS000000VV0AG80NVU6UR3L6",
+        "name": "Marvin Betz"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 74,
+      "side": "heim",
+      "rein": {
+        "id": "02FBJIGDRK000000VUM1DNOIVS15BG8N",
+        "name": "Jan Schumacher (SG Kirchardt) Spieler"
+      },
+      "raus": {
+        "id": "022JJRLFOO000000VS541L4JVUI2LL3G",
+        "name": "Gianluca Breve (SG Kirchardt) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 74,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAVJ954000000VV0AG85VVUH1CIQU",
+        "name": "Christopher Eppler"
+      },
+      "raus": {
+        "id": "00RE77O9GK000000VV0AG80NVVGDRLAO",
+        "name": "Edin Muharemovic"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 78,
+      "side": "gast",
+      "rein": {
+        "id": "00Q5QGH4GG000000VV0AG85VVV05E0NJ",
+        "name": "Mats Scheurer"
+      },
+      "raus": {
+        "id": "00NKB0DP7O000000VV0AG85VVUH1CIQU",
+        "name": "Johannes Wachsmuth"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 85,
+      "side": "heim",
+      "rein": {
+        "id": "02BQODMBF8000000VUM1DNO8VSH2IDKP",
+        "name": "Raphael Isik (SG Kirchardt) Spieler"
+      },
+      "raus": {
+        "id": "00NP5D4488000000VV0AG85VVTQNFIIH",
+        "name": "Dimitrios Babanatsas"
+      }
+    }
+  ]
+}

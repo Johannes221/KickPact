@@ -1,0 +1,46 @@
+{
+  "spielId": "02TS7VGSF4000000VS5489BTVTHCTAHT",
+  "heim": "VfB Wiesloch",
+  "gast": "JSG Dossenheim/​ Handschuhsheim",
+  "ergebnis": {
+    "heim": 0,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 2
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 29,
+      "side": "gast"
+    },
+    {
+      "typ": "TOR",
+      "minute": 29,
+      "side": "gast",
+      "spielerId": "02BA8GI9AS000000VS5489B6VTG0LGP0",
+      "spielerName": "Thomas Dittmar"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 36,
+      "side": "gast"
+    },
+    {
+      "typ": "TOR",
+      "minute": 39,
+      "side": "gast",
+      "spielerId": "02BA8GI9AS000000VS5489B6VTG0LGP0",
+      "spielerName": "Thomas Dittmar"
+    },
+    {
+      "typ": "TOR",
+      "minute": 67,
+      "side": "gast",
+      "spielerId": "02BA8GI9AS000000VS5489B6VTG0LGP0",
+      "spielerName": "Thomas Dittmar"
+    }
+  ]
+}
