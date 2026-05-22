@@ -1,0 +1,134 @@
+/**
+ * Snapshot + field-assertion tests for the InvoicePdf component.
+ *
+ * Adapted from the original plan (Phase 6, Task 6.1): the real component is
+ * `InvoicePdf` (not `InvoiceDocument`) exported from `lib/invoicing/builder.tsx`
+ * and the data shape is richer than the plan's fixture (split address fields,
+ * sponsor.type, items have matchDate/triggerLabel etc.).
+ *
+ * Note: builder.tsx registers Inter via a remote URL (rsms.me) which currently
+ * returns 404 in CI. We stub `Font.register` to a no-op so tests don't depend
+ * on remote resources; PDF then falls back to Helvetica.
+ */
+import { describe, it, expect, vi } from "vitest";
+import React from "react";
+
+// Mock Font.register so it ignores the remote Inter URL (currently 404 on rsms.me)
+// and registers a local alias pointing to the built-in Helvetica family.
+vi.mock("@react-pdf/renderer", async () => {
+  const actual = await vi.importActual<typeof import("@react-pdf/renderer")>("@react-pdf/renderer");
+  const originalRegister = actual.Font.register.bind(actual.Font);
+  const patchedRegister = (descriptor: Parameters<typeof actual.Font.register>[0]) => {
+    if (descriptor && (descriptor as { family?: string }).family === "Inter") {
+      originalRegister({
+        family: "Inter",
+        fonts: [
+          { src: "Helvetica", fontWeight: 400 },
+          { src: "Helvetica-Bold", fontWeight: 700 }
+        ]
+      });
+      return;
+    }
+    originalRegister(descriptor);
+  };
+  return {
+    ...actual,
+    Font: { ...actual.Font, register: patchedRegister }
+  };
+});
+
+import { renderToBuffer } from "@react-pdf/renderer";
+import { PDFParse } from "pdf-parse";
+import { InvoicePdf, type InvoiceData } from "../../lib/invoicing/builder";
+
+async function extractText(buffer: Buffer): Promise<string> {
+  const parser = new PDFParse({ data: new Uint8Array(buffer) });
+  try {
+    const result = await parser.getText();
+    return result.text;
+  } finally {
+    await parser.destroy();
+  }
+}
+
+const INVOICE_FIXTURE: InvoiceData = {
+  invoiceNumber: "2026-05-001",
+  period: "2026-05",
+  issuedAt: new Date("2026-05-31T12:00:00Z"),
+  club: {
+    name: "FC Sportfreunde 1910 Dossenheim",
+    address: { street: "Bahnhofstr. 1", zip: "69221", city: "Dossenheim" },
+    taxId: "DE123456789",
+    iban: "DE89 3704 0044 0532 0130 00",
+    isSmallBusiness: true,
+  },
+  sponsor: {
+    displayName: "Familie Müller",
+    email: "familie.mueller@example.com",
+    type: "familie",
+    businessName: null,
+    businessAddress: null,
+  },
+  items: [
+    {
+      matchDate: new Date("2026-05-01T15:00:00Z"),
+      matchLabel: "FC Dossenheim vs. TSV Handschuhsheim",
+      triggerLabel: "Tor",
+      amountCents: 500,
+    },
+    {
+      matchDate: new Date("2026-05-01T15:00:00Z"),
+      matchLabel: "FC Dossenheim vs. TSV Handschuhsheim",
+      triggerLabel: "Sieg",
+      amountCents: 1000,
+    },
+  ],
+};
+
+describe("Invoice PDF — InvoicePdf component", () => {
+  it("renders all key fields in PDF text", async () => {
+    const buffer = await renderToBuffer(<InvoicePdf data={INVOICE_FIXTURE} />);
+    // PDF text extraction inserts newlines wherever the layout wraps; normalize
+    // whitespace before substring assertions.
+    const text = (await extractText(buffer)).replace(/\s+/g, " ");
+
+    expect(text).toContain("FC Sportfreunde 1910 Dossenheim");
+    expect(text).toContain("Familie Müller");
+    expect(text).toContain("2026-05-001");
+    // 1500 cents = 15,00 € (de-DE formatting → "15,00")
+    expect(text).toContain("15,00");
+    expect(text).toContain("DE89 3704 0044 0532 0130 00");
+    // §19 UStG hint when isSmallBusiness
+    expect(text).toMatch(/§\s*19/);
+    expect(text.toLowerCase()).toContain("umsatzsteuer");
+  }, 30_000);
+
+  it("renders all line items (matchLabel + triggerLabel)", async () => {
+    const buffer = await renderToBuffer(<InvoicePdf data={INVOICE_FIXTURE} />);
+    const text = (await extractText(buffer)).replace(/\s+/g, " ");
+    for (const item of INVOICE_FIXTURE.items) {
+      expect(text).toContain(item.matchLabel);
+      expect(text).toContain(item.triggerLabel);
+    }
+  }, 30_000);
+
+  it("snapshot — text content stable across runs", async () => {
+    const buffer = await renderToBuffer(<InvoicePdf data={INVOICE_FIXTURE} />);
+    const text = (await extractText(buffer)).replace(/\s+/g, " ").trim();
+    expect(text).toMatchSnapshot();
+  }, 30_000);
+
+  it("non-small-business: shows USt-Zwischensumme + 19 % USt row", async () => {
+    const buffer = await renderToBuffer(
+      <InvoicePdf
+        data={{
+          ...INVOICE_FIXTURE,
+          club: { ...INVOICE_FIXTURE.club, isSmallBusiness: false },
+        }}
+      />
+    );
+    const text = await extractText(buffer);
+    expect(text.toLowerCase()).toContain("zwischensumme");
+    expect(text).toMatch(/19\s*%/);
+  }, 30_000);
+});
