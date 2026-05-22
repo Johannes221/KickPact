@@ -56,7 +56,7 @@ export function AppHeader() {
             className={cn(
               isLanding &&
                 !scrolled &&
-                "[&_a]:text-white [&_a:hover]:text-white md:rounded-full md:bg-white/85 md:backdrop-blur-md md:ring-1 md:ring-white/40 md:shadow-sm md:[&_a]:text-brand-night-navy md:[&_a:hover]:text-brand-night-navy"
+                "rounded-full bg-white/90 backdrop-blur-md ring-1 ring-white/40 shadow-sm px-1"
             )}
           >
             <HeaderUserMenu />
