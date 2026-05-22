@@ -15,7 +15,7 @@ export type FixtureClub = {
 export const FIXTURE_CLUBS: readonly FixtureClub[] = [
   {
     key: "dossenheim",
-    searchTerm: "FC Sportfreunde 1910 Dossenheim",
+    searchTerm: "FC Sportfreunde Dossenheim",
     expectedVereinIdPattern: /^[A-Z0-9]+$/,
     teams: [
       { key: "herren1", searchName: "Herren 1", saisons: ["2526", "2425"] },
@@ -28,7 +28,7 @@ export const FIXTURE_CLUBS: readonly FixtureClub[] = [
   },
   {
     key: "heidelberg-kirchheim",
-    searchTerm: "SG Heidelberg-Kirchheim",
+    searchTerm: "Heidelberg-Kirchheim",
     expectedVereinIdPattern: /^[A-Z0-9]+$/,
     teams: [
       { key: "herren1", searchName: "Herren 1", saisons: ["2526", "2425"] },
@@ -48,7 +48,7 @@ export const FIXTURE_CLUBS: readonly FixtureClub[] = [
   },
   {
     key: "schriesheim",
-    searchTerm: "SG Schriesheim",
+    searchTerm: "Schriesheim",
     expectedVereinIdPattern: /^[A-Z0-9]+$/,
     teams: [
       { key: "herren1", searchName: "Herren 1", saisons: ["2526", "2425"] },
