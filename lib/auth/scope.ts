@@ -137,3 +137,18 @@ export async function resolveTeamAccess(
 
   return { granted: false };
 }
+
+/**
+ * Page-level guard for team-scoped routes. Loads the current user, resolves
+ * their access to the team, and redirects to /dashboard on failure. Returns
+ * the access context for use in the page render.
+ */
+export async function assertTeamAccess(
+  teamId: string,
+  minRole: TeamRole = "viewer"
+) {
+  const user = await requireUser();
+  const access = await resolveTeamAccess(user.id, teamId, minRole);
+  if (!access.granted) redirect("/dashboard");
+  return { user, ...access };
+}
