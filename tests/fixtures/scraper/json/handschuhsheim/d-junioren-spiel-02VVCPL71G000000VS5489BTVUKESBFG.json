@@ -1,0 +1,30 @@
+{
+  "spielId": "02VVCPL71G000000VS5489BTVUKESBFG",
+  "heim": "FV Nußloch 2",
+  "gast": "TSV Handschuhsheim",
+  "ergebnis": {
+    "heim": 0,
+    "gast": 0
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 1,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 1,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 1,
+      "side": "heim"
+    }
+  ]
+}

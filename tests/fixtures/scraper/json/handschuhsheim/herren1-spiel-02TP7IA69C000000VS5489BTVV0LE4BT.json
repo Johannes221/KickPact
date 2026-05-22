@@ -1,0 +1,166 @@
+{
+  "spielId": "02TP7IA69C000000VS5489BTVV0LE4BT",
+  "heim": "FC Hirschhorn",
+  "gast": "TSV Handschuhsheim",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 4
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 2
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 13,
+      "side": "heim",
+      "spielerId": "01UCDOHM1K000000VS541L4HVSQPDOFN",
+      "spielerName": "Torben Flachs (FC Hirschhorn) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 20,
+      "side": "gast",
+      "spielerId": "00MQSQ49T4000000VV0AG85VVTE7DTLB",
+      "spielerName": "Manuel Mastel"
+    },
+    {
+      "typ": "TOR",
+      "minute": 36,
+      "side": "gast",
+      "spielerId": "00MQSQ49T4000000VV0AG85VVTE7DTLB",
+      "spielerName": "Manuel Mastel"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "02REBS0TO4000000VUM1D573VSQLT33V",
+        "name": "Yannick Heinzmann (FC Hirschhorn) Spieler"
+      },
+      "raus": {
+        "id": "01LD64TVOK000000VV0AG80NVV99VK9U",
+        "name": "Devid Hunecker"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "02I048EVU0000000VUM1DNPBVUTL25D3",
+        "name": "Matthias Jurij Raphael (FC Hirschhorn) Spieler"
+      },
+      "raus": {
+        "id": "02LKH13M94000000VS5489B6VU2FHSDO",
+        "name": "Daniil Shcherbakov"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast"
+    },
+    {
+      "typ": "TOR",
+      "minute": 46,
+      "side": "gast",
+      "spielerId": "02JFM8MMG4000000VUM1DNOUVSV30FUU",
+      "spielerName": "Jonathan Oberbeck (SV Igel-Liersberg 1963 e.V.) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "gast",
+      "rein": {
+        "id": "02JAQJEB80000000VUM1DNPKVUKO667D",
+        "name": "Jan Gnutzmann (TSV Handschuhsheim) Spieler"
+      },
+      "raus": {
+        "id": "00NKAUFMNS000000VV0AG85VVUH1CIQU",
+        "name": "Lukas Kiefer"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 61,
+      "side": "heim",
+      "rein": {
+        "id": "01LUMN5HCO000000VS541L4HVTFOTJRM",
+        "name": "Simon Schindler (FC Hirschhorn) Spieler"
+      },
+      "raus": {
+        "id": "01LH62C030000000VS541L4KVUPICCH0",
+        "name": "Julian Willinger (FC Hirschhorn) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 71,
+      "side": "gast",
+      "spielerId": "02JFM8MMG4000000VUM1DNOUVSV30FUU",
+      "spielerName": "Jonathan Oberbeck (SV Igel-Liersberg 1963 e.V.) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 77,
+      "side": "heim",
+      "rein": {
+        "id": "02LDFVQLF8000000VUM1DNQ4VTC7IAO5",
+        "name": "Levin Gruneberg (FC Hirschhorn) Spieler"
+      },
+      "raus": {
+        "id": "00NKB0Q5RG000000VV0AG85VVUH1CIQU",
+        "name": "Marc Mölle"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 81,
+      "side": "gast",
+      "rein": {
+        "id": "02UB1DAE0S000000VUM1D561VUAVP9B1",
+        "name": "Timo Glatzel (TSV Handschuhsheim) Spieler"
+      },
+      "raus": {
+        "id": "01TBR238MO000000VS54898GVUUJAPN3",
+        "name": "Neil Barnabas Brinkmann"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 82,
+      "side": "heim",
+      "rein": {
+        "id": "02G91LB1S4000000VUM1DNPEVVG00SEM",
+        "name": "Joona Straßer (FC Hirschhorn) Spieler"
+      },
+      "raus": {
+        "id": "02C449U93K000000VUM1DNP9VSMNJ2O4",
+        "name": "Oliver Martin (FC Hirschhorn) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 85,
+      "side": "heim",
+      "spielerId": "01UCDOHM1K000000VS541L4HVSQPDOFN",
+      "spielerName": "Torben Flachs (FC Hirschhorn) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 87,
+      "side": "gast",
+      "rein": {
+        "id": "024Q0A3K3O000000VS54898FVS18NMMJ",
+        "name": "Leonard Batista"
+      },
+      "raus": {
+        "id": "00MQSQ49T4000000VV0AG85VVTE7DTLB",
+        "name": "Manuel Mastel"
+      }
+    }
+  ]
+}

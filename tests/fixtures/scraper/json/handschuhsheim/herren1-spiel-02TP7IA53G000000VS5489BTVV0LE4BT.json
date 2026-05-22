@@ -1,0 +1,140 @@
+{
+  "spielId": "02TP7IA53G000000VS5489BTVV0LE4BT",
+  "heim": "VfB Rauenberg 2",
+  "gast": "TSV Handschuhsheim",
+  "ergebnis": {
+    "heim": 1,
+    "gast": 2
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 2
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 34,
+      "side": "gast",
+      "spielerId": "022FC666GG000000VS541L4KVVCMIN1C",
+      "spielerName": "Lukas Hemberger (TSV Handschuhsheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 43,
+      "side": "gast",
+      "spielerId": "02FR6FQB38000000VUM1DNQ2VV6R8OI0",
+      "spielerName": "Nils Erny (TSV Handschuhsheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "00OR55T350000000VV0AG83KVT283J6L",
+        "name": "Marco Chlum"
+      },
+      "raus": {
+        "id": "02FTG2KDEK000000VUM1DNPTVVKNNT7F",
+        "name": "Oliver Muth (VfB Rauenberg) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 55,
+      "side": "heim",
+      "spielerId": "01N5RT593C000000VV0AG80NVSO4KNNI",
+      "spielerName": "Darius Barbarossa"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 58,
+      "side": "heim",
+      "rein": {
+        "id": "01T701304C000000VS54898GVSBHTUAI",
+        "name": "Kim Gerold"
+      },
+      "raus": {
+        "id": "01OHAG43DO000000VS541L4RVS9T579N",
+        "name": "Berkin Özdemir (VfB Rauenberg) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 65,
+      "side": "gast",
+      "rein": {
+        "id": "00NKB0S270000000VV0AG85VVUH1CIQU",
+        "name": "Sebastian Drös"
+      },
+      "raus": {
+        "id": "00Q5Q9U5TC000000VV0AG85VVV05E0NJ",
+        "name": "Daniel Kneer"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 71,
+      "side": "gast",
+      "rein": {
+        "id": "03054G8HAC000000VS5489C2VSNIS8GP",
+        "name": "Marcos Ibarra Alvarez"
+      },
+      "raus": {
+        "id": "02FR6FQB38000000VUM1DNQ2VV6R8OI0",
+        "name": "Nils Erny (TSV Handschuhsheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 81,
+      "side": "heim",
+      "rein": {
+        "id": "02BP21J3S8000000VUM1DNPIVSSNP3E2",
+        "name": "Luis Schäfer (VfB Rauenberg) Spieler"
+      },
+      "raus": {
+        "id": "00V0O5QO7O000000VV0AG80NVUONQ8KI",
+        "name": "Johannes Rachel"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 87,
+      "side": "heim",
+      "rein": {
+        "id": "00NKB1H04O000000VV0AG85VVUH1CIQU",
+        "name": "Hendrik Kutz"
+      },
+      "raus": {
+        "id": "00OR55T350000000VV0AG83KVT283J6L",
+        "name": "Marco Chlum"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 87,
+      "side": "gast",
+      "rein": {
+        "id": "00S6VNJNKK000000VV0AG80NVVH5BM65",
+        "name": "Severin Petersen"
+      },
+      "raus": {
+        "id": "022FC666GG000000VS541L4KVVCMIN1C",
+        "name": "Lukas Hemberger (TSV Handschuhsheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 90,
+      "side": "gast",
+      "rein": {
+        "id": "024Q0A3K3O000000VS54898FVS18NMMJ",
+        "name": "Leonard Batista"
+      },
+      "raus": {
+        "id": "00MQSQ49T4000000VV0AG85VVTE7DTLB",
+        "name": "Manuel Mastel"
+      }
+    }
+  ]
+}

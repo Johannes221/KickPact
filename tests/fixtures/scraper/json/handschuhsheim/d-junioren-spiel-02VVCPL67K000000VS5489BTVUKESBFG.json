@@ -1,0 +1,27 @@
+{
+  "spielId": "02VVCPL67K000000VS5489BTVUKESBFG",
+  "heim": "TSV Handschuhsheim",
+  "gast": "VfB St. Leon",
+  "ergebnis": {
+    "heim": 1,
+    "gast": 0
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim"
+    },
+    {
+      "typ": "TOR",
+      "minute": 3,
+      "side": "heim",
+      "spielerId": "02FJ0E5K2G000000VS5489B5VSJBUS4H",
+      "spielerName": "Vincent Speth"
+    }
+  ]
+}

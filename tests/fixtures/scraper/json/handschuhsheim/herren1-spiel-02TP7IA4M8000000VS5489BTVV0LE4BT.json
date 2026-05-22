@@ -1,0 +1,127 @@
+{
+  "spielId": "02TP7IA4M8000000VS5489BTVV0LE4BT",
+  "heim": "TSV Handschuhsheim",
+  "gast": "SpVgg Neckarsteinach",
+  "ergebnis": {
+    "heim": 1,
+    "gast": 2
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 2
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 12,
+      "side": "gast",
+      "spielerId": "00NKATSVOO000000VV0AG85VVUH1CIQU",
+      "spielerName": "Thorben Stadler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 35,
+      "side": "gast",
+      "spielerId": "022BDIJIV8000000VS541L4JVU92DDQ3",
+      "spielerName": "Rick Wulle (SpVgg. Neckarsteinach) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 40,
+      "side": "heim",
+      "spielerId": "00MQSQ49T4000000VV0AG85VVTE7DTLB",
+      "spielerName": "Manuel Mastel"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "02NE1TFJ2G000000VS5489B7VTP0556N",
+        "name": "Niklas Lind"
+      },
+      "raus": {
+        "id": "00L31RQEHO000000VTVG0001VT3G7HNR",
+        "name": "Mathies Hinrichs"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "02JAQJEB80000000VUM1DNPKVUKO667D",
+        "name": "Jan Gnutzmann (TSV Handschuhsheim) Spieler"
+      },
+      "raus": {
+        "id": "03054G8HAC000000VS5489C2VSNIS8GP",
+        "name": "Marcos Ibarra Alvarez"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 62,
+      "side": "gast",
+      "rein": {
+        "id": "0171B6GUGO000000VV0AG811VUQ50GCE",
+        "name": "Marvin Alexa"
+      },
+      "raus": {
+        "id": "01U4073CU8000000VS541L4RVTDGL61T",
+        "name": "Malon Weiher (SpVgg. Neckarsteinach) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAUFMNS000000VV0AG85VVUH1CIQU",
+        "name": "Lukas Kiefer"
+      },
+      "raus": {
+        "id": "00Q5Q9U5TC000000VV0AG85VVV05E0NJ",
+        "name": "Daniel Kneer"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 71,
+      "side": "gast",
+      "rein": {
+        "id": "02U34F13DS000000VUM1D50KVUCDGE6P",
+        "name": "Anil Akcay (SpVgg. Neckarsteinach) Spieler"
+      },
+      "raus": {
+        "id": "02JJKMTSV4000000VUM1DNOHVU1E6M9S",
+        "name": "Tim Gschwend (SpVgg. Neckarsteinach) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 86,
+      "side": "gast",
+      "rein": {
+        "id": "029RBADTHC000000VUM1DNOAVSL07FOK",
+        "name": "Max Christmann (SpVgg. Neckarsteinach) Spieler"
+      },
+      "raus": {
+        "id": "00NKAUJUVK000000VV0AG85VVUH1CIQU",
+        "name": "Florian Hofstätter"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 88,
+      "side": "gast",
+      "rein": {
+        "id": "00PSU1MEGC000000VV0AG83KVTFELKHQ",
+        "name": "Sehmuz Temiz"
+      },
+      "raus": {
+        "id": "00NKAVVRAO000000VV0AG85VVUH1CIQU",
+        "name": "Niklas Ernestus"
+      }
+    }
+  ]
+}

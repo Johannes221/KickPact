@@ -1,0 +1,154 @@
+{
+  "spielId": "02U52J7LUK000000VS5489BTVV378D77",
+  "heim": "JSG Mauer/​Lobbach/​Meckesheim-Mönchszell",
+  "gast": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "02VR7H49I4000000VS5489C1VSV06J6I",
+        "name": "Carlos Andres Montano Castillo"
+      },
+      "raus": {
+        "id": "02JBFTVUB4000000VUM1DNORVS5NB6V1",
+        "name": "Harry Wakeling (TSV Handschuhsheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "01TB4UAJ8C000000VS54898GVUUJAPN3",
+        "name": "Levi Baur"
+      },
+      "raus": {
+        "id": "01SNI0M8SC000000VS548984VTF3AS78",
+        "name": "Julian Klimm"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "02JD042OSK000000VS5489B5VSEI4RPK",
+        "name": "Patrice Fuchs"
+      },
+      "raus": {
+        "id": "024ENTIK9G000000VS54898FVTNR7G7T",
+        "name": "Marcel Günther"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "02MOM5ONQS000000VUM1DNO8VUS6Q1B8",
+        "name": "Mikheil Buzhgulashvili (SG-SV Lobbach) Spieler"
+      },
+      "raus": {
+        "id": "02JA1M3MH8000000VUM1DNONVUNE6V7I",
+        "name": "Vincent Kaltschmitt (TSV Gauangelloch) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "02L6P6D188000000VUM1DNPNVVJDAIQO",
+        "name": "Louis Koester (SG-SV Lobbach) Spieler"
+      },
+      "raus": {
+        "id": "02QU29L028000000VUM1D53NVVUCE0SL",
+        "name": "Nicklas Becker (SG-SV Lobbach) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "02Q7ADEK9S000000VUM1D53GVS9HH6BF",
+        "name": "Gavro Smoljanic (SG Viktoria Mauer) Spieler"
+      },
+      "raus": {
+        "id": "022G99QJLO000000VS54898GVSDDQR0P",
+        "name": "Levin Ebinger"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "02R39AS874000000VUM1D53NVUURQ33L",
+        "name": "Morice Meyer (SG Viktoria Mauer) Spieler"
+      },
+      "raus": {
+        "id": "020J391M8S000000VS54898FVSH29C7M",
+        "name": "Lars Gruber"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 24,
+      "side": "heim",
+      "spielerId": "02QU29L028000000VUM1D53NVVUCE0SL",
+      "spielerName": "Nicklas Becker (SG-SV Lobbach) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 39,
+      "side": "gast",
+      "rein": {
+        "id": "030IM61BSS000000VUM1D558VU393I1B",
+        "name": "David Schönenberger (TSV Handschuhsheim) Spieler"
+      },
+      "raus": {
+        "id": "02UB1DAE0S000000VUM1D561VUAVP9B1",
+        "name": "Timo Glatzel (TSV Handschuhsheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 45,
+      "side": "gast",
+      "spielerId": "01SNI0M8SC000000VS548984VTF3AS78",
+      "spielerName": "Julian Klimm"
+    },
+    {
+      "typ": "TOR",
+      "minute": 47,
+      "side": "gast",
+      "spielerId": "030IM61BSS000000VUM1D558VU393I1B",
+      "spielerName": "David Schönenberger (TSV Handschuhsheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 69,
+      "side": "gast",
+      "spielerId": "02KAGA3D0O000000VUM1DNPBVUJA22FG",
+      "spielerName": "Petar Kostadinovski (TSV Handschuhsheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 77,
+      "side": "heim",
+      "spielerId": "02QU29L028000000VUM1D53NVVUCE0SL",
+      "spielerName": "Nicklas Becker (SG-SV Lobbach) Spieler"
+    }
+  ]
+}

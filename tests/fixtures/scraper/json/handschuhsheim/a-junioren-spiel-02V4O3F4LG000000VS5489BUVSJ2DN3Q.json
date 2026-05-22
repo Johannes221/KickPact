@@ -1,0 +1,97 @@
+{
+  "spielId": "02V4O3F4LG000000VS5489BUVSJ2DN3Q",
+  "heim": "TSG Rohrbach",
+  "gast": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
+  "ergebnis": {
+    "heim": 0,
+    "gast": 6
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 3
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim"
+    },
+    {
+      "typ": "TOR",
+      "minute": 32,
+      "side": "gast",
+      "spielerId": "02CCL14IM0000000VUM1DNQ5VU0QM86P",
+      "spielerName": "Nicolas Nimmrich Amoros (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 35,
+      "side": "gast",
+      "spielerId": "02C856303G000000VUM1DNQVVVUOO4SS",
+      "spielerName": "Oskar Bähr (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 41,
+      "side": "gast",
+      "spielerId": "02C856303G000000VUM1DNQVVVUOO4SS",
+      "spielerName": "Oskar Bähr (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 52,
+      "side": "gast",
+      "spielerId": "01SNI0M8SC000000VS548984VTF3AS78",
+      "spielerName": "Julian Klimm"
+    },
+    {
+      "typ": "TOR",
+      "minute": 63,
+      "side": "gast",
+      "spielerId": "02CCL14IM0000000VUM1DNQ5VU0QM86P",
+      "spielerName": "Nicolas Nimmrich Amoros (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "gast",
+      "spielerId": "02C856303G000000VUM1DNQVVVUOO4SS",
+      "spielerName": "Oskar Bähr (FC Sportfr. Dossenheim) Spieler"
+    }
+  ]
+}

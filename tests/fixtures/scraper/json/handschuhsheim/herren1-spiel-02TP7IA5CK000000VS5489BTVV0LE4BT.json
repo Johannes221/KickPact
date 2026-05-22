@@ -1,0 +1,147 @@
+{
+  "spielId": "02TP7IA5CK000000VS5489BTVV0LE4BT",
+  "heim": "TSV Handschuhsheim",
+  "gast": "FC Sportfreunde 1910 Dossenheim 2",
+  "ergebnis": {
+    "heim": 3,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 25,
+      "side": "heim",
+      "rein": {
+        "id": "02JAQJEB80000000VUM1DNPKVUKO667D",
+        "name": "Jan Gnutzmann (TSV Handschuhsheim) Spieler"
+      },
+      "raus": {
+        "id": "02NE1TFJ2G000000VS5489B7VTP0556N",
+        "name": "Niklas Lind"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 45,
+      "side": "gast",
+      "rein": {
+        "id": "028AKSQVOO000000VS5489B6VTSKHL86",
+        "name": "Hamza Abdullah"
+      },
+      "raus": {
+        "id": "01EUJHA4AK000000VV0AG811VSCA2LJJ",
+        "name": "Laurenz Weishuhn"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 57,
+      "side": "heim",
+      "rein": {
+        "id": "00QBT6R8G4000000VV0AG819VSPRME8B",
+        "name": "Flamur Kadrija"
+      },
+      "raus": {
+        "id": "03054G8HAC000000VS5489C2VSNIS8GP",
+        "name": "Marcos Ibarra Alvarez"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 57,
+      "side": "heim",
+      "spielerId": "00OFS8EJHK000000VV0AG83KVSJ5737U",
+      "spielerName": "Lukas Wunsch"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 67,
+      "side": "heim",
+      "rein": {
+        "id": "00MC76MF5S000000VV0AG85VVSMHI0R7",
+        "name": "Linus Silla"
+      },
+      "raus": {
+        "id": "00Q5Q9U5TC000000VV0AG85VVV05E0NJ",
+        "name": "Daniel Kneer"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 69,
+      "side": "heim",
+      "spielerId": "00STM0B840000000VV0AG85VVU7JBUEE",
+      "spielerName": "Johannes Burr"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 71,
+      "side": "gast",
+      "rein": {
+        "id": "02FCONB7OK000000VUM1DNOTVSIG8NIT",
+        "name": "Paul Kauczor (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "01I8HUBA4S000000VV0AG80NVTFSKJQA",
+        "name": "Karim Meddeb"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 79,
+      "side": "gast",
+      "rein": {
+        "id": "0305EL7ISC000000VS5489C1VT52O25E",
+        "name": "Stephen Andrew Scharfenberg III"
+      },
+      "raus": {
+        "id": "02Q8UQOPKC000000VUM1D565VUTNCQJ1",
+        "name": "Eliah Beckenbach (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 79,
+      "side": "heim",
+      "spielerId": "00MQSQ49T4000000VV0AG85VVTE7DTLB",
+      "spielerName": "Manuel Mastel"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 84,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAUFMNS000000VV0AG85VVUH1CIQU",
+        "name": "Lukas Kiefer"
+      },
+      "raus": {
+        "id": "00MQSQ49T4000000VV0AG85VVTE7DTLB",
+        "name": "Manuel Mastel"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 88,
+      "side": "heim",
+      "rein": {
+        "id": "00S6VNJNKK000000VV0AG80NVVH5BM65",
+        "name": "Severin Petersen"
+      },
+      "raus": {
+        "id": "00OFS8EJHK000000VV0AG83KVSJ5737U",
+        "name": "Lukas Wunsch"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "gast",
+      "spielerId": "00OCKKNU98000000VV0AG83KVU713MQC",
+      "spielerName": "Samuel Ruland"
+    }
+  ]
+}

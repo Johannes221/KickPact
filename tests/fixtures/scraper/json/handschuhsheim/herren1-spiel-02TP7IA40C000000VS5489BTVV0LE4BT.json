@@ -1,0 +1,120 @@
+{
+  "spielId": "02TP7IA40C000000VS5489BTVV0LE4BT",
+  "heim": "SG Viktoria Mauer",
+  "gast": "TSV Handschuhsheim",
+  "ergebnis": {
+    "heim": 0,
+    "gast": 2
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 52,
+      "side": "heim",
+      "rein": {
+        "id": "030A349A08000000VUM1D57RVUMGSCA3",
+        "name": "Niklas Zelezny (SG Viktoria Mauer) Spieler"
+      },
+      "raus": {
+        "id": "00R47CFI6C000000VV0AG83KVT7COEQK",
+        "name": "Tobias Krupp"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 52,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAM7NAK000000VV0AG85VVUH1CIQU",
+        "name": "Thorsten Brinkert"
+      },
+      "raus": {
+        "id": "00S429TUC8000000VV0AG80NVTI1GQJD",
+        "name": "Philipp Wacknitz"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 57,
+      "side": "gast",
+      "rein": {
+        "id": "018UFRSII0000000VV0AG80NVU058VDB",
+        "name": "Frederik Huppertz"
+      },
+      "raus": {
+        "id": "00NKB0S270000000VV0AG85VVUH1CIQU",
+        "name": "Sebastian Drös"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 62,
+      "side": "heim",
+      "rein": {
+        "id": "02G6G4AFP8000000VUM1DNROVS0JBJJE",
+        "name": "Maximilian Kerschbaum (SG Viktoria Mauer) Spieler"
+      },
+      "raus": {
+        "id": "02V7BIBDB8000000VUM1D58AVVS3457C",
+        "name": "Ralf Wenzl (SG Viktoria Mauer) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 63,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAR146S000000VV0AG85VVUH1CIQU",
+        "name": "Stefan Zajonc"
+      },
+      "raus": {
+        "id": "02JAQJEB80000000VUM1DNPKVUKO667D",
+        "name": "Jan Gnutzmann (TSV Handschuhsheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 67,
+      "side": "heim",
+      "rein": {
+        "id": "0207K88KEK000000VS54898GVSG4R2UA",
+        "name": "Hosain Mohamadi"
+      },
+      "raus": {
+        "id": "02UKUGUJNO000000VS5489C2VSPCU72P",
+        "name": "Ahmet Akbulut"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 68,
+      "side": "gast",
+      "spielerId": "02NE1TFJ2G000000VS5489B7VTP0556N",
+      "spielerName": "Niklas Lind"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 77,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAU552O000000VV0AG85VVUH1CIQU",
+        "name": "Marcel Schmidt"
+      },
+      "raus": {
+        "id": "01M0SMOO94000000VV0AG811VUC98CQT",
+        "name": "Mirko Grund"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 85,
+      "side": "gast",
+      "spielerId": "022FC666GG000000VS541L4KVVCMIN1C",
+      "spielerName": "Lukas Hemberger (TSV Handschuhsheim) Spieler"
+    }
+  ]
+}

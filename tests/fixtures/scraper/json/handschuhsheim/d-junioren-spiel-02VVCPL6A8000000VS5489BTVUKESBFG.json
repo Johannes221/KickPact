@@ -1,0 +1,141 @@
+{
+  "spielId": "02VVCPL6A8000000VS5489BTVUKESBFG",
+  "heim": "SG HD-Kirchheim 2",
+  "gast": "TSV Handschuhsheim",
+  "ergebnis": {
+    "heim": 7,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 6,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "02N0JJ2HSS000000VS5489B5VVQKA5RU",
+        "name": "Nuri Youseff Stelkens"
+      },
+      "raus": {
+        "id": "02N1J6D630000000VS5489B5VVQKA5RU",
+        "name": "Felix Lipponer"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 9,
+      "side": "heim",
+      "spielerId": "02MGE43KL0000000VS5489B6VV4M48GU",
+      "spielerName": "Devin Huber"
+    },
+    {
+      "typ": "TOR",
+      "minute": 20,
+      "side": "gast",
+      "spielerId": "02FJ0E5K2G000000VS5489B5VSJBUS4H",
+      "spielerName": "Vincent Speth"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 29,
+      "side": "heim",
+      "rein": {
+        "id": "02N1J6KFQK000000VS5489B6VSLKS2T4",
+        "name": "Raphael Schafrik"
+      },
+      "raus": {
+        "id": "02N522JPHS000000VS5489B7VV5UOFP9",
+        "name": "Omar El Damaty"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 30,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 30,
+      "side": "heim",
+      "rein": {
+        "id": "02MB00F9S8000000VS5489B5VSOEKM1L",
+        "name": "Levin Yildirim"
+      },
+      "raus": {
+        "id": "02N1J6N610000000VS5489B6VSLKS2T4",
+        "name": "Moritz Kreuzer"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 30,
+      "side": "heim",
+      "rein": {
+        "id": "02MVJ3UB1C000000VS5489B6VSLKS2T4",
+        "name": "Milo Matteo Lange"
+      },
+      "raus": {
+        "id": "02IR9BKRFS000000VS5489B6VUDLU3RQ",
+        "name": "Lio Julius Thelen"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 30,
+      "side": "heim",
+      "spielerId": "02N1J6KFQK000000VS5489B6VSLKS2T4",
+      "spielerName": "Raphael Schafrik"
+    },
+    {
+      "typ": "TOR",
+      "minute": 32,
+      "side": "heim",
+      "spielerId": "02N4F36P7C000000VS5489B8VUQURFIT",
+      "spielerName": "Paulo Chaicovski"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 35,
+      "side": "heim",
+      "rein": {
+        "id": "02MGE41LT4000000VS5489B6VV4M48GU",
+        "name": "Jonah Jakob Can"
+      },
+      "raus": {
+        "id": "02N1J6KFQK000000VS5489B6VSLKS2T4",
+        "name": "Raphael Schafrik"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 35,
+      "side": "heim",
+      "spielerId": "02N4F36P7C000000VS5489B8VUQURFIT",
+      "spielerName": "Paulo Chaicovski"
+    },
+    {
+      "typ": "TOR",
+      "minute": 40,
+      "side": "heim",
+      "spielerId": "02N4Q0D270000000VS5489B7VTSQLV37",
+      "spielerName": "Louis Estermann"
+    },
+    {
+      "typ": "TOR",
+      "minute": 45,
+      "side": "heim",
+      "spielerId": "02MGE43KL0000000VS5489B6VV4M48GU",
+      "spielerName": "Devin Huber"
+    },
+    {
+      "typ": "TOR",
+      "minute": 52,
+      "side": "heim",
+      "spielerId": "02N4Q0D270000000VS5489B7VTSQLV37",
+      "spielerName": "Louis Estermann"
+    }
+  ]
+}
