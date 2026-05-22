@@ -1,4 +1,5 @@
 import { and, eq } from "drizzle-orm";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { clubMemberships, clubs } from "@/lib/db/schema";
 import { requireUser } from "./session";
@@ -17,7 +18,8 @@ export async function assertClubAccess(clubSlug: string, minRole: Role = "viewer
     .from(clubs)
     .where(eq(clubs.slug, clubSlug))
     .limit(1);
-  if (!club) throw new Error(`Club ${clubSlug} not found`);
+  // Redirect instead of throwing — prevents 500 on invalid/stale slugs
+  if (!club) redirect("/dashboard");
 
   const [membership] = await db
     .select({ role: clubMemberships.role })
@@ -27,11 +29,9 @@ export async function assertClubAccess(clubSlug: string, minRole: Role = "viewer
     )
     .limit(1);
 
-  if (!membership) {
-    throw new Error("Forbidden: not a club member");
-  }
-  if (ROLE_RANK[membership.role] < ROLE_RANK[minRole]) {
-    throw new Error(`Forbidden: requires ${minRole}`);
+  // Not a member or insufficient role → redirect to dashboard rather than 500
+  if (!membership || ROLE_RANK[membership.role] < ROLE_RANK[minRole]) {
+    redirect("/dashboard");
   }
 
   return { user, club, role: membership.role };

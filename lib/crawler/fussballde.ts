@@ -5,6 +5,7 @@ const USER_AGENT =
 
 export interface VereinHit {
   name: string;
+  ort: string | null;
   slug: string;
   vereinId: string;
   url: string;
@@ -71,11 +72,15 @@ export async function searchVereine(suchbegriff: string): Promise<VereinHit[]> {
       document.querySelectorAll('a[href*="/verein/"]').forEach(function(link) {
         var href = link.href || link.getAttribute("href") || "";
         var m = href.match(/\\/verein\\/([^/]+)\\/-\\/id\\/([A-Z0-9]+)/);
-        if (m && !seen.has(m[2])) {
-          seen.add(m[2]);
-          var name = (link.textContent || "").replace(/\\s+/g, " ").trim() || m[1];
-          results.push({ name: name, slug: m[1], vereinId: m[2], url: href });
-        }
+        if (!m || seen.has(m[2])) return;
+        seen.add(m[2]);
+        var raw = (link.textContent || "").replace(/\\s+/g, " ").trim();
+        // Address-Pattern "<Name> <5-stellige PLZ> <Ort>" abspalten, falls vorhanden
+        var addr = raw.match(/^(.+?)\\s+\\d{5}\\s+(.+)$/);
+        var name, ort;
+        if (addr) { name = addr[1].trim(); ort = addr[2].trim(); }
+        else { name = raw || m[1]; ort = null; }
+        results.push({ name: name, ort: ort, slug: m[1], vereinId: m[2], url: href });
       });
       return results;
     })()`) as VereinHit[];
@@ -84,14 +89,15 @@ export async function searchVereine(suchbegriff: string): Promise<VereinHit[]> {
 
 export async function getMannschaften(
   vereinId: string,
-  slug: string
+  slug: string,
+  vereinName?: string
 ): Promise<MannschaftHit[]> {
   return withPage(async (page) => {
     const url = `https://www.fussball.de/verein/${slug}/-/id/${vereinId}#!/`;
     await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForTimeout(2000);
 
-    return await page.evaluate(`(function() {
+    const raw = (await page.evaluate(`(function() {
       var results = [];
       var seen = new Set();
       document.querySelectorAll('a[href*="/mannschaft/"]').forEach(function(link) {
@@ -104,7 +110,23 @@ export async function getMannschaften(
         }
       });
       return results;
-    })()`) as MannschaftHit[];
+    })()`)) as MannschaftHit[];
+
+    if (!vereinName) return raw;
+
+    // Filter heuristik: nur Mannschaften behalten, deren Name mindestens einen
+    // signifikanten Token (≥3 Zeichen, nicht rein numerisch) aus dem Vereinsnamen
+    // enthält. Verhindert Cross-Contamination durch Gegner-Links aus dem Spielplan-Widget.
+    const tokens = vereinName
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((t) => t.length >= 3 && !/^\d+$/.test(t));
+    if (tokens.length === 0) return raw;
+
+    return raw.filter((team) => {
+      const tLower = team.name.toLowerCase();
+      return tokens.some((tok) => tLower.includes(tok));
+    });
   });
 }
 
@@ -169,7 +191,7 @@ export async function getSpiele(
   return withPage(async (page) => {
     const allResults = new Map<string, SpielListItem>();
 
-    // Strategy 1: paginate through ajax.team.prev.games with index/0, /1, /2, ...
+    // Strategy 1a: paginate through ajax.team.prev.games (returns current half-season)
     // fussball.de returns ~10 matches per page; try up to 8 pages (≈80 matches, full season)
     const MAX_PAGES = 8;
     for (let idx = 0; idx < MAX_PAGES; idx++) {
@@ -194,14 +216,60 @@ export async function getSpiele(
       }
     }
 
-    // Strategy 2: also scrape the main team page Spielplan (catches any missed by AJAX)
+    // Strategy 1b: saison-specific AJAX — explicitly requests the full season including Hinrunde
+    // fussball.de sometimes gates Hinrunde behind a saison parameter
+    for (let idx = 0; idx < MAX_PAGES; idx++) {
+      const ajaxUrl = idx === 0
+        ? `https://www.fussball.de/ajax.team.prev.games/-/mode/PAGE/team-id/${teamId}/saison/${saison}`
+        : `https://www.fussball.de/ajax.team.prev.games/-/mode/PAGE/team-id/${teamId}/saison/${saison}/index/${idx}`;
+      try {
+        await page.goto(ajaxUrl, { waitUntil: "networkidle", timeout: 20000 });
+        await page.waitForTimeout(800);
+        const pageResults = await page.evaluate(EXTRACT_MATCHES_JS) as SpielListItem[];
+        if (pageResults.length === 0) break;
+        let newCount = 0;
+        for (const r of pageResults) {
+          if (!allResults.has(r.spielId)) {
+            allResults.set(r.spielId, r);
+            newCount++;
+          }
+        }
+        if (newCount === 0) break;
+      } catch {
+        break;
+      }
+    }
+
+    // Strategy 2: main team page Spielplan — shows both halves; also click Hinrunde tab
+    // fussball.de defaults to Rückrunde tab; we click Hinrunde to capture first-half games
     try {
       const mainUrl = `https://www.fussball.de/mannschaft/${slug}/-/saison/${saison}/team-id/${teamId}#!/`;
       await page.goto(mainUrl, { waitUntil: "networkidle", timeout: 30000 });
       await page.waitForTimeout(2000);
+
+      // Extract whatever is currently visible (usually Rückrunde)
       const mainResults = await page.evaluate(EXTRACT_MATCHES_JS) as SpielListItem[];
       for (const r of mainResults) {
         if (!allResults.has(r.spielId)) allResults.set(r.spielId, r);
+      }
+
+      // Click Hinrunde / Vorrunde tab to capture first-half games
+      const tabClicked = await page.evaluate(`(function() {
+        var els = Array.from(document.querySelectorAll('a, button, span, li'));
+        var tab = els.find(function(el) {
+          var t = (el.textContent || '').toLowerCase().replace(/\\s+/g, '').trim();
+          return t === 'hinrunde' || t === 'vorrunde' || t === 'hinserie';
+        });
+        if (tab) { tab.click(); return true; }
+        return false;
+      })()`) as boolean;
+
+      if (tabClicked) {
+        await page.waitForTimeout(2000);
+        const hinrundeResults = await page.evaluate(EXTRACT_MATCHES_JS) as SpielListItem[];
+        for (const r of hinrundeResults) {
+          if (!allResults.has(r.spielId)) allResults.set(r.spielId, r);
+        }
       }
     } catch {
       // ignore
