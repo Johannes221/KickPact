@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { chromium, type Page } from "playwright";
 
 const USER_AGENT =
@@ -47,6 +48,54 @@ export async function withRetry<T>(
   }
   // unreachable — loop always returns or throws
   throw lastErr;
+}
+
+/**
+ * Stable, content-addressed hash of the "interesting" parts of a scraped match.
+ *
+ * Used by the crawler to detect when a previously seen match has been edited on
+ * fussball.de (e.g. result corrected, goal scorer reassigned, additional event
+ * added) so we can re-evaluate triggers and invalidate stale charges.
+ *
+ * Hash is order-independent: events are sorted by (minute, type, side,
+ * spielerId) before serialization. Null and undefined spielerId are treated as
+ * equivalent so we don't churn hashes when the player-name resolver fails
+ * intermittently.
+ */
+export type MatchHashInput = {
+  ergebnisHeim: number;
+  ergebnisGast: number;
+  halbzeitHeim: number | null;
+  halbzeitGast: number | null;
+  events: ReadonlyArray<{
+    minute: number | null;
+    type: string;
+    side: "heim" | "gast";
+    spielerId?: string | null;
+  }>;
+};
+
+export function computeMatchHash(input: MatchHashInput): string {
+  const normEvents = input.events.map((e) => ({
+    minute: e.minute ?? -1,
+    type: e.type ?? "",
+    side: e.side,
+    spielerId: e.spielerId ?? null,
+  }));
+  normEvents.sort((a, b) => {
+    if (a.minute !== b.minute) return a.minute - b.minute;
+    const typeCmp = a.type.localeCompare(b.type);
+    if (typeCmp !== 0) return typeCmp;
+    const sideCmp = a.side.localeCompare(b.side);
+    if (sideCmp !== 0) return sideCmp;
+    return (a.spielerId ?? "").localeCompare(b.spielerId ?? "");
+  });
+  const payload = JSON.stringify({
+    r: [input.ergebnisHeim, input.ergebnisGast],
+    h: [input.halbzeitHeim, input.halbzeitGast],
+    e: normEvents.map((e) => [e.minute, e.type, e.side, e.spielerId]),
+  });
+  return createHash("sha256").update(payload).digest("hex");
 }
 
 export interface VereinHit {

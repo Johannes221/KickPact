@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, gte, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { charges, pledges, matches, teams } from "@/lib/db/schema";
 
@@ -68,6 +68,28 @@ export function groupChargesBySponsorClub<T extends { sponsorId: string; clubId:
     const [sponsorId, clubId] = key.split("|");
     return { sponsorId, clubId, items };
   });
+}
+
+/**
+ * Markiert alle nicht-invoiced charges für ein Match als `cancelled`.
+ *
+ * Wird vom Match-Update-Path im Crawler aufgerufen wenn fussball.de Daten
+ * für ein bereits gescraptes Spiel ändert (z.B. Korrektur des Ergebnisses,
+ * nachgetragene Tore). Vor der Re-Evaluation müssen alle vorherigen Charges
+ * unschädlich gemacht werden, damit `evaluate-match` neu zählen kann.
+ *
+ * `invoiced` Charges werden bewusst NICHT angefasst — sie wurden bereits
+ * dem Sponsor in Rechnung gestellt und sind out-of-scope für Korrekturen
+ * (das wäre Buchhaltung, nicht Crawler-Logik).
+ */
+export async function invalidateChargesForMatch(
+  matchId: string,
+  reason: string
+): Promise<void> {
+  await db
+    .update(charges)
+    .set({ status: "cancelled", cancelledReason: reason })
+    .where(and(eq(charges.matchId, matchId), ne(charges.status, "invoiced")));
 }
 
 /**
