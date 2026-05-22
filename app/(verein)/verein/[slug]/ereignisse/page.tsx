@@ -1,6 +1,4 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { clubs } from "@/lib/db/schema";
+import { assertClubAccess } from "@/lib/auth/scope";
 import { listClubEreignisse } from "@/lib/db/queries/club-dashboard";
 import { EreignisseView } from "./_components/ereignisse-view";
 
@@ -12,8 +10,7 @@ export default async function EreignissePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [club] = await db.select().from(clubs).where(eq(clubs.slug, slug)).limit(1);
-  if (!club) return null;
+  const { club } = await assertClubAccess(slug, "viewer");
 
   const ereignisse = await listClubEreignisse(club.id);
 
