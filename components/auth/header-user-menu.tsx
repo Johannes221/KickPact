@@ -64,13 +64,13 @@ export function HeaderUserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="gap-2 rounded-full">
-          <Avatar className="h-7 w-7">
-            <AvatarFallback className="bg-brand-night-navy text-xs text-white font-semibold">
+        <Button variant="ghost" className="gap-2 rounded-full px-2 md:px-3">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-accent text-white text-xs font-bold">
               {initials}
             </AvatarFallback>
           </Avatar>
-          <span className="hidden md:inline max-w-[12rem] truncate">
+          <span className="hidden md:inline max-w-[12rem] truncate text-brand-night-navy font-medium">
             {session.user.name ?? session.user.email}
           </span>
         </Button>
