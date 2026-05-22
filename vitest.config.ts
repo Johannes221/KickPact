@@ -7,6 +7,12 @@ export default defineConfig({
     environment: "node",
     globalSetup: ["tests/setup/global.ts"],
     include: ["tests/**/*.test.ts"],
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        singleFork: true
+      }
+    },
     coverage: {
       reporter: ["text", "html"],
       include: ["lib/**/*.ts"],
