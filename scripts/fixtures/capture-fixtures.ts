@@ -11,8 +11,10 @@ import {
 import {
   searchVereine,
   getMannschaften,
+  getSpiele,
   type VereinHit,
   type MannschaftHit,
+  type SpielListItem,
 } from "../../lib/crawler/fussballde";
 
 const FORCE = process.argv.includes("--force");
@@ -111,6 +113,95 @@ function pickMatch(hits: VereinHit[], club: FixtureClub): VereinHit | null {
   );
 }
 
+function normalize(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9äöüß]/gi, "");
+}
+
+/**
+ * Match a configured team (e.g. "Herren 1", "A-Junioren", "Damen") against
+ * the fussball.de mannschaften list. fussball.de names look like:
+ *   "Herren - FC Sportfreunde 1910 Dossenheim"        → Herren 1
+ *   "Herren - FC Sportfreunde 1910 Dossenheim 2"      → Herren 2
+ *   "A-Junioren - JSG Dossenheim/Handschuhsheim/..."  → A-Junioren
+ *   "Damen - ..."                                      → Damen
+ *
+ * Algorithm: parse a category + optional number from both sides and match.
+ */
+function matchTeam(
+  mannschaften: MannschaftHit[],
+  searchName: string,
+): MannschaftHit | null {
+  const parseConfig = (n: string): { category: string; number: number } => {
+    const m = n.trim().match(/^([A-Za-zÄÖÜäöüß-]+)\s*(\d+)?$/);
+    return {
+      category: normalize(m?.[1] ?? n),
+      number: m?.[2] ? parseInt(m[2], 10) : 1,
+    };
+  };
+  const parseTeam = (name: string): { category: string; number: number } => {
+    const dashIdx = name.indexOf(" - ");
+    const head = dashIdx >= 0 ? name.slice(0, dashIdx) : name;
+    const tail = dashIdx >= 0 ? name.slice(dashIdx + 3) : "";
+    // A trailing number at the END of the team-string indicates 2nd/3rd/etc.
+    // We deliberately match only the final token (e.g. "...Dossenheim 2") so that
+    // year-numbers like "1910" in the middle of the club name are ignored.
+    // Suffixes like "zg." (zweite Mannschaft Gemeinschaft) are also ignored.
+    const cleaned = tail.replace(/\s*\d+\s*zg\.?\s*$/i, "").trim();
+    const trailing = cleaned.match(/(\d+)\s*$/);
+    return {
+      category: normalize(head),
+      number: trailing ? parseInt(trailing[1], 10) : 1,
+    };
+  };
+  const target = parseConfig(searchName);
+  // First pass: exact category + number
+  const exact = mannschaften.find((m) => {
+    const p = parseTeam(m.name);
+    return p.category === target.category && p.number === target.number;
+  });
+  if (exact) return exact;
+  // Second pass: category-contains + number
+  const fuzzy = mannschaften.find((m) => {
+    const p = parseTeam(m.name);
+    return (
+      (p.category.includes(target.category) ||
+        target.category.includes(p.category)) &&
+      p.number === target.number
+    );
+  });
+  return fuzzy ?? null;
+}
+
+async function captureSpiele(
+  club: FixtureClub,
+  team: MannschaftHit,
+  teamKey: string,
+  saison: string,
+): Promise<SpielListItem[]> {
+  const jsonRel = `${club.key}/${teamKey}-spiele-saison${saison}.json`;
+
+  if (!FORCE && (await exists(jsonRel, JSON_ROOT))) {
+    console.log(`    spiele ${teamKey} saison${saison}: cached`);
+    return JSON.parse(
+      await fs.readFile(path.join(JSON_ROOT, jsonRel), "utf-8"),
+    ) as SpielListItem[];
+  }
+
+  try {
+    const spiele = await getSpiele(team.teamId, team.slug, saison);
+    await writeJson(jsonRel, spiele);
+    await sleep(800);
+    console.log(`    spiele ${teamKey} saison${saison}: ${spiele.length}`);
+    return spiele;
+  } catch (err) {
+    console.warn(
+      `    ! spiele failed ${teamKey} saison${saison}:`,
+      (err as Error).message,
+    );
+    return [];
+  }
+}
+
 async function captureMannschaften(
   context: BrowserContext,
   club: FixtureClub,
@@ -158,7 +249,18 @@ async function captureClub(club: FixtureClub): Promise<void> {
     }
     const mannschaften = await captureMannschaften(context, club, verein);
     if (mannschaften.length === 0) return;
-    // Teams kommen in Tasks 1.5 – 1.7
+
+    for (const teamCfg of club.teams) {
+      const team = matchTeam(mannschaften, teamCfg.searchName);
+      if (!team) {
+        console.warn(`  ! team not found: ${teamCfg.searchName} — skipping`);
+        continue;
+      }
+      console.log(`  team: ${team.name} (id=${team.teamId})`);
+      for (const saison of teamCfg.saisons) {
+        await captureSpiele(club, team, teamCfg.key, saison);
+      }
+    }
   } finally {
     await context.close();
     await browser.close();
