@@ -18,10 +18,9 @@ export function VereinSubNav({ slug }: { slug: string }) {
   const base = `/verein/${slug}`;
 
   return (
-    <nav className="flex gap-0.5 overflow-x-auto rounded-xl bg-brand-night-navy/5 p-1 no-scrollbar">
+    <nav className="flex gap-1 overflow-x-auto rounded-2xl border border-brand-neutral/30 bg-brand-off-white p-1.5 no-scrollbar">
       {TABS.map(({ label, href }) => {
         const fullHref = `${base}${href}`;
-        // Dashboard ist aktiv nur genau auf /verein/[slug]
         const isActive = href === ""
           ? pathname === base
           : pathname === fullHref || pathname.startsWith(fullHref + "/");
@@ -31,10 +30,10 @@ export function VereinSubNav({ slug }: { slug: string }) {
             key={href}
             href={fullHref}
             className={cn(
-              "shrink-0 rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors whitespace-nowrap",
+              "shrink-0 rounded-xl px-4 py-2 text-sm font-semibold transition-all whitespace-nowrap",
               isActive
-                ? "bg-white text-brand-night-navy shadow-sm"
-                : "text-brand-night-navy/50 hover:text-brand-night-navy hover:bg-white/60"
+                ? "bg-white text-brand-night-navy shadow-sm ring-1 ring-brand-neutral/20"
+                : "text-brand-night-navy/60 hover:text-brand-night-navy hover:bg-white/70"
             )}
           >
             {label}
