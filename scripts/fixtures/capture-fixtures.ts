@@ -10,7 +10,9 @@ import {
 } from "../../tests/fixtures/scraper/config";
 import {
   searchVereine,
+  getMannschaften,
   type VereinHit,
+  type MannschaftHit,
 } from "../../lib/crawler/fussballde";
 
 const FORCE = process.argv.includes("--force");
@@ -109,6 +111,42 @@ function pickMatch(hits: VereinHit[], club: FixtureClub): VereinHit | null {
   );
 }
 
+async function captureMannschaften(
+  context: BrowserContext,
+  club: FixtureClub,
+  verein: VereinHit,
+): Promise<MannschaftHit[]> {
+  const htmlRel = `${club.key}/mannschaften.html`;
+  const jsonRel = `${club.key}/mannschaften.json`;
+
+  if (!FORCE && (await exists(jsonRel, JSON_ROOT))) {
+    console.log(`  mannschaften: cached`);
+    return JSON.parse(
+      await fs.readFile(path.join(JSON_ROOT, jsonRel), "utf-8"),
+    ) as MannschaftHit[];
+  }
+
+  try {
+    const page = await context.newPage();
+    const url = `https://www.fussball.de/verein/${verein.slug}/-/id/${verein.vereinId}#!/`;
+    await page.goto(url, { waitUntil: "networkidle", timeout: 30_000 });
+    await page.waitForTimeout(2000);
+    await writeHtml(htmlRel, await page.content());
+    await page.close();
+    await sleep(800);
+
+    const mannschaften = await getMannschaften(verein.vereinId, verein.slug, verein.name);
+    await writeJson(jsonRel, mannschaften);
+    await sleep(800);
+
+    console.log(`  mannschaften: ${mannschaften.length} found`);
+    return mannschaften;
+  } catch (err) {
+    console.warn(`  ! mannschaften failed for ${club.key}:`, (err as Error).message);
+    return [];
+  }
+}
+
 async function captureClub(club: FixtureClub): Promise<void> {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ userAgent: USER_AGENT });
@@ -118,7 +156,9 @@ async function captureClub(club: FixtureClub): Promise<void> {
       console.warn(`  skipping ${club.key} — no verein found`);
       return;
     }
-    // Mannschaften + Teams kommen in Tasks 1.4 – 1.7
+    const mannschaften = await captureMannschaften(context, club, verein);
+    if (mannschaften.length === 0) return;
+    // Teams kommen in Tasks 1.5 – 1.7
   } finally {
     await context.close();
     await browser.close();
