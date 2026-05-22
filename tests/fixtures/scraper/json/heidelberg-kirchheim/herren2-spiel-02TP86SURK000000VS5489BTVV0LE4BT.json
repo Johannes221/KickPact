@@ -1,0 +1,120 @@
+{
+  "spielId": "02TP86SURK000000VS5489BTVV0LE4BT",
+  "heim": "SG Horrenberg",
+  "gast": "SG HD-Kirchheim 2",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 0
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 43,
+      "side": "heim",
+      "spielerId": "00NKAU478S000000VV0AG85VVUH1CIQU",
+      "spielerName": "Patrick Greulich"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "00OS3HNDOC000000VV0AG83KVT283J6L",
+        "name": "Tim Jansen"
+      },
+      "raus": {
+        "id": "00NKAVU1S8000000VV0AG85VVUH1CIQU",
+        "name": "Michael Glaser"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 65,
+      "side": "gast",
+      "rein": {
+        "id": "01TTQMKO7K000000VS541L4KVUMUIUK4",
+        "name": "Nicolas Küspert (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "00NKB0QE0K000000VV0AG85VVUH1CIQU",
+        "name": "Marcel Steinle"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 70,
+      "side": "heim",
+      "rein": {
+        "id": "00VTMIVT1C000000VV0AG811VUFQ2882",
+        "name": "Tolga Koc"
+      },
+      "raus": {
+        "id": "01TNFJFF7C000000VS541L4KVVAH7FTU",
+        "name": "Marcel Andorfer (SG Horrenberg) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 70,
+      "side": "gast",
+      "rein": {
+        "id": "02TKPTSBGG000000VUM1D51EVUPQMSPD",
+        "name": "Elias Schmelzer (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "02KTD72N8C000000VUM1DNR3VSVM7DLD",
+        "name": "Marcel Knobel (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 81,
+      "side": "heim",
+      "rein": {
+        "id": "02V3CIQ4NK000000VUM1D521VTS30OPD",
+        "name": "Noah Wenzl (SG Horrenberg) Spieler"
+      },
+      "raus": {
+        "id": "00NKB0CUSO000000VV0AG85VVUH1CIQU",
+        "name": "Muharrem Iseni"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 81,
+      "side": "heim",
+      "rein": {
+        "id": "00NKB0160G000000VV0AG85VVUH1CIQU",
+        "name": "Marcel Hetzel"
+      },
+      "raus": {
+        "id": "01E3GK03DK000000VV0AG80NVT5PKA6J",
+        "name": "Fabian Heid"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 86,
+      "side": "heim",
+      "rein": {
+        "id": "02A9GCUF4C000000VUM1DNOTVVJ0Q0C0",
+        "name": "Benjamin Simon Köken (SG Horrenberg) Spieler"
+      },
+      "raus": {
+        "id": "02BR0N0KU8000000VUM1DNP9VSMNJ2O4",
+        "name": "Luis Aras (SG Horrenberg) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "heim",
+      "spielerId": "02A9GCUF4C000000VUM1DNOTVVJ0Q0C0",
+      "spielerName": "Benjamin Simon Köken (SG Horrenberg) Spieler"
+    }
+  ]
+}

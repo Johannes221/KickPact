@@ -1,0 +1,148 @@
+{
+  "spielId": "02TNBSVEN0000000VS5489BUVSSD35NB",
+  "heim": "SV Waldhof Mannheim 2",
+  "gast": "SG HD-Kirchheim",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 4
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 3
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 7,
+      "side": "gast",
+      "spielerId": "023HMQ1R04000000VS541L4GVTGJVDM2",
+      "spielerName": "Sinisa Sprecakovic (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 25,
+      "side": "gast",
+      "spielerId": "023HMQ1R04000000VS541L4GVTGJVDM2",
+      "spielerName": "Sinisa Sprecakovic (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 39,
+      "side": "gast",
+      "spielerId": "023HMQ1R04000000VS541L4GVTGJVDM2",
+      "spielerName": "Sinisa Sprecakovic (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "01OJ9SREAS000000VV0AG811VSO4D2IB",
+        "name": "Lenny Mikona"
+      },
+      "raus": {
+        "id": "0250SLFFFC000000VS541L4FVVAV7NCL",
+        "name": "Arlind Zeqiraj (SV Waldhof Mannheim 07) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 55,
+      "side": "heim",
+      "rein": {
+        "id": "017O5CEA4K000000VV0AG80NVTCBOR0A",
+        "name": "George Orr"
+      },
+      "raus": {
+        "id": "029ARHSCL4000000VS5489B6VU78H2BI",
+        "name": "Mathias Heiligenstein"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 58,
+      "side": "heim",
+      "spielerId": "02U9RV1VCC000000VUM1D52EVUCOEMDD",
+      "spielerName": "Milo Bauer (SV Waldhof Mannheim 07) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 63,
+      "side": "heim",
+      "spielerId": "024R3SNJEG000000VS541L4GVUO5L38F",
+      "spielerName": "Mikail Erdem Sentürk (SV Waldhof Mannheim 07) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 72,
+      "side": "gast",
+      "rein": {
+        "id": "01LQD4GGUS000000VV0AG80NVSJMIQ1G",
+        "name": "Jannik Ebert"
+      },
+      "raus": {
+        "id": "01I3JKCT74000000VV0AG811VVSBGVMJ",
+        "name": "Timo Hartmann"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 77,
+      "side": "heim",
+      "rein": {
+        "id": "01EFO8TU3O000000VV0AG811VTUSV75D",
+        "name": "Ebbe Prang"
+      },
+      "raus": {
+        "id": "024R3SNJEG000000VS541L4GVUO5L38F",
+        "name": "Mikail Erdem Sentürk (SV Waldhof Mannheim 07) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 77,
+      "side": "gast",
+      "spielerId": "023HMQ1R04000000VS541L4GVTGJVDM2",
+      "spielerName": "Sinisa Sprecakovic (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 80,
+      "side": "gast",
+      "rein": {
+        "id": "028CATL4Q0000000VS541L4KVT4E998U",
+        "name": "David Zimmermann (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "01LI1TKP1C000000VV0AG811VU3U5OGP",
+        "name": "Fabian Heller"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 83,
+      "side": "heim",
+      "rein": {
+        "id": "021H48ASGO000000VS54898FVSHOTEND",
+        "name": "Roen Fordyce Hlywka"
+      },
+      "raus": {
+        "id": "02LJ0N5CK8000000VUM1DNP0VTD5P3AQ",
+        "name": "Mika Träger (SV Waldhof Mannheim 07) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 88,
+      "side": "gast",
+      "rein": {
+        "id": "02I3AE24RC000000VUM1DNO7VUOBUGS8",
+        "name": "Finn Hagen (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "023HMQ1R04000000VS541L4GVTGJVDM2",
+        "name": "Sinisa Sprecakovic (SG HD-Kirchheim) Spieler"
+      }
+    }
+  ]
+}

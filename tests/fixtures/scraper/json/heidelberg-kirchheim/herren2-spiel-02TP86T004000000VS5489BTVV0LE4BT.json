@@ -1,0 +1,188 @@
+{
+  "spielId": "02TP86T004000000VS5489BTVV0LE4BT",
+  "heim": "SpVgg Baiertal",
+  "gast": "SG HD-Kirchheim 2",
+  "ergebnis": {
+    "heim": 6,
+    "gast": 2
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 3,
+      "side": "gast",
+      "spielerId": "02LR8RG474000000VUM1DNOGVUEV72HC",
+      "spielerName": "Tim Steinmann (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "01AC54LV5C000000VV0AG811VVLO05GD",
+        "name": "Paul Sebastian Jitarasu"
+      },
+      "raus": {
+        "id": "01PQTUPFL4000000VS541L4QVS7622C6",
+        "name": "Luca Quenzer (SpVgg. Baiertal) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 52,
+      "side": "heim",
+      "rein": {
+        "id": "02C1SS35UO000000VUM1DNOOVU80AIMP",
+        "name": "Kaan Kilic (SpVgg. Baiertal) Spieler"
+      },
+      "raus": {
+        "id": "011MC38FO0000000VV0AG80NVSFQHAG4",
+        "name": "Robin Benz"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 53,
+      "side": "heim",
+      "spielerId": "02CHAG3AAO000000VUM1DNOSVTFK34SG",
+      "spielerName": "Alexis Günther (SpVgg. Baiertal) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 55,
+      "side": "gast",
+      "rein": {
+        "id": "00NKB01UFC000000VV0AG85VVUH1CIQU",
+        "name": "Jonas Emmerich"
+      },
+      "raus": {
+        "id": "00NKB0QE0K000000VV0AG85VVUH1CIQU",
+        "name": "Marcel Steinle"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 55,
+      "side": "gast",
+      "rein": {
+        "id": "00NKB1AV24000000VV0AG85VVUH1CIQU",
+        "name": "Niklas Schmitt"
+      },
+      "raus": {
+        "id": "01TTQMKO7K000000VS541L4KVUMUIUK4",
+        "name": "Nicolas Küspert (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 55,
+      "side": "gast",
+      "rein": {
+        "id": "02IKUGH1PC000000VS5489B5VT8KI14O",
+        "name": "Carlos Alfredo Ocanto Dávila"
+      },
+      "raus": {
+        "id": "024HPOGDES000000VS541L4JVTQH35VK",
+        "name": "Leon Knörzer (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 61,
+      "side": "heim",
+      "spielerId": "01AC54LV5C000000VV0AG811VVLO05GD",
+      "spielerName": "Paul Sebastian Jitarasu"
+    },
+    {
+      "typ": "TOR",
+      "minute": 63,
+      "side": "heim",
+      "spielerId": "02C1SS35UO000000VUM1DNOOVU80AIMP",
+      "spielerName": "Kaan Kilic (SpVgg. Baiertal) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "gast",
+      "rein": {
+        "id": "01RHVCJ9CK000000VS541L4GVVU8CVVT",
+        "name": "Marvin Zollweg (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "02G08N2PFO000000VUM1DNOSVU169VS9",
+        "name": "Elias Piazolo (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "heim",
+      "rein": {
+        "id": "024L6TBRA0000000VS541L4GVTBENQ2N",
+        "name": "Lukas Müller (SpVgg. Baiertal) Spieler"
+      },
+      "raus": {
+        "id": "01M2QHGQ60000000VS541L4JVULRUCP6",
+        "name": "Philipp Öhler (SpVgg. Baiertal) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 74,
+      "side": "heim",
+      "rein": {
+        "id": "02FTNKN5GS000000VUM1DNQ0VVE1CMGO",
+        "name": "Bastian Boes (SpVgg. Baiertal) Spieler"
+      },
+      "raus": {
+        "id": "01IKMB4BTC000000VV0AG80NVSPK2NRH",
+        "name": "Janosch Payer"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 74,
+      "side": "gast",
+      "spielerId": "028S5S3V70000000VS541L4KVT82IE4D",
+      "spielerName": "David Peipp (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 81,
+      "side": "heim",
+      "spielerId": "01AC54LV5C000000VV0AG811VVLO05GD",
+      "spielerName": "Paul Sebastian Jitarasu"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 82,
+      "side": "heim",
+      "rein": {
+        "id": "02FH7PGRGK000000VUM1DNP5VU5PVP3B",
+        "name": "Paul Steinherr (SpVgg. Baiertal) Spieler"
+      },
+      "raus": {
+        "id": "01BG7LOU48000000VV0AG80NVUJINN23",
+        "name": "Spartak Kirbabin"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "heim",
+      "spielerId": "01AC54LV5C000000VV0AG811VVLO05GD",
+      "spielerName": "Paul Sebastian Jitarasu"
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "heim",
+      "spielerId": "02FH7PGRGK000000VUM1DNP5VU5PVP3B",
+      "spielerName": "Paul Steinherr (SpVgg. Baiertal) Spieler"
+    }
+  ]
+}

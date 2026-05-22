@@ -1,0 +1,140 @@
+{
+  "spielId": "02TP86SVNG000000VS5489BTVV0LE4BT",
+  "heim": "SG HD-Kirchheim 2",
+  "gast": "VfB Rauenberg",
+  "ergebnis": {
+    "heim": 1,
+    "gast": 2
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 43,
+      "side": "gast",
+      "spielerId": "00OCLCQSFK000000VV0AG83KVU713MQC",
+      "spielerName": "Riccardo Hickel"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 50,
+      "side": "gast",
+      "rein": {
+        "id": "0263646DL8000000VS54898FVVS6GNUR",
+        "name": "Siakra Berete"
+      },
+      "raus": {
+        "id": "00QAGETIJC000000VV0AG83KVUKPPPF5",
+        "name": "Lars Hambrecht"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 57,
+      "side": "gast",
+      "spielerId": "00NKB0SPEG000000VV0AG85VVUH1CIQU",
+      "spielerName": "Joshua Hillesheim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 58,
+      "side": "heim",
+      "rein": {
+        "id": "00NKB1AV24000000VV0AG85VVUH1CIQU",
+        "name": "Niklas Schmitt"
+      },
+      "raus": {
+        "id": "00S2QHMF2S000000VV0AG80NVTI1GQJD",
+        "name": "Felix Gerstmayer"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 64,
+      "side": "heim",
+      "spielerId": "02G08N2PFO000000VUM1DNOSVU169VS9",
+      "spielerName": "Elias Piazolo (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 65,
+      "side": "heim",
+      "rein": {
+        "id": "01TTQMKO7K000000VS541L4KVUMUIUK4",
+        "name": "Nicolas Küspert (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "02IKUGH1PC000000VS5489B5VT8KI14O",
+        "name": "Carlos Alfredo Ocanto Dávila"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 72,
+      "side": "gast",
+      "rein": {
+        "id": "00SOO2TLR8000000VV0AG80NVVIDSMSI",
+        "name": "Nils Menges"
+      },
+      "raus": {
+        "id": "025E0BI5U8000000VS541L4HVV10EKTI",
+        "name": "Tom Gieseler (VfB Rauenberg) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 79,
+      "side": "gast",
+      "rein": {
+        "id": "01OTHTUJV8000000VV0AG80NVSHO9FVA",
+        "name": "Abubacarr Jawara"
+      },
+      "raus": {
+        "id": "016UM35LA8000000VV0AG811VUQ50GCE",
+        "name": "Moritz Höffner"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 81,
+      "side": "gast",
+      "rein": {
+        "id": "02149642GG000000VS541L4KVVJUQ27A",
+        "name": "Timo Bosselman (VfB Rauenberg) Spieler"
+      },
+      "raus": {
+        "id": "01I3AC3JU0000000VV0AG811VVSBGVMJ",
+        "name": "Yannick Gwiosdzik"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 90,
+      "side": "gast",
+      "rein": {
+        "id": "024S2R6LVO000000VS541L4HVS38HCH1",
+        "name": "Nando Molitor (VfB Rauenberg) Spieler"
+      },
+      "raus": {
+        "id": "00OCLCQSFK000000VV0AG83KVU713MQC",
+        "name": "Riccardo Hickel"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 90,
+      "side": "heim",
+      "rein": {
+        "id": "01RHVCJ9CK000000VS541L4GVVU8CVVT",
+        "name": "Marvin Zollweg (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "028S5S3V70000000VS541L4KVT82IE4D",
+        "name": "David Peipp (SG HD-Kirchheim) Spieler"
+      }
+    }
+  ]
+}

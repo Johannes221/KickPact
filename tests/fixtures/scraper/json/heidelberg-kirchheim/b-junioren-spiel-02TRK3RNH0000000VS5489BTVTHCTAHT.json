@@ -1,0 +1,115 @@
+{
+  "spielId": "02TRK3RNH0000000VS5489BTVTHCTAHT",
+  "heim": "FC Nöttingen",
+  "gast": "SG HD-Kirchheim",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 3
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 20,
+      "side": "gast",
+      "spielerId": "024BF5OFC8000000VS54898FVV03JNV3",
+      "spielerName": "Rafael Gomes"
+    },
+    {
+      "typ": "TOR",
+      "minute": 30,
+      "side": "gast",
+      "spielerId": "02GDTG06VO000000VUM1DNPDVUD36GTN",
+      "spielerName": "Ali Aksoy (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 35,
+      "side": "heim",
+      "rein": {
+        "id": "02H4EB9VMS000000VUM1DNPBVVGGGAMC",
+        "name": "Emir Cici (FC Nöttingen) Spieler"
+      },
+      "raus": {
+        "id": "02FKLOGC20000000VUM1DNRBVS3B76CE",
+        "name": "Phil Doll (VfB Stuttgart) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 44,
+      "side": "gast",
+      "spielerId": "01RIRAJ13G000000VS548984VV46JFGG",
+      "spielerName": "Luan Ameti"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 48,
+      "side": "gast",
+      "rein": {
+        "id": "02G4S574LC000000VUM1DNOIVU9R2CBC",
+        "name": "Mats Beckenbach (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "024BF5OFC8000000VS54898FVV03JNV3",
+        "name": "Rafael Gomes"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 53,
+      "side": "heim",
+      "spielerId": "020QSPGU0O000000VS54898FVST61D60",
+      "spielerName": "Danis Sadikovic"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 57,
+      "side": "gast",
+      "rein": {
+        "id": "01LNRB2L28000000VV0AG811VVF4PM4J",
+        "name": "Nico Meyer"
+      },
+      "raus": {
+        "id": "023VSMNFN8000000VS54898GVUUOD9NL",
+        "name": "Niko Baleta"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 57,
+      "side": "heim",
+      "spielerId": "020QSPGU0O000000VS54898FVST61D60",
+      "spielerName": "Danis Sadikovic"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 65,
+      "side": "gast",
+      "rein": {
+        "id": "022RA01A30000000VS54898GVVV1H0DN",
+        "name": "Alessio Mangano"
+      },
+      "raus": {
+        "id": "02JNOOE40C000000VUM1DNOPVUHRQHQU",
+        "name": "Leon Alin Metzger (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 70,
+      "side": "heim",
+      "rein": {
+        "id": "021U88K1TS000000VS54898FVS1838UL",
+        "name": "Nils Baumgärtner"
+      },
+      "raus": {
+        "id": "02TVBRPA94000000VUM1D529VSSV19TM",
+        "name": "Tamer Abu Zaineh (FC Nöttingen) Spieler"
+      }
+    }
+  ]
+}

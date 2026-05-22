@@ -1,0 +1,134 @@
+{
+  "spielId": "02TRK3RNQK000000VS5489BTVTHCTAHT",
+  "heim": "SG HD-Kirchheim",
+  "gast": "FC Germ. Friedrichstal",
+  "ergebnis": {
+    "heim": 3,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 2,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "02JTJJ4KFC000000VUM1DNP3VTN593PR",
+        "name": "Bernardo Toasa Caiza (FC Germ. Friedrichstal) Spieler"
+      },
+      "raus": {
+        "id": "02C87R78GC000000VUM1DNRPVTSURG23",
+        "name": "Arda Altun (FC Germ. Friedrichstal) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 8,
+      "side": "gast",
+      "rein": {
+        "id": "02QOF14G1K000000VUM1D52JVV774M18",
+        "name": "Lenard Orani (FC Germ. Friedrichstal) Spieler"
+      },
+      "raus": {
+        "id": "023QDOR4VO000000VS54898FVSSD2CC7",
+        "name": "Oskar Schlindwein"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 14,
+      "side": "heim",
+      "spielerId": "02JNOOE40C000000VUM1DNOPVUHRQHQU",
+      "spielerName": "Leon Alin Metzger (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 16,
+      "side": "gast",
+      "rein": {
+        "id": "0265DSP8A8000000VS54898FVVS6GNUR",
+        "name": "Tiyan Kauert"
+      },
+      "raus": {
+        "id": "0245NICS4S000000VS54898FVVGPN8KI",
+        "name": "Paul Guggenbühler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 36,
+      "side": "heim",
+      "spielerId": "02G4S574LC000000VUM1DNOIVU9R2CBC",
+      "spielerName": "Mats Beckenbach (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 41,
+      "side": "heim",
+      "rein": {
+        "id": "024BF5OFC8000000VS54898FVV03JNV3",
+        "name": "Rafael Gomes"
+      },
+      "raus": {
+        "id": "02G4S574LC000000VUM1DNOIVU9R2CBC",
+        "name": "Mats Beckenbach (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 41,
+      "side": "heim",
+      "rein": {
+        "id": "01VJIC1PSK000000VS54898FVSRJ2N64",
+        "name": "Linus Hennecke"
+      },
+      "raus": {
+        "id": "01RJHESD9G000000VS548985VV9IEAF4",
+        "name": "David Spasojevic"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 52,
+      "side": "heim",
+      "rein": {
+        "id": "02JHAU9I9G000000VUM1DNPDVS4GBEVB",
+        "name": "Ajlan Besic (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "02JNOOE40C000000VUM1DNOPVUHRQHQU",
+        "name": "Leon Alin Metzger (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 55,
+      "side": "gast",
+      "spielerId": "02JTJJ4KFC000000VUM1DNP3VTN593PR",
+      "spielerName": "Bernardo Toasa Caiza (FC Germ. Friedrichstal) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "heim",
+      "rein": {
+        "id": "01LNRB2L28000000VV0AG811VVF4PM4J",
+        "name": "Nico Meyer"
+      },
+      "raus": {
+        "id": "02GDTG06VO000000VUM1DNPDVUD36GTN",
+        "name": "Ali Aksoy (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 80,
+      "side": "heim",
+      "spielerId": "01RIRAJ13G000000VS548984VV46JFGG",
+      "spielerName": "Luan Ameti"
+    }
+  ]
+}

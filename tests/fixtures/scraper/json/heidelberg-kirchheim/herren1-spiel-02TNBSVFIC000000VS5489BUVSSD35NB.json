@@ -1,0 +1,126 @@
+{
+  "spielId": "02TNBSVFIC000000VS5489BUVSSD35NB",
+  "heim": "SG HD-Kirchheim",
+  "gast": "GU-Türk. SV Pforzheim",
+  "ergebnis": {
+    "heim": 0,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 67,
+      "side": "heim",
+      "rein": {
+        "id": "02C4INP318000000VUM1DNP9VSMNJ2O4",
+        "name": "Malik Mikona (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "01LI1TKP1C000000VV0AG811VU3U5OGP",
+        "name": "Fabian Heller"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 76,
+      "side": "gast",
+      "rein": {
+        "id": "026EHHPLO4000000VS5489B6VU1J6RLI",
+        "name": "Luca-Daniel Dumbra"
+      },
+      "raus": {
+        "id": "0294TQ8MCK000000VS541L4KVUJSKUVP",
+        "name": "Mert Kizilarslan (GU-Türk. SV Pforzheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 78,
+      "side": "gast",
+      "rein": {
+        "id": "02S3P35B64000000VS5489B8VS8NVJV7",
+        "name": "Stefan Vladul"
+      },
+      "raus": {
+        "id": "02C605IFM8000000VUM1DNQDVU64JQHB",
+        "name": "Jan Trampus (GU-Türk. SV Pforzheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 78,
+      "side": "gast",
+      "spielerId": "01MH0AKQVS000005VV0AG13EVSFDFGE6",
+      "spielerName": "Ernesto De Santis (GU-Türk. SV Pforzheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 80,
+      "side": "heim",
+      "rein": {
+        "id": "02LR8RG474000000VUM1DNOGVUEV72HC",
+        "name": "Tim Steinmann (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "028CATL4Q0000000VS541L4KVT4E998U",
+        "name": "David Zimmermann (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 85,
+      "side": "gast",
+      "rein": {
+        "id": "01CSA6737S000000VV0AG811VT1IGQ2G",
+        "name": "Tiago Coutinho Lemos"
+      },
+      "raus": {
+        "id": "00Q5QD0JJ0000000VV0AG85VVV05E0NJ",
+        "name": "Nikolaos Dobros"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 85,
+      "side": "heim",
+      "rein": {
+        "id": "01I3JKCT74000000VV0AG811VVSBGVMJ",
+        "name": "Timo Hartmann"
+      },
+      "raus": {
+        "id": "02J5C0TONK000000VUM1DNOIVUPC128C",
+        "name": "David Kiefer (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 86,
+      "side": "heim",
+      "rein": {
+        "id": "026I2PJI3O000000VS541L4KVSEAAADN",
+        "name": "Luis Kietzmann (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "01F7LAQM3G000000VV0AG80NVSK6GLRA",
+        "name": "Mehmet Celik"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 90,
+      "side": "gast",
+      "rein": {
+        "id": "02L27LVM2G000000VUM1DNPQVSMTNIFC",
+        "name": "Marius Kraus (GU-Türk. SV Pforzheim) Spieler"
+      },
+      "raus": {
+        "id": "02IKKFMJRG000000VS5489B6VSFVOKCO",
+        "name": "Matheus Correia Dos Santos"
+      }
+    }
+  ]
+}

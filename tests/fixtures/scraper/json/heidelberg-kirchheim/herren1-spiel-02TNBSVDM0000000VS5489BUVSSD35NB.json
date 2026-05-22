@@ -1,0 +1,187 @@
+{
+  "spielId": "02TNBSVDM0000000VS5489BUVSSD35NB",
+  "heim": "FC-Astoria Walldorf 2",
+  "gast": "SG HD-Kirchheim",
+  "ergebnis": {
+    "heim": 5,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 3,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 4,
+      "side": "heim",
+      "spielerId": "02RMGP0C9G000000VUM1D58CVT4763FA",
+      "spielerName": "Till Wiesendanger (FC Astoria Walldorf) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 37,
+      "side": "heim",
+      "spielerId": "01EMGLCGGC000000VV0AG80NVVIPF5HD",
+      "spielerName": "Gabriele Carlo Gianetta"
+    },
+    {
+      "typ": "TOR",
+      "minute": 44,
+      "side": "heim",
+      "spielerId": "01LKJ28MCK000000VV0AG80NVU1OV8RM",
+      "spielerName": "Julian Thunert"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "heim",
+      "rein": {
+        "id": "02TMUAJI90000000VUM1D57DVUL92E27",
+        "name": "Benjamin Thurnher (FC Astoria Walldorf) Spieler"
+      },
+      "raus": {
+        "id": "01EMGLCGGC000000VV0AG80NVVIPF5HD",
+        "name": "Gabriele Carlo Gianetta"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "heim",
+      "rein": {
+        "id": "028UAV8FGS000000VS541L4GVTAENB4H",
+        "name": "Cedric Sieper (FC Astoria Walldorf) Spieler"
+      },
+      "raus": {
+        "id": "01E2KTP74C000000VV0AG811VU81O9RE",
+        "name": "Luis Baumert"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "heim",
+      "rein": {
+        "id": "02V372O340000000VUM1D582VVGEVFF7",
+        "name": "Tom Gebauer (FC Astoria Walldorf) Spieler"
+      },
+      "raus": {
+        "id": "02IQK1106G000000VUM1DNOPVS9NSHQP",
+        "name": "Bennet Schieber (FC Astoria Walldorf) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "gast",
+      "rein": {
+        "id": "01I3JKCT74000000VV0AG811VVSBGVMJ",
+        "name": "Timo Hartmann"
+      },
+      "raus": {
+        "id": "02J5C0TONK000000VUM1DNOIVUPC128C",
+        "name": "David Kiefer (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "gast",
+      "rein": {
+        "id": "026I2PJI3O000000VS541L4KVSEAAADN",
+        "name": "Luis Kietzmann (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "022834EFSO000000VS541L4HVUKTV0RV",
+        "name": "Marius Klein (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 66,
+      "side": "heim",
+      "rein": {
+        "id": "01P50P98PK000000VV0AG80NVTMUDICG",
+        "name": "Max Essenpreis"
+      },
+      "raus": {
+        "id": "01K2CG5JO4000000VV0AG811VV81EQQB",
+        "name": "Bennet Jautz"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "gast",
+      "rein": {
+        "id": "028CATL4Q0000000VS541L4KVT4E998U",
+        "name": "David Zimmermann (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "01F7LAQM3G000000VV0AG80NVSK6GLRA",
+        "name": "Mehmet Celik"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "gast",
+      "rein": {
+        "id": "02MUMFDUDG000000VUM1DNPDVTM9DTTF",
+        "name": "Til Huber (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "02C4INP318000000VUM1DNP9VSMNJ2O4",
+        "name": "Malik Mikona (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 75,
+      "side": "heim",
+      "spielerId": "02RMGP0C9G000000VUM1D58CVT4763FA",
+      "spielerName": "Till Wiesendanger (FC Astoria Walldorf) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 77,
+      "side": "heim",
+      "rein": {
+        "id": "02LDO937BO000000VUM1DNO6VV0KF6T0",
+        "name": "Leonhard Balkow (FC Astoria Walldorf) Spieler"
+      },
+      "raus": {
+        "id": "02RMGP0C9G000000VUM1D58CVT4763FA",
+        "name": "Till Wiesendanger (FC Astoria Walldorf) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 79,
+      "side": "gast",
+      "rein": {
+        "id": "02I3AE24RC000000VUM1DNO7VUOBUGS8",
+        "name": "Finn Hagen (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "01POF9CV8C000000VS541L4QVSB85PDH",
+        "name": "Marc Haffa (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 84,
+      "side": "heim",
+      "spielerId": "02TMUAJI90000000VUM1D57DVUL92E27",
+      "spielerName": "Benjamin Thurnher (FC Astoria Walldorf) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 89,
+      "side": "gast",
+      "spielerId": "02MUMFDUDG000000VUM1DNPDVTM9DTTF",
+      "spielerName": "Til Huber (SG HD-Kirchheim) Spieler"
+    }
+  ]
+}

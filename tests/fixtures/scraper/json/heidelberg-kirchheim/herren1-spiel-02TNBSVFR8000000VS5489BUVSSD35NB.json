@@ -1,0 +1,153 @@
+{
+  "spielId": "02TNBSVFR8000000VS5489BUVSSD35NB",
+  "heim": "1.FC Bruchsal 1899",
+  "gast": "SG HD-Kirchheim",
+  "ergebnis": {
+    "heim": 3,
+    "gast": 0
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 31,
+      "side": "heim",
+      "spielerId": "00P1TD89KS000000VV0AG83KVSA2TTUM",
+      "spielerName": "Alessandro Sautter"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 43,
+      "side": "heim",
+      "rein": {
+        "id": "02DL53VU4K000000VUM1DNP1VT1LJLLU",
+        "name": "Noah Hirth (1.FC Bruchsal) Spieler"
+      },
+      "raus": {
+        "id": "01MH0AKR00000007VV0AG13EVSFDFGE6",
+        "name": "Kai Kleinert (1.FC Bruchsal) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 49,
+      "side": "heim",
+      "rein": {
+        "id": "0237EM9J70000000VS541L4KVUSSOITT",
+        "name": "Stefano Savarese (1.FC Bruchsal) Spieler"
+      },
+      "raus": {
+        "id": "00MQSP1IDC000000VV0AG85VVTE7DTLB",
+        "name": "Dennis Klemm"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 63,
+      "side": "heim",
+      "spielerId": "02KUIS9940000000VUM1DNOSVUPMO8BO",
+      "spielerName": "Paulino De Tullio (1.FC Bruchsal) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 71,
+      "side": "gast",
+      "rein": {
+        "id": "01I3JKCT74000000VV0AG811VVSBGVMJ",
+        "name": "Timo Hartmann"
+      },
+      "raus": {
+        "id": "02C4INP318000000VUM1DNP9VSMNJ2O4",
+        "name": "Malik Mikona (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 76,
+      "side": "heim",
+      "spielerId": "00NKB0R1JK000000VV0AG85VVUH1CIQU",
+      "spielerName": "Jonas Malsam"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 77,
+      "side": "heim",
+      "rein": {
+        "id": "01P6RF49I8000000VV0AG80NVTMUDICG",
+        "name": "Adem Sabki"
+      },
+      "raus": {
+        "id": "00NKB0R1JK000000VV0AG85VVUH1CIQU",
+        "name": "Jonas Malsam"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 77,
+      "side": "heim",
+      "rein": {
+        "id": "01LMH888T8000000VV0AG80NVU1OV8RM",
+        "name": "Louis Wagensommer"
+      },
+      "raus": {
+        "id": "00VLDCH0U8000000VV0AG80NVVO0ALEL",
+        "name": "Giacomo Wiczynski"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 81,
+      "side": "heim",
+      "rein": {
+        "id": "01UVKTID0O000000VS54898GVUEA7KOB",
+        "name": "Daniel Neres de Oliveira"
+      },
+      "raus": {
+        "id": "01MH0AKRGO000001VV0AG13EVSFDFGE6",
+        "name": "Simon Kranitz (1.FC Bruchsal) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 81,
+      "side": "gast",
+      "rein": {
+        "id": "026I2PJI3O000000VS541L4KVSEAAADN",
+        "name": "Luis Kietzmann (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "01POF9CV8C000000VS541L4QVSB85PDH",
+        "name": "Marc Haffa (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 83,
+      "side": "gast",
+      "rein": {
+        "id": "028CATL4Q0000000VS541L4KVT4E998U",
+        "name": "David Zimmermann (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "01F7LAQM3G000000VV0AG80NVSK6GLRA",
+        "name": "Mehmet Celik"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 89,
+      "side": "gast",
+      "rein": {
+        "id": "01NRPVLKJ0000000VV0AG811VS4L15JE",
+        "name": "Cedric Jens Heinzerling"
+      },
+      "raus": {
+        "id": "02J5C0TONK000000VUM1DNOIVUPC128C",
+        "name": "David Kiefer (SG HD-Kirchheim) Spieler"
+      }
+    }
+  ]
+}

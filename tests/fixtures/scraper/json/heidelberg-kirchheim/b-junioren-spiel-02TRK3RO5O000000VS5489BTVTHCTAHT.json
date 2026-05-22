@@ -1,0 +1,135 @@
+{
+  "spielId": "02TRK3RO5O000000VS5489BTVTHCTAHT",
+  "heim": "SG HD-Kirchheim",
+  "gast": "TSV 05 Reichenbach",
+  "ergebnis": {
+    "heim": 4,
+    "gast": 2
+  },
+  "halbzeit": {
+    "heim": 2,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 5,
+      "side": "gast",
+      "spielerId": "02L3SVHSS0000000VUM1DNPHVUOHQJP4",
+      "spielerName": "Mazar Meer (TSV 05 Reichenbach) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 11,
+      "side": "gast",
+      "rein": {
+        "id": "02JPC9BBBG000000VUM1DNP4VSPR2GD5",
+        "name": "Bozhidar Kamburov (TSV 05 Reichenbach) Spieler"
+      },
+      "raus": {
+        "id": "02L3SVHSS0000000VUM1DNPHVUOHQJP4",
+        "name": "Mazar Meer (TSV 05 Reichenbach) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 20,
+      "side": "gast",
+      "rein": {
+        "id": "02LQU7EOEG000000VUM1DNR2VVCFIKFD",
+        "name": "Jonas Mahr (TSV 05 Reichenbach) Spieler"
+      },
+      "raus": {
+        "id": "026NH3AO7K000000VS5489B5VU5SQ264",
+        "name": "Can Leon Özkan"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 40,
+      "side": "heim",
+      "rein": {
+        "id": "02JHAU9I9G000000VUM1DNPDVS4GBEVB",
+        "name": "Ajlan Besic (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "021NFUK67C000000VS54898GVTS3FN53",
+        "name": "Jason Green"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 40,
+      "side": "heim",
+      "spielerId": "028JFCOTLO000000VS541L4JVUK84Q91",
+      "spielerName": "Berk Ekrem Bekyigit (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 40,
+      "side": "heim",
+      "spielerId": "02JHAU9I9G000000VUM1DNPDVS4GBEVB",
+      "spielerName": "Ajlan Besic (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 48,
+      "side": "heim",
+      "rein": {
+        "id": "022RA01A30000000VS54898GVVV1H0DN",
+        "name": "Alessio Mangano"
+      },
+      "raus": {
+        "id": "01VA77CCFK000000VS54898FVU7JQBI1",
+        "name": "Yonas Koch"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 48,
+      "side": "heim",
+      "rein": {
+        "id": "01LNRB2L28000000VV0AG811VVF4PM4J",
+        "name": "Nico Meyer"
+      },
+      "raus": {
+        "id": "023VSMNFN8000000VS54898GVUUOD9NL",
+        "name": "Niko Baleta"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 64,
+      "side": "heim",
+      "spielerId": "02JNOOE40C000000VUM1DNOPVUHRQHQU",
+      "spielerName": "Leon Alin Metzger (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 66,
+      "side": "gast",
+      "spielerId": "02UUKQ0KCO000000VUM1D535VUO4BC54",
+      "spielerName": "Maximilian Selzer (TSV 05 Reichenbach) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 68,
+      "side": "gast",
+      "rein": {
+        "id": "02QPNPG0U4000000VUM1D510VUE66US6",
+        "name": "Kostiantyn Shablin (TSV 05 Reichenbach) Spieler"
+      },
+      "raus": {
+        "id": "02H2NUV0RC000000VUM1DNOEVT3137H2",
+        "name": "Batug Arik (TSV 05 Reichenbach) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 80,
+      "side": "heim",
+      "spielerId": "02JNOOE40C000000VUM1DNOPVUHRQHQU",
+      "spielerName": "Leon Alin Metzger (SG HD-Kirchheim) Spieler"
+    }
+  ]
+}

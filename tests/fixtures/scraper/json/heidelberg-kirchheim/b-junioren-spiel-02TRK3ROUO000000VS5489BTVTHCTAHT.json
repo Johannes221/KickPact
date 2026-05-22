@@ -1,0 +1,186 @@
+{
+  "spielId": "02TRK3ROUO000000VS5489BTVTHCTAHT",
+  "heim": "SG HD-Kirchheim",
+  "gast": "SpVgg Durlach-Aue",
+  "ergebnis": {
+    "heim": 6,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 3,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 23,
+      "side": "gast",
+      "rein": {
+        "id": "02SSBLLIV0000000VUM1D580VTCO9HCH",
+        "name": "Marius Kramer (SpVgg Durlach-Aue) Spieler"
+      },
+      "raus": {
+        "id": "0309VP4HOK000000VUM1D59BVUI2V7N0",
+        "name": "Vitus Vuletic (SpVgg Durlach-Aue) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 28,
+      "side": "heim",
+      "spielerId": "01RIRAJ13G000000VS548984VV46JFGG",
+      "spielerName": "Luan Ameti"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 32,
+      "side": "heim",
+      "rein": {
+        "id": "024BF5OFC8000000VS54898FVV03JNV3",
+        "name": "Rafael Gomes"
+      },
+      "raus": {
+        "id": "020GK2IKHC000000VS54898FVUSQ2KJQ",
+        "name": "Niklas Grün"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 33,
+      "side": "heim",
+      "spielerId": "01RJHESD9G000000VS548985VV9IEAF4",
+      "spielerName": "David Spasojevic"
+    },
+    {
+      "typ": "TOR",
+      "minute": 40,
+      "side": "heim",
+      "spielerId": "01RJHESD9G000000VS548985VV9IEAF4",
+      "spielerName": "David Spasojevic"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 41,
+      "side": "gast",
+      "rein": {
+        "id": "0242ET3LF8000000VS54898FVVGPN8KI",
+        "name": "Habib Kiar Zakaria"
+      },
+      "raus": {
+        "id": "02TPKUF5IC000000VUM1D51VVV3KCT6A",
+        "name": "Jonas Heinrich Ruppert (SpVgg Durlach-Aue) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 41,
+      "side": "heim",
+      "rein": {
+        "id": "023VSMNFN8000000VS54898GVUUOD9NL",
+        "name": "Niko Baleta"
+      },
+      "raus": {
+        "id": "01LNRB2L28000000VV0AG811VVF4PM4J",
+        "name": "Nico Meyer"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 41,
+      "side": "heim",
+      "rein": {
+        "id": "02G4S574LC000000VUM1DNOIVU9R2CBC",
+        "name": "Mats Beckenbach (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "028JFCOTLO000000VS541L4JVUK84Q91",
+        "name": "Berk Ekrem Bekyigit (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 41,
+      "side": "heim",
+      "rein": {
+        "id": "02JHAU9I9G000000VUM1DNPDVS4GBEVB",
+        "name": "Ajlan Besic (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "02GDTG06VO000000VUM1DNPDVUD36GTN",
+        "name": "Ali Aksoy (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 45,
+      "side": "gast",
+      "spielerId": "0242ET3LF8000000VS54898FVVGPN8KI",
+      "spielerName": "Habib Kiar Zakaria"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 55,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 55,
+      "side": "heim",
+      "rein": {
+        "id": "024J9C0DMK000000VS54898GVUQ46MPJ",
+        "name": "Julian Wolf"
+      },
+      "raus": {
+        "id": "023D7JTP88000000VS54898FVVR4HGAN",
+        "name": "Julian Finn Müller"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 59,
+      "side": "gast",
+      "rein": {
+        "id": "02UVVJ7SC0000000VUM1D536VTGDPKUC",
+        "name": "Eymen Misir (SpVgg Durlach-Aue) Spieler"
+      },
+      "raus": {
+        "id": "024KFSLH24000000VS54898FVS18NMMJ",
+        "name": "Luca Gerner"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 59,
+      "side": "gast",
+      "rein": {
+        "id": "02REQ6NOLK000000VUM1D57VVUIFTBLC",
+        "name": "Leon Smolcic (SpVgg Durlach-Aue) Spieler"
+      },
+      "raus": {
+        "id": "02KRFOISMK000000VUM1DNONVV30C13N",
+        "name": "Tom Henry Kies (SpVgg Durlach-Aue) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 60,
+      "side": "heim",
+      "spielerId": "01RIRAJ13G000000VS548984VV46JFGG",
+      "spielerName": "Luan Ameti"
+    },
+    {
+      "typ": "TOR",
+      "minute": 78,
+      "side": "heim",
+      "spielerId": "023VSMNFN8000000VS54898GVUUOD9NL",
+      "spielerName": "Niko Baleta"
+    },
+    {
+      "typ": "TOR",
+      "minute": 79,
+      "side": "heim",
+      "spielerId": "022RA01A30000000VS54898GVVV1H0DN",
+      "spielerName": "Alessio Mangano"
+    }
+  ]
+}

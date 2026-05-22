@@ -1,0 +1,133 @@
+{
+  "spielId": "02TNBSVG8S000000VS5489BUVSSD35NB",
+  "heim": "SG HD-Kirchheim",
+  "gast": "TSG 1862/​09 Weinheim",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 0
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 16,
+      "side": "heim",
+      "spielerId": "01LI1TKP1C000000VV0AG811VU3U5OGP",
+      "spielerName": "Fabian Heller"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "02GSN2U5V8000000VUM1DNOSVVV6K8EJ",
+        "name": "Ismet Kartal (TSG 62/09 Weinheim) Spieler"
+      },
+      "raus": {
+        "id": "00Q5QDF7F8000000VV0AG85VVV05E0NJ",
+        "name": "Fabian Czaker"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 70,
+      "side": "heim",
+      "rein": {
+        "id": "01I3JKCT74000000VV0AG811VVSBGVMJ",
+        "name": "Timo Hartmann"
+      },
+      "raus": {
+        "id": "01LQD4GGUS000000VV0AG80NVSJMIQ1G",
+        "name": "Jannik Ebert"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 73,
+      "side": "heim",
+      "rein": {
+        "id": "028CATL4Q0000000VS541L4KVT4E998U",
+        "name": "David Zimmermann (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "02OE34R8VS000000VUM1DNOVVTO69U41",
+        "name": "Lazar Aed (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 77,
+      "side": "gast",
+      "rein": {
+        "id": "00UPM7N37S000000VV0AG811VUM8TEEV",
+        "name": "Kevin da Silva Arnold"
+      },
+      "raus": {
+        "id": "01DU318H0O000000VV0AG80NVS7CPDE2",
+        "name": "Marc Berger"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 81,
+      "side": "heim",
+      "rein": {
+        "id": "02C4INP318000000VUM1DNP9VSMNJ2O4",
+        "name": "Malik Mikona (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "01POF9CV8C000000VS541L4QVSB85PDH",
+        "name": "Marc Haffa (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 87,
+      "side": "heim",
+      "spielerId": "023HMQ1R04000000VS541L4GVTGJVDM2",
+      "spielerName": "Sinisa Sprecakovic (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 90,
+      "side": "gast",
+      "rein": {
+        "id": "01BFIK9ACG000000VV0AG80NVVL109AA",
+        "name": "Finlay Mucha"
+      },
+      "raus": {
+        "id": "02BOQ19NSS000000VUM1DNPIVSSNP3E2",
+        "name": "Milad Hussaini (TSG 62/09 Weinheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 90,
+      "side": "heim",
+      "rein": {
+        "id": "01VC9OTT5G000000VS541L4HVTCDVBA2",
+        "name": "Nick Johann (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "01LI1TKP1C000000VV0AG811VU3U5OGP",
+        "name": "Fabian Heller"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 90,
+      "side": "heim",
+      "rein": {
+        "id": "01NRPVLKJ0000000VV0AG811VS4L15JE",
+        "name": "Cedric Jens Heinzerling"
+      },
+      "raus": {
+        "id": "023HMQ1R04000000VS541L4GVTGJVDM2",
+        "name": "Sinisa Sprecakovic (SG HD-Kirchheim) Spieler"
+      }
+    }
+  ]
+}
