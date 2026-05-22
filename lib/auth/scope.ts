@@ -63,13 +63,11 @@ export async function assertClubWriteAccess(
 }
 
 type TeamRole = "trainer" | "viewer";
-type ClubRole = "admin" | "trainer" | "viewer";
 
-const CLUB_RANK: Record<ClubRole, number> = { viewer: 1, trainer: 2, admin: 3 };
 const TEAM_RANK: Record<TeamRole, number> = { viewer: 1, trainer: 2 };
 
 export type TeamAccessResult =
-  | { granted: true; scope: "club"; role: ClubRole; teamId: string; clubId: string }
+  | { granted: true; scope: "club"; role: Role; teamId: string; clubId: string }
   | { granted: true; scope: "team"; role: TeamRole; teamId: string; clubId: string }
   | { granted: false };
 
@@ -105,8 +103,7 @@ export async function resolveTeamAccess(
     )
     .limit(1);
   if (clubMem) {
-    const needClubRank = minRole === "trainer" ? CLUB_RANK.trainer : CLUB_RANK.viewer;
-    if (CLUB_RANK[clubMem.role] >= needClubRank) {
+    if (ROLE_RANK[clubMem.role] >= ROLE_RANK[minRole]) {
       return {
         granted: true,
         scope: "club",

@@ -130,4 +130,15 @@ describe("resolveTeamAccess", () => {
     expect(r.scope).toBe("club");
     expect(r.role).toBe("admin");
   });
+
+  it("falls back to team-trainer when club-viewer does not satisfy minRole", async () => {
+    const { userId, clubId, teamId } = await seed();
+    await db.insert(clubMemberships).values({ userId, clubId, role: "viewer" });
+    await db.insert(teamMemberships).values({ userId, teamId, role: "trainer" });
+    const r = await resolveTeamAccess(userId, teamId, "trainer");
+    expect(r.granted).toBe(true);
+    if (!r.granted) return;
+    expect(r.scope).toBe("team");
+    expect(r.role).toBe("trainer");
+  });
 });
