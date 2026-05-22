@@ -7,6 +7,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { users } from "./auth";
 
 export const memberRoleEnum = pgEnum("member_role", ["admin", "trainer", "viewer"]);
+export const teamMemberRoleEnum = pgEnum("team_member_role", ["trainer", "viewer"]);
 
 export const clubs = pgTable(
   "clubs",
@@ -91,5 +92,20 @@ export const players = pgTable(
     teamFussballdeIdx: uniqueIndex("players_team_fussballde_idx")
       .on(t.teamId, t.fussballdePlayerId)
       .where(sql`${t.fussballdePlayerId} IS NOT NULL`)
+  })
+);
+
+export const teamMemberships = pgTable(
+  "team_memberships",
+  {
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    teamId: text("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+    role: teamMemberRoleEnum("role").notNull().default("trainer"),
+    invitedByUserId: text("invited_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.teamId] }),
+    teamIdx: index("team_memberships_team_idx").on(t.teamId)
   })
 );
