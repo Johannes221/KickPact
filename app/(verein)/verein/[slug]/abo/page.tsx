@@ -73,12 +73,12 @@ export default async function AboPage({
         </div>
       )}
 
-      <div className="grid gap-3 md:gap-4 md:grid-cols-3">
+      <div className="grid gap-3 md:gap-4 md:grid-cols-3 items-stretch">
         {Object.values(PLANS).map((plan) => (
           <div
             key={plan.key}
             className={
-              "rounded-2xl border p-4 md:p-5 " +
+              "flex flex-col rounded-2xl border p-4 md:p-5 " +
               (plan.key === "pro"
                 ? "border-accent bg-accent/5"
                 : "border-brand-neutral/40 bg-white")
@@ -105,7 +105,7 @@ export default async function AboPage({
                 / {plan.unit === "team" ? "Mannschaft" : "Verein"} / Monat
               </span>
             </div>
-            <ul className="mt-3 md:mt-4 space-y-1.5 text-xs md:text-sm text-brand-night-navy/80">
+            <ul className="mt-3 md:mt-4 flex-1 space-y-1.5 text-xs md:text-sm text-brand-night-navy/80">
               {plan.features.map((f) => (
                 <li key={f} className="flex gap-1.5">
                   <span className="text-accent">✓</span>
@@ -118,7 +118,7 @@ export default async function AboPage({
                 clubSlug={slug}
                 plan={plan.key}
                 stripeReady={stripeReady}
-                hasSubscription={!!sub}
+                currentStatus={sub?.status ?? null}
               />
             </div>
           </div>

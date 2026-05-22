@@ -99,7 +99,7 @@ export default function LandingPage() {
                 <Link href="/signup">Mannschaft anlegen · 30 Tage gratis</Link>
               </Button>
               <Button variant="outline" size="lg" asChild className="w-full sm:w-auto bg-white/80">
-                <Link href="/login">Zum Dashboard</Link>
+                <Link href="/dashboard">Zum Dashboard</Link>
               </Button>
             </div>
             <p className="animate-fade-up delay-4 mt-3 text-[0.7rem] md:text-sm text-brand-night-navy/60">

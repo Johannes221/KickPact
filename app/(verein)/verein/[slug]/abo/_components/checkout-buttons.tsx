@@ -13,12 +13,16 @@ interface Props {
   clubSlug: string;
   plan: PlanKey;
   stripeReady: boolean;
-  hasSubscription: boolean;
+  /** Status des bestehenden Abos, oder null wenn noch keines */
+  currentStatus: string | null;
 }
 
-export function CheckoutButtons({ clubSlug, plan, stripeReady, hasSubscription }: Props) {
+export function CheckoutButtons({ clubSlug, plan, stripeReady, currentStatus }: Props) {
   const [isPending, startTransition] = useTransition();
   const [busy, setBusy] = useState<"checkout" | "portal" | null>(null);
+
+  const hasSubscription = !!currentStatus;
+  const isTrialing = currentStatus === "trialing";
 
   async function handleCheckout() {
     setBusy("checkout");
@@ -46,6 +50,15 @@ export function CheckoutButtons({ clubSlug, plan, stripeReady, hasSubscription }
     });
   }
 
+  // CTA-Text je nach Subscription-Status
+  function checkoutLabel() {
+    if (isPending && busy === "checkout") return "Öffne Checkout…";
+    if (!stripeReady) return "Stripe nicht aktiv";
+    if (isTrialing) return "Zahlungsdaten hinterlegen →";
+    if (hasSubscription) return "Plan wechseln →";
+    return "Jetzt starten · 30 Tage gratis";
+  }
+
   return (
     <div className="space-y-2">
       <Button
@@ -55,11 +68,7 @@ export function CheckoutButtons({ clubSlug, plan, stripeReady, hasSubscription }
         disabled={!stripeReady || (isPending && busy === "checkout")}
         onClick={handleCheckout}
       >
-        {isPending && busy === "checkout"
-          ? "Öffne Checkout…"
-          : stripeReady
-            ? "Jetzt starten · 30 Tage gratis"
-            : "Stripe nicht aktiv"}
+        {checkoutLabel()}
       </Button>
       {hasSubscription && stripeReady && (
         <Button
