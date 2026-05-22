@@ -7,6 +7,10 @@ export default defineConfig({
     environment: "node",
     globalSetup: ["tests/setup/global.ts"],
     include: ["tests/**/*.test.ts"],
+    // Integration tests against a real Postgres can be slow on cold start
+    // (migrations + truncate). 30s is generous for the heaviest seed paths.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     coverage: {
       reporter: ["text", "html"],
       include: ["lib/**/*.ts"],
