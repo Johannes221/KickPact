@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
-import { clubMemberships, clubs } from "@/lib/db/schema";
+import { clubMemberships, clubs, teams, teamMemberships } from "@/lib/db/schema";
 import { requireUser } from "./session";
 import {
   getSubscriptionGate,
@@ -60,4 +60,83 @@ export async function assertClubWriteAccess(
     );
   }
   return { ...ctx, gate };
+}
+
+type TeamRole = "trainer" | "viewer";
+type ClubRole = "admin" | "trainer" | "viewer";
+
+const CLUB_RANK: Record<ClubRole, number> = { viewer: 1, trainer: 2, admin: 3 };
+const TEAM_RANK: Record<TeamRole, number> = { viewer: 1, trainer: 2 };
+
+export type TeamAccessResult =
+  | { granted: true; scope: "club"; role: ClubRole; teamId: string; clubId: string }
+  | { granted: true; scope: "team"; role: TeamRole; teamId: string; clubId: string }
+  | { granted: false };
+
+/**
+ * Pure access resolver — given a user, team and minimum role, returns whether
+ * the user has access and through which membership. Prefers club-scope over
+ * team-scope when both exist (club role is at least as permissive).
+ *
+ * Tested in isolation; the auth-aware `assertTeamAccess` wraps this with
+ * `requireUser` + `redirect`.
+ */
+export async function resolveTeamAccess(
+  userId: string,
+  teamId: string,
+  minRole: TeamRole = "viewer"
+): Promise<TeamAccessResult> {
+  const [team] = await db
+    .select({ id: teams.id, clubId: teams.clubId })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  if (!team) return { granted: false };
+
+  // Club-level first — admins and trainers of the parent club see everything.
+  const [clubMem] = await db
+    .select({ role: clubMemberships.role })
+    .from(clubMemberships)
+    .where(
+      and(
+        eq(clubMemberships.userId, userId),
+        eq(clubMemberships.clubId, team.clubId)
+      )
+    )
+    .limit(1);
+  if (clubMem) {
+    const needClubRank = minRole === "trainer" ? CLUB_RANK.trainer : CLUB_RANK.viewer;
+    if (CLUB_RANK[clubMem.role] >= needClubRank) {
+      return {
+        granted: true,
+        scope: "club",
+        role: clubMem.role,
+        teamId: team.id,
+        clubId: team.clubId
+      };
+    }
+  }
+
+  // Fall back to team-level membership.
+  const [teamMem] = await db
+    .select({ role: teamMemberships.role })
+    .from(teamMemberships)
+    .where(
+      and(
+        eq(teamMemberships.userId, userId),
+        eq(teamMemberships.teamId, teamId)
+      )
+    )
+    .limit(1);
+  if (teamMem && TEAM_RANK[teamMem.role] >= TEAM_RANK[minRole]) {
+    return {
+      granted: true,
+      scope: "team",
+      role: teamMem.role,
+      teamId: team.id,
+      clubId: team.clubId
+    };
+  }
+
+  return { granted: false };
 }
