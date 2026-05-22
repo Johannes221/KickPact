@@ -11,6 +11,7 @@ import { listClubSeasonPledges } from "@/lib/db/queries/club-dashboard";
 import { SeasonResultForm } from "./_components/season-result-form";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
+import { inngest } from "@/lib/inngest/client";
 
 export const metadata = { title: "Mannschaft · KickPact" };
 
@@ -69,6 +70,21 @@ export default async function TeamDetailPage({
     else draws++;
   }
   const totalCharges = [...chargesSummary.values()].reduce((s, v) => s + v, 0);
+
+  // Falls noch keine Spiele für dieses Team vorhanden sind, einen On-Demand-Crawl
+  // anstoßen. Dedup über Event-ID (1h-Bucket) verhindert Mehrfach-Trigger bei Reloads.
+  if (matchRows.length === 0 && team.fussballdeTeamId) {
+    const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000));
+    inngest
+      .send({
+        id: `team-crawl-${team.id}-${hourBucket}`,
+        name: "crawler/team.crawl",
+        data: { teamId: team.id }
+      })
+      .catch((err) => {
+        console.error("[team-page] inngest.send failed", err);
+      });
+  }
 
   return (
     <div className="space-y-8">
@@ -193,7 +209,13 @@ export default async function TeamDetailPage({
         </div>
         {matchRows.length === 0 ? (
           <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60">
-            Noch keine Spiele erfasst. Crawler-Cron läuft alle 6h und scrapt Fußball.de.
+            <div className="flex items-center gap-3">
+              <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse" />
+              <span>
+                Wir suchen aktuell nach den letzten Spielen. Das kann ein paar Minuten dauern —
+                sobald neue Spiele auftauchen, erscheinen sie hier automatisch.
+              </span>
+            </div>
           </div>
         ) : (
           <ul className="space-y-2">

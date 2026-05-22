@@ -8,7 +8,13 @@ import { Label } from "@/components/ui/label";
 import { searchVereineAction } from "../_actions/search";
 import { toast } from "sonner";
 
-type VereinHit = { name: string; slug: string; vereinId: string; url: string };
+type VereinHit = {
+  name: string;
+  ort: string | null;
+  slug: string;
+  vereinId: string;
+  url: string;
+};
 
 export function SearchStep() {
   const router = useRouter();
@@ -67,13 +73,13 @@ export function SearchStep() {
           </Button>
         </div>
         <p className="text-xs text-brand-night-navy/50">
-          Wir scrapen Fußball.de live — die Suche dauert 3–5 Sekunden.
+          Wir suchen aktuell deinen Verein — das dauert ein paar Sekunden.
         </p>
       </div>
 
       {pending && (
         <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60 animate-pulse">
-          Suche läuft bei Fußball.de…
+          Wir suchen aktuell deinen Verein…
         </div>
       )}
 
@@ -94,9 +100,9 @@ export function SearchStep() {
                   >
                     <div>
                       <div className="font-semibold text-brand-night-navy">{v.name}</div>
-                      <div className="text-xs text-brand-night-navy/40 mt-0.5">
-                        Fußball.de-ID: {v.vereinId}
-                      </div>
+                      {v.ort && (
+                        <div className="text-xs text-brand-night-navy/40 mt-0.5">{v.ort}</div>
+                      )}
                     </div>
                     <span className="text-accent text-xl">→</span>
                   </button>

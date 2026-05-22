@@ -35,7 +35,11 @@ export function TeamPlanStep() {
       return;
     }
     (async () => {
-      const res = await getMannschaftenAction({ vereinId, slug });
+      const res = await getMannschaftenAction({
+        vereinId,
+        slug,
+        vereinName: vereinName ?? undefined
+      });
       setLoading(false);
       if (!res.ok) {
         toast.error(res.error);
@@ -46,7 +50,7 @@ export function TeamPlanStep() {
         toast.info("Keine Mannschaften für diesen Verein gefunden.");
       }
     })();
-  }, [vereinId, slug]);
+  }, [vereinId, slug, vereinName]);
 
   function handleNext() {
     if (!selectedTeamId) {
@@ -103,7 +107,7 @@ export function TeamPlanStep() {
         </Label>
         {loading ? (
           <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-4 text-sm text-brand-night-navy/60 animate-pulse">
-            Lade Mannschaften aus Fußball.de…
+            Lade Mannschaften…
           </div>
         ) : teams.length === 0 ? (
           <div className="rounded-lg border border-brand-neutral/40 bg-white p-4 text-sm text-brand-night-navy/60">
