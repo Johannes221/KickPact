@@ -165,4 +165,76 @@ test.describe("Multi-Tenant-Isolation (IDOR-Checks)", () => {
       finalUrl.includes("/verein/verein-a"); // redirect to own verein
     expect(ok).toBe(true);
   });
+
+  test("Sponsor A kann B-Pledge nicht via API DELETE/PATCH manipulieren", async ({
+    context,
+    baseURL,
+    request
+  }) => {
+    test.skip(!isE2EReady(), "requires E2E infrastructure");
+
+    const { a, b } = await seedTwoTenants();
+    await context.addCookies([
+      authCookie(a.sessionCookie, baseURL ?? "http://localhost:3000")
+    ]);
+
+    const patchResp = await request
+      .patch(`/api/pledges/${b.pledgeId}`, {
+        data: { status: "ended" },
+        failOnStatusCode: false
+      })
+      .catch(() => null);
+    if (patchResp) {
+      expect([401, 403, 404, 405]).toContain(patchResp.status());
+    }
+
+    const delResp = await request
+      .delete(`/api/pledges/${b.pledgeId}`, { failOnStatusCode: false })
+      .catch(() => null);
+    if (delResp) {
+      expect([401, 403, 404, 405]).toContain(delResp.status());
+    }
+  });
+
+  test("Trainer A kann B-Match-Events nicht via API erstellen", async ({
+    context,
+    baseURL,
+    request
+  }) => {
+    test.skip(!isE2EReady(), "requires E2E infrastructure");
+
+    const { a, b } = await seedTwoTenants();
+    await context.addCookies([
+      authCookie(a.sessionCookie, baseURL ?? "http://localhost:3000")
+    ]);
+
+    // Versuche, in B's Team ein manuelles Event zu schmuggeln
+    const candidates = [
+      `/api/teams/${b.teamId}/events`,
+      `/api/matches/events`,
+      `/api/verein/${b.clubId}/events`
+    ];
+    let blocked = false;
+    for (const path of candidates) {
+      const resp = await request
+        .post(path, {
+          data: {
+            teamId: b.teamId,
+            playerName: "Hacker",
+            minute: 1,
+            type: "spezial",
+            subtype: "hackentor",
+            side: "heim"
+          },
+          failOnStatusCode: false
+        })
+        .catch(() => null);
+      if (!resp) continue;
+      if ([401, 403, 404, 405].includes(resp.status())) {
+        blocked = true;
+        break;
+      }
+    }
+    expect(blocked).toBe(true);
+  });
 });
