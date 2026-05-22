@@ -37,7 +37,15 @@ export type TriggerType =
   | "red_card"
   | "assist"
   | "man_of_match"
-  | "custom";
+  | "custom"
+  // Season-scoped triggers — evaluated once at the end of a season via
+  // `evaluateSeasonTriggers`, never inside `evaluateTriggers`.
+  | "season_promotion"
+  | "season_no_relegation"
+  | "season_table_position"
+  | "season_champion"
+  | "season_cup_round"
+  | "season_custom";
 
 export interface PledgeRuleInput {
   id: string;
@@ -267,4 +275,107 @@ function manualEvents(
       amountCents: rule.amountCents,
       requiresApproval: true
     }));
+}
+
+// ---------------------------------------------------------------------------
+// Season-scope triggers
+// ---------------------------------------------------------------------------
+
+/**
+ * Snapshot of a team's end-of-season status, used to evaluate season-scoped
+ * triggers (`season_promotion`, `season_champion`, etc.). Built by the
+ * scraper from the final table + cup-result pages once a saison is over.
+ */
+export interface SeasonInput {
+  teamId: string;
+  saison: string;
+  finalPosition: number;
+  totalTeams: number;
+  promoted: boolean;
+  relegated: boolean;
+  champion: boolean;
+  /** Furthest cup round reached, or `null` if the team did not enter / was eliminated before recorded round. */
+  cupRound: string | null;
+}
+
+/**
+ * ChargeProposal variant for season-scoped triggers. `matchId` and
+ * `matchEventId` are always `null`; an additional `saison` identifies the
+ * season the charge belongs to.
+ */
+export interface SeasonChargeProposal {
+  pledgeId: string;
+  pledgeRuleId: string;
+  matchId: null;
+  matchEventId: null;
+  triggerType: TriggerType;
+  amountCents: number;
+  requiresApproval: boolean;
+  saison: string;
+}
+
+/**
+ * Pure function. Given a team's end-of-season snapshot and the active
+ * pledge-rules (season-scoped only), returns ChargeProposals to emit.
+ *
+ * Each season-rule fires at most once per `SeasonInput`. Non-season trigger
+ * types are silently skipped — callers can pass a mixed rule list.
+ *
+ * `season_custom` is treated as approval-required (verein-defined milestones
+ * the sponsor must confirm).
+ */
+export function evaluateSeasonTriggers(
+  input: SeasonInput,
+  rules: PledgeRuleInput[]
+): SeasonChargeProposal[] {
+  const out: SeasonChargeProposal[] = [];
+  for (const r of rules) {
+    let fires = false;
+    switch (r.triggerType) {
+      case "season_promotion":
+        fires = input.promoted;
+        break;
+      case "season_no_relegation":
+        fires = !input.relegated;
+        break;
+      case "season_table_position": {
+        const maxPosition = Number(
+          (r.triggerParams as { maxPosition?: number; max_position?: number }).maxPosition ??
+            (r.triggerParams as { max_position?: number }).max_position ??
+            0
+        );
+        fires = maxPosition > 0 && input.finalPosition <= maxPosition;
+        break;
+      }
+      case "season_champion":
+        fires = input.champion;
+        break;
+      case "season_cup_round": {
+        const target =
+          (r.triggerParams as { round?: string }).round ?? null;
+        fires = target !== null && input.cupRound === target;
+        break;
+      }
+      case "season_custom":
+        // verein-declared milestone — always emit and require sponsor approval
+        fires = true;
+        break;
+      default:
+        // not a season-scope trigger — skip silently
+        continue;
+    }
+    if (fires) {
+      out.push({
+        pledgeId: r.pledgeId,
+        pledgeRuleId: r.id,
+        matchId: null,
+        matchEventId: null,
+        triggerType: r.triggerType,
+        amountCents: r.amountCents,
+        requiresApproval: r.triggerType === "season_custom",
+        saison: input.saison
+      });
+    }
+  }
+  return out;
 }
