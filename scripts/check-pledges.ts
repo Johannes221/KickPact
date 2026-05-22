@@ -16,7 +16,7 @@ async function main() {
       console.log(`  Pledge ${p.id}: sponsor=${p.sponsorId} status=${p.status} startsAt=${p.startsAt?.toISOString()?.slice(0,10)} endsAt=${p.endsAt?.toISOString()?.slice(0,10)} monthlyCap=${p.monthlyCapCents ? (p.monthlyCapCents/100)+"€" : "none"}`);
       const rules = await db.select().from(pledgeRules).where(eq(pledgeRules.pledgeId, p.id));
       for (const r of rules) {
-        console.log(`    Rule ${r.id}: trigger=${r.triggerType} subtype=${r.subtype} side=${r.side} amountCents=${r.amountCents} active=${r.isActive}`);
+        console.log(`    Rule ${r.id}: trigger=${r.triggerType} amountCents=${r.amountCents} perMatchCap=${r.perMatchCapCents ?? "none"} params=${JSON.stringify(r.triggerParamsJson)}`);
       }
     }
   }
