@@ -307,3 +307,55 @@ export async function listClubSeasonPledges(
     };
   });
 }
+
+export type EreignisRow = {
+  chargeId: string;
+  triggerType: string;
+  amountCents: number;
+  status: string;
+  createdAt: Date;
+  matchId: string | null;
+  matchDatum: Date | null;
+  heimName: string | null;
+  gastName: string | null;
+  ergebnisHeim: number | null;
+  ergebnisGast: number | null;
+  teamId: string | null;
+  teamName: string | null;
+  sponsorDisplayName: string | null;
+};
+
+export async function listClubEreignisse(clubId: string): Promise<EreignisRow[]> {
+  const rows = await db
+    .select({
+      chargeId: charges.id,
+      triggerType: charges.triggerType,
+      amountCents: charges.amountCents,
+      status: charges.status,
+      createdAt: charges.createdAt,
+      matchId: charges.matchId,
+      matchDatum: matches.datum,
+      heimName: matches.heimName,
+      gastName: matches.gastName,
+      ergebnisHeim: matches.ergebnisHeim,
+      ergebnisGast: matches.ergebnisGast,
+      teamId: teams.id,
+      teamName: teams.name,
+      sponsorDisplayName: sponsors.displayName,
+    })
+    .from(charges)
+    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+    .innerJoin(pledgeRules, eq(charges.pledgeRuleId, pledgeRules.id))
+    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .leftJoin(matches, eq(charges.matchId, matches.id))
+    .where(
+      and(
+        eq(teams.clubId, clubId),
+        inArray(charges.status, ["confirmed", "invoiced"])
+      )
+    )
+    .orderBy(desc(charges.createdAt));
+
+  return rows;
+}
