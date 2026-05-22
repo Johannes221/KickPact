@@ -14,18 +14,18 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface UserContext {
   hasSponsor: boolean;
   clubs: Array<{ slug: string; name: string }>;
 }
 
-export function HeaderUserMenu() {
+export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const [ctx, setCtx] = useState<UserContext | null>(null);
 
-  // Kontext laden sobald eingeloggt (clubs + sponsor-status)
   useEffect(() => {
     if (!session?.user) { setCtx(null); return; }
     fetch("/api/user/context")
@@ -35,19 +35,40 @@ export function HeaderUserMenu() {
   }, [session?.user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isPending) {
-    return <div className="h-10 w-24 animate-pulse rounded-md bg-neutral-100" />;
+    return <div className="h-9 w-20 animate-pulse rounded-md bg-white/10" />;
   }
 
   if (!session?.user) {
+    // Plain-Text-Menüpunkte statt Buttons — auf Hero weiß, sonst dunkel.
+    const linkBase = "text-sm font-semibold transition-colors";
+    const linkColor = onHero
+      ? "text-white/90 hover:text-white drop-shadow-sm"
+      : "text-brand-night-navy/70 hover:text-brand-night-navy";
     return (
-      <div className="flex gap-1.5 sm:gap-2">
-        <Button variant="ghost" size="sm" asChild className="text-xs sm:text-sm px-2.5 sm:px-3">
-          <Link href="/login">Login</Link>
-        </Button>
-        <Button variant="default" size="sm" asChild className="text-xs sm:text-sm px-2.5 sm:px-3">
-          <Link href="/signup">Mannschaft anlegen</Link>
-        </Button>
-      </div>
+      <>
+        {/* Desktop: zwei Menüpunkte mit Divider */}
+        <nav className="hidden sm:flex items-center gap-5">
+          <Link href="/login" className={cn(linkBase, linkColor)}>
+            Login
+          </Link>
+          <span
+            aria-hidden
+            className={cn(
+              "h-4 w-px",
+              onHero ? "bg-white/30" : "bg-brand-night-navy/20"
+            )}
+          />
+          <Link href="/signup" className={cn(linkBase, linkColor)}>
+            Mannschaft anlegen
+          </Link>
+        </nav>
+        {/* Mobile: ein einziger Einstieg */}
+        <nav className="sm:hidden">
+          <Link href="/signup" className={cn(linkBase, linkColor)}>
+            Loslegen →
+          </Link>
+        </nav>
+      </>
     );
   }
 
@@ -64,20 +85,28 @@ export function HeaderUserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="gap-2 rounded-full px-2 md:px-3">
+        <Button
+          variant="ghost"
+          className={cn(
+            "gap-2 rounded-full px-2 md:px-3",
+            onHero && "text-white hover:bg-white/10 hover:text-white"
+          )}
+        >
           <Avatar className="h-8 w-8">
             <AvatarFallback className="bg-accent text-white text-xs font-bold">
               {initials}
             </AvatarFallback>
           </Avatar>
-          <span className="hidden md:inline max-w-[12rem] truncate text-brand-night-navy font-medium">
+          <span
+            className={cn(
+              "hidden md:inline max-w-[12rem] truncate font-medium",
+              onHero ? "text-white drop-shadow-sm" : "text-brand-night-navy"
+            )}
+          >
             {session.user.name ?? session.user.email}
           </span>
         </Button>
       </DropdownMenuTrigger>
-      {/* Explizite weiße bg + dunkler Text — ohne diesen Override greift
-          das shadcn-default mit oklch(..) Syntax, die Tailwind v3.4 nicht
-          parsed → Dropdown wirkt durchsichtig auf dem Foto-Hintergrund. */}
       <DropdownMenuContent
         align="end"
         className="w-64 bg-white text-brand-night-navy border border-brand-neutral/40 shadow-lg"
@@ -93,7 +122,6 @@ export function HeaderUserMenu() {
 
         <DropdownMenuSeparator className="bg-brand-neutral/40" />
 
-        {/* Sponsor-Bereich */}
         {showSponsorLink && (
           <DropdownMenuItem
             asChild
@@ -105,7 +133,6 @@ export function HeaderUserMenu() {
           </DropdownMenuItem>
         )}
 
-        {/* Vereins-Bereiche (dynamisch nach API-Call) */}
         {ctx?.clubs.map((club) => (
           <DropdownMenuItem
             key={club.slug}

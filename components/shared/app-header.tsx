@@ -49,18 +49,9 @@ export function AppHeader() {
           ) : (
             <Logo variant="full" />
           )}
-          {/* Buttons rechts: Mobile liegt auf dunklem Foto-Overlay → weiße
-              Schrift; Desktop liegt auf transparentem Foto-Bereich → braucht
-              einen dezenten weißen Pill-Backdrop für Lesbarkeit. */}
-          <div
-            className={cn(
-              isLanding &&
-                !scrolled &&
-                "rounded-full bg-white/90 backdrop-blur-md ring-1 ring-white/40 shadow-sm px-1"
-            )}
-          >
-            <HeaderUserMenu />
-          </div>
+          {/* Menüpunkte rechts: weiß auf Hero (Foto-Overlay liefert Kontrast),
+              dunkel auf gescrollter/normaler weißer Header-Bar. */}
+          <HeaderUserMenu onHero={isLanding && !scrolled} />
         </div>
       </header>
       {/* Spacer auf Nicht-Landing-Pages, damit Content nicht unter dem

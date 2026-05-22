@@ -104,10 +104,11 @@ export function RolesTabs() {
             </ul>
             <div className="flex flex-wrap gap-3 pt-2">
               <Button variant="accent" size="lg" asChild>
-                <Link href="/login">Einladungslink bekommen? Login →</Link>
+                <Link href="/signup?role=sponsor">Als Sponsor registrieren →</Link>
               </Button>
               <p className="text-xs text-white/50 pt-3 w-full">
-                Sponsoren werden von der Mannschaft eingeladen — keine direkte Anmeldung nötig.
+                Schon einen Einladungslink? Einfach öffnen — wir leiten dich automatisch ans
+                richtige Sponsor-Setup weiter.
               </p>
             </div>
           </div>

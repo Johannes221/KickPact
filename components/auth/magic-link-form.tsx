@@ -14,7 +14,15 @@ import { toast } from "sonner";
 const schema = z.object({ email: z.string().email("Bitte gültige E-Mail eingeben") });
 type FormValues = z.infer<typeof schema>;
 
-export function MagicLinkForm({ mode }: { mode: "login" | "signup" }) {
+export type SignupRole = "mannschaft" | "verein" | "sponsor";
+
+export function MagicLinkForm({
+  mode,
+  role
+}: {
+  mode: "login" | "signup";
+  role?: SignupRole;
+}) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const form = useForm<FormValues>({
@@ -28,10 +36,13 @@ export function MagicLinkForm({ mode }: { mode: "login" | "signup" }) {
       typeof window !== "undefined"
         ? new URLSearchParams(window.location.search).get("invitation")
         : null;
+    // Reihenfolge: Invitation > expliziter Sponsor-Signup > Default-Signup > Login.
     const callbackURL = invitationToken
       ? `/sponsor/onboarding?invitation=${invitationToken}`
       : mode === "signup"
-        ? "/onboarding/verein/1"
+        ? role === "sponsor"
+          ? "/sponsor"
+          : "/onboarding/verein/1"
         : "/dashboard"; // rollenbasiert weiterleiten
 
     const result = await signIn.magicLink({
