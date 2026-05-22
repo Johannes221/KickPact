@@ -3,6 +3,52 @@ import { chromium, type Page } from "playwright";
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
+/**
+ * Transient error patterns that justify a retry.
+ * Network-level failures (DNS, TCP-RST, navigation timeouts) and 5xx upstream
+ * errors are usually flaky — re-issuing the request often succeeds. Parse
+ * errors or 4xx are programming/data bugs and must NOT be retried.
+ */
+const TRANSIENT_PATTERNS: ReadonlyArray<RegExp> = [
+  /net::ERR_/i,
+  /ECONNRESET/i,
+  /ETIMEDOUT/i,
+  /Navigation timeout/i,
+  /HTTP 5\d{2}/i,
+];
+
+export type RetryOptions = { maxAttempts: number; baseDelayMs?: number };
+
+/**
+ * Exponential-backoff retry wrapper. Re-throws non-transient errors immediately;
+ * retries transient errors up to `maxAttempts` times with delay
+ * `baseDelayMs * 2^(attempt-1)`.
+ *
+ * Pure async function — no side effects beyond `setTimeout`. Used by `withPage`
+ * to harden Playwright launches against flaky network conditions.
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  opts: RetryOptions = { maxAttempts: 3 }
+): Promise<T> {
+  const baseDelay = opts.baseDelayMs ?? 1000;
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= opts.maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      const message = err instanceof Error ? err.message : String(err);
+      const transient = TRANSIENT_PATTERNS.some((p) => p.test(message));
+      if (!transient || attempt === opts.maxAttempts) throw err;
+      const delay = baseDelay * Math.pow(2, attempt - 1);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  // unreachable — loop always returns or throws
+  throw lastErr;
+}
+
 export interface VereinHit {
   name: string;
   ort: string | null;
@@ -50,14 +96,23 @@ export interface ScrapedEvent {
 }
 
 async function withPage<T>(fn: (page: Page) => Promise<T>): Promise<T> {
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ userAgent: USER_AGENT });
-  const page = await context.newPage();
-  try {
-    return await fn(page);
-  } finally {
-    await browser.close();
-  }
+  return withRetry(
+    async () => {
+      const browser = await chromium.launch({ headless: true });
+      try {
+        const context = await browser.newContext({ userAgent: USER_AGENT });
+        const page = await context.newPage();
+        try {
+          return await fn(page);
+        } finally {
+          await context.close();
+        }
+      } finally {
+        await browser.close();
+      }
+    },
+    { maxAttempts: 3, baseDelayMs: 1000 }
+  );
 }
 
 export async function searchVereine(suchbegriff: string): Promise<VereinHit[]> {
