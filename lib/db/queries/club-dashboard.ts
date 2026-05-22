@@ -7,6 +7,7 @@ import {
   sponsors,
   charges,
   matches,
+  matchEvents,
   seasonResults,
   users
 } from "@/lib/db/schema";
@@ -323,6 +324,8 @@ export type EreignisRow = {
   teamId: string | null;
   teamName: string | null;
   sponsorDisplayName: string | null;
+  /** Spielername bei goal_by_player o.ä. — kommt aus matchEvents.playerName */
+  playerName: string | null;
 };
 
 export async function listClubEreignisse(clubId: string): Promise<EreignisRow[]> {
@@ -342,6 +345,7 @@ export async function listClubEreignisse(clubId: string): Promise<EreignisRow[]>
       teamId: teams.id,
       teamName: teams.name,
       sponsorDisplayName: sponsors.displayName,
+      playerName: matchEvents.playerName,
     })
     .from(charges)
     .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
@@ -349,6 +353,7 @@ export async function listClubEreignisse(clubId: string): Promise<EreignisRow[]>
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
     .innerJoin(teams, eq(pledges.teamId, teams.id))
     .leftJoin(matches, eq(charges.matchId, matches.id))
+    .leftJoin(matchEvents, eq(charges.matchEventId, matchEvents.id))
     .where(
       and(
         eq(teams.clubId, clubId),

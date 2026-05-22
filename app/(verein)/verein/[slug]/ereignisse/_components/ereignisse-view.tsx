@@ -4,24 +4,30 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import type { EreignisRow } from "@/lib/db/queries/club-dashboard";
 
-// Trigger-Labels (same as in pledge-builder)
 const TRIGGER_LABELS: Record<string, { label: string; emoji: string }> = {
-  goal_total: { label: "Pro Tor", emoji: "⚽" },
-  goal_by_player: { label: "Spieler-Tor", emoji: "💎" },
-  win: { label: "Pro Sieg", emoji: "🏆" },
-  clean_sheet: { label: "Zu-Null-Sieg", emoji: "🛡️" },
-  comeback_win: { label: "Comeback-Sieg", emoji: "🔥" },
-  hattrick: { label: "Hattrick", emoji: "🎯" },
-  special_goal: { label: "Spezial-Tor", emoji: "🎭" },
-  goals_scored_min: { label: "Viele Tore", emoji: "🎉" },
-  goal_diff_min: { label: "Hoher Sieg", emoji: "💪" },
-  season_promotion: { label: "Aufstieg", emoji: "⬆️" },
-  season_no_relegation: { label: "Klassenerhalt", emoji: "🛟" },
-  season_champion: { label: "Meister", emoji: "👑" },
-  season_table_position: { label: "Tabellenplatz", emoji: "🥇" },
-  season_cup_round: { label: "Pokal-Runde", emoji: "🏆" },
-  season_custom: { label: "Saison-Ziel", emoji: "🎺" },
+  goal_total:           { label: "Pro Tor",          emoji: "⚽" },
+  goal_by_player:       { label: "Spieler-Tor",       emoji: "💎" },
+  win:                  { label: "Pro Sieg",           emoji: "🏆" },
+  clean_sheet:          { label: "Zu-Null-Sieg",       emoji: "🛡️" },
+  comeback_win:         { label: "Comeback-Sieg",      emoji: "🔥" },
+  hattrick:             { label: "Hattrick",           emoji: "🎯" },
+  special_goal:         { label: "Spezial-Tor",        emoji: "🎭" },
+  goals_scored_min:     { label: "Viele Tore",         emoji: "🎉" },
+  goal_diff_min:        { label: "Hoher Sieg",         emoji: "💪" },
+  season_promotion:     { label: "Aufstieg",           emoji: "⬆️" },
+  season_no_relegation: { label: "Klassenerhalt",      emoji: "🛟" },
+  season_champion:      { label: "Meister",            emoji: "👑" },
+  season_table_position:{ label: "Tabellenplatz",      emoji: "🥇" },
+  season_cup_round:     { label: "Pokal-Runde",        emoji: "🏆" },
+  season_custom:        { label: "Saison-Ziel",        emoji: "🎺" },
 };
+
+/** Spieler-/Ereignis-Label mit optionalem Spielernamen */
+function triggerLabel(r: EreignisRow): string {
+  const base = TRIGGER_LABELS[r.triggerType]?.label ?? r.triggerType;
+  if (r.playerName) return `${base} · ${r.playerName}`;
+  return base;
+}
 
 function eur(cents: number) {
   return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
@@ -30,13 +36,7 @@ function eur(cents: number) {
 type SortKey = "date" | "amount" | "type";
 type SortDir = "asc" | "desc";
 
-export function EreignisseView({
-  rows,
-  slug,
-}: {
-  rows: EreignisRow[];
-  slug: string;
-}) {
+export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: string }) {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterTeam, setFilterTeam] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey>("date");
@@ -55,40 +55,49 @@ export function EreignisseView({
     [rows]
   );
 
-  // Filter + sort
+  // Team-only filter (used for summary cards so they react to team but not type)
+  const teamFiltered = useMemo(
+    () => (filterTeam === "all" ? rows : rows.filter((r) => r.teamId === filterTeam)),
+    [rows, filterTeam]
+  );
+
+  // Full filter + sort (used for the list)
   const filtered = useMemo(() => {
-    let result = rows;
+    let result = teamFiltered;
     if (filterType !== "all") result = result.filter((r) => r.triggerType === filterType);
-    if (filterTeam !== "all") result = result.filter((r) => r.teamId === filterTeam);
     return [...result].sort((a, b) => {
       let cmp = 0;
-      if (sortKey === "date") cmp = (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0);
+      if (sortKey === "date")   cmp = (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0);
       if (sortKey === "amount") cmp = a.amountCents - b.amountCents;
-      if (sortKey === "type") cmp = (a.triggerType ?? "").localeCompare(b.triggerType ?? "");
+      if (sortKey === "type")   cmp = (a.triggerType ?? "").localeCompare(b.triggerType ?? "");
       return sortDir === "desc" ? -cmp : cmp;
     });
-  }, [rows, filterType, filterTeam, sortKey, sortDir]);
+  }, [teamFiltered, filterType, sortKey, sortDir]);
 
-  // Stats summary
-  const totalCents = filtered.reduce((s, r) => s + r.amountCents, 0);
+  // Summary cards — based on teamFiltered so they reflect the team selection
   const byType = useMemo(() => {
-    const map = new Map<string, { count: number; cents: number }>();
-    for (const r of rows) {
-      const e = map.get(r.triggerType) ?? { count: 0, cents: 0 };
-      map.set(r.triggerType, { count: e.count + 1, cents: e.cents + r.amountCents });
+    const map = new Map<string, { count: number; cents: number; sponsors: Set<string> }>();
+    for (const r of teamFiltered) {
+      const e = map.get(r.triggerType) ?? { count: 0, cents: 0, sponsors: new Set<string>() };
+      e.count++;
+      e.cents += r.amountCents;
+      if (r.sponsorDisplayName) e.sponsors.add(r.sponsorDisplayName);
+      map.set(r.triggerType, e);
     }
     return [...map.entries()]
       .sort((a, b) => b[1].cents - a[1].cents)
       .slice(0, 4);
-  }, [rows]);
+  }, [teamFiltered]);
+
+  const totalCents = filtered.reduce((s, r) => s + r.amountCents, 0);
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => (d === "desc" ? "asc" : "desc"));
     else { setSortKey(key); setSortDir("desc"); }
   }
-
-  const SortIcon = ({ k }: { k: SortKey }) =>
-    sortKey === k ? (sortDir === "desc" ? " ↓" : " ↑") : "";
+  function sortArrow(k: SortKey) {
+    return sortKey === k ? (sortDir === "desc" ? " ↓" : " ↑") : "";
+  }
 
   if (rows.length === 0) {
     return (
@@ -100,17 +109,18 @@ export function EreignisseView({
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Top-4 Ereignistypen nach Gesamtbetrag */}
+      {/* Top-4 Ereignistypen nach Gesamtbetrag — aktualisieren sich mit Team-Filter */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-        {byType.map(([type, { count, cents }]) => {
+        {byType.map(([type, { count, cents, sponsors }]) => {
           const meta = TRIGGER_LABELS[type];
+          const active = filterType === type;
           return (
             <button
               key={type}
-              onClick={() => setFilterType(filterType === type ? "all" : type)}
+              onClick={() => setFilterType(active ? "all" : type)}
               className={
                 "text-left rounded-xl border p-3 transition-colors " +
-                (filterType === type
+                (active
                   ? "border-accent bg-accent/5"
                   : "border-brand-neutral/40 bg-white hover:border-accent/40")
               }
@@ -118,7 +128,15 @@ export function EreignisseView({
               <div className="text-lg">{meta?.emoji ?? "💚"}</div>
               <div className="mt-1 font-semibold text-xs text-brand-night-navy">{meta?.label ?? type}</div>
               <div className="mt-0.5 font-mono tabular-nums font-black text-sm text-accent">{eur(cents)}</div>
-              <div className="text-[0.65rem] text-brand-night-navy/50">{count}×</div>
+              <div className="flex items-center gap-1.5 text-[0.65rem] text-brand-night-navy/50 mt-0.5">
+                <span>{count}×</span>
+                {sponsors.size > 0 && (
+                  <>
+                    <span className="opacity-40">·</span>
+                    <span>{sponsors.size} {sponsors.size === 1 ? "Sponsor" : "Sponsoren"}</span>
+                  </>
+                )}
+              </div>
             </button>
           );
         })}
@@ -146,9 +164,7 @@ export function EreignisseView({
           >
             <option value="all">Alle Mannschaften</option>
             {teams.map(([id, name]) => (
-              <option key={id ?? ""} value={id ?? ""}>
-                {name}
-              </option>
+              <option key={id ?? ""} value={id ?? ""}>{name}</option>
             ))}
           </select>
         )}
@@ -165,8 +181,7 @@ export function EreignisseView({
                   : "bg-brand-neutral/20 text-brand-night-navy hover:bg-brand-neutral/40")
               }
             >
-              {k === "date" ? "Datum" : k === "amount" ? "Betrag" : "Typ"}
-              {sortKey === k ? (sortDir === "desc" ? " ↓" : " ↑") : ""}
+              {k === "date" ? "Datum" : k === "amount" ? "Betrag" : "Typ"}{sortArrow(k)}
             </button>
           ))}
         </div>
@@ -180,53 +195,74 @@ export function EreignisseView({
         <table className="w-full text-sm">
           <thead className="bg-brand-off-white text-xs uppercase tracking-wider text-brand-night-navy/60">
             <tr>
-              <th
-                className="px-4 py-3 text-left font-semibold cursor-pointer hover:text-brand-night-navy"
-                onClick={() => toggleSort("date")}
-              >
-                Datum{SortIcon({ k: "date" })}
+              <th className="px-4 py-3 text-left font-semibold cursor-pointer hover:text-brand-night-navy"
+                  onClick={() => toggleSort("date")}>
+                Datum{sortArrow("date")}
               </th>
-              <th
-                className="px-4 py-3 text-left font-semibold cursor-pointer hover:text-brand-night-navy"
-                onClick={() => toggleSort("type")}
-              >
-                Ereignis{SortIcon({ k: "type" })}
+              <th className="px-4 py-3 text-left font-semibold cursor-pointer hover:text-brand-night-navy"
+                  onClick={() => toggleSort("type")}>
+                Ereignis{sortArrow("type")}
               </th>
               <th className="px-4 py-3 text-left font-semibold">Spiel</th>
               <th className="px-4 py-3 text-left font-semibold">Sponsor</th>
-              <th
-                className="px-4 py-3 text-right font-semibold cursor-pointer hover:text-brand-night-navy"
-                onClick={() => toggleSort("amount")}
-              >
-                Betrag{SortIcon({ k: "amount" })}
+              <th className="px-4 py-3 text-right font-semibold cursor-pointer hover:text-brand-night-navy"
+                  onClick={() => toggleSort("amount")}>
+                Betrag{sortArrow("amount")}
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-brand-neutral/30">
             {filtered.map((r) => {
               const meta = TRIGGER_LABELS[r.triggerType];
+              const matchHref = r.matchId ? `/verein/${slug}/spiel/${r.matchId}` : null;
               return (
-                <tr key={r.chargeId} className="relative hover:bg-brand-off-white/60">
+                <tr key={r.chargeId}
+                    className={matchHref ? "hover:bg-brand-off-white/60 cursor-pointer" : ""}>
                   <td className="px-4 py-3 font-mono tabular-nums text-brand-night-navy/70 text-xs">
-                    {r.matchDatum
-                      ? new Date(r.matchDatum).toLocaleDateString("de-DE")
-                      : new Date(r.createdAt).toLocaleDateString("de-DE")}
+                    {matchHref ? (
+                      <Link href={matchHref} className="block">
+                        {r.matchDatum
+                          ? new Date(r.matchDatum).toLocaleDateString("de-DE")
+                          : new Date(r.createdAt).toLocaleDateString("de-DE")}
+                      </Link>
+                    ) : (
+                      r.matchDatum
+                        ? new Date(r.matchDatum).toLocaleDateString("de-DE")
+                        : new Date(r.createdAt).toLocaleDateString("de-DE")
+                    )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center gap-1.5 font-semibold text-brand-night-navy">
-                      <span>{meta?.emoji ?? "💚"}</span>
-                      <span>{meta?.label ?? r.triggerType}</span>
-                    </span>
-                    {r.teamName && (
-                      <div className="text-xs text-brand-night-navy/40 mt-0.5">{r.teamName}</div>
+                    {matchHref ? (
+                      <Link href={matchHref} className="block">
+                        <span className="inline-flex items-center gap-1.5 font-semibold text-brand-night-navy">
+                          <span>{meta?.emoji ?? "💚"}</span>
+                          <span>{meta?.label ?? r.triggerType}</span>
+                        </span>
+                        {r.playerName && (
+                          <div className="text-xs text-brand-night-navy/50 mt-0.5">{r.playerName}</div>
+                        )}
+                        {r.teamName && (
+                          <div className="text-xs text-brand-night-navy/40 mt-0.5">{r.teamName}</div>
+                        )}
+                      </Link>
+                    ) : (
+                      <>
+                        <span className="inline-flex items-center gap-1.5 font-semibold text-brand-night-navy">
+                          <span>{meta?.emoji ?? "💚"}</span>
+                          <span>{meta?.label ?? r.triggerType}</span>
+                        </span>
+                        {r.playerName && (
+                          <div className="text-xs text-brand-night-navy/50 mt-0.5">{r.playerName}</div>
+                        )}
+                        {r.teamName && (
+                          <div className="text-xs text-brand-night-navy/40 mt-0.5">{r.teamName}</div>
+                        )}
+                      </>
                     )}
                   </td>
                   <td className="px-4 py-3 text-brand-night-navy/70">
-                    {r.matchId ? (
-                      <Link
-                        href={`/verein/${slug}/spiel/${r.matchId}`}
-                        className="hover:text-accent hover:underline"
-                      >
+                    {matchHref ? (
+                      <Link href={matchHref} className="hover:text-accent hover:underline">
                         {r.heimName} – {r.gastName}
                         {r.ergebnisHeim !== null && (
                           <span className="ml-1.5 font-mono font-semibold text-brand-night-navy">
@@ -242,7 +278,11 @@ export function EreignisseView({
                     {r.sponsorDisplayName ?? "—"}
                   </td>
                   <td className="px-4 py-3 text-right font-mono tabular-nums font-semibold text-accent">
-                    {eur(r.amountCents)}
+                    {matchHref ? (
+                      <Link href={matchHref} className="block">{eur(r.amountCents)}</Link>
+                    ) : (
+                      eur(r.amountCents)
+                    )}
                   </td>
                 </tr>
               );
@@ -251,39 +291,50 @@ export function EreignisseView({
         </table>
       </div>
 
-      {/* Mobile Cards */}
+      {/* Mobile Cards — ganzes Card klickbar */}
       <ul className="md:hidden space-y-2">
         {filtered.map((r) => {
           const meta = TRIGGER_LABELS[r.triggerType];
-          return (
-            <li key={`m-${r.chargeId}`} className="rounded-xl border border-brand-neutral/40 bg-white p-3">
+          const matchHref = r.matchId ? `/verein/${slug}/spiel/${r.matchId}` : null;
+          const card = (
+            <div className="rounded-xl border border-brand-neutral/40 bg-white p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-base">{meta?.emoji ?? "💚"}</span>
                   <div>
                     <div className="text-sm font-semibold text-brand-night-navy">
-                      {meta?.label ?? r.triggerType}
+                      {triggerLabel(r)}
                     </div>
                     {r.sponsorDisplayName && (
                       <div className="text-xs text-brand-night-navy/50">{r.sponsorDisplayName}</div>
                     )}
                   </div>
                 </div>
-                <span className="font-mono tabular-nums font-black text-accent">
+                <span className="font-mono tabular-nums font-black text-accent shrink-0">
                   {eur(r.amountCents)}
                 </span>
               </div>
-              {r.matchId && (
-                <Link
-                  href={`/verein/${slug}/spiel/${r.matchId}`}
-                  className="mt-2 block text-xs text-brand-night-navy/60 hover:text-accent"
-                >
+              {(r.matchId || r.matchDatum) && (
+                <div className="mt-2 text-xs text-brand-night-navy/50">
                   {r.matchDatum
                     ? new Date(r.matchDatum).toLocaleDateString("de-DE")
-                    : ""}{" "}
-                  {r.heimName} – {r.gastName}
+                    : new Date(r.createdAt).toLocaleDateString("de-DE")}
+                  {r.heimName && ` · ${r.heimName} – ${r.gastName}`}
                   {r.ergebnisHeim !== null && ` · ${r.ergebnisHeim}:${r.ergebnisGast}`}
-                </Link>
+                </div>
+              )}
+              {matchHref && (
+                <div className="mt-1.5 text-xs text-accent font-medium">Zum Spiel →</div>
+              )}
+            </div>
+          );
+
+          return (
+            <li key={`m-${r.chargeId}`}>
+              {matchHref ? (
+                <Link href={matchHref} className="block">{card}</Link>
+              ) : (
+                card
               )}
             </li>
           );
