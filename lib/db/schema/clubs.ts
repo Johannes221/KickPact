@@ -100,8 +100,8 @@ export const teamMemberships = pgTable(
   {
     userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     teamId: text("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
-    role: teamMemberRoleEnum("role").notNull().default("trainer"),
-    invitedByUserId: text("invited_by_user_id").references(() => users.id),
+    role: teamMemberRoleEnum("role").notNull().default("viewer"),
+    invitedByUserId: text("invited_by_user_id").references(() => users.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({
