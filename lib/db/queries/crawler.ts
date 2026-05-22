@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNotNull, desc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   teams,
@@ -10,6 +10,7 @@ import type { SpielDetails, SpielListItem } from "@/lib/crawler/fussballde";
 
 export interface ActiveTeam {
   id: string;
+  name: string;
   clubId: string;
   fussballdeTeamId: string;
   fussballdeSlug: string;
@@ -20,6 +21,7 @@ export async function getActiveTeams(): Promise<ActiveTeam[]> {
   const rows = await db
     .select({
       id: teams.id,
+      name: teams.name,
       clubId: teams.clubId,
       fussballdeTeamId: teams.fussballdeTeamId,
       fussballdeSlug: teams.fussballdeSlug,
@@ -31,11 +33,83 @@ export async function getActiveTeams(): Promise<ActiveTeam[]> {
     .filter((r) => r.fussballdeTeamId !== null && r.fussballdeSlug !== null)
     .map((r) => ({
       id: r.id,
+      name: r.name,
       clubId: r.clubId,
       fussballdeTeamId: r.fussballdeTeamId!,
       fussballdeSlug: r.fussballdeSlug!,
       saison: r.saison
     }));
+}
+
+// ---------------------------------------------------------------------------
+// Result verification helpers
+// ---------------------------------------------------------------------------
+
+export interface StoredMatch {
+  id: string;
+  fussballdeSpielId: string;
+  heimName: string;
+  gastName: string;
+  datum: Date;
+  ergebnisHeim: number;
+  ergebnisGast: number;
+}
+
+/** Returns the N most recent matches that already have a final score stored. */
+export async function getRecentFinishedMatches(
+  teamId: string,
+  limit = 3
+): Promise<StoredMatch[]> {
+  const rows = await db
+    .select({
+      id: matches.id,
+      fussballdeSpielId: matches.fussballdeSpielId,
+      heimName: matches.heimName,
+      gastName: matches.gastName,
+      datum: matches.datum,
+      ergebnisHeim: matches.ergebnisHeim,
+      ergebnisGast: matches.ergebnisGast
+    })
+    .from(matches)
+    .where(
+      and(
+        eq(matches.teamId, teamId),
+        isNotNull(matches.ergebnisHeim),
+        isNotNull(matches.ergebnisGast)
+      )
+    )
+    .orderBy(desc(matches.datum))
+    .limit(limit);
+  // isNotNull guarantees non-null at runtime; narrow the type here
+  return rows.filter(
+    (r): r is StoredMatch =>
+      r.ergebnisHeim !== null && r.ergebnisGast !== null
+  );
+}
+
+export async function getActiveTeamById(teamId: string): Promise<ActiveTeam | null> {
+  const [row] = await db
+    .select({
+      id: teams.id,
+      name: teams.name,
+      clubId: teams.clubId,
+      fussballdeTeamId: teams.fussballdeTeamId,
+      fussballdeSlug: teams.fussballdeSlug,
+      saison: teams.saison,
+      isActive: teams.isActive
+    })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  if (!row || !row.isActive || !row.fussballdeTeamId || !row.fussballdeSlug) return null;
+  return {
+    id: row.id,
+    name: row.name,
+    clubId: row.clubId,
+    fussballdeTeamId: row.fussballdeTeamId,
+    fussballdeSlug: row.fussballdeSlug,
+    saison: row.saison
+  };
 }
 
 export async function findMatchByFussballdeId(

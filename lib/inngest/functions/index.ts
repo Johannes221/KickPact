@@ -5,6 +5,7 @@ import { generateInvoices } from "./generate-invoices";
 import { seasonEndReminders } from "./season-end-reminders";
 import { evaluateSeason } from "./evaluate-season";
 import { trialReminders } from "./trial-reminders";
+import { verifyResults } from "./verify-results";
 
 export const functions = [
   crawlMatches,
@@ -13,5 +14,6 @@ export const functions = [
   generateInvoices,
   seasonEndReminders,
   evaluateSeason,
-  trialReminders
+  trialReminders,
+  verifyResults
 ];
