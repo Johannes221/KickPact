@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   Select,
@@ -27,10 +28,12 @@ function triggerLabel(t: string) {
 
 export function PledgesTable({
   rows,
-  teams
+  teams,
+  slug
 }: {
   rows: ClubPledgeRow[];
   teams: Array<{ id: string; name: string }>;
+  slug: string;
 }) {
   const [teamFilter, setTeamFilter] = useState<string>("all");
   const [scopeFilter, setScopeFilter] = useState<ScopeFilter>("all");
@@ -117,9 +120,12 @@ export function PledgesTable({
                       className="hover:bg-brand-off-white/60"
                     >
                       <td className="px-4 py-3">
-                        <div className="font-medium text-brand-night-navy">
+                        <Link
+                          href={`/verein/${slug}/sponsoren`}
+                          className="font-medium text-brand-night-navy hover:underline"
+                        >
                           {r.sponsorDisplayName}
-                        </div>
+                        </Link>
                         <div className="text-xs text-brand-night-navy/50 truncate">
                           {r.sponsorEmail}
                         </div>
@@ -156,9 +162,12 @@ export function PledgesTable({
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="font-semibold text-sm text-brand-night-navy truncate">
+                      <Link
+                        href={`/verein/${slug}/sponsoren`}
+                        className="font-semibold text-sm text-brand-night-navy truncate hover:underline block"
+                      >
                         {r.sponsorDisplayName}
-                      </div>
+                      </Link>
                       <div className="text-[0.65rem] text-brand-night-navy/50 truncate">
                         {r.sponsorEmail}
                       </div>

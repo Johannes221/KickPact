@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { label: "Dashboard", href: "" },         // /verein/[slug]
+  { label: "Ereignisse", href: "/ereignisse" },
   { label: "Sponsoren", href: "/sponsoren" },
   { label: "Abrechnungen", href: "/abrechnungen" },
   { label: "Abo", href: "/abo" },

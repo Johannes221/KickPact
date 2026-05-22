@@ -3,7 +3,6 @@ import Link from "next/link";
 import { db } from "@/lib/db/client";
 import { clubs, teams } from "@/lib/db/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   getClubDashboardStats,
   listClubPledges,
@@ -53,9 +52,6 @@ export default async function ClubDashboard({
 
   return (
     <div className="space-y-6 md:space-y-10">
-      {/* Quick-Actions */}
-      <QuickActions slug={slug} />
-
       {/* Stat-Cards */}
       <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-5">
         <StatCard label="Mannschaften" value={String(stats.teamCount)} />
@@ -77,6 +73,7 @@ export default async function ClubDashboard({
       <PledgesTable
         rows={pledgeRows}
         teams={teamRows.map((t) => ({ id: t.id, name: t.name }))}
+        slug={slug}
       />
 
       {/* Letzte Spiele */}
@@ -84,49 +81,6 @@ export default async function ClubDashboard({
 
       {/* Saison-Wetten */}
       <SeasonPledgesSection rows={seasonPledges} />
-    </div>
-  );
-}
-
-function QuickActions({ slug }: { slug: string }) {
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-      <Button asChild variant="accent" className="h-auto py-3 md:py-4 flex-col">
-        <Link href={`/verein/${slug}/sponsoren`}>
-          <span className="text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold opacity-90">
-            Sponsor
-          </span>
-          <span className="font-display font-black text-sm md:text-base">einladen</span>
-        </Link>
-      </Button>
-      {/* TODO: Mannschaft-hinzufügen-Flow kommt mit Plan zur Multi-Team-Verwaltung */}
-      <Button
-        variant="outline"
-        disabled
-        className="h-auto py-3 md:py-4 flex-col cursor-not-allowed opacity-60"
-        title="Kommt bald"
-      >
-        <span className="text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold">
-          Mannschaft
-        </span>
-        <span className="font-display font-black text-sm md:text-base">hinzufügen</span>
-      </Button>
-      <Button asChild variant="outline" className="h-auto py-3 md:py-4 flex-col">
-        <Link href={`/verein/${slug}/abrechnungen`}>
-          <span className="text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold">
-            Abrechnungen
-          </span>
-          <span className="font-display font-black text-sm md:text-base">öffnen</span>
-        </Link>
-      </Button>
-      <Button asChild variant="outline" className="h-auto py-3 md:py-4 flex-col">
-        <Link href={`/verein/${slug}/abo`}>
-          <span className="text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold">
-            Abo
-          </span>
-          <span className="font-display font-black text-sm md:text-base">verwalten</span>
-        </Link>
-      </Button>
     </div>
   );
 }
