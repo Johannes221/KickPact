@@ -12,9 +12,11 @@ import {
   searchVereine,
   getMannschaften,
   getSpiele,
+  getKader,
   type VereinHit,
   type MannschaftHit,
   type SpielListItem,
+  type KaderPlayer,
 } from "../../lib/crawler/fussballde";
 
 const FORCE = process.argv.includes("--force");
@@ -202,6 +204,36 @@ async function captureSpiele(
   }
 }
 
+async function captureKader(
+  club: FixtureClub,
+  team: MannschaftHit,
+  teamKey: string,
+  saison: string,
+): Promise<KaderPlayer[]> {
+  const jsonRel = `${club.key}/${teamKey}-kader-saison${saison}.json`;
+
+  if (!FORCE && (await exists(jsonRel, JSON_ROOT))) {
+    console.log(`    kader ${teamKey} saison${saison}: cached`);
+    return JSON.parse(
+      await fs.readFile(path.join(JSON_ROOT, jsonRel), "utf-8"),
+    ) as KaderPlayer[];
+  }
+
+  try {
+    const kader = await getKader(team.teamId, team.slug, saison);
+    await writeJson(jsonRel, kader);
+    await sleep(800);
+    console.log(`    kader ${teamKey} saison${saison}: ${kader.length}`);
+    return kader;
+  } catch (err) {
+    console.warn(
+      `    ! kader failed ${teamKey} saison${saison}:`,
+      (err as Error).message,
+    );
+    return [];
+  }
+}
+
 async function captureMannschaften(
   context: BrowserContext,
   club: FixtureClub,
@@ -259,6 +291,7 @@ async function captureClub(club: FixtureClub): Promise<void> {
       console.log(`  team: ${team.name} (id=${team.teamId})`);
       for (const saison of teamCfg.saisons) {
         await captureSpiele(club, team, teamCfg.key, saison);
+        await captureKader(club, team, teamCfg.key, saison);
       }
     }
   } finally {
