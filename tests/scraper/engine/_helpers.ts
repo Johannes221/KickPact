@@ -8,10 +8,11 @@ import { detectTeamSide } from "../../../lib/crawler/team-side";
 type RawMatchFixture = {
   matchId?: string;
   spielId?: string;
-  halbzeit: { heim: number | null; gast: number | null } | null;
+  halbzeit?: { heim: number | null; gast: number | null } | null;
   events: Array<{
     minute: number | null;
-    type: string;
+    type?: string;
+    typ?: string;
     subtype?: string | null;
     side: "heim" | "gast";
     spielerId?: string | null;
@@ -20,10 +21,24 @@ type RawMatchFixture = {
     playerName?: string | null;
     source?: "scraped" | "manual";
   }>;
-  heimName: string;
-  gastName: string;
-  ergebnisHeim: number;
-  ergebnisGast: number;
+  heim?: string;
+  gast?: string;
+  heimName?: string;
+  gastName?: string;
+  ergebnis?: { heim: number; gast: number };
+  ergebnisHeim?: number;
+  ergebnisGast?: number;
+};
+
+const EVENT_TYPE_MAP: Record<string, MatchInput["events"][number]["type"]> = {
+  TOR: "tor",
+  tor: "tor",
+  AUSWECHSLUNG: "auswechslung",
+  auswechslung: "auswechslung",
+  KARTE: "karte",
+  karte: "karte",
+  SPEZIAL: "spezial",
+  spezial: "spezial",
 };
 
 /**
@@ -45,25 +60,35 @@ export function loadMatchFixture(
   const data = JSON.parse(fs.readFileSync(file, "utf-8")) as RawMatchFixture;
 
   const matchId = data.matchId ?? data.spielId ?? spielId;
-  const teamSide = detectTeamSide(ownTeamName, data.heimName);
+  const heimName = data.heimName ?? data.heim ?? "";
+  const teamSide = detectTeamSide(ownTeamName, heimName);
+  const ergebnisHeim = data.ergebnisHeim ?? data.ergebnis?.heim ?? 0;
+  const ergebnisGast = data.ergebnisGast ?? data.ergebnis?.gast ?? 0;
 
   return {
     id: matchId,
     teamSide,
-    ergebnisHeim: data.ergebnisHeim,
-    ergebnisGast: data.ergebnisGast,
+    ergebnisHeim,
+    ergebnisGast,
     halbzeitHeim: data.halbzeit?.heim ?? null,
     halbzeitGast: data.halbzeit?.gast ?? null,
-    events: data.events.map((e, i) => ({
-      id: `e_${i}`,
-      minute: e.minute ?? null,
-      type: e.type as MatchInput["events"][number]["type"],
-      subtype: e.subtype ?? null,
-      side: e.side,
-      playerId: e.playerId ?? e.spielerId ?? null,
-      playerName: e.playerName ?? e.spielerName ?? null,
-      source: e.source ?? "scraped",
-    })),
+    events: data.events
+      .map((e, i) => {
+        const rawType = e.type ?? e.typ ?? "";
+        const mappedType = EVENT_TYPE_MAP[rawType];
+        if (!mappedType) return null;
+        return {
+          id: `e_${i}`,
+          minute: e.minute ?? null,
+          type: mappedType,
+          subtype: e.subtype ?? null,
+          side: e.side,
+          playerId: e.playerId ?? e.spielerId ?? null,
+          playerName: e.playerName ?? e.spielerName ?? null,
+          source: e.source ?? "scraped",
+        };
+      })
+      .filter((e): e is NonNullable<typeof e> => e !== null),
   };
 }
 
