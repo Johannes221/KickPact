@@ -203,13 +203,14 @@ export function PledgeBuilder() {
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end">
               <Button
                 type="button"
                 variant="accent"
                 size="lg"
                 disabled={enabled.size === 0}
                 onClick={() => setStep(2)}
+                className="min-h-12 w-full sm:w-auto"
               >
                 Weiter: Beträge festlegen →
               </Button>
@@ -455,11 +456,22 @@ export function PledgeBuilder() {
               })}
             </div>
 
-            <div className="flex justify-between gap-3">
-              <Button type="button" variant="outline" onClick={() => setStep(1)}>
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep(1)}
+                className="min-h-12 w-full sm:w-auto"
+              >
                 ← Ereignisse ändern
               </Button>
-              <Button type="button" variant="accent" size="lg" onClick={() => setStep(3)}>
+              <Button
+                type="button"
+                variant="accent"
+                size="lg"
+                onClick={() => setStep(3)}
+                className="min-h-12 w-full sm:w-auto"
+              >
                 Weiter: Zusammenfassung →
               </Button>
             </div>
@@ -590,8 +602,13 @@ export function PledgeBuilder() {
               </CardContent>
             </Card>
 
-            <div className="flex justify-between gap-3">
-              <Button type="button" variant="outline" onClick={() => setStep(2)}>
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep(2)}
+                className="min-h-12 w-full sm:w-auto"
+              >
                 ← Beträge anpassen
               </Button>
               <Button
@@ -599,7 +616,7 @@ export function PledgeBuilder() {
                 variant="accent"
                 size="lg"
                 disabled={pending || fields.length === 0}
-                className="flex-1 md:flex-none"
+                className="min-h-12 w-full sm:w-auto sm:flex-none"
               >
                 {pending ? "Speichere…" : "Sponsoring aktivieren →"}
               </Button>

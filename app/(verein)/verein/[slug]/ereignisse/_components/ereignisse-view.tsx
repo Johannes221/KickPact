@@ -192,7 +192,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
 
       {/* Desktop Table */}
       <div className="hidden md:block overflow-x-auto rounded-2xl border border-brand-neutral/40 bg-white">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-brand-off-white text-xs uppercase tracking-wider text-brand-night-navy/60">
             <tr>
               <th className="px-4 py-3 text-left font-semibold cursor-pointer hover:text-brand-night-navy"
