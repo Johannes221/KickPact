@@ -174,4 +174,87 @@ export function getStripePriceId(
   return process.env[envKey] ?? null;
 }
 
+/**
+ * Reverse-Lookup von Stripe-Price-ID auf (plan, cycle).
+ * Wird vom Webhook-Handler genutzt, um aus `subscription.items.data[0].price.id`
+ * auf den gebuchten Plan + Cycle zu schliessen und in die DB zu spiegeln.
+ */
+export function priceIdToPlanCycle(
+  priceId: string
+): { plan: PlanKey; cycle: BillingCycle } | null {
+  for (const plan of PLAN_ORDER) {
+    for (const cycle of CYCLE_ORDER) {
+      if (getStripePriceId(plan, cycle) === priceId) {
+        return { plan, cycle };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Effektive Monats-Belastung in Cent für eine (plan, cycle)-Kombination.
+ *
+ * - monthly: Preis 1:1
+ * - season: Saison-Pass / 10 Monate (Aug–Mai, Jun/Jul pausiert)
+ * - annual: Jahres-Preis / 12 Monate
+ *
+ * Werte gerundet auf ganze Cent.
+ */
+export function getMonthlyEquivalent(
+  plan: PlanKey,
+  cycle: BillingCycle
+): number {
+  const total = PLANS[plan].cycles[cycle].amountCents;
+  if (cycle === "monthly") return total;
+  if (cycle === "season") return Math.round(total / 10);
+  return Math.round(total / 12);
+}
+
+/**
+ * Ersparnis-Vergleich gegen "monthly × Vergleichsbasis".
+ *
+ * - season: 10 × monthly als Vergleichsbasis (Aug–Mai aktive Monate)
+ * - annual: 12 × monthly als Vergleichsbasis
+ * - monthly: keine Ersparnis (0/0)
+ */
+export function getSavings(
+  plan: PlanKey,
+  cycle: BillingCycle
+): { absoluteCents: number; percent: number } {
+  if (cycle === "monthly") return { absoluteCents: 0, percent: 0 };
+  const monthly = PLANS[plan].cycles.monthly.amountCents;
+  const total = PLANS[plan].cycles[cycle].amountCents;
+  const baseline = monthly * (cycle === "season" ? 10 : 12);
+  const absoluteCents = baseline - total;
+  const percent = baseline > 0 ? Math.round((absoluteCents / baseline) * 100) : 0;
+  return { absoluteCents, percent };
+}
+
 export const TRIAL_DAYS = 30;
+
+/**
+ * Monate, in denen Saison-Pass-Subscriptions pausiert sind (Sommerpause).
+ * Inngest-Cron `pause-season-passes` triggert am 1. dieser Monate.
+ */
+export const SEASON_PAUSE_MONTHS = [6, 7] as const;
+
+/**
+ * Tier-Caps für Basic (Pro/Verein sind uncapped).
+ *
+ * - basic: max. 5 aktive Sponsoren pro Team, max. 3 Pledge-Rules pro Sponsor.
+ * - pro / verein: `null` = unlimited.
+ *
+ * Wird von `lib/billing/plan-features.ts` zur Server-Action-Validierung benutzt.
+ */
+export const PLAN_CAPS: Record<
+  PlanKey,
+  {
+    maxSponsorsPerTeam: number | null;
+    maxPledgeRulesPerSponsor: number | null;
+  }
+> = {
+  basic: { maxSponsorsPerTeam: 5, maxPledgeRulesPerSponsor: 3 },
+  pro: { maxSponsorsPerTeam: null, maxPledgeRulesPerSponsor: null },
+  verein: { maxSponsorsPerTeam: null, maxPledgeRulesPerSponsor: null }
+} as const;
