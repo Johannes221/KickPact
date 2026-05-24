@@ -54,13 +54,13 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
         amountCents: 3900,
         display: "39 €",
         caption: "/ Saison · 3,90 €/Mon",
-        saveBadge: "~22 % sparen"
+        saveBadge: "35 % sparen"
       },
       annual: {
-        amountCents: 4900,
-        display: "49 €",
-        caption: "/ Jahr · 4,08 €/Mon",
-        saveBadge: "~18 % sparen"
+        amountCents: 3500,
+        display: "35 €",
+        caption: "/ Jahr · ~2,90 €/Mon",
+        saveBadge: "42 % sparen"
       }
     },
     features: [
@@ -88,13 +88,13 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
         amountCents: 14900,
         display: "149 €",
         caption: "/ Saison · 14,90 €/Mon",
-        saveBadge: "~22 % sparen"
+        saveBadge: "35 % sparen"
       },
       annual: {
-        amountCents: 18900,
-        display: "189 €",
-        caption: "/ Jahr · 15,75 €/Mon",
-        saveBadge: "~17 % sparen"
+        amountCents: 13500,
+        display: "135 €",
+        caption: "/ Jahr · ~11,25 €/Mon",
+        saveBadge: "40 % sparen"
       }
     },
     features: [
@@ -105,6 +105,7 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
       "Pledge-Discovery, Embed-Widget, Newsletter",
       "CSV-Export, Sponsor-Stats, Saison-Recap-PDF"
     ],
+    note: "Bei 22-Mann-Kader: unter 1 € pro Spieler/Monat.",
     cta: "Pro auswählen"
   },
   verein: {
@@ -122,13 +123,13 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
         amountCents: 38900,
         display: "389 €",
         caption: "/ Saison · 38,90 €/Mon",
-        saveBadge: "~21 % sparen"
+        saveBadge: "34 % sparen"
       },
       annual: {
-        amountCents: 48900,
-        display: "489 €",
-        caption: "/ Jahr · 40,75 €/Mon",
-        saveBadge: "~17 % sparen"
+        amountCents: 34900,
+        display: "349 €",
+        caption: "/ Jahr · ~29 €/Mon",
+        saveBadge: "41 % sparen"
       }
     },
     features: [
@@ -139,7 +140,7 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
       "Cross-Team-Sponsor-View",
       "Vereins-aggregiertes Saison-Recap"
     ],
-    note: "Unter 1 € pro Spieler bei 50-Mann-Verein.",
+    note: "Unter 1 € pro Spieler bei 50-Mann-Verein · ab 0,25 €/Spieler.",
     cta: "Verein anlegen"
   }
 };
@@ -158,8 +159,8 @@ export const CYCLE_LABELS: Record<BillingCycle, string> = {
 
 export const CYCLE_SUBLABELS: Record<BillingCycle, string> = {
   monthly: "monatlich kündbar",
-  season: "Aug–Mai · 2 Mon. geschenkt",
-  annual: "12 Mon. · ~2 Mon. geschenkt"
+  season: "Aug–Mai · 35 % sparen",
+  annual: "12 Mon. · bis 42 % sparen"
 };
 
 /** Default-Auswahl im Wizard und auf der Pricing-Page. */

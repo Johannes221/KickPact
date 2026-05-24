@@ -193,12 +193,12 @@ export function PricingToggle() {
 
   return (
     <>
-      {/* Billing-Cycle-Toggle */}
-      <div className="flex justify-center">
+      {/* Billing-Cycle-Toggle — stack vertikal unter md, inline ab md */}
+      <div className="flex justify-center px-4 md:px-0">
         <div
           role="tablist"
           aria-label="Abrechnungs-Intervall"
-          className="inline-flex flex-col sm:flex-row items-stretch rounded-2xl bg-white p-1.5 ring-1 ring-brand-neutral/40 shadow-sm gap-1 sm:gap-0"
+          className="flex w-full max-w-md md:max-w-none md:w-auto flex-col md:flex-row md:inline-flex items-stretch rounded-2xl bg-white p-1.5 ring-1 ring-brand-neutral/40 shadow-sm gap-1 md:gap-0"
         >
           {CYCLE_ORDER.map((c) => {
             const active = c === cycle;
@@ -209,44 +209,44 @@ export function PricingToggle() {
                 aria-selected={active}
                 onClick={() => setCycle(c)}
                 className={cn(
-                  "relative inline-flex items-center justify-center gap-2 rounded-xl px-4 sm:px-5 py-2.5 text-sm font-semibold transition-all",
+                  "flex flex-col items-center justify-center gap-1 rounded-xl px-4 md:px-5 py-2.5 md:py-2 text-sm font-semibold transition-all w-full md:w-auto",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
                   active
                     ? "bg-brand-night-navy text-white shadow-sm"
                     : "text-brand-night-navy/70 hover:text-brand-night-navy"
                 )}
               >
-                <span className="flex flex-col items-center sm:flex-row sm:gap-2">
-                  <span className="leading-none">{CYCLE_LABELS[c]}</span>
-                  <span
-                    className={cn(
-                      "text-[0.65rem] font-medium leading-none mt-0.5 sm:mt-0",
-                      active ? "text-white/80" : "text-brand-night-navy/50"
-                    )}
-                  >
-                    {CYCLE_SUBLABELS[c]}
-                  </span>
+                <span className="flex items-center justify-center gap-1.5 leading-none">
+                  <span>{CYCLE_LABELS[c]}</span>
+                  {c === "season" && (
+                    <span
+                      className={cn(
+                        "rounded-full px-1.5 py-[0.15rem] text-[0.5rem] font-bold uppercase tracking-wider leading-none",
+                        active
+                          ? "bg-accent text-white"
+                          : "bg-accent/15 text-accent-dark"
+                      )}
+                    >
+                      Empfohlen
+                    </span>
+                  )}
                 </span>
-                {c === "season" && (
-                  <span
-                    className={cn(
-                      "absolute -top-2 right-2 rounded-full px-1.5 py-0.5 text-[0.55rem] font-bold uppercase tracking-wider",
-                      active
-                        ? "bg-accent text-white"
-                        : "bg-accent/15 text-accent-dark"
-                    )}
-                  >
-                    Empfohlen
-                  </span>
-                )}
+                <span
+                  className={cn(
+                    "text-[0.65rem] font-medium leading-none",
+                    active ? "text-white/80" : "text-brand-night-navy/50"
+                  )}
+                >
+                  {CYCLE_SUBLABELS[c]}
+                </span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Pricing Cards */}
-      <div className="mt-10 md:mt-12 grid gap-6 md:gap-8 md:grid-cols-3 items-stretch">
+      {/* Pricing Cards — gap-8 auf Mobile, damit der „Empfohlen"-Badge der Pro-Card nicht overlapt */}
+      <div className="mt-10 md:mt-12 grid gap-8 md:grid-cols-3 items-stretch">
         {PLAN_ORDER.map((key) => (
           <PriceCard key={key} planKey={key} cycle={cycle} />
         ))}

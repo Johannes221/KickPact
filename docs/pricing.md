@@ -13,9 +13,10 @@
 | **Zielgruppe** | 1 Mannschaft, 1–5 Sponsoren aus dem direkten Umfeld | 1 Mannschaft, ernsthaftes Sponsoring, ∞ Sponsoren | Verein mit ≥ 2 Mannschaften, zentrale Verwaltung |
 | **Monatspreis** | **5 €**/Mannschaft/Monat | **19 €**/Mannschaft/Monat | **49 €**/Verein/Monat |
 | **Saison-Pass** *(Aug–Mai, 2 Monate geschenkt)* | **39 €**/Saison · ≈ 3,90 €/Mon | **149 €**/Saison · ≈ 14,90 €/Mon | **389 €**/Saison · ≈ 38,90 €/Mon |
-| **Annual** *(12 Mon ganzjährig, ~2 Monate geschenkt)* | 49 €/Jahr | 189 €/Jahr | 489 €/Jahr |
+| **Annual** *(12 Mon ganzjährig, bis zu 42 % sparen)* | 35 €/Jahr | 135 €/Jahr | 349 €/Jahr |
 | **Provision auf Pledges** | **0 %** | **0 %** | **0 %** |
 | **Trial** | 30 Tage | 30 Tage | 30 Tage |
+| **Pro Spieler/Monat** *(typischer Kader)* | ~0,23 €/Spieler (22 Mann) | **< 1 €/Spieler** (22 Mann) · 0,51 € im Annual | **< 1 €/Spieler** (50 Mann) · 0,58 € im Annual · 0,25 € bei 200 Spielern |
 
 **Headline-Versprechen:** *100 % deiner Pledges bleiben bei dir. KickPact verdient an Lizenzen, nicht an Provisionen.*
 
@@ -30,7 +31,7 @@
 ### Pricing
 - **Monatlich:** 5 €/Mannschaft
 - **Saison-Pass (Aug–Mai):** 39 €/Saison · ~2 Monate geschenkt · Juni/Juli automatisch kostenlos pausiert
-- **Annual (12 Monate):** 49 €/Jahr · ~2 Monate geschenkt · für ganzjährig spielende Mannschaften
+- **Annual (12 Monate):** 35 €/Jahr · **42 % sparen** vs. Monatsabo · für ganzjährig spielende Mannschaften (~2,90 €/Mon)
 - **0 % Provision** auf bestätigte Pledges
 
 ### Was ist drin
@@ -70,11 +71,13 @@
 ## 3. Pro — 19 €/Mannschaft/Monat ⭐
 
 > **Beliebteste.** Für aktive Sponsoring-Setups mit ≥ 5 Sponsoren. Hier sollen 80 % der Vereine landen.
+>
+> **Bei 22-Mann-Kader: unter 1 € pro Spieler/Monat.**
 
 ### Pricing
-- **Monatlich:** 19 €/Mannschaft
-- **Saison-Pass (Aug–Mai):** **149 €**/Saison · effektiv 14,90 €/Mon · 2 Monate geschenkt · Juni/Juli kostenlos pausiert
-- **Annual (12 Monate):** 189 €/Jahr · ~2 Monate geschenkt
+- **Monatlich:** 19 €/Mannschaft · bei 22-Mann-Kader **0,86 € pro Spieler/Monat**
+- **Saison-Pass (Aug–Mai):** **149 €**/Saison · effektiv 14,90 €/Mon · 35 % sparen · Juni/Juli kostenlos pausiert · **0,68 € pro Spieler/Monat**
+- **Annual (12 Monate):** **135 €**/Jahr · **40 % sparen** vs. Monatsabo · ~11,25 €/Mon · **0,51 € pro Spieler/Monat** bei 22-Mann-Kader
 - **0 % Provision** auf bestätigte Pledges
 
 ### Was ist drin
@@ -104,11 +107,13 @@
 ## 4. Vereinslizenz — 49 €/Verein/Monat
 
 > **Für den ganzen Verein.** Eine Lizenz, unbegrenzt Mannschaften, alles inklusive.
+>
+> **Unter 1 € pro Spieler ab 50-Mann-Verein · ab 0,25 €/Spieler bei großen Vereinen.**
 
 ### Pricing
-- **Monatlich:** 49 €/Verein (= unter 1 € pro Spieler bei 50-Mann-Verein)
-- **Saison-Pass (Aug–Mai):** **389 €**/Saison · effektiv 38,90 €/Mon · 2 Monate geschenkt · Juni/Juli kostenlos pausiert
-- **Annual (12 Monate):** 489 €/Jahr · ~2 Monate geschenkt
+- **Monatlich:** 49 €/Verein · bei 50 Spielern **0,98 € pro Spieler/Monat**
+- **Saison-Pass (Aug–Mai):** **389 €**/Saison · effektiv 38,90 €/Mon · 34 % sparen · Juni/Juli kostenlos pausiert · **0,78 € pro Spieler/Monat** (50 Spieler)
+- **Annual (12 Monate):** **349 €**/Jahr · **41 % sparen** vs. Monatsabo · ~29 €/Mon · **0,58 € pro Spieler/Monat** (50 Spieler) · **0,15 €/Spieler bei 200 Spielern**
 - **0 % Provision**
 
 ### Was ist drin
@@ -165,7 +170,7 @@
 | **Pricing** | | | |
 | Monatspreis | 5 € | 19 € | 49 € |
 | Saison-Pass | **39 €** | **149 €** | **389 €** |
-| Annual | 49 € | 189 € | 489 € |
+| Annual | **35 €** | **135 €** | **349 €** |
 | Provision | 0 % | 0 % | 0 % |
 | Trial | 30 Tage | 30 Tage | 30 Tage |
 | **Trigger** | | | |
@@ -244,18 +249,18 @@
 
 ## 7. Annual-Plan — wie es funktioniert
 
-Für Vereine mit **ganzjährigem Spielbetrieb** (Hallenfußball, Veteranen-Ligen, Sommer-Turniere, Test-Setups). 12 Monate Laufzeit, **~2 Monate geschenkt** vs. 12× Monatsabo.
+Für Vereine mit **ganzjährigem Spielbetrieb** (Hallenfußball, Veteranen-Ligen, Sommer-Turniere, Test-Setups). 12 Monate Laufzeit, **40 % sparen** vs. 12× Monatsabo — die günstigste Variante pro aktivem Monat.
 
 | Tier | Monat × 12 | Annual | Ersparnis |
 |---|---|---|---|
-| Basic | 60 € | **49 €** | -11 € (~18 %) |
-| Pro | 228 € | **189 €** | -39 € (~17 %) |
-| Vereinslizenz | 588 € | **489 €** | -99 € (~17 %) |
+| Basic | 60 € | **35 €** | -25 € (**42 % sparen**) |
+| Pro | 228 € | **135 €** | -93 € (**40 % sparen**) |
+| Vereinslizenz | 588 € | **349 €** | -239 € (**41 % sparen**) |
 
 **Unterschied zum Saison-Pass:**
 - Annual läuft 12 Monate, kein Sommerpause-Stop, Crawler bleibt auch Jun/Jul an
 - Saison-Pass läuft 10 Monate aktiv + 2 Monate kostenlos pausiert
-- **Saison-Pass ist pro aktivem Monat günstiger** (Pro: 14,90 € vs Annual 15,75 €) — aber Annual lohnt sich, wenn auch Jun/Jul aktiv genutzt werden
+- **Annual ist pro aktivem Monat günstiger** (Pro: 11,25 € vs Saison-Pass 14,90 €) und auch absolut günstiger (135 € vs 149 €) — Annual ist die Power-Wahl für ganzjährig spielende Vereine
 - Wahl ist klar: ganzjährig spielende Mannschaft → Annual; nur Punktspielsaison → Saison-Pass
 
 **Default-Empfehlung im Wizard:** Saison-Pass. Annual als zweite Option, Monatsabo als dritte.
@@ -350,7 +355,7 @@ Was im Code/Spec geändert werden muss, sobald dieses Pricing abgesegnet ist:
 | 2 | Basic Sponsor-Cap | **5** | ✅ entschieden |
 | 3 | Basic Pledge-Rules-Cap pro Sponsor | **3** | ✅ entschieden |
 | 4 | Vereinslizenz-Monatspreis | **49 €** | ✅ entschieden |
-| 5 | Annual-Plan anbieten | **Ja** (49 / 189 / 489 €) | ✅ entschieden |
+| 5 | Annual-Plan anbieten | **Ja** (35 / 135 / 349 €, 40-42 % sparen) | ✅ entschieden |
 | 6 | Saison-Pass-Preise | **39 / 149 / 389 €** (~ 8× Monat, 2 Mon geschenkt) | ✅ entschieden |
 | 7 | Saison-Pass + Saison-Wetten Cutoff | **5. Spieltag der laufenden Saison** (gleicher Cutoff für beides) | ✅ entschieden |
 | 8 | Provision auf allen Tiers | **0 %** | ✅ entschieden |

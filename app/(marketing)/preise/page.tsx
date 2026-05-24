@@ -122,8 +122,11 @@ export default function PreisePage() {
               <span className="text-accent">bleiben bei dir.</span>
             </h1>
             <p className="mt-3 text-sm md:text-base text-brand-night-navy/70 max-w-xl mx-auto">
-              Wir verdienen an Lizenzen, nicht an Provisionen. Saison-Pass mit
-              2 Monaten geschenkt — Sommerpause kostet nichts.
+              Wir verdienen an Lizenzen, nicht an Provisionen.
+            </p>
+            <p className="mt-2 text-xs md:text-sm text-brand-night-navy/55 max-w-xl mx-auto">
+              Unter 1 € pro Spieler/Monat im Pro-Tarif · bis 42 % sparen im
+              Annual · Sommerpause kostenlos.
             </p>
           </div>
 
