@@ -40,7 +40,11 @@ export function InviteStep() {
             taxId: params.get("taxId") || undefined,
             iban: params.get("iban") ?? ""
           },
-          plan: (params.get("plan") as "basic" | "pro") ?? "basic"
+          plan:
+            (params.get("plan") as "basic" | "pro" | "verein") ?? "basic",
+          cycle:
+            (params.get("cycle") as "monthly" | "season" | "annual") ??
+            "monthly"
         });
         const baseUrl = window.location.origin;
         setInvitationUrl(`${baseUrl}/einladung/${result.invitationToken}`);
