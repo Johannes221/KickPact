@@ -6,6 +6,8 @@ import { seasonEndReminders } from "./season-end-reminders";
 import { evaluateSeason } from "./evaluate-season";
 import { trialReminders } from "./trial-reminders";
 import { verifyResults } from "./verify-results";
+import { pauseSeasonPasses } from "./pause-season-passes";
+import { resumeSeasonPasses } from "./resume-season-passes";
 
 export const functions = [
   crawlMatches,
@@ -15,5 +17,7 @@ export const functions = [
   seasonEndReminders,
   evaluateSeason,
   trialReminders,
-  verifyResults
+  verifyResults,
+  pauseSeasonPasses,
+  resumeSeasonPasses
 ];
