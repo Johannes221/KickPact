@@ -100,43 +100,38 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
 export default function PreisePage() {
   return (
     <main>
-      {/* HERO */}
+      {/* HERO + PRICING (kompakt, Pricing direkt sichtbar) */}
       <section className="relative overflow-hidden bg-white">
         <div
           className="absolute inset-0 bg-gradient-to-br from-accent/10 via-white to-accent/5"
           aria-hidden
         />
         <div
-          className="absolute top-0 right-0 h-72 md:h-96 w-72 md:w-96 rounded-full bg-accent/15 blur-3xl"
-          aria-hidden
-        />
-        <div
-          className="absolute bottom-0 left-0 h-56 md:h-72 w-56 md:w-72 rounded-full bg-accent/10 blur-3xl"
+          className="absolute top-0 right-0 h-56 md:h-72 w-56 md:w-72 rounded-full bg-accent/15 blur-3xl"
           aria-hidden
         />
 
-        <div className="relative mx-auto max-w-6xl px-5 md:px-6 py-16 md:py-24 text-center">
-          <span className="inline-flex items-center rounded-full bg-accent/15 px-3 py-1 text-[0.6rem] md:text-xs font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30">
-            0 % Provision · Faire Preise
-          </span>
-          <h1 className="mt-5 font-display font-black text-[2.2rem] leading-[1.05] sm:text-5xl md:text-6xl tracking-tight text-brand-night-navy">
-            100 % deiner Pledges
-            <br className="hidden sm:block" />{" "}
-            <span className="text-accent">bleiben bei dir.</span>
-          </h1>
-          <p className="mt-5 text-base md:text-xl text-brand-night-navy/70 max-w-2xl mx-auto leading-relaxed">
-            Wir verdienen an Lizenzen, nicht an Provisionen. Kein Trick. Kein
-            Kleingedrucktes.
-          </p>
-          <p className="mt-2 text-sm md:text-base text-brand-night-navy/60 max-w-2xl mx-auto">
-            Saison-Pass mit 2 Monaten geschenkt — Sommerpause kostet nichts.
-          </p>
+        <div className="relative mx-auto max-w-6xl px-5 md:px-6 pt-8 md:pt-12 pb-12 md:pb-16">
+          {/* Kompakte Hero */}
+          <div className="text-center max-w-3xl mx-auto">
+            <span className="inline-flex items-center rounded-full bg-accent/15 px-3 py-1 text-[0.6rem] md:text-xs font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30">
+              0 % Provision · Faire Preise
+            </span>
+            <h1 className="mt-3 font-display font-black text-3xl sm:text-4xl md:text-5xl leading-[1.1] tracking-tight text-brand-night-navy">
+              100 % deiner Pledges{" "}
+              <span className="text-accent">bleiben bei dir.</span>
+            </h1>
+            <p className="mt-3 text-sm md:text-base text-brand-night-navy/70 max-w-xl mx-auto">
+              Wir verdienen an Lizenzen, nicht an Provisionen. Saison-Pass mit
+              2 Monaten geschenkt — Sommerpause kostet nichts.
+            </p>
+          </div>
+
+          {/* Pricing-Toggle + Cards + Matrix direkt darunter */}
+          <div className="mt-8 md:mt-10">
+            <PricingToggle />
+          </div>
         </div>
-      </section>
-
-      {/* BILLING TOGGLE + PRICING CARDS + COMPARISON MATRIX */}
-      <section className="mx-auto max-w-6xl px-5 md:px-6 py-12 md:py-20">
-        <PricingToggle />
       </section>
 
       {/* CLUB MATH BLOCK */}
