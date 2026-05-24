@@ -9,8 +9,12 @@ import {
   sponsors,
   clubs,
   clubMemberships,
-  users
+  users,
+  teams,
+  teamLicenses
 } from "@/lib/db/schema";
+import { highestPlanFrom } from "@/lib/mail/reply-to-pure";
+import type { PlanKey } from "@/lib/stripe/pricing";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { getReplyToForClub } from "@/lib/mail/reply-to";
 import { invoiceSponsorEmail } from "@/lib/mail/templates/invoice-sponsor";
@@ -128,6 +132,18 @@ export const generateInvoices = inngest.createFunction(
           }
 
           const invoiceNumber = await nextInvoiceNumber(cl.id, period.year);
+
+          // Pricing v2: höchstes Tier aller Teams des Clubs → steuert PDF-Footer.
+          const planRows = await db
+            .select({ plan: teamLicenses.plan })
+            .from(teamLicenses)
+            .innerJoin(teams, eq(teamLicenses.teamId, teams.id))
+            .where(eq(teams.clubId, cl.id));
+          const clubPlan: PlanKey =
+            planRows.length > 0
+              ? highestPlanFrom(planRows.map((r) => r.plan as PlanKey))
+              : "basic";
+
           const subtotal = group.items.reduce((s, i) => s + i.amountCents, 0);
           const ust = cl.isSmallBusiness ? 0 : Math.round(subtotal * 0.19);
           const total = subtotal + ust;
@@ -152,6 +168,7 @@ export const generateInvoices = inngest.createFunction(
                 invoiceNumber,
                 period: period.label,
                 issuedAt: new Date(),
+                plan: clubPlan,
                 club: {
                   name: cl.name,
                   address: {
