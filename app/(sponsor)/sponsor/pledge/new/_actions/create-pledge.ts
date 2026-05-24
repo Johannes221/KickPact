@@ -22,6 +22,7 @@ import {
 } from "@/lib/billing/wager-window";
 import { getActiveSeason } from "@/lib/billing/wager-window-server";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
+import { SeasonWagerNotAllowedError } from "@/lib/billing/season-wager-errors";
 
 const MANUAL_TRIGGERS = new Set([
   "special_goal",
@@ -112,6 +113,15 @@ export async function createPledge(input: PledgeInput) {
   // Pricing v2: Saison-Wetten nur vor Matchday 5 erlaubt.
   const now = new Date();
   if (parsed.rules.some((r) => isSeasonTrigger(r.triggerType))) {
+    // Pricing-v2-Audit #4 (2026-05-24): Tier-Gate fuer Saison-Wetten.
+    // Laut docs/pricing.md §5+§8 ist season_* nur fuer Pro/Verein.
+    // Auf basic-Tier ist es das Hauptverkaufsargument fuers Upgrade —
+    // ohne Server-Gate koennten Basic-Sponsoren Saison-Wetten erstellen.
+    const plan = await getTeamLicensePlan(invitation.teamId);
+    if (plan === "basic") {
+      throw new SeasonWagerNotAllowedError(plan);
+    }
+
     const activeSeason = await getActiveSeason(now);
     try {
       assertWagerWindowOpen(activeSeason, now);
