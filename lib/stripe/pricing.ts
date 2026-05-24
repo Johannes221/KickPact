@@ -57,10 +57,10 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
         saveBadge: "35 % sparen"
       },
       annual: {
-        amountCents: 3500,
-        display: "35 €",
-        caption: "/ Jahr · ~2,90 €/Mon",
-        saveBadge: "42 % sparen"
+        amountCents: 4900,
+        display: "49 €",
+        caption: "/ Jahr · ~4,08 €/Mon",
+        saveBadge: "18 % sparen"
       }
     },
     features: [
@@ -91,10 +91,10 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
         saveBadge: "35 % sparen"
       },
       annual: {
-        amountCents: 13500,
-        display: "135 €",
-        caption: "/ Jahr · ~11,25 €/Mon",
-        saveBadge: "40 % sparen"
+        amountCents: 18900,
+        display: "189 €",
+        caption: "/ Jahr · ~15,75 €/Mon",
+        saveBadge: "17 % sparen"
       }
     },
     features: [
@@ -126,10 +126,10 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
         saveBadge: "34 % sparen"
       },
       annual: {
-        amountCents: 34900,
-        display: "349 €",
-        caption: "/ Jahr · ~29 €/Mon",
-        saveBadge: "41 % sparen"
+        amountCents: 48900,
+        display: "489 €",
+        caption: "/ Jahr · ~40,75 €/Mon",
+        saveBadge: "17 % sparen"
       }
     },
     features: [
@@ -160,7 +160,7 @@ export const CYCLE_LABELS: Record<BillingCycle, string> = {
 export const CYCLE_SUBLABELS: Record<BillingCycle, string> = {
   monthly: "jederzeit kündbar",
   season: "Aug–Mai · 35 % sparen",
-  annual: "12 Mon. · bis 42 % sparen"
+  annual: "12 Mon. · ~17 % sparen"
 };
 
 /** Default-Auswahl im Wizard und auf der Pricing-Page. */
