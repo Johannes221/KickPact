@@ -77,7 +77,7 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Wirklich 0 % Provision auf Pledges?",
-    a: "Ja, in allen Tarifen. KickPact verdient ausschließlich an Lizenzgebühren. Was Sponsoren versprechen, kommt 1:1 bei eurer Mannschaft an — KickPact zwackt nie etwas ab."
+    a: "Ja, in allen Tarifen. KickPact stellt die Plattform und wickelt Tracking, PDF-Rechnungen und Sponsor-Inbox ab — finanziert wird das über die Lizenzgebühr. Was Sponsoren versprechen, kommt 1:1 bei eurer Mannschaft an."
   },
   {
     q: "Was ist mit der Umsatzsteuer?",
@@ -111,27 +111,23 @@ export default function PreisePage() {
           aria-hidden
         />
 
-        <div className="relative mx-auto max-w-6xl px-5 md:px-6 pt-8 md:pt-12 pb-12 md:pb-16">
-          {/* Kompakte Hero */}
+        <div className="relative mx-auto max-w-6xl px-5 md:px-6 pt-6 md:pt-10 pb-12 md:pb-16">
+          {/* Minimaler Hero — Pricing direkt darunter */}
           <div className="text-center max-w-3xl mx-auto">
             <span className="inline-flex items-center rounded-full bg-accent/15 px-3 py-1 text-[0.6rem] md:text-xs font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30">
-              0 % Provision · Faire Preise
+              0 % Provision
             </span>
             <h1 className="mt-3 font-display font-black text-3xl sm:text-4xl md:text-5xl leading-[1.1] tracking-tight text-brand-night-navy">
-              100 % deiner Pledges{" "}
-              <span className="text-accent">bleiben bei dir.</span>
+              100 % der Einnahmen{" "}
+              <span className="text-accent">gehen an euch.</span>
             </h1>
             <p className="mt-3 text-sm md:text-base text-brand-night-navy/70 max-w-xl mx-auto">
-              Wir verdienen an Lizenzen, nicht an Provisionen.
-            </p>
-            <p className="mt-2 text-xs md:text-sm text-brand-night-navy/55 max-w-xl mx-auto">
-              Unter 1 € pro Spieler/Monat im Pro-Tarif · bis 42 % sparen im
-              Annual · Sommerpause kostenlos.
+              30 Tage kostenlos testen — ohne Kreditkarte.
             </p>
           </div>
 
           {/* Pricing-Toggle + Cards + Matrix direkt darunter */}
-          <div className="mt-8 md:mt-10">
+          <div className="mt-6 md:mt-8">
             <PricingToggle />
           </div>
         </div>

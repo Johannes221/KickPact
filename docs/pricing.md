@@ -18,7 +18,7 @@
 | **Trial** | 30 Tage | 30 Tage | 30 Tage |
 | **Pro Spieler/Monat** *(typischer Kader)* | ~0,23 €/Spieler (22 Mann) | **< 1 €/Spieler** (22 Mann) · 0,51 € im Annual | **< 1 €/Spieler** (50 Mann) · 0,58 € im Annual · 0,25 € bei 200 Spielern |
 
-**Headline-Versprechen:** *100 % deiner Pledges bleiben bei dir. KickPact verdient an Lizenzen, nicht an Provisionen.*
+**Headline-Versprechen:** *100 % der Einnahmen gehen an euch. KickPact stellt die Plattform — Tracking, PDFs, Sponsor-Inbox — und finanziert sich rein über Lizenzgebühren.*
 
 **Default-Empfehlung im Wizard:** Saison-Pass (Aug–Mai). Annual-Plan für ganzjährige Vereine (Hallenfußball/Veteranen). Monatsabo nach 5. Spieltag der laufenden Saison.
 
@@ -306,7 +306,7 @@ Saison-Wetten (6 Typen: Aufstieg, Klassenerhalt, Tabellenplatz-Range, Meister, P
 Wiederverwendbare Sätze für Landing, Pricing-Page, Onboarding, Sales-Pitches:
 
 ### Plattform-Versprechen
-> **„100 % deiner Pledges bleiben bei dir. Wir verdienen an Lizenzen, nicht Provisionen."**
+> **„100 % der Einnahmen gehen an euch. 30 Tage kostenlos testen — ohne Kreditkarte."**
 
 ### Tarif-Anker
 - **Basic:** *„Zum Reinkommen. 5 € im Monat, kein Risiko."*
