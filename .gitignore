@@ -41,3 +41,7 @@ reference/
 test-results/
 playwright-report/
 .playwright-cache/
+
+# drift checker reports (regenerated on each run)
+drift-report.json
+drift-report.md

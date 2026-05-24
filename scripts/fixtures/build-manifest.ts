@@ -36,9 +36,18 @@ export function inferSchema(
     }
   }
   for (const key of keys) {
-    const values = flat.map((s) => (s as Record<string, unknown>)[key]);
-    const nonNull = values.filter((v) => v !== null && v !== undefined);
-    const nullable = values.some((v) => v === null);
+    // Track BOTH "explicitly null" and "missing from object" — the latter
+    // happens with union-typed records (e.g. spiel-event TOR vs AUSWECHSLUNG
+    // have different field sets). Either case must mark the field nullable
+    // so the drift checker does not flag a perfectly valid event-shape as
+    // drift.
+    const presentSamples = flat.filter(
+      (s) => s && typeof s === "object" && key in (s as Record<string, unknown>),
+    );
+    const allValues = flat.map((s) => (s as Record<string, unknown>)[key]);
+    const nonNull = allValues.filter((v) => v !== null && v !== undefined);
+    const nullable =
+      allValues.some((v) => v === null) || presentSamples.length < flat.length;
     if (nonNull.length === 0) continue;
     const types = new Set(nonNull.map((v) => typeof v));
     const fieldKey = `${prefix}.${key}`;
@@ -60,9 +69,16 @@ export function inferSchema(
           ...(nullable ? { nullable } : {}),
         };
       } else {
+        // We intentionally use a conservative minLength=1 instead of the
+        // observed minimum from the fixture set. Real-world fussball.de data
+        // has far more variance than our 4-club fixture sample (e.g. opponent
+        // names like "VFB Eppingen" are much shorter than our fixtures'
+        // "Herren - FC Sportfreunde 1910 ..."). The minLength check exists to
+        // catch the only signal that actually matters: empty strings caused by
+        // a broken selector. Anything tighter is a false-positive magnet.
         out[fieldKey] = {
           type: "string",
-          minLength: Math.min(...strs.map((s) => s.length)),
+          minLength: 1,
           ...(nullable ? { nullable } : {}),
         };
       }

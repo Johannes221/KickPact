@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generatedAt": "2026-05-24T08:42:39.861Z",
+  "generatedAt": "2026-05-24T11:35:08.017Z",
   "scraperFunctions": {
     "searchVereine": {
       "function": "searchVereine",
@@ -36,11 +36,11 @@
         },
         "items[].vereinId": {
           "type": "string",
-          "minLength": 32
+          "minLength": 1
         },
         "items[].url": {
           "type": "string",
-          "minLength": 88
+          "minLength": 1
         }
       },
       "domAnchors": [
@@ -57,11 +57,11 @@
       "expectedFields": {
         "items[].name": {
           "type": "string",
-          "minLength": 23
+          "minLength": 1
         },
         "items[].slug": {
           "type": "string",
-          "minLength": 35
+          "minLength": 1
         },
         "items[].saison": {
           "type": "string",
@@ -71,11 +71,11 @@
         },
         "items[].teamId": {
           "type": "string",
-          "minLength": 32
+          "minLength": 1
         },
         "items[].url": {
           "type": "string",
-          "minLength": 125
+          "minLength": 1
         }
       },
       "domAnchors": [
@@ -92,23 +92,23 @@
       "expectedFields": {
         "items[].spielId": {
           "type": "string",
-          "minLength": 32
+          "minLength": 1
         },
         "items[].slug": {
           "type": "string",
-          "minLength": 24
+          "minLength": 1
         },
         "items[].datum": {
           "type": "string",
-          "minLength": 8
+          "minLength": 1
         },
         "items[].heim": {
           "type": "string",
-          "minLength": 10
+          "minLength": 1
         },
         "items[].gast": {
           "type": "string",
-          "minLength": 6
+          "minLength": 1
         },
         "items[].ergebnis": {
           "type": "string",
@@ -118,7 +118,7 @@
         },
         "items[].url": {
           "type": "string",
-          "minLength": 95
+          "minLength": 1
         }
       },
       "domAnchors": [
@@ -135,11 +135,12 @@
       "expectedFields": {
         "items[].name": {
           "type": "string",
-          "minLength": 10
+          "minLength": 1
         },
         "items[].spielerId": {
           "type": "string",
-          "minLength": 32
+          "minLength": 1,
+          "nullable": true
         }
       },
       "domAnchors": [
@@ -159,27 +160,32 @@
           "enum": [
             "AUSWECHSLUNG",
             "TOR"
-          ]
+          ],
+          "nullable": true
         },
         "events[].minute": {
           "type": "number",
           "min": 0,
-          "max": 90
+          "max": 90,
+          "nullable": true
         },
         "events[].side": {
           "type": "string",
           "enum": [
             "gast",
             "heim"
-          ]
+          ],
+          "nullable": true
         },
         "events[].spielerId": {
           "type": "string",
-          "minLength": 32
+          "minLength": 1,
+          "nullable": true
         },
         "events[].spielerName": {
           "type": "string",
-          "minLength": 10
+          "minLength": 1,
+          "nullable": true
         }
       },
       "domAnchors": [
