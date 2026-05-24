@@ -1,13 +1,19 @@
 import { inngest } from "@/lib/inngest/client";
-import { getSpiele, getSpielDetails } from "@/lib/crawler/fussballde";
+import {
+  getSpiele,
+  getSpielDetails,
+  computeMatchHash
+} from "@/lib/crawler/fussballde";
 import { validateSpielListItem, validateSpielDetails } from "@/lib/crawler/validator";
 import {
   getActiveTeams,
   getActiveTeamById,
   findMatchByFussballdeId,
   insertMatchWithEvents,
+  updateMatchWithEvents,
   type ActiveTeam
 } from "@/lib/db/queries/crawler";
+import { invalidateChargesForMatch } from "@/lib/db/queries/charges";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 
 export const crawlMatches = inngest.createFunction(
@@ -44,6 +50,7 @@ export const crawlMatches = inngest.createFunction(
     );
 
     let totalNewMatches = 0;
+    let totalUpdatedMatches = 0;
     let skippedReadOnly = 0;
     let skippedInvalid = 0;
     for (const team of targetTeams) {
@@ -80,10 +87,9 @@ export const crawlMatches = inngest.createFunction(
       });
 
       for (const spiel of validSpiele) {
-        const exists = await step.run(`check-${spiel.spielId}`, () =>
+        const existing = await step.run(`check-${spiel.spielId}`, () =>
           findMatchByFussballdeId(spiel.spielId)
         );
-        if (exists) continue;
 
         const details = await step.run(`details-${spiel.spielId}`, () =>
           getSpielDetails(spiel.spielId, spiel.slug)
@@ -102,19 +108,70 @@ export const crawlMatches = inngest.createFunction(
           continue;
         }
 
+        const newHash = computeMatchHash({
+          ergebnisHeim: details.ergebnis.heim,
+          ergebnisGast: details.ergebnis.gast,
+          halbzeitHeim: details.halbzeit?.heim ?? null,
+          halbzeitGast: details.halbzeit?.gast ?? null,
+          events: details.events.map((e) => ({
+            minute: e.minute,
+            type: e.typ.toLowerCase(),
+            side: e.side === "unbekannt" ? "heim" : e.side,
+            spielerId: e.spielerId ?? null
+          }))
+        });
+
+        if (existing) {
+          // Already in DB. Hash unchanged → nothing to do.
+          if (existing.contentHash === newHash) continue;
+
+          // Match data changed on fussball.de — invalidate stale charges, then
+          // re-import events and re-emit so evaluate-match can recompute.
+          await step.run(`invalidate-charges-${spiel.spielId}`, () =>
+            invalidateChargesForMatch(existing.id, "match_updated")
+          );
+          await step.run(`update-${spiel.spielId}`, () =>
+            updateMatchWithEvents({
+              matchId: existing.id,
+              teamId: team.id,
+              listItem: spiel,
+              details,
+              contentHash: newHash
+            })
+          );
+
+          await step.sendEvent("emit-match-updated", {
+            name: "match/finished",
+            data: { matchId: existing.id, teamId: team.id, updated: true }
+          });
+
+          totalUpdatedMatches++;
+          continue;
+        }
+
         const { matchId } = await step.run(`persist-${spiel.spielId}`, () =>
-          insertMatchWithEvents({ teamId: team.id, listItem: spiel, details })
+          insertMatchWithEvents({
+            teamId: team.id,
+            listItem: spiel,
+            details,
+            contentHash: newHash
+          })
         );
 
         await step.sendEvent("emit-match-finished", {
           name: "match/finished",
-          data: { matchId, teamId: team.id }
+          data: { matchId, teamId: team.id, updated: false }
         });
 
         totalNewMatches++;
       }
     }
 
-    return { newMatches: totalNewMatches, skippedReadOnly, skippedInvalid };
+    return {
+      newMatches: totalNewMatches,
+      updatedMatches: totalUpdatedMatches,
+      skippedReadOnly,
+      skippedInvalid
+    };
   }
 );

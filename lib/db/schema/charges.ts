@@ -39,6 +39,12 @@ export const charges = pgTable(
     triggerType: triggerTypeEnum("trigger_type").notNull(),
     amountCents: integer("amount_cents").notNull(),
     status: chargeStatusEnum("status").notNull().default("confirmed"),
+    /**
+     * Reason this charge was cancelled (e.g. "match_updated"). Set by the
+     * match-update-path when fussball.de data changes and we have to
+     * invalidate previously-recorded charges before recomputing.
+     */
+    cancelledReason: text("cancelled_reason"),
     invoiceId: text("invoice_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true })
