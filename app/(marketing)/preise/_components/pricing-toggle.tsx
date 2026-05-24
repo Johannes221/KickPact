@@ -253,7 +253,7 @@ export function PricingToggle() {
       </div>
 
       <p className="mt-6 md:mt-8 text-center text-xs md:text-sm text-brand-night-navy/60 max-w-2xl mx-auto">
-        Alle Preise zzgl. USt. (19 %). Monatlich kündbar. Saison-Pass mit
+        Alle Preise zzgl. USt. (19 %). <strong className="font-semibold text-brand-night-navy/80">Monatsabo jederzeit zum Monatsende kündbar.</strong> Saison-Pass mit
         kostenloser Sommerpause (Juni/Juli). Trial 30 Tage, keine Kreditkarte
         beim Start.
       </p>
@@ -321,6 +321,13 @@ function PriceCard({
             {price.caption}
           </span>
         </div>
+
+        {cycle === "monthly" && (
+          <p className="mt-1.5 text-[0.7rem] md:text-xs font-semibold text-accent-dark inline-flex items-center gap-1">
+            <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            Jederzeit zum Monatsende kündbar.
+          </p>
+        )}
 
         {plan.note && (
           <p className="mt-2 text-[0.7rem] md:text-xs font-semibold text-accent-dark">

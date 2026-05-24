@@ -158,7 +158,7 @@ export const CYCLE_LABELS: Record<BillingCycle, string> = {
 };
 
 export const CYCLE_SUBLABELS: Record<BillingCycle, string> = {
-  monthly: "monatlich kündbar",
+  monthly: "jederzeit kündbar",
   season: "Aug–Mai · 35 % sparen",
   annual: "12 Mon. · bis 42 % sparen"
 };
