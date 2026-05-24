@@ -1,0 +1,174 @@
+{
+  "spielId": "02TPJMNKD8000000VS5489BUVSPHI8RP",
+  "heim": "SG 1983 Viernheim",
+  "gast": "SV Schriesheim",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 4
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 2
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 20,
+      "side": "heim",
+      "spielerId": "00NKAUJH48000000VV0AG85VVUH1CIQU",
+      "spielerName": "Fabian Braun"
+    },
+    {
+      "typ": "TOR",
+      "minute": 25,
+      "side": "gast",
+      "spielerId": "021NVFOU98000000VS541L4GVS1ICQNS",
+      "spielerName": "Sven Richard Richter (SV Schriesheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 32,
+      "side": "heim",
+      "rein": {
+        "id": "024PEIP3MC000000VS541L4JVUUJOJVQ",
+        "name": "Dennis Herzog (SG 1983 Viernheim) Spieler"
+      },
+      "raus": {
+        "id": "00LN6MIQGG000000VV0AG85VVTNE19SS",
+        "name": "Aldin Novalic"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 32,
+      "side": "gast",
+      "spielerId": "00NKAUJU1K000000VV0AG85VVUH1CIQU",
+      "spielerName": "Maurice Körbel"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 49,
+      "side": "heim",
+      "rein": {
+        "id": "02P752PA54000000VUM1D52FVT7LM6MH",
+        "name": "Julian Ferraraccio (SG 1983 Viernheim) Spieler"
+      },
+      "raus": {
+        "id": "01QICUM55S000000VS541L4JVUQUO4F7",
+        "name": "Daniel Jeremic (SG 1983 Viernheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 50,
+      "side": "gast",
+      "spielerId": "024PEIP3MC000000VS541L4JVUUJOJVQ",
+      "spielerName": "Dennis Herzog (SG 1983 Viernheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 57,
+      "side": "gast",
+      "rein": {
+        "id": "01RC57JK08000000VS548984VS0BET8D",
+        "name": "Nidal Abbas"
+      },
+      "raus": {
+        "id": "00NKB0G29C000000VV0AG85VVUH1CIQU",
+        "name": "Steffen Mechler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAVAEUG000000VV0AG85VVUH1CIQU",
+        "name": "Julian Ullrich"
+      },
+      "raus": {
+        "id": "02NH9PFJK8000000VUM1DNRAVVG52THP",
+        "name": "Jaylen Follo (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 60,
+      "side": "gast",
+      "spielerId": "00NKB059E8000000VV0AG85VVUH1CIQU",
+      "spielerName": "Simon Plewa"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 67,
+      "side": "heim",
+      "rein": {
+        "id": "016KPO09UO000000VV0AG80NVTDQAIRM",
+        "name": "Ahmet Yagiz"
+      },
+      "raus": {
+        "id": "02Q0G6JC78000000VS5489B7VSE1ROAJ",
+        "name": "Sanel Kazaferovic"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 67,
+      "side": "gast",
+      "rein": {
+        "id": "022PKAHRV8000000VS541L4IVT85DN1N",
+        "name": "Lennart Petzoldt (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "016P8UUHUG000000VV0AG80NVS7R7KB6",
+        "name": "Donat Tahiri"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 71,
+      "side": "heim",
+      "rein": {
+        "id": "02MEU94220000000VUM1DNP0VUIL78II",
+        "name": "Andrew Schmitt (SG 1983 Viernheim) Spieler"
+      },
+      "raus": {
+        "id": "02KSFVO4JK000000VUM1DNOSVUPMO8BO",
+        "name": "Akeem Schmitt (SG 1983 Viernheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 75,
+      "side": "heim",
+      "rein": {
+        "id": "01UQRTV0BK000000VS54898FVTABNGIG",
+        "name": "Jeffry Pla Fernandez"
+      },
+      "raus": {
+        "id": "00NKARGL2K000000VV0AG85VVUH1CIQU",
+        "name": "Marc Hanselmann"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 78,
+      "side": "gast",
+      "rein": {
+        "id": "00NKB047AG000000VV0AG85VVUH1CIQU",
+        "name": "Nabil Djallouli"
+      },
+      "raus": {
+        "id": "01PNMABVRG000000VS541L4KVV7VC7M8",
+        "name": "Sebastian Bock (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 82,
+      "side": "heim",
+      "spielerId": "01UQRTV0BK000000VS54898FVTABNGIG",
+      "spielerName": "Jeffry Pla Fernandez"
+    }
+  ]
+}

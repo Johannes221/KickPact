@@ -1,0 +1,120 @@
+{
+  "spielId": "02TPICGDRG000000VS5489BUVSPHI8RP",
+  "heim": "SV Rippenweier",
+  "gast": "SV Schriesheim 2",
+  "ergebnis": {
+    "heim": 1,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 16,
+      "side": "heim",
+      "spielerId": "01EMHH2ELO000000VV0AG80NVVIPF5HD",
+      "spielerName": "Jacob Dörsam"
+    },
+    {
+      "typ": "TOR",
+      "minute": 32,
+      "side": "gast",
+      "spielerId": "00NKAU0OMS000000VV0AG85VVUH1CIQU",
+      "spielerName": "Domenico Bonello"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 40,
+      "side": "heim",
+      "rein": {
+        "id": "02C5MRM1US000000VUM1DNOVVS78PTHI",
+        "name": "Philliph Flößer (SV Rippenweier) Spieler"
+      },
+      "raus": {
+        "id": "00VPQU69J8000000VV0AG811VUFQ2882",
+        "name": "David Albert Bühler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 52,
+      "side": "gast",
+      "rein": {
+        "id": "01I8G0LIN0000000VV0AG80NVTFSKJQA",
+        "name": "Nicolas Röger"
+      },
+      "raus": {
+        "id": "023B6KGM7O000000VS541L4JVSGGO3A3",
+        "name": "Florian Greiser (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 59,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAVFUS0000000VV0AG85VVUH1CIQU",
+        "name": "Jan Beckenbach"
+      },
+      "raus": {
+        "id": "00NKAU0OMS000000VV0AG85VVUH1CIQU",
+        "name": "Domenico Bonello"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 61,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAU2L9O000000VV0AG85VVUH1CIQU",
+        "name": "Dennis Bickel"
+      },
+      "raus": {
+        "id": "00R9QM97DG000000VV0AG85VVUJPKL05",
+        "name": "Fabio Antona"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 61,
+      "side": "heim",
+      "rein": {
+        "id": "02HAOU06NG000000VUM1DNPJVSIAD808",
+        "name": "Julian Strauch (SV Rippenweier) Spieler"
+      },
+      "raus": {
+        "id": "02H889F0H0000000VUM1DNP3VTN04VQ9",
+        "name": "Luca Roth (SV Rippenweier) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 61,
+      "side": "gast",
+      "rein": {
+        "id": "01LFP14L28000000VV0AG80NVSOEI20N",
+        "name": "Fabio Griesheimer"
+      },
+      "raus": {
+        "id": "01LV7SE7QK000000VS541L4RVUTNOG27",
+        "name": "Sascha Harbarth (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 67,
+      "side": "gast",
+      "rein": {
+        "id": "00Q5QI5A28000000VV0AG85VVV05E0NJ",
+        "name": "Fabian Bär"
+      },
+      "raus": {
+        "id": "01E73IOLBO000000VV0AG811VVOD6UT3",
+        "name": "Rasmus Füller"
+      }
+    }
+  ]
+}

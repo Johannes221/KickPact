@@ -1,0 +1,180 @@
+{
+  "spielId": "02TPICGEIO000000VS5489BUVSPHI8RP",
+  "heim": "FV 03 Ladenburg 2",
+  "gast": "SV Schriesheim 2",
+  "ergebnis": {
+    "heim": 4,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 2,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 16,
+      "side": "heim",
+      "spielerId": "00O3B246FC000000VV0AG83KVTGT8G00",
+      "spielerName": "Eliah Hesse"
+    },
+    {
+      "typ": "TOR",
+      "minute": 45,
+      "side": "heim",
+      "spielerId": "02FNVSFQG8000000VUM1DNPFVSC8GJGQ",
+      "spielerName": "Tristan Brauneisen (FV 03 Ladenburg) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "02PHBUU1AK000000VUM1D52EVVDOKAUJ",
+        "name": "Joanis-Luca Papadopoulos (FV 03 Ladenburg) Spieler"
+      },
+      "raus": {
+        "id": "01FGKA5A3O000000VV0AG811VSN9B03H",
+        "name": "David Krusenbaum"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "01LVABTIS8000000VV0AG80NVTMPTR0P",
+        "name": "Adriano Galli"
+      },
+      "raus": {
+        "id": "00O3B246FC000000VV0AG83KVTGT8G00",
+        "name": "Eliah Hesse"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "00S6LTKTDS000000VV0AG80NVTI1GQJD",
+        "name": "Adriano Oliveira Dos Santos"
+      },
+      "raus": {
+        "id": "02CAPE2CG0000000VUM1DNPTVSCSLFVG",
+        "name": "Simon Manuel Ammann (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "01NTM43K8S000000VV0AG80NVU504LH5",
+        "name": "Ben-Joel Vogel"
+      },
+      "raus": {
+        "id": "01LV7SE7QK000000VS541L4RVUTNOG27",
+        "name": "Sascha Harbarth (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAVDAM0000000VV0AG85VVUH1CIQU",
+        "name": "Dennis Pagonas"
+      },
+      "raus": {
+        "id": "02G1TTT73S000000VUM1DNQEVVS9FNGT",
+        "name": "Erik Jürgen Lux (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "02OP2KOI80000000VUM1DNQEVT09UPFA",
+        "name": "Manuel Reitberger (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "00NKAVD3JO000000VV0AG85VVUH1CIQU",
+        "name": "Daniel Gramlich"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 55,
+      "side": "heim",
+      "spielerId": "02PHBUU1AK000000VUM1D52EVVDOKAUJ",
+      "spielerName": "Joanis-Luca Papadopoulos (FV 03 Ladenburg) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 57,
+      "side": "gast",
+      "spielerId": "01HQARAV0K000000VV0AG80NVSPKCFQ1",
+      "spielerName": "Finn Knies"
+    },
+    {
+      "typ": "TOR",
+      "minute": 59,
+      "side": "heim",
+      "spielerId": "02PHBUU1AK000000VUM1D52EVVDOKAUJ",
+      "spielerName": "Joanis-Luca Papadopoulos (FV 03 Ladenburg) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 64,
+      "side": "heim",
+      "rein": {
+        "id": "0242IUUGT0000000VS541L4FVSNVQQ90",
+        "name": "Jaron Draco (FV 03 Ladenburg) Spieler"
+      },
+      "raus": {
+        "id": "02GUA4LCJS000000VUM1DNPKVS392RNO",
+        "name": "Felix Diehm (FV 03 Ladenburg) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 65,
+      "side": "heim",
+      "rein": {
+        "id": "0197E2LDQC000000VV0AG80NVT4BP08A",
+        "name": "Dastin Ochman"
+      },
+      "raus": {
+        "id": "01M331S87O000000VV0AG80NVSS5TBMT",
+        "name": "Dennis Kölner"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "gast",
+      "rein": {
+        "id": "00NKB0M3VS000000VV0AG85VVUH1CIQU",
+        "name": "Felix Will"
+      },
+      "raus": {
+        "id": "01LH61G77O000000VS541L4HVTLV2V99",
+        "name": "Tim Möllenbeck (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 85,
+      "side": "heim",
+      "rein": {
+        "id": "01OUIIU788000000VV0AG811VUATOF6H",
+        "name": "Luca Wittmann"
+      },
+      "raus": {
+        "id": "00OETAB9V8000000VV0AG83KVT8KPMPI",
+        "name": "Mario Heinz"
+      }
+    }
+  ]
+}

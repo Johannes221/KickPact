@@ -1,0 +1,154 @@
+{
+  "spielId": "02TPJMNKPG000000VS5489BUVSPHI8RP",
+  "heim": "SV Schriesheim",
+  "gast": "SC 1910 Käfertal 2",
+  "ergebnis": {
+    "heim": 4,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 2,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 13,
+      "side": "heim",
+      "spielerId": "00NKAUJU1K000000VV0AG85VVUH1CIQU",
+      "spielerName": "Maurice Körbel"
+    },
+    {
+      "typ": "TOR",
+      "minute": 37,
+      "side": "heim",
+      "spielerId": "00NKAUJU1K000000VV0AG85VVUH1CIQU",
+      "spielerName": "Maurice Körbel"
+    },
+    {
+      "typ": "TOR",
+      "minute": 42,
+      "side": "gast",
+      "spielerId": "01V9VM8LL0000000VS541L4SVV8PRFV6",
+      "spielerName": "Sebastian Kreutzer (SC Käfertal) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "00VH7K68ES000000VV0AG811VSH599EV",
+        "name": "Leon Pernikas"
+      },
+      "raus": {
+        "id": "025AJDH774000000VS541L4JVTJU23IL",
+        "name": "David Milivojevic (SC Käfertal) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 51,
+      "side": "heim",
+      "spielerId": "00NKAUJU1K000000VV0AG85VVUH1CIQU",
+      "spielerName": "Maurice Körbel"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 59,
+      "side": "gast",
+      "rein": {
+        "id": "02I73KDSI8000000VUM1DNP8VVE1EQBL",
+        "name": "Daniel Khosravi (SC Käfertal) Spieler"
+      },
+      "raus": {
+        "id": "01V9VM8LL0000000VS541L4SVV8PRFV6",
+        "name": "Sebastian Kreutzer (SC Käfertal) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 61,
+      "side": "heim",
+      "rein": {
+        "id": "02OF2NCG5S000000VUM1DNP1VS3QM7C6",
+        "name": "Lennart Knies (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "00NKB0G29C000000VV0AG85VVUH1CIQU",
+        "name": "Steffen Mechler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 71,
+      "side": "gast",
+      "rein": {
+        "id": "01MGLMO2IK000000VS541L4KVTF03MA6",
+        "name": "Daniel Lackmann (SC Käfertal) Spieler"
+      },
+      "raus": {
+        "id": "02G7J435U4000000VUM1DNPDVUU9SGQE",
+        "name": "Konstantin Horschitz (SC Käfertal) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 72,
+      "side": "heim",
+      "rein": {
+        "id": "01RC57JK08000000VS548984VS0BET8D",
+        "name": "Nidal Abbas"
+      },
+      "raus": {
+        "id": "01RHK6F2DC000000VS541L4GVVU8CVVT",
+        "name": "Alexander Jeremic (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 79,
+      "side": "heim",
+      "rein": {
+        "id": "016P8UUHUG000000VV0AG80NVS7R7KB6",
+        "name": "Donat Tahiri"
+      },
+      "raus": {
+        "id": "00NKATUNF8000000VV0AG85VVUH1CIQU",
+        "name": "Jan Höfer"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 80,
+      "side": "heim",
+      "rein": {
+        "id": "01PNMABVRG000000VS541L4KVV7VC7M8",
+        "name": "Sebastian Bock (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "021NVFOU98000000VS541L4GVS1ICQNS",
+        "name": "Sven Richard Richter (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 87,
+      "side": "heim",
+      "rein": {
+        "id": "00NKB047AG000000VV0AG85VVUH1CIQU",
+        "name": "Nabil Djallouli"
+      },
+      "raus": {
+        "id": "00NKB059E8000000VV0AG85VVUH1CIQU",
+        "name": "Simon Plewa"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "heim",
+      "spielerId": "00NKB047AG000000VV0AG85VVUH1CIQU",
+      "spielerName": "Nabil Djallouli"
+    }
+  ]
+}

@@ -1,0 +1,181 @@
+{
+  "spielId": "02TPICGEUS000000VS5489BUVSPHI8RP",
+  "heim": "SG Hohensachsen",
+  "gast": "SV Schriesheim 2",
+  "ergebnis": {
+    "heim": 4,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 12,
+      "side": "gast",
+      "spielerId": "01HQARAV0K000000VV0AG80NVSPKCFQ1",
+      "spielerName": "Finn Knies"
+    },
+    {
+      "typ": "TOR",
+      "minute": 19,
+      "side": "heim",
+      "spielerId": "00NKARPU0C000000VV0AG85VVUH1CIQU",
+      "spielerName": "Valerio Lewandowski"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "01V5E87Q6C000000VS541L4JVVN72IEO",
+        "name": "Nick Dellbrügge (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "02CAPE2CG0000000VUM1DNPTVSCSLFVG",
+        "name": "Simon Manuel Ammann (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 50,
+      "side": "gast",
+      "spielerId": "00NKARODU0000000VV0AG85VVUH1CIQU",
+      "spielerName": "Daniel Bensmail"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 58,
+      "side": "heim",
+      "rein": {
+        "id": "00QBT4NSRO000000VV0AG819VSPRME8B",
+        "name": "Imanuel Jesse"
+      },
+      "raus": {
+        "id": "01US6I20GC000000VS541L4FVSJHEH8K",
+        "name": "Fynn Hendrik Bauer (SG Hohensachsen) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 58,
+      "side": "heim",
+      "rein": {
+        "id": "024QEVPJ0K000000VS541L4IVUV119U5",
+        "name": "Justus Röhrl (SG Hohensachsen) Spieler"
+      },
+      "raus": {
+        "id": "01CJAGBDN4000000VV0AG80NVS4LJG62",
+        "name": "Malte Ferchland"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAVFUS0000000VV0AG85VVUH1CIQU",
+        "name": "Jan Beckenbach"
+      },
+      "raus": {
+        "id": "01I8G0LIN0000000VV0AG80NVTFSKJQA",
+        "name": "Nicolas Röger"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "gast",
+      "rein": {
+        "id": "01CJB1SL18000000VV0AG80NVS4LJG62",
+        "name": "Samuel Rudolf"
+      },
+      "raus": {
+        "id": "01LH61G77O000000VS541L4HVTLV2V99",
+        "name": "Tim Möllenbeck (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 60,
+      "side": "heim",
+      "spielerId": "02910NQLJ8000000VS541L4FVUBQUBNH",
+      "spielerName": "Rico Nesselhauf (SG Hohensachsen) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 68,
+      "side": "heim",
+      "spielerId": "02QTEBCVH4000000VUM1D52CVVAFVG26",
+      "spielerName": "Steffen Anders (SG Hohensachsen) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 70,
+      "side": "gast",
+      "rein": {
+        "id": "01LFP14L28000000VV0AG80NVSOEI20N",
+        "name": "Fabio Griesheimer"
+      },
+      "raus": {
+        "id": "012VJB7A90000000VV0AG811VS1833NE",
+        "name": "Luis Hildebrand"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 76,
+      "side": "heim",
+      "rein": {
+        "id": "02JMDEUL84000000VUM1DNOOVUS5UMG2",
+        "name": "Gianluca Rizzo (SG Hohensachsen) Spieler"
+      },
+      "raus": {
+        "id": "028J1GM4B4000000VS541L4IVS6MICF1",
+        "name": "Felix Bauer (SG Hohensachsen) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 76,
+      "side": "heim",
+      "spielerId": "00QBT4NSRO000000VV0AG819VSPRME8B",
+      "spielerName": "Imanuel Jesse"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 78,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAVDAM0000000VV0AG85VVUH1CIQU",
+        "name": "Dennis Pagonas"
+      },
+      "raus": {
+        "id": "02ITUMQ3KC000000VS5489B6VUDLU3RQ",
+        "name": "Eghe Wesley Idubor"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 83,
+      "side": "heim",
+      "rein": {
+        "id": "01LJ40LQ60000000VS541L4KVUPE408U",
+        "name": "Andreas Hauke (SG Hohensachsen) Spieler"
+      },
+      "raus": {
+        "id": "00NKARPU0C000000VV0AG85VVUH1CIQU",
+        "name": "Valerio Lewandowski"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "gast",
+      "spielerId": "00NKARODU0000000VV0AG85VVUH1CIQU",
+      "spielerName": "Daniel Bensmail"
+    }
+  ]
+}

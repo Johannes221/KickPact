@@ -1,0 +1,160 @@
+{
+  "spielId": "02TPJMNM1C000000VS5489BUVSPHI8RP",
+  "heim": "TSV 1887 Sulzbach",
+  "gast": "SV Schriesheim",
+  "ergebnis": {
+    "heim": 1,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 2
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 7,
+      "side": "gast",
+      "spielerId": "016P8UUHUG000000VV0AG80NVS7R7KB6",
+      "spielerName": "Donat Tahiri"
+    },
+    {
+      "typ": "TOR",
+      "minute": 9,
+      "side": "gast",
+      "spielerId": "00NKB059E8000000VV0AG85VVUH1CIQU",
+      "spielerName": "Simon Plewa"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "02J604JDRG000000VUM1DNORVTH5RBQH",
+        "name": "Manuel Herzog (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "011VLQN6G0000000VV0AG811VUNB7MR0",
+        "name": "Luca Menges"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 52,
+      "side": "heim",
+      "rein": {
+        "id": "00PNFDR4Q8000000VV0AG83KVVI32UHF",
+        "name": "Mirko Hilkert"
+      },
+      "raus": {
+        "id": "00NKB0NBKS000000VV0AG85VVUH1CIQU",
+        "name": "Maximilian Berger"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 57,
+      "side": "heim",
+      "spielerId": "00R9R3ML38000000VV0AG85VVUJPKL05",
+      "spielerName": "Alexander Zimmermann"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 59,
+      "side": "gast",
+      "rein": {
+        "id": "023RDFK0VC000000VS54898FVUD9HD9D",
+        "name": "Ruben Simon Schwertner"
+      },
+      "raus": {
+        "id": "00NKB0G29C000000VV0AG85VVUH1CIQU",
+        "name": "Steffen Mechler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 64,
+      "side": "gast",
+      "rein": {
+        "id": "01RC57JK08000000VS548984VS0BET8D",
+        "name": "Nidal Abbas"
+      },
+      "raus": {
+        "id": "022PKAHRV8000000VS541L4IVT85DN1N",
+        "name": "Lennart Petzoldt (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 69,
+      "side": "gast",
+      "spielerId": "01RC57JK08000000VS548984VS0BET8D",
+      "spielerName": "Nidal Abbas"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 75,
+      "side": "heim",
+      "rein": {
+        "id": "01U8JA2H3C000000VS541L4KVV89PJPD",
+        "name": "Dominic Krusche (TSV 1887 Sulzbach) Spieler"
+      },
+      "raus": {
+        "id": "02MGFIGR00000000VS5489B6VV4M48GU",
+        "name": "Traykov Dimitar"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 79,
+      "side": "gast",
+      "rein": {
+        "id": "00NKB047AG000000VV0AG85VVUH1CIQU",
+        "name": "Nabil Djallouli"
+      },
+      "raus": {
+        "id": "016P8UUHUG000000VV0AG80NVS7R7KB6",
+        "name": "Donat Tahiri"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 84,
+      "side": "heim",
+      "rein": {
+        "id": "02KE963CQ8000000VUM1DNPBVUJA22FG",
+        "name": "Matthis Arnold (TSV 1887 Sulzbach) Spieler"
+      },
+      "raus": {
+        "id": "017EFK6GHC000000VV0AG80NVT880ULB",
+        "name": "Yusuf Yildiz"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 84,
+      "side": "heim",
+      "rein": {
+        "id": "00NKB0FDSO000000VV0AG85VVUH1CIQU",
+        "name": "Benjamin Ehret"
+      },
+      "raus": {
+        "id": "02SRG1TE64000000VUM1D514VVDO2AEA",
+        "name": "Fidan Haxhijaj (TSV 1887 Sulzbach) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 84,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAVD3JO000000VV0AG85VVUH1CIQU",
+        "name": "Daniel Gramlich"
+      },
+      "raus": {
+        "id": "02OF2NCG5S000000VUM1DNP1VS3QM7C6",
+        "name": "Lennart Knies (SV Schriesheim) Spieler"
+      }
+    }
+  ]
+}

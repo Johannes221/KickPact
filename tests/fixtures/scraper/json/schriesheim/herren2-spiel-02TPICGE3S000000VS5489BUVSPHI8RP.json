@@ -1,0 +1,183 @@
+{
+  "spielId": "02TPICGE3S000000VS5489BUVSPHI8RP",
+  "heim": "SV Schriesheim 2",
+  "gast": "TuS Einheit Weinheim",
+  "ergebnis": {
+    "heim": 8,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 4,
+    "gast": 2
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAU0OMS000000VV0AG85VVUH1CIQU",
+        "name": "Domenico Bonello"
+      },
+      "raus": {
+        "id": "01HQARAV0K000000VV0AG80NVSPKCFQ1",
+        "name": "Finn Knies"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 5,
+      "side": "heim",
+      "spielerId": "00NKB0M3VS000000VV0AG85VVUH1CIQU",
+      "spielerName": "Felix Will"
+    },
+    {
+      "typ": "TOR",
+      "minute": 8,
+      "side": "heim",
+      "spielerId": "00NKB0M3VS000000VV0AG85VVUH1CIQU",
+      "spielerName": "Felix Will"
+    },
+    {
+      "typ": "TOR",
+      "minute": 18,
+      "side": "heim",
+      "spielerId": "01HQARAV0K000000VV0AG80NVSPKCFQ1",
+      "spielerName": "Finn Knies"
+    },
+    {
+      "typ": "TOR",
+      "minute": 29,
+      "side": "gast",
+      "spielerId": "02J5F9S4R8000000VUM1DNOVVTKDCVHS",
+      "spielerName": "Veton Rexhepi (TuS Einheit Weinheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 35,
+      "side": "gast",
+      "spielerId": "0175FLO87G000000VV0AG811VUFT5QPC",
+      "spielerName": "Lum Rexhepi"
+    },
+    {
+      "typ": "TOR",
+      "minute": 44,
+      "side": "heim",
+      "spielerId": "02RBNS4QTG000000VUM1D54LVU1I6QIH",
+      "spielerName": "Marcel Pulfer (TuS Einheit Weinheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "01I8G0LIN0000000VV0AG80NVTFSKJQA",
+        "name": "Nicolas Röger"
+      },
+      "raus": {
+        "id": "01LH61G77O000000VS541L4HVTLV2V99",
+        "name": "Tim Möllenbeck (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 46,
+      "side": "heim",
+      "spielerId": "00S6LTKTDS000000VV0AG80NVTI1GQJD",
+      "spielerName": "Adriano Oliveira Dos Santos"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 55,
+      "side": "gast",
+      "rein": {
+        "id": "00O404GL9O000000VV0AG83KVTGT8G00",
+        "name": "Oliver Mazurek"
+      },
+      "raus": {
+        "id": "02ND4F0098000000VS5489B8VU7P6VKN",
+        "name": "Sebastian-Petrut Sindilaru"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 66,
+      "side": "heim",
+      "spielerId": "00NKB0M3VS000000VV0AG85VVUH1CIQU",
+      "spielerName": "Felix Will"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 67,
+      "side": "gast",
+      "rein": {
+        "id": "02Q5C82634000000VS5489B8VT4OTCL7",
+        "name": "Mihai-Catalin Musat"
+      },
+      "raus": {
+        "id": "022UEQGP3K000000VS541L4KVTBTVPC3",
+        "name": "Manuel Ehret (TuS Einheit Weinheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 67,
+      "side": "heim",
+      "rein": {
+        "id": "01LFP14L28000000VV0AG80NVSOEI20N",
+        "name": "Fabio Griesheimer"
+      },
+      "raus": {
+        "id": "00NKB0M3VS000000VV0AG85VVUH1CIQU",
+        "name": "Felix Will"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 67,
+      "side": "heim",
+      "rein": {
+        "id": "02G1TTT73S000000VUM1DNQEVVS9FNGT",
+        "name": "Erik Jürgen Lux (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "02ITUMQ3KC000000VS5489B6VUDLU3RQ",
+        "name": "Eghe Wesley Idubor"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 79,
+      "side": "gast",
+      "rein": {
+        "id": "01JG3AD050000000VV0AG811VVVS1C3T",
+        "name": "Oguzhan Sari"
+      },
+      "raus": {
+        "id": "00NKB0533S000000VV0AG85VVUH1CIQU",
+        "name": "Kevin Metz"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 88,
+      "side": "heim",
+      "spielerId": "01HQARAV0K000000VV0AG80NVSPKCFQ1",
+      "spielerName": "Finn Knies"
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "heim",
+      "spielerId": "01HQARAV0K000000VV0AG80NVSPKCFQ1",
+      "spielerName": "Finn Knies"
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "gast",
+      "spielerId": "00NKB07OM4000000VV0AG85VVUH1CIQU",
+      "spielerName": "Dominique Fillmann"
+    }
+  ]
+}

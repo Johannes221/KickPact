@@ -1,0 +1,174 @@
+{
+  "spielId": "02TPJMNML8000000VS5489BUVSPHI8RP",
+  "heim": "SV Schriesheim",
+  "gast": "SKV Sandhofen",
+  "ergebnis": {
+    "heim": 3,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 2,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 8,
+      "side": "heim",
+      "spielerId": "016P8UUHUG000000VV0AG80NVS7R7KB6",
+      "spielerName": "Donat Tahiri"
+    },
+    {
+      "typ": "TOR",
+      "minute": 17,
+      "side": "heim",
+      "spielerId": "016P8UUHUG000000VV0AG80NVS7R7KB6",
+      "spielerName": "Donat Tahiri"
+    },
+    {
+      "typ": "TOR",
+      "minute": 45,
+      "side": "gast",
+      "spielerId": "02NF595KCG000000VUM1DNONVSD01VNM",
+      "spielerName": "Markus Köhler (SKV Sandhofen) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "01RC57JK08000000VS548984VS0BET8D",
+        "name": "Nidal Abbas"
+      },
+      "raus": {
+        "id": "02NH9PFJK8000000VUM1DNRAVVG52THP",
+        "name": "Jaylen Follo (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 56,
+      "side": "gast",
+      "rein": {
+        "id": "028AF2VL8G000000VS541L4IVTRMKA0U",
+        "name": "Marc Wheeler (SKV Sandhofen) Spieler"
+      },
+      "raus": {
+        "id": "01JT9K0J0G000000VV0AG80NVS63HA1B",
+        "name": "Vincent Hergert"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 67,
+      "side": "gast",
+      "spielerId": "0138HLCTRK000000VV0AG811VUTA5CSU",
+      "spielerName": "Jakub Bednarski"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 70,
+      "side": "gast",
+      "rein": {
+        "id": "02TT2DBKVK000000VUM1D52BVU5U4A3N",
+        "name": "Lukas Geiger (SKV Sandhofen) Spieler"
+      },
+      "raus": {
+        "id": "02F9N2C45C000000VUM1DNPMVTA46ILC",
+        "name": "Sören Staatsmann (SKV Sandhofen) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 77,
+      "side": "gast",
+      "spielerId": "02NF595KCG000000VUM1DNONVSD01VNM",
+      "spielerName": "Markus Köhler (SKV Sandhofen) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 78,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAU6P48000000VV0AG85VVUH1CIQU",
+        "name": "Maximilian Stowasser"
+      },
+      "raus": {
+        "id": "00NKB1FBFO000000VV0AG85VVUH1CIQU",
+        "name": "Alessandro Cammilleri"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 85,
+      "side": "heim",
+      "rein": {
+        "id": "00NKB0G29C000000VV0AG85VVUH1CIQU",
+        "name": "Steffen Mechler"
+      },
+      "raus": {
+        "id": "021NVFOU98000000VS541L4GVS1ICQNS",
+        "name": "Sven Richard Richter (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 87,
+      "side": "heim",
+      "spielerId": "01RC57JK08000000VS548984VS0BET8D",
+      "spielerName": "Nidal Abbas"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 88,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAVAEUG000000VV0AG85VVUH1CIQU",
+        "name": "Julian Ullrich"
+      },
+      "raus": {
+        "id": "016P8UUHUG000000VV0AG80NVS7R7KB6",
+        "name": "Donat Tahiri"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 89,
+      "side": "gast",
+      "rein": {
+        "id": "02196EFI6C000000VS541L4KVU858TUB",
+        "name": "Sascha Weisel (SKV Sandhofen) Spieler"
+      },
+      "raus": {
+        "id": "01T9892EG4000000VS54898GVUUJAPN3",
+        "name": "Raul-Mihai Baiceanu"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 90,
+      "side": "heim",
+      "rein": {
+        "id": "02OF2NCG5S000000VUM1DNP1VS3QM7C6",
+        "name": "Lennart Knies (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "01RHK6F2DC000000VS541L4GVVU8CVVT",
+        "name": "Alexander Jeremic (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 90,
+      "side": "heim",
+      "rein": {
+        "id": "023B6KGM7O000000VS541L4JVSGGO3A3",
+        "name": "Florian Greiser (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "00NKAUJU1K000000VV0AG85VVUH1CIQU",
+        "name": "Maurice Körbel"
+      }
+    }
+  ]
+}

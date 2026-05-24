@@ -1,0 +1,102 @@
+{
+  "spielId": "02VUT1RVKO000000VS5489BTVUKESBFG",
+  "heim": "MFC 08 Lindenhof (Flex)",
+  "gast": "SV Schriesheim",
+  "ergebnis": {
+    "heim": 4,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 20,
+      "side": "gast",
+      "rein": {
+        "id": "02O0U68M2S000000VUM1DNR8VUTN04CS",
+        "name": "Marvin Rafael Scheller (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "02C1G24GRK000000VUM1DNPFVVKS6Q0I",
+        "name": "Alexander Igorevic Gurenko (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 21,
+      "side": "heim",
+      "rein": {
+        "id": "02UD48BBA4000000VS5489C2VVFE14E9",
+        "name": "Abdulelah Alsalih Alsleman"
+      },
+      "raus": {
+        "id": "01P1MFNLDC000000VV0AG811VUE726LS",
+        "name": "Paul Zimmermann"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 36,
+      "side": "heim",
+      "spielerId": "02030RN8O0000000VS54898FVURH594E",
+      "spielerName": "Maxim Borodulya"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 38,
+      "side": "gast",
+      "rein": {
+        "id": "02084LK5JG000000VS54898GVSG4R2UA",
+        "name": "Sandro Ingoflur Lux"
+      },
+      "raus": {
+        "id": "01MENU61LG000000VV0AG80NVS213ORG",
+        "name": "Tim Carstensen"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "02TBBCT2CS000000VS5489C2VSJNJVM9",
+        "name": "Jonathan Soza Putschky"
+      },
+      "raus": {
+        "id": "02O0U68M2S000000VUM1DNR8VUTN04CS",
+        "name": "Marvin Rafael Scheller (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 50,
+      "side": "heim",
+      "spielerId": "02030RN8O0000000VS54898FVURH594E",
+      "spielerName": "Maxim Borodulya"
+    },
+    {
+      "typ": "TOR",
+      "minute": 62,
+      "side": "gast",
+      "spielerId": "020B2CVO7K000000VS54898GVTHALE2V",
+      "spielerName": "Leon Can Ungelenk"
+    },
+    {
+      "typ": "TOR",
+      "minute": 75,
+      "side": "heim",
+      "spielerId": "01PV08O4UK000000VV0AG811VUNH3IDQ",
+      "spielerName": "Nils Henrik Gerold Glette"
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "heim",
+      "spielerId": "01PV08O4UK000000VV0AG811VUNH3IDQ",
+      "spielerName": "Nils Henrik Gerold Glette"
+    }
+  ]
+}

@@ -1,0 +1,250 @@
+{
+  "spielId": "02TPICGFDC000000VS5489BUVSPHI8RP",
+  "heim": "SV Schriesheim 2",
+  "gast": "SKV Sandhofen 2",
+  "ergebnis": {
+    "heim": 12,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 5,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAUOPQC000000VV0AG85VVUH1CIQU",
+        "name": "Max Rosinski"
+      },
+      "raus": {
+        "id": "02196EFI6C000000VS541L4KVU858TUB",
+        "name": "Sascha Weisel (SKV Sandhofen) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "02FSEMEAUS000000VUM1DNO7VS5FTFKM",
+        "name": "Ümit Akpinar (SKV Sandhofen) Spieler"
+      },
+      "raus": {
+        "id": "01DUBS39BG000000VV0AG811VVHC0V0R",
+        "name": "Muhammed Kaplican"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "0219AP3AOC000000VS541L4GVUST1QNQ",
+        "name": "Christian Kalke (SKV Sandhofen) Spieler"
+      },
+      "raus": {
+        "id": "00NKAUQRDO000000VV0AG85VVUH1CIQU",
+        "name": "Patric Isele"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "00NMD1O4T0000000VV0AG83KVUEANCND",
+        "name": "Luca Haingärtner"
+      },
+      "raus": {
+        "id": "02BMC2K4KG000000VUM1DNO5VS2G4HTD",
+        "name": "Anil Aybars (SKV Sandhofen) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAR2SPC000000VV0AG85VVUH1CIQU",
+        "name": "Rafael Pytel"
+      },
+      "raus": {
+        "id": "02NCI3QOG8000000VUM1DNPGVTBKT2A0",
+        "name": "Cheick Ahmed Benon (SKV Sandhofen) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "02CAPE2CG0000000VUM1DNPTVSCSLFVG",
+        "name": "Simon Manuel Ammann (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "01I8G0LIN0000000VV0AG80NVTFSKJQA",
+        "name": "Nicolas Röger"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "01LFP14L28000000VV0AG80NVSOEI20N",
+        "name": "Fabio Griesheimer"
+      },
+      "raus": {
+        "id": "01NTM43K8S000000VV0AG80NVU504LH5",
+        "name": "Ben-Joel Vogel"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "02OP2KOI80000000VUM1DNQEVT09UPFA",
+        "name": "Manuel Reitberger (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "01HQARAV0K000000VV0AG80NVSPKCFQ1",
+        "name": "Finn Knies"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAVDAM0000000VV0AG85VVUH1CIQU",
+        "name": "Dennis Pagonas"
+      },
+      "raus": {
+        "id": "02ITUMQ3KC000000VS5489B6VUDLU3RQ",
+        "name": "Eghe Wesley Idubor"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "00NKB0M3VS000000VV0AG85VVUH1CIQU",
+        "name": "Felix Will"
+      },
+      "raus": {
+        "id": "01LV7SE7QK000000VS541L4RVUTNOG27",
+        "name": "Sascha Harbarth (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 5,
+      "side": "gast",
+      "spielerId": "028TD8PHKK000000VS541L4HVUJIC9P9",
+      "spielerName": "Dennis Kremer (SKV Sandhofen) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 7,
+      "side": "heim",
+      "spielerId": "00NKB0G29C000000VV0AG85VVUH1CIQU",
+      "spielerName": "Steffen Mechler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 21,
+      "side": "heim",
+      "spielerId": "01NTM43K8S000000VV0AG80NVU504LH5",
+      "spielerName": "Ben-Joel Vogel"
+    },
+    {
+      "typ": "TOR",
+      "minute": 24,
+      "side": "heim",
+      "spielerId": "00NKB0G29C000000VV0AG85VVUH1CIQU",
+      "spielerName": "Steffen Mechler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 26,
+      "side": "heim",
+      "spielerId": "01HQARAV0K000000VV0AG80NVSPKCFQ1",
+      "spielerName": "Finn Knies"
+    },
+    {
+      "typ": "TOR",
+      "minute": 30,
+      "side": "heim",
+      "spielerId": "01HQARAV0K000000VV0AG80NVSPKCFQ1",
+      "spielerName": "Finn Knies"
+    },
+    {
+      "typ": "TOR",
+      "minute": 52,
+      "side": "heim",
+      "spielerId": "00NKB0G29C000000VV0AG85VVUH1CIQU",
+      "spielerName": "Steffen Mechler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 56,
+      "side": "heim",
+      "spielerId": "00NKB0G29C000000VV0AG85VVUH1CIQU",
+      "spielerName": "Steffen Mechler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 61,
+      "side": "gast",
+      "spielerId": "02NCI3QOG8000000VUM1DNPGVTBKT2A0",
+      "spielerName": "Cheick Ahmed Benon (SKV Sandhofen) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 68,
+      "side": "gast",
+      "spielerId": "01TR25G2Q0000000VS541L4GVT0TI543",
+      "spielerName": "Dennis Schäfer (SKV Sandhofen) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 69,
+      "side": "heim",
+      "spielerId": "00NKB0M3VS000000VV0AG85VVUH1CIQU",
+      "spielerName": "Felix Will"
+    },
+    {
+      "typ": "TOR",
+      "minute": 70,
+      "side": "heim",
+      "spielerId": "01HQARAV0K000000VV0AG80NVSPKCFQ1",
+      "spielerName": "Finn Knies"
+    },
+    {
+      "typ": "TOR",
+      "minute": 71,
+      "side": "heim",
+      "spielerId": "01HQARAV0K000000VV0AG80NVSPKCFQ1",
+      "spielerName": "Finn Knies"
+    },
+    {
+      "typ": "TOR",
+      "minute": 82,
+      "side": "heim",
+      "spielerId": "02CAPE2CG0000000VUM1DNPTVSCSLFVG",
+      "spielerName": "Simon Manuel Ammann (SV Schriesheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 89,
+      "side": "heim",
+      "spielerId": "01HQARAV0K000000VV0AG80NVSPKCFQ1",
+      "spielerName": "Finn Knies"
+    }
+  ]
+}
