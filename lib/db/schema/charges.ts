@@ -1,5 +1,5 @@
 import {
-  pgTable, text, timestamp, integer, pgEnum, index, uniqueIndex
+  pgTable, text, timestamp, integer, pgEnum, index, primaryKey, uniqueIndex
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
@@ -85,6 +85,28 @@ export const invoices = pgTable(
       t.clubId,
       t.period
     )
+  })
+);
+
+/**
+ * Audit 2026-05-24 Task 2.1: Race-safe Invoice-Sequenz pro (club, year).
+ *
+ * `nextInvoiceNumber()` machte vorher `COUNT(*)+1` ohne Lock — zwei parallele
+ * Cron+Manual-Runs konnten identische `KP-2026-0001` produzieren, danach
+ * R2-PUT überschreibt → Sponsor A bekam PDF von Sponsor B. Diese Tabelle hält
+ * den letzten ausgegebenen Counter pro Club+Jahr. Update über atomic
+ * `INSERT ... ON CONFLICT DO UPDATE SET counter = counter + 1 RETURNING counter`.
+ */
+export const invoiceCounters = pgTable(
+  "invoice_counters",
+  {
+    clubId: text("club_id").notNull().references(() => clubs.id, { onDelete: "cascade" }),
+    year: integer("year").notNull(),
+    counter: integer("counter").notNull().default(0),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.clubId, t.year] })
   })
 );
 
