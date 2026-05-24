@@ -10,7 +10,7 @@ export default function DatenschutzPage() {
         Datenschutzerklärung
       </h1>
       <p className="mt-2 text-xs md:text-sm text-brand-night-navy/60">
-        Letzte Aktualisierung: 20. Mai 2026
+        Letzte Aktualisierung: 24. Mai 2026
       </p>
 
       <p className="mt-6">
@@ -26,8 +26,11 @@ export default function DatenschutzPage() {
         <br />
         Johannes Schartl — KickPact
         <br />
-        {/* TODO: vor Production ergänzen */}
-        [Anschrift]
+        Kleegarten
+        <br />
+        69123 Heidelberg-Wieblingen
+        <br />
+        Deutschland
         <br />
         E-Mail:{" "}
         <a className="text-accent hover:underline" href="mailto:hello@kickpact.com">
@@ -57,10 +60,10 @@ export default function DatenschutzPage() {
           monatlichen PDF-Rechnung notwendig sind (Rechnungsadresse, ggf. USt-ID).
         </li>
         <li>
-          <strong>Fußball.de-Crawler-Daten:</strong> öffentliche Spieldaten
-          (Tore, Siege, Spielstände) deiner Mannschaft, die wir von fussball.de
-          abrufen. Es handelt sich ausschließlich um Daten, die bereits öffentlich
-          zugänglich sind.
+          <strong>Fußball.de-Crawler-Daten:</strong> öffentliche Spielergebnisse,
+          Spielereignisse (Tore, Karten, Auswechslungen) und Spielernamen
+          deiner Mannschaft, die wir von fussball.de abrufen — Details und
+          Widerspruchsrecht siehe Abschnitt 5.
         </li>
         <li>
           <strong>Technische Logs:</strong> IP-Adresse, User-Agent und Zeitstempel
@@ -90,44 +93,130 @@ export default function DatenschutzPage() {
       </ul>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
-        4. Drittanbieter (Auftragsverarbeiter)
+        4. Auftragsverarbeiter
       </h2>
       <p className="mt-2">
         Für den Betrieb arbeiten wir mit folgenden Dienstleistern zusammen. Mit
-        allen Anbietern bestehen Auftragsverarbeitungsverträge nach Art. 28 DSGVO.
+        allen Auftragsverarbeitern bestehen Auftragsverarbeitungsverträge gemäß
+        Art. 28 DSGVO. Für Drittlandtransfers außerhalb der EU/EWR werden
+        Standardvertragsklauseln (SCC) gemäß Durchführungsbeschluss (EU) 2021/914
+        und ergänzende Schutzmaßnahmen eingesetzt.
       </p>
-      <ul className="mt-3 space-y-3 list-disc pl-5">
-        <li>
-          <strong>Neon (Postgres-Datenbank, EU):</strong> hostet unsere Datenbank
-          in einer EU-Region. Sämtliche Anwendungsdaten liegen hier.
-        </li>
-        <li>
-          <strong>Resend (Transaktions-Mails, EU/US):</strong> versendet
-          Magic-Link-Mails, Rechnungs-Versand und Benachrichtigungen. Standard
-          Contractual Clauses für etwaige Drittlandtransfers.
-        </li>
-        <li>
-          <strong>Stripe (Zahlungsdienstleister, US/IE):</strong> wickelt die
-          Abo-Zahlungen für KickPact ab. Stripe ist Verantwortlicher gemäß
-          eigener Datenschutzerklärung; wir übermitteln nur Rechnungs-Basisdaten.
-        </li>
-        <li>
-          <strong>Inngest (Workflow-Engine, US):</strong> orchestriert
-          asynchrone Jobs (Crawler-Runs, Rechnungserstellung). Verarbeitet
-          ausschließlich Job-Metadaten, keine Inhalte über die Job-Payload hinaus.
-        </li>
-        <li>
-          <strong>Cloudflare (CDN &amp; Object-Storage R2):</strong> liefert
-          statische Assets aus und speichert PDF-Rechnungen verschlüsselt in R2.
-        </li>
-        <li>
-          <strong>Hetzner (Hosting, Deutschland):</strong> die Anwendung läuft auf
-          Hetzner-Servern in einem deutschen Rechenzentrum.
-        </li>
-      </ul>
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full text-xs md:text-sm border-collapse">
+          <thead className="bg-brand-off-white text-brand-night-navy">
+            <tr>
+              <th className="text-left p-2 border border-brand-neutral/40">Anbieter</th>
+              <th className="text-left p-2 border border-brand-neutral/40">Sitz / Rechenzentrum</th>
+              <th className="text-left p-2 border border-brand-neutral/40">Zweck</th>
+              <th className="text-left p-2 border border-brand-neutral/40">Rechtsgrundlage Drittland</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="p-2 border border-brand-neutral/40">Hetzner Online GmbH</td>
+              <td className="p-2 border border-brand-neutral/40">Deutschland (Nürnberg / Falkenstein)</td>
+              <td className="p-2 border border-brand-neutral/40">Server-Hosting der Anwendung (Coolify-Plattform)</td>
+              <td className="p-2 border border-brand-neutral/40">EU-Hosting, kein Drittlandtransfer</td>
+            </tr>
+            <tr>
+              <td className="p-2 border border-brand-neutral/40">Neon Inc.</td>
+              <td className="p-2 border border-brand-neutral/40">Hosting EU-Region (Frankfurt)</td>
+              <td className="p-2 border border-brand-neutral/40">Postgres-Datenbank (alle Anwendungsdaten)</td>
+              <td className="p-2 border border-brand-neutral/40">EU-Hosting, kein Drittlandtransfer</td>
+            </tr>
+            <tr>
+              <td className="p-2 border border-brand-neutral/40">Resend (Drop, Inc.)</td>
+              <td className="p-2 border border-brand-neutral/40">USA</td>
+              <td className="p-2 border border-brand-neutral/40">Transaktions-E-Mail-Versand (Magic-Link, Rechnungen, Benachrichtigungen)</td>
+              <td className="p-2 border border-brand-neutral/40">SCC + Data Privacy Framework (DPF)</td>
+            </tr>
+            <tr>
+              <td className="p-2 border border-brand-neutral/40">Stripe Payments Europe Ltd.</td>
+              <td className="p-2 border border-brand-neutral/40">Irland (Konzern-Mutter USA)</td>
+              <td className="p-2 border border-brand-neutral/40">Zahlungsabwicklung Plattform-Abo</td>
+              <td className="p-2 border border-brand-neutral/40">EU-Vertragspartner; konzernintern SCC + DPF</td>
+            </tr>
+            <tr>
+              <td className="p-2 border border-brand-neutral/40">Inngest, Inc.</td>
+              <td className="p-2 border border-brand-neutral/40">USA</td>
+              <td className="p-2 border border-brand-neutral/40">Asynchrone Job-Orchestrierung (Crawler-Runs, Rechnungserstellung)</td>
+              <td className="p-2 border border-brand-neutral/40">SCC + DPF</td>
+            </tr>
+            <tr>
+              <td className="p-2 border border-brand-neutral/40">Cloudflare, Inc.</td>
+              <td className="p-2 border border-brand-neutral/40">USA (Edge weltweit)</td>
+              <td className="p-2 border border-brand-neutral/40">CDN für statische Assets, R2-Object-Storage für PDF-Rechnungen</td>
+              <td className="p-2 border border-brand-neutral/40">SCC + DPF</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-3 text-xs text-brand-night-navy/60">
+        Eine aktuelle Liste der Auftragsverarbeiter und Subprocessoren stellen wir
+        auf Anfrage per E-Mail an{" "}
+        <a className="text-accent hover:underline" href="mailto:hello@kickpact.com">
+          hello@kickpact.com
+        </a>{" "}
+        bereit.
+      </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
-        5. Cookies
+        5. Verarbeitung von Spielerdaten aus fussball.de
+      </h2>
+      <p className="mt-2">
+        Damit Sponsor-Wetten („Pledge pro Tor", „Pledge pro Hattrick" etc.)
+        korrekt ausgewertet werden können, ruft KickPact öffentlich zugängliche
+        Spielergebnisse, Spielereignisse (Tore, Karten, Auswechslungen) und
+        Spielernamen von{" "}
+        <a className="text-accent hover:underline" href="https://www.fussball.de" target="_blank" rel="noreferrer">
+          fussball.de
+        </a>{" "}
+        ab und speichert sie verknüpft mit der jeweiligen Mannschaft.
+      </p>
+      <p className="mt-3">
+        <strong>Rechtsgrundlage</strong> ist Art. 6 Abs. 1 lit. f DSGVO
+        (berechtigtes Interesse). Unser berechtigtes Interesse besteht in der
+        Bereitstellung des Kernzwecks von KickPact — Pledge-Auswertung anhand
+        überprüfbarer, öffentlich publizierter Spielresultate. Ohne diese
+        Verarbeitung wäre die Dienstleistung nicht erbringbar. Wir verarbeiten
+        ausschließlich Daten, die der DFB-Landesverband über fussball.de bereits
+        öffentlich publiziert hat, und keine über die Spielberichte hinausgehenden
+        personenbezogenen Daten (insbesondere keine Adressen, Geburtsdaten oder
+        Kontaktdaten der Spieler).
+      </p>
+      <p className="mt-3">
+        <strong>Interessenabwägung:</strong> Die Spielernamen sind bereits
+        öffentlich auf fussball.de einsehbar; KickPact reichert sie nicht mit
+        zusätzlichen Daten an und gibt sie ausschließlich an die mit der
+        Mannschaft verknüpften Sponsoren weiter (geschlossener Empfängerkreis,
+        eingeloggt + Pledge an die Mannschaft aktiv). Eine darüber hinausgehende
+        öffentliche Veröffentlichung findet nicht statt. Bei Jugendmannschaften
+        (Spieler unter 18 Jahren) erfolgt die Verarbeitung nur, solange der
+        zuständige Landesverband die Daten auch auf fussball.de öffentlich zeigt.
+      </p>
+      <p className="mt-3">
+        <strong>Widerspruchsrecht (Opt-out):</strong> Spieler oder
+        Erziehungsberechtigte können der Verarbeitung jederzeit formlos
+        widersprechen. Bitte schreibe eine E-Mail mit dem vollständigen Namen
+        und der betroffenen Mannschaft an{" "}
+        <a className="text-accent hover:underline" href="mailto:hello@kickpact.com">
+          hello@kickpact.com
+        </a>
+        . Wir anonymisieren den Spielernamen in unserem System innerhalb von
+        14 Tagen nach Eingang und schließen ihn von zukünftigen Crawler-Updates
+        aus.
+      </p>
+      <p className="mt-3">
+        <strong>Speicherdauer:</strong> Spielereignisse und damit verbundene
+        Spielernamen werden gelöscht, sobald die zugehörige Mannschaft auf
+        KickPact deaktiviert wird, spätestens jedoch nach Ablauf der gesetzlichen
+        Aufbewahrungspflichten für die zugehörigen Rechnungsdaten (§ 147 AO,
+        10 Jahre).
+      </p>
+
+      <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+        6. Cookies
       </h2>
       <p className="mt-2">
         KickPact setzt ausschließlich ein technisch notwendiges Cookie für die
@@ -141,7 +230,7 @@ export default function DatenschutzPage() {
       </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
-        6. Deine Rechte
+        7. Deine Rechte
       </h2>
       <p className="mt-2">
         Nach DSGVO stehen dir folgende Rechte zu:
@@ -173,7 +262,7 @@ export default function DatenschutzPage() {
       </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
-        7. Speicherdauer
+        8. Speicherdauer
       </h2>
       <p className="mt-2">
         Account-Daten werden gespeichert, solange dein KickPact-Account aktiv ist.
@@ -183,7 +272,7 @@ export default function DatenschutzPage() {
       </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
-        8. Änderungen dieser Erklärung
+        9. Änderungen dieser Erklärung
       </h2>
       <p className="mt-2">
         Wir aktualisieren diese Datenschutzerklärung gelegentlich, um Änderungen

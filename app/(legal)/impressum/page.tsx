@@ -24,11 +24,9 @@ export default function ImpressumPage() {
       <p className="mt-2">
         KickPact — Johannes Schartl
         <br />
-        {/* TODO: vor Production ergänzen */}
-        [Straße &amp; Hausnummer]
+        Kleegarten
         <br />
-        {/* TODO: vor Production ergänzen */}
-        [PLZ &amp; Ort]
+        69123 Heidelberg-Wieblingen
         <br />
         Deutschland
       </p>
@@ -44,25 +42,24 @@ export default function ImpressumPage() {
       </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
-        Umsatzsteuer-ID
+        Umsatzsteuer
       </h2>
       <p className="mt-2">
-        Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz:
-        <br />
-        {/* TODO: vor Production ergänzen */}
-        [USt-IdNr — wird vor Production ergänzt]
+        Aufgrund der Kleinunternehmerregelung nach § 19 UStG wird keine
+        Umsatzsteuer ausgewiesen und keine USt-Identifikationsnummer geführt.
       </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
         Verantwortlich für den Inhalt
       </h2>
       <p className="mt-2">
-        Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV:
+        Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV:
         <br />
         Johannes Schartl
         <br />
-        {/* TODO: vor Production ergänzen */}
-        [Anschrift wie oben]
+        Kleegarten
+        <br />
+        69123 Heidelberg-Wieblingen
       </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
