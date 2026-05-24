@@ -89,6 +89,7 @@ export default async function AboPage({
           clubSlug={slug}
           stripeReady={stripeReady}
           currentStatus={sub.status}
+          currentCycle={currentCycle}
         />
       )}
 
@@ -142,6 +143,7 @@ export default async function AboPage({
                     plan={plan.key}
                     stripeReady={stripeReady}
                     currentStatus={sub?.status ?? null}
+                    cycle={currentCycle}
                   />
                 </div>
               </div>
@@ -204,12 +206,14 @@ function UpgradePathsCard({
   currentPlan,
   clubSlug,
   stripeReady,
-  currentStatus
+  currentStatus,
+  currentCycle
 }: {
   currentPlan: PlanKey;
   clubSlug: string;
   stripeReady: boolean;
   currentStatus: string;
+  currentCycle: BillingCycle;
 }) {
   return (
     <div className="rounded-2xl border border-brand-night-navy/15 bg-brand-off-white p-4 md:p-5 space-y-3">
@@ -227,6 +231,7 @@ function UpgradePathsCard({
             plan="pro"
             stripeReady={stripeReady}
             currentStatus={currentStatus}
+            cycle={currentCycle}
           />
         </div>
       )}
@@ -242,6 +247,7 @@ function UpgradePathsCard({
             plan="verein"
             stripeReady={stripeReady}
             currentStatus={currentStatus}
+            cycle={currentCycle}
           />
         </div>
       )}

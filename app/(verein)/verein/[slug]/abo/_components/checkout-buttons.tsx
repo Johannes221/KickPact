@@ -7,7 +7,7 @@ import {
   createCheckoutSession,
   createCustomerPortalSession
 } from "@/lib/actions/subscriptions";
-import type { PlanKey } from "@/lib/stripe/pricing";
+import type { PlanKey, BillingCycle } from "@/lib/stripe/pricing";
 
 interface Props {
   clubSlug: string;
@@ -15,9 +15,14 @@ interface Props {
   stripeReady: boolean;
   /** Status des bestehenden Abos, oder null wenn noch keines */
   currentStatus: string | null;
+  /**
+   * Billing-Cycle, der an Stripe-Checkout gereicht wird. Default monthly für
+   * Backwards-Compat — die Abo-Page propagiert den per Sub gespeicherten Cycle.
+   */
+  cycle?: BillingCycle;
 }
 
-export function CheckoutButtons({ clubSlug, plan, stripeReady, currentStatus }: Props) {
+export function CheckoutButtons({ clubSlug, plan, stripeReady, currentStatus, cycle }: Props) {
   const [isPending, startTransition] = useTransition();
   const [busy, setBusy] = useState<"checkout" | "portal" | null>(null);
 
@@ -28,7 +33,7 @@ export function CheckoutButtons({ clubSlug, plan, stripeReady, currentStatus }: 
     setBusy("checkout");
     startTransition(async () => {
       try {
-        const { url } = await createCheckoutSession({ clubSlug, plan });
+        const { url } = await createCheckoutSession({ clubSlug, plan, cycle });
         window.location.href = url;
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Checkout konnte nicht gestartet werden");

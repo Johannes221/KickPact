@@ -7,7 +7,12 @@ import { clubs, subscriptions } from "@/lib/db/schema";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { requireUser } from "@/lib/auth/session";
 import { getStripe, isStripeConfigured } from "@/lib/stripe/client";
-import { getStripePriceId, TRIAL_DAYS, type PlanKey } from "@/lib/stripe/pricing";
+import {
+  getStripePriceId,
+  TRIAL_DAYS,
+  type PlanKey,
+  type BillingCycle
+} from "@/lib/stripe/pricing";
 
 const baseUrl = process.env.BETTER_AUTH_URL ?? "https://kickpact.schartl.dev";
 
@@ -22,6 +27,12 @@ const baseUrl = process.env.BETTER_AUTH_URL ?? "https://kickpact.schartl.dev";
 export async function createCheckoutSession(opts: {
   clubSlug: string;
   plan: PlanKey;
+  /**
+   * Billing-Cycle (monthly/season/annual). Falls leer: aus subscriptions.billingCycle,
+   * Fallback monthly. Pricing-v2-Audit #2 (2026-05-24): vorher wurde cycle ignoriert,
+   * Saison-Pass-Checkout zeigte fälschlich Monthly-Preis.
+   */
+  cycle?: BillingCycle;
 }): Promise<{ url: string }> {
   if (!isStripeConfigured()) {
     throw new Error(
@@ -32,13 +43,6 @@ export async function createCheckoutSession(opts: {
   const user = await requireUser();
   const stripe = getStripe();
 
-  const priceId = getStripePriceId(opts.plan);
-  if (!priceId) {
-    throw new Error(
-      `Stripe Price-ID für Plan "${opts.plan}" fehlt. Setze STRIPE_${opts.plan.toUpperCase()}_PRICE_ID.`
-    );
-  }
-
   // Customer holen oder neu anlegen.
   // Akzeptiert sowohl NULL (neuer Standard seit Audit 2026-05-24) als auch
   // legacy "placeholder_…"-Strings (alte Daten aus finalize.ts vor Mai 2026)
@@ -48,6 +52,17 @@ export async function createCheckoutSession(opts: {
     .from(subscriptions)
     .where(eq(subscriptions.clubId, club.id))
     .limit(1);
+
+  // Cycle-Resolution: explizit > subscriptions.billingCycle > monthly.
+  const cycle: BillingCycle =
+    opts.cycle ?? ((existing?.billingCycle as BillingCycle | undefined) ?? "monthly");
+
+  const priceId = getStripePriceId(opts.plan, cycle);
+  if (!priceId) {
+    throw new Error(
+      `Stripe Price-ID für Plan "${opts.plan}" (${cycle}) fehlt. Setze STRIPE_${opts.plan.toUpperCase()}_${cycle.toUpperCase()}_PRICE_ID.`
+    );
+  }
 
   let customerId = existing?.stripeCustomerId ?? null;
   const isPlaceholder =
@@ -87,7 +102,7 @@ export async function createCheckoutSession(opts: {
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: {
       trial_period_days: TRIAL_DAYS,
-      metadata: { clubId: club.id, plan: opts.plan }
+      metadata: { clubId: club.id, plan: opts.plan, cycle }
     },
     success_url: `${baseUrl}/verein/${club.slug}?subscribed=1`,
     cancel_url: `${baseUrl}/verein/${club.slug}?subscribe_cancelled=1`,
@@ -135,6 +150,11 @@ export async function createCustomerPortalSession(clubSlug: string): Promise<{ u
 export async function startCheckoutAndRedirect(formData: FormData) {
   const clubSlug = String(formData.get("clubSlug"));
   const plan = String(formData.get("plan")) as PlanKey;
-  const { url } = await createCheckoutSession({ clubSlug, plan });
+  const cycleRaw = formData.get("cycle");
+  const cycle =
+    cycleRaw === "monthly" || cycleRaw === "season" || cycleRaw === "annual"
+      ? (cycleRaw as BillingCycle)
+      : undefined;
+  const { url } = await createCheckoutSession({ clubSlug, plan, cycle });
   redirect(url);
 }

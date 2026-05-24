@@ -35,7 +35,8 @@ vi.mock("@/lib/stripe/client", () => ({
 }));
 
 vi.mock("@/lib/stripe/pricing", () => ({
-  getStripePriceId: (plan: string) => `price_${plan}_test`,
+  getStripePriceId: (plan: string, cycle: string = "monthly") =>
+    `price_${plan}_${cycle}_test`,
   TRIAL_DAYS: 30
 }));
 
@@ -108,6 +109,34 @@ describe("createCheckoutSession", () => {
     expect(dbUpdateFn).not.toHaveBeenCalled();
     expect(stripeCheckoutSessionsCreate).toHaveBeenCalledWith(
       expect.objectContaining({ customer: "cus_existing_789" })
+    );
+  });
+
+  it("propagates billing cycle from opts to Stripe price-id (Audit #2)", async () => {
+    dbSelectFn.mockResolvedValue([
+      { clubId: "club1", stripeCustomerId: "cus_x", status: "trialing", billingCycle: "monthly" }
+    ]);
+
+    await createCheckoutSession({ clubSlug: "fc-test", plan: "pro", cycle: "season" });
+
+    expect(stripeCheckoutSessionsCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        line_items: [{ price: "price_pro_season_test", quantity: 1 }]
+      })
+    );
+  });
+
+  it("falls back to subscription.billingCycle when opts.cycle is missing (Audit #2)", async () => {
+    dbSelectFn.mockResolvedValue([
+      { clubId: "club1", stripeCustomerId: "cus_y", status: "trialing", billingCycle: "annual" }
+    ]);
+
+    await createCheckoutSession({ clubSlug: "fc-test", plan: "verein" });
+
+    expect(stripeCheckoutSessionsCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        line_items: [{ price: "price_verein_annual_test", quantity: 1 }]
+      })
     );
   });
 });
