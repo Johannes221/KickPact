@@ -89,7 +89,7 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Was passiert bei einem Disput?",
-    a: "Sponsoren bestätigen oder bestreiten jedes Event innerhalb von 7 Tagen. Bei Streit erscheinen Event-Beweise (Fußball.de-Match, ggf. Trainer-Foto), und der Verein kann den Pledge stornieren. Monats-Rechnung wird erst danach final erstellt — kein Geld fließt für strittige Events."
+    a: "Sponsoren bestätigen oder bestreiten jedes Event innerhalb von 7 Tagen. Bei Streit erscheinen Event-Beweise (Spielnachweis, ggf. Trainer-Foto), und der Verein kann den Pledge stornieren. Monats-Rechnung wird erst danach final erstellt — kein Geld fließt für strittige Events."
   }
 ];
 

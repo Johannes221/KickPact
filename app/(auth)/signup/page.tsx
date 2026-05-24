@@ -17,7 +17,7 @@ const ROLE_META: Record<
     tagline:
       "Du willst Sponsoring für eine einzelne Mannschaft — Sponsoren versprechen pro Tor, Sieg, Comeback. Geld direkt in eure Kasse.",
     bullets: [
-      "Onboarding in 90 Sek. — wir finden euch auf Fußball.de",
+      "Onboarding in 90 Sek. — wir finden eure Mannschaft automatisch",
       "Einladungslink → Sponsoren legen Pledges selbst fest",
       "30 Tage gratis, danach 9 € / Mon."
     ]

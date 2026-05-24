@@ -36,7 +36,7 @@ export function RolesTabs() {
             </p>
             <ul className="space-y-2.5 md:space-y-3 text-white/80 text-sm md:text-base">
               <Bullet>
-                Mannschafts-Onboarding in 90 Sekunden — wir finden euch auf Fußball.de.
+                Mannschafts-Onboarding in 90 Sekunden — wir finden eure Mannschaft automatisch.
               </Bullet>
               <Bullet>
                 Sponsoren über einen Einladungslink — Familie, Freunde, Stammtisch,

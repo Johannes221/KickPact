@@ -332,7 +332,7 @@ export default async function HomePage() {
                 aus{" "}
                 <code className="rounded bg-neutral-100 px-1">lib/crawler/triggers.ts</code>.
                 In Production läuft das in einem Inngest-Job pro neuem Match aus dem
-                Fußball.de-Crawler, mit Monthly-Cap-Enforcement und Idempotenz über
+                Match-Crawler, mit Monthly-Cap-Enforcement und Idempotenz über
                 UNIQUE-Constraints in Postgres.
               </p>
             </div>

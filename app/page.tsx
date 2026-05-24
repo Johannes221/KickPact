@@ -258,7 +258,7 @@ export default function LandingPage() {
           <Step
             num="01"
             title="Mannschaft anlegen"
-            body="Magic-Link per Mail, Wizard sucht deine Mannschaft auf Fußball.de, wählt Plan. Dauert 90 Sekunden. Verein mit mehreren Teams? → Vereinslizenz."
+            body="Magic-Link per Mail, Wizard findet eure Mannschaft automatisch, wählt Plan. Dauert 90 Sekunden. Verein mit mehreren Teams? → Vereinslizenz."
           />
           <Step
             num="02"
@@ -268,7 +268,7 @@ export default function LandingPage() {
           <Step
             num="03"
             title="Spiele werden ausgewertet"
-            body="Crawler holt Tore, Siege, Halbzeiten direkt von Fußball.de. Spezial-Events (Kopfballtor, Elfmeter) meldet der Trainer per Smartphone."
+            body="Wir lesen Tore, Siege und Halbzeiten automatisch ein. Spezial-Events (Kopfballtor, Elfmeter) meldet der Trainer per Smartphone."
           />
           <Step
             num="04"
@@ -349,7 +349,7 @@ export default function LandingPage() {
           </div>
           <p className="mt-5 md:mt-6 text-[0.7rem] md:text-xs text-white/50 flex flex-wrap gap-x-3 gap-y-1">
             <span className="inline-flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Auto (Fußball.de)
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Auto
             </span>
             <span className="inline-flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-white/60" /> Mannschaft meldet + Sponsor bestätigt
@@ -385,7 +385,7 @@ export default function LandingPage() {
             <SeasonBetCard emoji="🎺" name="Custom-Ziel" example="frei wählbar" detail={'z.B. "20 Tore mehr als letzte Saison"'} />
           </div>
           <p className="mt-5 md:mt-6 text-xs md:text-sm text-brand-night-navy/70 max-w-2xl">
-            Tabellen-Stände kommen direkt von Fußball.de, sobald die Saison gewertet ist.
+            Tabellen-Stände werden automatisch nach Saisonende gewertet.
             Custom-Ziele werden von der Mannschaft gemeldet und vom Sponsor bestätigt — gleicher
             Trust-Mechanismus wie bei Spezial-Events.
           </p>
@@ -479,11 +479,11 @@ export default function LandingPage() {
             />
             <FaqItem
               q="Wie funktionieren die Saison-Wetten?"
-              a={'Saison-Wetten sind Pledges, die nicht pro Spiel sondern erst am Saisons-Ende abrechnen — z.B. 200 € für Aufstieg, 100 € für Klassenerhalt, 50 € für Platz 1–5. KickPact liest die End-Tabelle von Fußball.de aus; wenn das Ziel erreicht wurde, geht der volle Betrag an den Verein. Wenn nicht, zahlt der Sponsor nichts.'}
+              a={'Saison-Wetten sind Pledges, die nicht pro Spiel sondern erst am Saisons-Ende abrechnen — z.B. 200 € für Aufstieg, 100 € für Klassenerhalt, 50 € für Platz 1–5. KickPact liest die End-Tabelle automatisch; wenn das Ziel erreicht wurde, geht der volle Betrag an den Verein. Wenn nicht, zahlt der Sponsor nichts.'}
             />
             <FaqItem
               q="Funktioniert das auch für Junioren-Mannschaften?"
-              a={'Ja. Solange die Mannschaft auf Fußball.de gelistet ist, scrapt unser Crawler die Spielergebnisse. Bei Junioren kannst du einen Elternteil als Sponsor-Manager hinterlegen — er sammelt Pledges von Oma, Onkel, Freunden und behält den Überblick, ohne dass jeder eine eigene Mail-Adresse braucht. Familien-Sponsoring auch ohne Smartphone für Linus aus der C-Jugend.'}
+              a={'Ja. Solange eure Mannschaft öffentlich gelistet ist, holen wir die Spielergebnisse automatisch. Bei Junioren kannst du einen Elternteil als Sponsor-Manager hinterlegen — er sammelt Pledges von Oma, Onkel, Freunden und behält den Überblick, ohne dass jeder eine eigene Mail-Adresse braucht. Familien-Sponsoring auch ohne Smartphone für Linus aus der C-Jugend.'}
             />
             <FaqItem
               q="Sind die Beträge für den Sponsor steuerlich absetzbar?"
@@ -491,7 +491,7 @@ export default function LandingPage() {
             />
             <FaqItem
               q="Kann ich einen Pledge auf einen bestimmten Spieler binden?"
-              a={'Ja. Beispiel: "3 € wenn Schmidt ein Tor schießt." Im Pledge-Setup wählst du den Trigger „Tor von Spieler X", suchst den Spieler über Fußball.de-Profil aus, und KickPact erkennt automatisch nach jedem Spiel ob Schmidt getroffen hat. Bei nicht zuordenbaren Spielern (z.B. Junioren ohne öffentliches Profil) meldet der Trainer manuell.'}
+              a={'Ja. Beispiel: "3 € wenn Schmidt ein Tor schießt." Im Pledge-Setup wählst du den Trigger „Tor von Spieler X", suchst den Spieler über das Spielerprofil aus, und KickPact erkennt automatisch nach jedem Spiel ob Schmidt getroffen hat. Bei nicht zuordenbaren Spielern (z.B. Junioren ohne öffentliches Profil) meldet der Trainer manuell.'}
             />
             <FaqItem
               q="Was passiert wenn meine Mannschaft schlecht spielt?"
