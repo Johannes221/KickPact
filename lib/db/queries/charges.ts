@@ -1,6 +1,6 @@
-import { and, eq, gte, lte, ne, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { charges, pledges, matches, teams } from "@/lib/db/schema";
+import { charges, pledges, matches, teams, eventApprovals } from "@/lib/db/schema";
 
 export interface ChargeForBilling {
   chargeId: string;
@@ -86,10 +86,35 @@ export async function invalidateChargesForMatch(
   matchId: string,
   reason: string
 ): Promise<void> {
-  await db
-    .update(charges)
-    .set({ status: "cancelled", cancelledReason: reason })
-    .where(and(eq(charges.matchId, matchId), ne(charges.status, "invoiced")));
+  // Audit 2026-05-24 Task 2.3: Approvals MÜSSEN auch expired werden, sonst
+  // kann der Sponsor einen cancelled Charge via "Bestätigen" wiederbeleben
+  // (siehe approvals.confirmApproval). Atomar in einer Transaction.
+  await db.transaction(async (tx) => {
+    const affectedCharges = await tx
+      .select({ matchEventId: charges.matchEventId })
+      .from(charges)
+      .where(and(eq(charges.matchId, matchId), ne(charges.status, "invoiced")));
+
+    await tx
+      .update(charges)
+      .set({ status: "cancelled", cancelledReason: reason })
+      .where(and(eq(charges.matchId, matchId), ne(charges.status, "invoiced")));
+
+    const eventIds = affectedCharges
+      .map((c) => c.matchEventId)
+      .filter((id): id is string => id !== null);
+    if (eventIds.length > 0) {
+      await tx
+        .update(eventApprovals)
+        .set({ status: "expired", respondedAt: new Date() })
+        .where(
+          and(
+            inArray(eventApprovals.matchEventId, eventIds),
+            eq(eventApprovals.status, "pending")
+          )
+        );
+    }
+  });
 }
 
 /**

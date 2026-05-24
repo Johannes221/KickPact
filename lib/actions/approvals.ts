@@ -21,6 +21,26 @@ export async function confirmApproval(approvalId: string) {
     throw new Error(`Approval ist bereits ${row.approval.status}.`);
   }
 
+  // Audit 2026-05-24 Task 2.3: defense-in-depth gegen Charge-Wiederbelebung.
+  // invalidateChargesForMatch expired Approvals normalerweise mit, aber falls
+  // ein Race-Fenster offen war (Sponsor klickt aus cached UI), blockt der
+  // Charge-Status-Check hier ein "Bestätigen" eines bereits cancelled Charges.
+  const [chargeRow] = await db
+    .select({ status: charges.status })
+    .from(charges)
+    .where(
+      and(
+        eq(charges.pledgeRuleId, row.pledgeRuleId),
+        eq(charges.matchEventId, row.matchEventId)
+      )
+    )
+    .limit(1);
+  if (chargeRow?.status === "cancelled") {
+    throw new Error(
+      "Das Ereignis wurde inzwischen vom Spielbericht widerrufen und kann nicht mehr bestätigt werden."
+    );
+  }
+
   await db.transaction(async (tx) => {
     await tx
       .update(eventApprovals)

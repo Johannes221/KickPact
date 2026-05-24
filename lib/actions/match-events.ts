@@ -19,6 +19,7 @@ import {
   type MatchInput,
   type MatchEventInput
 } from "@/lib/crawler/triggers";
+import { detectTeamSide } from "@/lib/crawler/team-side";
 import {
   loadActivePledgeRulesForTeam,
   getMonthlyChargedCents,
@@ -54,11 +55,12 @@ export async function addManualEvent(input: AddManualEventInput) {
   // Permission: mindestens trainer + Subscription darf nicht read-only sein
   await assertClubWriteAccess(target.club.slug, "trainer");
 
-  // Bestimme teamSide (welche Seite ist die gesponserte Mannschaft?)
-  // Heuristik: first significant word of team name in heim_name → heim
-  const teamFirstWord = target.team.name.toLowerCase().split(" ")[0];
-  const heimMatch = target.match.heimName.toLowerCase().includes(teamFirstWord);
-  const teamSide: "heim" | "gast" = heimMatch ? "heim" : "gast";
+  // Bestimme teamSide via detectTeamSide-Helper — identisch zur Crawler-Pipeline,
+  // damit Manual-Events nicht anders klassifiziert werden als Scraped-Events.
+  // Audit 2026-05-24 Phase 2 Task 2.7: vorher split(" ")[0] → bei
+  // "Herren - FC Sportfreunde 1910 Dossenheim 3" greift first word "herren"
+  // nicht im heimName → teamSide=gast → Manual-Events feuern für falsche Seite.
+  const teamSide = detectTeamSide(target.team.name, target.match.heimName);
 
   // Falls Trainer ein Event auf der "anderen Seite" einträgt (also nicht teamSide):
   // wir erlauben es trotzdem in DB, evaluieren aber NUR wenn side === teamSide

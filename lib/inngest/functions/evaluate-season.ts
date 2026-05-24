@@ -11,6 +11,31 @@ import {
 import { isSeasonTrigger, type SeasonTriggerType } from "@/lib/db/schema/pledges";
 
 /**
+ * Parsed eine saison-String wie "2526" oder "2025/26" in Datums-Grenzen.
+ * Konvention: Saison startet 1.7. des unteren Jahres, endet 30.6. des oberen.
+ * Exportiert für Unit-Tests.
+ */
+export function parseSeasonBoundaries(saison: string): { start: Date; end: Date } {
+  const compact = saison.replace("/", "");
+  let lo: number;
+  let hi: number;
+  if (compact.length === 4) {
+    lo = 2000 + Number(compact.slice(0, 2));
+    hi = 2000 + Number(compact.slice(2, 4));
+  } else if (compact.length === 8) {
+    lo = Number(compact.slice(0, 4));
+    hi = Number(compact.slice(4, 8));
+  } else {
+    // Fallback: unbekanntes Format → epoch + far future, lässt alle Pledges durch
+    return { start: new Date(0), end: new Date("9999-12-31") };
+  }
+  return {
+    start: new Date(Date.UTC(lo, 6, 1, 0, 0, 0)), // 1.7. lo
+    end: new Date(Date.UTC(hi, 5, 30, 23, 59, 59)) // 30.6. hi
+  };
+}
+
+/**
  * Saison-Wetten-Auswertung.
  *
  * Trigger: Event `season/result-set` mit `{teamId, saison}` payload.
@@ -40,7 +65,11 @@ export const evaluateSeason = inngest.createFunction(
       return { teamId, saison, chargesCreated: 0, skipped: "no-result" };
     }
 
-    // Lade alle aktiven pledges für diese Mannschaft + alle Saison-Trigger-Rules.
+    // Audit 2026-05-24 Task 2.6: Pledge muss zur Saison gültig gewesen sein —
+    // vorher war `gte(pledges.endsAt, new Date(0))` tautologisch und Saison-
+    // Wetten feuerten auch für Pledges, die erst NACH Saison-Ende erstellt
+    // wurden (siehe cross-saison-pledges.test.ts:212-245).
+    const { start: seasonStart, end: seasonEnd } = parseSeasonBoundaries(saison);
     const rows = await db
       .select({
         pledge: pledges,
@@ -54,8 +83,9 @@ export const evaluateSeason = inngest.createFunction(
         and(
           eq(pledges.teamId, teamId),
           eq(pledges.status, "active"),
-          gte(pledges.endsAt, new Date(0)),
-          lte(pledges.startsAt, new Date())
+          // Pledge musste zur Saison aktiv sein: startsAt <= Saison-Ende UND endsAt >= Saison-Start
+          lte(pledges.startsAt, seasonEnd),
+          gte(pledges.endsAt, seasonStart)
         )
       );
 
@@ -78,10 +108,12 @@ export const evaluateSeason = inngest.createFunction(
           return;
         }
 
+        // Audit 2026-05-24 Task 2.6: season_custom landete vorher mit
+        // pending_approval, aber ohne event_approvals-Row → Sponsor sah nie
+        // etwas in der Inbox, Charge blieb forever pending. Entscheidung:
+        // Verein setzt customNotes = Verein bestätigt selbst. Auto-confirmed.
         const requiresApproval =
-          r.rule.requiresApproval ||
-          triggerType === "season_cup_round" ||
-          triggerType === "season_custom";
+          r.rule.requiresApproval || triggerType === "season_cup_round";
 
         const insertResult = await db
           .insert(charges)
@@ -135,6 +167,10 @@ export function isTriggerHit(
     case "season_promotion":
       return result.promoted === true;
     case "season_no_relegation":
+      // Audit 2026-05-24 Task 2.6: nur als Hit zählen wenn das Resultat
+      // wirklich ausgewertet wurde — sonst greift der Default `relegated=false`
+      // und jeder Run mit unfertiger Saison erzeugt sofort Charges.
+      if (!result.evaluatedAt) return false;
       return result.relegated === false;
     case "season_champion":
       return result.finalPosition === 1;

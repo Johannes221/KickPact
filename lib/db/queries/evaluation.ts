@@ -59,6 +59,13 @@ export async function getMatch(matchId: string) {
 /**
  * Liefert die Summe aller `confirmed` + `pending_approval` + `invoiced` Charges
  * für einen Pledge im laufenden Monat (basierend auf asOf).
+ *
+ * Audit 2026-05-24 Task 2.5: Filterung über COALESCE(confirmedAt, createdAt)
+ * statt rein `createdAt`. Grund: `generate-invoices` selektiert confirmed-Charges
+ * via `confirmedAt`. Wenn der Cap-Check `createdAt` nutzte, konnten Spät-Confirms
+ * (z.B. Sponsor bestätigt am 5. ein Approval aus dem 1.) den Cap des Vor-Monats
+ * belasten, aber auf der Folge-Rechnung landen → Pledge mit monthlyCap=100€
+ * konnte effektiv 200€ in einem Monat erzeugen.
  */
 export async function getMonthlyChargedCents(pledgeId: string, asOf: Date): Promise<number> {
   const monthStart = new Date(asOf.getFullYear(), asOf.getMonth(), 1);
@@ -71,8 +78,8 @@ export async function getMonthlyChargedCents(pledgeId: string, asOf: Date): Prom
     .where(
       and(
         eq(charges.pledgeId, pledgeId),
-        gte(charges.createdAt, monthStart),
-        lt(charges.createdAt, monthEnd),
+        gte(sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt})`, monthStart),
+        lt(sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt})`, monthEnd),
         inArray(charges.status, ["confirmed", "pending_approval", "invoiced"])
       )
     );
