@@ -111,7 +111,13 @@ export const generateInvoices = inngest.createFunction(
     const failures: { sponsorId: string; clubId: string; error: string }[] = [];
 
     for (const group of grouped) {
-      // Use a deterministic step-ID so retries on the same group don't double-fire.
+      // Audit 2026-05-24 Phase 2 / Task 2.2: Mail-Send aus DB-Step rausgezogen.
+      // Vorher war alles (DB-insert + PDF + 2 Mails) in einem step.run, bei
+      // Inngest-Retry → doppelte Mail an Sponsor + Verein. Jetzt:
+      //   Step A: create-invoice — DB + PDF + R2-Store (idempotent durch UNIQUE)
+      //   Step B: mail-sponsor — Mail an Sponsor (deterministische step-id)
+      //   Step C: mail-admins  — Mail an Club-Admins (deterministische step-id)
+      // Retry triggert dann nur den fehlgeschlagenen Step erneut.
       const stepId = `invoice-${group.sponsorId}-${group.clubId}-${periodStr}`;
       try {
         const result = await step.run(stepId, async () => {
@@ -251,77 +257,99 @@ export const generateInvoices = inngest.createFunction(
             return { skipped: true, reason: "duplicate-invoice" } as const;
           }
 
-          // Mails — Sponsor + Club-Admin(s) bekommen die PDF
-          const totalEur = eur(total);
-          const itemCount = group.items.length;
-
-          const sponsorMail = invoiceSponsorEmail({
-            sponsorName: spRow.sponsor.displayName,
-            clubName: cl.name,
-            period: period.label,
-            totalEur,
-            invoiceNumber,
-            itemCount
-          });
-
-          const replyTo = await getReplyToForClub(cl.id);
-          const sponsorSend = await resend.emails.send({
-            from: MAIL_FROM,
-            to: spRow.user.email,
-            replyTo,
-            subject: sponsorMail.subject,
-            text: sponsorMail.text,
-            html: sponsorMail.html,
-            attachments: [{ filename: `${invoiceNumber}.pdf`, content: pdfBuf }]
-          });
-
-          if (sponsorSend.error) {
-            logger.error("sponsor-mail failed", {
-              to: spRow.user.email,
-              error: sponsorSend.error
-            });
-          }
-
-          // Copy to all club admins
+          // Sammle Mail-Metadaten — werden in separaten Steps unten versendet.
+          // pdfBuf als base64 durch Inngest-Step-Boundary serialisierbar.
           const adminRows = await db
             .select({ email: users.email, name: users.name })
             .from(clubMemberships)
             .innerJoin(users, eq(clubMemberships.userId, users.id))
             .where(eq(clubMemberships.clubId, cl.id));
-          const adminEmails = adminRows
-            .filter((a) => a.email)
-            .map((a) => a.email);
+          const adminEmails = adminRows.filter((a) => a.email).map((a) => a.email);
+          const replyTo = await getReplyToForClub(cl.id);
 
-          if (adminEmails.length > 0) {
-            const clubMail = invoiceClubEmail({
-              adminName: adminRows[0]?.name ?? undefined,
-              clubName: cl.name,
-              sponsorName: spRow.sponsor.displayName,
-              period: period.label,
-              totalEur,
-              invoiceNumber,
-              itemCount
+          return {
+            skipped: false as const,
+            invoiceId: inserted.id,
+            invoiceNumber,
+            sponsorEmail: spRow.user.email,
+            sponsorName: spRow.sponsor.displayName,
+            adminEmails,
+            adminName: adminRows[0]?.name ?? null,
+            clubName: cl.name,
+            replyTo: replyTo ?? null,
+            totalEur: eur(total),
+            itemCount: group.items.length,
+            pdfBase64: pdfBuf.toString("base64")
+          };
+        });
+
+        if (result.skipped) {
+          continue;
+        }
+
+        invoicesCreated += 1;
+        const pdfBuf = Buffer.from(result.pdfBase64, "base64");
+
+        // Step B: Mail an Sponsor. Eigener step.run mit deterministischer
+        // step-id basierend auf invoiceId → Inngest-Retry triggert genau
+        // diesen Step neu, nicht den ganzen Group-Flow.
+        await step.run(`mail-sponsor-${result.invoiceId}`, async () => {
+          const sponsorMail = invoiceSponsorEmail({
+            sponsorName: result.sponsorName,
+            clubName: result.clubName,
+            period: period.label,
+            totalEur: result.totalEur,
+            invoiceNumber: result.invoiceNumber,
+            itemCount: result.itemCount
+          });
+          const send = await resend.emails.send({
+            from: MAIL_FROM,
+            to: result.sponsorEmail,
+            replyTo: result.replyTo ?? undefined,
+            subject: sponsorMail.subject,
+            text: sponsorMail.text,
+            html: sponsorMail.html,
+            attachments: [{ filename: `${result.invoiceNumber}.pdf`, content: pdfBuf }],
+            headers: { "Idempotency-Key": `invoice-sponsor-${result.invoiceId}` }
+          });
+          if (send.error) {
+            logger.error("sponsor-mail failed", {
+              to: result.sponsorEmail,
+              error: send.error
             });
-            const clubSend = await resend.emails.send({
+            throw new Error(`sponsor-mail-failed: ${send.error}`);
+          }
+        });
+        mailsSent += 1;
+
+        // Step C: Mail an Club-Admins. Skippen wenn keine Admins.
+        if (result.adminEmails.length > 0) {
+          await step.run(`mail-admins-${result.invoiceId}`, async () => {
+            const clubMail = invoiceClubEmail({
+              adminName: result.adminName ?? undefined,
+              clubName: result.clubName,
+              sponsorName: result.sponsorName,
+              period: period.label,
+              totalEur: result.totalEur,
+              invoiceNumber: result.invoiceNumber,
+              itemCount: result.itemCount
+            });
+            const send = await resend.emails.send({
               from: MAIL_FROM,
-              to: adminEmails,
-              replyTo,
+              to: result.adminEmails,
+              replyTo: result.replyTo ?? undefined,
               subject: clubMail.subject,
               text: clubMail.text,
               html: clubMail.html,
-              attachments: [{ filename: `${invoiceNumber}.pdf`, content: pdfBuf }]
+              attachments: [{ filename: `${result.invoiceNumber}.pdf`, content: pdfBuf }],
+              headers: { "Idempotency-Key": `invoice-admins-${result.invoiceId}` }
             });
-            if (clubSend.error) {
-              logger.error("club-mail failed", { to: adminEmails, error: clubSend.error });
+            if (send.error) {
+              logger.error("club-mail failed", { to: result.adminEmails, error: send.error });
+              throw new Error(`club-mail-failed: ${send.error}`);
             }
-          }
-
-          return { skipped: false, invoiceId: inserted.id, mailsTo: adminEmails.length + 1 } as const;
-        });
-
-        if (!result.skipped) {
-          invoicesCreated += 1;
-          mailsSent += result.mailsTo;
+          });
+          mailsSent += result.adminEmails.length;
         }
       } catch (err) {
         logger.error("invoice-group failed", {
