@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { sponsors } from "@/lib/db/schema";
 import { SponsorTypeForm } from "./_components/sponsor-type-form";
+import { SignupCompletedTracker } from "@/components/analytics/signup-completed-tracker";
 
 export const metadata = { title: "Sponsor-Profil · KickPact" };
 
@@ -34,6 +35,9 @@ export default async function SponsorOnboardingPage({
 
   return (
     <div className="mx-auto max-w-2xl">
+      {/* Feuert signup_completed einmal pro Session — Sponsor-Onboarding ist
+          der erste authentifizierte Touchpoint für Sponsor-Signups. */}
+      <SignupCompletedTracker />
       <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
         Willkommen bei <span className="text-accent">KickPact</span>
       </h1>

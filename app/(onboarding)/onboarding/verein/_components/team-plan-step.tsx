@@ -17,6 +17,7 @@ import {
   type BillingCycle,
   type PlanKey
 } from "@/lib/stripe/pricing";
+import { track } from "@/lib/analytics/track";
 
 type Mannschaft = {
   name: string;
@@ -103,6 +104,10 @@ export function TeamPlanStep({
     }
     const team = teams.find((t) => t.teamId === selectedTeamId);
     if (!team) return;
+    track("verein_onboarding_step2_completed", {
+      plan: selectedPlan,
+      cycle: selectedCycle
+    });
     const next = new URLSearchParams({
       vereinId: vereinId!,
       slug: slug!,
@@ -244,7 +249,10 @@ export function TeamPlanStep({
                 key={c}
                 type="button"
                 disabled={disabled}
-                onClick={() => setSelectedCycle(c)}
+                onClick={() => {
+                  setSelectedCycle(c);
+                  track("pricing_cycle_switched", { cycle: c, surface: "wizard" });
+                }}
                 className={
                   "px-4 py-2 rounded-lg text-sm font-semibold transition-colors " +
                   (active

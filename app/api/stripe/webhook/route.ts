@@ -4,6 +4,8 @@ import type Stripe from "stripe";
 import { getStripe, getStripeWebhookSecret, isStripeConfigured } from "@/lib/stripe/client";
 import { db } from "@/lib/db/client";
 import { subscriptions } from "@/lib/db/schema";
+import { trackServer } from "@/lib/analytics/track-server";
+import { priceIdToPlanCycle } from "@/lib/stripe/pricing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,6 +61,25 @@ export async function POST(req: NextRequest) {
             updatedAt: new Date()
           })
           .where(eq(subscriptions.clubId, clubId));
+        // Conversion-Event: nur bei Erst-Erzeugung, nicht bei jedem Update
+        // (sonst zählen wir Plan-Wechsel/Trial-Ende doppelt). Fire-and-forget,
+        // damit Plausible-Outage niemals den Webhook scheitern lässt.
+        if (event.type === "customer.subscription.created") {
+          const priceId = sub.items?.data?.[0]?.price?.id;
+          const planCycle = priceId ? priceIdToPlanCycle(priceId) : null;
+          const baseUrl =
+            process.env.NEXT_PUBLIC_BASE_URL ?? "https://kickpact.de";
+          await trackServer(
+            "stripe_subscription_created",
+            `${baseUrl}/server/subscription`,
+            {
+              plan: planCycle?.plan ?? "unknown",
+              cycle: planCycle?.cycle ?? "unknown",
+              status: mapStripeStatus(sub.status),
+              clubId
+            }
+          );
+        }
         break;
       }
       case "customer.subscription.deleted": {

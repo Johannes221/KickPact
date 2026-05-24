@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { sponsorOnboardingSchema, type SponsorOnboardingInput } from "@/lib/validations/sponsor";
 import { createSponsor } from "../_actions/create-sponsor";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics/track";
 
 export function SponsorTypeForm() {
   const router = useRouter();
@@ -70,6 +71,10 @@ export function SponsorTypeForm() {
     startTransition(async () => {
       try {
         await createSponsor(payload, invitationToken ?? undefined);
+        track("sponsor_onboarding_completed", {
+          type: payload.type,
+          hasProxies: (payload.pledgeProxies?.length ?? 0) > 0
+        });
         toast.success("Profil angelegt 🎉");
         if (invitationToken) {
           router.push(`/sponsor/pledge/new?invitation=${invitationToken}`);

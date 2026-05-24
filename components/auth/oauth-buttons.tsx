@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { signIn } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics/track";
 
 interface OAuthButtonsProps {
   /** Login → /dashboard (Smart-Dispatcher), Signup → wizard für `role`. */
@@ -46,6 +47,14 @@ export function OAuthButtons({ mode, enabled, role }: OAuthButtonsProps) {
 
   async function handleSocial(provider: "google" | "apple") {
     setPending(provider);
+    // Conversion-Event vor dem OAuth-Redirect — der Provider-Roundtrip
+    // verlässt die App, also kein post-click-Track mehr möglich.
+    if (mode === "signup") {
+      track("signup_started", {
+        method: provider,
+        ...(role ? { role } : {})
+      });
+    }
     try {
       await signIn.social({ provider, callbackURL });
       // signIn.social löst Browser-Redirect zu Provider aus,

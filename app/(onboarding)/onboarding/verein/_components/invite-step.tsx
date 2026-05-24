@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { finalizeOnboarding } from "../_actions/finalize";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics/track";
 
 export function InviteStep() {
   const router = useRouter();
@@ -49,6 +50,10 @@ export function InviteStep() {
         const baseUrl = window.location.origin;
         setInvitationUrl(`${baseUrl}/einladung/${result.invitationToken}`);
         setClubSlug(result.clubSlug);
+        track("verein_onboarding_completed", {
+          plan: params.get("plan") ?? "basic",
+          cycle: params.get("cycle") ?? "monthly"
+        });
         toast.success("Verein angelegt 🎉");
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Fehler beim Anlegen";

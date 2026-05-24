@@ -23,6 +23,7 @@ import {
 } from "@/lib/validations/pledge";
 import { createPledge } from "../_actions/create-pledge";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics/track";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -130,6 +131,11 @@ export function PledgeBuilder() {
     startTransition(async () => {
       try {
         const { pledgeId } = await createPledge(values);
+        track("pledge_created", {
+          triggerCount: values.rules.length,
+          monthlyCap: values.monthlyCapEur ?? 0,
+          endsAtSaisonEnd: values.endsAtSaisonEnd ?? false
+        });
         toast.success("Sponsoring ist live 🎉");
         router.push(`/sponsor/pledge/${pledgeId}`);
       } catch (e) {

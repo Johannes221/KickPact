@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics/track";
 
 const schema = z.object({ email: z.string().email("Bitte gültige E-Mail eingeben") });
 type FormValues = z.infer<typeof schema>;
@@ -32,6 +33,13 @@ export function MagicLinkForm({
 
   async function onSubmit(values: FormValues) {
     setPending(true);
+    // Conversion-Event: User hat aktiv den Magic-Link angefordert. Wir
+    // tracken vor dem Netzwerk-Call, damit auch Resend-/Auth-Fehler im
+    // Funnel sichtbar bleiben (signup_started ohne nachfolgendes
+    // signup_completed = abgebrochener Mail-Versand oder kein Klick).
+    if (mode === "signup") {
+      track("signup_started", { method: "magic_link", ...(role ? { role } : {}) });
+    }
     const invitationToken =
       typeof window !== "undefined"
         ? new URLSearchParams(window.location.search).get("invitation")
