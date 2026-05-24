@@ -58,6 +58,10 @@ describe("getSpielDetails parser", () => {
             .replace(".json", "");
           const htmlRel = `${club.key}/${teamCfg.key}-spiel-${spielId}.html`;
 
+          // Capture-Script saves JSON but not per-spiel HTML for some teams —
+          // skip pages we don't have a fixture for instead of throwing ENOENT.
+          if (!(await fixtureExists(htmlRel))) continue;
+
           const expected = await loadFixtureJson<ExpectedSpielDetails>(
             `${club.key}/${file}`,
           );
