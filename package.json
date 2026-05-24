@@ -17,7 +17,8 @@
     "test:e2e:ui": "playwright test --ui",
     "fixtures:capture": "tsx scripts/fixtures/capture-fixtures.ts",
     "fixtures:manifest": "tsx scripts/fixtures/build-manifest.ts",
-    "fixtures:refresh": "tsx scripts/fixtures/capture-fixtures.ts --force && tsx scripts/fixtures/build-manifest.ts"
+    "fixtures:refresh": "tsx scripts/fixtures/capture-fixtures.ts --force && tsx scripts/fixtures/build-manifest.ts",
+    "drift:check": "tsx scripts/drift/check-drift.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1050.0",
