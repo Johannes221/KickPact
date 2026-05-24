@@ -29,11 +29,17 @@ function triggerLabel(t: string) {
 export function PledgesTable({
   rows,
   teams,
-  slug
+  slug,
+  totalRows
 }: {
   rows: ClubPledgeRow[];
   teams: Array<{ id: string; name: string }>;
   slug: string;
+  /**
+   * Gesamtzahl aller Pledges im Verein (über alle Seiten). Wenn nicht gesetzt,
+   * wird `rows.length` als Total angenommen (Backwards-Kompat).
+   */
+  totalRows?: number;
 }) {
   const [teamFilter, setTeamFilter] = useState<string>("all");
   const [scopeFilter, setScopeFilter] = useState<ScopeFilter>("all");
@@ -48,6 +54,9 @@ export function PledgesTable({
     });
   }, [rows, teamFilter, scopeFilter, statusFilter]);
 
+  const total = totalRows ?? rows.length;
+  const isPaginated = totalRows !== undefined && totalRows > rows.length;
+
   return (
     <section>
       <div className="flex flex-wrap items-end justify-between gap-3 mb-3 md:mb-4">
@@ -55,7 +64,9 @@ export function PledgesTable({
           Aktuelle Sponsoren-Wetten
         </h2>
         <span className="text-xs text-brand-night-navy/50">
-          {filtered.length} von {rows.length}
+          {isPaginated
+            ? `${filtered.length} von ${rows.length} auf dieser Seite · ${total} gesamt`
+            : `${filtered.length} von ${rows.length}`}
         </span>
       </div>
 

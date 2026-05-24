@@ -3,6 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db/client";
 import { clubs, teams } from "@/lib/db/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Pagination } from "@/components/ui/pagination";
 import {
   getClubDashboardStats,
   listClubPledges,
@@ -12,6 +13,13 @@ import {
 } from "@/lib/db/queries/club-dashboard";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { PledgesTable } from "./_components/pledges-table";
+
+function parsePageParam(raw: string | string[] | undefined): number {
+  if (!raw) return 1;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  const n = Number.parseInt(value, 10);
+  return Number.isFinite(n) && n >= 1 ? n : 1;
+}
 
 export const metadata = { title: "Vereins-Dashboard · KickPact" };
 
@@ -31,17 +39,22 @@ function formatDate(d: Date): string {
 }
 
 export default async function ClubDashboard({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ page?: string | string[] }>;
 }) {
   const { slug } = await params;
+  const sp = (await searchParams) ?? {};
+  const requestedPage = parsePageParam(sp.page);
+
   const [club] = await db.select().from(clubs).where(eq(clubs.slug, slug)).limit(1);
   if (!club) return null;
 
-  const [stats, pledgeRows, recentMatches, seasonPledges, teamRows] = await Promise.all([
+  const [stats, pledgePage, recentMatches, seasonPledges, teamRows] = await Promise.all([
     getClubDashboardStats(club.id),
-    listClubPledges(club.id),
+    listClubPledges(club.id, { page: requestedPage, pageSize: 25 }),
     listRecentClubMatches(club.id, 10),
     listClubSeasonPledges(club.id),
     db
@@ -70,11 +83,19 @@ export default async function ClubDashboard({
       </div>
 
       {/* Sponsoren-Wetten */}
-      <PledgesTable
-        rows={pledgeRows}
-        teams={teamRows.map((t) => ({ id: t.id, name: t.name }))}
-        slug={slug}
-      />
+      <div>
+        <PledgesTable
+          rows={pledgePage.rows}
+          teams={teamRows.map((t) => ({ id: t.id, name: t.name }))}
+          slug={slug}
+          totalRows={pledgePage.page.total}
+        />
+        <Pagination
+          page={pledgePage.page.page}
+          totalPages={pledgePage.page.totalPages}
+          basePath={`/verein/${slug}`}
+        />
+      </div>
 
       {/* Letzte Spiele */}
       <RecentMatchesSection rows={recentMatches} slug={slug} />

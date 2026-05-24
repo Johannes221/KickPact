@@ -90,20 +90,64 @@ export interface ClubPledgeRow {
   status: "active" | "paused" | "ended";
 }
 
+export interface PageInfo {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface PaginatedPledges {
+  rows: ClubPledgeRow[];
+  page: PageInfo;
+}
+
+export interface ListClubPledgesArgs {
+  page?: number;
+  pageSize?: number;
+}
+
+const DEFAULT_PAGE_SIZE = 25;
+
 /**
  * Listet alle Sponsor-Wetten (pledges + ihre rules) quer durch die Mannschaften
- * eines Vereins. Pro Pledge-Rule eine Zeile, mit dem bisher aufgelaufenen
- * Charge-Volumen (confirmed + invoiced).
+ * eines Vereins, paginiert. Pro Pledge-Rule eine Zeile, mit dem bisher
+ * aufgelaufenen Charge-Volumen (confirmed + invoiced).
  *
- * Sortiert nach Status (active zuerst), dann Sponsor.
+ * Sortiert nach pledge.createdAt DESC (neueste zuerst).
+ *
+ * Default-Pagesize 25. `page` ist 1-indiziert.
  */
-export async function listClubPledges(clubId: string): Promise<ClubPledgeRow[]> {
+export async function listClubPledges(
+  clubId: string,
+  args: ListClubPledgesArgs = {}
+): Promise<PaginatedPledges> {
+  const pageSize = Math.max(1, args.pageSize ?? DEFAULT_PAGE_SIZE);
+  const requestedPage = Math.max(1, Math.floor(args.page ?? 1));
+
   const teamRows = await db
     .select({ id: teams.id })
     .from(teams)
     .where(eq(teams.clubId, clubId));
   const teamIds = teamRows.map((t) => t.id);
-  if (teamIds.length === 0) return [];
+  if (teamIds.length === 0) {
+    return {
+      rows: [],
+      page: { page: 1, pageSize, total: 0, totalPages: 0 }
+    };
+  }
+
+  const [countRow] = await db
+    .select({ count: sql<number>`COUNT(*)::int` })
+    .from(pledgeRules)
+    .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
+    .where(inArray(pledges.teamId, teamIds));
+  const total = Number(countRow?.count ?? 0);
+  const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize);
+  // Clamp the page to the valid range so a stale ?page=99 does not return an
+  // empty result silently.
+  const page = totalPages === 0 ? 1 : Math.min(requestedPage, totalPages);
+  const offset = (page - 1) * pageSize;
 
   const rows = await db
     .select({
@@ -131,9 +175,11 @@ export async function listClubPledges(clubId: string): Promise<ClubPledgeRow[]> 
     .innerJoin(users, eq(sponsors.userId, users.id))
     .innerJoin(teams, eq(pledges.teamId, teams.id))
     .where(inArray(pledges.teamId, teamIds))
-    .orderBy(desc(pledges.createdAt));
+    .orderBy(desc(pledges.createdAt))
+    .limit(pageSize)
+    .offset(offset);
 
-  return rows.map((r) => ({
+  const mapped: ClubPledgeRow[] = rows.map((r) => ({
     pledgeId: r.pledgeId,
     sponsorId: r.sponsorId,
     sponsorDisplayName: r.sponsorDisplayName,
@@ -146,6 +192,11 @@ export async function listClubPledges(clubId: string): Promise<ClubPledgeRow[]> 
     chargedCents: Number(r.chargedCents ?? 0),
     status: r.pledgeStatus
   }));
+
+  return {
+    rows: mapped,
+    page: { page, pageSize, total, totalPages }
+  };
 }
 
 export interface ClubMatchRow {

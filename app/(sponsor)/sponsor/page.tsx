@@ -1,16 +1,33 @@
 import Link from "next/link";
-import { eq } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { pledges, sponsors, teams, clubs } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/ui/pagination";
+
+const PLEDGE_PAGE_SIZE = 25;
 
 function eur(cents: number) {
   return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 }
 
-export default async function SponsorDashboard() {
+function parsePageParam(raw: string | string[] | undefined): number {
+  if (!raw) return 1;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  const n = Number.parseInt(value, 10);
+  return Number.isFinite(n) && n >= 1 ? n : 1;
+}
+
+export default async function SponsorDashboard({
+  searchParams
+}: {
+  searchParams?: Promise<{ page?: string | string[] }>;
+}) {
   const user = await requireUser();
+  const sp = (await searchParams) ?? {};
+  const requestedPage = parsePageParam(sp.page);
+
   const [sponsor] = await db
     .select()
     .from(sponsors)
@@ -49,6 +66,17 @@ export default async function SponsorDashboard() {
     );
   }
 
+  // Count total to compute totalPages.
+  const [countRow] = await db
+    .select({ count: sql<number>`COUNT(*)::int` })
+    .from(pledges)
+    .where(eq(pledges.sponsorId, sponsor.id));
+  const totalPledges = Number(countRow?.count ?? 0);
+  const totalPages =
+    totalPledges === 0 ? 0 : Math.ceil(totalPledges / PLEDGE_PAGE_SIZE);
+  const page = totalPages === 0 ? 1 : Math.min(requestedPage, totalPages);
+  const offset = (page - 1) * PLEDGE_PAGE_SIZE;
+
   const myPledges = await db
     .select({
       id: pledges.id,
@@ -56,12 +84,16 @@ export default async function SponsorDashboard() {
       teamName: teams.name,
       clubName: clubs.name,
       endsAt: pledges.endsAt,
-      monthlyCapCents: pledges.monthlyCapCents
+      monthlyCapCents: pledges.monthlyCapCents,
+      createdAt: pledges.createdAt
     })
     .from(pledges)
     .innerJoin(teams, eq(pledges.teamId, teams.id))
     .innerJoin(clubs, eq(teams.clubId, clubs.id))
-    .where(eq(pledges.sponsorId, sponsor.id));
+    .where(eq(pledges.sponsorId, sponsor.id))
+    .orderBy(desc(pledges.createdAt))
+    .limit(PLEDGE_PAGE_SIZE)
+    .offset(offset);
 
   return (
     <div className="space-y-10">
@@ -83,36 +115,43 @@ export default async function SponsorDashboard() {
             </p>
           </div>
         ) : (
-          <ul className="mt-4 space-y-2">
-            {myPledges.map((p) => (
-              <li key={p.id}>
-                <Link
-                  href={`/sponsor/pledge/${p.id}`}
-                  className="block rounded-lg border border-brand-neutral/40 bg-white p-4 hover:border-accent/40 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-semibold text-brand-night-navy">{p.teamName}</div>
-                      <div className="text-xs text-brand-night-navy/40 mt-0.5">{p.clubName}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs uppercase tracking-widest font-semibold text-accent-dark">
-                        {p.status}
+          <>
+            <ul className="mt-4 space-y-2">
+              {myPledges.map((p) => (
+                <li key={p.id}>
+                  <Link
+                    href={`/sponsor/pledge/${p.id}`}
+                    className="block rounded-lg border border-brand-neutral/40 bg-white p-4 hover:border-accent/40 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="font-semibold text-brand-night-navy">{p.teamName}</div>
+                        <div className="text-xs text-brand-night-navy/40 mt-0.5">{p.clubName}</div>
                       </div>
-                      <div className="text-xs text-brand-night-navy/40 mt-0.5">
-                        bis {p.endsAt.toLocaleDateString("de-DE")}
+                      <div className="text-right">
+                        <div className="text-xs uppercase tracking-widest font-semibold text-accent-dark">
+                          {p.status}
+                        </div>
+                        <div className="text-xs text-brand-night-navy/40 mt-0.5">
+                          bis {p.endsAt.toLocaleDateString("de-DE")}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  {p.monthlyCapCents && (
-                    <div className="mt-2 text-xs text-brand-night-navy/50">
-                      Cap: {eur(p.monthlyCapCents)} / Monat
-                    </div>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
+                    {p.monthlyCapCents && (
+                      <div className="mt-2 text-xs text-brand-night-navy/50">
+                        Cap: {eur(p.monthlyCapCents)} / Monat
+                      </div>
+                    )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              basePath="/sponsor"
+            />
+          </>
         )}
       </section>
 
