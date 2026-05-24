@@ -55,6 +55,16 @@ export const crawlMatches = inngest.createFunction(
     let skippedInvalid = 0;
     for (const team of targetTeams) {
       // Read-Only-Clubs überspringen — spart fussball.de-Calls für inaktive Vereine.
+      //
+      // Audit 2026-05-24 Phase 2 / Task 2.4: bewusst symmetrisch — wenn der
+      // Club read-only ist, läuft WEDER der initiale Crawl NOCH der
+      // Match-Update-Path. Damit kann ein Match-Update auf fussball.de
+      // (z.B. Korrektur eines Ergebnisses) keine alten Charges via
+      // invalidateChargesForMatch wegputzen, ohne dass die nachgelagerte
+      // evaluate-match-Pipeline neue Charges erzeugen würde (evaluate-match
+      // hat ein eigenes gate). Beim ersten Cron nach Reaktivierung läuft
+      // der Crawler komplett durch, Hash-Vergleich detected den Drift, und
+      // alles wird konsistent neu aufgebaut.
       const gate = await step.run(`gate-${team.id}`, () =>
         getSubscriptionGate(team.clubId)
       );
