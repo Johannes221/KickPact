@@ -2,6 +2,14 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { DashboardTile } from "@/components/shared/dashboard-tile";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { createSponsorInquiry } from "@/lib/actions/sponsor-inquiries";
 import type { DiscoverableTeam } from "@/lib/db/queries/sponsor-discover";
@@ -12,7 +20,7 @@ export function DiscoverList({ teams }: { teams: DiscoverableTeam[] }) {
       <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-6 md:p-8 text-center">
         <div className="text-3xl mb-2">🔍</div>
         <p className="font-display font-black text-base md:text-lg text-brand-night-navy">
-          Keine passenden Mannschaften gefunden
+          Noch keine entdeckbaren Mannschaften
         </p>
         <p className="mt-1.5 text-sm text-brand-night-navy/60">
           Versuch eine andere Suche — oder warte, bis mehr Mannschaften ihr Profil öffentlich
@@ -23,15 +31,15 @@ export function DiscoverList({ teams }: { teams: DiscoverableTeam[] }) {
   }
 
   return (
-    <ul className="grid gap-3 md:gap-4 sm:grid-cols-2">
+    <div className="grid gap-3 md:gap-4 md:grid-cols-2">
       {teams.map((t) => (
-        <TeamCard key={t.teamId} team={t} />
+        <TeamTile key={t.teamId} team={t} />
       ))}
-    </ul>
+    </div>
   );
 }
 
-function TeamCard({ team }: { team: DiscoverableTeam }) {
+function TeamTile({ team }: { team: DiscoverableTeam }) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
@@ -51,51 +59,93 @@ function TeamCard({ team }: { team: DiscoverableTeam }) {
     }
   }
 
+  const title = `${team.clubName} · ${team.teamName}`;
+  const primary = `Saison ${team.saison}`;
+  const secondaryParts: string[] = [];
+  if (team.clubOrt) secondaryParts.push(team.clubOrt);
+  if (team.publicTagline) secondaryParts.push(`„${team.publicTagline}"`);
+  const secondary = secondaryParts.join(" · ") || undefined;
+
   return (
-    <li className="rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5">
-      <div className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
-        {team.teamName}
-      </div>
-      <div className="mt-0.5 text-xs md:text-sm text-brand-night-navy/60">
-        {team.clubName}
-        {team.clubOrt && <span> · {team.clubOrt}</span>}
-        <span> · Saison {team.saison}</span>
-      </div>
-      {team.publicTagline && (
-        <p className="mt-2 text-xs md:text-sm text-brand-night-navy/80 italic">
-          „{team.publicTagline}"
-        </p>
-      )}
-      <div className="mt-3 md:mt-4">
-        {done ? (
-          <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-1 text-xs font-semibold">
-            ✓ Anfrage gesendet
-          </span>
-        ) : open ? (
-          <div className="space-y-2">
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Optional: kurze Nachricht — wer du bist, warum du unterstützen willst…"
-              rows={3}
-              maxLength={500}
-              className="w-full rounded-lg border border-brand-neutral/40 bg-white px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
-            />
-            <div className="flex gap-2">
-              <Button size="sm" variant="accent" disabled={pending} onClick={handleSubmit}>
-                {pending ? "Sende…" : "Anfrage absenden"}
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
-                Abbrechen
-              </Button>
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="text-left w-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+        aria-label={`Sponsoring anfragen: ${title}`}
+      >
+        <DashboardTile
+          icon="⚽"
+          title={title}
+          primary={primary}
+          secondary={secondary}
+        >
+          {done ? (
+            <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-1 text-xs font-semibold">
+              ✓ Anfrage gesendet
+            </span>
+          ) : (
+            <span className="inline-flex items-center text-xs font-semibold text-accent">
+              Sponsoring anfragen →
+            </span>
+          )}
+        </DashboardTile>
+      </button>
+
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="right" className="w-[90%] sm:max-w-md bg-white">
+          <SheetHeader>
+            <SheetTitle className="text-left">
+              <span className="block text-[0.65rem] uppercase tracking-widest font-semibold text-brand-night-navy/50">
+                Sponsoring anfragen
+              </span>
+              <span className="block font-display font-black text-xl tracking-tight text-brand-night-navy">
+                {title}
+              </span>
+            </SheetTitle>
+            <SheetDescription className="text-left text-sm text-brand-night-navy/60">
+              Saison {team.saison}
+              {team.clubOrt ? ` · ${team.clubOrt}` : ""}
+            </SheetDescription>
+          </SheetHeader>
+
+          {team.publicTagline && (
+            <p className="mt-4 text-sm text-brand-night-navy/80 italic">
+              „{team.publicTagline}"
+            </p>
+          )}
+
+          {done ? (
+            <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+              ✓ Deine Anfrage wurde versendet. Die Mannschaft meldet sich per Mail.
             </div>
-          </div>
-        ) : (
-          <Button size="sm" variant="accent" onClick={() => setOpen(true)}>
-            Sponsoring anfragen →
-          </Button>
-        )}
-      </div>
-    </li>
+          ) : (
+            <div className="mt-6 space-y-3">
+              <label className="block">
+                <span className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
+                  Nachricht (optional)
+                </span>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Wer du bist, warum du unterstützen willst…"
+                  rows={4}
+                  maxLength={500}
+                  className="mt-1.5 w-full rounded-lg border border-brand-neutral/40 bg-white px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                />
+              </label>
+              <div className="flex gap-2">
+                <Button variant="accent" disabled={pending} onClick={handleSubmit}>
+                  {pending ? "Sende…" : "Anfrage absenden"}
+                </Button>
+                <Button variant="ghost" onClick={() => setOpen(false)}>
+                  Abbrechen
+                </Button>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
