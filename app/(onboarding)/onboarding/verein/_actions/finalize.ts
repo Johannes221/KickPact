@@ -125,7 +125,11 @@ export async function finalizeOnboarding(input: z.infer<typeof finalizeSchema>) 
 
     await tx.insert(subscriptions).values({
       clubId: club.id,
-      stripeCustomerId: `placeholder_${club.id}`,
+      // NULL bis zum ersten echten Stripe-Checkout. createCheckoutSession
+      // erzeugt den Customer lazy. Frühere Implementierung schrieb hier
+      // einen "placeholder_<clubId>"-String, der dann an Stripe Checkout
+      // weitergereicht wurde → 4xx, Onboarding broken. Siehe Audit 2026-05-24.
+      stripeCustomerId: null,
       stripeSubscriptionId: null,
       status: "trialing",
       trialEndsAt: trialEnd

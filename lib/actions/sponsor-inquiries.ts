@@ -6,7 +6,6 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import {
   sponsorInquiries,
-  sponsorInvitations,
   teams,
   clubs,
   clubMemberships,
@@ -16,7 +15,7 @@ import { requireUser } from "@/lib/auth/session";
 import { assertClubWriteAccess } from "@/lib/auth/scope";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
-import { createId } from "@paralleldrive/cuid2";
+import { createInvitation } from "@/lib/db/queries/invitations";
 
 const inquirySchema = z.object({
   teamId: z.string().min(1),
@@ -162,14 +161,15 @@ export async function respondToInquiry(input: {
     .where(eq(sponsorInquiries.id, parsed.inquiryId));
 
   if (parsed.accept) {
-    // Erzeuge Einladungs-Token + mail an Sponsor
-    const token = createId();
-    await db.insert(sponsorInvitations).values({
+    // Erzeuge Einladungs-Token + mail an Sponsor.
+    // Nutzt createInvitation-Helper (setzt korrekt expiresAt = +30d und
+    // einen base64url-Token statt cuid2 — konsistent mit allen anderen
+    // Invitations-Pfaden seit Audit 2026-05-24).
+    const invitation = await createInvitation({
       teamId: row.team.id,
-      token,
-      createdByUserId: user.id,
-      status: "pending"
+      createdByUserId: user.id
     });
+    const token = invitation.token;
 
     const inviteUrl = `${process.env.BETTER_AUTH_URL ?? "https://kickpact.schartl.dev"}/einladung/${token}`;
     try {

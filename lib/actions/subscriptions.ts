@@ -39,29 +39,46 @@ export async function createCheckoutSession(opts: {
     );
   }
 
-  // Customer holen oder neu anlegen
+  // Customer holen oder neu anlegen.
+  // Akzeptiert sowohl NULL (neuer Standard seit Audit 2026-05-24) als auch
+  // legacy "placeholder_…"-Strings (alte Daten aus finalize.ts vor Mai 2026)
+  // — beides triggert Lazy-Create eines echten Stripe-Customers.
   const [existing] = await db
     .select()
     .from(subscriptions)
     .where(eq(subscriptions.clubId, club.id))
     .limit(1);
 
-  let customerId = existing?.stripeCustomerId;
-  if (!customerId) {
+  let customerId = existing?.stripeCustomerId ?? null;
+  const isPlaceholder =
+    typeof customerId === "string" && customerId.startsWith("placeholder_");
+
+  if (!customerId || isPlaceholder) {
     const customer = await stripe.customers.create({
       email: user.email,
       name: club.name,
       metadata: { clubId: club.id, clubSlug: club.slug }
     });
     customerId = customer.id;
-    await db
-      .insert(subscriptions)
-      .values({
-        clubId: club.id,
-        stripeCustomerId: customerId,
-        status: "trialing"
-      })
-      .onConflictDoNothing();
+
+    if (existing) {
+      // Update existierenden Subscription-Row mit dem echten Customer-ID
+      await db
+        .update(subscriptions)
+        .set({ stripeCustomerId: customerId, updatedAt: new Date() })
+        .where(eq(subscriptions.clubId, club.id));
+    } else {
+      // Fallback: kein subscriptions-Row da (sollte nach Onboarding nicht
+      // passieren, aber defensiv für direkte Checkouts ohne Onboarding-Pfad).
+      await db
+        .insert(subscriptions)
+        .values({
+          clubId: club.id,
+          stripeCustomerId: customerId,
+          status: "trialing"
+        })
+        .onConflictDoNothing();
+    }
   }
 
   const session = await stripe.checkout.sessions.create({

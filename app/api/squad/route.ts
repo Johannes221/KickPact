@@ -4,22 +4,33 @@ import { db } from "@/lib/db/client";
 import { teams } from "@/lib/db/schema";
 import { findInvitationByToken } from "@/lib/db/queries/invitations";
 import { getKader } from "@/lib/crawler/fussballde";
+import { requireUser } from "@/lib/auth/session";
 
 export async function GET(req: NextRequest) {
+  // Auth-Gate: nur eingeloggte User dürfen Spielerlisten ziehen.
+  // Vorher war das öffentlich (nur Token-Check) → Spielerdaten-Leak via
+  // geleakter Mail/Browser-History (Audit 2026-05-24, CRITICAL).
+  await requireUser();
+
   const token = req.nextUrl.searchParams.get("invitationToken");
   if (!token) {
     return NextResponse.json({ error: "invitationToken required" }, { status: 400 });
   }
 
+  // findInvitationByToken filtert intern auf status='pending' + expiresAt > now,
+  // d.h. used/revoked/expired Tokens → null → 410 Gone.
   const invitation = await findInvitationByToken(token);
   if (!invitation) {
-    return NextResponse.json({ error: "Invitation not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Invitation expired or already used" },
+      { status: 410 }
+    );
   }
 
   const [team] = await db
     .select({
       fussballdeTeamId: teams.fussballdeTeamId,
-      fussballdeSlug: teams.fussballdeSlug,
+      fussballdeSlug: teams.fussballdeSlug
     })
     .from(teams)
     .where(eq(teams.id, invitation.teamId))
