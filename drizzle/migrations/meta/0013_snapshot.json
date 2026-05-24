@@ -1,6 +1,6 @@
 {
-  "id": "cf993694-7b7e-4a14-bc36-eb2ee61027f3",
-  "prevId": "7b716f53-5c84-4f13-b58d-1bcb7bd9ef05",
+  "id": "7b716f53-5c84-4f13-b58d-1bcb7bd9ef05",
+  "prevId": "934785ee-3172-4ac5-8da4-69c67cccc797",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -720,6 +720,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "blocked": {
+          "name": "blocked",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -2250,7 +2257,7 @@
           "name": "stripe_customer_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "stripe_subscription_id": {
           "name": "stripe_subscription_id",
@@ -2266,14 +2273,6 @@
           "notNull": true,
           "default": "'trialing'"
         },
-        "billing_cycle": {
-          "name": "billing_cycle",
-          "type": "billing_cycle",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'monthly'"
-        },
         "trial_ends_at": {
           "name": "trial_ends_at",
           "type": "timestamp with time zone",
@@ -2282,12 +2281,6 @@
         },
         "current_period_end": {
           "name": "current_period_end",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "paused_until": {
-          "name": "paused_until",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
@@ -2388,12 +2381,6 @@
           "notNull": true,
           "default": "'trialing'"
         },
-        "parent_club_license_id": {
-          "name": "parent_club_license_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "activated_at": {
           "name": "activated_at",
           "type": "timestamp with time zone",
@@ -2414,21 +2401,6 @@
           "columns": [
             {
               "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "team_licenses_parent_idx": {
-          "name": "team_licenses_parent_idx",
-          "columns": [
-            {
-              "expression": "parent_club_license_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2465,19 +2437,6 @@
             "id"
           ],
           "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "team_licenses_parent_club_license_id_team_licenses_id_fk": {
-          "name": "team_licenses_parent_club_license_id_team_licenses_id_fk",
-          "tableFrom": "team_licenses",
-          "tableTo": "team_licenses",
-          "columnsFrom": [
-            "parent_club_license_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -2543,6 +2502,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
         },
         "used_at": {
           "name": "used_at",
@@ -2877,93 +2842,6 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
-    },
-    "public.seasons": {
-      "name": "seasons",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "code": {
-          "name": "code",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "region": {
-          "name": "region",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'DFB'"
-        },
-        "starts_at": {
-          "name": "starts_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "ends_at": {
-          "name": "ends_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "matchday_5_at": {
-          "name": "matchday_5_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "seasons_range_idx": {
-          "name": "seasons_range_idx",
-          "columns": [
-            {
-              "expression": "starts_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "ends_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "seasons_code_unique": {
-          "name": "seasons_code_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -3104,15 +2982,6 @@
         "paid"
       ]
     },
-    "public.billing_cycle": {
-      "name": "billing_cycle",
-      "schema": "public",
-      "values": [
-        "monthly",
-        "season",
-        "annual"
-      ]
-    },
     "public.license_status": {
       "name": "license_status",
       "schema": "public",
@@ -3121,8 +2990,7 @@
         "active",
         "past_due",
         "cancelled",
-        "read_only",
-        "paused"
+        "read_only"
       ]
     },
     "public.plan": {
@@ -3130,8 +2998,7 @@
       "schema": "public",
       "values": [
         "basic",
-        "pro",
-        "verein"
+        "pro"
       ]
     },
     "public.subscription_status": {
@@ -3142,8 +3009,7 @@
         "active",
         "past_due",
         "cancelled",
-        "incomplete",
-        "paused"
+        "incomplete"
       ]
     },
     "public.invitation_status": {

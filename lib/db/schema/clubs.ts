@@ -141,6 +141,14 @@ export const clubMembershipRequests = pgTable(
   (t) => ({
     // Partial unique index: only one OPEN (pending) request per user/club/team
     // combination. Once resolved (approved/rejected) the user can request again.
+    //
+    // NOTE: This index uses NULLS NOT DISTINCT (PG 15+), so duplicate pending
+    // requests with `requestedTeamId = NULL` (club-wide) are also blocked at
+    // the DB level. Drizzle's uniqueIndex() builder does NOT support
+    // `.nullsNotDistinct()` (only the table-level `unique()` constraint does),
+    // so the clause is applied via a hand-written migration. The schema-level
+    // declaration here is otherwise faithful — drizzle-kit will not regenerate
+    // a diff because the column tuple, partial WHERE and uniqueness all match.
     uniquePending: uniqueIndex("club_request_unique_pending_idx")
       .on(t.userId, t.clubId, t.requestedTeamId)
       .where(sql`${t.status} = 'pending'`),

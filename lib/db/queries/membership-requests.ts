@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   clubMembershipRequests,
@@ -35,35 +35,12 @@ export interface MembershipRequest {
 
 /**
  * Inserts a new pending club-membership request. The partial unique index
- * on (userId, clubId, requestedTeamId WHERE status='pending') makes a
- * second-open request throw a UNIQUE-violation — propagate it.
- *
- * Note: Postgres treats NULLs as distinct in unique indexes by default, so
- * the partial index alone won't catch duplicates when `requestedTeamId` is
- * NULL (club-wide requests). We pre-check explicitly to cover that case;
- * for team-scoped requests the index still does the work.
+ * `club_request_unique_pending_idx` is defined with NULLS NOT DISTINCT
+ * (PG 15+) on (userId, clubId, requestedTeamId WHERE status='pending'),
+ * so a duplicate open request — including the club-wide case where
+ * `requestedTeamId IS NULL` — raises a UNIQUE-violation that we propagate.
  */
 export async function createRequest(args: CreateRequestArgs): Promise<MembershipRequest> {
-  if (args.requestedTeamId === null) {
-    const [existing] = await db
-      .select({ id: clubMembershipRequests.id })
-      .from(clubMembershipRequests)
-      .where(
-        and(
-          eq(clubMembershipRequests.userId, args.userId),
-          eq(clubMembershipRequests.clubId, args.clubId),
-          isNull(clubMembershipRequests.requestedTeamId),
-          eq(clubMembershipRequests.status, "pending")
-        )
-      )
-      .limit(1);
-    if (existing) {
-      throw new Error(
-        `duplicate pending club-wide request for user=${args.userId} club=${args.clubId}`
-      );
-    }
-  }
-
   const [row] = await db
     .insert(clubMembershipRequests)
     .values({
