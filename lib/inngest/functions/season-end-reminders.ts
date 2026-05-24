@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { pledges, sponsors, teams, clubs, users } from "@/lib/db/schema";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { seasonEndReminderEmail } from "@/lib/mail/templates/season-end-reminder";
+import { getReplyToForClub } from "@/lib/mail/reply-to";
 
 /**
  * Season-End Reminders.
@@ -35,7 +36,8 @@ export const seasonEndReminders = inngest.createFunction(
           sponsorDisplayName: sponsors.displayName,
           sponsorEmail: users.email,
           teamName: teams.name,
-          clubName: clubs.name
+          clubName: clubs.name,
+          clubId: clubs.id
         })
         .from(pledges)
         .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
@@ -70,9 +72,11 @@ export const seasonEndReminders = inngest.createFunction(
             pledgeId: p.pledgeId,
             renewUrl: `${baseUrl}/sponsor/pledge/new?renew=${p.pledgeId}`
           });
+          const replyTo = await getReplyToForClub(p.clubId);
           const result = await resend.emails.send({
             from: MAIL_FROM,
             to: p.sponsorEmail,
+            replyTo,
             subject: mail.subject,
             text: mail.text,
             html: mail.html

@@ -17,7 +17,8 @@ import {
   invoices,
   invoiceItems,
   eventApprovals,
-  players
+  players,
+  seasons
 } from "@/lib/db/schema";
 
 /**
@@ -43,4 +44,5 @@ export async function resetTestDb() {
   await db.delete(teams);
   await db.delete(clubs);
   await db.delete(users);
+  await db.delete(seasons);
 }

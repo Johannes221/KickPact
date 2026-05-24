@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { subscriptions, clubs, clubMemberships, users } from "@/lib/db/schema";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { trialReminderEmail } from "@/lib/mail/templates/trial-reminder";
+import { getReplyToForClub } from "@/lib/mail/reply-to";
 
 /**
  * Daily Cron — sucht Subscriptions mit Status=trialing deren trialEndsAt
@@ -75,9 +76,11 @@ export const trialReminders = inngest.createFunction(
               manageUrl: `${baseUrl}/verein/${sub.clubSlug}/abo`
             });
 
+            const replyTo = await getReplyToForClub(sub.clubId);
             const result = await resend.emails.send({
               from: MAIL_FROM,
               to: admins.map((a) => a.email),
+              replyTo,
               subject: mail.subject,
               text: mail.text,
               html: mail.html

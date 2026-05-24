@@ -7,6 +7,21 @@ import { requireUser } from "@/lib/auth/session";
 import { pledgeInputSchema, type PledgeInput } from "@/lib/validations/pledge";
 import { findInvitationByToken, markInvitationUsed } from "@/lib/db/queries/invitations";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
+import {
+  assertCanAddSponsorToTeam,
+  PlanCapExceededError
+} from "@/lib/billing/plan-features";
+import {
+  countPledgeRulesForSponsorOnTeam,
+  getTeamLicensePlan
+} from "@/lib/db/queries/pledges";
+import { PLAN_CAPS } from "@/lib/stripe/pricing";
+import {
+  assertWagerWindowOpen,
+  WagerWindowClosedError
+} from "@/lib/billing/wager-window";
+import { getActiveSeason } from "@/lib/billing/wager-window-server";
+import { isSeasonTrigger } from "@/lib/db/schema/pledges";
 
 const MANUAL_TRIGGERS = new Set([
   "special_goal",
@@ -64,8 +79,54 @@ export async function createPledge(input: PledgeInput) {
     );
   }
 
-  // Saison-Ende vereinfacht: 30. Juni des Saison-Endjahrs
+  // Pricing v2: Cap-Check vor INSERT. Erst Sponsor-Cap (nur wenn neuer Sponsor),
+  // dann Pledge-Rules-Cap (zählt bestehende Rules + die neu hinzukommenden).
+  try {
+    await assertCanAddSponsorToTeam(invitation.teamId, sponsorId);
+    const plan = await getTeamLicensePlan(invitation.teamId);
+    const ruleCap = PLAN_CAPS[plan].maxPledgeRulesPerSponsor;
+    if (ruleCap !== null) {
+      const existing = await countPledgeRulesForSponsorOnTeam(
+        sponsorId,
+        invitation.teamId
+      );
+      if (existing + parsed.rules.length > ruleCap) {
+        throw new PlanCapExceededError(
+          "pledge_rules",
+          ruleCap,
+          existing + parsed.rules.length,
+          plan
+        );
+      }
+    }
+  } catch (e) {
+    if (e instanceof PlanCapExceededError) {
+      throw new Error(
+        `Limit erreicht: ${e.cap === "sponsors" ? "max. Sponsoren" : "max. Pledge-Rules"} ` +
+          `auf dem ${e.plan}-Tier (${e.current}/${e.limit}). Bitte Verein auf Pro upgraden.`
+      );
+    }
+    throw e;
+  }
+
+  // Pricing v2: Saison-Wetten nur vor Matchday 5 erlaubt.
   const now = new Date();
+  if (parsed.rules.some((r) => isSeasonTrigger(r.triggerType))) {
+    const activeSeason = await getActiveSeason(now);
+    try {
+      assertWagerWindowOpen(activeSeason, now);
+    } catch (e) {
+      if (e instanceof WagerWindowClosedError) {
+        throw new Error(
+          `Saison-Wetten sind für Saison ${e.seasonCode ?? "?"} nicht mehr buchbar ` +
+            `(Cutoff am 5. Spieltag). Wieder verfügbar zur nächsten Saison ab Juli.`
+        );
+      }
+      throw e;
+    }
+  }
+
+  // Saison-Ende vereinfacht: 30. Juni des Saison-Endjahrs
   const seasonEnd = (() => {
     const year = now.getMonth() <= 5 ? now.getFullYear() : now.getFullYear() + 1;
     return new Date(`${year}-06-30T23:59:59Z`);

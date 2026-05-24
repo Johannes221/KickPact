@@ -30,7 +30,9 @@ const finalizeSchema = z.object({
     // IBAN beim Onboarding optional — Verein kann sie später ergänzen.
     iban: z.string().optional()
   }),
-  plan: z.enum(["basic", "pro"])
+  plan: z.enum(["basic", "pro", "verein"]),
+  // Pricing v2: optional, default monthly. season nur erlaubt vor Matchday 5.
+  cycle: z.enum(["monthly", "season", "annual"]).optional().default("monthly")
 });
 
 export async function finalizeOnboarding(input: z.infer<typeof finalizeSchema>) {
@@ -132,6 +134,7 @@ export async function finalizeOnboarding(input: z.infer<typeof finalizeSchema>) 
       stripeCustomerId: null,
       stripeSubscriptionId: null,
       status: "trialing",
+      billingCycle: parsed.cycle,
       trialEndsAt: trialEnd
     });
 

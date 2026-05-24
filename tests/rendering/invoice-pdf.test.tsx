@@ -94,6 +94,35 @@ describe("Invoice PDF — InvoicePdf component", () => {
     expect(text).toMatchSnapshot();
   }, 30_000);
 
+  it("basic plan: footer contains 'KickPact' branding", async () => {
+    const buffer = await renderToBuffer(
+      <InvoicePdf data={{ ...INVOICE_FIXTURE, plan: "basic" }} />
+    );
+    const text = await extractText(buffer);
+    expect(text).toContain("KickPact");
+    expect(text).toContain("kickpact.de");
+  }, 30_000);
+
+  it("pro plan: footer does NOT contain 'KickPact' branding (Vereins-Footer only)", async () => {
+    const buffer = await renderToBuffer(
+      <InvoicePdf data={{ ...INVOICE_FIXTURE, plan: "pro" }} />
+    );
+    const text = await extractText(buffer);
+    // Vereins-Adresse statt KickPact-Hinweis
+    expect(text).toContain(INVOICE_FIXTURE.club.address.city);
+    // KickPact-Hinweis darf NICHT mehr im Footer-Bereich auftauchen
+    // (das Wort "KickPact" steht sonst nirgends auf der Rechnung)
+    expect(text).not.toContain("kickpact.de");
+  }, 30_000);
+
+  it("verein plan: footer does NOT contain 'KickPact' branding", async () => {
+    const buffer = await renderToBuffer(
+      <InvoicePdf data={{ ...INVOICE_FIXTURE, plan: "verein" }} />
+    );
+    const text = await extractText(buffer);
+    expect(text).not.toContain("kickpact.de");
+  }, 30_000);
+
   it("non-small-business: shows USt-Zwischensumme + 19 % USt row", async () => {
     const buffer = await renderToBuffer(
       <InvoicePdf

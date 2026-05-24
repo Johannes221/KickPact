@@ -9,9 +9,14 @@ import {
   sponsors,
   clubs,
   clubMemberships,
-  users
+  users,
+  teams,
+  teamLicenses
 } from "@/lib/db/schema";
+import { highestPlanFrom } from "@/lib/mail/reply-to-pure";
+import type { PlanKey } from "@/lib/stripe/pricing";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
+import { getReplyToForClub } from "@/lib/mail/reply-to";
 import { invoiceSponsorEmail } from "@/lib/mail/templates/invoice-sponsor";
 import { invoiceClubEmail } from "@/lib/mail/templates/invoice-club";
 import { lastBillingPeriod, type BillingPeriod } from "@/lib/invoicing/period";
@@ -127,6 +132,18 @@ export const generateInvoices = inngest.createFunction(
           }
 
           const invoiceNumber = await nextInvoiceNumber(cl.id, period.year);
+
+          // Pricing v2: höchstes Tier aller Teams des Clubs → steuert PDF-Footer.
+          const planRows = await db
+            .select({ plan: teamLicenses.plan })
+            .from(teamLicenses)
+            .innerJoin(teams, eq(teamLicenses.teamId, teams.id))
+            .where(eq(teams.clubId, cl.id));
+          const clubPlan: PlanKey =
+            planRows.length > 0
+              ? highestPlanFrom(planRows.map((r) => r.plan as PlanKey))
+              : "basic";
+
           const subtotal = group.items.reduce((s, i) => s + i.amountCents, 0);
           const ust = cl.isSmallBusiness ? 0 : Math.round(subtotal * 0.19);
           const total = subtotal + ust;
@@ -151,6 +168,7 @@ export const generateInvoices = inngest.createFunction(
                 invoiceNumber,
                 period: period.label,
                 issuedAt: new Date(),
+                plan: clubPlan,
                 club: {
                   name: cl.name,
                   address: {
@@ -246,9 +264,11 @@ export const generateInvoices = inngest.createFunction(
             itemCount
           });
 
+          const replyTo = await getReplyToForClub(cl.id);
           const sponsorSend = await resend.emails.send({
             from: MAIL_FROM,
             to: spRow.user.email,
+            replyTo,
             subject: sponsorMail.subject,
             text: sponsorMail.text,
             html: sponsorMail.html,
@@ -285,6 +305,7 @@ export const generateInvoices = inngest.createFunction(
             const clubSend = await resend.emails.send({
               from: MAIL_FROM,
               to: adminEmails,
+              replyTo,
               subject: clubMail.subject,
               text: clubMail.text,
               html: clubMail.html,

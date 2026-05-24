@@ -8,3 +8,4 @@ export * from "./billing";
 export * from "./invitations";
 export * from "./sponsor-inquiries";
 export * from "./season-results";
+export * from "./seasons";

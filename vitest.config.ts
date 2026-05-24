@@ -27,6 +27,10 @@ export default defineConfig({
     }
   },
   resolve: {
-    alias: { "@": path.resolve(__dirname, ".") }
+    alias: {
+      "@": path.resolve(__dirname, "."),
+      // Next.js `server-only` ist in der Test-Runtime nicht verfügbar — Stub.
+      "server-only": path.resolve(__dirname, "tests/setup/server-only-stub.ts")
+    }
   }
 });

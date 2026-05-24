@@ -7,7 +7,9 @@ export type SubscriptionStatus =
   | "active"
   | "past_due"
   | "cancelled"
-  | "incomplete";
+  | "incomplete"
+  // Pricing v2: Saison-Pass in Sommerpause (Jun/Jul).
+  | "paused";
 
 export type SubscriptionGate = {
   status: SubscriptionStatus | "missing";
@@ -82,6 +84,17 @@ export function gateFromSubscription(
   if (sub.status === "cancelled") {
     return {
       status: "cancelled",
+      isReadOnly: true,
+      daysUntilReadOnly: null,
+      trialEndsAt: null,
+      pastDueSince: null
+    };
+  }
+
+  if (sub.status === "paused") {
+    // Pricing v2: Sommerpause für Saison-Pass — read-only, kein Past-Due.
+    return {
+      status: "paused",
       isReadOnly: true,
       daysUntilReadOnly: null,
       trialEndsAt: null,
