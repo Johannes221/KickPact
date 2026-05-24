@@ -24,7 +24,10 @@ export const subscriptions = pgTable("subscriptions", {
   clubId: text("club_id")
     .primaryKey()
     .references(() => clubs.id, { onDelete: "cascade" }),
-  stripeCustomerId: text("stripe_customer_id").notNull().unique(),
+  // Erlaubt NULL bis zum ersten echten Stripe-Checkout. Beim Onboarding
+  // wird nur ein subscriptions-Row angelegt, der echte Customer entsteht
+  // lazy in createCheckoutSession (lib/actions/subscriptions.ts).
+  stripeCustomerId: text("stripe_customer_id").unique(),
   stripeSubscriptionId: text("stripe_subscription_id").unique(),
   status: subscriptionStatusEnum("status").notNull().default("trialing"),
   trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),

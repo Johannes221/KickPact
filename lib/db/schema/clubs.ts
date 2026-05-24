@@ -90,6 +90,15 @@ export const players = pgTable(
     teamId: text("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
     fussballdePlayerId: text("fussballde_player_id"),
     name: text("name").notNull(),
+    /**
+     * DSGVO-Opt-out: wenn true, ignoriert der Crawler diesen Spieler bei
+     * Name-Updates (Spalte bleibt auf "Anonymisiert"). Wird vom Support
+     * manuell per Datenschutz-Mail gesetzt. Spalte existiert ab Phase 1,
+     * damit die DSE-Versprechen (Opt-out via Mail) sofort technisch
+     * umsetzbar sind — ein simples `UPDATE players SET blocked=true,
+     * name='Anonymisiert' WHERE id=…` reicht aus.
+     */
+    blocked: boolean("blocked").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({

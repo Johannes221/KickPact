@@ -78,6 +78,13 @@
       "when": 1779615090317,
       "tag": "0010_new_pixie",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1779621511239,
+      "tag": "0011_premium_spirit",
+      "breakpoints": true
     }
   ]
 }

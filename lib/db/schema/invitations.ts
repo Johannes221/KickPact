@@ -14,6 +14,12 @@ export const sponsorInvitations = pgTable("sponsor_invitations", {
   recipientName: text("recipient_name"),
   status: invitationStatusEnum("status").notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  /**
+   * Token läuft 30 Tage nach Erzeugung ab. Helper `createInvitation` setzt
+   * diesen Wert automatisch. `findInvitationByToken` filtert abgelaufene
+   * Tokens raus, damit alte/geleakte Tokens nicht mehr verwendbar sind.
+   */
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   usedAt: timestamp("used_at", { withTimezone: true }),
   usedByUserId: text("used_by_user_id").references(() => users.id, { onDelete: "set null" })
 });
