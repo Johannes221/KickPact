@@ -6,36 +6,12 @@
  * and the data shape is richer than the plan's fixture (split address fields,
  * sponsor.type, items have matchDate/triggerLabel etc.).
  *
- * Note: builder.tsx registers Inter via a remote URL (rsms.me) which currently
- * returns 404 in CI. We stub `Font.register` to a no-op so tests don't depend
- * on remote resources; PDF then falls back to Helvetica.
+ * Font handling: builder.tsx now uses self-hosted Inter TTFs under
+ * public/fonts/inter/ (rsms.me dropped /font-files/*.otf in May 2026 → 404).
+ * Tests therefore render with the real local fonts — no mocks required.
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import React from "react";
-
-// Mock Font.register so it ignores the remote Inter URL (currently 404 on rsms.me)
-// and registers a local alias pointing to the built-in Helvetica family.
-vi.mock("@react-pdf/renderer", async () => {
-  const actual = await vi.importActual<typeof import("@react-pdf/renderer")>("@react-pdf/renderer");
-  const originalRegister = actual.Font.register.bind(actual.Font);
-  const patchedRegister = (descriptor: Parameters<typeof actual.Font.register>[0]) => {
-    if (descriptor && (descriptor as { family?: string }).family === "Inter") {
-      originalRegister({
-        family: "Inter",
-        fonts: [
-          { src: "Helvetica", fontWeight: 400 },
-          { src: "Helvetica-Bold", fontWeight: 700 }
-        ]
-      });
-      return;
-    }
-    originalRegister(descriptor);
-  };
-  return {
-    ...actual,
-    Font: { ...actual.Font, register: patchedRegister }
-  };
-});
 
 import { renderToBuffer } from "@react-pdf/renderer";
 import { PDFParse } from "pdf-parse";

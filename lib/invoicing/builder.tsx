@@ -1,11 +1,14 @@
 import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
+import path from "node:path";
 
-// Inter Font registrieren (CDN — funktioniert in Node)
+// Inter Font registrieren — lokale TTFs unter public/fonts/inter/
+// (Remote rsms.me liefert seit ~Mai 2026 HTTP 404 für /font-files/*.otf —
+//  daher self-hosted; verifiziert in tests/rendering/invoice-pdf.test.tsx)
 Font.register({
   family: "Inter",
   fonts: [
-    { src: "https://rsms.me/inter/font-files/Inter-Regular.otf" },
-    { src: "https://rsms.me/inter/font-files/Inter-Bold.otf", fontWeight: 700 }
+    { src: path.join(process.cwd(), "public/fonts/inter/Inter-Regular.ttf") },
+    { src: path.join(process.cwd(), "public/fonts/inter/Inter-Bold.ttf"), fontWeight: 700 }
   ]
 });
 
