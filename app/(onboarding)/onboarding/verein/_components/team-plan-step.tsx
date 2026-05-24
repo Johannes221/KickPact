@@ -360,43 +360,128 @@ function PlanCard({
 }) {
   const def = PLANS[plan];
   const price = def.cycles[cycle];
+  const isPro = plan === "pro";
+
+  // Kompakte 3-Item-Highlights pro Tier (Wizard-Fokus)
+  const highlights: string[] =
+    plan === "basic"
+      ? [
+          "Alle Auto- & Manuell-Trigger",
+          "Bis 5 Sponsoren / Mannschaft",
+          "Monatliche PDF-Rechnung"
+        ]
+      : plan === "pro"
+        ? [
+            "∞ Sponsoren · ∞ Pledge-Rules",
+            "Saison-Wetten + Custom-Trigger",
+            "Vereins-Logo auf PDF · CSV-Export"
+          ]
+        : [
+            "∞ Mannschaften unter einer Lizenz",
+            "Master-Cockpit + Sammelrechnung",
+            "WhatsApp-Support, 4 h SLA"
+          ];
+
   return (
     <Label
       htmlFor={`plan-${plan}`}
-      className={
-        "block rounded-2xl border p-5 cursor-pointer transition-colors " +
-        (selected
-          ? "border-accent bg-accent/5"
-          : "border-brand-neutral/40 bg-white hover:border-accent/40")
-      }
+      className={cn(
+        "relative flex flex-col rounded-2xl border p-5 cursor-pointer transition-all",
+        selected
+          ? "border-accent bg-accent/5 ring-2 ring-accent/40 shadow-lg shadow-accent/10"
+          : "border-brand-neutral/40 bg-white hover:border-accent/40 hover:shadow-sm",
+        isPro && !selected && "border-accent/30"
+      )}
     >
+      {isPro && (
+        <span className="absolute -top-2.5 right-4 rounded-full bg-accent text-white text-[0.55rem] font-bold uppercase tracking-[0.18em] px-2.5 py-0.5 shadow-sm">
+          Empfohlen
+        </span>
+      )}
+
       <div className="flex items-center gap-3">
         <RadioGroupItem value={plan} id={`plan-${plan}`} />
-        <div className="flex flex-1 items-baseline justify-between gap-2">
-          <span className="font-display font-black text-base md:text-lg tracking-tight uppercase text-brand-night-navy">
-            {def.label}
-          </span>
-          <span className="font-mono text-sm text-brand-night-navy/70 whitespace-nowrap">
-            {price.display}
-          </span>
-        </div>
+        <span className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+          {def.label}
+        </span>
       </div>
-      <div className="mt-1 text-[11px] text-brand-night-navy/50 pl-7">
-        {price.caption}
-        {price.saveBadge ? (
-          <span className="ml-2 inline-block rounded-full bg-accent/15 px-2 py-0.5 text-accent-dark font-semibold">
-            {price.saveBadge}
-          </span>
-        ) : null}
+
+      <div className="mt-3 pl-7 flex items-baseline gap-1.5 tabular-nums">
+        <span className="font-display font-black text-3xl text-brand-night-navy leading-none">
+          {price.display}
+        </span>
+        <span className="text-xs text-brand-night-navy/60">
+          {price.caption}
+        </span>
       </div>
-      <ul className="mt-4 space-y-1.5 text-xs text-brand-night-navy/70 pl-7">
-        {def.features.slice(0, 4).map((f) => (
-          <li key={f} className="flex gap-2">
-            <span className="text-accent">·</span>
-            <span>{f}</span>
+
+      {price.saveBadge && (
+        <span className="mt-1.5 ml-7 inline-flex w-fit rounded-full bg-accent/15 px-2 py-0.5 text-[0.55rem] font-bold uppercase tracking-wider text-accent-dark">
+          {price.saveBadge}
+        </span>
+      )}
+
+      {cycle === "monthly" && (
+        <p className="mt-1.5 pl-7 inline-flex items-center gap-1 text-[0.7rem] font-semibold text-accent-dark">
+          <Check className="h-3 w-3 shrink-0" aria-hidden />
+          Jederzeit zum Monatsende kündbar
+        </p>
+      )}
+
+      {def.note && cycle !== "monthly" && (
+        <p className="mt-1.5 pl-7 text-[0.7rem] font-semibold text-accent-dark">
+          {def.note}
+        </p>
+      )}
+
+      <ul className="mt-4 space-y-1.5 text-xs text-brand-night-navy/80 pl-7">
+        {highlights.map((h) => (
+          <li key={h} className="flex gap-1.5">
+            <Check
+              className="h-3.5 w-3.5 mt-0.5 shrink-0 text-accent"
+              aria-hidden
+            />
+            <span>{h}</span>
           </li>
         ))}
       </ul>
     </Label>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// TrustItem — Inline-Item für den Trust-Banner (30 Tage / Keine Kreditkarte)
+// ---------------------------------------------------------------------------
+
+function TrustItem({
+  icon,
+  children,
+  strike = false
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  /** Roter Strich durchs Icon — Kreditkarten-Verbot-Stil. */
+  strike?: boolean;
+}) {
+  return (
+    <span className="inline-flex items-center gap-2 text-brand-night-navy">
+      <span
+        className={cn(
+          "relative inline-flex h-7 w-7 items-center justify-center rounded-full",
+          strike
+            ? "bg-brand-alert-red/10 text-brand-alert-red"
+            : "bg-accent/15 text-accent-dark"
+        )}
+      >
+        {icon}
+        {strike && (
+          <span
+            className="absolute h-[2px] w-5 rotate-[-25deg] bg-brand-alert-red rounded-full"
+            aria-hidden
+          />
+        )}
+      </span>
+      <span className="text-sm font-medium">{children}</span>
+    </span>
   );
 }
