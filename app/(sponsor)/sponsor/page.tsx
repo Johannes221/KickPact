@@ -3,7 +3,11 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { pledges, sponsors, teams, clubs } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
-import { Button } from "@/components/ui/button";
+import {
+  getSponsorDashboardStats,
+  getSponsorMonthlyCharges
+} from "@/lib/db/queries/sponsor-dashboard";
+import { ChargesSparkline } from "./_components/charges-sparkline";
 
 function eur(cents: number) {
   return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
@@ -49,22 +53,63 @@ export default async function SponsorDashboard() {
     );
   }
 
-  const myPledges = await db
-    .select({
-      id: pledges.id,
-      status: pledges.status,
-      teamName: teams.name,
-      clubName: clubs.name,
-      endsAt: pledges.endsAt,
-      monthlyCapCents: pledges.monthlyCapCents
-    })
-    .from(pledges)
-    .innerJoin(teams, eq(pledges.teamId, teams.id))
-    .innerJoin(clubs, eq(teams.clubId, clubs.id))
-    .where(eq(pledges.sponsorId, sponsor.id));
+  const [myPledges, stats, sparkline] = await Promise.all([
+    db
+      .select({
+        id: pledges.id,
+        status: pledges.status,
+        teamName: teams.name,
+        clubName: clubs.name,
+        endsAt: pledges.endsAt,
+        monthlyCapCents: pledges.monthlyCapCents
+      })
+      .from(pledges)
+      .innerJoin(teams, eq(pledges.teamId, teams.id))
+      .innerJoin(clubs, eq(teams.clubId, clubs.id))
+      .where(eq(pledges.sponsorId, sponsor.id)),
+    getSponsorDashboardStats(sponsor.id),
+    getSponsorMonthlyCharges(sponsor.id, 6)
+  ]);
 
   return (
     <div className="space-y-10">
+      {/* KPI-Cards */}
+      <section>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <KpiCard label="Aktive Pledges" value={String(stats.activePledges)} />
+          <KpiCard
+            label="Diesen Monat"
+            value={eur(stats.thisMonthCents)}
+            hint="bestätigt"
+          />
+          <KpiCard
+            label="Gesamt zugesagt"
+            value={eur(stats.lifetimeCents)}
+            hint="seit Start"
+          />
+          <KpiCard
+            label="Pending Approvals"
+            value={String(stats.pendingApprovals)}
+            hint={stats.pendingApprovals > 0 ? "→ Inbox öffnen" : "alles erledigt"}
+            href={stats.pendingApprovals > 0 ? "/sponsor/inbox" : undefined}
+            accent={stats.pendingApprovals > 0}
+          />
+        </div>
+
+        {/* Trend */}
+        <div className="mt-4 rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5">
+          <div className="flex items-baseline justify-between mb-2">
+            <h3 className="font-display font-black text-sm md:text-base tracking-tight text-brand-night-navy">
+              Letzte 6 Monate
+            </h3>
+            <span className="text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
+              Charges-Trend
+            </span>
+          </div>
+          <ChargesSparkline points={sparkline} />
+        </div>
+      </section>
+
       <section>
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
@@ -141,4 +186,50 @@ export default async function SponsorDashboard() {
       </div>
     </div>
   );
+}
+
+function KpiCard({
+  label,
+  value,
+  hint,
+  href,
+  accent
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  href?: string;
+  accent?: boolean;
+}) {
+  const inner = (
+    <div
+      className={
+        "rounded-2xl border p-4 md:p-5 h-full transition-colors " +
+        (accent
+          ? "border-accent/40 bg-accent/5 hover:bg-accent/10"
+          : "border-brand-neutral/40 bg-white hover:border-brand-neutral/60")
+      }
+    >
+      <div className="text-[0.6rem] md:text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
+        {label}
+      </div>
+      <div
+        className={
+          "mt-1.5 font-display font-black text-xl md:text-3xl tracking-tight " +
+          (accent ? "text-accent-dark" : "text-brand-night-navy")
+        }
+      >
+        {value}
+      </div>
+      {hint && (
+        <div className="text-[0.65rem] md:text-xs text-brand-night-navy/40 mt-1">
+          {hint}
+        </div>
+      )}
+    </div>
+  );
+  if (href) {
+    return <Link href={href}>{inner}</Link>;
+  }
+  return inner;
 }
