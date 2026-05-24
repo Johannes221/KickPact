@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,8 @@ type VereinHit = {
   slug: string;
   vereinId: string;
   url: string;
+  isAlreadyClaimed?: boolean;
+  claimedClubSlug?: string | null;
 };
 
 export function SearchStep() {
@@ -91,23 +94,50 @@ export function SearchStep() {
             </p>
           ) : (
             <ul className="divide-y divide-brand-neutral/40">
-              {results.map((v) => (
-                <li key={v.vereinId}>
-                  <button
-                    type="button"
-                    onClick={() => selectVerein(v)}
-                    className="flex w-full items-center justify-between p-4 text-left hover:bg-accent/5 transition-colors"
-                  >
-                    <div>
-                      <div className="font-semibold text-brand-night-navy">{v.name}</div>
-                      {v.ort && (
-                        <div className="text-xs text-brand-night-navy/40 mt-0.5">{v.ort}</div>
-                      )}
-                    </div>
-                    <span className="text-accent text-xl">→</span>
-                  </button>
-                </li>
-              ))}
+              {results.map((v) => {
+                const claimed = v.isAlreadyClaimed === true;
+                if (claimed) {
+                  return (
+                    <li key={v.vereinId}>
+                      <Link
+                        href={`/onboarding/zugriff-anfragen?clubSlug=${encodeURIComponent(v.claimedClubSlug ?? "")}`}
+                        className="flex w-full items-center justify-between p-4 text-left hover:bg-amber-50 transition-colors"
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-amber-600" aria-hidden>🔒</span>
+                            <span className="font-semibold text-brand-night-navy">{v.name}</span>
+                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-amber-800">
+                              Schon registriert
+                            </span>
+                          </div>
+                          {v.ort && (
+                            <div className="text-xs text-brand-night-navy/40 mt-0.5 ml-6">{v.ort}</div>
+                          )}
+                        </div>
+                        <span className="text-amber-700 text-sm font-semibold">Zugriff anfragen →</span>
+                      </Link>
+                    </li>
+                  );
+                }
+                return (
+                  <li key={v.vereinId}>
+                    <button
+                      type="button"
+                      onClick={() => selectVerein(v)}
+                      className="flex w-full items-center justify-between p-4 text-left hover:bg-accent/5 transition-colors"
+                    >
+                      <div>
+                        <div className="font-semibold text-brand-night-navy">{v.name}</div>
+                        {v.ort && (
+                          <div className="text-xs text-brand-night-navy/40 mt-0.5">{v.ort}</div>
+                        )}
+                      </div>
+                      <span className="text-accent text-xl">→</span>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

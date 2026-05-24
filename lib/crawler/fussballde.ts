@@ -104,6 +104,8 @@ export interface VereinHit {
   slug: string;
   vereinId: string;
   url: string;
+  isAlreadyClaimed?: boolean;
+  claimedClubSlug?: string | null;
 }
 
 export interface MannschaftHit {
