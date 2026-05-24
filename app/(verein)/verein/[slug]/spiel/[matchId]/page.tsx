@@ -158,8 +158,8 @@ export default async function MatchDetailPage({
           </div>
 
           {/* Sponsor-Breakdown */}
-          <div className="rounded-2xl border border-brand-neutral/40 bg-white overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="rounded-2xl border border-brand-neutral/40 bg-white overflow-x-auto">
+            <table className="w-full min-w-[480px] text-sm">
               <thead className="bg-brand-off-white text-xs uppercase tracking-wider text-brand-night-navy/60">
                 <tr>
                   <th className="px-4 py-3 text-left font-semibold">Sponsor</th>

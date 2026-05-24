@@ -32,8 +32,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="de" className={`${inter.variable} ${displayFont.variable}`}>
       <body className="font-sans bg-brand-off-white text-brand-night-navy">
+        {/* Skip-Link für Tastatur-Nutzer: standardmäßig visuell versteckt,
+            taucht beim Fokussieren auf (Tab als erstes Element). Zielt auf
+            #main; jede Page rendert mindestens das App-Layout, das die
+            entsprechenden <main>-Container hat. */}
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:rounded-md focus:bg-accent focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+        >
+          Zum Inhalt springen
+        </a>
         <AppHeader />
-        {children}
+        <div id="main">{children}</div>
         <Toaster />
       </body>
     </html>
