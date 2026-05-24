@@ -60,9 +60,10 @@ export default function DatenschutzPage() {
           monatlichen PDF-Rechnung notwendig sind (Rechnungsadresse, ggf. USt-ID).
         </li>
         <li>
-          <strong>Fußball.de-Crawler-Daten:</strong> öffentliche Spielergebnisse,
-          Spielereignisse (Tore, Karten, Auswechslungen) und Spielernamen
-          deiner Mannschaft, die wir von fussball.de abrufen — Details und
+          <strong>Öffentliche Spieldaten der DFB-Landesverbände:</strong>{" "}
+          öffentliche Spielergebnisse, Spielereignisse (Tore, Karten,
+          Auswechslungen) und Spielernamen deiner Mannschaft, die wir von den
+          öffentlichen DFB-Verbandsseiten abrufen — Details und
           Widerspruchsrecht siehe Abschnitt 5.
         </li>
         <li>
@@ -81,7 +82,8 @@ export default function DatenschutzPage() {
         </li>
         <li>
           <strong>Pledge-Verwaltung &amp; Performance-Tracking</strong> — Berechnung
-          der Beträge anhand der Sponsor-Pledges und der Fußball.de-Ergebnisse.
+          der Beträge anhand der Sponsor-Pledges und der öffentlichen
+          DFB-Spielergebnisse.
         </li>
         <li>
           <strong>Erstellung monatlicher PDF-Rechnungen</strong> und Versand per
@@ -162,7 +164,7 @@ export default function DatenschutzPage() {
       </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
-        5. Verarbeitung von Spielerdaten aus fussball.de
+        5. Verarbeitung öffentlicher DFB-Spielerdaten
       </h2>
       <p className="mt-2">
         Damit Sponsor-Wetten („Pledge pro Tor", „Pledge pro Hattrick" etc.)
@@ -170,7 +172,7 @@ export default function DatenschutzPage() {
         Spielergebnisse, Spielereignisse (Tore, Karten, Auswechslungen) und
         Spielernamen von{" "}
         <a className="text-accent hover:underline" href="https://www.fussball.de" target="_blank" rel="noreferrer">
-          fussball.de
+          den öffentlichen DFB-Verbandsseiten
         </a>{" "}
         ab und speichert sie verknüpft mit der jeweiligen Mannschaft.
       </p>
@@ -180,20 +182,23 @@ export default function DatenschutzPage() {
         Bereitstellung des Kernzwecks von KickPact — Pledge-Auswertung anhand
         überprüfbarer, öffentlich publizierter Spielresultate. Ohne diese
         Verarbeitung wäre die Dienstleistung nicht erbringbar. Wir verarbeiten
-        ausschließlich Daten, die der DFB-Landesverband über fussball.de bereits
-        öffentlich publiziert hat, und keine über die Spielberichte hinausgehenden
+        ausschließlich Daten, die der DFB-Landesverband auf den öffentlichen
+        DFB-Verbandsseiten bereits öffentlich publiziert hat, und keine über
+        die Spielberichte hinausgehenden
         personenbezogenen Daten (insbesondere keine Adressen, Geburtsdaten oder
         Kontaktdaten der Spieler).
       </p>
       <p className="mt-3">
         <strong>Interessenabwägung:</strong> Die Spielernamen sind bereits
-        öffentlich auf fussball.de einsehbar; KickPact reichert sie nicht mit
+        öffentlich auf den öffentlichen DFB-Verbandsseiten einsehbar; KickPact
+        reichert sie nicht mit
         zusätzlichen Daten an und gibt sie ausschließlich an die mit der
         Mannschaft verknüpften Sponsoren weiter (geschlossener Empfängerkreis,
         eingeloggt + Pledge an die Mannschaft aktiv). Eine darüber hinausgehende
         öffentliche Veröffentlichung findet nicht statt. Bei Jugendmannschaften
         (Spieler unter 18 Jahren) erfolgt die Verarbeitung nur, solange der
-        zuständige Landesverband die Daten auch auf fussball.de öffentlich zeigt.
+        zuständige Landesverband die Daten auch auf den öffentlichen
+        DFB-Verbandsseiten öffentlich zeigt.
       </p>
       <p className="mt-3">
         <strong>Widerspruchsrecht (Opt-out):</strong> Spieler oder

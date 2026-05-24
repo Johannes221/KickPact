@@ -42,8 +42,8 @@ export default function AgbPage() {
         KickPact ist eine SaaS-Plattform für performance-basiertes
         Amateurfußball-Sponsoring. Sponsoren legen ihre Pledges (z.B. „5 € pro
         Tor") selbst fest, KickPact ermittelt Spielereignisse automatisiert
-        anhand öffentlicher Daten von fussball.de sowie manueller Meldungen des
-        Vereins und erstellt monatliche PDF-Rechnungen.
+        anhand öffentlicher Spieldaten der DFB-Landesverbände sowie manueller
+        Meldungen des Vereins und erstellt monatliche PDF-Rechnungen.
       </p>
       <p className="mt-3">
         KickPact ist <strong>kein Zahlungsdienstleister</strong>. Wir wickeln
@@ -212,8 +212,9 @@ export default function AgbPage() {
         zulässig.
       </p>
       <p className="mt-3">
-        Für die Richtigkeit der von fussball.de bezogenen Spieldaten übernehmen
-        wir keine Gewähr — Korrekturen sind über den Bestätigen/Bestreiten-
+        Für die Richtigkeit der von den öffentlichen DFB-Verbandsseiten
+        bezogenen Spieldaten übernehmen wir keine Gewähr — Korrekturen sind
+        über den Bestätigen/Bestreiten-
         Workflow im Sponsor-Dashboard möglich. Die Haftung nach dem
         Produkthaftungsgesetz bleibt unberührt.
       </p>
