@@ -67,7 +67,6 @@ export default async function VereinDashboard({
       .then((r) => Number(r[0]?.n ?? 0))
   ]);
 
-  const firstTeamId = teamRows[0]?.id ?? null;
   const teamCount = teamRows.length;
 
   return (
@@ -92,7 +91,7 @@ export default async function VereinDashboard({
                 .map((t) => t.name)
                 .join(" · ") + (teamCount > 3 ? ` · +${teamCount - 3}` : "")
         }
-        href={firstTeamId ? `/verein/${slug}/mannschaft/${firstTeamId}` : `/verein/${slug}/einstellungen`}
+        href={`/verein/${slug}/mannschaften`}
       />
 
       <DashboardTile
