@@ -86,9 +86,15 @@ export async function closeTestDb(): Promise<void> {
 
 /**
  * Skip helper — use in `describe.skipIf(...)` to gate integration suites that
- * require a running Postgres. Returns true when `DATABASE_URL_TEST` is unset
- * AND the default docker-compose port is unreachable would be expensive to
- * probe synchronously, so we use a lighter env-flag fallback: set
- * `SKIP_DB_INTEGRATION=1` in environments without docker (e.g. CI without DB).
+ * require a running Postgres.
+ *
+ * Skipped when EITHER:
+ *   - `SKIP_DB_INTEGRATION=1` is set explicitly, OR
+ *   - `DATABASE_URL_TEST` is unset (local dev without docker-compose up).
+ *
+ * In CI we always set `DATABASE_URL_TEST` (postgres service container), so
+ * the suites run. Locally a developer needs to either spin up docker-compose
+ * or just run `npm test` and accept that the integration layer is skipped.
  */
-export const isIntegrationDbDisabled = process.env.SKIP_DB_INTEGRATION === "1";
+export const isIntegrationDbDisabled =
+  process.env.SKIP_DB_INTEGRATION === "1" || !process.env.DATABASE_URL_TEST;
