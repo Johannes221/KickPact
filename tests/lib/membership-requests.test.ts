@@ -15,7 +15,12 @@ import {
   listPendingRequestsForClub,
   getRequestById,
   approveRequest,
-  rejectRequest
+  rejectRequest,
+  changeClubMembershipRole,
+  revokeClubMembership,
+  changeTeamMembershipRole,
+  revokeTeamMembership,
+  countClubAdmins
 } from "@/lib/db/queries/membership-requests";
 import { resetTestDb } from "../setup/db";
 
@@ -218,5 +223,100 @@ describe("membership-requests queries", () => {
       .from(clubMemberships)
       .where(eq(clubMemberships.userId, requesterId));
     expect(clubMems).toHaveLength(0);
+  });
+});
+
+describe("membership management queries", () => {
+  beforeEach(async () => {
+    await resetTestDb();
+  });
+
+  it("countClubAdmins returns the number of admin memberships", async () => {
+    const adminA = await seedUser("admA");
+    const adminB = await seedUser("admB");
+    const trainer = await seedUser("trnX");
+    const { clubId } = await seedClubWithTeam("count");
+
+    await db.insert(clubMemberships).values({ userId: adminA, clubId, role: "admin" });
+    await db.insert(clubMemberships).values({ userId: adminB, clubId, role: "admin" });
+    await db.insert(clubMemberships).values({ userId: trainer, clubId, role: "trainer" });
+
+    expect(await countClubAdmins(clubId)).toBe(2);
+  });
+
+  it("changeClubMembershipRole updates the row and returns it", async () => {
+    const userId = await seedUser("chg");
+    const { clubId } = await seedClubWithTeam("chgrole");
+    await db.insert(clubMemberships).values({ userId, clubId, role: "viewer" });
+
+    const updated = await changeClubMembershipRole(clubId, userId, "trainer");
+    expect(updated?.role).toBe("trainer");
+
+    const [row] = await db
+      .select()
+      .from(clubMemberships)
+      .where(eq(clubMemberships.userId, userId));
+    expect(row.role).toBe("trainer");
+  });
+
+  it("changeClubMembershipRole returns null when the membership does not exist", async () => {
+    const userId = await seedUser("ghost");
+    const { clubId } = await seedClubWithTeam("ghostc");
+
+    const updated = await changeClubMembershipRole(clubId, userId, "trainer");
+    expect(updated).toBeNull();
+  });
+
+  it("revokeClubMembership deletes the row", async () => {
+    const userId = await seedUser("rev");
+    const { clubId } = await seedClubWithTeam("revc");
+    await db.insert(clubMemberships).values({ userId, clubId, role: "trainer" });
+
+    const ok = await revokeClubMembership(clubId, userId);
+    expect(ok).toBe(true);
+
+    const rows = await db
+      .select()
+      .from(clubMemberships)
+      .where(eq(clubMemberships.userId, userId));
+    expect(rows).toHaveLength(0);
+  });
+
+  it("changeTeamMembershipRole + revokeTeamMembership work on team scope", async () => {
+    const userId = await seedUser("tm");
+    const { teamId } = await seedClubWithTeam("tmscope");
+    await db.insert(teamMemberships).values({ userId, teamId, role: "viewer" });
+
+    const updated = await changeTeamMembershipRole(teamId, userId, "trainer");
+    expect(updated?.role).toBe("trainer");
+
+    const ok = await revokeTeamMembership(teamId, userId);
+    expect(ok).toBe(true);
+
+    const rows = await db
+      .select()
+      .from(teamMemberships)
+      .where(eq(teamMemberships.userId, userId));
+    expect(rows).toHaveLength(0);
+  });
+
+  it("self-demotion guard: countClubAdmins=1 means demote / revoke must be blocked at call site", async () => {
+    // This test documents the contract used by the manage.ts server actions:
+    // when countClubAdmins(club.id) <= 1 and the acting user is the only admin,
+    // the action must refuse to change the role or revoke. The action layer
+    // owns the policy; here we just verify the building blocks behave as
+    // assumed (count==1, then a change still mechanically succeeds — meaning
+    // the guard MUST live in the action, not the query).
+    const onlyAdmin = await seedUser("only");
+    const { clubId } = await seedClubWithTeam("solo");
+    await db.insert(clubMemberships).values({ userId: onlyAdmin, clubId, role: "admin" });
+
+    expect(await countClubAdmins(clubId)).toBe(1);
+
+    // The query itself does NOT enforce the guard — that's intentional. The
+    // server action checks countClubAdmins() and refuses before calling this.
+    const demoted = await changeClubMembershipRole(clubId, onlyAdmin, "viewer");
+    expect(demoted?.role).toBe("viewer");
+    expect(await countClubAdmins(clubId)).toBe(0);
   });
 });

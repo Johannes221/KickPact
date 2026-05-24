@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   clubMembershipRequests,
@@ -10,6 +10,8 @@ import {
 
 export type MembershipRequestStatus = "pending" | "approved" | "rejected";
 export type RequestedRole = "admin" | "trainer" | "viewer";
+export type ClubRole = "admin" | "trainer" | "viewer";
+export type TeamRole = "trainer" | "viewer";
 
 export interface CreateRequestArgs {
   userId: string;
@@ -191,4 +193,115 @@ export async function rejectRequest(args: RejectArgs): Promise<MembershipRequest
     .returning();
 
   return updated as MembershipRequest;
+}
+
+/**
+ * Counts the active admins for a given club. Used by the self-demotion guard
+ * to prevent the last admin from demoting or revoking themselves and locking
+ * the club out.
+ */
+export async function countClubAdmins(clubId: string): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(clubMemberships)
+    .where(
+      and(
+        eq(clubMemberships.clubId, clubId),
+        eq(clubMemberships.role, "admin")
+      )
+    );
+  return row?.count ?? 0;
+}
+
+/**
+ * Updates a club-level membership role for a given user. No-ops cleanly when
+ * the membership row does not exist (returns null).
+ */
+export async function changeClubMembershipRole(
+  clubId: string,
+  userId: string,
+  newRole: ClubRole
+): Promise<{ userId: string; clubId: string; role: ClubRole } | null> {
+  const [updated] = await db
+    .update(clubMemberships)
+    .set({ role: newRole })
+    .where(
+      and(
+        eq(clubMemberships.clubId, clubId),
+        eq(clubMemberships.userId, userId)
+      )
+    )
+    .returning();
+  if (!updated) return null;
+  return {
+    userId: updated.userId,
+    clubId: updated.clubId,
+    role: updated.role as ClubRole
+  };
+}
+
+/**
+ * Removes a club-level membership row entirely. Returns true if a row was
+ * deleted, false if nothing matched.
+ */
+export async function revokeClubMembership(
+  clubId: string,
+  userId: string
+): Promise<boolean> {
+  const deleted = await db
+    .delete(clubMemberships)
+    .where(
+      and(
+        eq(clubMemberships.clubId, clubId),
+        eq(clubMemberships.userId, userId)
+      )
+    )
+    .returning({ userId: clubMemberships.userId });
+  return deleted.length > 0;
+}
+
+/**
+ * Updates a team-level membership role for a given user.
+ */
+export async function changeTeamMembershipRole(
+  teamId: string,
+  userId: string,
+  newRole: TeamRole
+): Promise<{ userId: string; teamId: string; role: TeamRole } | null> {
+  const [updated] = await db
+    .update(teamMemberships)
+    .set({ role: newRole })
+    .where(
+      and(
+        eq(teamMemberships.teamId, teamId),
+        eq(teamMemberships.userId, userId)
+      )
+    )
+    .returning();
+  if (!updated) return null;
+  return {
+    userId: updated.userId,
+    teamId: updated.teamId,
+    role: updated.role as TeamRole
+  };
+}
+
+/**
+ * Removes a team-level membership row entirely. Returns true if a row was
+ * deleted, false if nothing matched.
+ */
+export async function revokeTeamMembership(
+  teamId: string,
+  userId: string
+): Promise<boolean> {
+  const deleted = await db
+    .delete(teamMemberships)
+    .where(
+      and(
+        eq(teamMemberships.teamId, teamId),
+        eq(teamMemberships.userId, userId)
+      )
+    )
+    .returning({ userId: teamMemberships.userId });
+  return deleted.length > 0;
 }
