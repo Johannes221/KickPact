@@ -31,10 +31,8 @@ describe("negative cases", () => {
     expect(Array.isArray(result) ? result : []).toEqual([]);
   }, 60_000);
 
-  // Captcha-Detection wird in Phase 4 (Task 4.2) implementiert. Diese
-  // Worktree enthält die Detection noch nicht — bis zum Sammelmerge
-  // bleibt der Test geskippt. Phase 9 aktiviert ihn.
-  it.skip("captcha page throws loud error (not silent empty)", async () => {
+  // Captcha-Detection in Phase 4 implementiert (lib/crawler/fussballde.ts).
+  it("captcha page throws loud error (not silent empty)", async () => {
     await expect(
       withMockedBrowser(
         [
