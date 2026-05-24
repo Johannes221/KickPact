@@ -3,7 +3,8 @@ import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
 import { getStripe, getStripeWebhookSecret, isStripeConfigured } from "@/lib/stripe/client";
 import { db } from "@/lib/db/client";
-import { subscriptions } from "@/lib/db/schema";
+import { subscriptions, teamLicenses } from "@/lib/db/schema";
+import { priceIdToPlanCycle } from "@/lib/stripe/pricing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,16 +50,61 @@ export async function POST(req: NextRequest) {
           console.warn("[stripe-webhook] subscription without clubId metadata", sub.id);
           break;
         }
+
+        // Pricing-v2-Audit #3 (2026-05-24): plan + billing_cycle aus dem
+        // gebuchten Stripe-Price reverse-mappen und in die DB spiegeln.
+        // Vorher blieb subscriptions.billing_cycle auf 'monthly' (DB-Default)
+        // → Sommerpause-Cron fand 0 Saison-Pass-Subscriptions → Stripe
+        // buchte im Juni/Juli weiter, obwohl Marketing "2 Monate geschenkt"
+        // verspricht.
+        const firstItem = sub.items?.data?.[0];
+        const priceId =
+          typeof firstItem?.price?.id === "string" ? firstItem.price.id : null;
+        const planCycle = priceId ? priceIdToPlanCycle(priceId) : null;
+
+        // Status priorisiert: pause_collection > cancel_at > Stripe-Status.
+        // - pause_collection !== null heisst Sommerpause via pause-season-passes.
+        // - cancel_at !== null heisst "cancelling at period end" (User hat
+        //   gekündigt, läuft aber bis Period-Ende weiter).
+        let resolvedStatus: ReturnType<typeof mapStripeStatus> = mapStripeStatus(sub.status);
+        if (sub.pause_collection) {
+          resolvedStatus = "paused";
+        } else if (sub.cancel_at) {
+          // Stripe-Subscription läuft bis Period-Ende, danach gekündigt.
+          // Wir behalten "active", spiegeln aber pausedUntil/cancel_at.
+          resolvedStatus = "active";
+        }
+
+        // pausedUntil: bei pause_collection.resumes_at oder Default null
+        const pauseResumesAt =
+          sub.pause_collection?.resumes_at &&
+          typeof sub.pause_collection.resumes_at === "number"
+            ? new Date(sub.pause_collection.resumes_at * 1000)
+            : null;
+
         await db
           .update(subscriptions)
           .set({
             stripeSubscriptionId: sub.id,
-            status: mapStripeStatus(sub.status),
+            status: resolvedStatus,
+            ...(planCycle ? { billingCycle: planCycle.cycle } : {}),
             trialEndsAt: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
             currentPeriodEnd: extractCurrentPeriodEnd(sub),
+            pausedUntil: pauseResumesAt,
             updatedAt: new Date()
           })
           .where(eq(subscriptions.clubId, clubId));
+
+        // Plan-Spiegelung auf team_licenses: bei Verein-Plan kann eine
+        // einzige Subscription mehrere Teams decken; wir setzen den Plan auf
+        // ALLE License-Rows dieser Subscription. Bei team-units (basic/pro)
+        // ist's i.d.R. ohnehin nur eine Row.
+        if (planCycle) {
+          await db
+            .update(teamLicenses)
+            .set({ plan: planCycle.plan })
+            .where(eq(teamLicenses.subscriptionClubId, clubId));
+        }
         break;
       }
       case "customer.subscription.deleted": {
@@ -106,7 +152,7 @@ export async function POST(req: NextRequest) {
 
 function mapStripeStatus(
   s: Stripe.Subscription.Status
-): "trialing" | "active" | "past_due" | "cancelled" | "incomplete" {
+): "trialing" | "active" | "past_due" | "cancelled" | "incomplete" | "paused" {
   switch (s) {
     case "trialing":
       return "trialing";
@@ -118,8 +164,12 @@ function mapStripeStatus(
     case "incomplete_expired":
     case "unpaid":
       return "cancelled";
-    case "incomplete":
+    // Pricing-v2-Audit #3 (2026-05-24): Stripe-"paused" muss auf unser
+    // "paused"-Enum mappen, nicht auf "incomplete" — sonst sperrt die App
+    // einen pausierten Saison-Pass-Verein fälschlich auf read-only.
     case "paused":
+      return "paused";
+    case "incomplete":
     default:
       return "incomplete";
   }
