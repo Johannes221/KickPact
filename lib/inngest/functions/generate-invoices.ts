@@ -12,6 +12,7 @@ import {
   users
 } from "@/lib/db/schema";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
+import { getReplyToForClub } from "@/lib/mail/reply-to";
 import { invoiceSponsorEmail } from "@/lib/mail/templates/invoice-sponsor";
 import { invoiceClubEmail } from "@/lib/mail/templates/invoice-club";
 import { lastBillingPeriod, type BillingPeriod } from "@/lib/invoicing/period";
@@ -246,9 +247,11 @@ export const generateInvoices = inngest.createFunction(
             itemCount
           });
 
+          const replyTo = await getReplyToForClub(cl.id);
           const sponsorSend = await resend.emails.send({
             from: MAIL_FROM,
             to: spRow.user.email,
+            replyTo,
             subject: sponsorMail.subject,
             text: sponsorMail.text,
             html: sponsorMail.html,
@@ -285,6 +288,7 @@ export const generateInvoices = inngest.createFunction(
             const clubSend = await resend.emails.send({
               from: MAIL_FROM,
               to: adminEmails,
+              replyTo,
               subject: clubMail.subject,
               text: clubMail.text,
               html: clubMail.html,
