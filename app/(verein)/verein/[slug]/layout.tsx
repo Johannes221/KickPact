@@ -36,7 +36,7 @@ export default async function VereinLayout({
       {/* Header-Bereich: Vereinsname + Sub-Nav */}
       <div className="mb-6 md:mb-10">
         <div className="flex items-start justify-between gap-4 mb-4">
-          <div>
+          <div className="hidden md:block">
             <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
               Vereins-Dashboard
             </p>
@@ -57,7 +57,7 @@ export default async function VereinLayout({
           )}
         </div>
 
-        <VereinSubNav slug={slug} />
+        <VereinSubNav slug={slug} clubName={club.name} />
       </div>
 
       {/* Weitere Vereins-Tabs wenn User mehrere Vereine hat */}
