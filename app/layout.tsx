@@ -2,6 +2,7 @@ import "./globals.css";
 import { Inter, Montserrat_Alternates } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shared/app-header";
+import { PlausibleScript } from "@/components/analytics/plausible-script";
 
 // Body / UI: Inter (broad latin coverage, weight 400-900)
 const inter = Inter({
@@ -31,6 +32,9 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="de" className={`${inter.variable} ${displayFont.variable}`}>
+      <head>
+        <PlausibleScript />
+      </head>
       <body className="font-sans bg-brand-off-white text-brand-night-navy">
         {/* Skip-Link für Tastatur-Nutzer: standardmäßig visuell versteckt,
             taucht beim Fokussieren auf (Tab als erstes Element). Zielt auf
