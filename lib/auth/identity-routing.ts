@@ -1,0 +1,67 @@
+import type { UserIdentities } from "@/lib/db/queries/user-identities";
+
+/**
+ * Discriminated union describing which identity surface a given URL belongs
+ * to. Used by the header role-switcher to highlight the currently active
+ * identity tile and by anywhere else that needs to ask "what role is the
+ * user currently acting under?" from a pathname alone.
+ *
+ *  - `club`    → /verein/{slug} and all subroutes
+ *  - `team`    → /verein/{slug}/mannschaft/{teamId} and all subroutes
+ *  - `sponsor` → /sponsor and all subroutes
+ *  - `neutral` → marketing pages, auth, /select-role, /dashboard, anything else
+ */
+export type ActiveIdentity =
+  | { kind: "club"; slug: string }
+  | { kind: "team"; slug: string; teamId: string }
+  | { kind: "sponsor" }
+  | { kind: "neutral" };
+
+/**
+ * Maps the user's identity snapshot to the best dashboard destination.
+ *
+ * Rules:
+ *  - 0 identities → `/signup` (no account artefacts yet → onboarding).
+ *  - Exactly 1 identity → direct deep-link into that surface.
+ *  - 2+ identities → `/select-role` so the user can pick.
+ *
+ * Pure function — no DB, no auth, no `headers()`. Safe to call from server
+ * components, server actions, or unit tests.
+ */
+export function pickDashboardDestination(ids: UserIdentities): string {
+  const total = ids.clubs.length + ids.teamOnly.length + (ids.sponsor ? 1 : 0);
+  if (total === 0) return "/signup";
+  if (total >= 2) return "/select-role";
+
+  if (ids.clubs[0]) return `/verein/${ids.clubs[0].slug}`;
+  if (ids.teamOnly[0]) {
+    return `/verein/${ids.teamOnly[0].clubSlug}/mannschaft/${ids.teamOnly[0].teamId}`;
+  }
+  return "/sponsor";
+}
+
+// Order matters: team must be tested before club (team paths also match the
+// club regex). Sponsor uses `(\/|$)` so `/sponsorXYZ` does NOT match — only
+// `/sponsor` or `/sponsor/...`.
+const TEAM_PATH = /^\/verein\/([^/]+)\/mannschaft\/([^/]+)/;
+const CLUB_PATH = /^\/verein\/([^/]+)/;
+const SPONSOR_PATH = /^\/sponsor(\/|$)/;
+
+/**
+ * Parses a Next.js pathname into the active identity it represents.
+ * Pure, synchronous, allocation-light — fine to call in render paths.
+ */
+export function activeIdentityFromPath(pathname: string): ActiveIdentity {
+  const teamMatch = pathname.match(TEAM_PATH);
+  if (teamMatch) {
+    return { kind: "team", slug: teamMatch[1], teamId: teamMatch[2] };
+  }
+  const clubMatch = pathname.match(CLUB_PATH);
+  if (clubMatch) {
+    return { kind: "club", slug: clubMatch[1] };
+  }
+  if (SPONSOR_PATH.test(pathname)) {
+    return { kind: "sponsor" };
+  }
+  return { kind: "neutral" };
+}
