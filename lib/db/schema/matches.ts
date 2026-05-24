@@ -46,6 +46,15 @@ export const matches = pgTable(
     halbzeitHeim: integer("halbzeit_heim"),
     halbzeitGast: integer("halbzeit_gast"),
     status: matchStatusEnum("status").notNull().default("scheduled"),
+    /**
+     * Stable hash over (result, halftime, events). Set by the crawler so re-runs
+     * can detect when fussball.de data has changed and we need to invalidate
+     * downstream charges. NULL for pre-existing matches inserted before the
+     * column landed — they'll be backfilled on the next successful crawl.
+     */
+    contentHash: text("content_hash"),
+    /** Human-readable reason if the match was cancelled (e.g. "match_updated"). */
+    cancelledReason: text("cancelled_reason"),
     crawledAt: timestamp("crawled_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({

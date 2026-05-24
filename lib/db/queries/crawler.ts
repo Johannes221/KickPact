@@ -114,9 +114,9 @@ export async function getActiveTeamById(teamId: string): Promise<ActiveTeam | nu
 
 export async function findMatchByFussballdeId(
   fussballdeSpielId: string
-): Promise<{ id: string } | null> {
+): Promise<{ id: string; contentHash: string | null } | null> {
   const [m] = await db
-    .select({ id: matches.id })
+    .select({ id: matches.id, contentHash: matches.contentHash })
     .from(matches)
     .where(eq(matches.fussballdeSpielId, fussballdeSpielId))
     .limit(1);
@@ -134,8 +134,9 @@ export async function insertMatchWithEvents(args: {
   teamId: string;
   listItem: SpielListItem;
   details: SpielDetails;
+  contentHash?: string;
 }): Promise<{ matchId: string; newEventCount: number }> {
-  const { teamId, listItem, details } = args;
+  const { teamId, listItem, details, contentHash } = args;
 
   const [matchRow] = await db
     .insert(matches)
@@ -149,12 +150,64 @@ export async function insertMatchWithEvents(args: {
       ergebnisGast: details.ergebnis.gast,
       halbzeitHeim: details.halbzeit?.heim ?? null,
       halbzeitGast: details.halbzeit?.gast ?? null,
-      status: "finished"
+      status: "finished",
+      contentHash: contentHash ?? null
     })
     .returning({ id: matches.id });
 
   if (!matchRow) throw new Error("insertMatch failed");
 
+  const newEventCount = await writeMatchEvents(matchRow.id, teamId, details);
+  return { matchId: matchRow.id, newEventCount };
+}
+
+/**
+ * Re-imports a previously-scraped match after fussball.de data changed.
+ *
+ * Deletes the old `match_events` rows (cascade will not touch `charges`
+ * because we want the existing-but-cancelled charge audit trail to survive),
+ * updates the parent `matches` row with the new score / halftime / contentHash,
+ * then re-inserts events from the fresh scrape.
+ *
+ * Callers MUST first invoke `invalidateChargesForMatch` so downstream
+ * evaluators don't see double-counted events.
+ */
+export async function updateMatchWithEvents(args: {
+  matchId: string;
+  teamId: string;
+  listItem: SpielListItem;
+  details: SpielDetails;
+  contentHash: string;
+}): Promise<{ matchId: string; newEventCount: number }> {
+  const { matchId, teamId, listItem, details, contentHash } = args;
+
+  // Remove old events; new ones get re-inserted below.
+  await db.delete(matchEvents).where(eq(matchEvents.matchId, matchId));
+
+  await db
+    .update(matches)
+    .set({
+      datum: parseDateDdMmYyyy(listItem.datum),
+      heimName: details.heim || listItem.heim,
+      gastName: details.gast || listItem.gast,
+      ergebnisHeim: details.ergebnis.heim,
+      ergebnisGast: details.ergebnis.gast,
+      halbzeitHeim: details.halbzeit?.heim ?? null,
+      halbzeitGast: details.halbzeit?.gast ?? null,
+      status: "finished",
+      contentHash
+    })
+    .where(eq(matches.id, matchId));
+
+  const newEventCount = await writeMatchEvents(matchId, teamId, details);
+  return { matchId, newEventCount };
+}
+
+async function writeMatchEvents(
+  matchId: string,
+  teamId: string,
+  details: SpielDetails
+): Promise<number> {
   let newEventCount = 0;
   for (const ev of details.events) {
     if (ev.typ === "TOR" && ev.spielerId) {
@@ -164,7 +217,7 @@ export async function insertMatchWithEvents(args: {
         ev.spielerName ?? ev.spielerId
       );
       await db.insert(matchEvents).values({
-        matchId: matchRow.id,
+        matchId,
         minute: ev.minute,
         type: "tor",
         side: ev.side === "unbekannt" ? "heim" : ev.side,
@@ -176,7 +229,7 @@ export async function insertMatchWithEvents(args: {
     } else if (ev.typ === "AUSWECHSLUNG" && ev.rein && ev.raus) {
       const reinId = await upsertPlayer(teamId, ev.rein.id, ev.rein.name);
       await db.insert(matchEvents).values({
-        matchId: matchRow.id,
+        matchId,
         minute: ev.minute,
         type: "auswechslung",
         subtype: "ein",
@@ -187,7 +240,7 @@ export async function insertMatchWithEvents(args: {
       });
       const rausId = await upsertPlayer(teamId, ev.raus.id, ev.raus.name);
       await db.insert(matchEvents).values({
-        matchId: matchRow.id,
+        matchId,
         minute: ev.minute,
         type: "auswechslung",
         subtype: "aus",
@@ -199,8 +252,7 @@ export async function insertMatchWithEvents(args: {
       newEventCount += 2;
     }
   }
-
-  return { matchId: matchRow.id, newEventCount };
+  return newEventCount;
 }
 
 async function upsertPlayer(
