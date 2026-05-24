@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -9,11 +10,14 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import type { ClubPledgeRow } from "@/lib/db/queries/club-dashboard";
 
 type ScopeFilter = "all" | "match" | "season";
 type StatusFilter = "all" | "active" | "paused" | "ended";
+
+const PAGE_SIZE = 25;
 
 function eur(cents: number): string {
   return (cents / 100).toLocaleString("de-DE", {
@@ -39,6 +43,12 @@ export function PledgesTable({
   const [scopeFilter, setScopeFilter] = useState<ScopeFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const pageParam = Number(searchParams.get("page") ?? "1");
+  const currentPage = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+
   const filtered = useMemo(() => {
     return rows.filter((r) => {
       if (teamFilter !== "all" && r.teamId !== teamFilter) return false;
@@ -47,6 +57,32 @@ export function PledgesTable({
       return true;
     });
   }, [rows, teamFilter, scopeFilter, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageIndex = Math.min(currentPage, totalPages);
+  const pageStart = (pageIndex - 1) * PAGE_SIZE;
+  const pageItems = filtered.slice(pageStart, pageStart + PAGE_SIZE);
+
+  // Wenn Filter sich ändern und page > totalPages: zurück zu page 1
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      const sp = new URLSearchParams(searchParams.toString());
+      sp.delete("page");
+      const qs = sp.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    }
+  }, [currentPage, totalPages, pathname, router, searchParams]);
+
+  function goToPage(p: number) {
+    const sp = new URLSearchParams(searchParams.toString());
+    if (p <= 1) {
+      sp.delete("page");
+    } else {
+      sp.set("page", String(p));
+    }
+    const qs = sp.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
 
   return (
     <section>
@@ -112,7 +148,7 @@ export function PledgesTable({
                 </tr>
               </thead>
               <tbody className="divide-y divide-brand-neutral/30">
-                {filtered.map((r) => {
+                {pageItems.map((r) => {
                   const meta = triggerLabel(r.triggerType);
                   return (
                     <tr
@@ -153,7 +189,7 @@ export function PledgesTable({
 
           {/* Mobile-Cards */}
           <ul className="md:hidden space-y-2">
-            {filtered.map((r) => {
+            {pageItems.map((r) => {
               const meta = triggerLabel(r.triggerType);
               return (
                 <li
@@ -196,6 +232,36 @@ export function PledgesTable({
               );
             })}
           </ul>
+
+          {filtered.length > PAGE_SIZE && (
+            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs text-brand-night-navy/60">
+                {pageStart + 1}–{Math.min(pageStart + PAGE_SIZE, filtered.length)} von{" "}
+                {filtered.length}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pageIndex <= 1}
+                  onClick={() => goToPage(pageIndex - 1)}
+                >
+                  Vorherige
+                </Button>
+                <span className="text-xs text-brand-night-navy/60 tabular-nums px-2">
+                  Seite {pageIndex} / {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pageIndex >= totalPages}
+                  onClick={() => goToPage(pageIndex + 1)}
+                >
+                  Nächste
+                </Button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </section>
