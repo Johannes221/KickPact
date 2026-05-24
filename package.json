@@ -18,7 +18,8 @@
     "fixtures:capture": "tsx scripts/fixtures/capture-fixtures.ts",
     "fixtures:manifest": "tsx scripts/fixtures/build-manifest.ts",
     "fixtures:refresh": "tsx scripts/fixtures/capture-fixtures.ts --force && tsx scripts/fixtures/build-manifest.ts",
-    "drift:check": "tsx scripts/drift/check-drift.ts"
+    "drift:check": "tsx scripts/drift/check-drift.ts",
+    "test:live": "LIVE=1 vitest run live-smoke"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1050.0",
