@@ -8,10 +8,14 @@ import {
   listClubPledges,
   listRecentClubMatches,
   listClubSeasonPledges,
-  type SeasonPledgeOutcome
+  getMonthlyChargesForClub,
+  getTopSponsorsForClub,
+  type SeasonPledgeOutcome,
+  type TopSponsorRow
 } from "@/lib/db/queries/club-dashboard";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { PledgesTable } from "./_components/pledges-table";
+import { RevenueChart } from "./_components/revenue-chart";
 
 export const metadata = { title: "Vereins-Dashboard · KickPact" };
 
@@ -39,16 +43,19 @@ export default async function ClubDashboard({
   const [club] = await db.select().from(clubs).where(eq(clubs.slug, slug)).limit(1);
   if (!club) return null;
 
-  const [stats, pledgeRows, recentMatches, seasonPledges, teamRows] = await Promise.all([
-    getClubDashboardStats(club.id),
-    listClubPledges(club.id),
-    listRecentClubMatches(club.id, 10),
-    listClubSeasonPledges(club.id),
-    db
-      .select({ id: teams.id, name: teams.name })
-      .from(teams)
-      .where(eq(teams.clubId, club.id))
-  ]);
+  const [stats, pledgeRows, recentMatches, seasonPledges, teamRows, monthlyRevenue, topSponsors] =
+    await Promise.all([
+      getClubDashboardStats(club.id),
+      listClubPledges(club.id),
+      listRecentClubMatches(club.id, 10),
+      listClubSeasonPledges(club.id),
+      db
+        .select({ id: teams.id, name: teams.name })
+        .from(teams)
+        .where(eq(teams.clubId, club.id)),
+      getMonthlyChargesForClub(club.id, 12),
+      getTopSponsorsForClub(club.id, 5)
+    ]);
 
   return (
     <div className="space-y-6 md:space-y-10">
@@ -69,6 +76,9 @@ export default async function ClubDashboard({
         />
       </div>
 
+      {/* Revenue-Chart + Top-Sponsoren */}
+      <RevenueAndTopSection rows={monthlyRevenue} top={topSponsors} />
+
       {/* Sponsoren-Wetten */}
       <PledgesTable
         rows={pledgeRows}
@@ -82,6 +92,58 @@ export default async function ClubDashboard({
       {/* Saison-Wetten */}
       <SeasonPledgesSection rows={seasonPledges} />
     </div>
+  );
+}
+
+function RevenueAndTopSection({
+  rows,
+  top
+}: {
+  rows: Awaited<ReturnType<typeof getMonthlyChargesForClub>>;
+  top: TopSponsorRow[];
+}) {
+  return (
+    <section className="grid gap-4 md:gap-6 lg:grid-cols-3">
+      <div className="lg:col-span-2">
+        <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy mb-3 md:mb-4">
+          Charges der letzten 12 Monate
+        </h2>
+        <RevenueChart points={rows} />
+      </div>
+      <div>
+        <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy mb-3 md:mb-4">
+          Top-Sponsoren
+        </h2>
+        {top.length === 0 ? (
+          <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60">
+            Noch keine Sponsoren mit bestätigten Charges in dieser Saison.
+          </div>
+        ) : (
+          <ol className="rounded-2xl border border-brand-neutral/40 bg-white divide-y divide-brand-neutral/30 overflow-hidden">
+            {top.map((s, i) => (
+              <li key={s.sponsorId} className="flex items-center gap-3 p-3 md:p-4">
+                <span
+                  className={
+                    "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold tabular-nums " +
+                    (i === 0
+                      ? "bg-accent text-white"
+                      : "bg-brand-neutral/30 text-brand-night-navy/70")
+                  }
+                >
+                  {i + 1}
+                </span>
+                <span className="flex-1 truncate font-medium text-sm md:text-base text-brand-night-navy">
+                  {s.displayName}
+                </span>
+                <span className="font-mono tabular-nums font-semibold text-sm text-brand-night-navy">
+                  {eur(s.totalCents)}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+    </section>
   );
 }
 
