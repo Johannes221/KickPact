@@ -37,11 +37,14 @@ export function MagicLinkForm({
         ? new URLSearchParams(window.location.search).get("invitation")
         : null;
     // Reihenfolge: Invitation > expliziter Sponsor-Signup > Default-Signup > Login.
+    // Sponsor-Signup MUSS auf /sponsor/onboarding gehen (Profil-Wizard) und
+    // nicht auf /sponsor — sonst landet der User auf einem leeren Dashboard
+    // ohne Sponsor-Profil und die Page redirected ihn potentiell hin und her.
     const callbackURL = invitationToken
       ? `/sponsor/onboarding?invitation=${invitationToken}`
       : mode === "signup"
         ? role === "sponsor"
-          ? "/sponsor"
+          ? "/sponsor/onboarding"
           : "/onboarding/verein/1"
         : "/dashboard"; // rollenbasiert weiterleiten
 

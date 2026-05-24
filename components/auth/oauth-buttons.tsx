@@ -7,10 +7,17 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 interface OAuthButtonsProps {
-  /** Login → /sponsor, Signup → /onboarding/verein/1 */
+  /** Login → /dashboard (Smart-Dispatcher), Signup → wizard für `role`. */
   mode: "login" | "signup";
   /** Welche Provider verfügbar sind (Server-side bestimmt). */
   enabled: { google: boolean; apple: boolean };
+  /**
+   * Rolle aus dem `/signup?role=X`-Param. Bestimmt das OAuth-Callback-Ziel:
+   *  - `sponsor` → `/sponsor/onboarding` (Sponsor-Profil-Wizard)
+   *  - `mannschaft` / `verein` → `/onboarding/verein/1`
+   *  - undefined (z.B. login) → fallback `/dashboard`
+   */
+  role?: "mannschaft" | "verein" | "sponsor" | null;
 }
 
 /**
@@ -22,7 +29,7 @@ interface OAuthButtonsProps {
  * steht, wird der nach OAuth-Auth direkt ins Sponsor-Onboarding mitgeführt —
  * sonst landet der User auf einem leeren `/sponsor` Dashboard ohne Profil.
  */
-export function OAuthButtons({ mode, enabled }: OAuthButtonsProps) {
+export function OAuthButtons({ mode, enabled, role }: OAuthButtonsProps) {
   const params = useSearchParams();
   const invitationToken = params.get("invitation");
   const [pending, setPending] = useState<"google" | "apple" | null>(null);
@@ -32,7 +39,9 @@ export function OAuthButtons({ mode, enabled }: OAuthButtonsProps) {
   const callbackURL = invitationToken
     ? `/sponsor/onboarding?invitation=${invitationToken}`
     : mode === "signup"
-      ? "/onboarding/verein/1"
+      ? role === "sponsor"
+        ? "/sponsor/onboarding"
+        : "/onboarding/verein/1"
       : "/dashboard"; // rollenbasiert weiterleiten
 
   async function handleSocial(provider: "google" | "apple") {

@@ -1,11 +1,37 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
+import { db } from "@/lib/db/client";
+import { sponsors } from "@/lib/db/schema";
 import { SponsorTypeForm } from "./_components/sponsor-type-form";
 
 export const metadata = { title: "Sponsor-Profil · KickPact" };
 
-export default async function SponsorOnboardingPage() {
-  await requireUser();
+export default async function SponsorOnboardingPage({
+  searchParams
+}: {
+  searchParams: Promise<{ invitation?: string }>;
+}) {
+  const user = await requireUser();
+  const { invitation } = await searchParams;
+
+  // ── Skip-If-Profile-Exists ────────────────────────────────────────────────
+  // Sponsor mit fertigem Profil soll niemals erneut die "Familie oder
+  // Unternehmen?"-Frage sehen — sonst Duplicate-Insert beim Submit.
+  const [existing] = await db
+    .select({ id: sponsors.id })
+    .from(sponsors)
+    .where(eq(sponsors.userId, user.id))
+    .limit(1);
+  if (existing) {
+    redirect(
+      invitation
+        ? `/sponsor/pledge/new?invitation=${invitation}`
+        : "/sponsor"
+    );
+  }
+
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
