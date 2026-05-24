@@ -96,10 +96,13 @@ export default async function AboPage({
             </div>
             <div className="mt-2 md:mt-3 flex items-baseline gap-2">
               <span className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
-                {(plan.amountCents / 100).toLocaleString("de-DE", {
-                  style: "currency",
-                  currency: "EUR"
-                })}
+                {(plan.cycles.monthly.amountCents / 100).toLocaleString(
+                  "de-DE",
+                  {
+                    style: "currency",
+                    currency: "EUR"
+                  }
+                )}
               </span>
               <span className="text-xs text-brand-night-navy/60">
                 / {plan.unit === "team" ? "Mannschaft" : "Verein"} / Monat

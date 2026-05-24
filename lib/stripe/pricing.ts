@@ -1,73 +1,177 @@
 /**
- * Pricing-Tabelle synchron zur Landing — pro Plan eine Stripe-Price-ID + Metadata.
+ * Pricing-Tabelle synchron zu docs/pricing.md (Source of Truth) und /preise-Page.
+ *
+ * 3 Tiers (basic / pro / verein) × 3 Billing-Cycles (monthly / season / annual)
+ * = 9 Stripe-Price-IDs.
  *
  * Stripe-Setup:
- * - Produkt: "KickPact Basic" (recurring), 9 €/Monat → STRIPE_BASIC_PRICE_ID
- * - Produkt: "KickPact Pro" (recurring), 19 €/Monat → STRIPE_PRO_PRICE_ID
- * - Produkt: "KickPact Vereinslizenz" (recurring), 49 €/Monat → STRIPE_VEREIN_PRICE_ID
+ * - Pro Plan + Billing-Cycle eine eigene Stripe-Price-ID, Env-Variable folgt
+ *   dem Muster STRIPE_<PLAN>_<CYCLE>_PRICE_ID, z.B. STRIPE_PRO_SEASON_PRICE_ID.
  *
  * Trial: 30 Tage (in Stripe Subscription oder via subscription_data.trial_period_days).
  */
 export type PlanKey = "basic" | "pro" | "verein";
+export type BillingCycle = "monthly" | "season" | "annual";
+
+export interface CyclePrice {
+  /** Voll-Preis in Cent (z.B. 14900 = 149 €). */
+  amountCents: number;
+  /** Display-Anzeige: was groß steht. */
+  display: string;
+  /** Sub-Anzeige: kleinerer Kontext (z.B. effektiv pro Monat). */
+  caption: string;
+  /** Optionaler Spar-Badge ("~22 % sparen"). */
+  saveBadge?: string;
+}
 
 export interface PlanDefinition {
   key: PlanKey;
   label: string;
-  amountCents: number;
+  tagline: string;
   unit: "team" | "club";
+  /** Pro Billing-Cycle ein Preis-Eintrag. */
+  cycles: Record<BillingCycle, CyclePrice>;
+  /** Highlight-Features für die Pricing-Card (5–6 Zeilen). */
   features: string[];
+  /** Pro Tier optionale Sub-Notiz (z.B. "Unter 1 € pro Spieler"). */
+  note?: string;
+  cta: string;
 }
 
 export const PLANS: Record<PlanKey, PlanDefinition> = {
   basic: {
     key: "basic",
-    label: "Mannschaft Basic",
-    amountCents: 900,
+    label: "Basic",
+    tagline: "Zum Reinkommen.",
     unit: "team",
+    cycles: {
+      monthly: {
+        amountCents: 500,
+        display: "5 €",
+        caption: "/ Mannschaft / Monat"
+      },
+      season: {
+        amountCents: 3900,
+        display: "39 €",
+        caption: "/ Saison · 3,90 €/Mon",
+        saveBadge: "~22 % sparen"
+      },
+      annual: {
+        amountCents: 4900,
+        display: "49 €",
+        caption: "/ Jahr · 4,08 €/Mon",
+        saveBadge: "~18 % sparen"
+      }
+    },
     features: [
-      "Eine Mannschaft, eigenständig verwaltet",
-      "Bis zu 20 Sponsoren",
-      "Alle Auto- + Manuelle Trigger",
+      "Alle Auto-Trigger (10 Typen) + Manual-Trigger",
+      "Bis zu 5 Sponsoren, 3 Pledge-Rules pro Sponsor",
+      "Fußball.de-Crawler alle 6h",
       "Monatliche PDF-Rechnung",
-      "30 Tage gratis"
-    ]
+      "Sponsor-Einladungslinks",
+      "30 Tage gratis · 0 % Provision"
+    ],
+    cta: "Basic testen"
   },
   pro: {
     key: "pro",
-    label: "Mannschaft Pro",
-    amountCents: 1900,
+    label: "Pro",
+    tagline: "Sponsoring, das mitfiebert.",
     unit: "team",
+    cycles: {
+      monthly: {
+        amountCents: 1900,
+        display: "19 €",
+        caption: "/ Mannschaft / Monat"
+      },
+      season: {
+        amountCents: 14900,
+        display: "149 €",
+        caption: "/ Saison · 14,90 €/Mon",
+        saveBadge: "~22 % sparen"
+      },
+      annual: {
+        amountCents: 18900,
+        display: "189 €",
+        caption: "/ Jahr · 15,75 €/Mon",
+        saveBadge: "~17 % sparen"
+      }
+    },
     features: [
-      "Unlimited Sponsoren",
-      "Mannschafts-Logo auf PDF",
-      "Custom Trigger-Texte",
-      "Saison-Wetten",
-      "CSV-Export + Sponsor-Stats",
-      "30 Tage gratis"
-    ]
+      "Alles aus Basic, plus:",
+      "∞ Sponsoren · ∞ Pledge-Rules · ∞ Historie",
+      "Saison-Wetten + Custom-Trigger-Texte",
+      "Vereins-Logo auf PDF · Vereins-Mail-Absender",
+      "Pledge-Discovery, Embed-Widget, Newsletter",
+      "CSV-Export, Sponsor-Stats, Saison-Recap-PDF"
+    ],
+    cta: "Pro auswählen"
   },
   verein: {
     key: "verein",
     label: "Vereinslizenz",
-    amountCents: 4900,
+    tagline: "Der ganze Verein. Ein Tarif.",
     unit: "club",
+    cycles: {
+      monthly: {
+        amountCents: 4900,
+        display: "49 €",
+        caption: "/ Verein / Monat"
+      },
+      season: {
+        amountCents: 38900,
+        display: "389 €",
+        caption: "/ Saison · 38,90 €/Mon",
+        saveBadge: "~21 % sparen"
+      },
+      annual: {
+        amountCents: 48900,
+        display: "489 €",
+        caption: "/ Jahr · 40,75 €/Mon",
+        saveBadge: "~17 % sparen"
+      }
+    },
     features: [
-      "Alle Mannschaften des Vereins",
-      "Master-Admin zentral",
-      "Pro-Features für jedes Team",
-      "Konsolidierte Rechnung",
-      "Übergreifende Sponsor-Übersicht"
-    ]
+      "Alles aus Pro, plus:",
+      "∞ Mannschaften unter einer Lizenz",
+      "Master-Admin-Cockpit + bis zu 10 Admins",
+      "Konsolidierte Sammelrechnung",
+      "Cross-Team-Sponsor-View",
+      "Vereins-aggregiertes Saison-Recap"
+    ],
+    note: "Unter 1 € pro Spieler bei 50-Mann-Verein.",
+    cta: "Verein anlegen"
   }
 };
 
-export function getStripePriceId(plan: PlanKey): string | null {
-  const map: Record<PlanKey, string | undefined> = {
-    basic: process.env.STRIPE_BASIC_PRICE_ID,
-    pro: process.env.STRIPE_PRO_PRICE_ID,
-    verein: process.env.STRIPE_VEREIN_PRICE_ID
-  };
-  return map[plan] ?? null;
+/** Geordnete Liste für UI-Iteration (Basic → Pro → Vereinslizenz). */
+export const PLAN_ORDER: PlanKey[] = ["basic", "pro", "verein"];
+
+/** Geordnete Liste für UI-Iteration (Monatlich → Saison-Pass → Annual). */
+export const CYCLE_ORDER: BillingCycle[] = ["monthly", "season", "annual"];
+
+export const CYCLE_LABELS: Record<BillingCycle, string> = {
+  monthly: "Monatlich",
+  season: "Saison-Pass",
+  annual: "Annual"
+};
+
+export const CYCLE_SUBLABELS: Record<BillingCycle, string> = {
+  monthly: "monatlich kündbar",
+  season: "Aug–Mai · 2 Mon. geschenkt",
+  annual: "12 Mon. · ~2 Mon. geschenkt"
+};
+
+/** Default-Auswahl im Wizard und auf der Pricing-Page. */
+export const DEFAULT_CYCLE: BillingCycle = "season";
+
+export function getStripePriceId(
+  plan: PlanKey,
+  cycle: BillingCycle = "monthly"
+): string | null {
+  const envKey =
+    `STRIPE_${plan.toUpperCase()}_${cycle.toUpperCase()}_PRICE_ID` as const;
+  return process.env[envKey] ?? null;
 }
 
 export const TRIAL_DAYS = 30;

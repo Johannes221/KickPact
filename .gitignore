@@ -31,6 +31,9 @@ reference/
 # inngest dev
 .inngest/
 
+# claude code agent worktrees (lokal, isoliert)
+.claude/worktrees/
+
 # typescript incremental build cache
 *.tsbuildinfo
 

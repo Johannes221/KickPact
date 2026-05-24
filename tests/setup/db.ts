@@ -3,6 +3,7 @@ import {
   users,
   clubs,
   clubMemberships,
+  clubMembershipRequests,
   teamMemberships,
   teams,
   sponsors,
@@ -37,6 +38,7 @@ export async function resetTestDb() {
   await db.delete(subscriptions);
   await db.delete(players);
   await db.delete(teamMemberships);
+  await db.delete(clubMembershipRequests);
   await db.delete(clubMemberships);
   await db.delete(teams);
   await db.delete(clubs);

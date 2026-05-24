@@ -129,8 +129,9 @@ erDiagram
 | `charges` | `id`, `pledge_id` FK, `pledge_rule_id` FK, `match_id` FK, `match_event_id` FK (nullable), `amount_cents`, `status` (`pending_approval`\|`confirmed`\|`invoiced`\|`cancelled`), `created_at`, `confirmed_at`, UNIQUE (`pledge_rule_id`, `match_event_id`), UNIQUE (`pledge_rule_id`, `match_id`, `trigger_type`) für match-level triggers |
 | `invoices` | `id`, `sponsor_id` FK, `club_id` FK, `period` (YYYY-MM), `total_cents`, `pdf_url`, `status` (`draft`\|`sent`\|`paid`), `sent_at`, `paid_marked_at`, `paid_marked_by` |
 | `invoice_items` | `id`, `invoice_id` FK, `charge_id` FK, `description`, `amount_cents` |
-| `subscriptions` | `club_id` FK PK, `stripe_customer_id`, `stripe_subscription_id`, `status`, `trial_ends_at` |
-| `team_licenses` | `id`, `subscription_id` FK, `team_id` FK, `plan` (`basic`\|`pro`), `stripe_subscription_item_id`, `status` (`trialing`\|`active`\|`past_due`\|`cancelled`\|`read_only`), `activated_at` |
+| `subscriptions` | `club_id` FK PK, `stripe_customer_id`, `stripe_subscription_id`, `status`, `trial_ends_at`, `billing_cycle` (`monthly`\|`season`\|`annual`), `paused_until` (nullable timestamp, für Saison-Pass Sommerpause Jun/Jul) |
+| `team_licenses` | `id`, `subscription_id` FK, `team_id` FK, `plan` (`basic`\|`pro`\|`verein`), `stripe_subscription_item_id`, `status` (`trialing`\|`active`\|`past_due`\|`cancelled`\|`read_only`\|`paused`), `activated_at` |
+| `seasons` | `id`, `code` (z.B. `2627`), `starts_at` (1.8.), `ends_at` (31.5.), `matchday_5_at` (Saison-Pass + Saison-Wetten Cutoff, ca. Mitte Sep), optional `region`/`liga`-Scoping |
 | `players` | `id`, `team_id` FK, `fussballde_player_id`, `name` |
 
 ### 5.2 Constraints + Indizes
@@ -304,27 +305,38 @@ Verein-Admin: /verein/[slug]/abrechnungen → "Als bezahlt markieren"
 
 ### 6.8 KickPact-Abo
 
-**Pricing-Modell (3 Plans):**
+> **Source of Truth ab 2026-05-22:** siehe [docs/pricing.md](../../pricing.md). Dieser Abschnitt ist Zusammenfassung.
 
-| Plan | Preis | Scope | Verwaltung |
-|---|---|---|---|
-| Mannschaft Basic | 9 €/Mannschaft/Monat | eine Mannschaft, bis 20 Sponsoren | Trainer/Betreuer eigenständig |
-| Mannschaft Pro | 19 €/Mannschaft/Monat | eine Mannschaft, unlimited Sponsoren, Saison-Wetten, Custom-Trigger | Trainer/Betreuer eigenständig |
-| Vereinslizenz | 49 €/Verein/Monat | **alle Mannschaften des Vereins**, alle Pro-Features | Master-Admin verwaltet zentral |
+**Pricing-Modell (3 Tiers × 3 Billing-Cycles, 0 % Provision auf allen Tiers):**
+
+| Tier | Monatlich | Saison-Pass (Aug–Mai) | Annual (12 Mon) | Scope |
+|---|---|---|---|---|
+| **Basic** | 5 €/Mannschaft | 39 €/Saison (~3,90 €/Mon) | 49 €/Jahr | 1 Mannschaft, max 5 Sponsoren, max 3 Pledge-Rules/Sponsor |
+| **Pro** ⭐ | 19 €/Mannschaft | 149 €/Saison (~14,90 €/Mon) | 189 €/Jahr | 1 Mannschaft, ∞ Sponsoren, Saison-Wetten, Custom-Trigger, Vereins-Logo+Mail, Discovery, Stats, Export |
+| **Vereinslizenz** | 49 €/Verein | 389 €/Saison (~38,90 €/Mon) | 489 €/Jahr | **alle Mannschaften des Vereins**, alle Pro-Features, Master-Admin-Cockpit, konsolidierte Rechnung |
+
+**Headline:** *„100 % deiner Pledges bleiben bei dir. KickPact verdient an Lizenzen, nicht an Provisionen."*
 
 Default-Sprache: Onboarding/UI sagt "Mannschaft anlegen", weil jede Mannschaft
 bei KickPact eigenständig ist (eigene Sponsoren, eigene Pledges, eigene
 Rechnungen). Nur bei der Vereinslizenz gibt es einen `club.master_admin_user_id`
 der alle Mannschafts-Lizenzen unter einer Subscription bündelt.
 
+**Billing-Cycles:**
+- **Monatlich** — kein Commitment, jederzeit kündbar.
+- **Saison-Pass (Aug–Mai)** — ~ 8× Monatspreis = 2 Monate geschenkt. Juni/Juli automatisch kostenlos pausiert (`subscriptions.paused_until = next_aug_1`). Renewal zum 1.8., Kündigungsrecht bis 1.7. **Kauf-Cutoff: 5. Spieltag der laufenden Saison** (`seasons.matchday_5_at`), danach nur Monatsabo bis zur Folgesaison. Default-Empfehlung im Wizard.
+- **Annual (12 Monate ganzjährig)** — ~2 Monate geschenkt. Für Hallenfußball/Veteranen/ganzjährige Setups, keine Sommerpause.
+
 **Vereinslizenz-spezifika:**
 - DB: `team_licenses.parent_club_license_id` (nullable) — wenn gesetzt, ist
   diese Team-Lizenz Teil einer Vereinslizenz und wird nicht einzeln berechnet.
 - Stripe: eine Subscription pro Verein mit Item "vereinslizenz" (49 €/Monat
-  flat). Einzelne Mannschafts-Items entfallen, solange Vereinslizenz aktiv ist.
+  flat, alternativ Saison-Pass 389 € oder Annual 489 €). Einzelne
+  Mannschafts-Items entfallen, solange Vereinslizenz aktiv ist.
 - UI: Vereinslizenz-Inhaber bekommt ein zusätzliches `/verein/[slug]/admin`
   Cockpit mit Übersicht aller Mannschaften, Konsolidierter Rechnungs-Liste,
   und Sponsor-Cross-Listing (welcher Sponsor unterstützt welche Teams).
+- Break-Even: ab **3 Mannschaften** günstiger als 3× Pro (49 € vs. 57 €/Mon).
 
 **Trial + Lifecycle:**
 
@@ -342,6 +354,15 @@ Bei past_due / cancelled:
     * KEINE neuen PDFs (bestehende bleiben sichtbar)
     * Sponsoren sehen "Mannschaft pausiert"
   - Reaktivierung mit Zahlung
+
+Saison-Pass-Sommerpause (Jun/Jul):
+  - Cron 1.6.: alle Saison-Pass-Subscriptions → status=paused,
+    paused_until = next_aug_1, team_licenses.status=paused
+  - Crawler stoppt für pausierte Teams (keine Charges, keine Mails)
+  - UI: Banner "Sommerpause aktiv — kostenlos, automatisch reaktiviert am 1.8."
+  - Daten + PDFs bleiben sichtbar, keine Abbuchung
+  - Cron 1.8.: paused_until erreicht → status=active, Crawler nimmt Betrieb auf
+  - Annual + Monatsabo sind davon NICHT betroffen (laufen ganzjährig).
 ```
 
 ### 6.9 Saison-Ende
@@ -439,12 +460,17 @@ DB-Erweiterungen:
 
 ### 8.4 Pricing-Stufen
 
-| Plan | Preis | Sponsoren-Slots | Features |
-|---|---|---|---|
-| **Basic** | 9 €/Monat pro Mannschaft | 20 Sponsoren pro Mannschaft | Alle Auto-Trigger, Manual Events, monatliches PDF, alle Standard-Custom-Trigger |
-| **Pro** | 19 €/Monat pro Mannschaft | unlimited pro Mannschaft | Basic + Vereins-Logo auf PDF, CSV-Export, eigene Custom-Trigger-Texte, Sponsor-Stats-Widgets |
+> **Source of Truth ab 2026-05-22:** siehe [docs/pricing.md](../../pricing.md). Dieser Abschnitt ist Zusammenfassung.
 
-Trial: 30 Tage für die **erste** aktivierte Mannschaft.
+3 Tiers × 3 Billing-Cycles, **0 % Provision** auf allen Tiers, **30 Tage Trial** für die erste aktivierte Mannschaft.
+
+| Tier | Monatlich | Saison-Pass (Aug–Mai) | Annual | Sponsoren-Slots | Highlights |
+|---|---|---|---|---|---|
+| **Basic** | 5 €/Mannschaft | 39 € | 49 € | max 5 / Mannschaft | Auto- + Manual-Trigger, monatliche PDF mit KickPact-Footer, max 3 Pledge-Rules/Sponsor |
+| **Pro** ⭐ | 19 €/Mannschaft | 149 € | 189 € | ∞ / Mannschaft | Basic + Saison-Wetten, Custom-Trigger-Texte, Vereins-Logo auf PDF, Vereins-Mail-Absender, Pledge-Discovery, Embed-Widget, Sponsor-Newsletter, CSV/Excel-Export, Saison-Recap-PDF, Stats-Widgets |
+| **Vereinslizenz** | 49 €/Verein | 389 € | 489 € | ∞ / Mannschaft, **∞ Mannschaften** | Pro + Master-Admin-Cockpit, konsolidierte Monats-Rechnung, Cross-Team-Sponsor-View, Multi-Admin (10), aggregiertes Saison-Recap. Break-Even ab 3 Mannschaften vs. 3× Pro. |
+
+**Saison-Pass-Logik:** Aug–Mai aktiv, Jun/Jul automatisch kostenlos pausiert (~2 Monate geschenkt). Kauf-Cutoff = **5. Spieltag** der laufenden Saison — gleicher Cutoff für Saison-Wetten-Buchung. Default-Empfehlung im Onboarding-Wizard.
 
 ### 8.5 Marketing-Hooks (Microcopy für Landing, Onboarding, Sales)
 
@@ -527,8 +553,15 @@ GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET
 STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET
-STRIPE_BASIC_PRICE_ID                 # pro Mannschaft, Basic
-STRIPE_PRO_PRICE_ID                   # pro Mannschaft, Pro
+STRIPE_BASIC_MONTHLY_PRICE_ID         # Basic, 5 €/Mannschaft/Monat
+STRIPE_BASIC_SEASON_PRICE_ID          # Basic, 39 €/Saison-Pass (Aug–Mai)
+STRIPE_BASIC_ANNUAL_PRICE_ID          # Basic, 49 €/Jahr
+STRIPE_PRO_MONTHLY_PRICE_ID           # Pro, 19 €/Mannschaft/Monat
+STRIPE_PRO_SEASON_PRICE_ID            # Pro, 149 €/Saison-Pass
+STRIPE_PRO_ANNUAL_PRICE_ID            # Pro, 189 €/Jahr
+STRIPE_VEREIN_MONTHLY_PRICE_ID        # Vereinslizenz, 49 €/Verein/Monat
+STRIPE_VEREIN_SEASON_PRICE_ID         # Vereinslizenz, 389 €/Saison-Pass
+STRIPE_VEREIN_ANNUAL_PRICE_ID         # Vereinslizenz, 489 €/Jahr
 INNGEST_EVENT_KEY
 INNGEST_SIGNING_KEY
 RESEND_API_KEY

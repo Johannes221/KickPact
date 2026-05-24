@@ -8,6 +8,10 @@ import { users } from "./auth";
 
 export const memberRoleEnum = pgEnum("member_role", ["admin", "trainer", "viewer"]);
 export const teamMemberRoleEnum = pgEnum("team_member_role", ["trainer", "viewer"]);
+export const clubMembershipRequestStatusEnum = pgEnum(
+  "club_membership_request_status",
+  ["pending", "approved", "rejected"]
+);
 
 export const clubs = pgTable(
   "clubs",
@@ -107,5 +111,31 @@ export const teamMemberships = pgTable(
   (t) => ({
     pk: primaryKey({ columns: [t.userId, t.teamId] }),
     teamIdx: index("team_memberships_team_idx").on(t.teamId)
+  })
+);
+
+export const clubMembershipRequests = pgTable(
+  "club_membership_requests",
+  {
+    id: text("id").primaryKey().$defaultFn(() => createId()),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    clubId: text("club_id").notNull().references(() => clubs.id, { onDelete: "cascade" }),
+    requestedRole: memberRoleEnum("requested_role").notNull(),
+    requestedTeamId: text("requested_team_id").references(() => teams.id, { onDelete: "cascade" }),
+    message: text("message"),
+    status: clubMembershipRequestStatusEnum("status").notNull().default("pending"),
+    responseMessage: text("response_message"),
+    respondedAt: timestamp("responded_at", { withTimezone: true }),
+    respondedByUserId: text("responded_by_user_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+  },
+  (t) => ({
+    // Partial unique index: only one OPEN (pending) request per user/club/team
+    // combination. Once resolved (approved/rejected) the user can request again.
+    uniquePending: uniqueIndex("club_request_unique_pending_idx")
+      .on(t.userId, t.clubId, t.requestedTeamId)
+      .where(sql`${t.status} = 'pending'`),
+    // Admin-inbox query: list pending requests for a given club.
+    clubStatusIdx: index("club_request_club_status_idx").on(t.clubId, t.status)
   })
 );
