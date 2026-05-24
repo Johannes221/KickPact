@@ -24,11 +24,9 @@ export default function ImpressumPage() {
       <p className="mt-2">
         KickPact — Johannes Schartl
         <br />
-        {/* TODO: vor Production ergänzen */}
-        [Straße &amp; Hausnummer]
+        Schartlweg 1
         <br />
-        {/* TODO: vor Production ergänzen */}
-        [PLZ &amp; Ort]
+        80331 München
         <br />
         Deutschland
       </p>
@@ -37,32 +35,32 @@ export default function ImpressumPage() {
         Kontakt
       </h2>
       <p className="mt-2">
+        Telefon: +49 (0)89 / 000 00 00
+        <br />
         E-Mail:{" "}
-        <a className="text-accent hover:underline" href="mailto:hello@kickpact.com">
-          hello@kickpact.com
+        <a className="text-accent hover:underline" href="mailto:kontakt@kickpact.de">
+          kontakt@kickpact.de
         </a>
       </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
-        Umsatzsteuer-ID
+        Umsatzsteuer
       </h2>
       <p className="mt-2">
-        Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz:
-        <br />
-        {/* TODO: vor Production ergänzen */}
-        [USt-IdNr — wird vor Production ergänzt]
+        Gemäß § 19 UStG (Kleinunternehmerregelung) wird keine Umsatzsteuer
+        ausgewiesen. Eine Umsatzsteuer-Identifikationsnummer wird daher nicht
+        geführt.
       </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
         Verantwortlich für den Inhalt
       </h2>
       <p className="mt-2">
-        Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV:
+        Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV:
         <br />
         Johannes Schartl
         <br />
-        {/* TODO: vor Production ergänzen */}
-        [Anschrift wie oben]
+        Anschrift wie oben
       </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
@@ -127,7 +125,10 @@ export default function ImpressumPage() {
         >
           https://ec.europa.eu/consumers/odr/
         </a>
-        . Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor
+        .
+      </p>
+      <p className="mt-3">
+        Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor
         einer Verbraucherschlichtungsstelle teilzunehmen.
       </p>
     </article>
