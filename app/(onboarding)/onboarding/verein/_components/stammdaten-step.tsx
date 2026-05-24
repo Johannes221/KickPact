@@ -15,6 +15,7 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { clubStammdatenSchema, type ClubStammdaten } from "@/lib/validations/club";
+import { track } from "@/lib/analytics/track";
 
 export function StammdatenStep() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export function StammdatenStep() {
   });
 
   function onSubmit(values: ClubStammdaten) {
+    track("verein_onboarding_step3_completed");
     const next = new URLSearchParams(params.toString());
     next.set("contactName", values.contactName);
     next.set("street", values.street);

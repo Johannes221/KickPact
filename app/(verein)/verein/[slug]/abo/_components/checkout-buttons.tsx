@@ -8,6 +8,7 @@ import {
   createCustomerPortalSession
 } from "@/lib/actions/subscriptions";
 import type { PlanKey, BillingCycle } from "@/lib/stripe/pricing";
+import { track } from "@/lib/analytics/track";
 
 interface Props {
   clubSlug: string;
@@ -31,6 +32,14 @@ export function CheckoutButtons({ clubSlug, plan, stripeReady, currentStatus, cy
 
   async function handleCheckout() {
     setBusy("checkout");
+    // Conversion-Event vor dem (server-side) Checkout-Aufruf — der ist
+    // potentiell lang (Stripe-Roundtrip + Redirect), wir wollen den
+    // Funnel-Hit auch bei langsamer Verbindung sehen.
+    track("stripe_checkout_started", {
+      plan,
+      hasSubscription: !!currentStatus,
+      isTrialing: currentStatus === "trialing"
+    });
     startTransition(async () => {
       try {
         const { url } = await createCheckoutSession({ clubSlug, plan, cycle });

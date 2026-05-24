@@ -16,6 +16,7 @@ import {
 } from "@/lib/stripe/pricing";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { track } from "@/lib/analytics/track";
 
 // ---------------------------------------------------------------------------
 // Comparison-Matrix-Daten (aus docs/pricing.md §5 abgeleitet, redaktionell
@@ -207,7 +208,13 @@ export function PricingToggle() {
                 key={c}
                 role="tab"
                 aria-selected={active}
-                onClick={() => setCycle(c)}
+                onClick={() => {
+                  setCycle(c);
+                  track("pricing_cycle_switched", {
+                    cycle: c,
+                    surface: "pricing_page"
+                  });
+                }}
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 rounded-xl px-4 md:px-5 py-2.5 md:py-2 text-sm font-semibold transition-all w-full md:w-auto",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
@@ -367,7 +374,12 @@ function PriceCard({
           size="lg"
           asChild
         >
-          <Link href={`/onboarding/verein/1?plan=${planKey}&cycle=${cycle}`}>
+          <Link
+            href={`/onboarding/verein/1?plan=${planKey}&cycle=${cycle}`}
+            onClick={() =>
+              track("pricing_tier_clicked", { tier: planKey, cycle })
+            }
+          >
             {plan.cta}
           </Link>
         </Button>

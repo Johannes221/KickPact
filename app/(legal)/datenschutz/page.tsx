@@ -151,6 +151,12 @@ export default function DatenschutzPage() {
               <td className="p-2 border border-brand-neutral/40">CDN für statische Assets, R2-Object-Storage für PDF-Rechnungen</td>
               <td className="p-2 border border-brand-neutral/40">SCC + DPF</td>
             </tr>
+            <tr>
+              <td className="p-2 border border-brand-neutral/40">Plausible Insights OÜ</td>
+              <td className="p-2 border border-brand-neutral/40">Estland (Hosting Deutschland, Hetzner Falkenstein)</td>
+              <td className="p-2 border border-brand-neutral/40">Cookiefreie Webanalyse (siehe Abschnitt 7)</td>
+              <td className="p-2 border border-brand-neutral/40">EU-Hosting, kein Drittlandtransfer</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -235,7 +241,44 @@ export default function DatenschutzPage() {
       </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
-        7. Deine Rechte
+        7. Webanalyse (Plausible Analytics)
+      </h2>
+      <p className="mt-2">
+        Wir nutzen{" "}
+        <a
+          className="text-accent hover:underline"
+          href="https://plausible.io/privacy-focused-web-analytics"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Plausible Analytics
+        </a>
+        , eine cookiefreie und DSGVO-konforme Webanalyse-Lösung. Es werden{" "}
+        <strong>keine personenbezogenen Daten</strong> gespeichert; nur
+        aggregierte Zugriffszahlen (Seitenaufrufe, Quellen, Geräte-Typen,
+        anonyme Conversion-Events wie „Signup begonnen" oder „Pledge angelegt").
+        Plausible setzt keine Cookies, erzeugt kein Geräte-Fingerprinting und
+        verfolgt Nutzer nicht über Websites hinweg. Server-Standort: Deutschland
+        (Hetzner Online GmbH, Falkenstein).
+      </p>
+      <p className="mt-3">
+        <strong>Rechtsgrundlage</strong> ist Art. 6 Abs. 1 lit. f DSGVO
+        (berechtigtes Interesse an der Verbesserung der eigenen Website ohne
+        invasive Tracking-Maßnahmen). Da keine personenbezogenen Daten
+        verarbeitet werden, ist keine Einwilligung erforderlich. Mehr Details:{" "}
+        <a
+          className="text-accent hover:underline"
+          href="https://plausible.io/data-policy"
+          target="_blank"
+          rel="noreferrer"
+        >
+          plausible.io/data-policy
+        </a>
+        .
+      </p>
+
+      <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+        8. Deine Rechte
       </h2>
       <p className="mt-2">
         Nach DSGVO stehen dir folgende Rechte zu:
@@ -267,7 +310,7 @@ export default function DatenschutzPage() {
       </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
-        8. Speicherdauer
+        9. Speicherdauer
       </h2>
       <p className="mt-2">
         Account-Daten werden gespeichert, solange dein KickPact-Account aktiv ist.
@@ -277,7 +320,7 @@ export default function DatenschutzPage() {
       </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
-        9. Änderungen dieser Erklärung
+        10. Änderungen dieser Erklärung
       </h2>
       <p className="mt-2">
         Wir aktualisieren diese Datenschutzerklärung gelegentlich, um Änderungen

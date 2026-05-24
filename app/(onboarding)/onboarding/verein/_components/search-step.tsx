@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { searchVereineAction } from "../_actions/search";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics/track";
 
 type VereinHit = {
   name: string;
@@ -46,6 +47,7 @@ export function SearchStep() {
   }
 
   function selectVerein(v: VereinHit) {
+    track("verein_onboarding_step1_completed");
     const params = new URLSearchParams({
       vereinId: v.vereinId,
       slug: v.slug,
