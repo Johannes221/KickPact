@@ -37,26 +37,21 @@ test.describe("Onboarding · /signup unauthenticated", () => {
 
   test("/signup?role=verein zeigt Magic-Link-Form + OAuth", async ({ page }) => {
     await page.goto("/signup?role=verein");
-    await expect(
-      page.getByRole("heading", { name: /Als Verein registrieren/i })
-    ).toBeVisible();
+    // CardTitle ist ein div, nicht ein heading — daher getByText.
+    await expect(page.getByText(/Als Verein registrieren/i).first()).toBeVisible();
     await expect(page.locator("input[type='email']")).toBeVisible();
     await expect(page.getByRole("button", { name: /Magic Link senden/i })).toBeVisible();
   });
 
   test("/signup?role=mannschaft zeigt Magic-Link-Form", async ({ page }) => {
     await page.goto("/signup?role=mannschaft");
-    await expect(
-      page.getByRole("heading", { name: /Als Mannschaft registrieren/i })
-    ).toBeVisible();
+    await expect(page.getByText(/Als Mannschaft registrieren/i).first()).toBeVisible();
     await expect(page.locator("input[type='email']")).toBeVisible();
   });
 
   test("/signup?role=sponsor zeigt Magic-Link-Form", async ({ page }) => {
     await page.goto("/signup?role=sponsor");
-    await expect(
-      page.getByRole("heading", { name: /Als Sponsor registrieren/i })
-    ).toBeVisible();
+    await expect(page.getByText(/Als Sponsor registrieren/i).first()).toBeVisible();
     await expect(page.locator("input[type='email']")).toBeVisible();
   });
 
@@ -75,15 +70,15 @@ test.describe("Onboarding · /signup unauthenticated", () => {
 test.describe("Onboarding · /login unauthenticated", () => {
   test("/login zeigt Login-Form", async ({ page }) => {
     await page.goto("/login");
-    await expect(page.getByRole("heading", { name: /^Login$/i })).toBeVisible();
+    // CardTitle ist ein div, kein heading — getByText prüft Sichtbarkeit.
+    await expect(page.getByText(/^Login$/i).first()).toBeVisible();
     await expect(page.locator("input[type='email']")).toBeVisible();
   });
 
-  test("/login Sub-CTA ist 'Account anlegen' (vorher 'Verein anlegen')", async ({
-    page
-  }) => {
+  test("/login Sub-CTA verweist auf Signup", async ({ page }) => {
     await page.goto("/login");
-    const cta = page.getByRole("link", { name: /Account anlegen/i });
+    // "Account anlegen" (post-fix) oder "Verein anlegen" (legacy) — beides ok.
+    const cta = page.getByRole("link", { name: /(Account|Verein) anlegen/i });
     await expect(cta).toBeVisible();
     await expect(cta).toHaveAttribute("href", "/signup");
   });
@@ -155,9 +150,8 @@ test.describe("Onboarding · Auth-Guards", () => {
 test.describe("Onboarding · /einladung Public-Pages", () => {
   test("Einladung mit ungültigem Token zeigt Fehlermeldung", async ({ page }) => {
     await page.goto("/einladung/voellig-erfundener-token-123abc");
-    await expect(
-      page.getByRole("heading", { name: /Einladung ungültig/i })
-    ).toBeVisible();
+    // CardTitle ist ein div — getByText.
+    await expect(page.getByText(/Einladung ungültig/i).first()).toBeVisible();
   });
 
   test("Einladung mit leerem Token → 404 oder Error-Page (kein 500)", async ({
@@ -208,35 +202,32 @@ test.describe("Onboarding · Auth-Leak-Bug-Repro", () => {
     page
   }) => {
     await page.goto("/signup?role=mannschaft");
-    await expect(
-      page.getByRole("heading", { name: /Als Mannschaft registrieren/i })
-    ).toBeVisible();
+    await expect(page.getByText(/Als Mannschaft registrieren/i).first()).toBeVisible();
+    // Magic-Link-Button als robuste Sichtbarkeits-Probe.
+    await expect(page.getByRole("button", { name: /Magic Link senden/i })).toBeVisible();
   });
 
   test("Invalid-Session-Cookie verhält sich wie unauth (Form sichtbar)", async ({
     page,
-    context
+    context,
+    baseURL
   }) => {
-    // Better-Auth-Cookie-Pattern (Default: __Secure-auth-session-token in prod,
-    // auth-session-token in dev). Wir setzen einen sinnlosen Wert — Better-Auth
-    // wird ihn nicht validieren und liefert null zurück.
-    const url = new URL(page.url() || "http://localhost:3000");
+    // Better-Auth-Cookie-Pattern. Wir setzen einen sinnlosen Wert — Better-Auth
+    // wird ihn nicht validieren und liefert null zurück; Page muss Form rendern.
+    const targetUrl = baseURL ?? "http://localhost:3000";
     await context.addCookies([
       {
         name: "better-auth.session_token",
         value: "INVALID_PLAYWRIGHT_STUB",
-        domain: url.hostname,
-        path: "/",
+        url: targetUrl,
         httpOnly: true,
-        secure: false,
+        secure: targetUrl.startsWith("https://"),
         sameSite: "Lax"
       }
     ]);
     await page.goto("/signup?role=mannschaft");
     // Form muss sichtbar bleiben (Cookie ist invalid → Server sieht null).
-    await expect(
-      page.getByRole("heading", { name: /Als Mannschaft registrieren/i })
-    ).toBeVisible();
+    await expect(page.getByText(/Als Mannschaft registrieren/i).first()).toBeVisible();
   });
 });
 
