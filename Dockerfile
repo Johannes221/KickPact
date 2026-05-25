@@ -39,6 +39,9 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder /app/scripts ./scripts
+# Help-Center liest Markdown via fs.readdir aus docs/help-center/articles/.
+# Ohne diese Zeile crashed /hilfe mit ENOENT zur Runtime.
+COPY --from=builder /app/docs/help-center ./docs/help-center
 
 EXPOSE 3000
 CMD ["npm", "start"]
