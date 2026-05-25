@@ -13,6 +13,7 @@ import {
 } from "@/lib/db/schema";
 import { requireUserOrThrow } from "@/lib/auth/session";
 import { createInvitation, listInvitationsForTeam } from "@/lib/db/queries/invitations";
+import { inngest } from "@/lib/inngest/client";
 
 const teamSchema = z.object({
   teamId: z.string(),
@@ -192,6 +193,20 @@ export async function createDraftClub(input: CreateDraftInput): Promise<CreateDr
   const invitations = await Promise.all(
     result.insertedTeamIds.map((teamId) =>
       createInvitation({ teamId, createdByUserId: user.id })
+    )
+  );
+
+  // Crawler sofort triggern damit die Mannschafts-Übersicht nicht ewig auf
+  // "Wir suchen nach den letzten Spielen…" stehen bleibt. Fire-and-forget —
+  // Inngest-Failures (z.B. INNGEST_SIGNING_KEY fehlt lokal) sollen den
+  // Onboarding-Abschluss nicht blocken.
+  await Promise.all(
+    result.insertedTeamIds.map((teamId) =>
+      inngest
+        .send({ name: "crawler/team.crawl", data: { teamId } })
+        .catch((err) => {
+          console.error("[onboarding] crawler-trigger failed", { teamId, err });
+        })
     )
   );
 
