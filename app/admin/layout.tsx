@@ -3,6 +3,17 @@ import { assertPlatformAdmin } from "@/lib/auth/admin";
 
 export const metadata = { title: "Admin · KickPact" };
 
+const NAV_ITEMS: Array<{ href: string; label: string }> = [
+  { href: "/admin/dashboard", label: "Dashboard" },
+  { href: "/admin/verifications", label: "Verifications" },
+  { href: "/admin/conflicts", label: "Konflikte" },
+  { href: "/admin/vereine", label: "Vereine" },
+  { href: "/admin/users", label: "User" },
+  { href: "/admin/crawler", label: "Crawler" },
+  { href: "/admin/stripe", label: "Stripe" },
+  { href: "/admin/mail", label: "Mail" }
+];
+
 export default async function AdminLayout({
   children
 }: {
@@ -11,7 +22,7 @@ export default async function AdminLayout({
   await assertPlatformAdmin();
 
   return (
-    <main className="mx-auto max-w-5xl px-5 md:px-6 py-8 md:py-12">
+    <main className="mx-auto max-w-7xl px-5 md:px-6 py-8 md:py-12">
       <div className="mb-6 md:mb-8">
         <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
           KickPact Operator
@@ -20,19 +31,16 @@ export default async function AdminLayout({
           Admin
         </h1>
       </div>
-      <nav className="mb-8 flex gap-1 rounded-2xl border border-brand-neutral/30 bg-brand-off-white p-1.5 w-fit">
-        <Link
-          href="/admin/verifications"
-          className="rounded-xl px-4 py-2 text-sm font-semibold text-brand-night-navy/70 hover:text-brand-night-navy hover:bg-white/70 transition-colors"
-        >
-          Verifications
-        </Link>
-        <Link
-          href="/admin/conflicts"
-          className="rounded-xl px-4 py-2 text-sm font-semibold text-brand-night-navy/70 hover:text-brand-night-navy hover:bg-white/70 transition-colors"
-        >
-          Konflikte
-        </Link>
+      <nav className="mb-8 -mx-1 flex flex-wrap gap-1 rounded-2xl border border-brand-neutral/30 bg-brand-off-white p-1.5">
+        {NAV_ITEMS.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="rounded-xl px-4 py-2 text-sm font-semibold text-brand-night-navy/70 hover:text-brand-night-navy hover:bg-white/70 transition-colors"
+          >
+            {item.label}
+          </Link>
+        ))}
       </nav>
       {children}
     </main>

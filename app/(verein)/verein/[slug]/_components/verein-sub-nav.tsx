@@ -17,6 +17,8 @@ const TABS = [
   { label: "Dashboard", href: "", emoji: "🏟️" },
   { label: "Ereignisse", href: "/ereignisse", emoji: "⚽" },
   { label: "Sponsoren", href: "/sponsoren", emoji: "💚" },
+  { label: "Pledges", href: "/pledges", emoji: "🎯" },
+  { label: "Charges", href: "/charges", emoji: "📊" },
   { label: "Abrechnungen", href: "/abrechnungen", emoji: "📄" },
   { label: "Abo", href: "/abo", emoji: "💎" },
   { label: "Einstellungen", href: "/einstellungen", emoji: "⚙️" }
