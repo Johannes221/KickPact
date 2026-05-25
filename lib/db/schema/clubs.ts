@@ -29,6 +29,26 @@ export const clubVerificationDocTypeEnum = pgEnum(
   ]
 );
 
+/**
+ * Onboarding-Status pro Club. Tracked als state machine: draft → stammdaten_complete → completed.
+ * Bestehende Clubs bekommen per Migration-Default "completed" (Backwards-Compat).
+ * Wird vom Onboarding-Resume-Dispatcher (`/onboarding/page.tsx`) gelesen, um Halbfertige
+ * User zurück zur richtigen Step zu schicken statt sie im "Wie willst du starten?"-Chooser
+ * zu fangen.
+ */
+export const onboardingStatusEnum = pgEnum("onboarding_status", [
+  "draft",
+  "stammdaten_complete",
+  "completed"
+]);
+
+/**
+ * Onboarding-Rolle: bestimmt welcher Wizard durchlaufen wurde (Mannschaft = single team /
+ * Pro-Trial, Verein = multi team / Vereinslizenz-Trial). Bestimmt auch wohin der Resume-
+ * Dispatcher schickt.
+ */
+export const onboardingRoleEnum = pgEnum("onboarding_role", ["mannschaft", "verein"]);
+
 export const clubs = pgTable(
   "clubs",
   {
@@ -48,11 +68,28 @@ export const clubs = pgTable(
     iban: text("iban"),
     logoUrl: text("logo_url"),
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    // Onboarding-State (siehe Enums oben). Default "completed", damit bestehende
+    // Clubs und ältere Code-Pfade out-of-the-box korrekt sind.
+    onboardingStatus: onboardingStatusEnum("onboarding_status")
+      .notNull()
+      .default("completed"),
+    onboardingRole: onboardingRoleEnum("onboarding_role")
+      .notNull()
+      .default("verein"),
+    onboardingStartedAt: timestamp("onboarding_started_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({
-    slugIdx: uniqueIndex("clubs_slug_idx").on(t.slug)
+    slugIdx: uniqueIndex("clubs_slug_idx").on(t.slug),
+    // Resume-Dispatcher-Query: "alle Draft-Clubs dieses Users". Partial index, weil
+    // im Steady-State 99.x% aller Clubs completed sind.
+    draftIdx: index("clubs_draft_idx")
+      .on(t.onboardingStatus)
+      .where(sql`${t.onboardingStatus} != 'completed'`)
   })
 );
 

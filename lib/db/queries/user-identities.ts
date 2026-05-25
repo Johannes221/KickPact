@@ -67,6 +67,10 @@ export interface UserIdentities {
  */
 export async function getUserIdentities(userId: string): Promise<UserIdentities> {
   // ── Clubs (with team + sponsor counts) ──────────────────────────────
+  // Draft-Clubs (onboardingStatus != 'completed') werden hier raus-gefiltert,
+  // damit `/dashboard` und `/select-role` den halbfertigen Wizard nicht als
+  // echte Identity behandeln. Stattdessen schickt der Resume-Dispatcher
+  // (`/onboarding/page.tsx`) den User zurück zur richtigen Step.
   const clubRows = await db
     .select({
       clubId: clubs.id,
@@ -77,7 +81,12 @@ export async function getUserIdentities(userId: string): Promise<UserIdentities>
     })
     .from(clubMemberships)
     .innerJoin(clubs, eq(clubMemberships.clubId, clubs.id))
-    .where(eq(clubMemberships.userId, userId));
+    .where(
+      and(
+        eq(clubMemberships.userId, userId),
+        eq(clubs.onboardingStatus, "completed")
+      )
+    );
 
   const clubIds = clubRows.map((r) => r.clubId);
 
