@@ -10,7 +10,13 @@ function emptyIdentities(): UserIdentities {
   return { clubs: [], teamOnly: [], sponsor: null };
 }
 
-function clubIdentity(slug: string): UserIdentities["clubs"][number] {
+function clubIdentity(
+  slug: string,
+  opts: {
+    effectivePlan?: "basic" | "pro" | "verein" | null;
+    firstTeamId?: string | null;
+  } = {}
+): UserIdentities["clubs"][number] {
   return {
     clubId: `club-${slug}`,
     slug,
@@ -18,7 +24,9 @@ function clubIdentity(slug: string): UserIdentities["clubs"][number] {
     logoUrl: null,
     role: "admin",
     teamCount: 3,
-    sponsorCount: 5
+    sponsorCount: 5,
+    effectivePlan: opts.effectivePlan ?? "verein",
+    firstTeamId: opts.firstTeamId ?? null
   };
 }
 
@@ -47,8 +55,46 @@ describe("pickDashboardDestination", () => {
     expect(pickDashboardDestination(emptyIdentities())).toBe("/signup");
   });
 
-  it("one club → /verein/{slug}", () => {
+  it("one club with verein plan → /verein/{slug}", () => {
     const ids: UserIdentities = { clubs: [clubIdentity("acn")], teamOnly: [], sponsor: null };
+    expect(pickDashboardDestination(ids)).toBe("/verein/acn");
+  });
+
+  it("one club with basic plan + firstTeamId → deep-link to team", () => {
+    const ids: UserIdentities = {
+      clubs: [
+        clubIdentity("acn", { effectivePlan: "basic", firstTeamId: "team-7" })
+      ],
+      teamOnly: [],
+      sponsor: null
+    };
+    expect(pickDashboardDestination(ids)).toBe("/verein/acn/mannschaft/team-7");
+  });
+
+  it("one club with pro plan + firstTeamId → deep-link to team", () => {
+    const ids: UserIdentities = {
+      clubs: [clubIdentity("acn", { effectivePlan: "pro", firstTeamId: "team-9" })],
+      teamOnly: [],
+      sponsor: null
+    };
+    expect(pickDashboardDestination(ids)).toBe("/verein/acn/mannschaft/team-9");
+  });
+
+  it("one club with basic plan but no firstTeamId → fall back to club page", () => {
+    const ids: UserIdentities = {
+      clubs: [clubIdentity("acn", { effectivePlan: "basic", firstTeamId: null })],
+      teamOnly: [],
+      sponsor: null
+    };
+    expect(pickDashboardDestination(ids)).toBe("/verein/acn");
+  });
+
+  it("one club with null plan → fall back to club page", () => {
+    const ids: UserIdentities = {
+      clubs: [clubIdentity("acn", { effectivePlan: null, firstTeamId: "team-7" })],
+      teamOnly: [],
+      sponsor: null
+    };
     expect(pickDashboardDestination(ids)).toBe("/verein/acn");
   });
 
