@@ -23,8 +23,7 @@ import {
 import { detectTeamSide } from "@/lib/crawler/team-side";
 import {
   loadActivePledgeRulesForTeam,
-  getMonthlyChargedCents,
-  getPledgeMonthlyCap
+  getMonthlyChargedCents
 } from "@/lib/db/queries/evaluation";
 
 const inputSchema = z.object({
@@ -122,20 +121,24 @@ export async function addManualEvent(input: AddManualEventInput) {
 
     const proposals = evaluateTriggers(singleEventInput, rules);
 
-    // Audit 2026-05-25 (Phase 5): Approval-Expiry aus pledges.endsAt ableiten,
-    // nicht hardcoded 06-30. Vorher konnte ein Approval länger gültig sein als
-    // sein Pledge — confirmApproval würde dann auf einem geendeten Pledge
-    // Charges erzeugen. Lade die endsAt für alle relevanten Pledges in einem
-    // Roundtrip.
-    const uniquePledgeIds = [...new Set(proposals.map((p) => p.pledgeId))];
-    const pledgeEndsAtMap = new Map<string, Date>();
+    // Audit 2026-05-25 (Phase 5): Approval-Expiry aus pledges.endsAt ableiten +
+    // pessimistic FOR UPDATE Lock auf jeden Pledge gegen Monthly-Cap-Races
+    // (parallel zu evaluate-match.ts B-1-Fix). Sortierte IDs gegen Deadlocks
+    // wenn mehrere Pledges im selben Trainer-Event-Request gelockt werden.
+    const uniquePledgeIds = [...new Set(proposals.map((p) => p.pledgeId))].sort();
+    const pledgeInfoMap = new Map<string, { endsAt: Date; cap: number | null }>();
     if (uniquePledgeIds.length > 0) {
       const pledgeRows = await tx
-        .select({ id: pledges.id, endsAt: pledges.endsAt })
+        .select({
+          id: pledges.id,
+          endsAt: pledges.endsAt,
+          cap: pledges.monthlyCapCents
+        })
         .from(pledges)
-        .where(inArray(pledges.id, uniquePledgeIds));
+        .where(inArray(pledges.id, uniquePledgeIds))
+        .for("update");
       for (const row of pledgeRows) {
-        pledgeEndsAtMap.set(row.id, row.endsAt);
+        pledgeInfoMap.set(row.id, { endsAt: row.endsAt, cap: row.cap });
       }
     }
 
@@ -146,11 +149,11 @@ export async function addManualEvent(input: AddManualEventInput) {
       // Only consider proposals with matchEventId pointing to OUR new event
       if (p.matchEventId !== created.id) continue;
 
-      // Monthly-cap check
-      const cap = await getPledgeMonthlyCap(p.pledgeId);
-      if (cap !== null) {
+      // Monthly-cap check unter Lock — siehe pessimistic Select oben.
+      const info = pledgeInfoMap.get(p.pledgeId);
+      if (info?.cap !== null && info?.cap !== undefined) {
         const alreadyCharged = await getMonthlyChargedCents(p.pledgeId, matchDate);
-        if (alreadyCharged + p.amountCents > cap) continue;
+        if (alreadyCharged + p.amountCents > info.cap) continue;
       }
 
       try {
@@ -172,7 +175,7 @@ export async function addManualEvent(input: AddManualEventInput) {
         if (p.requiresApproval && chargeRow) {
           // Approval expired am Pledge-Ende. Fallback auf 30d wenn endsAt
           // fehlt (sollte nie passieren — pledges.endsAt ist notNull).
-          const pledgeEndsAt = pledgeEndsAtMap.get(p.pledgeId);
+          const pledgeEndsAt = pledgeInfoMap.get(p.pledgeId)?.endsAt;
           const approvalExpiresAt =
             pledgeEndsAt ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
           await tx.insert(eventApprovals).values({
