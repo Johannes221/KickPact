@@ -96,7 +96,7 @@ export default function LandingPage() {
 
             <div className="animate-fade-up delay-3 mt-5 md:mt-6 flex flex-col sm:flex-row gap-3">
               <Button variant="accent" size="lg" asChild className="w-full sm:w-auto">
-                <Link href="/signup">Mannschaft anlegen · 30 Tage gratis</Link>
+                <Link href="/signup?role=mannschaft">Mannschaft anlegen · 30 Tage gratis</Link>
               </Button>
               <Button variant="outline" size="lg" asChild className="w-full sm:w-auto bg-white/80">
                 <Link href="/dashboard">Zum Dashboard</Link>
@@ -538,7 +538,7 @@ export default function LandingPage() {
           </p>
           <div className="mt-6 md:mt-7 flex flex-col sm:flex-row gap-3 justify-center">
             <Button variant="accent" size="lg" asChild className="w-full sm:w-auto">
-              <Link href="/signup">Mannschaft anlegen</Link>
+              <Link href="/signup?role=mannschaft">Mannschaft anlegen</Link>
             </Button>
             <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
               <Link href="/login">Login</Link>
@@ -842,11 +842,22 @@ function PriceCard({
           asChild
           size="lg"
         >
-          <Link href="/signup">Mit {plan} starten</Link>
+          <Link href={signupHrefForPlan(plan)}>Mit {plan} starten</Link>
         </Button>
       </div>
     </div>
   );
+}
+
+/**
+ * Maps the marketing-Plan-Label auf den richtigen Signup-Role-Param. Vereinslizenz
+ * adressiert einen Verein-mit-mehreren-Mannschaften, alles andere ist Single-Mannschaft.
+ */
+function signupHrefForPlan(plan: string): string {
+  if (plan.toLowerCase().startsWith("verein")) {
+    return "/signup?role=verein";
+  }
+  return "/signup?role=mannschaft";
 }
 
 function FaqItem({ q, a }: { q: string; a: string }) {

@@ -67,10 +67,15 @@ const ADD_ROLE_HREF: Record<SignupRole, string> = {
 export default async function SignupPage({
   searchParams
 }: {
-  searchParams: Promise<{ role?: string }>;
+  searchParams: Promise<{ role?: string; from?: string }>;
 }) {
-  const { role: roleParam } = await searchParams;
+  const { role: roleParam, from: fromParam } = await searchParams;
   const role = isSignupRole(roleParam) ? roleParam : null;
+  // `from=chooser` markiert: User kam vom 3-Wege-Chooser auf dieser Seite. Nur
+  // dann zeigen wir den „← Andere Rolle wählen"-Back-Link. Bei direktem Deep-
+  // Link (z.B. "Mannschaft anlegen"-CTA von Landing) hat der User die Rolle
+  // explizit gewählt — kein Back-Link, der das wieder relativiert.
+  const fromChooser = fromParam === "chooser";
 
   // ── Auth-aware: eingeloggter User darf niemals die Signup-Form sehen ──────
   // Bug-Fix für „bin als Verein eingeloggt, klick auf signup?role=mannschaft
@@ -116,7 +121,7 @@ export default async function SignupPage({
             return (
               <Link
                 key={r}
-                href={`/signup?role=${r}`}
+                href={`/signup?role=${r}&from=chooser`}
                 className="group flex flex-col gap-4 rounded-2xl border border-brand-neutral/40 bg-white p-6 transition-all hover:border-accent hover:shadow-md"
               >
                 <div className="text-4xl">{meta.emoji}</div>
@@ -158,14 +163,16 @@ export default async function SignupPage({
   const meta = ROLE_META[role];
   return (
     <main className="mx-auto max-w-md px-6 py-12 md:py-16">
-      <div className="mb-2">
-        <Link
-          href="/signup"
-          className="text-xs text-brand-night-navy/50 hover:text-brand-night-navy"
-        >
-          ← Andere Rolle wählen
-        </Link>
-      </div>
+      {fromChooser && (
+        <div className="mb-2">
+          <Link
+            href="/signup"
+            className="text-xs text-brand-night-navy/50 hover:text-brand-night-navy"
+          >
+            ← Andere Rolle wählen
+          </Link>
+        </div>
+      )}
       <Card>
         <CardHeader>
           <div className="text-3xl mb-1">{meta.emoji}</div>

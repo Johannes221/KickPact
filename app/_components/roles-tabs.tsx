@@ -53,7 +53,7 @@ export function RolesTabs() {
             </ul>
             <div className="flex flex-wrap gap-3 pt-2">
               <Button variant="accent" size="lg" asChild>
-                <Link href="/signup">Mannschaft anlegen · 30 Tage gratis</Link>
+                <Link href="/signup?role=mannschaft">Mannschaft anlegen · 30 Tage gratis</Link>
               </Button>
             </div>
           </div>

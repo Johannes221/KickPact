@@ -111,7 +111,7 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
               onHero ? "bg-white/30" : "bg-brand-night-navy/20"
             )}
           />
-          <Link href="/signup" className={cn(linkBase, linkColor)}>
+          <Link href="/signup?role=mannschaft" className={cn(linkBase, linkColor)}>
             Mannschaft anlegen
           </Link>
         </nav>
