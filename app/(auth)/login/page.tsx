@@ -6,7 +6,6 @@ import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAppleConfigured } from "@/lib/auth/apple-client-secret";
 import { getServerSession } from "@/lib/auth/session";
-import { LoginSessionGuard } from "./_components/login-session-guard";
 
 export const metadata = { title: "Login · KickPact" };
 
@@ -42,8 +41,6 @@ export default async function LoginPage({
 
   return (
     <main className="mx-auto max-w-md px-6 py-16">
-      {/* Client-Side Safety-Net falls SSR-Session-Check fehlgeschlagen ist. */}
-      <LoginSessionGuard />
       <Card>
         <CardHeader>
           <CardTitle className="font-display text-3xl tracking-wide">Login</CardTitle>
