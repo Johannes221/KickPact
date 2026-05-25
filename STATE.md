@@ -6,9 +6,10 @@
 
 - **Branch:** `main`
 - **Staging:** https://kickpact.schartl.dev (Coolify-Auto-Deploy on push)
-- **Letzter Commit:** `ecb7f53` — fix(onboarding): role-aware plan filter (mannschaft → basic/pro, verein → verein)
-- **Aktive Initiative:** **Onboarding-Rebuild** (Draft-Plan: [docs/superpowers/plans/2026-05-25-onboarding-rebuild.md](docs/superpowers/plans/2026-05-25-onboarding-rebuild.md)) + **Phase E3 in flight** (Girocode-QR + Sponsor-Pay-Toggle) + **Plan 6 Production-Deploy in Vorbereitung**
-- **Phase E1 + E2 + Help-Center sind komplett live** — Verifications-Workflow von Upload bis Admin-Approval + 27 Hilfe-Artikel + Conflict-Claim-Flow
+- **Letzter Commit:** `96d1278` — chore(mail): mention QR-scan tip in invoice cover mail
+- **Aktive Initiative:** **Onboarding-Rebuild** (P1+P2 live in `a45c82b` + `db9e484`, Wizard-Files in Migration — Working Tree weiterhin in flight)
+- **Frisch durch:** **Phase E3** (Girocode-QR + Sponsor-Pay-Toggle, Commits `dbcf4a3` + `9d55fd9` + `96d1278`) — kein Banking-App-Friction mehr bei Sponsoren
+- **Plan 6 Production-Deploy** als Draft fertig: [docs/superpowers/plans/2026-05-25-plan-6-production-deploy.md](docs/superpowers/plans/2026-05-25-plan-6-production-deploy.md) (451 Zeilen, 77 Steps)
 
 ## Plan-Status
 
@@ -32,10 +33,10 @@
 | **Trust & Payment Spec (non-custodial)** | ✅ verifiziert | Code war nie custodial — Spec dokumentiert Realität |
 | **Phase E1** (Verifications Schema+Upload+Gate) | ✅ live | Schema + Storage + Queries + Wizard Step 4 + Withhold-Gate |
 | **Phase E2** (Admin-Tooling + Mails + Banner + Conflict-Claim) | ✅ live | `/admin/verifications` + `/admin/conflicts` + 3 Mail-Templates + `VerificationBanner` auf Verein/Sponsor-Discover |
-| **Phase E3** (Girocode QR + Sponsor-Pay-Toggle) | 🚧 in Arbeit | Background-Agent baut gerade |
-| **Help-Center** | ✅ live | 27 Markdown-Artikel + `/hilfe`-Routes + Frontmatter-Navigation (`206c640` + `68f11f1`) |
-| **Onboarding-Rebuild** | 📝 Draft-Plan | [`onboarding-rebuild.md`](docs/superpowers/plans/2026-05-25-onboarding-rebuild.md) — Mannschaft-first Routing + Draft-Persistence ab Step 1 + Pro-Trial-Default |
-| **Plan 6: Production-Domain `kickpact.com`** | 🚧 Plan in Arbeit | Background-Agent schreibt detaillierten Deploy-Plan |
+| **Phase E3** (Girocode QR + Sponsor-Pay-Toggle) | ✅ live | EPC069-12 QR im PDF, BIC weggelassen (Apps resolven aus IBAN), `markedPaidBySponsorAt` 3-Zustands-Pill, Mail-Tipp. Migration 0022 |
+| **Help-Center** | ✅ live | 27 Markdown-Artikel + `/hilfe`-Routes + Frontmatter-Navigation |
+| **Onboarding-Rebuild** | 🚧 in Arbeit | P1 (Schema) + P2 (Server-Actions für draft-persistent Wizard) live; Wizard-UI im Working-Tree-Refactor (alte 5-Step-Files deleted, neue mannschaft-first Routes im Bau) |
+| **Plan 6: Production-Domain `kickpact.com`** | 📝 Draft-Plan | 451 Zeilen, 11 Sektionen, 77 Checkbox-Steps, Risiko-Matrix + Aufwandsschätzung (~7-8h aktiv + 1-3 Tage Stripe-Wartezeit) |
 
 ## Audit-Trail
 
@@ -64,10 +65,9 @@
 1. **Onboarding-Rebuild approven oder iterieren** — Draft-Plan empfiehlt Mannschaft-first Routing, Draft-Persistence ab Step 1, Pro-Trial als Default. Bei Approval: Plan ausführen (1-2 Tage).
 2. **Team-Tabs Abo/Einstellungen** — gemäß Onboarding-Rebuild-Draft bleiben sie für Mannschaft-Plan (basic/pro) nötig, für Vereins-Plan wegfallend. Erst nach Rebuild-Entscheidung bauen.
 
-### In Flight (parallel)
+### In Flight
 
-- **Phase E3** (Background-Agent): Girocode QR-Code im PDF + Sponsor-Pay-Toggle „bezahlt/offen"
-- **Plan 6 Production-Deploy** (Background-Agent): Deploy-Plan für kickpact.com
+- **Onboarding-Rebuild** P3+ (User aktiv) — neue mannschaft-first Wizard-UI ersetzt 5-Step verein/1-5/-Tree
 
 ### Cleanup-Sweep (½ Tag, jederzeit)
 
@@ -78,7 +78,7 @@
 
 ## Tests
 
-- **473 passed | 40 skipped** (54 test files, 9 skipped)
+- **511 passed | 40 skipped** (+38 neue via E3-Snapshots + sponsor-mark-action)
 - TypeScript strict, Build clean
 - E2E: Onboarding-Flows un-skipped, Auth-Redirects abgedeckt
 
