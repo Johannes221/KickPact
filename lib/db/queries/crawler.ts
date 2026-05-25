@@ -1,4 +1,4 @@
-import { eq, and, isNotNull, desc } from "drizzle-orm";
+import { eq, and, inArray, isNotNull, desc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   teams,
@@ -215,77 +215,126 @@ export async function updateMatchWithEvents(args: {
  */
 const ANONYMIZED_NAME = "Anonymisiert";
 
+/**
+ * Audit 2026-05-24 Phase 5 / Task 5.2: writeMatchEvents batchen.
+ *
+ * Vorher: pro Event ein upsertPlayer-Roundtrip + ein insert(matchEvents).
+ * Für 1 Spiel mit 10 Events → 20 DB-Calls. × 50 Teams × 30 Spielen pro
+ * Crawl-Run = ~30 000 Roundtrips.
+ *
+ * Jetzt: ein Roundtrip pro Phase
+ *   1. Alle fussballdePlayerIds sammeln, ein SELECT für existing players
+ *   2. EIN INSERT für alle neuen Players (onConflictDoNothing)
+ *   3. EIN SELECT für die fertige ID+blocked-Map
+ *   4. EIN INSERT für alle matchEvents
+ */
 async function writeMatchEvents(
   matchId: string,
   teamId: string,
   details: SpielDetails
 ): Promise<number> {
-  let newEventCount = 0;
+  // 1. Sammle alle (spielerId, name)-Paare aus den Events
+  const playerInputs = new Map<string, string>(); // spielerId → name
   for (const ev of details.events) {
     if (ev.typ === "TOR" && ev.spielerId) {
-      const player = await upsertPlayer(
-        teamId,
-        ev.spielerId,
-        ev.spielerName ?? ev.spielerId
+      playerInputs.set(ev.spielerId, ev.spielerName ?? ev.spielerId);
+    } else if (ev.typ === "AUSWECHSLUNG" && ev.rein && ev.raus) {
+      if (ev.rein.id) playerInputs.set(ev.rein.id, ev.rein.name);
+      if (ev.raus.id) playerInputs.set(ev.raus.id, ev.raus.name);
+    }
+  }
+
+  // 2. Batch-Upsert aller Spieler (ein Insert mit onConflictDoNothing)
+  const playerMap = new Map<string, { id: string; blocked: boolean }>();
+  if (playerInputs.size > 0) {
+    const fussballdeIds = [...playerInputs.keys()];
+
+    await db
+      .insert(players)
+      .values(
+        [...playerInputs.entries()].map(([fbId, name]) => ({
+          teamId,
+          fussballdePlayerId: fbId,
+          name
+        }))
+      )
+      .onConflictDoNothing();
+
+    const rows = await db
+      .select({
+        id: players.id,
+        fussballdePlayerId: players.fussballdePlayerId,
+        blocked: players.blocked
+      })
+      .from(players)
+      .where(
+        and(eq(players.teamId, teamId), inArray(players.fussballdePlayerId, fussballdeIds))
       );
-      await db.insert(matchEvents).values({
+    for (const r of rows) {
+      if (r.fussballdePlayerId) {
+        playerMap.set(r.fussballdePlayerId, { id: r.id, blocked: r.blocked });
+      }
+    }
+  }
+
+  // 3. Baue alle matchEvents-Inserts in einem Array.
+  // minute nullable: matches.minute ist `integer("minute")` ohne notNull —
+  // bei einigen fussball.de-Events fehlt die Minute komplett.
+  const eventRows: Array<{
+    matchId: string;
+    minute: number | null;
+    type: "tor" | "auswechslung";
+    subtype: string | null;
+    side: "heim" | "gast";
+    playerName: string | null;
+    playerId: string | undefined;
+    source: "scraped";
+  }> = [];
+
+  for (const ev of details.events) {
+    const side: "heim" | "gast" = ev.side === "unbekannt" ? "heim" : ev.side;
+    if (ev.typ === "TOR" && ev.spielerId) {
+      const player = playerMap.get(ev.spielerId);
+      eventRows.push({
         matchId,
         minute: ev.minute,
         type: "tor",
-        side: ev.side === "unbekannt" ? "heim" : ev.side,
-        playerName: player?.anonymized ? ANONYMIZED_NAME : ev.spielerName,
+        subtype: null,
+        side,
+        playerName: player?.blocked ? ANONYMIZED_NAME : ev.spielerName ?? null,
         playerId: player?.id ?? undefined,
         source: "scraped"
       });
-      newEventCount++;
     } else if (ev.typ === "AUSWECHSLUNG" && ev.rein && ev.raus) {
-      const rein = await upsertPlayer(teamId, ev.rein.id, ev.rein.name);
-      await db.insert(matchEvents).values({
+      const rein = ev.rein.id ? playerMap.get(ev.rein.id) : undefined;
+      const raus = ev.raus.id ? playerMap.get(ev.raus.id) : undefined;
+      eventRows.push({
         matchId,
         minute: ev.minute,
         type: "auswechslung",
         subtype: "ein",
-        side: ev.side === "unbekannt" ? "heim" : ev.side,
-        playerName: rein?.anonymized ? ANONYMIZED_NAME : ev.rein.name,
+        side,
+        playerName: rein?.blocked ? ANONYMIZED_NAME : ev.rein.name,
         playerId: rein?.id ?? undefined,
         source: "scraped"
       });
-      const raus = await upsertPlayer(teamId, ev.raus.id, ev.raus.name);
-      await db.insert(matchEvents).values({
+      eventRows.push({
         matchId,
         minute: ev.minute,
         type: "auswechslung",
         subtype: "aus",
-        side: ev.side === "unbekannt" ? "heim" : ev.side,
-        playerName: raus?.anonymized ? ANONYMIZED_NAME : ev.raus.name,
+        side,
+        playerName: raus?.blocked ? ANONYMIZED_NAME : ev.raus.name,
         playerId: raus?.id ?? undefined,
         source: "scraped"
       });
-      newEventCount += 2;
     }
   }
-  return newEventCount;
-}
 
-async function upsertPlayer(
-  teamId: string,
-  fussballdeId: string,
-  name: string
-): Promise<{ id: string; anonymized: boolean } | null> {
-  // Leere IDs überspringen (passiert wenn fussball.de kein Player-Profil hat)
-  if (!fussballdeId) return null;
-
-  const [existing] = await db
-    .select({ id: players.id, blocked: players.blocked })
-    .from(players)
-    .where(and(eq(players.teamId, teamId), eq(players.fussballdePlayerId, fussballdeId)))
-    .limit(1);
-  if (existing) {
-    return { id: existing.id, anonymized: existing.blocked };
+  // 4. EIN INSERT für alle Events
+  if (eventRows.length > 0) {
+    await db.insert(matchEvents).values(eventRows);
   }
-  const [created] = await db
-    .insert(players)
-    .values({ teamId, fussballdePlayerId: fussballdeId, name })
-    .returning({ id: players.id });
-  return { id: created.id, anonymized: false };
+
+  return eventRows.length;
 }

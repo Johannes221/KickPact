@@ -15,7 +15,7 @@ import { getReplyToForClub } from "@/lib/mail/reply-to";
  * sorgt für Idempotenz.
  */
 export const trialReminders = inngest.createFunction(
-  { id: "trial-reminders", name: "Trial-Ablauf Reminders 7d/3d/1d" },
+  { id: "trial-reminders", name: "Trial-Ablauf Reminders 7d/3d/1d", concurrency: { limit: 1 } },
   [{ cron: "0 10 * * *" }, { event: "subscriptions/trial-test" }],
   async ({ step, logger }) => {
     const now = new Date();

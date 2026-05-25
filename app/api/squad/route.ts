@@ -27,6 +27,12 @@ export async function GET(req: NextRequest) {
     );
   }
 
+  // invitation.teamId ist nullable (team-member-Invites haben evtl. nur clubId).
+  // /api/squad gibt nur Sinn für sponsor-Invites mit teamId — sonst leere Liste.
+  if (!invitation.teamId) {
+    return NextResponse.json({ players: [] });
+  }
+
   const [team] = await db
     .select({
       fussballdeTeamId: teams.fussballdeTeamId,

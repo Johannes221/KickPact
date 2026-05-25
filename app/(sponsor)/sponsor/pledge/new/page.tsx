@@ -24,7 +24,7 @@ export default async function NewPledgePage({
   let gateBanner: React.ReactNode = null;
   if (invitationToken) {
     const invitation = await findInvitationByToken(invitationToken);
-    if (invitation) {
+    if (invitation && invitation.teamId) {
       const [teamRow] = await db
         .select({ clubId: teams.clubId })
         .from(teams)

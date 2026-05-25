@@ -1,14 +1,10 @@
-import { eq } from "drizzle-orm";
+import { and, eq, gte, lt, inArray, sql } from "drizzle-orm";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
-import { matches, matchEvents, teams, charges } from "@/lib/db/schema";
+import { matches, matchEvents, teams, charges, pledges } from "@/lib/db/schema";
 import { evaluateTriggers, type MatchInput } from "@/lib/crawler/triggers";
 import { detectTeamSide } from "@/lib/crawler/team-side";
-import {
-  loadActivePledgeRulesForTeam,
-  getMonthlyChargedCents,
-  getPledgeMonthlyCap
-} from "@/lib/db/queries/evaluation";
+import { loadActivePledgeRulesForTeam } from "@/lib/db/queries/evaluation";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 
 export const evaluateMatch = inngest.createFunction(
@@ -70,29 +66,76 @@ export const evaluateMatch = inngest.createFunction(
 
     let inserted = 0;
     let cappedOrSkipped = 0;
+    const matchDate = new Date(matchData.m.datum);
     for (const p of proposals) {
       const wasInserted = await step.run(
         `insert-charge-${p.pledgeRuleId}-${p.matchEventId ?? "match"}`,
         async () => {
-          // Monthly-cap check
-          const cap = await getPledgeMonthlyCap(p.pledgeId);
-          if (cap !== null) {
-            const alreadyCharged = await getMonthlyChargedCents(p.pledgeId, new Date(matchData.m.datum));
-            if (alreadyCharged + p.amountCents > cap) return false;
-          }
-
+          // Audit 2026-05-25 B-1: Monthly-cap-check + insert in a single
+          // transaction with SELECT … FOR UPDATE on the pledge row. Vorher
+          // waren cap-read und insert nicht atomar — Inngest-concurrency=4
+          // konnte parallel zwei Events lesen `alreadyCharged=X`, beide
+          // unter dem cap berechnen, beide inserten → effektiver Cap-Bruch.
           try {
-            await db.insert(charges).values({
-              pledgeId: p.pledgeId,
-              pledgeRuleId: p.pledgeRuleId,
-              matchId: p.matchId,
-              matchEventId: p.matchEventId,
-              triggerType: p.triggerType,
-              amountCents: p.amountCents,
-              status: p.requiresApproval ? "pending_approval" : "confirmed",
-              confirmedAt: p.requiresApproval ? null : new Date()
+            return await db.transaction(async (tx) => {
+              const [pledgeRow] = await tx
+                .select({ id: pledges.id, cap: pledges.monthlyCapCents })
+                .from(pledges)
+                .where(eq(pledges.id, p.pledgeId))
+                .for("update")
+                .limit(1);
+              if (!pledgeRow) return false;
+
+              if (pledgeRow.cap !== null) {
+                const monthStart = new Date(
+                  matchDate.getFullYear(),
+                  matchDate.getMonth(),
+                  1
+                );
+                const monthEnd = new Date(
+                  matchDate.getFullYear(),
+                  matchDate.getMonth() + 1,
+                  1
+                );
+                const [sumRow] = await tx
+                  .select({
+                    total: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int`
+                  })
+                  .from(charges)
+                  .where(
+                    and(
+                      eq(charges.pledgeId, p.pledgeId),
+                      gte(
+                        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt})`,
+                        monthStart
+                      ),
+                      lt(
+                        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt})`,
+                        monthEnd
+                      ),
+                      inArray(charges.status, [
+                        "confirmed",
+                        "pending_approval",
+                        "invoiced"
+                      ])
+                    )
+                  );
+                const alreadyCharged = sumRow?.total ?? 0;
+                if (alreadyCharged + p.amountCents > pledgeRow.cap) return false;
+              }
+
+              await tx.insert(charges).values({
+                pledgeId: p.pledgeId,
+                pledgeRuleId: p.pledgeRuleId,
+                matchId: p.matchId,
+                matchEventId: p.matchEventId,
+                triggerType: p.triggerType,
+                amountCents: p.amountCents,
+                status: p.requiresApproval ? "pending_approval" : "confirmed",
+                confirmedAt: p.requiresApproval ? null : new Date()
+              });
+              return true;
             });
-            return true;
           } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             if (msg.includes("unique") || msg.includes("duplicate")) return false;

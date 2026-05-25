@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { db } from "@/lib/db/client";
 import { clubMemberships, teamMemberships, users, teams } from "@/lib/db/schema";
@@ -9,6 +9,7 @@ import {
 } from "@/lib/db/queries/membership-requests";
 import { RequestsTable } from "./_components/requests-table";
 import { MembersTable } from "./_components/members-table";
+import { InviteForm } from "./_components/invite-form";
 
 export const metadata = { title: "Mitglieder · KickPact" };
 
@@ -20,7 +21,7 @@ export default async function MitgliederPage({
   const { slug } = await params;
   const { user, club } = await assertClubAccess(slug, "admin");
 
-  const [pendingRequests, clubMems, teamMems, clubAdminCount] = await Promise.all([
+  const [pendingRequests, clubMems, teamMems, clubAdminCount, clubTeams] = await Promise.all([
     listPendingRequestsForClub(club.id),
     db
       .select({
@@ -45,7 +46,12 @@ export default async function MitgliederPage({
       .innerJoin(teams, eq(teamMemberships.teamId, teams.id))
       .innerJoin(users, eq(teamMemberships.userId, users.id))
       .where(eq(teams.clubId, club.id)),
-    countClubAdmins(club.id)
+    countClubAdmins(club.id),
+    db
+      .select({ id: teams.id, name: teams.name })
+      .from(teams)
+      .where(and(eq(teams.clubId, club.id), eq(teams.isActive, true)))
+      .orderBy(asc(teams.name))
   ]);
 
   return (
@@ -64,6 +70,18 @@ export default async function MitgliederPage({
           Wer hat Zugriff auf {club.name} — und wer will Zugriff.
         </p>
       </div>
+
+      {/* Trainer/Viewer einladen */}
+      <section>
+        <h3 className="font-display font-black text-xl tracking-tight text-brand-night-navy mb-1">
+          Trainer oder Viewer einladen
+        </h3>
+        <p className="text-sm text-brand-night-navy/60 mb-3">
+          Erzeugt einen Einladungs-Link. Schick ihn an die Person — sie loggt sich ein
+          und ist mit einem Klick drin.
+        </p>
+        <InviteForm clubSlug={slug} teams={clubTeams} />
+      </section>
 
       {/* Offene Anfragen */}
       <section>

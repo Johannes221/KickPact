@@ -9,7 +9,7 @@ import { resumeSeasonPassSubscriptions } from "@/lib/billing/season-pass";
  * `team_licenses.status = 'active'`.
  */
 export const resumeSeasonPasses = inngest.createFunction(
-  { id: "resume-season-passes", name: "Sommerpause: Saison-Pass reaktivieren (1.8.)" },
+  { id: "resume-season-passes", name: "Sommerpause: Saison-Pass reaktivieren (1.8.)", concurrency: { limit: 1, key: "season-pass-lifecycle" } },
   [{ cron: "0 2 1 8 *" }, { event: "subscriptions/resume-season-passes-test" }],
   async ({ logger }) => {
     if (!isStripeConfigured()) {

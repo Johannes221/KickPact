@@ -1,124 +1,91 @@
-# KickPact Autopilot State
+# KickPact State
 
-> **Live tracking file für die autonome Plan-Implementation.**
+> **Live-Snapshot des aktiven Repos.** Bei jedem größeren Merge updaten.
 
-## Aktueller Stand
+## Stand
 
 - **Branch:** `main`
-- **Live-Domain (Staging):** https://kickpact.schartl.dev — Coolify-App `kickpact-staging`, Auto-Deploy bei Push auf main
-- **Letzter Push:** `b66cbf6` — Stripe Hard-Gate (assertClubWriteAccess + Crawler-Skip)
-- **Aktive Initiative:** Plan 6 (Production-Domain `kickpact.com`)
-- **Blocker:** Stripe-Production-Keys, R2-Keys, Production-DNS
+- **Staging:** https://kickpact.schartl.dev (Coolify-Auto-Deploy on push)
+- **Letzter Commit:** `2c47860` — fix(onboarding): race-safe finalizeOnboarding via advisory lock
+- **Aktive Initiative:** **Phase E1 Closure** — Admin-Tooling, Mail-Templates, Sponsor-Banner. Plan: [docs/superpowers/plans/2026-05-25-phase-e1-closure.md](docs/superpowers/plans/2026-05-25-phase-e1-closure.md)
+- **Withhold-Gate ist live** (Commit `c1ce57c`), Phase 4 DSGVO komplett (Commit `19a8edb`)
 
-## Plan-Übersicht & Fortschritt
+## Plan-Status
 
-| Plan | Tasks done | Status |
+| Plan / Spec | Status | Notiz |
 |---|---|---|
-| 1 — Foundation | 29/29 ✅ | merged in main |
-| 2 — Auth + Onboarding | 21/21 ✅ | merged in main |
-| 3 — Match-UI + Approvals | 14/14 ✅ | merged in main |
-| 4 — Invoicing + PDF + Mail | 11/12 ✅ | merged in main, Task 12 (E2E) durch Auth-Guards abgedeckt |
-| 5 — Stripe-Abo | Phase A + B done | Skeleton + Trial-Reminder + Hard-Gate live. Keys-Setup für echte Charges offen. |
-| 6 — Brand + Deploy | Staging ✅ | Production-Domain `kickpact.com` setup offen |
+| **Foundation v1** (`2026-05-19-kickpact-v1-design.md`) | ✅ ~90% live | Stripe-Connect-Sektion durch Trust-Spec ersetzt |
+| **Auth + Onboarding** | ✅ live | Magic-Link + Google + Apple |
+| **Match-UI + Approvals** | ✅ live | Approval-Inbox, Manual-Events, Saison-Wetten |
+| **Invoicing + PDF + R2** | ✅ live | PDF-Builder, IBAN+Disclaimer, R2-Storage seit `5c5f151` |
+| **Stripe-Abo (Pricing v2)** | ✅ live | 3 Tiers × 3 Cycles (9 SKUs), Saison-Pass-Pause Jun-Jul, Vereinslizenz-Bündelung via `parent_club_license_id` |
+| **Identity Phase A+B** (Roles, Smart Routing) | ✅ live | `pickDashboardDestination`, Role-Switcher, Multi-Identity-Header |
+| **Identity Phase C** (Access-Requests bei Duplikat-Verein) | ❌ offen | Workaround: bessere Error-Message statt 500 |
+| **Identity Phase D** (Mobile-IA-Tiles) | ⚠️ teilweise | Team-centric Dashboard deckt vieles ab |
+| **Audit-Fix Phase 1** (Show-Stopper) | ✅ live | Stripe-Placeholder, /api/squad, Impressum, DSGVO-Spielerblock |
+| **Audit-Fix Phase 2** (Geld-Risiken) | ⚠️ ~95% | B-2 (Read-Only-Gate via `assertClubWriteAccess`) ✅ schon gefixt; B-3 (Approval-Expiry aus `pledges.endsAt`) ✅ live; offen: B-1 Monthly-Cap-Race |
+| **Audit-Fix Phase 3** (Subscription-Lifecycle) | ✅ live | Webhook-Idempotenz, expire-trials/approvals, end-pledges, sent_notifications |
+| **Audit-Fix Phase 4** (DSGVO-Vollständigkeit) | ✅ live (Commit `19a8edb`) | Magic-Link Rate-Limit, PII-Masking, `cleanup-sessions`-Cron, `players.blocked` Enforcement, `requestDataExport`, `requestAccountDeletion` + `anonymize-accounts`-Cron |
+| **Audit-Fix Phase 5** (Performance) | ⚠️ teils | `approval-reminders` Concurrency-Limit ✅ live; offen: Indexes, Crawler-Batch, weitere Mail-Functions Concurrency |
+| **Team-centric Dashboard** | ⚠️ ~80% | Routing + 5 Sub-Pages live (Übersicht, Pacts, Spiele, Finanzen, hart-redirect basic/pro) + Finanzen-Trend-Chart. Offen: Abo + Einstellungen Tabs |
+| **Trust & Payment Spec (non-custodial)** | ✅ als Architektur-Realität verifiziert | Code war nie custodial — Spec dokumentiert, was schon Realität war |
+| **Phase E1** (Verifications) | ⚠️ ~80% live | Schema + Storage + Queries + Wizard + Upload-UI + Withhold-Gate alles live. Offen: Admin-Page, Mails, Sponsor-Banner |
+| **Phase E2** (Admin-Tooling, Conflict-Resolution) | ❌ Plan-Stub im E1-Closure-Plan | |
+| **Phase E3** (Girocode QR, Pay-Status-Toggle) | ❌ offen | |
 
-## Extra-Features (außerhalb der Plan-Datei)
+## Audit-Trail
 
-| Feature | Status |
-|---|---|
-| Landing-Rebrand mit Hero + Stories + Bildern | ✅ live |
-| Mobile-First-Audit für alle Pages | ✅ |
-| Rotating-Trigger-Animation im Hero | ✅ |
-| OAuth: Google + Apple Sign-in | ✅ live auf Staging |
-| Sponsor-Discover (Spec §6.10) inkl. Admin-UI | ✅ live |
-| Coolify-Deploy mit Playwright-Dockerfile | ✅ live |
-| Drizzle 0.36 → 0.45 Upgrade | ✅ |
-| Saison-Wetten Marketing + Backend + UI | ✅ live |
-| Eltern-Proxy für Junioren (Spec §6.2) | ✅ live, Migration `0005` |
-| DSGVO / Impressum / AGB | ✅ live (Platzhalter-Daten) |
-| Read-Only-Hard-Gate für past_due Clubs | ✅ live |
-| Trial-Reminder-Cron 7/3/1d | ✅ live |
-| Crawler-Skip bei read-only Clubs | ✅ live |
+- **2026-05-24:** [docs/audits/2026-05-24-onboarding-audit.md](docs/audits/2026-05-24-onboarding-audit.md) — Onboarding-Tiefenprüfung
+- **2026-05-24:** [docs/superpowers/plans/2026-05-24-codebase-audit.md](docs/superpowers/plans/2026-05-24-codebase-audit.md) — Erster Codebase-Audit (30 Findings, ~17 inzwischen gefixt)
+- **2026-05-25:** [docs/audits/2026-05-25-codebase-audit.md](docs/audits/2026-05-25-codebase-audit.md) — Folge-Audit nach Phase 1-3 + non-custodial Pivot
 
 ## Verfügbare Secrets (Coolify + .env.local)
 
-- ✅ DATABASE_URL · BETTER_AUTH_SECRET · BETTER_AUTH_URL · NEXT_PUBLIC_BASE_URL · RESEND_API_KEY · MAIL_FROM
-- ✅ GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET (Vaultwarden)
-- ✅ APPLE_CLIENT_ID + APPLE_CLIENT_SECRET (vor-signiertes JWT, gültig bis 2026-10-17, Vaultwarden)
-- ❌ R2_* (Plan 4 — Storage fällt auf `/tmp/kickpact-pdfs/` zurück)
-- ❌ STRIPE_* (Plan 5 — Skeleton aktiv, Checkout disabled; User muss Stripe-Account anlegen + Price-IDs erzeugen, siehe `docs/stripe-setup.md`)
+- ✅ DATABASE_URL · BETTER_AUTH_SECRET · BETTER_AUTH_URL · NEXT_PUBLIC_BASE_URL
+- ✅ RESEND_API_KEY · MAIL_FROM
+- ✅ GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET
+- ✅ APPLE_CLIENT_ID + APPLE_CLIENT_SECRET (pre-signiertes JWT, gültig bis 2026-10-17)
+- ✅ STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET + 9 STRIPE_*_PRICE_ID
+- ✅ R2_ACCOUNT_ID + R2_ACCESS_KEY_ID + R2_SECRET_ACCESS_KEY + R2_BUCKET (seit `5c5f151`)
+- ✅ PLAUSIBLE_DOMAIN (15 instrumentierte Events)
+- ❌ INNGEST_SIGNING_KEY in Production — Audit-Task 4.6 macht fail-closed; muss gesetzt sein
+- ❌ KICKPACT_ADMIN_EMAILS für `/admin/verifications` — wird in Phase-E1-Closure eingeführt
 
 ## Was als nächstes ansteht
 
-### Plan 6 — Production-Domain `kickpact.com`
+### Sofort (Phase-E1-Closure, ~1 Tag)
 
-- Cloudflare-DNS für `kickpact.com` einrichten (analog zu kickpact.schartl.dev Staging)
-- Coolify-App `kickpact-production` analog zu Staging anlegen, Branch=main
-- ENV setzen: BETTER_AUTH_URL+NEXT_PUBLIC_BASE_URL auf `https://kickpact.com`
-- Stripe-Live-Keys + Webhook auf `https://kickpact.com/api/stripe/webhook`
-- Apple Services-ID um `kickpact.com`-Return-URL erweitern
-- Google OAuth-Console: Authorized origins + redirect URIs für kickpact.com ergänzen
-- Production-DB: eigener Neon-Branch (statt Staging-DB)
+1. `/admin/verifications` Page + Approve/Reject/Signed-URL-Actions
+2. 3 Mail-Templates (submitted/approved/rejected) + `verification-events`-Inngest-Function für Nachversand withheld Invoices
+3. Verein/Sponsor-Banner für unverified Clubs (Dashboard + Discover)
+4. B-1 Monthly-Cap-Race (atomare Transaktion mit row-lock auf `pledges`)
 
-### Plan 5 Phase C — Vereinslizenz
+Detail-Plan: [docs/superpowers/plans/2026-05-25-phase-e1-closure.md](docs/superpowers/plans/2026-05-25-phase-e1-closure.md)
 
-- `team_licenses.parent_club_license_id` Logic: wenn Verein Vereinslizenz-Abo hat,
-  werden Mannschafts-Lizenzen unter dem Abo subsumiert, nicht einzeln gechargt
-- UI-Flag im Onboarding-Wizard Step 2 (Plan-Auswahl) für "Vereinslizenz wählen"
-- Master-Admin-Cockpit `/verein/[slug]/admin` mit Cross-Team-Übersicht
+### Cleanup-Sweep (½ Tag, jederzeit zwischendurch)
 
-### R2-Storage für PDFs (statt /tmp/)
+- `scripts/cleanup-dossenheim3-*` + `seed-dossenheim3-*` löschen (Pilot-Müll)
+- `npm remove @neondatabase/serverless` (ungenutzt)
+- Hinfällige Pläne archivieren (`docs/superpowers/plans/archive/`)
+- TriggerType Single-Source: `lib/validations/pledge.ts` Zod-Array aus `lib/triggers/labels.ts` ableiten
 
-- Cloudflare R2-Bucket anlegen + IAM für KickPact-Service
-- ENV: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET
-- Bestehender `lib/invoicing/storage.ts` aktiviert sich automatisch wenn alle 4 gesetzt sind
-- Migration für bestehende PDFs (falls Production schon Rechnungen erzeugt hat)
+### Phase E2/E3 (eigene Sprints)
 
-### Apple-JWT-Auto-Rotation (nice-to-have)
+- E2: Conflict-Claim-Erweiterung in `/onboarding/zugriff-anfragen` (überlappt mit Identity Phase C — am besten zusammen ziehen)
+- E3: Girocode-QR im PDF + Sponsor-Pay-Toggle „bezahlt/offen"
 
-- Inngest-Cron alle 4 Monate: neues JWT signieren + in DB-Tabelle `apple_secrets` speichern
-- `lib/auth/server.ts` liest aus DB statt aus Env
-- Eliminiert manuelle Rotation
+### Plan 6: Production-Domain `kickpact.com`
 
-## Bekannte Limitierungen
-
-- **R2-Storage** nicht konfiguriert — PDFs landen lokal in `/tmp/kickpact-pdfs/`
-- **Stripe** Skeleton aktiv, aber ohne Keys keine echten Checkouts
-- **Apple-JWT-Rotation**: aktuell manuell alle 5 Monate via `scripts/generate-apple-jwt.mjs`
-- **DB-Branch fürs Staging**: Staging + Lokal teilen aktuell die Neon-DB. Sauberer wäre ein eigener Neon-Branch.
+Weiter blockiert durch DNS + Production-Keys + Stripe-Live-Webhook.
 
 ## Tests
 
-- 65 passing (+11 für `gateFromSubscription` Pure-Function)
-- 6 skipped (Crawler-DOM-Tests + evaluate-match-E2E — brauchen Browser oder mock-Setup)
-- TypeScript strict, Build clean, alle 25 Routes generieren ohne Errors
+- **464 passed | 40 skipped** (53 test files, 9 skipped — Phase-4-Integration-Tests bewusst skipped, plus Live-Smoke nur unter `LIVE=1`)
+- TypeScript strict, Build clean
+- E2E: Onboarding-Flows + Auth-Redirects abgedeckt
 
-## Commits dieser Auto-Session (chronologisch)
+## Bekannte Limitierungen
 
-1. `bae10cc` — KickPact-Branded Teamfotos + originale Logo-Typo im Header
-2. `a647911` — Hero-Foto ohne aufgebranntes Wasserzeichen + Gradient stärker
-3. `b7cd355` — Magic-Link-Mail wirklich verschicken statt Sandbox-Fallback
-4. `0ec5bd7` — Hero Glass-Panel statt Gradient
-5. `e9cd83b` — Google + Apple Sign-in
-6. `d80fcc7` — Mobile-First Refactor + Saison-Wetten + Jugend/Eltern-Story
-7. `7e010f4` — App-weite Mobile-First-Optimierung
-8. `f3c0a80` — Benefits-Section + Branding Mannschaft + Vereinslizenz
-9. `93ededf` — Apple JWT als pre-signed statt boot-time
-10. `c71b53d` — Docker für Playwright + Coolify-Setup
-11. `f2c396b` — Hero-Formula + €/Spieler Pricing + Inline-CTAs
-12. `014a3b3` — Mannschaft-Sprache + Hero smoother + Dashboard-CTA
-13. `3be8fc1` — Rotating-Trigger im Hero
-14. `9ea9ae6` — OAuth invitation-token weitergeben + Onboarding-Optionals
-15. `f6412f0` — Plan 4 Invoicing komplett (Tasks 6–11)
-16. `b08e877` — Drizzle 0.36→0.45 Upgrade
-17. `98c90a5` — Stripe Abo-Skeleton (Checkout + Webhook + Abo-Page)
-18. `02fa50b` — Sponsor-Discover Feature (§6.10)
-19. `1e68dbc` — STATE Update
-20. `2a7ab1a` — Discover Admin-UI (Inquiry-Inbox + Discoverability-Toggle)
-21. `f368c27` — Saison-Wetten Backend
-22. `6baa1b7` — Saison-Ergebnis-Form auf Mannschaft-Page
-23. `1f89abb` — Pledge-Builder erweitert um Saison-Trigger
-24. `6d85ee6` — 22 evaluate-season Tests + Status-Page-Update
-25. `b7700b0` — Trial-Reminder-Cron + Past-Due-Banner + getSubscriptionGate
-26. `87f74bf` — Impressum + Datenschutz + AGB + Footer-Links
-27. `bc9afdf` — Eltern-Proxy für Junioren-Sponsoring
-28. `b66cbf6` — Stripe Phase B Hard-Gate (assertClubWriteAccess + Crawler-Skip)
+- Apple-JWT-Rotation manuell alle 5 Monate via `scripts/generate-apple-jwt.mjs`
+- Staging + Lokal teilen Neon-DB; sauberer wäre eigener Neon-Branch
+- Crawler `0 */6 * * *` hat keinen UA-Rotation/Jitter → fussball.de-Bann-Risiko bei Scale (Phase-5-Fix vorgesehen)

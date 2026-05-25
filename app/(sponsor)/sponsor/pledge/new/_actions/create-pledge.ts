@@ -63,12 +63,20 @@ export async function createPledge(input: PledgeInput) {
     throw new Error("Einladung wurde vom Verein zurückgezogen.");
   }
 
+  // Sponsor-Pledges brauchen eine teamId — die neue invitations-Tabelle hat
+  // sie als nullable (für team-member Invites), aber sponsor-Invites haben sie
+  // immer gesetzt. Defensive Narrowing damit der TS-Compiler glücklich ist.
+  if (!invitation.teamId) {
+    throw new Error("Einladung hat keine Mannschaft — falscher Token-Typ?");
+  }
+  const invitationTeamId: string = invitation.teamId;
+
   // Read-Only-Gate: Mannschaft → Club → Subscription. Wir lassen Sponsoren keinen
   // neuen Pledge anlegen, wenn der Verein im Read-Only-Modus ist.
   const [teamRow] = await db
     .select({ clubId: teams.clubId })
     .from(teams)
-    .where(eq(teams.id, invitation.teamId))
+    .where(eq(teams.id, invitationTeamId))
     .limit(1);
   if (!teamRow) {
     throw new Error("Mannschaft zur Einladung nicht gefunden.");
@@ -83,13 +91,13 @@ export async function createPledge(input: PledgeInput) {
   // Pricing v2: Cap-Check vor INSERT. Erst Sponsor-Cap (nur wenn neuer Sponsor),
   // dann Pledge-Rules-Cap (zählt bestehende Rules + die neu hinzukommenden).
   try {
-    await assertCanAddSponsorToTeam(invitation.teamId, sponsorId);
-    const plan = await getTeamLicensePlan(invitation.teamId);
+    await assertCanAddSponsorToTeam(invitationTeamId, sponsorId);
+    const plan = await getTeamLicensePlan(invitationTeamId);
     const ruleCap = PLAN_CAPS[plan].maxPledgeRulesPerSponsor;
     if (ruleCap !== null) {
       const existing = await countPledgeRulesForSponsorOnTeam(
         sponsorId,
-        invitation.teamId
+        invitationTeamId
       );
       if (existing + parsed.rules.length > ruleCap) {
         throw new PlanCapExceededError(
@@ -117,7 +125,7 @@ export async function createPledge(input: PledgeInput) {
     // Laut docs/pricing.md §5+§8 ist season_* nur fuer Pro/Verein.
     // Auf basic-Tier ist es das Hauptverkaufsargument fuers Upgrade —
     // ohne Server-Gate koennten Basic-Sponsoren Saison-Wetten erstellen.
-    const plan = await getTeamLicensePlan(invitation.teamId);
+    const plan = await getTeamLicensePlan(invitationTeamId);
     if (plan === "basic") {
       throw new SeasonWagerNotAllowedError(plan);
     }
@@ -147,7 +155,7 @@ export async function createPledge(input: PledgeInput) {
       .insert(pledges)
       .values({
         sponsorId: sponsorId,
-        teamId: invitation.teamId,
+        teamId: invitationTeamId,
         status: "active",
         startsAt: now,
         endsAt: parsed.endsAtSaisonEnd

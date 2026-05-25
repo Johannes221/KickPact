@@ -1,8 +1,26 @@
 import { createHash } from "node:crypto";
 import { chromium, type Page } from "playwright";
 
-const USER_AGENT =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+/**
+ * Audit 2026-05-24 Phase 5 / Task 5.2: User-Agent-Rotation gegen fussball.de-Bann.
+ * Vorher statisch — bei häufigen Calls vom selben UA muster erkennt der Server.
+ * Mix aus aktuellen Desktop-Browser-Strings (Chrome/Firefox/Safari, Mac+Win).
+ */
+const USER_AGENTS: ReadonlyArray<string> = [
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_2) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+];
+
+function pickUserAgent(): string {
+  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+}
+
+// Backward-compat: alte Aufrufer kennen evtl. die Konstante. Random pro
+// Module-Load → wenigstens unterschiedlich pro Inngest-Worker.
+const USER_AGENT = pickUserAgent();
 
 /**
  * Transient error patterns that justify a retry.

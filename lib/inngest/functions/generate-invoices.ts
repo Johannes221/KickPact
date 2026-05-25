@@ -85,7 +85,7 @@ function buildPeriodFromString(periodStr: string): BillingPeriod {
  * wird onConflictDoNothing ausgelöst und der Mail-Send-Step übersprungen.
  */
 export const generateInvoices = inngest.createFunction(
-  { id: "generate-invoices", name: "Monthly Invoice Generation" },
+  { id: "generate-invoices", name: "Monthly Invoice Generation", concurrency: { limit: 1 } },
   [{ cron: "17 3 1 * *" }, { event: "invoices/manual-run" }],
   async ({ step, logger, event }) => {
     const overridePeriod = (event?.data as { period?: string } | undefined)?.period;

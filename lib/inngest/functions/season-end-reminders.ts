@@ -25,7 +25,7 @@ import { getReplyToForClub } from "@/lib/mail/reply-to";
  * Manual run: `pledges/season-end-test` Event.
  */
 export const seasonEndReminders = inngest.createFunction(
-  { id: "season-end-reminders", name: "Season-End Pledge Reminders" },
+  { id: "season-end-reminders", name: "Season-End Pledge Reminders", concurrency: { limit: 1 } },
   [{ cron: "30 2 * * *" }, { event: "pledges/season-end-test" }],
   async ({ step, logger, event }) => {
     const overrideDays = (event?.data as { daysAhead?: number } | undefined)?.daysAhead;

@@ -50,7 +50,7 @@ export function parseSeasonBoundaries(saison: string): { start: Date; end: Date 
  * status='pending_approval' damit der Sponsor sie bestätigt.
  */
 export const evaluateSeason = inngest.createFunction(
-  { id: "evaluate-season", name: "Evaluate Season-Wetten" },
+  { id: "evaluate-season", name: "Evaluate Season-Wetten", concurrency: { limit: 2 } },
   [{ event: "season/result-set" }],
   async ({ event, step, logger }) => {
     const { teamId, saison } = event.data as { teamId: string; saison: string };

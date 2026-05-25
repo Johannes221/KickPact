@@ -19,7 +19,10 @@ import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 export const crawlMatches = inngest.createFunction(
   { id: "crawl-matches", concurrency: { limit: 2 } },
   [
-    { cron: "0 */6 * * *" },
+    // Audit 2026-05-24 Phase 5 / Task 5.2: Crawler-Throttling.
+    // Vorher alle 6h — Amateurfußball-Spielzeit ist Sa/So, 4 Runs/Tag sind
+    // Verschwendung + erhöhen fussball.de-Bann-Risiko. Jetzt einmal nachts.
+    { cron: "0 3 * * *" },
     { event: "crawler/manual" },
     { event: "crawler/team.crawl" }
   ],

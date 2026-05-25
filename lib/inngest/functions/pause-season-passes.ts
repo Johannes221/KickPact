@@ -9,7 +9,7 @@ import { pauseSeasonPassSubscriptions } from "@/lib/billing/season-pass";
  * triggert Stripe `pause_collection={behavior:'void'}`, spiegelt `team_licenses.status`.
  */
 export const pauseSeasonPasses = inngest.createFunction(
-  { id: "pause-season-passes", name: "Sommerpause: Saison-Pass pausieren (1.6.)" },
+  { id: "pause-season-passes", name: "Sommerpause: Saison-Pass pausieren (1.6.)", concurrency: { limit: 1, key: "season-pass-lifecycle" } },
   [{ cron: "0 2 1 6 *" }, { event: "subscriptions/pause-season-passes-test" }],
   async ({ logger }) => {
     if (!isStripeConfigured()) {
