@@ -11,6 +11,7 @@ export interface DiscoverableTeam {
   clubOrt: string | null;
   publicTagline: string | null;
   hasOpenInquiry: boolean;
+  clubVerifiedAt: Date | null;
 }
 
 /**
@@ -46,6 +47,7 @@ export async function listDiscoverableTeams(opts: {
       clubId: clubs.id,
       clubName: clubs.name,
       clubOrt: clubs.ort,
+      clubVerifiedAt: clubs.verifiedAt,
       publicTagline: teams.publicTagline,
       hasInquiry: opts.sponsorUserId
         ? sql<boolean>`EXISTS (
@@ -70,7 +72,8 @@ export async function listDiscoverableTeams(opts: {
     clubName: r.clubName,
     clubOrt: r.clubOrt,
     publicTagline: r.publicTagline,
-    hasOpenInquiry: Boolean(r.hasInquiry)
+    hasOpenInquiry: Boolean(r.hasInquiry),
+    clubVerifiedAt: r.clubVerifiedAt
   }));
 }
 

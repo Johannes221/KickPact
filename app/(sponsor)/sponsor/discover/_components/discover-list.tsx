@@ -80,15 +80,22 @@ function TeamTile({ team }: { team: DiscoverableTeam }) {
           primary={primary}
           secondary={secondary}
         >
-          {done ? (
-            <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-1 text-xs font-semibold">
-              ✓ Anfrage gesendet
-            </span>
-          ) : (
-            <span className="inline-flex items-center text-xs font-semibold text-accent">
-              Sponsoring anfragen →
-            </span>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {!team.clubVerifiedAt && (
+              <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-widest text-amber-800">
+                Nicht verifiziert
+              </span>
+            )}
+            {done ? (
+              <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-1 text-xs font-semibold">
+                ✓ Anfrage gesendet
+              </span>
+            ) : (
+              <span className="inline-flex items-center text-xs font-semibold text-accent">
+                Sponsoring anfragen →
+              </span>
+            )}
+          </div>
         </DashboardTile>
       </button>
 
@@ -121,6 +128,13 @@ function TeamTile({ team }: { team: DiscoverableTeam }) {
             </div>
           ) : (
             <div className="mt-6 space-y-3">
+              {!team.clubVerifiedAt && (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+                  Dieser Verein ist noch nicht verifiziert. Pledges sind möglich, aber wir
+                  senden dir erst eine Rechnung, sobald KickPact die Vereinsvertretung
+                  bestätigt hat.
+                </div>
+              )}
               <label className="block">
                 <span className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
                   Nachricht (optional)

@@ -2,9 +2,11 @@ import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
+import { getActiveVerificationForClub } from "@/lib/db/queries/verifications";
 import { db } from "@/lib/db/client";
 import { sponsors, clubMemberships, clubs } from "@/lib/db/schema";
 import { VereinSubNav } from "./_components/verein-sub-nav";
+import { VerificationBanner } from "@/components/shared/verification-banner";
 
 export default async function VereinLayout({
   params,
@@ -31,6 +33,18 @@ export default async function VereinLayout({
     .innerJoin(clubs, eq(clubMemberships.clubId, clubs.id))
     .where(eq(clubMemberships.userId, user.id));
 
+  // Verifikations-Status für Banner. assertClubAccess gibt verifiedAt nicht
+  // mit zurück, also einen kleinen Extra-Select hier — minimal-invasiv.
+  const [verifiedRow] = await db
+    .select({ verifiedAt: clubs.verifiedAt })
+    .from(clubs)
+    .where(eq(clubs.id, club.id))
+    .limit(1);
+  const verifiedAt = verifiedRow?.verifiedAt ?? null;
+  const verification = verifiedAt
+    ? null
+    : await getActiveVerificationForClub(club.id);
+
   return (
     <main className="mx-auto max-w-5xl px-5 md:px-6 py-8 md:py-12">
       {/* Header-Bereich: Vereinsname + Sub-Nav */}
@@ -56,6 +70,10 @@ export default async function VereinLayout({
             </Link>
           )}
         </div>
+
+        {!verifiedAt && (
+          <VerificationBanner clubSlug={slug} verification={verification} />
+        )}
 
         <VereinSubNav slug={slug} clubName={club.name} />
       </div>
