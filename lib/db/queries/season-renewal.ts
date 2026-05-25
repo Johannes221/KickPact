@@ -75,9 +75,9 @@ export async function findPledgesEligibleForRenewal(
         lte(pledges.endsAt, windowEnd)
       )
     );
-  return rows.map((r) => ({
+  return rows.map((r): RenewalCandidate => ({
     ...r,
-    endsAt: r.endsAt instanceof Date ? r.endsAt : new Date(r.endsAt)
+    endsAt: r.endsAt instanceof Date ? r.endsAt : new Date(r.endsAt as unknown as string)
   }));
 }
 

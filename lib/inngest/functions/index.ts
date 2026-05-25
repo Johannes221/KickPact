@@ -12,6 +12,7 @@ import { expireApprovals, endPledges } from "./lifecycle-cleanup";
 import { expireTrials } from "./expire-trials";
 import { cleanupSessions } from "./cleanup-sessions";
 import { anonymizeAccounts } from "./anonymize-accounts";
+import { seasonRenewalPrompts } from "./season-renewal-prompts";
 
 export const functions = [
   crawlMatches,
@@ -28,5 +29,6 @@ export const functions = [
   endPledges,
   expireTrials,
   cleanupSessions,
-  anonymizeAccounts
+  anonymizeAccounts,
+  seasonRenewalPrompts
 ];
