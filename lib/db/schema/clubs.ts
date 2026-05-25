@@ -1,5 +1,5 @@
 import {
-  pgTable, text, timestamp, boolean, jsonb,
+  pgTable, text, timestamp, boolean, jsonb, integer,
   uniqueIndex, index, primaryKey, pgEnum
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
@@ -11,6 +11,22 @@ export const teamMemberRoleEnum = pgEnum("team_member_role", ["trainer", "viewer
 export const clubMembershipRequestStatusEnum = pgEnum(
   "club_membership_request_status",
   ["pending", "approved", "rejected"]
+);
+
+export const clubVerificationStatusEnum = pgEnum(
+  "club_verification_status",
+  ["pending", "approved", "rejected", "revoked"]
+);
+
+export const clubVerificationDocTypeEnum = pgEnum(
+  "club_verification_doc_type",
+  [
+    "vereinsregister_auszug",
+    "vorstands_beschluss",
+    "vereinssatzung",
+    "mitgliederversammlung_protokoll",
+    "sonstiges"
+  ]
 );
 
 export const clubs = pgTable(
@@ -31,6 +47,7 @@ export const clubs = pgTable(
     } | null>(),
     iban: text("iban"),
     logoUrl: text("logo_url"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
   },
@@ -154,5 +171,33 @@ export const clubMembershipRequests = pgTable(
       .where(sql`${t.status} = 'pending'`),
     // Admin-inbox query: list pending requests for a given club.
     clubStatusIdx: index("club_request_club_status_idx").on(t.clubId, t.status)
+  })
+);
+
+export const clubVerifications = pgTable(
+  "club_verifications",
+  {
+    id: text("id").primaryKey().$defaultFn(() => createId()),
+    clubId: text("club_id").notNull().references(() => clubs.id, { onDelete: "cascade" }),
+    submittedByUserId: text("submitted_by_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    docType: clubVerificationDocTypeEnum("doc_type").notNull(),
+    docFilename: text("doc_filename").notNull(),
+    docStorageKey: text("doc_storage_key").notNull(),
+    docMimeType: text("doc_mime_type").notNull(),
+    docSizeBytes: integer("doc_size_bytes").notNull(),
+    submitterRole: text("submitter_role").notNull(),
+    submitterFullName: text("submitter_full_name").notNull(),
+    submitterNotes: text("submitter_notes"),
+    status: clubVerificationStatusEnum("status").notNull().default("pending"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    reviewedByUserId: text("reviewed_by_user_id").references(() => users.id, { onDelete: "set null" }),
+    rejectionReason: text("rejection_reason"),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow()
+  },
+  (t) => ({
+    clubStatusIdx: index("club_verifications_club_status_idx").on(t.clubId, t.status),
+    pendingIdx: index("club_verifications_pending_idx")
+      .on(t.submittedAt)
+      .where(sql`${t.status} = 'pending'`)
   })
 );

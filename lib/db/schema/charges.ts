@@ -15,7 +15,7 @@ export const chargeStatusEnum = pgEnum("charge_status", [
   "cancelled"
 ]);
 
-export const invoiceStatusEnum = pgEnum("invoice_status", ["draft", "sent", "paid"]);
+export const invoiceStatusEnum = pgEnum("invoice_status", ["draft", "sent", "paid", "withheld"]);
 
 export const charges = pgTable(
   "charges",
