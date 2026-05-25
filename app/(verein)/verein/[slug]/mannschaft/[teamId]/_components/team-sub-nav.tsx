@@ -12,6 +12,7 @@ import {
   SheetTitle,
   SheetTrigger
 } from "@/components/ui/sheet";
+import type { EffectivePlan } from "@/lib/db/queries/user-identities";
 
 /**
  * Team-Scope Sub-Navigation für Mannschafts-Admins (basic/pro Plan).
@@ -25,9 +26,20 @@ import {
  * Naming-Entscheidung (2026-05-25): "Pacts" für Pledges, "Spiele" für Matches,
  * "Finanzen" für die Geld-Übersicht. "Events" bleibt internal für die einzelnen
  * Spielereignisse (Tor, Karte, Auswechslung).
+ *
+ * Plan-aware Tab-Filter (2026-05-25): Auf einer Vereinslizenz (`verein`) leben
+ * Abo + Einstellungen auf Club-Ebene und werden vom VereinSubNav bereitgestellt;
+ * im Team-Menü würden sie nur doppelt erscheinen. Bei `basic` / `pro` ist die
+ * Mannschaft der Abrechnungs- und Einstellungs-Anker → Tabs bleiben sichtbar.
  */
 
-const TABS = [
+export type TeamSubNavTab = {
+  label: string;
+  href: string;
+  emoji: string;
+};
+
+const ALL_TABS: readonly TeamSubNavTab[] = [
   { label: "Übersicht", href: "", emoji: "🏟️" },
   { label: "Pacts", href: "/pacts", emoji: "🤝" },
   { label: "Spiele", href: "/spiele", emoji: "⚽" },
@@ -36,19 +48,47 @@ const TABS = [
   { label: "Einstellungen", href: "/einstellungen", emoji: "⚙️" }
 ] as const;
 
+/**
+ * Liefert die im Team-SubNav sichtbaren Tabs für den gegebenen Effective-Plan.
+ *
+ * - `verein` → entfernt `Abo` und `Einstellungen` (Club-Ebene-Tabs)
+ * - `basic` / `pro` / `null` → volles Tab-Set (Mannschaft ist der Anker)
+ *
+ * Wird exportiert, damit die Filter-Semantik isoliert testbar ist.
+ */
+export function getTeamSubNavTabs(
+  effectivePlan: EffectivePlan | null
+): TeamSubNavTab[] {
+  if (effectivePlan === "verein") {
+    return ALL_TABS.filter(
+      (t) => t.href !== "/abo" && t.href !== "/einstellungen"
+    );
+  }
+  return [...ALL_TABS];
+}
+
 interface Props {
   slug: string;
   teamId: string;
   teamName: string;
   clubName: string;
+  effectivePlan: EffectivePlan | null;
 }
 
-export function TeamSubNav({ slug, teamId, teamName, clubName }: Props) {
+export function TeamSubNav({
+  slug,
+  teamId,
+  teamName,
+  clubName,
+  effectivePlan
+}: Props) {
   const pathname = usePathname();
   const base = `/verein/${slug}/mannschaft/${teamId}`;
   const [open, setOpen] = useState(false);
 
-  const activeTab = TABS.find(({ href }) => {
+  const tabs = getTeamSubNavTabs(effectivePlan);
+
+  const activeTab = tabs.find(({ href }) => {
     const fullHref = `${base}${href}`;
     if (href === "") return pathname === base;
     return pathname === fullHref || pathname.startsWith(fullHref + "/");
@@ -58,7 +98,7 @@ export function TeamSubNav({ slug, teamId, teamName, clubName }: Props) {
     <>
       {/* Desktop: horizontal tabs */}
       <nav className="hidden md:flex gap-1 rounded-2xl border border-brand-neutral/30 bg-brand-off-white p-1.5 overflow-x-auto">
-        {TABS.map(({ label, href }) => {
+        {tabs.map(({ label, href }) => {
           const fullHref = `${base}${href}`;
           const isActive = activeTab?.href === href;
           return (
@@ -114,7 +154,7 @@ export function TeamSubNav({ slug, teamId, teamName, clubName }: Props) {
             </SheetTitle>
           </SheetHeader>
           <nav className="mt-6 flex flex-col gap-1">
-            {TABS.map(({ label, href, emoji }) => {
+            {tabs.map(({ label, href, emoji }) => {
               const fullHref = `${base}${href}`;
               const isActive = activeTab?.href === href;
               return (
