@@ -8,12 +8,9 @@ import { Logo } from "@/components/shared/logo";
 import { MobileNav } from "@/components/shared/mobile-nav";
 import { cn } from "@/lib/utils";
 
-// Desktop-Center-Nav. Nur auf md+ sichtbar; Mobile hat den Hamburger-Drawer.
-// Auf Auth-/Onboarding-Routen rendern wir gar keine Nav-Links, da würde
-// das eher ablenken (User soll im Flow bleiben).
-const PUBLIC_DESKTOP_NAV: ReadonlyArray<{ href: string; label: string }> = [
-  { href: "/preise", label: "Preise" }
-];
+// Desktop-Center-Nav ist bewusst leer. „Preise" ist im Footer + als Inline-
+// Link in der Landing-Page erreichbar — der Header-Center-Slot bleibt clean.
+const PUBLIC_DESKTOP_NAV: ReadonlyArray<{ href: string; label: string }> = [];
 
 export interface AppHeaderProps {
   /** True wenn ein Better-Auth-Session-Cookie aktiv ist (vom Server geladen). */

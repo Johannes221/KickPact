@@ -95,24 +95,53 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
 
   if (!session?.user) {
     const linkBase = "text-sm font-semibold transition-colors";
-    const linkColor = onHero
-      ? "text-white/90 hover:text-white drop-shadow-sm"
-      : "text-brand-night-navy/70 hover:text-brand-night-navy";
+    // Auf dem Hero (Foto-Hintergrund mit ggf. hellen Stellen): translucent
+    // Pill als Backdrop hinter den Links → Text bleibt lesbar auch bei
+    // weißen Bereichen im Foto. Auf weißer Header-Bar normaler Dark-Text.
+    if (onHero) {
+      return (
+        <>
+          <nav
+            className={cn(
+              "hidden sm:flex items-center gap-3 rounded-full",
+              "bg-black/35 backdrop-blur-md px-4 py-1.5 ring-1 ring-white/10"
+            )}
+          >
+            <Link href="/login" className={cn(linkBase, "text-white hover:text-white/80")}>
+              Login
+            </Link>
+            <span aria-hidden className="h-3.5 w-px bg-white/40" />
+            <Link
+              href="/signup?role=mannschaft"
+              className={cn(linkBase, "text-white hover:text-white/80")}
+            >
+              Registrieren
+            </Link>
+          </nav>
+          <nav className="sm:hidden">
+            <Link
+              href="/signup"
+              className={cn(
+                linkBase,
+                "text-white rounded-full bg-black/35 backdrop-blur-md px-3 py-1.5 ring-1 ring-white/10"
+              )}
+            >
+              Loslegen →
+            </Link>
+          </nav>
+        </>
+      );
+    }
+    const linkColor = "text-brand-night-navy/70 hover:text-brand-night-navy";
     return (
       <>
         <nav className="hidden sm:flex items-center gap-5">
           <Link href="/login" className={cn(linkBase, linkColor)}>
             Login
           </Link>
-          <span
-            aria-hidden
-            className={cn(
-              "h-4 w-px",
-              onHero ? "bg-white/30" : "bg-brand-night-navy/20"
-            )}
-          />
+          <span aria-hidden className="h-4 w-px bg-brand-night-navy/20" />
           <Link href="/signup?role=mannschaft" className={cn(linkBase, linkColor)}>
-            Mannschaft anlegen
+            Registrieren
           </Link>
         </nav>
         <nav className="sm:hidden">

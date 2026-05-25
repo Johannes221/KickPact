@@ -201,7 +201,7 @@ export function MobileNav({ onHero = false }: { onHero?: boolean }) {
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                     )}
                   >
-                    Mannschaft anlegen →
+                    Registrieren →
                   </Link>
                 </SheetClose>
               </li>
