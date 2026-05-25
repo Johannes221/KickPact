@@ -83,20 +83,28 @@ export default async function MannschaftenPage({
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <Link
+            href={`/verein/${slug}`}
+            className="text-sm text-brand-night-navy/60 hover:text-accent"
+          >
+            ← Dashboard
+          </Link>
+          <h2 className="mt-1.5 font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+            Mannschaften
+          </h2>
+          <p className="text-sm text-brand-night-navy/60">
+            {activeCount} aktive{activeCount === 1 ? "" : ""}
+            {inactiveCount > 0 && <> · {inactiveCount} inaktiv</>}
+          </p>
+        </div>
         <Link
-          href={`/verein/${slug}`}
-          className="text-sm text-brand-night-navy/60 hover:text-accent"
+          href={`/verein/${slug}/mannschaften/neu`}
+          className="shrink-0 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent/90 transition-colors"
         >
-          ← Dashboard
+          + Mannschaft hinzufügen
         </Link>
-        <h2 className="mt-1.5 font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
-          Mannschaften
-        </h2>
-        <p className="text-sm text-brand-night-navy/60">
-          {activeCount} aktive{activeCount === 1 ? "" : ""}
-          {inactiveCount > 0 && <> · {inactiveCount} inaktiv</>}
-        </p>
       </div>
 
       <ul className="space-y-3">
