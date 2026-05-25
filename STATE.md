@@ -1,55 +1,55 @@
 # KickPact State
 
 > **Live-Snapshot des aktiven Repos.** Bei jedem größeren Merge updaten.
+> Letztes Konsolidieren: 2026-05-25 20:00 — alle ~7 Parallel-Sessions des Tages zusammengeführt + Worktrees gereinigt.
 
 ## Stand
 
-- **Branch:** `main` (22 commits ahead of `origin/main` — push pending)
+- **Branch:** `main` (synced mit `origin/main`)
 - **Staging:** https://kickpact.schartl.dev (Coolify-Auto-Deploy on push)
-- **Letzter Commit:** `f1a2639` — feat(queries): salvage team-centric query layer from abandoned worktrees
-- **Aktive Initiative:** **Mannschafts-Lifecycle** (Plan 3 Teil 1, andere Session in Flight — Team-Logo Upload + Spieler-Opt-Out + neue „Mannschaft anlegen"-Page + Team-Roster, Working-Tree-WIP)
-- **Frisch durch:**
-  - **Onboarding-Rebuild komplett** P1-P7 live (`a45c82b` → `76a894c`): 3-Step Wizard mit Draft-Persistence, Plan-Wahl + Cycle weg, PDF-Verifikation aus Wizard raus in `/verein/[slug]/verifikation`, Nav-Doppel-Menü fixed, Login-SSR-Race gefixt
-  - **DataTable-Infra** (`1b3251c` paginate + `a13504d` Component + `19b9c12` + `33c3b8d` Migration auf Sponsor/Verein-Rechnungen)
-  - **Gap-Fix Plan 0** (`3d6723b`): Konto-Page + Cookie-Banner + DSGVO-UI wired
-  - **Phase E3** (Girocode-QR + Sponsor-Pay-Toggle, `dbcf4a3` + `9d55fd9` + `96d1278`)
-  - **Team-Centric Query-Layer** gerettet aus 3 abandoned Worktrees: `team-dashboard.ts`, `team-finances.ts`, `matches.ts`-Extension (`f1a2639`) — wartet auf Wiring in den Sub-Pages
-- **Plan 6 Production-Deploy** als Draft fertig: [docs/superpowers/plans/2026-05-25-plan-6-production-deploy.md](docs/superpowers/plans/2026-05-25-plan-6-production-deploy.md) (484 Zeilen, 77 Steps)
-- **Feature-Catalog Gap-Analyse + Roadmap** (`db03445`): vollständiges Soll/Ist über alle Rollen, davon abgeleitet `docs/superpowers/plans/2026-05-25-gap-fix-roadmap.md`
+- **Letzter Commit:** `23f4021` — feat(admin): platform-tooling expansion + verein-sub-nav pledges/charges
+- **Aktive Initiative:** keine — Tag konsolidiert, bereit für sauberen Neustart morgen
+- **Working-Tree:** clean (alle WIP aus Parallel-Sessions committed)
+- **Worktrees:** clean (alle 9 stale agent-* removed, `phase2-audit` gelöscht — nur noch `main`)
+- **Stashes:** keine
 
-## Plan-Status
+## Heute gebaut (~92 Commits seit 00:00)
 
-| Plan / Spec | Status | Notiz |
+Gruppiert nach Initiative — die ursprünglich auf ~7 Parallel-Sessions verteilte Arbeit:
+
+| Initiative | Status | Source-Session |
 |---|---|---|
-| **Foundation v1** (`2026-05-19-kickpact-v1-design.md`) | ✅ ~95% live | Stripe-Connect-Sektion durch Trust-Spec ersetzt |
-| **Auth + Onboarding** | ✅ live | Magic-Link + Google + Apple, E2E-Bypass-Stub für Tests (`9d4b785`) |
-| **Match-UI + Approvals** | ✅ live | Approval-Inbox, Manual-Events, Saison-Wetten |
-| **Invoicing + PDF + R2** | ✅ live | PDF-Builder, IBAN+Disclaimer, R2-Storage |
-| **Stripe-Abo (Pricing v2)** | ✅ live | 3 Tiers × 3 Cycles (9 SKUs), Saison-Pass-Pause, Vereinslizenz-Bündelung |
-| **Identity Phase A+B** | ✅ live | `pickDashboardDestination`, Role-Switcher, Multi-Identity-Header |
-| **Identity Phase C** | ✅ live (über Conflict-Claim) | `zugriff-anfragen` mit Doc-Upload + Admin-Conflicts-Page (`2a5070a` + `c9f2188`) |
-| **Identity Phase D** (Mobile-IA-Tiles) | ⚠️ teilweise | Team-centric Dashboard deckt vieles ab |
-| **Team-Member-Invitations** | ✅ live | Migration 0018, Mitglieder-Admin + `/team-einladung` Route |
-| **Audit-Fix Phase 1** (Show-Stopper) | ✅ live | Stripe-Placeholder, /api/squad, Impressum, DSGVO-Spielerblock |
-| **Audit-Fix Phase 2** (Geld-Risiken) | ✅ live | Alle 8 Bugs gefixt inkl. B-1 Monthly-Cap-Race (`9cc1e2a` + evaluate-match in `9c613f9`) |
-| **Audit-Fix Phase 3** (Subscription-Lifecycle) | ✅ live | Webhook-Idempotenz, expire-trials/approvals, end-pledges, sent_notifications |
-| **Audit-Fix Phase 4** (DSGVO) | ✅ live | Magic-Link Rate-Limit, PII-Masking, cleanup-sessions, players.blocked, Account-Export, Account-Deletion + Anonymize-Cron |
-| **Audit-Fix Phase 5** (Performance) | ✅ live | 8 Perf-Indexes (Migration 0019), Crawler-Batch, Inngest-Concurrency-Limits |
-| **Team-centric Dashboard** | ⚠️ ~85% | 5 Sub-Pages live + hart-redirect basic/pro + Finanzen-Trend-Chart. Saubere Query-Layer (`team-dashboard.ts`, `team-finances.ts`, `matches.ts`-Extension) jetzt verfügbar — Wiring in die Pages ausstehend. P5 Nav-Dedup live (Mannschaft-only blendet Verein-Nav aus, Verein-Plan Team-SubNav ohne Abo+Einstellungen). |
-| **Trust & Payment Spec (non-custodial)** | ✅ verifiziert | Code war nie custodial — Spec dokumentiert Realität |
-| **Phase E1** (Verifications Schema+Upload+Gate) | ✅ live | Schema + Storage + Queries + Wizard Step 4 + Withhold-Gate |
-| **Phase E2** (Admin-Tooling + Mails + Banner + Conflict-Claim) | ✅ live | `/admin/verifications` + `/admin/conflicts` + 3 Mail-Templates + `VerificationBanner` auf Verein/Sponsor-Discover |
-| **Phase E3** (Girocode QR + Sponsor-Pay-Toggle) | ✅ live | EPC069-12 QR im PDF, BIC weggelassen (Apps resolven aus IBAN), `markedPaidBySponsorAt` 3-Zustands-Pill, Mail-Tipp. Migration 0022 |
-| **Help-Center** | ✅ live | 27 Markdown-Artikel + `/hilfe`-Routes + Frontmatter-Navigation |
-| **Onboarding-Rebuild** | ✅ live | P1-P7 alle durch (`a45c82b` → `76a894c`). Schema mit `onboarding_status` + `onboarding_role` + Draft-Resume-Dispatcher unter `/onboarding`. Wizard ist 3-Step (`{role}/verein` → `{role}/stammdaten` → `{role}/sponsoren`), Plan-Wahl + Cycle komplett weg, Auto-Trial: Mannschaft → Pro, Verein → Vereinslizenz. PDF-Verifikation als async Action unter `/verein/[slug]/verifikation`. Saisonergebnis-Form raus aus Übersicht, in `einstellungen/saison`. Login-SSR-Race via `<LoginSessionGuard />` gefixt. **Caveat:** E2E-Tests unter `tests/e2e/01-onboarding.spec.ts`, `onboarding-flows.spec.ts`, `scraper-flow/verein-onboarding.spec.ts` referenzieren noch alte URLs — werden in CI rot. Rewrite ist Follow-up. |
-| **Mannschafts-Lifecycle** (Plan 3 Teil 1) | 🚧 in Arbeit (andere Session) | Team-Logo Upload (Migration 0023), DSGVO Player-Opt-Out (HMAC-Token + `/spieler-opt-out`-Page), Team-Lifecycle Server-Actions, neue „Mannschaft anlegen"-Page (`/verein/[slug]/mannschaften/neu/`), Team-Spieler-Roster — alles im Working-Tree noch uncommitted |
-| **Konto/DSGVO-UI** (Gap-Fix Plan 0) | ✅ live | `/konto`-Page mit Datenexport + Account-Löschung-Banner, Cookie-Banner, DSGVO-Action-Buttons im Header-Dropdown |
-| **DataTable-Infra** | ✅ live | Paginate-Helper für Drizzle + generische DataTable-Component mit URL-State + sortable Headers, migriert auf Sponsor- und Verein-Rechnungen |
-| **Plan 6: Production-Domain `kickpact.com`** | 📝 Draft-Plan | 451 Zeilen, 11 Sektionen, 77 Checkbox-Steps, Risiko-Matrix + Aufwandsschätzung (~7-8h aktiv + 1-3 Tage Stripe-Wartezeit) |
+| **Onboarding-Rebuild P1-P7** (Schema + 3-Step Wizard + Draft-Resume + Role-aware Routing) | ✅ live | „Onboarding flow issues" |
+| **Login-SSR-Race Fix** (LoginSessionGuard → revert + NEXT_REDIRECT-Server-Action-Fix `3d5bd9b`) | ✅ live | „Onboarding flow issues" |
+| **Phase E1+E2+E3 Verifications** (Schema + Upload + Withhold-Gate + Admin-Tooling + Conflict-Claim + 3 Mails + Banner + Girocode-QR) | ✅ live | „Kickpact" |
+| **Team-Centric Dashboard** (effectivePlan-Routing + Layout + Pacts/Spiele/Finanzen/Spieler-Tabs + Hart-Redirect + Nav-Dedup) | ✅ live | „Kickpact 2" |
+| **Reporting + CSV + Filter** (paginate-Helper + DataTable + FilterBar + CsvExportButton + Sponsor /charges + /bilanz + Verein /pledges + /charges + /sponsor/[id] + Sponsor-Dashboard-Tiles) | ✅ live | „kickpact logik audit" |
+| **Mannschafts-Lifecycle** (Team-Logo-Upload + CRUD + /mannschaften/neu + Spieler-Roster + /spieler-opt-out + Match-Event-Editor + Result-Override) | ✅ live | „kickpact logik audit" (Plan 3) |
+| **Admin-Platform-Tooling** (dashboard mit MRR-Chart + users + vereine + crawler + stripe + mail Admin-Pages + platform-stats + crawler-health queries) | ✅ live (`23f4021`) | „Kickpact 2" oder „Scraping" — uncommitted bis 20:00, dann konsolidiert |
+| **Season-Renewal-Cron** (Token + Inngest-Job + Mail-Template + /season-renewal-Page + Server-Actions) | ✅ live (`f10121c`) | unklar — uncommitted bis 19:50, dann konsolidiert |
+| **DSGVO Phase 4+5** (Magic-Link Rate-Limit + PII-Mask + Account-Export + Anonymize-Cron + Perf-Indexes) | ✅ live | „kickpact logik audit" |
+| **Konto/DSGVO-UI** (/konto-Page + Cookie-Banner + DSGVO-Actions im Header) | ✅ live | „Feature catalog by user" |
+| **Help-Center** (27 Markdown-Artikel + /hilfe-Routes) | ✅ live | unklar |
+| **Feature-Catalog Gap-Analyse + Roadmap** (Soll/Ist über alle Rollen) | ✅ docs | „Feature catalog by user" |
+| **Plan 6 Production-Deploy** | 📝 Draft (484 Zeilen, 77 Steps) — wartet auf User-GO | „Kickpact" |
+
+## Plan-Status (kompakt)
+
+| Plan / Spec | Status |
+|---|---|
+| Foundation v1, Auth + Onboarding (alt), Match-UI, Invoicing, Pricing v2, Identity A-C, Team-Member-Invitations, Audit-Fix 1-5, Phase E1-E3, Help-Center | ✅ live (Tag-1 bis Tag-7) |
+| Onboarding-Rebuild (P1-P7) | ✅ live (heute) |
+| Mannschafts-Lifecycle (Plan 3 Teil 1) | ✅ live (heute) |
+| Admin-Platform-Tooling (Gap-Fix Plan 4 vorgezogen) | ✅ live (heute) |
+| Season-Renewal | ✅ live (heute) |
+| Team-Centric Dashboard | ✅ ~95% (5 Sub-Pages + Query-Layer; Wiring der gesalvageten Queries in Pages noch offen — kosmetisches Refactor) |
+| Identity Phase D (Mobile-IA-Tiles) | ⚠️ teilweise (Team-centric deckt vieles ab) |
+| Plan 6 Production-Domain `kickpact.com` | 📝 Draft (wartet auf User) |
+| **Gap-Fix Plans 5+6 (Notifications + …)** | 📝 noch nicht angefangen |
 
 ## Audit-Trail
 
-- **2026-05-24:** [docs/audits/2026-05-24-onboarding-audit.md](docs/audits/2026-05-24-onboarding-audit.md) — Onboarding-Tiefenprüfung
+- **2026-05-24:** [docs/audits/2026-05-24-onboarding-audit.md](docs/audits/2026-05-24-onboarding-audit.md) — Onboarding-Tiefenprüfung (Input für Rebuild)
 - **2026-05-24:** [docs/superpowers/plans/2026-05-24-codebase-audit.md](docs/superpowers/plans/2026-05-24-codebase-audit.md) — Erster Codebase-Audit (30 Findings)
 - **2026-05-25:** [docs/audits/2026-05-25-codebase-audit.md](docs/audits/2026-05-25-codebase-audit.md) — Folge-Audit nach Phase 1-3 + non-custodial Pivot
 - **2026-05-25:** [docs/audits/2026-05-25-feature-catalog-gap-analysis.md](docs/audits/2026-05-25-feature-catalog-gap-analysis.md) — Vollständiger Feature-Katalog Soll/Ist über alle Rollen
@@ -67,36 +67,72 @@
 - ✅ KICKPACT_ADMIN_EMAILS für `/admin/verifications` (Coolify)
 - ❌ Stripe-LIVE-Keys, Production-DNS, Resend-Production-Domain — alles Plan-6-Scope
 
-## Was als nächstes ansteht
+## Was morgen ansteht — DIREKTIVE
 
-### Pending Entscheidungen (User)
+### Priorität 1: User testet Onboarding-Flow
 
-1. **Plan 6 Production-Deploy approven oder iterieren** — Draft mit 77 Checkbox-Steps. Wenn GO: Domain auf kickpact.com flippen, Stripe LIVE, Resend Production-Domain.
-2. **E2E-Tests umschreiben** für neuen 3-Step Onboarding-Wizard — aktuell in CI rot.
-3. **Fußball.de-Saisonergebnis-Crawler** Integration — eigenständiger Plan, würde Saisonergebnis-Manual-Override in `einstellungen/saison` zur Ausnahme machen statt zur Regel.
-4. **FOMO Trial-End-Email-Reminders** (vom User erwähnt) — eigener Plan: Pre-Trial-End-Reminder + Post-Trial-Conversion-FOMO ("X € Pledges aktiv, ohne Abo verlierst du sie").
+Mit dem `3d5bd9b` NEXT_REDIRECT-Fix + `fc976ba` Login-Guard-Revert sollte der Wizard jetzt:
+- Bei frischer Mannschaft-Anmeldung sauber durchlaufen (Step 1 → 2 → 3 → Mannschaft-Dashboard)
+- Session-Verlust während Server-Action ergibt klare „Session abgelaufen"-Toast + Hard-Reload zu /login (statt „NEXT_REDIRECT")
+- Verein-Flow analog mit Multi-Team-Select
 
-### In Flight
+Wenn Bug auftritt → DevTools Network-Tab Screenshot ist **das** Diagnose-Tool.
 
-- **Mannschafts-Lifecycle** (andere Session) — Team-Logo + Opt-Out + Roster + neue „Mannschaft anlegen"-Page. Working-Tree-WIP, kommt wahrscheinlich gleich als atomarer Commit.
-- **Team-Centric Dashboard Wiring** — gerettete Query-Layer in Pages reinziehen (Übersicht, Spiele, Finanzen)
+### Priorität 2: Test-Suite grün kriegen (~30 min)
+
+Per Inventur-Agent: **82 Tests rot** — ein Cluster (~40+) sind Season-Renewal FK-Violations weil das Feature jetzt committed ist aber das resetTestDb-Setup nicht weiß. Der Rest braucht Bisect.
+
+```bash
+npx vitest run 2>&1 | tail -100
+# → herausfinden welche Test-Files fail, geziel reparieren
+```
+
+### Priorität 3: E2E-Tests rewriten für neuen Onboarding-Wizard
+
+`tests/e2e/01-onboarding.spec.ts`, `onboarding-flows.spec.ts`, `scraper-flow/verein-onboarding.spec.ts` referenzieren noch alte `/onboarding/verein/1..5` URLs. Eigener kleiner Plan (~1h).
+
+### Priorität 4 (entscheiden): Plan 6 Production-Deploy?
+
+Wenn User GO sagt → kickpact.com domain flip + Stripe LIVE + Resend Production-Domain. Ohne grüne Tests = riskant.
 
 ### Cleanup-Sweep (½ Tag, jederzeit)
 
 - `scripts/cleanup-dossenheim3-*` + `seed-dossenheim3-*` löschen
 - `npm remove @neondatabase/serverless` (ungenutzt)
-- Hinfällige Pläne archivieren (`docs/superpowers/plans/archive/`)
+- Hinfällige Pläne nach `docs/superpowers/plans/archive/` verschieben (alle vor `2026-05-25`)
+- `CLAUDE.md` aktiver-Plan-Pointer aktualisieren (zeigt noch auf Foundation-Plan von Mai-19)
+- `AUTOPILOT_PROMPT.md` refresh (Tippfehler + Plans 2-4 sind durch)
 - TriggerType Single-Source: `lib/validations/pledge.ts` Zod-Array aus `lib/triggers/labels.ts` ableiten
 
 ## Tests
 
-- **511 passed | 40 skipped** (+38 neue via E3-Snapshots + sponsor-mark-action)
+- **Stand 20:00:** 533 passed | 82 failed | 85 skipped (per Inventur-Agent, 700 total)
+- Failures konzentriert auf Season-Renewal FK-Setup (40+) + offene Cluster zu bisect
 - TypeScript strict, Build clean
-- E2E: Onboarding-Flows un-skipped, Auth-Redirects abgedeckt
+- E2E: alte Onboarding-Specs rot (referenzieren gelöschte Routes)
 
 ## Bekannte Limitierungen
 
 - Apple-JWT-Rotation manuell alle 5 Monate via `scripts/generate-apple-jwt.mjs`
 - Staging + Lokal teilen Neon-DB; sauberer wäre eigener Neon-Branch (Plan-6-Scope)
 - Crawler `0 */6 * * *` — Phase-5 reduziert N+1, aber UA-Rotation/Jitter noch offen (low prio bis Skalierung)
-- Onboarding-Step-4-PDF-Upload-Fehler killt Wizard-State (Onboarding-Rebuild adressiert das)
+- **Better-Auth SSR-Cookie intermittierend nicht sichtbar** — Symptom war NEXT_REDIRECT-Leak in Server-Actions (heute via `requireUserOrThrow` umschifft), tieferer Cookie-Bug noch nicht root-cause-gefixt. Falls Symptom in anderer Form auftritt: BETTER_AUTH_URL env + Coolify Reverse-Proxy Headers verdächtig.
+
+## Setup für morgen — Single-Session-Mode
+
+User möchte alle 7 Parallel-Sessions schließen und morgen in **EINER Session mit mehreren Agents** weiterarbeiten. Aktueller Stand erlaubt das:
+
+- ✅ Alle WIP committed
+- ✅ Alle 9 stale Worktrees removed
+- ✅ Branches clean (`main` only)
+- ✅ Stashes leer
+- ✅ Origin synced
+- ✅ Coolify deployt automatisch beim nächsten Push
+
+**Risiko:** Falls noch eine andere Session beim Schließen versucht zu committen mit alten Schemas/Files, kann es zu Konflikten kommen. Empfehlung: einfach alle Tabs schließen — bei Datenverlust kann man im Reflog (`git reflog`) nachschauen, aber laut Inventur ist alles drin.
+
+**Morgen Start:**
+1. Diese STATE.md lesen für Kontext
+2. `npm test` für Test-Health-Check
+3. Test-Cluster bisect (vermutlich Season-Renewal FK + 1-2 weitere)
+4. Wenn grün → User entscheidet Plan 6 oder andere Initiative
