@@ -4,12 +4,18 @@
 
 ## Stand
 
-- **Branch:** `main`
+- **Branch:** `main` (22 commits ahead of `origin/main` — push pending)
 - **Staging:** https://kickpact.schartl.dev (Coolify-Auto-Deploy on push)
-- **Letzter Commit:** `96d1278` — chore(mail): mention QR-scan tip in invoice cover mail
-- **Aktive Initiative:** **Onboarding-Rebuild** (P1+P2 live in `a45c82b` + `db9e484`, Wizard-Files in Migration — Working Tree weiterhin in flight)
-- **Frisch durch:** **Phase E3** (Girocode-QR + Sponsor-Pay-Toggle, Commits `dbcf4a3` + `9d55fd9` + `96d1278`) — kein Banking-App-Friction mehr bei Sponsoren
-- **Plan 6 Production-Deploy** als Draft fertig: [docs/superpowers/plans/2026-05-25-plan-6-production-deploy.md](docs/superpowers/plans/2026-05-25-plan-6-production-deploy.md) (451 Zeilen, 77 Steps)
+- **Letzter Commit:** `f1a2639` — feat(queries): salvage team-centric query layer from abandoned worktrees
+- **Aktive Initiative:** **Mannschafts-Lifecycle** (Plan 3 Teil 1, andere Session in Flight — Team-Logo Upload + Spieler-Opt-Out + neue „Mannschaft anlegen"-Page + Team-Roster, Working-Tree-WIP)
+- **Frisch durch:**
+  - **Onboarding-Rebuild komplett** P1-P7 live (`a45c82b` → `76a894c`): 3-Step Wizard mit Draft-Persistence, Plan-Wahl + Cycle weg, PDF-Verifikation aus Wizard raus in `/verein/[slug]/verifikation`, Nav-Doppel-Menü fixed, Login-SSR-Race gefixt
+  - **DataTable-Infra** (`1b3251c` paginate + `a13504d` Component + `19b9c12` + `33c3b8d` Migration auf Sponsor/Verein-Rechnungen)
+  - **Gap-Fix Plan 0** (`3d6723b`): Konto-Page + Cookie-Banner + DSGVO-UI wired
+  - **Phase E3** (Girocode-QR + Sponsor-Pay-Toggle, `dbcf4a3` + `9d55fd9` + `96d1278`)
+  - **Team-Centric Query-Layer** gerettet aus 3 abandoned Worktrees: `team-dashboard.ts`, `team-finances.ts`, `matches.ts`-Extension (`f1a2639`) — wartet auf Wiring in den Sub-Pages
+- **Plan 6 Production-Deploy** als Draft fertig: [docs/superpowers/plans/2026-05-25-plan-6-production-deploy.md](docs/superpowers/plans/2026-05-25-plan-6-production-deploy.md) (484 Zeilen, 77 Steps)
+- **Feature-Catalog Gap-Analyse + Roadmap** (`db03445`): vollständiges Soll/Ist über alle Rollen, davon abgeleitet `docs/superpowers/plans/2026-05-25-gap-fix-roadmap.md`
 
 ## Plan-Status
 
@@ -29,13 +35,16 @@
 | **Audit-Fix Phase 3** (Subscription-Lifecycle) | ✅ live | Webhook-Idempotenz, expire-trials/approvals, end-pledges, sent_notifications |
 | **Audit-Fix Phase 4** (DSGVO) | ✅ live | Magic-Link Rate-Limit, PII-Masking, cleanup-sessions, players.blocked, Account-Export, Account-Deletion + Anonymize-Cron |
 | **Audit-Fix Phase 5** (Performance) | ✅ live | 8 Perf-Indexes (Migration 0019), Crawler-Batch, Inngest-Concurrency-Limits |
-| **Team-centric Dashboard** | ⚠️ ~80% | 5 Sub-Pages live + hart-redirect basic/pro + Finanzen-Trend-Chart. Abo + Einstellungen Tabs pending (siehe Onboarding-Rebuild Entscheidung) |
+| **Team-centric Dashboard** | ⚠️ ~85% | 5 Sub-Pages live + hart-redirect basic/pro + Finanzen-Trend-Chart. Saubere Query-Layer (`team-dashboard.ts`, `team-finances.ts`, `matches.ts`-Extension) jetzt verfügbar — Wiring in die Pages ausstehend. P5 Nav-Dedup live (Mannschaft-only blendet Verein-Nav aus, Verein-Plan Team-SubNav ohne Abo+Einstellungen). |
 | **Trust & Payment Spec (non-custodial)** | ✅ verifiziert | Code war nie custodial — Spec dokumentiert Realität |
 | **Phase E1** (Verifications Schema+Upload+Gate) | ✅ live | Schema + Storage + Queries + Wizard Step 4 + Withhold-Gate |
 | **Phase E2** (Admin-Tooling + Mails + Banner + Conflict-Claim) | ✅ live | `/admin/verifications` + `/admin/conflicts` + 3 Mail-Templates + `VerificationBanner` auf Verein/Sponsor-Discover |
 | **Phase E3** (Girocode QR + Sponsor-Pay-Toggle) | ✅ live | EPC069-12 QR im PDF, BIC weggelassen (Apps resolven aus IBAN), `markedPaidBySponsorAt` 3-Zustands-Pill, Mail-Tipp. Migration 0022 |
 | **Help-Center** | ✅ live | 27 Markdown-Artikel + `/hilfe`-Routes + Frontmatter-Navigation |
-| **Onboarding-Rebuild** | 🚧 in Arbeit | P1 (Schema) + P2 (Server-Actions für draft-persistent Wizard) live; Wizard-UI im Working-Tree-Refactor (alte 5-Step-Files deleted, neue mannschaft-first Routes im Bau) |
+| **Onboarding-Rebuild** | ✅ live | P1-P7 alle durch (`a45c82b` → `76a894c`). Schema mit `onboarding_status` + `onboarding_role` + Draft-Resume-Dispatcher unter `/onboarding`. Wizard ist 3-Step (`{role}/verein` → `{role}/stammdaten` → `{role}/sponsoren`), Plan-Wahl + Cycle komplett weg, Auto-Trial: Mannschaft → Pro, Verein → Vereinslizenz. PDF-Verifikation als async Action unter `/verein/[slug]/verifikation`. Saisonergebnis-Form raus aus Übersicht, in `einstellungen/saison`. Login-SSR-Race via `<LoginSessionGuard />` gefixt. **Caveat:** E2E-Tests unter `tests/e2e/01-onboarding.spec.ts`, `onboarding-flows.spec.ts`, `scraper-flow/verein-onboarding.spec.ts` referenzieren noch alte URLs — werden in CI rot. Rewrite ist Follow-up. |
+| **Mannschafts-Lifecycle** (Plan 3 Teil 1) | 🚧 in Arbeit (andere Session) | Team-Logo Upload (Migration 0023), DSGVO Player-Opt-Out (HMAC-Token + `/spieler-opt-out`-Page), Team-Lifecycle Server-Actions, neue „Mannschaft anlegen"-Page (`/verein/[slug]/mannschaften/neu/`), Team-Spieler-Roster — alles im Working-Tree noch uncommitted |
+| **Konto/DSGVO-UI** (Gap-Fix Plan 0) | ✅ live | `/konto`-Page mit Datenexport + Account-Löschung-Banner, Cookie-Banner, DSGVO-Action-Buttons im Header-Dropdown |
+| **DataTable-Infra** | ✅ live | Paginate-Helper für Drizzle + generische DataTable-Component mit URL-State + sortable Headers, migriert auf Sponsor- und Verein-Rechnungen |
 | **Plan 6: Production-Domain `kickpact.com`** | 📝 Draft-Plan | 451 Zeilen, 11 Sektionen, 77 Checkbox-Steps, Risiko-Matrix + Aufwandsschätzung (~7-8h aktiv + 1-3 Tage Stripe-Wartezeit) |
 
 ## Audit-Trail
@@ -62,12 +71,15 @@
 
 ### Pending Entscheidungen (User)
 
-1. **Onboarding-Rebuild approven oder iterieren** — Draft-Plan empfiehlt Mannschaft-first Routing, Draft-Persistence ab Step 1, Pro-Trial als Default. Bei Approval: Plan ausführen (1-2 Tage).
-2. **Team-Tabs Abo/Einstellungen** — gemäß Onboarding-Rebuild-Draft bleiben sie für Mannschaft-Plan (basic/pro) nötig, für Vereins-Plan wegfallend. Erst nach Rebuild-Entscheidung bauen.
+1. **Plan 6 Production-Deploy approven oder iterieren** — Draft mit 77 Checkbox-Steps. Wenn GO: Domain auf kickpact.com flippen, Stripe LIVE, Resend Production-Domain.
+2. **E2E-Tests umschreiben** für neuen 3-Step Onboarding-Wizard — aktuell in CI rot.
+3. **Fußball.de-Saisonergebnis-Crawler** Integration — eigenständiger Plan, würde Saisonergebnis-Manual-Override in `einstellungen/saison` zur Ausnahme machen statt zur Regel.
+4. **FOMO Trial-End-Email-Reminders** (vom User erwähnt) — eigener Plan: Pre-Trial-End-Reminder + Post-Trial-Conversion-FOMO ("X € Pledges aktiv, ohne Abo verlierst du sie").
 
 ### In Flight
 
-- **Onboarding-Rebuild** P3+ (User aktiv) — neue mannschaft-first Wizard-UI ersetzt 5-Step verein/1-5/-Tree
+- **Mannschafts-Lifecycle** (andere Session) — Team-Logo + Opt-Out + Roster + neue „Mannschaft anlegen"-Page. Working-Tree-WIP, kommt wahrscheinlich gleich als atomarer Commit.
+- **Team-Centric Dashboard Wiring** — gerettete Query-Layer in Pages reinziehen (Übersicht, Spiele, Finanzen)
 
 ### Cleanup-Sweep (½ Tag, jederzeit)
 
