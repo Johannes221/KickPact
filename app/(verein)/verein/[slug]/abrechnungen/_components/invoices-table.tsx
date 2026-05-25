@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { DataTable, type DataTableColumn, type SortDirection } from "@/components/ui/data-table";
 import { markInvoicePaid, invoiceDownloadUrl } from "@/lib/actions/invoices";
 
 interface Row {
@@ -24,13 +25,27 @@ function eur(cents: number): string {
   return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 }
 
-export function InvoicesTable({
-  invoices,
-  canMarkPaid
-}: {
+interface InvoicesTableProps {
   invoices: Row[];
   canMarkPaid: boolean;
-}) {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  sort?: "period" | "totalCents" | "status" | "sponsorDisplayName";
+  dir?: SortDirection;
+}
+
+export function InvoicesTable({
+  invoices,
+  canMarkPaid,
+  page,
+  pageSize,
+  total,
+  totalPages,
+  sort,
+  dir
+}: InvoicesTableProps) {
   const [isPending, startTransition] = useTransition();
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -57,66 +72,87 @@ export function InvoicesTable({
     }
   }
 
+  const columns: Array<DataTableColumn<Row>> = [
+    {
+      key: "period",
+      label: "Periode",
+      sortable: true,
+      render: (row) => (
+        <span className="font-mono tabular-nums text-brand-night-navy">{row.period}</span>
+      )
+    },
+    {
+      key: "sponsorDisplayName",
+      label: "Sponsor",
+      sortable: true,
+      render: (row) => (
+        <div className="min-w-0">
+          <div className="font-medium truncate">{row.sponsorDisplayName}</div>
+          <div className="text-xs text-brand-night-navy/50 truncate max-w-[16ch] sm:max-w-none">
+            {row.sponsorEmail}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: "totalCents",
+      label: "Betrag",
+      sortable: true,
+      align: "right",
+      render: (row) => (
+        <span className="font-mono tabular-nums font-semibold">{eur(row.totalCents)}</span>
+      )
+    },
+    {
+      key: "status",
+      label: "Status",
+      sortable: true,
+      render: (row) => <StatusBadge status={row.status} />
+    },
+    {
+      key: "actions",
+      label: "",
+      align: "right",
+      render: (row) => (
+        <div className="inline-flex gap-1 md:gap-2 whitespace-nowrap">
+          {row.pdfUrl && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleDownload(row.id)}
+              className="text-xs"
+            >
+              PDF
+            </Button>
+          )}
+          {canMarkPaid && row.status !== "paid" && (
+            <Button
+              size="sm"
+              variant="accent"
+              disabled={isPending && busyId === row.id}
+              onClick={() => handleMarkPaid(row.id)}
+              className="text-xs"
+            >
+              {isPending && busyId === row.id ? "…" : "Bezahlt"}
+            </Button>
+          )}
+        </div>
+      )
+    }
+  ];
+
   return (
-    <div className="overflow-x-auto rounded-2xl border border-brand-neutral/40 bg-white">
-      <table className="w-full min-w-[640px] text-sm">
-        <thead className="bg-brand-off-white text-[0.65rem] md:text-xs uppercase tracking-wider text-brand-night-navy/60">
-          <tr>
-            <th className="px-3 md:px-4 py-3 text-left font-semibold">Periode</th>
-            <th className="px-3 md:px-4 py-3 text-left font-semibold">Sponsor</th>
-            <th className="px-3 md:px-4 py-3 text-right font-semibold">Betrag</th>
-            <th className="px-3 md:px-4 py-3 text-left font-semibold">Status</th>
-            <th className="px-3 md:px-4 py-3 text-right font-semibold">&nbsp;</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-brand-neutral/30">
-          {invoices.map((inv) => (
-            <tr key={inv.id} className="hover:bg-brand-off-white/60">
-              <td className="px-3 md:px-4 py-3 font-mono tabular-nums text-brand-night-navy">
-                {inv.period}
-              </td>
-              <td className="px-3 md:px-4 py-3 text-brand-night-navy">
-                <div className="font-medium">{inv.sponsorDisplayName}</div>
-                <div className="text-xs text-brand-night-navy/50 truncate max-w-[16ch] sm:max-w-none">
-                  {inv.sponsorEmail}
-                </div>
-              </td>
-              <td className="px-3 md:px-4 py-3 text-right font-mono tabular-nums font-semibold text-brand-night-navy">
-                {eur(inv.totalCents)}
-              </td>
-              <td className="px-3 md:px-4 py-3">
-                <StatusBadge status={inv.status} />
-              </td>
-              <td className="px-3 md:px-4 py-3 text-right whitespace-nowrap">
-                <div className="inline-flex gap-1 md:gap-2">
-                  {inv.pdfUrl && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDownload(inv.id)}
-                      className="text-xs"
-                    >
-                      PDF
-                    </Button>
-                  )}
-                  {canMarkPaid && inv.status !== "paid" && (
-                    <Button
-                      size="sm"
-                      variant="accent"
-                      disabled={isPending && busyId === inv.id}
-                      onClick={() => handleMarkPaid(inv.id)}
-                      className="text-xs"
-                    >
-                      {isPending && busyId === inv.id ? "…" : "Bezahlt"}
-                    </Button>
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable<Row>
+      rows={invoices}
+      columns={columns}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      sort={sort}
+      dir={dir}
+      emptyState="Keine Rechnungen auf dieser Seite."
+    />
   );
 }
 
