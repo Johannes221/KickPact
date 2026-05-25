@@ -3,10 +3,10 @@ import { eq } from "drizzle-orm";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { getActiveVerificationForClub } from "@/lib/db/queries/verifications";
+import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { db } from "@/lib/db/client";
 import { sponsors, clubMemberships, clubs } from "@/lib/db/schema";
-import { VereinSubNav } from "./_components/verein-sub-nav";
-import { VerificationBanner } from "@/components/shared/verification-banner";
+import { VereinHeaderShell } from "./_components/verein-header-shell";
 
 export default async function VereinLayout({
   params,
@@ -45,38 +45,31 @@ export default async function VereinLayout({
     ? null
     : await getActiveVerificationForClub(club.id);
 
+  // Effective-Plan dieses Clubs auflösen — entscheidet, ob der Vereins-Header
+  // auf Mannschafts-Routen ausgeblendet wird (basic/pro: Mannschaft ist der
+  // primäre Scope, Vereins-Header wäre nur Lärm).
+  let effectivePlan: "basic" | "pro" | "verein" | null = null;
+  try {
+    const ids = await getUserIdentities(user.id);
+    effectivePlan =
+      ids.clubs.find((c) => c.clubId === club.id)?.effectivePlan ?? null;
+  } catch {
+    // Layout darf nicht wegen Identity-Lookup kippen.
+  }
+
   return (
     <main className="mx-auto max-w-5xl px-5 md:px-6 py-8 md:py-12">
-      {/* Header-Bereich: Vereinsname + Sub-Nav */}
-      <div className="mb-6 md:mb-10">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div className="hidden md:block">
-            <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
-              Vereins-Dashboard
-            </p>
-            <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
-              {club.name}
-            </h1>
-          </div>
-
-          {/* Kontext-Switcher: nur wenn User auch Sponsor ist */}
-          {sponsorRow && (
-            <Link
-              href="/sponsor"
-              className="shrink-0 mt-1 inline-flex items-center gap-1.5 rounded-full border border-brand-neutral/40 bg-white px-3 py-1.5 text-xs font-semibold text-brand-night-navy/70 hover:bg-brand-off-white hover:text-brand-night-navy transition-colors"
-            >
-              <span className="text-base leading-none">⚡</span>
-              Sponsor-Bereich
-            </Link>
-          )}
-        </div>
-
-        {!verifiedAt && (
-          <VerificationBanner clubSlug={slug} verification={verification} />
-        )}
-
-        <VereinSubNav slug={slug} clubName={club.name} />
-      </div>
+      {/* Header-Bereich: Vereinsname + Sub-Nav.
+          Auf /verein/<slug>/mannschaft/<teamId>... bei basic/pro-Lizenzen
+          ausgeblendet — der TeamSubNav übernimmt dort die Navigation. */}
+      <VereinHeaderShell
+        slug={slug}
+        clubName={club.name}
+        verifiedAt={verifiedAt}
+        verification={verification}
+        hasSponsorProfile={!!sponsorRow}
+        effectivePlan={effectivePlan}
+      />
 
       {/* Weitere Vereins-Tabs wenn User mehrere Vereine hat */}
       {myClubs.length > 1 && (
