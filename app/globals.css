@@ -56,3 +56,41 @@ body { @apply bg-white text-neutral-900 antialiased; }
 @media (prefers-reduced-motion: reduce) {
   .animate-trigger-fly, .animate-trigger-pop { animation: none; }
 }
+
+/* Help-Center Artikel-Typografie. Bewusst minimal — kein @tailwindcss/typography
+   Plugin, um die Build-Surface klein zu halten. */
+.article-prose h2 {
+  @apply mt-8 mb-3 font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy;
+}
+.article-prose h3 {
+  @apply mt-6 mb-2 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy;
+}
+.article-prose h4 {
+  @apply mt-4 mb-2 font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy;
+}
+.article-prose p { @apply my-3 text-sm md:text-base; }
+.article-prose strong { @apply font-bold text-brand-night-navy; }
+.article-prose a { @apply text-accent underline-offset-2 hover:underline; }
+.article-prose ul { @apply my-3 ml-5 list-disc space-y-1 text-sm md:text-base; }
+.article-prose ol { @apply my-3 ml-5 list-decimal space-y-1 text-sm md:text-base; }
+.article-prose li { @apply leading-relaxed; }
+.article-prose blockquote {
+  @apply my-4 border-l-4 border-accent/50 bg-accent/5 pl-4 py-2 text-sm md:text-base text-brand-night-navy/80;
+}
+.article-prose code {
+  @apply rounded bg-brand-neutral/40 px-1.5 py-0.5 text-[0.85em] text-brand-night-navy font-mono;
+}
+.article-prose pre {
+  @apply my-4 rounded-lg bg-brand-night-navy text-brand-off-white p-4 text-xs md:text-sm overflow-x-auto;
+}
+.article-prose pre code { @apply bg-transparent p-0 text-inherit; }
+.article-prose table {
+  @apply my-4 w-full border-collapse text-xs md:text-sm;
+}
+.article-prose th, .article-prose td {
+  @apply border border-brand-neutral/50 px-2 md:px-3 py-2 text-left align-top;
+}
+.article-prose th {
+  @apply bg-brand-off-white font-bold text-brand-night-navy;
+}
+.article-prose hr { @apply my-8 border-brand-neutral/40; }
