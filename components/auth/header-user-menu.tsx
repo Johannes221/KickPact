@@ -240,6 +240,15 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
 
         <DropdownMenuSeparator className="bg-brand-neutral/40" />
         <DropdownMenuItem
+          asChild
+          className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
+        >
+          <Link href="/konto">
+            <span className="mr-2 text-base">⚙️</span>Mein Konto
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
           className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
           onSelect={async () => {
             await signOut();
@@ -247,7 +256,7 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
             router.refresh();
           }}
         >
-          Abmelden
+          <span className="mr-2 text-base">↩</span>Abmelden
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

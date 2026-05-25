@@ -2,6 +2,7 @@ import "./globals.css";
 import { Inter, Montserrat_Alternates } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shared/app-header";
+import { CookieBanner } from "@/components/shared/cookie-banner";
 import { PlausibleScript } from "@/components/analytics/plausible-script";
 import { getServerSession } from "@/lib/auth/session";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
@@ -69,6 +70,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <AppHeader authenticated={authenticated} dashboardHref={dashboardHref} />
         <div id="main">{children}</div>
         <Toaster />
+        <CookieBanner />
       </body>
     </html>
   );

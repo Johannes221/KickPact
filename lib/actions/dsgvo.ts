@@ -142,7 +142,7 @@ export async function requestAccountDeletion(): Promise<{ ok: boolean; error?: s
       }
     });
 
-    revalidatePath("/sponsor/profil");
+    revalidatePath("/konto");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Fehler" };
@@ -156,7 +156,7 @@ export async function cancelAccountDeletion(): Promise<{ ok: boolean; error?: st
       .update(users)
       .set({ deletionRequestedAt: null })
       .where(eq(users.id, user.id));
-    revalidatePath("/sponsor/profil");
+    revalidatePath("/konto");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Fehler" };
