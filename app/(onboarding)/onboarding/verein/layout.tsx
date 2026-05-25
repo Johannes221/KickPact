@@ -15,7 +15,7 @@ export default async function OnboardingLayout({
           Mannschaft anlegen
         </h1>
         <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
-          4 Schritte, dauert ca. 5 Minuten. Verein mit mehreren Teams? → Vereinslizenz im Plan-Schritt wählen.
+          5 Schritte, dauert ca. 5 Minuten. Verein mit mehreren Teams? → Vereinslizenz im Plan-Schritt wählen.
         </p>
       </div>
       {children}
