@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 
 export async function setPledgeStatus(
   pledgeId: string,
-  newStatus: "active" | "paused"
+  newStatus: "active" | "paused" | "ended"
 ): Promise<{ error?: string }> {
   try {
     const user = await requireUser();
@@ -25,9 +25,13 @@ export async function setPledgeStatus(
     }
 
     if (pledge.status === "ended") {
-      return { error: "Abgelaufene Pledges können nicht mehr geändert werden." };
+      return { error: "Beendete Pledges können nicht mehr geändert werden." };
     }
 
+    // Audit 2026-05-24 Phase 3 / Task 3.6: Sponsor darf Pledge endgültig
+    // beenden. Vorher gab es nur active|paused — kein User-initiiertes
+    // ended, der Sponsor war zum Pausieren oder zum Auslaufen am Saisonende
+    // gezwungen. ended ist irreversibel (siehe ended-Check oben).
     await db.update(pledges)
       .set({ status: newStatus })
       .where(eq(pledges.id, pledgeId));

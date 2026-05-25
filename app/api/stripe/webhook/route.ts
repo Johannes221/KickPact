@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
 import { getStripe, getStripeWebhookSecret, isStripeConfigured } from "@/lib/stripe/client";
 import { db } from "@/lib/db/client";
-import { subscriptions, teamLicenses } from "@/lib/db/schema";
+import { subscriptions, teamLicenses, processedStripeEvents } from "@/lib/db/schema";
 import { trackServer } from "@/lib/analytics/track-server";
 import { priceIdToPlanCycle } from "@/lib/stripe/pricing";
 
@@ -39,6 +39,21 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[stripe-webhook] signature verification failed:", err);
     return NextResponse.json({ error: "invalid-signature" }, { status: 400 });
+  }
+
+  // Audit 2026-05-24 Phase 3 / Task 3.1: Idempotency-Gate.
+  // Stripe schickt bei Retries denselben Event nochmal, plus bei reorderten
+  // Events kann ein älteres `subscription.updated` ein neueres überschreiben.
+  // INSERT … ON CONFLICT DO NOTHING + RETURNING ist atomar: nur der erste
+  // Webhook für event.id bekommt die Row zurück und verarbeitet.
+  const insertGate = await db
+    .insert(processedStripeEvents)
+    .values({ eventId: event.id, eventType: event.type })
+    .onConflictDoNothing()
+    .returning({ eventId: processedStripeEvents.eventId });
+  if (insertGate.length === 0) {
+    console.info("[stripe-webhook] duplicate event, skipping", { eventId: event.id });
+    return NextResponse.json({ received: true, deduplicated: true });
   }
 
   try {

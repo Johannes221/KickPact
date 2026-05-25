@@ -8,6 +8,8 @@ import { trialReminders } from "./trial-reminders";
 import { verifyResults } from "./verify-results";
 import { pauseSeasonPasses } from "./pause-season-passes";
 import { resumeSeasonPasses } from "./resume-season-passes";
+import { expireApprovals, endPledges } from "./lifecycle-cleanup";
+import { expireTrials } from "./expire-trials";
 
 export const functions = [
   crawlMatches,
@@ -19,5 +21,8 @@ export const functions = [
   trialReminders,
   verifyResults,
   pauseSeasonPasses,
-  resumeSeasonPasses
+  resumeSeasonPasses,
+  expireApprovals,
+  endPledges,
+  expireTrials
 ];

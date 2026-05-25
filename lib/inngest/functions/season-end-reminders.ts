@@ -1,7 +1,14 @@
 import { eq, and, gte, lte, inArray } from "drizzle-orm";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
-import { pledges, sponsors, teams, clubs, users } from "@/lib/db/schema";
+import {
+  pledges,
+  sponsors,
+  teams,
+  clubs,
+  users,
+  sentNotifications
+} from "@/lib/db/schema";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { seasonEndReminderEmail } from "@/lib/mail/templates/season-end-reminder";
 import { getReplyToForClub } from "@/lib/mail/reply-to";
@@ -64,6 +71,28 @@ export const seasonEndReminders = inngest.createFunction(
     for (const p of expiring) {
       try {
         await step.run(`remind-${p.pledgeId}`, async () => {
+          // Audit 2026-05-24 Phase 3 / Task 3.5: Dedupe-Gate über
+          // sent_notifications. Bestimme Stage anhand der verbleibenden Tage
+          // — wir wollen MAX. 3 Mails pro Pledge: 30d / 14d / 3d.
+          const endsAtDate =
+            typeof p.endsAt === "string" ? new Date(p.endsAt) : p.endsAt;
+          const daysLeft = Math.ceil(
+            (endsAtDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)
+          );
+          const stage =
+            daysLeft <= 3 ? "3d" : daysLeft <= 14 ? "14d" : "30d";
+          const dedupeKey = `${p.pledgeId}:${stage}`;
+
+          const gate = await db
+            .insert(sentNotifications)
+            .values({ kind: "season-end-pledge", key: dedupeKey })
+            .onConflictDoNothing()
+            .returning({ key: sentNotifications.key });
+          if (gate.length === 0) {
+            // already sent for this stage today/earlier — silent skip
+            return;
+          }
+
           const mail = seasonEndReminderEmail({
             sponsorName: p.sponsorDisplayName,
             teamName: p.teamName,
