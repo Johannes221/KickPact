@@ -20,6 +20,8 @@ Mannschaft: ${clubName}
 
 Die PDF findest du im Anhang. Der Verein wird sie dir auch separat per Mail schicken.
 
+Tipp: Banking-App auf, QR-Code auf der Rechnung scannen — fertig.
+
 Vielen Dank, dass du die Mannschaft unterstützt!
 
 — KickPact`,
@@ -40,9 +42,13 @@ Vielen Dank, dass du die Mannschaft unterstützt!
         <tr><td colspan="2" style="font-size: 12px; color:#a3a3a3; padding-top: 8px;">Rechnungsnummer ${invoiceNumber}</td></tr>
       </table>
 
-      <p style="color:#525252; font-size: 14px; line-height: 1.6; margin: 0 0 24px;">
+      <p style="color:#525252; font-size: 14px; line-height: 1.6; margin: 0 0 16px;">
         Die PDF findest du im Anhang. Bitte überweise den Betrag innerhalb von 14 Tagen an den Verein —
         Bankverbindung steht auf der Rechnung.
+      </p>
+
+      <p style="color:#525252; font-size: 13px; line-height: 1.6; margin: 0 0 24px; padding: 10px 14px; background:#F5F8F5; border-radius:8px;">
+        <strong style="color:#1A1A2E;">Tipp:</strong> Banking-App auf, QR-Code im Anhang scannen — fertig.
       </p>
 
       <p style="color:#1A1A2E; font-size: 14px; line-height: 1.6;">
