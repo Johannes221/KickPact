@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { loginAsTestUser, skipIfNoBypass, testEmail } from "./helpers";
 
 /**
  * Onboarding-Flow-Tests
@@ -257,31 +258,69 @@ test.describe("Onboarding · Sponsor-Pfade", () => {
 // ║ Backlog im Plan dokumentiert.                                         ║
 // ╚═══════════════════════════════════════════════════════════════════════╝
 
-test.describe("Onboarding · Realistic-Data-Smokes (auth required, skipped)", () => {
-  test.skip(
-    Boolean(LIVE) || !LIVE,
-    "Voller Flow braucht Test-Auth-Bypass — siehe Plan §5"
-  );
+test.describe("Onboarding · Realistic-Data-Smokes (auth required)", () => {
+  // Skip ganze Suite, wenn kein Bypass-Key konfiguriert ist. So bleiben die
+  // Tests in CI lauffähig ohne Env-Setup, in Local-Dev / Coolify-CI mit Key
+  // werden sie aktiviert.
+  test.skip(skipIfNoBypass(), "E2E_TEST_BYPASS_KEY nicht gesetzt — Auth-Bypass nicht verfügbar");
 
-  test("Verein-Onboarding mit FC Dossenheim", async ({ page }: { page: Page }) => {
+  test("Verein-Onboarding-Wizard Step 1 mit FC Dossenheim (auth)", async ({
+    page
+  }: {
+    page: Page;
+  }) => {
+    const email = testEmail("dossenheim");
+    await loginAsTestUser(page, email, { name: "Dossenheim Tester" });
+
     await page.goto("/onboarding/verein/1");
-    await page.getByPlaceholder(/Heidelberg/i).fill("Dossenheim");
-    await page.getByRole("button", { name: /Suchen/i }).click();
-    // ... weitere Schritte
-    expect(page).toBeTruthy();
+    // Step 1 muss als eingeloggter User rendern, kein Redirect auf /login.
+    await expect(page).not.toHaveURL(/\/login/);
+
+    // Vereinssuche-Input vorhanden.
+    const search = page.getByPlaceholder(/Heidelberg|Verein|Suchen/i).first();
+    await expect(search).toBeVisible();
+    await search.fill("Dossenheim");
+    // Suchen-Button kann verschieden labeled sein — robuster Selector.
+    const submit = page.getByRole("button", { name: /(Suchen|Weiter)/i }).first();
+    await expect(submit).toBeVisible();
   });
 
-  test("Verein-Onboarding mit TSG Schriesheim", async ({ page }: { page: Page }) => {
+  test("Verein-Onboarding-Wizard Step 1 mit TSG Schriesheim (auth)", async ({
+    page
+  }: {
+    page: Page;
+  }) => {
+    const email = testEmail("schriesheim");
+    await loginAsTestUser(page, email, { name: "Schriesheim Tester" });
+
     await page.goto("/onboarding/verein/1");
-    await page.getByPlaceholder(/Heidelberg/i).fill("Schriesheim");
-    await page.getByRole("button", { name: /Suchen/i }).click();
-    expect(page).toBeTruthy();
+    await expect(page).not.toHaveURL(/\/login/);
+    const search = page.getByPlaceholder(/Heidelberg|Verein|Suchen/i).first();
+    await expect(search).toBeVisible();
+    await search.fill("Schriesheim");
   });
 
-  test("Verein-Onboarding mit SG Neuenheim", async ({ page }: { page: Page }) => {
+  test("Verein-Onboarding-Wizard Step 1 mit SG Neuenheim (auth)", async ({
+    page
+  }: {
+    page: Page;
+  }) => {
+    const email = testEmail("neuenheim");
+    await loginAsTestUser(page, email, { name: "Neuenheim Tester" });
+
     await page.goto("/onboarding/verein/1");
-    await page.getByPlaceholder(/Heidelberg/i).fill("Neuenheim");
-    await page.getByRole("button", { name: /Suchen/i }).click();
-    expect(page).toBeTruthy();
+    await expect(page).not.toHaveURL(/\/login/);
+    const search = page.getByPlaceholder(/Heidelberg|Verein|Suchen/i).first();
+    await expect(search).toBeVisible();
+    await search.fill("Neuenheim");
+  });
+
+  // Cleanup nach der Suite — löscht alle e2e-test User wieder.
+  test.afterAll(async ({ request }) => {
+    const key = process.env.E2E_TEST_BYPASS_KEY;
+    if (!key) return;
+    await request.post("/api/test-auth/cleanup", {
+      headers: { "x-test-bypass": key }
+    });
   });
 });
