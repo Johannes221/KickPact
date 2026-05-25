@@ -44,17 +44,25 @@ export function MagicLinkForm({
     // Bug #10 Fix: useSearchParams() statt window.location.search — SSR-sicher,
     // reaktiv bei Route-Wechseln, kein Hydration-Mismatch-Risiko.
     const invitationToken = searchParams.get("invitation");
-    // Reihenfolge: Invitation > expliziter Sponsor-Signup > Default-Signup > Login.
+    const teamInviteToken = searchParams.get("team-invite");
+    // Reihenfolge:
+    //   1. team-invite (Trainer/Viewer-Invite → /team-einladung/[token])
+    //   2. invitation (Sponsor-Invite → /sponsor/onboarding)
+    //   3. expliziter Sponsor-Signup
+    //   4. Default-Verein-Signup
+    //   5. Login → /dashboard
     // Sponsor-Signup MUSS auf /sponsor/onboarding gehen (Profil-Wizard) und
     // nicht auf /sponsor — sonst landet der User auf einem leeren Dashboard
     // ohne Sponsor-Profil und die Page redirected ihn potentiell hin und her.
-    const callbackURL = invitationToken
-      ? `/sponsor/onboarding?invitation=${invitationToken}`
-      : mode === "signup"
-        ? role === "sponsor"
-          ? "/sponsor/onboarding"
-          : "/onboarding/verein/1"
-        : "/dashboard"; // rollenbasiert weiterleiten
+    const callbackURL = teamInviteToken
+      ? `/team-einladung/${teamInviteToken}`
+      : invitationToken
+        ? `/sponsor/onboarding?invitation=${invitationToken}`
+        : mode === "signup"
+          ? role === "sponsor"
+            ? "/sponsor/onboarding"
+            : "/onboarding/verein/1"
+          : "/dashboard"; // rollenbasiert weiterleiten
 
     const result = await signIn.magicLink({
       email: values.email,

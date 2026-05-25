@@ -12,15 +12,21 @@ export const metadata = { title: "Login · KickPact" };
 export default async function LoginPage({
   searchParams
 }: {
-  searchParams: Promise<{ invitation?: string }>;
+  searchParams: Promise<{ invitation?: string; "team-invite"?: string }>;
 }) {
-  const { invitation } = await searchParams;
+  const params = await searchParams;
+  const invitation = params.invitation;
+  const teamInvite = params["team-invite"];
 
   // ── Auth-aware: eingeloggter User landet direkt im Dashboard-Dispatcher ──
   const session = await getServerSession();
   if (session?.user) {
-    // Mit Einladungs-Token: direkt in den Pledge-Wizard, damit das Sponsor-
-    // Onboarding aus einem Einladungs-Link nicht verloren geht.
+    // Team-Einladung (Trainer/Viewer) hat Vorrang — direkt zur Accept-Page.
+    if (teamInvite) {
+      redirect(`/team-einladung/${teamInvite}`);
+    }
+    // Mit Sponsor-Einladungs-Token: direkt in den Pledge-Wizard, damit das
+    // Sponsor-Onboarding aus einem Einladungs-Link nicht verloren geht.
     if (invitation) {
       redirect(`/sponsor/pledge/new?invitation=${invitation}`);
     }

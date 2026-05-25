@@ -106,5 +106,11 @@ export async function submitVerificationAction(
     submitterNotes: parsed.data.submitterNotes ?? null
   });
 
-  redirect(`/onboarding/verein/5?slug=${encodeURIComponent(parsed.data.clubSlug)}`);
+  // Token aus FormData durchreichen (Step 3 hat ihn an Step 4 weitergegeben,
+  // Step 5 braucht ihn um die Sponsor-Einladungs-URL anzuzeigen).
+  const invitationToken = String(formData.get("invitationToken") ?? "");
+  const target = invitationToken
+    ? `/onboarding/verein/5?slug=${encodeURIComponent(parsed.data.clubSlug)}&token=${encodeURIComponent(invitationToken)}`
+    : `/onboarding/verein/5?slug=${encodeURIComponent(parsed.data.clubSlug)}`;
+  redirect(target);
 }

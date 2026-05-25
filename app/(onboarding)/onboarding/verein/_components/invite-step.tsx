@@ -1,66 +1,40 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { finalizeOnboarding } from "../_actions/finalize";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics/track";
 
 export function InviteStep() {
   const router = useRouter();
   const params = useSearchParams();
-  const [pending, startTransition] = useTransition();
   const [invitationUrl, setInvitationUrl] = useState<string>("");
   const [clubSlug, setClubSlug] = useState<string>("");
   const [error, setError] = useState<string>("");
+  // BUG-FIX 2026-05-25: finalizeOnboarding läuft jetzt schon in Step 3 (StammdatenStep).
+  // Step 5 liest nur noch slug + token aus der URL — kein zweiter DB-Call mehr.
+  // Fallback: wenn slug/token fehlen, sind wir auf einem Refresh ohne Daten →
+  // zurück zu Step 1 schicken.
+  const pending = false;
 
   useEffect(() => {
     if (invitationUrl || error) return;
-    startTransition(async () => {
-      try {
-        const result = await finalizeOnboarding({
-          verein: {
-            name: params.get("name") ?? "",
-            vereinId: params.get("vereinId") ?? "",
-            slug: params.get("slug") ?? ""
-          },
-          team: {
-            name: params.get("teamName") ?? "",
-            teamId: params.get("teamId") ?? "",
-            slug: params.get("teamSlug") ?? "",
-            saison: params.get("saison") ?? ""
-          },
-          stammdaten: {
-            contactName: params.get("contactName") ?? "",
-            street: params.get("street") ?? "",
-            zip: params.get("zip") ?? "",
-            city: params.get("city") ?? "",
-            isSmallBusiness: params.get("isSmallBusiness") === "true",
-            taxId: params.get("taxId") || undefined,
-            iban: params.get("iban") ?? ""
-          },
-          plan:
-            (params.get("plan") as "basic" | "pro" | "verein") ?? "basic",
-          cycle:
-            (params.get("cycle") as "monthly" | "season" | "annual") ??
-            "monthly"
-        });
-        const baseUrl = window.location.origin;
-        setInvitationUrl(`${baseUrl}/einladung/${result.invitationToken}`);
-        setClubSlug(result.clubSlug);
-        track("verein_onboarding_completed", {
-          plan: params.get("plan") ?? "basic",
-          cycle: params.get("cycle") ?? "monthly"
-        });
-        toast.success("Verein angelegt 🎉");
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "Fehler beim Anlegen";
-        setError(msg);
-        toast.error(msg);
-      }
+    const slug = params.get("slug");
+    const token = params.get("token");
+    if (!slug || !token) {
+      setError("Onboarding-Daten verloren. Bitte beginne neu.");
+      return;
+    }
+    setClubSlug(slug);
+    const baseUrl = window.location.origin;
+    setInvitationUrl(`${baseUrl}/einladung/${token}`);
+    track("verein_onboarding_completed", {
+      plan: params.get("plan") ?? "basic",
+      cycle: params.get("cycle") ?? "monthly"
     });
+    toast.success("Verein angelegt 🎉");
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error) {
