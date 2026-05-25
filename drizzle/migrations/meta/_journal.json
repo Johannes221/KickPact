@@ -169,6 +169,13 @@
       "when": 1780200000000,
       "tag": "0023_team_logo_url",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1780300000000,
+      "tag": "0024_match_admin_note",
+      "breakpoints": true
     }
   ]
 }

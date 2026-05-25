@@ -55,6 +55,25 @@ export const matches = pgTable(
     contentHash: text("content_hash"),
     /** Human-readable reason if the match was cancelled (e.g. "match_updated"). */
     cancelledReason: text("cancelled_reason"),
+    /**
+     * Plan 3 Teil 2: Audit-Trail für manuelle Admin-Eingriffe am Match.
+     *
+     * JSON-Array von Audit-Einträgen — append-only. Jeder Eintrag dokumentiert
+     * was geändert wurde, von wem, wann, mit dem Original-Snapshot:
+     *
+     *   [{
+     *     kind: "event-deleted" | "result-override" | "event-edited",
+     *     at:   ISO-Date-String,
+     *     byUserId: string,
+     *     snapshot: object,   // Original-Werte vor der Aktion
+     *     reason?: string     // optional (z.B. bei result-override)
+     *   }, ...]
+     *
+     * Wird vom Match-Detail-Page (Read-Only-Anzeige) als "Admin-Korrekturen"
+     * gerendert. Schema ist absichtlich frei (JSON), weil die einzelnen
+     * Action-Typen unterschiedliche Snapshot-Shapes brauchen.
+     */
+    adminNote: text("admin_note"),
     crawledAt: timestamp("crawled_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({
