@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { label: "Übersicht", href: "/sponsor" },
+  { label: "Bilanz", href: "/sponsor/bilanz" },
+  { label: "Charges", href: "/sponsor/charges" },
   { label: "Wetten", href: "/sponsor/pledge" },
   { label: "Inbox", href: "/sponsor/inbox" },
   { label: "Rechnungen", href: "/sponsor/rechnungen" },
