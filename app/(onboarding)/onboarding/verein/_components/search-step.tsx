@@ -20,7 +20,11 @@ type VereinHit = {
   claimedClubSlug?: string | null;
 };
 
-export function SearchStep() {
+export function SearchStep({
+  signupRole = null
+}: {
+  signupRole?: "mannschaft" | "verein" | null;
+} = {}) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<VereinHit[]>([]);
@@ -53,6 +57,7 @@ export function SearchStep() {
       slug: v.slug,
       name: v.name
     });
+    if (signupRole) params.set("role", signupRole);
     router.push(`/onboarding/verein/2?${params.toString()}`);
   }
 

@@ -53,11 +53,22 @@ export function TeamPlanStep({
   const vereinId = params.get("vereinId");
   const slug = params.get("slug");
   const vereinName = params.get("name");
+  const signupRole = params.get("role"); // string | null
+  const isVereinFlow = signupRole === "verein";
+  const isMannschaftFlow = signupRole === "mannschaft";
+
+  const visiblePlans = isVereinFlow
+    ? (["verein"] as PlanKey[])
+    : isMannschaftFlow
+      ? (["basic", "pro"] as PlanKey[])
+      : PLAN_ORDER;
 
   const [teams, setTeams] = useState<Mannschaft[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
-  const [selectedPlan, setSelectedPlan] = useState<PlanKey>("basic");
+  const [selectedPlan, setSelectedPlan] = useState<PlanKey>(
+    isVereinFlow ? "verein" : "basic"
+  );
   const [selectedCycle, setSelectedCycle] = useState<BillingCycle>(
     defaultCycle(seasonOpen, new Date().getMonth() + 1)
   );
@@ -119,6 +130,7 @@ export function TeamPlanStep({
       plan: selectedPlan,
       cycle: selectedCycle
     });
+    if (signupRole) next.set("role", signupRole);
     startTransition(() => {
       router.push(`/onboarding/verein/3?${next.toString()}`);
     });
@@ -275,17 +287,30 @@ export function TeamPlanStep({
         </div>
       </div>
 
-      {/* Plan-Wahl 3 Tiers */}
+      {/* Plan-Wahl — rollenabhängig gefiltert (mannschaft → basic+pro, verein → verein) */}
       <div className="space-y-4">
         <Label className="text-sm font-semibold text-brand-night-navy">
           Welcher Plan für diese Mannschaft?
         </Label>
+        {isVereinFlow && (
+          <p className="text-sm text-brand-night-navy/70">
+            Du registrierst einen Verein mit mehreren Mannschaften — wir haben
+            den Vereins-Plan vorausgewählt.
+          </p>
+        )}
         <RadioGroup
           value={selectedPlan}
           onValueChange={(v) => setSelectedPlan(v as PlanKey)}
-          className="grid gap-4 md:grid-cols-3"
+          className={cn(
+            "grid gap-4",
+            visiblePlans.length === 1
+              ? "md:grid-cols-1 md:max-w-md"
+              : visiblePlans.length === 2
+                ? "md:grid-cols-2"
+                : "md:grid-cols-3"
+          )}
         >
-          {PLAN_ORDER.map((key) => (
+          {visiblePlans.map((key) => (
             <PlanCard
               key={key}
               plan={key}
