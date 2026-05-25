@@ -6,6 +6,13 @@ export const users = pgTable("users", {
   emailVerified: boolean("email_verified").notNull().default(false),
   name: text("name"),
   image: text("image"),
+  /**
+   * Audit 2026-05-24 Phase 4 / Task 4.2: Account-Löschung (Art. 17 DSGVO).
+   * Gesetzt durch requestAccountDeletion() Server-Action. Anonymisierungs-
+   * Cron (anonymize-accounts.ts) löscht/anonymisiert 14d nach diesem
+   * Zeitstempel. Steuer-relevante Rechnungsdaten bleiben § 147 AO erhalten.
+   */
+  deletionRequestedAt: timestamp("deletion_requested_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
 });

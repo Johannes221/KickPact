@@ -11,6 +11,7 @@ import { resumeSeasonPasses } from "./resume-season-passes";
 import { expireApprovals, endPledges } from "./lifecycle-cleanup";
 import { expireTrials } from "./expire-trials";
 import { cleanupSessions } from "./cleanup-sessions";
+import { anonymizeAccounts } from "./anonymize-accounts";
 
 export const functions = [
   crawlMatches,
@@ -26,5 +27,6 @@ export const functions = [
   expireApprovals,
   endPledges,
   expireTrials,
-  cleanupSessions
+  cleanupSessions,
+  anonymizeAccounts
 ];
