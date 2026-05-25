@@ -211,9 +211,19 @@ async function withPage<T>(fn: (page: Page) => Promise<T>): Promise<T> {
 export async function searchVereine(suchbegriff: string): Promise<VereinHit[]> {
   return withPage(async (page) => {
     const url = `https://www.fussball.de/suche/-/text/${encodeURIComponent(suchbegriff)}/restriction/-1#!/`;
-    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+    // Vorher: waitUntil="networkidle" — fußball.de hat Long-Polling-Tracker,
+    // dadurch triggered networkidle teils nie und wartet den vollen 30s-
+    // Timeout. domcontentloaded + waitForSelector auf das tatsächliche
+    // Ergebnis-Element ist deterministisch: sobald Verein-Links im DOM
+    // sind, geht's weiter. Typisch ~2-4s statt 20-30s.
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 15000 });
     await assertNotCaptcha(page);
-    await page.waitForTimeout(2000);
+    await page
+      .waitForSelector('a[href*="/verein/"]', { timeout: 8000 })
+      .catch(() => {
+        // Kein Treffer → returnen wir gleich leeres Array, nicht 8s warten
+        // und dann doch leer. evaluate unten liefert dann [] zurück.
+      });
 
     return await page.evaluate(`(function() {
       var results = [];
@@ -243,9 +253,15 @@ export async function getMannschaften(
 ): Promise<MannschaftHit[]> {
   return withPage(async (page) => {
     const url = `https://www.fussball.de/verein/${slug}/-/id/${vereinId}#!/`;
-    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+    // Siehe searchVereine — domcontentloaded + selector statt networkidle,
+    // sonst hängen wir am long-polling Tracker.
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 15000 });
     await assertNotCaptcha(page);
-    await page.waitForTimeout(2000);
+    await page
+      .waitForSelector('a[href*="/mannschaft/"]', { timeout: 8000 })
+      .catch(() => {
+        // Kein Mannschafts-Link → Verein hat keine Teams, returnen leer.
+      });
 
     const raw = (await page.evaluate(`(function() {
       var results = [];
