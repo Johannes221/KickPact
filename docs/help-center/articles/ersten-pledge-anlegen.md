@@ -1,0 +1,85 @@
+---
+title: "Ersten Pledge anlegen"
+slug: "ersten-pledge-anlegen"
+category: "erste-schritte-sponsor"
+category_label: "Erste Schritte — Sponsor"
+prio: "MUSS"
+audience: ["sponsor"]
+related_articles:
+  - "was-ist-ein-pledge"
+  - "auto-trigger-katalog"
+  - "manual-trigger-katalog"
+  - "caps-und-monats-limits"
+  - "worst-case-berechnung-verstehen"
+last_updated: "2026-05-25"
+status: "published"
+---
+
+Du bist im Pledge-Wizard. Vier Schritte, fünf Minuten — danach läuft dein Pledge automatisch mit jedem Spiel der Mannschaft.
+
+## Was ein Pledge ist (Kurzform)
+
+Ein Pledge ist dein **Sponsoring-Versprechen**: Du verbindest **Trigger** ("Tor", "Sieg", "Hattrick") mit **Beträgen** ("5 €", "20 €", "50 €"). Sobald der Trigger eintritt — durch Fußball.de-Crawl oder manuell durch den Verein bestätigt — wird ein Charge auf dein Konto gebucht. Am Monatsende: Rechnung. Mehr Hintergrund in [Was ist ein Pledge?](was-ist-ein-pledge.md).
+
+## Schritt 1 — Pledge-Name und Mannschaft
+
+- **Name**: kurzer Titel ("Mannschafts-Pledge", "Mein Sohn Tim", "Aufstiegs-Wette"). Nur für dich, der Verein sieht ihn auch.
+- **Mannschaft**: wenn du über einen Einladungslink kommst, schon vorausgewählt. Sonst aus deinen verknüpften Mannschaften wählen.
+
+Tipp: **Pro Trigger-Logik ein eigener Pledge.** Ein Pledge nur für Tore deines Sohnes, ein anderer für Mannschafts-Erfolge. Macht die Übersicht und das Pausieren später leichter.
+
+## Schritt 2 — Trigger wählen
+
+Du siehst eine Liste aller verfügbaren Trigger, gruppiert in:
+
+- **Auto-Trigger** — Fußball.de-Daten, läuft automatisch. Siehe [Auto-Trigger-Katalog](auto-trigger-katalog.md). 10 Optionen: Tor, Sieg, Unentschieden, Niederlage, Clean Sheet, Hattrick, Comeback, Tordifferenz, Gesamttore, Spieler-Tor.
+- **Manual-Trigger** — Trainer pflegt sie nach Spielende. Siehe [Manual-Trigger-Katalog](manual-trigger-katalog.md). Beispiele: Kopfball, Volley, Hackentor, Karten, Assists, Spieler des Spiels.
+- **Saison-Wetten** (Pro / Vereinslizenz) — einmaliger großer Pay-out: Aufstieg, Klassenerhalt, Tabellenplatz, Pokalrunde.
+- **Custom-Trigger** (Pro / Vereinslizenz) — du formulierst eigene Texte ("Trainer-Frisur-Lob: 5 €").
+
+Wähle einen oder mehrere. Du kannst später jederzeit weitere hinzufügen.
+
+## Schritt 3 — Beträge und Caps setzen
+
+Für jeden Trigger:
+
+- **Betrag pro Vorkommen** (z.B. 5 € pro Tor).
+- **Optionaler Spieler-Filter** (nur bei Spieler-Triggern): z.B. "nur Tore von Tim Schmidt".
+- **Per-Match-Cap** (optional): "Maximal 20 € pro Spiel" — Schutz vor 7:1-Festspielen.
+
+Auf Pledge-Ebene:
+
+- **Monats-Cap** (optional aber empfohlen): "Maximal 100 €/Monat über alle Trigger zusammen".
+- **Saison-Cap** (optional): "Maximal 800 €/Saison".
+
+Caps sind weiche Limits: Wenn das Cap erreicht ist, werden keine weiteren Charges für diesen Monat erzeugt. Triggers laufen weiter, sind aber als "vom Cap geblockt" markiert (Sponsor sieht das im Dashboard, Verein auch).
+
+Mehr in [Caps und Monats-Limits](caps-und-monats-limits.md).
+
+## Schritt 4 — Worst-Case-Review
+
+Bevor du **Pledge aktivieren** drückst, zeigt KickPact dir:
+
+- **Pro-Match-Worst-Case** — was kannst du maximal in einem einzelnen Spiel auslösen, wenn alle Trigger maximal feuern (ohne Per-Match-Cap)
+- **Monats-Worst-Case** — was kannst du maximal in einem Monat verlieren, basierend auf typischer Spielfrequenz
+- **Saison-Hochrechnung** — Spannweite (z.B. "zwischen 240 € und 480 €")
+
+Wenn die Zahl höher ist als geplant, geh zurück und setze Caps. Bei meisten Pledges landen Sponsoren in einem Worst-Case von 30-100 €/Monat. Mehr in [Worst-Case-Berechnung verstehen](worst-case-berechnung-verstehen.md).
+
+## Aktivierung
+
+Klick **"Pledge aktivieren"**. Ab diesem Moment werden alle zukünftigen Trigger-Events gegen deinen Pledge geprüft. **Vergangene Spiele** der laufenden Saison werden **nicht rückwirkend berücksichtigt** — das gilt nur ab Aktivierung.
+
+## Was du jederzeit ändern kannst
+
+- Beträge hochsetzen — neue Beträge gelten ab dem Änderungs-Zeitpunkt
+- Beträge runtersetzen — analog
+- Trigger entfernen — keine neuen Charges für diesen Trigger
+- Pledge pausieren / beenden — siehe [Pledge pausieren](pledge-paused-und-beendet.md)
+
+Was du **nicht** ändern kannst: bereits erzeugte Charges. Wenn du einen Trigger falsch konfiguriert hattest, kannst du nur **die nachfolgenden Spiele** anpassen, nicht den 5 €-Tor-Charge von gestern.
+
+Weiter lesen:
+- [Was ist ein Pledge?](was-ist-ein-pledge.md)
+- [Caps und Monats-Limits](caps-und-monats-limits.md)
+- [Worst-Case-Berechnung verstehen](worst-case-berechnung-verstehen.md)
