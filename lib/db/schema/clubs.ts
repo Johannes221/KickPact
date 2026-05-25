@@ -126,6 +126,12 @@ export const teams = pgTable(
      * Kurze Beschreibung für das öffentliche Discover-Profil (max ~280 chars).
      */
     publicTagline: text("public_tagline"),
+    /**
+     * Team-Logo. Optional, von Club-Admin in Team-Einstellungen hochgeladen.
+     * Storage-URL im Format `r2://<bucket>/teams/<teamId>/logo-<cuid>.<ext>`
+     * oder `local://...`, aufgelöst via `getDocumentSignedUrl`.
+     */
+    logoUrl: text("logo_url"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({
