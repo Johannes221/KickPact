@@ -153,6 +153,8 @@ export const clubMembershipRequests = pgTable(
     responseMessage: text("response_message"),
     respondedAt: timestamp("responded_at", { withTimezone: true }),
     respondedByUserId: text("responded_by_user_id").references(() => users.id, { onDelete: "set null" }),
+    isConflictClaim: boolean("is_conflict_claim").notNull().default(false),
+    conflictDocStorageKey: text("conflict_doc_storage_key"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({
