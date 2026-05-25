@@ -77,6 +77,16 @@ export const invoices = pgTable(
     sentAt: timestamp("sent_at", { withTimezone: true }),
     paidMarkedAt: timestamp("paid_marked_at", { withTimezone: true }),
     paidMarkedBy: text("paid_marked_by"),
+    /**
+     * Sponsor self-claim of payment ("Habe bezahlt"-Toggle in der
+     * Sponsor-Rechnungsliste). KickPact ist non-custodial — diese Spalte
+     * ist nur ein UX-Marker und ersetzt NICHT die Vereinsbestätigung
+     * (`paidMarkedAt`). Status-Logik:
+     *   - paidMarkedAt != NULL                              → "Bezahlt (Verein bestätigt)"
+     *   - markedPaidBySponsorAt != NULL && paidMarkedAt = NULL → "Bezahlt (warte auf Verein)"
+     *   - sonst                                              → "Offen"
+     */
+    markedPaidBySponsorAt: timestamp("marked_paid_by_sponsor_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({

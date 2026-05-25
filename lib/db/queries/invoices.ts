@@ -17,6 +17,7 @@ export async function listForSponsor(sponsorId: string) {
       clubSlug: clubs.slug,
       sentAt: invoices.sentAt,
       paidMarkedAt: invoices.paidMarkedAt,
+      markedPaidBySponsorAt: invoices.markedPaidBySponsorAt,
       createdAt: invoices.createdAt
     })
     .from(invoices)

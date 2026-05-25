@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { invoices, clubs, sponsors } from "@/lib/db/schema";
@@ -56,4 +56,60 @@ export async function invoiceDownloadUrl(invoiceId: string): Promise<string> {
     throw new Error("Keine PDF-URL für diese Rechnung");
   }
   return getDownloadUrl(row.invoice.pdfUrl);
+}
+
+/**
+ * Sponsor-Self-Toggle: Sponsor markiert die Rechnung als "von mir bezahlt".
+ *
+ * Reines UX-Marker — KickPact bleibt non-custodial und der Verein muss
+ * weiterhin den Geldeingang bestätigen (`markInvoicePaid`). Diese Aktion
+ * setzt nur `invoices.markedPaidBySponsorAt`.
+ *
+ * Toggle-Logik: ist der Marker schon gesetzt, hebt ein zweiter Klick ihn
+ * wieder auf (Sponsor hat sich vertippt). Sobald aber der Verein bezahlt
+ * bestätigt hat (`paidMarkedAt` gesetzt), ist der Sponsor-Marker
+ * einfrierend — kein Toggle mehr möglich, würde die Vereinsbestätigung
+ * verwirren.
+ *
+ * Auth: nur der Sponsor (sponsors.userId === session.user) der Rechnung
+ * darf togglen. Verein-Admins haben hierfür `markInvoicePaid`.
+ */
+export async function markInvoicePaidBySponsor(invoiceId: string) {
+  const user = await requireUser();
+  const [row] = await db
+    .select({
+      invoice: invoices,
+      clubSlug: clubs.slug,
+      sponsorUserId: sponsors.userId
+    })
+    .from(invoices)
+    .innerJoin(clubs, eq(invoices.clubId, clubs.id))
+    .innerJoin(sponsors, eq(invoices.sponsorId, sponsors.id))
+    .where(eq(invoices.id, invoiceId))
+    .limit(1);
+  if (!row) throw new Error("Rechnung nicht gefunden");
+  if (row.sponsorUserId !== user.id) {
+    throw new Error("Diese Rechnung gehört nicht zu deinem Sponsor-Account");
+  }
+  if (row.invoice.paidMarkedAt) {
+    throw new Error(
+      "Der Verein hat den Zahlungseingang bereits bestätigt — die Markierung ist eingefroren."
+    );
+  }
+
+  const next = row.invoice.markedPaidBySponsorAt ? null : new Date();
+
+  await db
+    .update(invoices)
+    .set({ markedPaidBySponsorAt: next })
+    .where(
+      and(
+        eq(invoices.id, invoiceId),
+        // Defense in depth: still check sponsor scope at the WHERE level.
+        eq(invoices.sponsorId, row.invoice.sponsorId)
+      )
+    );
+
+  revalidatePath("/sponsor/rechnungen");
+  return { markedPaidBySponsorAt: next };
 }
