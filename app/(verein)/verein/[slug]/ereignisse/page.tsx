@@ -1,4 +1,4 @@
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { listClubEreignisse } from "@/lib/db/queries/club-dashboard";
 import { EreignisseView } from "./_components/ereignisse-view";
 
@@ -10,7 +10,7 @@ export default async function EreignissePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { club } = await assertClubAccess(slug, "viewer");
+  const { club } = await assertVereinAdminOrRedirect(slug, "viewer");
 
   const ereignisse = await listClubEreignisse(club.id);
 

@@ -27,6 +27,7 @@ import {
   listConfirmedChargesByPeriod,
   groupChargesBySponsorClub
 } from "@/lib/db/queries/charges";
+import { maskEmail } from "@/lib/utils/log-pii";
 
 /**
  * Lesbare Labels für Trigger-Typen — landen auf der PDF + in der DB-Description.
@@ -218,6 +219,12 @@ export const generateInvoices = inngest.createFunction(
 
           const storageUrl = await storePdf(`${cl.id}/${invoiceNumber}.pdf`, pdfBuf);
 
+          // Phase E1 Withhold-Gate: Unverified clubs → invoice + PDF created,
+          // but status='withheld' and mail send is skipped. After approve-
+          // verification (Phase E2), withheld invoices for that club are re-
+          // released in a batch.
+          const clubVerified = cl.verifiedAt !== null;
+
           const inserted = await db.transaction(async (tx) => {
             const [inv] = await tx
               .insert(invoices)
@@ -227,8 +234,8 @@ export const generateInvoices = inngest.createFunction(
                 period: periodStr,
                 totalCents: total,
                 pdfUrl: storageUrl,
-                status: "sent",
-                sentAt: new Date()
+                status: clubVerified ? "sent" : "withheld",
+                sentAt: clubVerified ? new Date() : null
               })
               .onConflictDoNothing()
               .returning();
@@ -271,6 +278,8 @@ export const generateInvoices = inngest.createFunction(
             skipped: false as const,
             invoiceId: inserted.id,
             invoiceNumber,
+            clubId: cl.id,
+            clubVerified,
             sponsorEmail: spRow.user.email,
             sponsorName: spRow.sponsor.displayName,
             adminEmails,
@@ -289,6 +298,19 @@ export const generateInvoices = inngest.createFunction(
 
         invoicesCreated += 1;
         const pdfBuf = Buffer.from(result.pdfBase64, "base64");
+
+        // Phase E1 Withhold-Gate: For unverified clubs, the invoice + PDF
+        // exist (status='withheld' from the DB insert above) but NO mails go
+        // out — sponsor or club-internal. Phase E2's approve-verification
+        // re-releases withheld invoices in a batch.
+        if (!result.clubVerified) {
+          logger.info("invoice withheld — club not verified", {
+            invoiceId: result.invoiceId,
+            clubId: result.clubId,
+            invoiceNumber: result.invoiceNumber
+          });
+          continue;
+        }
 
         // Step B: Mail an Sponsor. Eigener step.run mit deterministischer
         // step-id basierend auf invoiceId → Inngest-Retry triggert genau
@@ -314,7 +336,7 @@ export const generateInvoices = inngest.createFunction(
           });
           if (send.error) {
             logger.error("sponsor-mail failed", {
-              to: result.sponsorEmail,
+              to: maskEmail(result.sponsorEmail),
               error: send.error
             });
             throw new Error(`sponsor-mail-failed: ${send.error}`);
@@ -345,7 +367,7 @@ export const generateInvoices = inngest.createFunction(
               headers: { "Idempotency-Key": `invoice-admins-${result.invoiceId}` }
             });
             if (send.error) {
-              logger.error("club-mail failed", { to: result.adminEmails, error: send.error });
+              logger.error("club-mail failed", { to: maskEmail(result.adminEmails), error: send.error });
               throw new Error(`club-mail-failed: ${send.error}`);
             }
           });

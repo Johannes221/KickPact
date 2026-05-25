@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { eq, and, sql, gte, inArray } from "drizzle-orm";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { db } from "@/lib/db/client";
 import { teams } from "@/lib/db/schema";
 import { matches } from "@/lib/db/schema/matches";
@@ -19,7 +19,7 @@ export default async function MannschaftenPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { club } = await assertClubAccess(slug, "viewer");
+  const { club } = await assertVereinAdminOrRedirect(slug, "viewer");
 
   // Load all active teams
   const teamRows = await db

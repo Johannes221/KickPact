@@ -8,7 +8,7 @@ import {
   users,
   sponsorInquiries
 } from "@/lib/db/schema";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { SponsorsManager } from "./_components/sponsors-manager";
 import { InquiriesInbox } from "./_components/inquiries-inbox";
 import { DiscoverabilityPanel } from "./_components/discoverability-panel";
@@ -21,7 +21,7 @@ export default async function SponsorenPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { club } = await assertClubAccess(slug, "viewer");
+  const { club } = await assertVereinAdminOrRedirect(slug, "viewer");
 
   // Teams of this club
   const teamRows = await db.select().from(teams).where(eq(teams.clubId, club.id));

@@ -5,6 +5,7 @@ import { db } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema/auth";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { magicLinkEmail } from "@/lib/mail/templates/magic-link";
+import { maskEmail } from "@/lib/utils/log-pii";
 
 // Social-Provider werden konditional registriert, damit fehlende Credentials
 // nicht den Server-Boot blocken — z.B. lokal kann man ohne Apple-Keys arbeiten.
@@ -45,6 +46,16 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3003",
   trustedOrigins: [process.env.BETTER_AUTH_URL ?? "http://localhost:3003"],
   socialProviders: Object.keys(socialProviders).length > 0 ? socialProviders : undefined,
+  // Audit 2026-05-24 Phase 4 / Task 4.5: Rate-Limit gegen Magic-Link-Mail-Spam.
+  // Ohne dieses Limit könnte ein Angreifer eine User-Inbox via wiederholten
+  // Login-Attempts fluten (Resend-Kostenangriff + User-Annoyance). 5 Requests
+  // pro 60s pro IP ist großzügig genug für legitime "habe Mail nicht bekommen,
+  // bitte nochmal"-Retries, blockt aber Skript-Spam.
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 5
+  },
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {
@@ -62,12 +73,12 @@ export const auth = betterAuth({
         if (result.error) {
           console.error("[magicLink] Resend send failed:", {
             from: MAIL_FROM,
-            to: email,
+            to: maskEmail(email),
             error: result.error
           });
           throw new Error(`Magic-Link-Mail konnte nicht verschickt werden: ${result.error.message}`);
         }
-        console.log("[magicLink] sent", { to: email, id: result.data?.id });
+        console.log("[magicLink] sent", { to: maskEmail(email), id: result.data?.id });
       },
       expiresIn: 60 * 15
     })

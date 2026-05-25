@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { clubs } from "@/lib/db/schema";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { listForClub } from "@/lib/db/queries/invoices";
 import { InvoicesTable } from "./_components/invoices-table";
 
@@ -13,13 +13,13 @@ export default async function AbrechnungenPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  await assertClubAccess(slug, "viewer");
+  await assertVereinAdminOrRedirect(slug, "viewer");
   const [club] = await db.select().from(clubs).where(eq(clubs.slug, slug)).limit(1);
   if (!club) return null;
 
   const invoicesList = await listForClub(club.id);
 
-  const isAdmin = true; // assertClubAccess already validated; refine later for trainer/viewer
+  const isAdmin = true; // assertVereinAdminOrRedirect already validated; refine later for trainer/viewer
   const totalCents = invoicesList.reduce((sum, i) => sum + i.totalCents, 0);
   const openCents = invoicesList
     .filter((i) => i.status !== "paid")

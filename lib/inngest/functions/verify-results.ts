@@ -15,6 +15,7 @@ import { getActiveTeams, getRecentFinishedMatches } from "@/lib/db/queries/crawl
 import { getSpielDetails } from "@/lib/crawler/fussballde";
 import { validateSpielDetails } from "@/lib/crawler/validator";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
+import { maskEmail } from "@/lib/utils/log-pii";
 
 const TEAMS_PER_RUN = 3; // how many teams to spot-check per day
 const MATCHES_PER_TEAM = 3; // how many of their recent matches to re-verify
@@ -124,7 +125,7 @@ export const verifyResults = inngest.createFunction(
         await step.run("send-alert-email", () =>
           sendDriftEmail(adminEmail, drifts, totalChecked)
         );
-        logger.info("verify-results: alert email sent", { to: adminEmail });
+        logger.info("verify-results: alert email sent", { to: maskEmail(adminEmail) });
       }
     }
 

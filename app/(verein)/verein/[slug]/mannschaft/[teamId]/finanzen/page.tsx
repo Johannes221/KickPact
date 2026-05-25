@@ -1,6 +1,6 @@
-import { eq, and, sql, gte, inArray } from "drizzle-orm";
+import { eq, and, gte, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
+import { teams, matches as matchesTable } from "@/lib/db/schema";
 import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
 import { charges } from "@/lib/db/schema/charges";
 import { sponsors } from "@/lib/db/schema/sponsors";
@@ -11,6 +11,7 @@ import {
   getCategoryLabel,
   type TriggerCategory
 } from "@/lib/billing/trigger-labels";
+import { FinanzenTrendChart } from "./_components/finanzen-trend-chart";
 
 export const metadata = { title: "Finanzen · KickPact" };
 
@@ -33,18 +34,21 @@ export default async function FinanzenPage({
 
   if (!team) return <div className="text-sm text-brand-alert-red">Mannschaft nicht gefunden.</div>;
 
-  // Alle confirmed Charges für dieses Team, aggregiert nach Trigger-Type
+  // Alle confirmed Charges für dieses Team, mit Match-Datum für Trend
   const ruleSums = await db
     .select({
       triggerType: pledgeRules.triggerType,
       triggerParams: pledgeRules.triggerParamsJson,
       amountCents: charges.amountCents,
-      sponsorDisplayName: sponsors.displayName
+      sponsorDisplayName: sponsors.displayName,
+      matchDate: matchesTable.datum,
+      confirmedAt: charges.confirmedAt
     })
     .from(charges)
     .innerJoin(pledgeRules, eq(charges.pledgeRuleId, pledgeRules.id))
     .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .leftJoin(matchesTable, eq(charges.matchId, matchesTable.id))
     .where(and(eq(pledges.teamId, team.id), eq(charges.status, "confirmed")));
 
   const totalCents = ruleSums.reduce((acc, r) => acc + r.amountCents, 0);
@@ -77,6 +81,25 @@ export default async function FinanzenPage({
   const topSponsors = Array.from(sponsorSums.values())
     .sort((a, b) => b.sum - a.sum)
     .slice(0, 10);
+
+  // Monthly-Buckets für Trend-Chart: letzte 12 Monate
+  const now = new Date();
+  const buckets: Array<{ monthLabel: string; totalCents: number; key: string }> = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const monthLabel = d.toLocaleDateString("de-DE", { month: "short" });
+    buckets.push({ monthLabel, totalCents: 0, key });
+  }
+  const bucketByKey = new Map(buckets.map((b) => [b.key, b]));
+  for (const r of ruleSums) {
+    const d = r.matchDate ?? r.confirmedAt;
+    if (!d) continue;
+    const dd = new Date(d);
+    const key = `${dd.getFullYear()}-${String(dd.getMonth() + 1).padStart(2, "0")}`;
+    const b = bucketByKey.get(key);
+    if (b) b.totalCents += r.amountCents;
+  }
 
   return (
     <div className="space-y-6">
@@ -171,6 +194,11 @@ export default async function FinanzenPage({
           </ul>
         </section>
       )}
+
+      {/* Trend-Chart */}
+      <FinanzenTrendChart
+        data={buckets.map((b) => ({ monthLabel: b.monthLabel, totalCents: b.totalCents }))}
+      />
 
       {totalCount === 0 && (
         <div className="rounded-2xl border border-brand-neutral/30 bg-white p-8 text-center text-sm text-brand-night-navy/60">

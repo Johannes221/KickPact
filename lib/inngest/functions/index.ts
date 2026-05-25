@@ -10,6 +10,7 @@ import { pauseSeasonPasses } from "./pause-season-passes";
 import { resumeSeasonPasses } from "./resume-season-passes";
 import { expireApprovals, endPledges } from "./lifecycle-cleanup";
 import { expireTrials } from "./expire-trials";
+import { cleanupSessions } from "./cleanup-sessions";
 
 export const functions = [
   crawlMatches,
@@ -24,5 +25,6 @@ export const functions = [
   resumeSeasonPasses,
   expireApprovals,
   endPledges,
-  expireTrials
+  expireTrials,
+  cleanupSessions
 ];

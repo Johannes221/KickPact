@@ -1,7 +1,8 @@
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { clubMemberships, clubs, teams, teamMemberships } from "@/lib/db/schema";
+import { teamLicenses } from "@/lib/db/schema/billing";
 import { requireUser } from "./session";
 import {
   getSubscriptionGate,
@@ -152,3 +153,41 @@ export async function assertTeamAccess(
   if (!access.granted) redirect("/dashboard");
   return { user, ...access };
 }
+
+/**
+ * Wie assertClubAccess, aber leitet User mit Mannschafts-Lizenz (basic/pro)
+ * sofort zur Team-Page um. Nur Vereinslizenz-Inhaber sehen die Club-Top-
+ * Routes (Dashboard / Mannschaften / Sponsoren / Ereignisse / Abrechnungen).
+ *
+ * Aufrufen in den Club-Top-Pages — NICHT in Sub-Routes wie /mannschaft/[teamId]
+ * oder /spiel/[matchId] (dort ist der Team-Scope erlaubt).
+ */
+export async function assertVereinAdminOrRedirect(
+  clubSlug: string,
+  minRole: Role = "viewer"
+) {
+  const access = await assertClubAccess(clubSlug, minRole);
+
+  // Höchsten Plan über alle team_licenses des Clubs ermitteln. "verein"
+  // hat Vorrang vor "pro" hat Vorrang vor "basic".
+  const teamRows = await db
+    .select({ id: teams.id })
+    .from(teams)
+    .where(eq(teams.clubId, access.club.id))
+    .orderBy(asc(teams.createdAt))
+    .limit(50);
+  if (teamRows.length === 0) return access; // Verein ohne Teams — kein Redirect
+
+  const teamIds = teamRows.map((r) => r.id);
+  const licenses = await db
+    .select({ plan: teamLicenses.plan })
+    .from(teamLicenses)
+    .where(inArray(teamLicenses.teamId, teamIds));
+
+  const hasVerein = licenses.some((l) => l.plan === "verein");
+  if (hasVerein) return access; // Vereinslizenz aktiv → kein Redirect
+
+  // Sonst (basic, pro, oder keine Lizenz): zur Team-Page des ersten Teams
+  redirect(`/verein/${clubSlug}/mannschaft/${teamRows[0].id}`);
+}
+

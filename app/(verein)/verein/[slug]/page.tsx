@@ -1,5 +1,5 @@
 import { eq, sql, and, gte } from "drizzle-orm";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { db } from "@/lib/db/client";
 import { teams } from "@/lib/db/schema";
 import { charges } from "@/lib/db/schema/charges";
@@ -19,7 +19,7 @@ export default async function VereinDashboard({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { club } = await assertClubAccess(slug, "viewer");
+  const { club } = await assertVereinAdminOrRedirect(slug, "viewer");
 
   // Month-start in UTC for "this month" stats
   const now = new Date();

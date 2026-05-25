@@ -203,6 +203,18 @@ export async function updateMatchWithEvents(args: {
   return { matchId, newEventCount };
 }
 
+/**
+ * Audit 2026-05-24 Phase 4 / Task 4.7: Player-Anonymisierung bei Opt-out.
+ *
+ * `players.blocked=true` wird vom Support gesetzt, wenn ein Spieler oder
+ * Erziehungsberechtigter per Mail (siehe DSE Abschnitt 5) der Verarbeitung
+ * widerspricht. `upsertPlayer` returnt jetzt `{id, anonymized}` — wenn
+ * anonymized=true, schreibt `writeMatchEvents` den match_event mit
+ * playerName="Anonymisiert" statt dem echten Namen. Player-Row bleibt erhalten
+ * (für Cross-Match-Statistiken, aber Name-Update wird ignoriert).
+ */
+const ANONYMIZED_NAME = "Anonymisiert";
+
 async function writeMatchEvents(
   matchId: string,
   teamId: string,
@@ -211,7 +223,7 @@ async function writeMatchEvents(
   let newEventCount = 0;
   for (const ev of details.events) {
     if (ev.typ === "TOR" && ev.spielerId) {
-      const playerId = await upsertPlayer(
+      const player = await upsertPlayer(
         teamId,
         ev.spielerId,
         ev.spielerName ?? ev.spielerId
@@ -221,32 +233,32 @@ async function writeMatchEvents(
         minute: ev.minute,
         type: "tor",
         side: ev.side === "unbekannt" ? "heim" : ev.side,
-        playerName: ev.spielerName,
-        playerId: playerId ?? undefined,
+        playerName: player?.anonymized ? ANONYMIZED_NAME : ev.spielerName,
+        playerId: player?.id ?? undefined,
         source: "scraped"
       });
       newEventCount++;
     } else if (ev.typ === "AUSWECHSLUNG" && ev.rein && ev.raus) {
-      const reinId = await upsertPlayer(teamId, ev.rein.id, ev.rein.name);
+      const rein = await upsertPlayer(teamId, ev.rein.id, ev.rein.name);
       await db.insert(matchEvents).values({
         matchId,
         minute: ev.minute,
         type: "auswechslung",
         subtype: "ein",
         side: ev.side === "unbekannt" ? "heim" : ev.side,
-        playerName: ev.rein.name,
-        playerId: reinId ?? undefined,
+        playerName: rein?.anonymized ? ANONYMIZED_NAME : ev.rein.name,
+        playerId: rein?.id ?? undefined,
         source: "scraped"
       });
-      const rausId = await upsertPlayer(teamId, ev.raus.id, ev.raus.name);
+      const raus = await upsertPlayer(teamId, ev.raus.id, ev.raus.name);
       await db.insert(matchEvents).values({
         matchId,
         minute: ev.minute,
         type: "auswechslung",
         subtype: "aus",
         side: ev.side === "unbekannt" ? "heim" : ev.side,
-        playerName: ev.raus.name,
-        playerId: rausId ?? undefined,
+        playerName: raus?.anonymized ? ANONYMIZED_NAME : ev.raus.name,
+        playerId: raus?.id ?? undefined,
         source: "scraped"
       });
       newEventCount += 2;
@@ -259,19 +271,21 @@ async function upsertPlayer(
   teamId: string,
   fussballdeId: string,
   name: string
-): Promise<string | null> {
+): Promise<{ id: string; anonymized: boolean } | null> {
   // Leere IDs überspringen (passiert wenn fussball.de kein Player-Profil hat)
   if (!fussballdeId) return null;
 
   const [existing] = await db
-    .select({ id: players.id })
+    .select({ id: players.id, blocked: players.blocked })
     .from(players)
     .where(and(eq(players.teamId, teamId), eq(players.fussballdePlayerId, fussballdeId)))
     .limit(1);
-  if (existing) return existing.id;
+  if (existing) {
+    return { id: existing.id, anonymized: existing.blocked };
+  }
   const [created] = await db
     .insert(players)
     .values({ teamId, fussballdePlayerId: fussballdeId, name })
     .returning({ id: players.id });
-  return created.id;
+  return { id: created.id, anonymized: false };
 }
