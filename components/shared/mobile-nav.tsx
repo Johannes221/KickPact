@@ -193,7 +193,7 @@ export function MobileNav({ onHero = false }: { onHero?: boolean }) {
               <li className="pt-2">
                 <SheetClose asChild>
                   <Link
-                    href="/signup?role=mannschaft"
+                    href="/signup"
                     className={cn(
                       "flex min-h-12 items-center justify-center rounded-lg",
                       "bg-accent px-4 text-sm font-bold text-white",

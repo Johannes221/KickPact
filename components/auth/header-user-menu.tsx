@@ -112,7 +112,7 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
             </Link>
             <span aria-hidden className="h-3.5 w-px bg-white/40" />
             <Link
-              href="/signup?role=mannschaft"
+              href="/signup"
               className={cn(linkBase, "text-white hover:text-white/80")}
             >
               Registrieren
@@ -140,7 +140,7 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
             Login
           </Link>
           <span aria-hidden className="h-4 w-px bg-brand-night-navy/20" />
-          <Link href="/signup?role=mannschaft" className={cn(linkBase, linkColor)}>
+          <Link href="/signup" className={cn(linkBase, linkColor)}>
             Registrieren
           </Link>
         </nav>
