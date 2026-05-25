@@ -23,6 +23,7 @@ import { lastBillingPeriod, type BillingPeriod } from "@/lib/invoicing/period";
 import { nextInvoiceNumber } from "@/lib/invoicing/numbering";
 import { storePdf } from "@/lib/invoicing/storage";
 import { InvoicePdf } from "@/lib/invoicing/builder";
+import { renderGirocodeDataUrl } from "@/lib/invoicing/girocode";
 import {
   listConfirmedChargesByPeriod,
   groupChargesBySponsorClub
@@ -169,6 +170,16 @@ export const generateInvoices = inngest.createFunction(
             country?: string;
           } | null) ?? null;
 
+          // Pre-render Girocode (EPC069-12) data-URL so the synchronous
+          // react-pdf <Image> can embed it. Returns null when IBAN missing
+          // → builder simply omits the QR side of the pay-box.
+          const girocodeDataUrl = await renderGirocodeDataUrl({
+            beneficiaryName: cl.name,
+            iban: cl.iban ?? null,
+            amountCents: total,
+            remittance: invoiceNumber
+          });
+
           const pdfBuf = await renderToBuffer(
             InvoicePdf({
               data: {
@@ -176,6 +187,7 @@ export const generateInvoices = inngest.createFunction(
                 period: period.label,
                 issuedAt: new Date(),
                 plan: clubPlan,
+                girocodeDataUrl,
                 club: {
                   name: cl.name,
                   address: {

@@ -16,6 +16,7 @@ import React from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { PDFParse } from "pdf-parse";
 import { InvoicePdf, type InvoiceData } from "../../lib/invoicing/builder";
+import { renderGirocodeDataUrl } from "../../lib/invoicing/girocode";
 
 async function extractText(buffer: Buffer): Promise<string> {
   const parser = new PDFParse({ data: new Uint8Array(buffer) });
@@ -121,6 +122,46 @@ describe("Invoice PDF — InvoicePdf component", () => {
     );
     const text = await extractText(buffer);
     expect(text).not.toContain("kickpact.de");
+  }, 30_000);
+
+  it("pay-box renders IBAN + Verwendungszweck (invoice number)", async () => {
+    const buffer = await renderToBuffer(<InvoicePdf data={INVOICE_FIXTURE} />);
+    const text = (await extractText(buffer)).replace(/\s+/g, " ");
+    expect(text.toLowerCase()).toContain("zahlung");
+    expect(text).toContain("Verwendungszweck: 2026-05-001");
+  }, 30_000);
+
+  it("pay-box renders QR-caption when girocodeDataUrl provided", async () => {
+    const girocodeDataUrl = await renderGirocodeDataUrl({
+      beneficiaryName: INVOICE_FIXTURE.club.name,
+      iban: INVOICE_FIXTURE.club.iban,
+      amountCents: 1500,
+      remittance: INVOICE_FIXTURE.invoiceNumber
+    });
+    expect(girocodeDataUrl).toMatch(/^data:image\/png;base64,/);
+
+    const buffer = await renderToBuffer(
+      <InvoicePdf data={{ ...INVOICE_FIXTURE, girocodeDataUrl }} />
+    );
+    // pdf-parse may insert hyphen + linebreak inside long words; strip both
+    // soft-wrapping hyphens and whitespace before substring matching.
+    const text = (await extractText(buffer)).replace(/-\s+/g, "").replace(/\s+/g, " ");
+    // The PNG itself is opaque to pdf-parse, but the caption below it is text.
+    expect(text).toContain("Mit Banking-App scannen");
+  }, 30_000);
+
+  it("pay-box omitted entirely when IBAN missing", async () => {
+    const buffer = await renderToBuffer(
+      <InvoicePdf
+        data={{
+          ...INVOICE_FIXTURE,
+          club: { ...INVOICE_FIXTURE.club, iban: null }
+        }}
+      />
+    );
+    const text = (await extractText(buffer)).replace(/\s+/g, " ");
+    expect(text).not.toContain("Verwendungszweck");
+    expect(text).not.toContain("Mit Banking-App scannen");
   }, 30_000);
 
   it("non-small-business: shows USt-Zwischensumme + 19 % USt row", async () => {

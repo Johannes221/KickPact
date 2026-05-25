@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Image, StyleSheet, Font } from "@react-pdf/renderer";
 import path from "node:path";
 
 // Inter Font registrieren — lokale TTFs unter public/fonts/inter/
@@ -90,6 +90,36 @@ const s = StyleSheet.create({
   proxyShare: { width: 60, textAlign: "right", color: "#525252" },
   proxyAmount: { width: 70, textAlign: "right", color: "#1A1A2E" },
   proxyNote: { marginTop: 6, fontSize: 8, color: "#525252", lineHeight: 1.4 },
+  payBox: {
+    marginTop: 24,
+    padding: 12,
+    borderWidth: 0.5,
+    borderColor: "#CDD2D1",
+    borderRadius: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14
+  },
+  payBoxText: { flex: 1, fontSize: 10, color: "#1A1A2E", lineHeight: 1.5 },
+  payBoxLabel: {
+    fontSize: 9,
+    fontWeight: 700,
+    color: "#1A1A2E",
+    marginBottom: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.4
+  },
+  payBoxIban: { fontFamily: "Inter", fontSize: 10, color: "#1A1A2E" },
+  payBoxMeta: { fontSize: 9, color: "#525252", marginTop: 2 },
+  qrWrap: { width: 80, alignItems: "center" },
+  qrImage: { width: 80, height: 80 },
+  qrCaption: {
+    marginTop: 4,
+    fontSize: 7,
+    color: "#525252",
+    textAlign: "center",
+    lineHeight: 1.3
+  },
   footer: {
     position: "absolute",
     bottom: 36,
@@ -141,6 +171,15 @@ export interface InvoiceData {
    * Keine eigene Auth/Charge — reines Display-Detail.
    */
   proxies?: Array<{ name: string; sharePercent: number; note?: string }>;
+  /**
+   * Optional pre-rendered EPC069-12 Girocode PNG as data-URL. Caller must
+   * render this *before* invoking `InvoicePdf` because react-pdf's `<Image>`
+   * cannot do async work synchronously inside a component. Generated via
+   * `lib/invoicing/girocode.renderGirocodeDataUrl`.
+   *
+   * When `undefined` (or no IBAN), the QR block is not rendered.
+   */
+  girocodeDataUrl?: string | null;
 }
 
 function eur(cents: number): string {
@@ -277,6 +316,32 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
               Diese Aufteilung ist eine interne Notiz des Sponsors — die
               Rechnungs-Gesamtsumme wird zwischen Sponsor und Verein abgerechnet.
             </Text>
+          </View>
+        ) : null}
+
+        {/* Zahlungs-Block — IBAN prominent + Girocode-QR rechts (sofern beide
+            vorhanden). Banking-App scannt → SEPA-Formular vorausgefüllt. */}
+        {data.club.iban ? (
+          <View style={s.payBox} wrap={false}>
+            <View style={s.payBoxText}>
+              <Text style={s.payBoxLabel}>Zahlung</Text>
+              <Text>
+                Bitte überweise {eur(total)} innerhalb von 14 Tagen an:
+              </Text>
+              <Text style={[s.payBoxIban, { marginTop: 4 }]}>
+                {data.club.name}
+              </Text>
+              <Text style={s.payBoxIban}>IBAN: {data.club.iban}</Text>
+              <Text style={s.payBoxMeta}>
+                Verwendungszweck: {data.invoiceNumber}
+              </Text>
+            </View>
+            {data.girocodeDataUrl ? (
+              <View style={s.qrWrap}>
+                <Image src={data.girocodeDataUrl} style={s.qrImage} />
+                <Text style={s.qrCaption}>Mit Banking-App scannen</Text>
+              </View>
+            ) : null}
           </View>
         ) : null}
 
