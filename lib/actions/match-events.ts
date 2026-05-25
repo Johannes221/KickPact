@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
@@ -10,7 +10,8 @@ import {
   teams,
   clubs,
   charges,
-  eventApprovals
+  eventApprovals,
+  pledges
 } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { assertClubWriteAccess } from "@/lib/auth/scope";
@@ -121,6 +122,23 @@ export async function addManualEvent(input: AddManualEventInput) {
 
     const proposals = evaluateTriggers(singleEventInput, rules);
 
+    // Audit 2026-05-25 (Phase 5): Approval-Expiry aus pledges.endsAt ableiten,
+    // nicht hardcoded 06-30. Vorher konnte ein Approval länger gültig sein als
+    // sein Pledge — confirmApproval würde dann auf einem geendeten Pledge
+    // Charges erzeugen. Lade die endsAt für alle relevanten Pledges in einem
+    // Roundtrip.
+    const uniquePledgeIds = [...new Set(proposals.map((p) => p.pledgeId))];
+    const pledgeEndsAtMap = new Map<string, Date>();
+    if (uniquePledgeIds.length > 0) {
+      const pledgeRows = await tx
+        .select({ id: pledges.id, endsAt: pledges.endsAt })
+        .from(pledges)
+        .where(inArray(pledges.id, uniquePledgeIds));
+      for (const row of pledgeRows) {
+        pledgeEndsAtMap.set(row.id, row.endsAt);
+      }
+    }
+
     let chargeCount = 0;
     let approvalCount = 0;
 
@@ -152,17 +170,16 @@ export async function addManualEvent(input: AddManualEventInput) {
         chargeCount++;
 
         if (p.requiresApproval && chargeRow) {
-          // Saison-Ende = 30. Juni des aktuellen Saison-Jahrs (vereinfacht)
-          const now = new Date();
-          const seasonEnd =
-            now.getMonth() <= 5
-              ? new Date(`${now.getFullYear()}-06-30T23:59:59Z`)
-              : new Date(`${now.getFullYear() + 1}-06-30T23:59:59Z`);
+          // Approval expired am Pledge-Ende. Fallback auf 30d wenn endsAt
+          // fehlt (sollte nie passieren — pledges.endsAt ist notNull).
+          const pledgeEndsAt = pledgeEndsAtMap.get(p.pledgeId);
+          const approvalExpiresAt =
+            pledgeEndsAt ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
           await tx.insert(eventApprovals).values({
             matchEventId: created.id,
             pledgeRuleId: p.pledgeRuleId,
             status: "pending",
-            expiresAt: seasonEnd
+            expiresAt: approvalExpiresAt
           });
           approvalCount++;
         }

@@ -37,7 +37,7 @@ function eventLabel(type: string, subtype: string | null): string {
 }
 
 export const approvalReminders = inngest.createFunction(
-  { id: "approval-reminders" },
+  { id: "approval-reminders", concurrency: { limit: 1 } },
   [{ cron: "0 9 * * *" }, { event: "approvals/manual-reminder" }],
   async ({ step, logger }) => {
     // 1) Pending approvals älter als 7d, die seit ≥7d nicht erinnert wurden (oder noch nie)
