@@ -78,7 +78,9 @@ export async function rejectAction(input: { verificationId: string; reason: stri
   });
 
   const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
-  const reuploadUrl = `${base}/onboarding/verein/4?slug=${encodeURIComponent(baseInfo.clubSlug)}`;
+  // Verifikation läuft nicht mehr im Onboarding-Wizard, sondern als async
+  // Aktion im Vereins-Dashboard via /verein/[slug]/verifikation.
+  const reuploadUrl = `${base}/verein/${encodeURIComponent(baseInfo.clubSlug)}/verifikation`;
   const mail = verificationRejectedEmail({
     clubName: baseInfo.clubName,
     reason: parsed.data.reason,

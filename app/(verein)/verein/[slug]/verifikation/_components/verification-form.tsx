@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition, useRef, type DragEvent } from "react";
-import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,11 +50,11 @@ function formatSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-export function VerificationForm() {
-  const params = useSearchParams();
-  const clubSlug = params.get("slug") ?? "";
-  const invitationToken = params.get("token") ?? "";
+interface Props {
+  clubSlug: string;
+}
 
+export function VerificationForm({ clubSlug }: Props) {
   const [pending, startTransition] = useTransition();
   const [docType, setDocType] = useState<string>("vereinsregister_auszug");
   const [submitterRole, setSubmitterRole] = useState("");
@@ -101,7 +100,6 @@ export function VerificationForm() {
     }
     const fd = new FormData();
     fd.set("clubSlug", clubSlug);
-    fd.set("invitationToken", invitationToken);
     fd.set("submitterRole", submitterRole);
     fd.set("submitterFullName", submitterFullName);
     fd.set("docType", docType);

@@ -344,7 +344,7 @@ export default function PreisePage() {
               asChild
               className="w-full sm:w-auto"
             >
-              <Link href="/onboarding/verein/1?plan=pro&cycle=season">
+              <Link href="/onboarding/mannschaft/verein">
                 Kostenlos starten
               </Link>
             </Button>

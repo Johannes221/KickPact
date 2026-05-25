@@ -13,7 +13,7 @@ export default async function ZugriffAnfragenPage({
   searchParams: Promise<{ clubSlug?: string }>;
 }) {
   const { clubSlug } = await searchParams;
-  if (!clubSlug) redirect("/onboarding/verein/1");
+  if (!clubSlug) redirect("/onboarding");
 
   await requireUser();
 
@@ -22,7 +22,7 @@ export default async function ZugriffAnfragenPage({
     .from(clubs)
     .where(eq(clubs.slug, clubSlug))
     .limit(1);
-  if (!club) redirect("/onboarding/verein/1");
+  if (!club) redirect("/onboarding");
 
   const teamRows = await db
     .select({ id: teams.id, name: teams.name, saison: teams.saison })

@@ -2,7 +2,8 @@ import type { UserIdentities } from "@/lib/db/queries/user-identities";
 
 /**
  * Die Rollen, die ein eingeloggter User via `/signup?role=X` hinzufügen kann.
- *  - `mannschaft` und `verein` münden beide in den `/onboarding/verein/...`-Wizard.
+ *  - `mannschaft` mündet in `/onboarding/mannschaft/verein` (Pro-Trial).
+ *  - `verein` mündet in `/onboarding/verein/verein` (Vereinslizenz-Trial).
  *  - `sponsor` mündet in `/sponsor/onboarding`.
  */
 export type AddRoleTarget = "mannschaft" | "verein" | "sponsor";
@@ -52,6 +53,8 @@ export function pickAuthenticatedSignupDestination(
   if (ids.teamOnly[0]) {
     return `/verein/${ids.teamOnly[0].clubSlug}/mannschaft/${ids.teamOnly[0].teamId}`;
   }
-  // Sonst → Wizard starten.
-  return "/onboarding/verein/1";
+  // Sonst → rollenspezifischen Wizard starten.
+  return role === "verein"
+    ? "/onboarding/verein/verein"
+    : "/onboarding/mannschaft/verein";
 }

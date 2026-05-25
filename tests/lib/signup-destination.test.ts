@@ -158,13 +158,13 @@ describe("pickAuthenticatedSignupDestination — role=verein / mannschaft", () =
       sponsor: sponsorIdentity()
     };
     expect(pickAuthenticatedSignupDestination(ids, "verein")).toBe(
-      "/onboarding/verein/1"
+      "/onboarding/verein/verein"
     );
   });
 
-  it("role=mannschaft + nichts → Onboarding-Wizard", () => {
+  it("role=mannschaft + nichts → Mannschaft-Wizard", () => {
     expect(
       pickAuthenticatedSignupDestination(emptyIdentities(), "mannschaft")
-    ).toBe("/onboarding/verein/1");
+    ).toBe("/onboarding/mannschaft/verein");
   });
 });

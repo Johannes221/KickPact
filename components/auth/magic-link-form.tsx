@@ -61,9 +61,11 @@ export function MagicLinkForm({
         : mode === "signup"
           ? role === "sponsor"
             ? "/sponsor/onboarding"
-            : role
-              ? `/onboarding/verein/1?role=${role}`
-              : "/onboarding/verein/1"
+            : role === "mannschaft"
+              ? "/onboarding/mannschaft/verein"
+              : role === "verein"
+                ? "/onboarding/verein/verein"
+                : "/onboarding"
           : "/dashboard"; // rollenbasiert weiterleiten
 
     const result = await signIn.magicLink({

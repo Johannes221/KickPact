@@ -375,7 +375,11 @@ function PriceCard({
           asChild
         >
           <Link
-            href={`/onboarding/verein/1?plan=${planKey}&cycle=${cycle}`}
+            href={
+              planKey === "verein"
+                ? "/onboarding/verein/verein"
+                : "/onboarding/mannschaft/verein"
+            }
             onClick={() =>
               track("pricing_tier_clicked", { tier: planKey, cycle })
             }

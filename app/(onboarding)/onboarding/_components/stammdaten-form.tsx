@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,73 +17,61 @@ import {
   FormLabel,
   FormMessage
 } from "@/components/ui/form";
-import { clubStammdatenSchema, type ClubStammdaten } from "@/lib/validations/club";
 import { track } from "@/lib/analytics/track";
-import { finalizeOnboarding } from "../_actions/finalize";
+import { updateDraftStammdaten } from "../_actions/update-draft-stammdaten";
 
-export function StammdatenStep() {
+const formSchema = z.object({
+  street: z.string().min(1, "Bitte Straße eingeben"),
+  zip: z.string().min(4, "Mind. 4 Zeichen").max(10),
+  city: z.string().min(1, "Bitte Stadt eingeben"),
+  isSmallBusiness: z.boolean(),
+  taxId: z.string().optional(),
+  iban: z.string().optional()
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+interface Props {
+  clubId: string;
+  role: "mannschaft" | "verein";
+  defaultValues?: Partial<FormValues>;
+}
+
+export function StammdatenForm({ clubId, role, defaultValues }: Props) {
   const router = useRouter();
-  const params = useSearchParams();
-  const [submitError, setSubmitError] = useState<string>("");
-  const [submitting, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
+  const [submitError, setSubmitError] = useState("");
 
-  const form = useForm<ClubStammdaten>({
-    resolver: zodResolver(clubStammdatenSchema),
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      contactName: "",
       street: "",
       zip: "",
       city: "",
       isSmallBusiness: true,
       taxId: "",
-      iban: ""
+      iban: "",
+      ...defaultValues
     }
   });
 
-  function onSubmit(values: ClubStammdaten) {
+  function onSubmit(values: FormValues) {
     setSubmitError("");
     track("verein_onboarding_step3_completed");
     startTransition(async () => {
       try {
-        // BUG-FIX 2026-05-25: Vorher wurden die Stammdaten als URL-Params an
-        // Step 4 weitergegeben und der Verein erst in Step 5 (invite-step) in
-        // der DB angelegt. Step 4 (Verifikation) erwartet aber einen
-        // existierenden clubSlug → der existierte nie, Verifikations-Submit
-        // failte still, der User landete ohne Membership in der DB.
-        // Lösung: finalizeOnboarding jetzt schon hier nach Schritt 3.
-        const result = await finalizeOnboarding({
-          verein: {
-            name: params.get("name") ?? "",
-            vereinId: params.get("vereinId") ?? "",
-            slug: params.get("slug") ?? ""
-          },
-          team: {
-            name: params.get("teamName") ?? "",
-            teamId: params.get("teamId") ?? "",
-            slug: params.get("teamSlug") ?? "",
-            saison: params.get("saison") ?? ""
-          },
-          stammdaten: {
-            contactName: values.contactName,
-            street: values.street,
-            zip: values.zip,
-            city: values.city,
-            isSmallBusiness: values.isSmallBusiness,
-            taxId: values.taxId || undefined,
-            iban: values.iban || undefined
-          },
-          plan: (params.get("plan") as "basic" | "pro" | "verein") ?? "basic",
-          cycle:
-            (params.get("cycle") as "monthly" | "season" | "annual") ?? "monthly"
+        await updateDraftStammdaten({
+          clubId,
+          street: values.street,
+          zip: values.zip,
+          city: values.city,
+          isSmallBusiness: values.isSmallBusiness,
+          taxId: values.taxId || undefined,
+          iban: values.iban || undefined
         });
-        // Step 4 bekommt nur noch slug + invitationToken — die anderen
-        // Stammdaten sind in der DB.
-        const next = new URLSearchParams();
-        next.set("slug", result.clubSlug);
-        next.set("token", result.invitationToken);
-        router.push(`/onboarding/verein/4?${next.toString()}`);
+        router.push(`/onboarding/${role}/sponsoren`);
       } catch (e) {
-        const msg = e instanceof Error ? e.message : "Fehler beim Anlegen des Vereins.";
+        const msg = e instanceof Error ? e.message : "Konnte Stammdaten nicht speichern.";
         setSubmitError(msg);
         toast.error(msg);
       }
@@ -94,24 +83,6 @@ export function StammdatenStep() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {/* Kontakt */}
-        <FormField
-          control={form.control}
-          name="contactName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm font-semibold text-brand-night-navy">
-                Dein Name (Kontaktperson)
-              </FormLabel>
-              <FormControl>
-                <Input {...field} autoComplete="name" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Adresse */}
         <div className="space-y-4">
           <h3 className="text-sm font-semibold uppercase tracking-widest text-brand-night-navy/50">
             Vereins-Adresse
@@ -137,9 +108,7 @@ export function StammdatenStep() {
               name="zip"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-brand-night-navy">
-                    PLZ
-                  </FormLabel>
+                  <FormLabel className="text-sm font-medium text-brand-night-navy">PLZ</FormLabel>
                   <FormControl>
                     <Input {...field} autoComplete="postal-code" />
                   </FormControl>
@@ -152,9 +121,7 @@ export function StammdatenStep() {
               name="city"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel className="text-sm font-medium text-brand-night-navy">
-                    Stadt
-                  </FormLabel>
+                  <FormLabel className="text-sm font-medium text-brand-night-navy">Stadt</FormLabel>
                   <FormControl>
                     <Input {...field} autoComplete="address-level2" />
                   </FormControl>
@@ -165,7 +132,6 @@ export function StammdatenStep() {
           </div>
         </div>
 
-        {/* Kleinunternehmer-Toggle */}
         <FormField
           control={form.control}
           name="isSmallBusiness"
@@ -174,12 +140,13 @@ export function StammdatenStep() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <FormLabel className="text-sm font-semibold text-brand-night-navy">
-                    Kleinunternehmer (§19 UStG) <span className="text-xs font-normal text-brand-night-navy/50">— optional</span>
+                    Kleinunternehmer (§19 UStG){" "}
+                    <span className="text-xs font-normal text-brand-night-navy/50">— optional</span>
                   </FormLabel>
                   <FormDescription className="text-xs text-brand-night-navy/60">
-                    Aktiviert lassen, wenn deine Mannschaft nicht USt-pflichtig ist. Wir
-                    setzen dann den §19-Hinweis auf die Sponsoren-Rechnungen. Kannst du
-                    auch später im Dashboard ändern.
+                    Aktiviert lassen, wenn dein Verein nicht USt-pflichtig ist. Wir setzen
+                    dann den §19-Hinweis auf die Sponsoren-Rechnungen. Lässt sich später im
+                    Dashboard ändern.
                   </FormDescription>
                 </div>
                 <FormControl>
@@ -195,16 +162,13 @@ export function StammdatenStep() {
           )}
         />
 
-        {/* USt-ID — nur wenn nicht-KU */}
         {!isSB && (
           <FormField
             control={form.control}
             name="taxId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-semibold text-brand-night-navy">
-                  USt-IdNr.
-                </FormLabel>
+                <FormLabel className="text-sm font-semibold text-brand-night-navy">USt-IdNr.</FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="DE123456789" />
                 </FormControl>
@@ -217,14 +181,13 @@ export function StammdatenStep() {
           />
         )}
 
-        {/* IBAN — optional */}
         <FormField
           control={form.control}
           name="iban"
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-sm font-semibold text-brand-night-navy">
-                IBAN <span className="text-xs font-normal text-brand-night-navy/50">— optional, kann später ergänzt werden</span>
+                IBAN <span className="text-xs font-normal text-brand-night-navy/50">— optional</span>
               </FormLabel>
               <FormControl>
                 <Input
@@ -234,9 +197,8 @@ export function StammdatenStep() {
                 />
               </FormControl>
               <FormDescription className="text-xs text-brand-night-navy/60">
-                Wird nur auf den Sponsoren-Rechnungen abgedruckt — vertraulich behandelt.
-                KickPact nimmt nie Geld an. Du kannst die IBAN auch später im Dashboard
-                eintragen, bevor die erste Rechnung rausgeht.
+                Erscheint nur auf den Sponsoren-Rechnungen. KickPact nimmt nie Geld an. Du
+                kannst die IBAN auch später im Dashboard eintragen.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -249,24 +211,9 @@ export function StammdatenStep() {
           </div>
         )}
 
-        <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-4">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => router.back()}
-            disabled={submitting}
-            className="min-h-12 w-full sm:w-auto"
-          >
-            ← Zurück
-          </Button>
-          <Button
-            type="submit"
-            variant="accent"
-            size="lg"
-            disabled={submitting}
-            className="min-h-12 w-full sm:w-auto"
-          >
-            {submitting ? "Verein wird angelegt…" : "Verein anlegen →"}
+        <div className="flex justify-end pt-4">
+          <Button type="submit" variant="accent" size="lg" disabled={pending}>
+            {pending ? "Speichere…" : "Weiter →"}
           </Button>
         </div>
       </form>

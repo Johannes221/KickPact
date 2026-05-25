@@ -14,7 +14,7 @@ export interface VerificationBannerProps {
  *   - rejected     → reason + "neu hochladen"
  */
 export function VerificationBanner({ clubSlug, verification }: VerificationBannerProps) {
-  const uploadUrl = `/onboarding/verein/4?slug=${encodeURIComponent(clubSlug)}`;
+  const uploadUrl = `/verein/${encodeURIComponent(clubSlug)}/verifikation`;
 
   if (!verification) {
     return (

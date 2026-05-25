@@ -59,8 +59,8 @@ function isSignupRole(v: string | undefined): v is SignupRole {
  * Onboarding-Wizard? Wird im Auth-aware-Add-Role-Chooser genutzt.
  */
 const ADD_ROLE_HREF: Record<SignupRole, string> = {
-  mannschaft: "/onboarding/verein/1",
-  verein: "/onboarding/verein/1",
+  mannschaft: "/onboarding/mannschaft/verein",
+  verein: "/onboarding/verein/verein",
   sponsor: "/sponsor/onboarding"
 };
 

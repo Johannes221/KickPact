@@ -15,7 +15,8 @@ interface OAuthButtonsProps {
   /**
    * Rolle aus dem `/signup?role=X`-Param. Bestimmt das OAuth-Callback-Ziel:
    *  - `sponsor` → `/sponsor/onboarding` (Sponsor-Profil-Wizard)
-   *  - `mannschaft` / `verein` → `/onboarding/verein/1`
+   *  - `mannschaft` → `/onboarding/mannschaft/verein` (Pro-Trial Wizard)
+   *  - `verein` → `/onboarding/verein/verein` (Vereinslizenz-Trial Wizard)
    *  - undefined (z.B. login) → fallback `/dashboard`
    */
   role?: "mannschaft" | "verein" | "sponsor" | null;
@@ -42,7 +43,9 @@ export function OAuthButtons({ mode, enabled, role }: OAuthButtonsProps) {
     : mode === "signup"
       ? role === "sponsor"
         ? "/sponsor/onboarding"
-        : "/onboarding/verein/1"
+        : role === "verein"
+          ? "/onboarding/verein/verein"
+          : "/onboarding/mannschaft/verein"
       : "/dashboard"; // rollenbasiert weiterleiten
 
   async function handleSocial(provider: "google" | "apple") {

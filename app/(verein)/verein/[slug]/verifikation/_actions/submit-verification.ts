@@ -120,11 +120,8 @@ export async function submitVerificationAction(
     })
     .catch((err) => console.error("[verification-submitted] mail failed", err));
 
-  // Token aus FormData durchreichen (Step 3 hat ihn an Step 4 weitergegeben,
-  // Step 5 braucht ihn um die Sponsor-Einladungs-URL anzuzeigen).
-  const invitationToken = String(formData.get("invitationToken") ?? "");
-  const target = invitationToken
-    ? `/onboarding/verein/5?slug=${encodeURIComponent(parsed.data.clubSlug)}&token=${encodeURIComponent(invitationToken)}`
-    : `/onboarding/verein/5?slug=${encodeURIComponent(parsed.data.clubSlug)}`;
-  redirect(target);
+  // Verifikation ist seit dem 2026-05 Onboarding-Rewrite eine asynchrone
+  // Aktion außerhalb des Wizards. Nach Submit landet der User zurück im
+  // Vereins-Dashboard, wo der VerificationBanner jetzt den "pending" Status zeigt.
+  redirect(`/verein/${encodeURIComponent(parsed.data.clubSlug)}`);
 }
