@@ -1,0 +1,279 @@
+import { and, eq, desc, gt, sql, inArray } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import {
+  matches,
+  teams,
+  pledges,
+  pledgeRules,
+  charges,
+  sponsors,
+  eventApprovals
+} from "@/lib/db/schema";
+import { TRIGGER_META } from "@/lib/triggers/labels";
+import { isSeasonTrigger } from "@/lib/db/schema/pledges";
+
+/**
+ * Live-Statistik für die Team-Übersicht (Hero-KPI-Cards).
+ */
+export interface TeamHeroKpis {
+  activePledges: number;
+  thisMonthChargesCents: number;
+  pendingApprovals: number;
+  nextMatchDatum: Date | null;
+  nextMatchOpponent: string | null;
+}
+
+function startOfMonth(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+
+function startOfNextMonth(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth() + 1, 1);
+}
+
+export async function getTeamHeroKpis(teamId: string): Promise<TeamHeroKpis> {
+  const now = new Date();
+  const monthStart = startOfMonth(now);
+  const monthEnd = startOfNextMonth(now);
+
+  const [activePledgesRow] = await db
+    .select({ n: sql<number>`COUNT(*)::int` })
+    .from(pledges)
+    .where(and(eq(pledges.teamId, teamId), eq(pledges.status, "active")));
+
+  const [thisMonthRow] = await db
+    .select({
+      cents: sql<number>`COALESCE(SUM(${charges.amountCents}) FILTER (WHERE ${charges.status} IN ('confirmed','invoiced') AND ${charges.createdAt} >= ${monthStart} AND ${charges.createdAt} < ${monthEnd}), 0)::int`
+    })
+    .from(charges)
+    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+    .where(eq(pledges.teamId, teamId));
+
+  const [pendingRow] = await db
+    .select({ n: sql<number>`COUNT(*)::int` })
+    .from(eventApprovals)
+    .innerJoin(pledgeRules, eq(eventApprovals.pledgeRuleId, pledgeRules.id))
+    .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
+    .where(and(eq(pledges.teamId, teamId), eq(eventApprovals.status, "pending")));
+
+  const [nextMatch] = await db
+    .select({
+      datum: matches.datum,
+      heimName: matches.heimName,
+      gastName: matches.gastName
+    })
+    .from(matches)
+    .where(and(eq(matches.teamId, teamId), gt(matches.datum, now)))
+    .orderBy(matches.datum)
+    .limit(1);
+
+  // Bestimme Gegner aus dem Team-Namen (heuristisch — wie in der Page)
+  let opponent: string | null = null;
+  if (nextMatch) {
+    const [team] = await db
+      .select({ name: teams.name })
+      .from(teams)
+      .where(eq(teams.id, teamId))
+      .limit(1);
+    if (team) {
+      const teamWord = team.name.toLowerCase().split(" ")[0];
+      const isHeim = nextMatch.heimName.toLowerCase().includes(teamWord);
+      opponent = isHeim ? nextMatch.gastName : nextMatch.heimName;
+    }
+  }
+
+  return {
+    activePledges: Number(activePledgesRow?.n ?? 0),
+    thisMonthChargesCents: Number(thisMonthRow?.cents ?? 0),
+    pendingApprovals: Number(pendingRow?.n ?? 0),
+    nextMatchDatum: nextMatch?.datum ?? null,
+    nextMatchOpponent: opponent
+  };
+}
+
+export interface RecentTeamMatch {
+  matchId: string;
+  datum: Date;
+  heimName: string;
+  gastName: string;
+  ergebnisHeim: number | null;
+  ergebnisGast: number | null;
+  status: "scheduled" | "live" | "finished" | "cancelled" | "postponed";
+  chargesSumCents: number;
+}
+
+/** Letzte N Spiele (alle Status) mit Charges-Summe. */
+export async function listRecentTeamMatches(
+  teamId: string,
+  limit = 5
+): Promise<RecentTeamMatch[]> {
+  const rows = await db
+    .select({
+      matchId: matches.id,
+      datum: matches.datum,
+      heimName: matches.heimName,
+      gastName: matches.gastName,
+      ergebnisHeim: matches.ergebnisHeim,
+      ergebnisGast: matches.ergebnisGast,
+      status: matches.status,
+      chargesSumCents: sql<number>`COALESCE((
+        SELECT SUM(c.amount_cents) FROM ${charges} c
+        WHERE c.match_id = ${matches.id}
+          AND c.status IN ('confirmed','invoiced')
+      ), 0)::int`
+    })
+    .from(matches)
+    .where(eq(matches.teamId, teamId))
+    .orderBy(desc(matches.datum))
+    .limit(limit);
+
+  return rows.map((r) => ({
+    matchId: r.matchId,
+    datum: r.datum,
+    heimName: r.heimName,
+    gastName: r.gastName,
+    ergebnisHeim: r.ergebnisHeim,
+    ergebnisGast: r.ergebnisGast,
+    status: r.status,
+    chargesSumCents: Number(r.chargesSumCents ?? 0)
+  }));
+}
+
+export interface TeamTopSponsor {
+  sponsorId: string;
+  displayName: string;
+  totalCents: number;
+}
+
+export async function getTopSponsorsForTeam(
+  teamId: string,
+  limit = 3
+): Promise<TeamTopSponsor[]> {
+  const rows = await db
+    .select({
+      sponsorId: sponsors.id,
+      displayName: sponsors.displayName,
+      totalCents: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int`
+    })
+    .from(charges)
+    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .where(
+      and(
+        eq(pledges.teamId, teamId),
+        inArray(charges.status, ["confirmed", "invoiced"])
+      )
+    )
+    .groupBy(sponsors.id, sponsors.displayName)
+    .orderBy(sql`SUM(${charges.amountCents}) DESC NULLS LAST`)
+    .limit(limit);
+
+  return rows.map((r) => ({
+    sponsorId: r.sponsorId,
+    displayName: r.displayName,
+    totalCents: Number(r.totalCents ?? 0)
+  }));
+}
+
+// ---------------- Pacts (Tab 2) ----------------
+
+export type PactKind = "auto" | "manual" | "season";
+
+export interface TeamPactRow {
+  pledgeId: string;
+  ruleId: string;
+  sponsorId: string;
+  sponsorDisplayName: string;
+  triggerType: string;
+  triggerLabel: string;
+  triggerEmoji: string;
+  triggerScope: "match" | "season";
+  /** Auto = vom Crawler erkannt, manual = manuell zu melden. Season = season-scoped. */
+  triggerKind: PactKind;
+  amountCents: number;
+  perMatchCapCents: number | null;
+  monthlyCapCents: number | null;
+  chargedCents: number;
+  status: "active" | "paused" | "ended";
+}
+
+export interface ListPactsForTeamArgs {
+  status?: "all" | "active" | "paused" | "ended";
+  kind?: "all" | PactKind;
+}
+
+/**
+ * Klassifiziert ein Trigger-Type in eine Pact-Kategorie für den Filter:
+ *   - season: alle SEASON_TRIGGERS (1× pro Saison)
+ *   - auto: pro-Spiel, vom Crawler erkannt
+ *   - manual: pro-Spiel, manuell zu melden
+ */
+export function pactKindFor(triggerType: string): PactKind {
+  if (isSeasonTrigger(triggerType)) return "season";
+  const meta = (TRIGGER_META as Record<string, { auto: boolean } | undefined>)[triggerType];
+  if (meta && meta.auto === false) return "manual";
+  return "auto";
+}
+
+export async function listPactsForTeam(
+  teamId: string,
+  args: ListPactsForTeamArgs = {}
+): Promise<TeamPactRow[]> {
+  const conditions = [eq(pledges.teamId, teamId)];
+  if (args.status && args.status !== "all") {
+    conditions.push(eq(pledges.status, args.status));
+  }
+
+  const rows = await db
+    .select({
+      pledgeId: pledges.id,
+      pledgeStatus: pledges.status,
+      monthlyCapCents: pledges.monthlyCapCents,
+      sponsorId: sponsors.id,
+      sponsorDisplayName: sponsors.displayName,
+      ruleId: pledgeRules.id,
+      triggerType: pledgeRules.triggerType,
+      amountCents: pledgeRules.amountCents,
+      perMatchCapCents: pledgeRules.perMatchCapCents,
+      chargedCents: sql<number>`COALESCE((
+        SELECT SUM(c.amount_cents)
+        FROM ${charges} c
+        WHERE c.pledge_id = ${pledges.id}
+          AND c.pledge_rule_id = ${pledgeRules.id}
+          AND c.status IN ('confirmed','invoiced')
+      ), 0)::int`
+    })
+    .from(pledgeRules)
+    .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
+    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .where(and(...conditions))
+    .orderBy(desc(pledges.createdAt));
+
+  const mapped: TeamPactRow[] = rows.map((r) => {
+    const meta = (TRIGGER_META as Record<string, { label: string; emoji: string; scope: "match" | "season" } | undefined>)[
+      r.triggerType
+    ];
+    const kind = pactKindFor(r.triggerType);
+    return {
+      pledgeId: r.pledgeId,
+      ruleId: r.ruleId,
+      sponsorId: r.sponsorId,
+      sponsorDisplayName: r.sponsorDisplayName,
+      triggerType: r.triggerType,
+      triggerLabel: meta?.label ?? r.triggerType,
+      triggerEmoji: meta?.emoji ?? "💚",
+      triggerScope: meta?.scope ?? (isSeasonTrigger(r.triggerType) ? "season" : "match"),
+      triggerKind: kind,
+      amountCents: r.amountCents,
+      perMatchCapCents: r.perMatchCapCents,
+      monthlyCapCents: r.monthlyCapCents,
+      chargedCents: Number(r.chargedCents ?? 0),
+      status: r.pledgeStatus
+    };
+  });
+
+  if (args.kind && args.kind !== "all") {
+    return mapped.filter((r) => r.triggerKind === args.kind);
+  }
+  return mapped;
+}
