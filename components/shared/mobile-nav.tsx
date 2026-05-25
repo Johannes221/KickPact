@@ -284,14 +284,10 @@ export function MobileNav({ onHero = false }: { onHero?: boolean }) {
                       </Link>
                     </SheetClose>
                   </li>
-                  <li>
-                    <Link
-                      href="/preise"
-                      className="flex min-h-12 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-brand-night-navy hover:bg-brand-off-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                    >
-                      Preise
-                    </Link>
-                  </li>
+                  {/* "Preise" bewusst NICHT im eingeloggten Bereich — der
+                      User hat schon ein Abo/Trial, Marketing-Link wäre Lärm.
+                      Wer trotzdem hin will, kommt über die Marketing-Landing
+                      oder /verein/[slug]/abo (Plan-Wechsel). */}
                 </ul>
               </section>
             </>

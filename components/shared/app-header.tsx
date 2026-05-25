@@ -11,11 +11,22 @@ import { cn } from "@/lib/utils";
 // Desktop-Center-Nav. Nur auf md+ sichtbar; Mobile hat den Hamburger-Drawer.
 // Auf Auth-/Onboarding-Routen rendern wir gar keine Nav-Links, da würde
 // das eher ablenken (User soll im Flow bleiben).
-const DESKTOP_NAV: ReadonlyArray<{ href: string; label: string }> = [
+const PUBLIC_DESKTOP_NAV: ReadonlyArray<{ href: string; label: string }> = [
   { href: "/preise", label: "Preise" }
 ];
 
-export function AppHeader() {
+export interface AppHeaderProps {
+  /** True wenn ein Better-Auth-Session-Cookie aktiv ist (vom Server geladen). */
+  authenticated: boolean;
+  /**
+   * Ziel-URL für das Logo, wenn der User eingeloggt ist. Wird vom Server-Layout
+   * aus `pickDashboardDestination(getUserIdentities(userId))` gefüllt. Fallback
+   * auf "/" wenn unauthenticated.
+   */
+  dashboardHref: string;
+}
+
+export function AppHeader({ authenticated, dashboardHref }: AppHeaderProps) {
   const pathname = usePathname() ?? "/";
   const isLanding = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
@@ -36,6 +47,16 @@ export function AppHeader() {
   }, [isLanding]);
 
   const onHero = isLanding && !scrolled;
+  // Eingeloggte User springen vom Logo direkt ins Dashboard (oder
+  // /select-role bei mehreren Identities) — niemals auf die Marketing-
+  // Landing. Unauthenticated user → "/" wie gehabt.
+  const logoHref = authenticated ? dashboardHref : "/";
+  // Marketing-Nav ("Preise") ist im eingeloggten Bereich Lärm — der User
+  // hat bereits ein Abo (oder ist im Trial), zeigt ihm hier kein Marketing.
+  // Auf /preise selbst lassen wir den Link, falls jemand bewusst dahin
+  // navigiert hat (Selbst-Highlight + Konsistenz mit aria-current).
+  const desktopNav =
+    !authenticated || pathname.startsWith("/preise") ? PUBLIC_DESKTOP_NAV : [];
 
   return (
     <>
@@ -56,23 +77,25 @@ export function AppHeader() {
             {onHero ? (
               <>
                 <div className="md:hidden">
-                  <Logo variant="full" inverted />
+                  <Logo variant="full" inverted href={logoHref} />
                 </div>
                 <div className="hidden md:block">
-                  <Logo variant="full" />
+                  <Logo variant="full" href={logoHref} />
                 </div>
               </>
             ) : (
-              <Logo variant="full" />
+              <Logo variant="full" href={logoHref} />
             )}
           </div>
 
-          {/* Desktop-Center-Nav. Mobile-Hamburger ersetzt das. */}
+          {/* Desktop-Center-Nav. Mobile-Hamburger ersetzt das.
+              Im eingeloggten Bereich ist die zentrale Nav leer — die
+              identity-Navigation läuft komplett über das UserMenu rechts. */}
           <nav
             aria-label="Hauptnavigation"
             className="hidden md:flex flex-1 items-center justify-center gap-1"
           >
-            {DESKTOP_NAV.map((item) => {
+            {desktopNav.map((item) => {
               const active =
                 pathname === item.href || pathname.startsWith(item.href + "/");
               return (

@@ -3,6 +3,9 @@ import { Inter, Montserrat_Alternates } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shared/app-header";
 import { PlausibleScript } from "@/components/analytics/plausible-script";
+import { getServerSession } from "@/lib/auth/session";
+import { getUserIdentities } from "@/lib/db/queries/user-identities";
+import { pickDashboardDestination } from "@/lib/auth/identity-routing";
 
 // Body / UI: Inter (broad latin coverage, weight 400-900)
 const inter = Inter({
@@ -29,7 +32,24 @@ export const metadata = {
   description: "Performance-basiertes Sponsoring im Amateurfußball"
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Session + Identity-basiertes Logo-Routing: eingeloggte User springen vom
+  // Logo direkt ins Dashboard (oder /select-role bei Multi-Identity), nicht
+  // mehr auf die Marketing-Landing. Bei Auth-Fehler oder unauth.: Default "/".
+  const session = await getServerSession().catch(() => null);
+  let dashboardHref = "/";
+  if (session?.user?.id) {
+    try {
+      const ids = await getUserIdentities(session.user.id);
+      dashboardHref = pickDashboardDestination(ids);
+    } catch {
+      // Identity-Lookup darf das Layout NIE kippen — fallback auf "/" ist
+      // semantisch sinnvoll (User landet im schlimmsten Fall einmal auf der
+      // Landing, klickt Login/Profil).
+    }
+  }
+  const authenticated = !!session?.user;
+
   return (
     <html lang="de" className={`${inter.variable} ${displayFont.variable}`}>
       <head>
@@ -46,7 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Zum Inhalt springen
         </a>
-        <AppHeader />
+        <AppHeader authenticated={authenticated} dashboardHref={dashboardHref} />
         <div id="main">{children}</div>
         <Toaster />
       </body>
