@@ -13,59 +13,56 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 // Drizzle's fluent API: db.select().from(t).where(...).limit(N).
 // Wir bauen ein Proxy-Objekt, das alle Method-Calls protokolliert und am Ende
 // ein konfigurierbares Result liefert.
-function createDbMock() {
+//
+// vi.hoisted erlaubt, dass das Mock-Objekt VOR den vi.mock-Hoists existiert.
+const dbMock = vi.hoisted(() => {
   const calls: { method: string; args: unknown[] }[] = [];
-  const insertReturning = vi.fn();
-  const updateReturning = vi.fn();
-  const selectResult = vi.fn();
+  const insertReturningQueue: unknown[][] = [];
+  const selectResultQueue: unknown[][] = [];
 
-  const chain = {
-    insert: vi.fn(function insert(_table: unknown) {
-      calls.push({ method: "insert", args: [_table] });
-      return chain;
-    }),
-    values: vi.fn(function values(v: unknown) {
-      calls.push({ method: "values", args: [v] });
-      return chain;
-    }),
-    onConflictDoNothing: vi.fn(function onConflictDoNothing() {
-      calls.push({ method: "onConflictDoNothing", args: [] });
-      return chain;
-    }),
-    returning: vi.fn(function returning() {
-      const ret = insertReturning.mock.results.shift()?.value ?? [];
-      return Promise.resolve(ret);
-    }),
-    update: vi.fn(function update(_table: unknown) {
-      calls.push({ method: "update", args: [_table] });
-      return chain;
-    }),
-    set: vi.fn(function set(v: unknown) {
-      calls.push({ method: "set", args: [v] });
-      return chain;
-    }),
-    select: vi.fn(function select(_cols?: unknown) {
-      calls.push({ method: "select", args: [_cols] });
-      return chain;
-    }),
-    from: vi.fn(function from(_table: unknown) {
-      calls.push({ method: "from", args: [_table] });
-      return chain;
-    }),
-    where: vi.fn(function where(_cond: unknown) {
-      calls.push({ method: "where", args: [_cond] });
-      return chain;
-    }),
-    limit: vi.fn(function limit(_n: number) {
-      const ret = selectResult.mock.results.shift()?.value ?? [];
-      return Promise.resolve(ret);
-    })
+  const chain: Record<string, unknown> = {};
+  chain.insert = (_table: unknown) => {
+    calls.push({ method: "insert", args: [_table] });
+    return chain;
+  };
+  chain.values = (v: unknown) => {
+    calls.push({ method: "values", args: [v] });
+    return chain;
+  };
+  chain.onConflictDoNothing = () => {
+    calls.push({ method: "onConflictDoNothing", args: [] });
+    return chain;
+  };
+  chain.returning = () => {
+    return Promise.resolve(insertReturningQueue.shift() ?? []);
+  };
+  chain.update = (_table: unknown) => {
+    calls.push({ method: "update", args: [_table] });
+    return chain;
+  };
+  chain.set = (v: unknown) => {
+    calls.push({ method: "set", args: [v] });
+    return chain;
+  };
+  chain.select = (_cols?: unknown) => {
+    calls.push({ method: "select", args: [_cols] });
+    return chain;
+  };
+  chain.from = (_table: unknown) => {
+    calls.push({ method: "from", args: [_table] });
+    return chain;
+  };
+  chain.where = (_cond: unknown) => {
+    calls.push({ method: "where", args: [_cond] });
+    // .where ohne .limit muss auch awaitable sein (update-Pfad)
+    return Object.assign(Promise.resolve(undefined), chain);
+  };
+  chain.limit = (_n: number) => {
+    return Promise.resolve(selectResultQueue.shift() ?? []);
   };
 
-  return { calls, chain, insertReturning, selectResult };
-}
-
-const dbMock = createDbMock();
+  return { calls, chain, insertReturningQueue, selectResultQueue };
+});
 
 vi.mock("@/lib/db/client", () => ({
   db: dbMock.chain
@@ -75,9 +72,8 @@ vi.mock("@/lib/db/client", () => ({
 // echten Imports liefern echte Drizzle-Table-Objekte zurück, das ist ok.
 
 beforeEach(() => {
-  // Reset alle Mock-Returns vor jedem Test
-  dbMock.insertReturning.mockReset();
-  dbMock.selectResult.mockReset();
+  dbMock.insertReturningQueue.length = 0;
+  dbMock.selectResultQueue.length = 0;
   dbMock.calls.length = 0;
 });
 
@@ -110,7 +106,7 @@ describe("createTeamMemberInvitation", () => {
   });
 
   it("erzeugt eine Invitation mit kind=team-member + teamId", async () => {
-    dbMock.insertReturning.mockReturnValueOnce([
+    dbMock.insertReturningQueue.push([
       {
         id: "inv1",
         token: "tok123",
@@ -145,7 +141,7 @@ describe("createTeamMemberInvitation", () => {
   });
 
   it("erzeugt eine Club-weite Invitation mit clubId", async () => {
-    dbMock.insertReturning.mockReturnValueOnce([
+    dbMock.insertReturningQueue.push([
       {
         id: "inv2",
         token: "tok456",
@@ -176,13 +172,13 @@ describe("createTeamMemberInvitation", () => {
 
 describe("findTeamMemberInvitationByToken", () => {
   it("liefert null wenn kein Treffer", async () => {
-    dbMock.selectResult.mockReturnValueOnce([]);
+    dbMock.selectResultQueue.push([]);
     const result = await findTeamMemberInvitationByToken("nope");
     expect(result).toBeNull();
   });
 
   it("liefert die Invitation bei Treffer", async () => {
-    dbMock.selectResult.mockReturnValueOnce([
+    dbMock.selectResultQueue.push([
       {
         id: "inv1",
         token: "tok",
@@ -200,14 +196,14 @@ describe("findTeamMemberInvitationByToken", () => {
 
 describe("acceptTeamMemberInvitation", () => {
   it("wirft bei ungültigem Token", async () => {
-    dbMock.selectResult.mockReturnValueOnce([]); // Token-Lookup leer
+    dbMock.selectResultQueue.push([]); // Token-Lookup leer
     await expect(
       acceptTeamMemberInvitation({ token: "bad", userId: "u1" })
     ).rejects.toThrow(/ungültig|abgelaufen/i);
   });
 
   it("legt Team-Membership an + markiert Token used (scope=team)", async () => {
-    dbMock.selectResult.mockReturnValueOnce([
+    dbMock.selectResultQueue.push([
       {
         id: "inv1",
         token: "tok",
@@ -233,7 +229,7 @@ describe("acceptTeamMemberInvitation", () => {
   });
 
   it("legt Club-Membership an + markiert Token used (scope=club)", async () => {
-    dbMock.selectResult.mockReturnValueOnce([
+    dbMock.selectResultQueue.push([
       {
         id: "inv2",
         token: "tok2",
