@@ -9,6 +9,8 @@ import { db } from "@/lib/db/client";
 import { clubs } from "@/lib/db/schema";
 import { createVerificationSubmission } from "@/lib/db/queries/verifications";
 import { storeDocument, buildVerificationKey } from "@/lib/storage/documents";
+import { resend, MAIL_FROM } from "@/lib/mail/client";
+import { verificationSubmittedEmail } from "@/lib/mail/templates/verification-submitted";
 
 const ALLOWED_MIME = new Set([
   "application/pdf",
@@ -75,7 +77,7 @@ export async function submitVerificationAction(
   // Resolve clubId from slug (assertClubAccess overkill here — onboarding
   // user just created the club, they own it by virtue of clubMemberships).
   const [club] = await db
-    .select({ id: clubs.id })
+    .select({ id: clubs.id, name: clubs.name })
     .from(clubs)
     .where(eq(clubs.slug, parsed.data.clubSlug))
     .limit(1);
@@ -105,6 +107,18 @@ export async function submitVerificationAction(
     submitterFullName: parsed.data.submitterFullName,
     submitterNotes: parsed.data.submitterNotes ?? null
   });
+
+  const mail = verificationSubmittedEmail({ clubName: club.name });
+  // Fire-and-forget — don't block the redirect on mail-send.
+  resend.emails
+    .send({
+      from: MAIL_FROM,
+      to: user.email,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text
+    })
+    .catch((err) => console.error("[verification-submitted] mail failed", err));
 
   // Token aus FormData durchreichen (Step 3 hat ihn an Step 4 weitergegeben,
   // Step 5 braucht ihn um die Sponsor-Einladungs-URL anzuzeigen).
