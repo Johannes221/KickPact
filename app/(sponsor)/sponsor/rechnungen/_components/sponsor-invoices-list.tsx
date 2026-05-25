@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { DataTable, type DataTableColumn, type SortDirection } from "@/components/ui/data-table";
 import { invoiceDownloadUrl, markInvoicePaidBySponsor } from "@/lib/actions/invoices";
 
 interface Row {
@@ -35,7 +36,25 @@ function payState(row: Row): PayState {
   return { kind: "open" };
 }
 
-export function SponsorInvoicesList({ invoices }: { invoices: Row[] }) {
+interface SponsorInvoicesListProps {
+  invoices: Row[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  sort?: "period" | "totalCents" | "status";
+  dir?: SortDirection;
+}
+
+export function SponsorInvoicesList({
+  invoices,
+  page,
+  pageSize,
+  total,
+  totalPages,
+  sort,
+  dir
+}: SponsorInvoicesListProps) {
   async function handleDownload(id: string) {
     try {
       const url = await invoiceDownloadUrl(id);
@@ -45,23 +64,75 @@ export function SponsorInvoicesList({ invoices }: { invoices: Row[] }) {
     }
   }
 
+  const columns: Array<DataTableColumn<Row>> = [
+    {
+      key: "period",
+      label: "Periode",
+      sortable: true,
+      render: (row) => (
+        <div>
+          <div className="font-mono tabular-nums text-xs uppercase tracking-wider text-brand-night-navy/60">
+            {row.period}
+          </div>
+          <div className="mt-0.5 font-display font-bold text-sm md:text-base tracking-tight text-brand-night-navy">
+            {row.clubName}
+          </div>
+          {row.sentAt && (
+            <div className="text-[0.65rem] text-brand-night-navy/40">
+              Versendet {new Date(row.sentAt).toLocaleDateString("de-DE")}
+            </div>
+          )}
+        </div>
+      )
+    },
+    {
+      key: "totalCents",
+      label: "Betrag",
+      sortable: true,
+      align: "right",
+      render: (row) => (
+        <span className="font-mono tabular-nums font-semibold text-accent-dark">
+          {eur(row.totalCents)}
+        </span>
+      )
+    },
+    {
+      key: "status",
+      label: "Status",
+      sortable: true,
+      render: (row) => <PayPill state={payState(row)} />
+    },
+    {
+      key: "actions",
+      label: "",
+      align: "right",
+      render: (row) => <RowActions row={row} onDownload={() => handleDownload(row.id)} />
+    }
+  ];
+
   return (
-    <ul className="space-y-3">
-      {invoices.map((inv) => (
-        <InvoiceRow key={inv.id} inv={inv} onDownload={() => handleDownload(inv.id)} />
-      ))}
-    </ul>
+    <DataTable<Row>
+      rows={invoices}
+      columns={columns}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      sort={sort}
+      dir={dir}
+      emptyState="Keine Rechnungen auf dieser Seite."
+    />
   );
 }
 
-function InvoiceRow({ inv, onDownload }: { inv: Row; onDownload: () => void }) {
+function RowActions({ row, onDownload }: { row: Row; onDownload: () => void }) {
   const [pending, startTransition] = useTransition();
-  const state = payState(inv);
+  const state = payState(row);
 
   function handleToggle() {
     startTransition(async () => {
       try {
-        const res = await markInvoicePaidBySponsor(inv.id);
+        const res = await markInvoicePaidBySponsor(row.id);
         toast.success(
           res.markedPaidBySponsorAt
             ? "Markiert als bezahlt — der Verein bestätigt den Eingang."
@@ -74,48 +145,24 @@ function InvoiceRow({ inv, onDownload }: { inv: Row; onDownload: () => void }) {
   }
 
   return (
-    <li className="rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div className="min-w-0">
-          <div className="font-mono tabular-nums text-xs uppercase tracking-wider text-brand-night-navy/50">
-            {inv.period}
-          </div>
-          <div className="mt-1 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
-            {inv.clubName}
-          </div>
-          <div className="mt-1 text-xs text-brand-night-navy/50">
-            {inv.sentAt
-              ? `Versendet am ${new Date(inv.sentAt).toLocaleDateString("de-DE")}`
-              : "Noch nicht versendet"}
-          </div>
-        </div>
-        <div className="text-right shrink-0">
-          <div className="font-display font-black text-xl md:text-2xl tracking-tight text-accent-dark tabular-nums">
-            {eur(inv.totalCents)}
-          </div>
-          <PayPill state={state} />
-        </div>
-      </div>
-      <div className="mt-3 md:mt-4 flex flex-wrap gap-2">
-        {inv.pdfUrl && (
-          <Button size="sm" variant="outline" onClick={onDownload}>
-            PDF herunterladen
-          </Button>
-        )}
-        {state.kind !== "club_confirmed" && (
-          <Button
-            size="sm"
-            variant={state.kind === "sponsor_marked" ? "outline" : "default"}
-            onClick={handleToggle}
-            disabled={pending}
-          >
-            {state.kind === "sponsor_marked"
-              ? "Markierung zurücknehmen"
-              : "Habe bezahlt"}
-          </Button>
-        )}
-      </div>
-    </li>
+    <div className="inline-flex gap-1 md:gap-2">
+      {row.pdfUrl && (
+        <Button size="sm" variant="outline" onClick={onDownload} className="text-xs">
+          PDF
+        </Button>
+      )}
+      {state.kind !== "club_confirmed" && (
+        <Button
+          size="sm"
+          variant={state.kind === "sponsor_marked" ? "outline" : "default"}
+          onClick={handleToggle}
+          disabled={pending}
+          className="text-xs"
+        >
+          {state.kind === "sponsor_marked" ? "Rückgängig" : "Bezahlt"}
+        </Button>
+      )}
+    </div>
   );
 }
 
@@ -123,19 +170,19 @@ function PayPill({ state }: { state: PayState }) {
   const cfg =
     state.kind === "club_confirmed"
       ? {
-          label: `Bezahlt · Verein bestätigt ${state.at.toLocaleDateString("de-DE")}`,
+          label: `Bezahlt · bestätigt ${state.at.toLocaleDateString("de-DE")}`,
           cls: "bg-emerald-100 text-emerald-800"
         }
       : state.kind === "sponsor_marked"
         ? {
-            label: `Bezahlt · warte auf Vereinsbestätigung`,
+            label: `Bezahlt · warte auf Verein`,
             cls: "bg-amber-100 text-amber-800"
           }
         : { label: "Offen", cls: "bg-neutral-100 text-neutral-700" };
   return (
     <span
       className={
-        "mt-1.5 inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold " +
+        "inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold " +
         cfg.cls
       }
     >
