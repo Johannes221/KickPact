@@ -5,6 +5,8 @@ import { getMatchById, listMatchEvents, listMatchCharges } from "@/lib/db/querie
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MatchEventsList } from "./_components/match-events-list";
 import { ManualEventEditor } from "./_components/manual-event-editor";
+import { ResultOverrideEditor } from "./_components/result-override-editor";
+import { AdminNoteDisplay } from "./_components/admin-note-display";
 
 export const metadata = { title: "Spiel · KickPact" };
 
@@ -18,7 +20,10 @@ export default async function MatchDetailPage({
   params: Promise<{ slug: string; matchId: string }>;
 }) {
   const { slug, matchId } = await params;
-  await assertClubAccess(slug, "viewer");
+  const access = await assertClubAccess(slug, "viewer");
+  // Plan 3 Teil 2: nur Trainer/Admin sehen Edit/Delete + Result-Override.
+  // (assertClubAccess returnt access.role das wir hier abfragen.)
+  const canEdit = access.role === "admin" || access.role === "trainer";
 
   const data = await getMatchById(matchId, slug);
   if (!data) redirect(`/verein/${slug}`);
@@ -215,13 +220,33 @@ export default async function MatchDetailPage({
             {events.length} Event{events.length === 1 ? "" : "s"}
           </span>
         </div>
-        <MatchEventsList events={events} chargesByEvent={chargesData.rows} />
+        <MatchEventsList
+          events={events}
+          chargesByEvent={chargesData.rows}
+          canEdit={canEdit}
+        />
       </section>
 
-      {/* Manual-Event-Editor */}
-      <section className="flex justify-center pt-4">
-        <ManualEventEditor matchId={match.id} />
-      </section>
+      {/* Admin-Korrekturen (Audit-Trail) */}
+      <AdminNoteDisplay adminNote={match.adminNote} />
+
+      {/* Admin-Controls — Manual-Event hinzufügen + Result-Override */}
+      {canEdit && (
+        <section className="flex flex-wrap items-center justify-center gap-3 pt-4">
+          <ManualEventEditor matchId={match.id} />
+          <ResultOverrideEditor
+            matchId={match.id}
+            initial={{
+              ergebnisHeim: match.ergebnisHeim,
+              ergebnisGast: match.ergebnisGast,
+              halbzeitHeim: match.halbzeitHeim,
+              halbzeitGast: match.halbzeitGast,
+              heimName: match.heimName,
+              gastName: match.gastName
+            }}
+          />
+        </section>
+      )}
     </div>
   );
 }

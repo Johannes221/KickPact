@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { MatchChargeRow } from "@/lib/db/queries/matches";
 import { TRIGGER_META } from "@/lib/triggers/labels";
+import { EventRowActions } from "./event-row-actions";
 
 type MatchEvent = {
   id: string;
@@ -48,10 +49,17 @@ function eur(cents: number): string {
 
 export function MatchEventsList({
   events,
-  chargesByEvent = []
+  chargesByEvent = [],
+  canEdit = false
 }: {
   events: MatchEvent[];
   chargesByEvent?: MatchChargeRow[];
+  /**
+   * Wenn true werden pro Event Edit + Delete-Buttons gerendert. Nur an die
+   * Komponente weitergeben wenn der User mindestens Trainer-Rolle hat
+   * (Server-Page entscheidet — siehe page.tsx).
+   */
+  canEdit?: boolean;
 }) {
   // Build a lookup: matchEventId → charges
   const eventChargeMap = new Map<string, MatchChargeRow[]>();
@@ -126,6 +134,17 @@ export function MatchEventsList({
                   <span className="text-[0.6rem] uppercase tracking-widest font-bold text-accent-dark bg-accent/10 px-1.5 py-0.5 rounded">
                     Manual
                   </span>
+                )}
+                {canEdit && (
+                  <EventRowActions
+                    eventId={e.id}
+                    initial={{
+                      minute: e.minute,
+                      type: e.type,
+                      subtype: e.subtype,
+                      playerName: e.playerName
+                    }}
+                  />
                 )}
               </div>
             </div>
