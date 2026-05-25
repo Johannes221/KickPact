@@ -1,4 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
+import { config as loadEnv } from "dotenv";
+import path from "node:path";
+
+// Lade .env.local in den Test-Runner-Process, damit E2E_TEST_BYPASS_KEY +
+// PLAYWRIGHT_BASE_URL ohne separates Setup-Skript funktionieren.
+loadEnv({ path: path.resolve(process.cwd(), ".env.local") });
 
 export default defineConfig({
   testDir: "./tests/e2e",
