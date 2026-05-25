@@ -1,14 +1,17 @@
-import { and, eq, gte, inArray, notInArray, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, notInArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   clubs,
   clubMemberships,
   teams,
   teamMemberships,
-  sponsors
+  sponsors,
+  teamLicenses
 } from "@/lib/db/schema";
 import { pledges } from "@/lib/db/schema/pledges";
 import { charges } from "@/lib/db/schema/charges";
+
+export type EffectivePlan = "basic" | "pro" | "verein";
 
 export interface UserIdentityClub {
   clubId: string;
@@ -18,6 +21,17 @@ export interface UserIdentityClub {
   role: "admin" | "trainer" | "viewer";
   teamCount: number;
   sponsorCount: number;
+  /**
+   * Höchster Plan über alle Team-Licenses dieses Clubs (verein > pro > basic).
+   * `null`, wenn keine Team-License existiert (User hat Club ohne Subscription).
+   */
+  effectivePlan: EffectivePlan | null;
+  /**
+   * Ältestes/erstes Team dieses Clubs. Wird vom Routing benötigt, um bei
+   * basic/pro-Lizenzen direkt zur Team-Page zu deep-linken.
+   * `null`, wenn der Club (noch) kein Team hat.
+   */
+  firstTeamId: string | null;
 }
 
 export interface UserIdentityTeamOnly {
@@ -67,35 +81,86 @@ export async function getUserIdentities(userId: string): Promise<UserIdentities>
 
   const clubIds = clubRows.map((r) => r.clubId);
 
-  const [teamCounts, sponsorCountsByClub] = await Promise.all([
-    clubIds.length === 0
-      ? Promise.resolve(new Map<string, number>())
-      : db
-          .select({
-            clubId: teams.clubId,
-            count: sql<number>`count(${teams.id})::int`
-          })
-          .from(teams)
-          .where(and(inArray(teams.clubId, clubIds), eq(teams.isActive, true)))
-          .groupBy(teams.clubId)
-          .then(
-            (rows) => new Map(rows.map((r) => [r.clubId, Number(r.count)]))
-          ),
-    clubIds.length === 0
-      ? Promise.resolve(new Map<string, number>())
-      : db
-          .select({
-            clubId: teams.clubId,
-            count: sql<number>`count(distinct ${pledges.sponsorId})::int`
-          })
-          .from(pledges)
-          .innerJoin(teams, eq(pledges.teamId, teams.id))
-          .where(and(inArray(teams.clubId, clubIds), eq(pledges.status, "active")))
-          .groupBy(teams.clubId)
-          .then(
-            (rows) => new Map(rows.map((r) => [r.clubId, Number(r.count)]))
-          )
-  ]);
+  const [teamCounts, sponsorCountsByClub, firstTeamByClub, plansByClub] =
+    await Promise.all([
+      clubIds.length === 0
+        ? Promise.resolve(new Map<string, number>())
+        : db
+            .select({
+              clubId: teams.clubId,
+              count: sql<number>`count(${teams.id})::int`
+            })
+            .from(teams)
+            .where(and(inArray(teams.clubId, clubIds), eq(teams.isActive, true)))
+            .groupBy(teams.clubId)
+            .then(
+              (rows) => new Map(rows.map((r) => [r.clubId, Number(r.count)]))
+            ),
+      clubIds.length === 0
+        ? Promise.resolve(new Map<string, number>())
+        : db
+            .select({
+              clubId: teams.clubId,
+              count: sql<number>`count(distinct ${pledges.sponsorId})::int`
+            })
+            .from(pledges)
+            .innerJoin(teams, eq(pledges.teamId, teams.id))
+            .where(and(inArray(teams.clubId, clubIds), eq(pledges.status, "active")))
+            .groupBy(teams.clubId)
+            .then(
+              (rows) => new Map(rows.map((r) => [r.clubId, Number(r.count)]))
+            ),
+      // First active team per club, ordered by created_at (oldest first).
+      clubIds.length === 0
+        ? Promise.resolve(new Map<string, string>())
+        : db
+            .select({
+              clubId: teams.clubId,
+              teamId: teams.id,
+              createdAt: teams.createdAt
+            })
+            .from(teams)
+            .where(and(inArray(teams.clubId, clubIds), eq(teams.isActive, true)))
+            .orderBy(asc(teams.createdAt), asc(teams.id))
+            .then((rows) => {
+              const m = new Map<string, string>();
+              for (const r of rows) {
+                if (!m.has(r.clubId)) m.set(r.clubId, r.teamId);
+              }
+              return m;
+            }),
+      // Effective plan per club: take the strongest plan across all team_licenses
+      // of the club's teams (verein > pro > basic). Returns the set of distinct
+      // plans per club; resolution to the strongest happens in the mapper.
+      clubIds.length === 0
+        ? Promise.resolve(new Map<string, Set<EffectivePlan>>())
+        : db
+            .select({
+              clubId: teams.clubId,
+              plan: teamLicenses.plan
+            })
+            .from(teamLicenses)
+            .innerJoin(teams, eq(teamLicenses.teamId, teams.id))
+            .where(inArray(teams.clubId, clubIds))
+            .then((rows) => {
+              const m = new Map<string, Set<EffectivePlan>>();
+              for (const r of rows) {
+                if (!r.plan) continue;
+                const s = m.get(r.clubId) ?? new Set<EffectivePlan>();
+                s.add(r.plan);
+                m.set(r.clubId, s);
+              }
+              return m;
+            })
+    ]);
+
+  function highestPlan(plans: Set<EffectivePlan> | undefined): EffectivePlan | null {
+    if (!plans || plans.size === 0) return null;
+    if (plans.has("verein")) return "verein";
+    if (plans.has("pro")) return "pro";
+    if (plans.has("basic")) return "basic";
+    return null;
+  }
 
   const clubsResult: UserIdentityClub[] = clubRows.map((r) => ({
     clubId: r.clubId,
@@ -104,7 +169,9 @@ export async function getUserIdentities(userId: string): Promise<UserIdentities>
     logoUrl: r.logoUrl,
     role: r.role,
     teamCount: teamCounts.get(r.clubId) ?? 0,
-    sponsorCount: sponsorCountsByClub.get(r.clubId) ?? 0
+    sponsorCount: sponsorCountsByClub.get(r.clubId) ?? 0,
+    effectivePlan: highestPlan(plansByClub.get(r.clubId)),
+    firstTeamId: firstTeamByClub.get(r.clubId) ?? null
   }));
 
   // ── Team-only memberships (excluding teams whose club is already above) ─

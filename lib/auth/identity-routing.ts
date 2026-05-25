@@ -33,7 +33,21 @@ export function pickDashboardDestination(ids: UserIdentities): string {
   if (total === 0) return "/signup";
   if (total >= 2) return "/select-role";
 
-  if (ids.clubs[0]) return `/verein/${ids.clubs[0].slug}`;
+  if (ids.clubs[0]) {
+    const club = ids.clubs[0];
+    // Mannschafts-Lizenz (basic/pro): kein Vereins-Dashboard, sondern direkt
+    // Team-Dashboard. Voraussetzung: mindestens ein Team existiert. Fällt der
+    // firstTeamId-Lookup leer aus (sehr früher Onboarding-State), bleibt es
+    // beim Vereins-Dashboard — der harte Redirect im Club-Layout würde sonst
+    // in eine Endlos-Schleife laufen.
+    if (
+      (club.effectivePlan === "basic" || club.effectivePlan === "pro") &&
+      club.firstTeamId
+    ) {
+      return `/verein/${club.slug}/mannschaft/${club.firstTeamId}`;
+    }
+    return `/verein/${club.slug}`;
+  }
   if (ids.teamOnly[0]) {
     return `/verein/${ids.teamOnly[0].clubSlug}/mannschaft/${ids.teamOnly[0].teamId}`;
   }
