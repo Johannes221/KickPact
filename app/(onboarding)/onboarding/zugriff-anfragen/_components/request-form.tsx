@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +18,8 @@ const schema = z.object({
   requestedRole: z.enum(["admin", "trainer", "viewer"]),
   scope: z.enum(["club", "team"]),
   requestedTeamId: z.string().nullable(),
-  message: z.string().max(280).optional()
+  message: z.string().max(280).optional(),
+  isConflictClaim: z.boolean().default(false)
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -33,25 +34,34 @@ export function RequestForm({
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const conflictFileRef = useRef<HTMLInputElement>(null);
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       requestedRole: "trainer",
       scope: "club",
       requestedTeamId: null,
-      message: ""
+      message: "",
+      isConflictClaim: false
     }
   });
   const scope = form.watch("scope");
 
   async function onSubmit(values: FormValues) {
     setPending(true);
-    const res = await requestClubAccessAction({
-      clubSlug,
-      requestedRole: values.requestedRole,
-      requestedTeamId: values.scope === "team" ? values.requestedTeamId : null,
-      message: values.message?.trim() ? values.message.trim() : null
-    });
+    const fd = new FormData();
+    fd.set("clubSlug", clubSlug);
+    fd.set("requestedRole", values.requestedRole);
+    if (values.scope === "team" && values.requestedTeamId) {
+      fd.set("requestedTeamId", values.requestedTeamId);
+    }
+    if (values.message?.trim()) fd.set("message", values.message.trim());
+    fd.set("isConflictClaim", String(values.isConflictClaim));
+    if (values.isConflictClaim && conflictFileRef.current?.files?.[0]) {
+      fd.set("conflictDoc", conflictFileRef.current.files[0]);
+    }
+
+    const res = await requestClubAccessAction(fd);
     setPending(false);
 
     if (!res.ok) {
@@ -63,7 +73,9 @@ export function RequestForm({
       router.push(`/verein/${res.clubSlug}`);
       return;
     }
-    router.push(`/onboarding/zugriff-anfragen/gesendet?clubName=${encodeURIComponent(clubName)}`);
+    router.push(
+      `/onboarding/zugriff-anfragen/gesendet?clubName=${encodeURIComponent(clubName)}${res.isConflictClaim ? "&conflict=1" : ""}`
+    );
   }
 
   return (
@@ -176,6 +188,35 @@ export function RequestForm({
                 </FormItem>
               )}
             />
+
+            <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4 space-y-3">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={form.watch("isConflictClaim") ?? false}
+                  onChange={(e) => form.setValue("isConflictClaim", e.target.checked)}
+                />
+                <span className="text-sm">
+                  <strong>Ich bin der eigentliche Vereinsvertreter</strong> und der bestehende
+                  Account ist eine Falschanmeldung.
+                </span>
+              </label>
+              {form.watch("isConflictClaim") && (
+                <div className="space-y-2 pt-2 border-t border-amber-200">
+                  <p className="text-xs text-amber-900/80">
+                    Lade eine Bescheinigung hoch (Vereinsregister-Auszug, Vorstandsbeschluss, …).
+                    KickPact prüft beide Seiten und entscheidet anhand der stärkeren Beweisbasis.
+                  </p>
+                  <input
+                    ref={conflictFileRef}
+                    type="file"
+                    accept="application/pdf,image/jpeg,image/png,image/heic,image/heif"
+                    className="block w-full text-sm"
+                  />
+                </div>
+              )}
+            </div>
 
             <Button type="submit" variant="accent" disabled={pending} className="w-full">
               {pending ? "Sende Anfrage…" : "Anfrage senden"}

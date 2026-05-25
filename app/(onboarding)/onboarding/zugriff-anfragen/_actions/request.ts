@@ -3,29 +3,40 @@
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { createId } from "@paralleldrive/cuid2";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { clubs, clubMemberships, teams, users } from "@/lib/db/schema";
 import { createRequest } from "@/lib/db/queries/membership-requests";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { accessRequestEmail } from "@/lib/mail/templates/access-request";
+import { storeDocument, buildVerificationKey } from "@/lib/storage/documents";
 
 const inputSchema = z.object({
   clubSlug: z.string().min(1),
   requestedRole: z.enum(["admin", "trainer", "viewer"]),
   requestedTeamId: z.string().nullable(),
-  message: z.string().max(280).nullable()
+  message: z.string().max(280).nullable(),
+  isConflictClaim: z.boolean().optional().default(false)
 });
 
-export type RequestClubAccessInput = z.infer<typeof inputSchema>;
+export async function requestClubAccessAction(formData: FormData) {
+  const fields = {
+    clubSlug: String(formData.get("clubSlug") ?? ""),
+    requestedRole: String(formData.get("requestedRole") ?? "trainer") as
+      | "admin"
+      | "trainer"
+      | "viewer",
+    requestedTeamId: formData.get("requestedTeamId")
+      ? String(formData.get("requestedTeamId"))
+      : null,
+    message: formData.get("message") ? String(formData.get("message")) : null,
+    isConflictClaim: formData.get("isConflictClaim") === "true"
+  };
+  const parsed = inputSchema.safeParse(fields);
+  if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
 
-export async function requestClubAccessAction(input: RequestClubAccessInput) {
-  const parsed = inputSchema.safeParse(input);
-  if (!parsed.success) {
-    return { ok: false as const, error: "Ungültige Eingabe" };
-  }
   const user = await requireUser();
-
   const [club] = await db
     .select({ id: clubs.id, name: clubs.name, slug: clubs.slug })
     .from(clubs)
@@ -33,8 +44,6 @@ export async function requestClubAccessAction(input: RequestClubAccessInput) {
     .limit(1);
   if (!club) return { ok: false as const, error: "Verein nicht gefunden" };
 
-  // If the user already has any club membership, redirect them to the club
-  // instead of creating a duplicate request.
   const [existing] = await db
     .select({ role: clubMemberships.role })
     .from(clubMemberships)
@@ -44,6 +53,39 @@ export async function requestClubAccessAction(input: RequestClubAccessInput) {
     return { ok: true as const, alreadyMember: true, clubSlug: club.slug };
   }
 
+  // Conflict-claim path: validate + upload doc
+  let conflictDocStorageKey: string | null = null;
+  if (parsed.data.isConflictClaim) {
+    const file = formData.get("conflictDoc");
+    if (!(file instanceof File)) {
+      return {
+        ok: false as const,
+        error: "Bei einer Konflikt-Anfrage musst du eine Bescheinigung hochladen."
+      };
+    }
+    const ALLOWED = new Set([
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/heic",
+      "image/heif"
+    ]);
+    if (!ALLOWED.has(file.type)) {
+      return { ok: false as const, error: "Nur PDF, JPEG, PNG oder HEIC." };
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      return { ok: false as const, error: "Datei max. 10 MB." };
+    }
+    const conflictId = createId();
+    const key = buildVerificationKey({
+      clubId: club.id,
+      verificationId: `conflict-${conflictId}`,
+      filename: file.name
+    });
+    const buffer = Buffer.from(await file.arrayBuffer());
+    conflictDocStorageKey = await storeDocument(key, buffer, file.type);
+  }
+
   let req;
   try {
     req = await createRequest({
@@ -51,7 +93,9 @@ export async function requestClubAccessAction(input: RequestClubAccessInput) {
       clubId: club.id,
       requestedRole: parsed.data.requestedRole,
       requestedTeamId: parsed.data.requestedTeamId,
-      message: parsed.data.message
+      message: parsed.data.message,
+      isConflictClaim: parsed.data.isConflictClaim,
+      conflictDocStorageKey
     });
   } catch {
     // Likely a duplicate-pending unique violation — surface a friendly message.
@@ -72,7 +116,12 @@ export async function requestClubAccessAction(input: RequestClubAccessInput) {
   });
 
   revalidatePath("/onboarding/zugriff-anfragen");
-  return { ok: true as const, alreadyMember: false, requestId: req.id };
+  return {
+    ok: true as const,
+    alreadyMember: false,
+    requestId: req.id,
+    isConflictClaim: parsed.data.isConflictClaim
+  };
 }
 
 async function notifyAdmins(args: {

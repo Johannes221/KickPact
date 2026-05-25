@@ -19,6 +19,8 @@ export interface CreateRequestArgs {
   requestedRole: RequestedRole;
   requestedTeamId: string | null;
   message: string | null;
+  isConflictClaim?: boolean;
+  conflictDocStorageKey?: string | null;
 }
 
 export interface MembershipRequest {
@@ -33,6 +35,8 @@ export interface MembershipRequest {
   respondedAt: Date | null;
   respondedByUserId: string | null;
   createdAt: Date;
+  isConflictClaim: boolean;
+  conflictDocStorageKey: string | null;
 }
 
 /**
@@ -50,7 +54,9 @@ export async function createRequest(args: CreateRequestArgs): Promise<Membership
       clubId: args.clubId,
       requestedRole: args.requestedRole,
       requestedTeamId: args.requestedTeamId,
-      message: args.message
+      message: args.message,
+      isConflictClaim: args.isConflictClaim ?? false,
+      conflictDocStorageKey: args.conflictDocStorageKey ?? null
     })
     .returning();
   return row as MembershipRequest;
