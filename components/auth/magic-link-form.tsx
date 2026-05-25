@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -25,6 +25,7 @@ export function MagicLinkForm({
   role?: SignupRole;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [pending, setPending] = useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -40,10 +41,9 @@ export function MagicLinkForm({
     if (mode === "signup") {
       track("signup_started", { method: "magic_link", ...(role ? { role } : {}) });
     }
-    const invitationToken =
-      typeof window !== "undefined"
-        ? new URLSearchParams(window.location.search).get("invitation")
-        : null;
+    // Bug #10 Fix: useSearchParams() statt window.location.search — SSR-sicher,
+    // reaktiv bei Route-Wechseln, kein Hydration-Mismatch-Risiko.
+    const invitationToken = searchParams.get("invitation");
     // Reihenfolge: Invitation > expliziter Sponsor-Signup > Default-Signup > Login.
     // Sponsor-Signup MUSS auf /sponsor/onboarding gehen (Profil-Wizard) und
     // nicht auf /sponsor — sonst landet der User auf einem leeren Dashboard

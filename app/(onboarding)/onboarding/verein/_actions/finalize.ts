@@ -2,7 +2,7 @@
 
 import slugify from "slugify";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { clubs, teams, clubMemberships, subscriptions, teamLicenses } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
@@ -39,11 +39,20 @@ export async function finalizeOnboarding(input: z.infer<typeof finalizeSchema>) 
   const user = await requireUser();
   const parsed = finalizeSchema.parse(input);
 
-  // ── Idempotenz-Check ──────────────────────────────────────────────────────
-  // Wenn die fussballde_verein_id schon existiert, ist das Onboarding bereits
-  // durchgelaufen (z.B. Page-Reload nach erfolgreichem Speichern). Dann
-  // einfach die vorhandenen Daten zurückliefern statt die DB-Transaktion
-  // nochmal zu versuchen (würde an der Unique-Constraint crashen).
+  // ── Race-safe Idempotenz via Advisory Lock ────────────────────────────────
+  // Bug #7 Fix (siehe docs/audits/2026-05-24-onboarding-audit.md):
+  // Bei gleichzeitigen Wizard-Submits (Double-Click, Browser-Tab-Sync) konnten
+  // zwei Calls den Existence-Check passieren und beide INSERT versuchen → der
+  // zweite crashte an der UNIQUE-Constraint auf `clubs.fussballde_verein_id`.
+  //
+  // Lösung: Komplette Logik in EINER Transaktion + pg_advisory_xact_lock auf
+  // den vereinId-Hash. Lock wird automatisch bei Transaction-Commit/Rollback
+  // released. Concurrent Calls für den gleichen Verein werden serialisiert,
+  // der zweite sieht dann unter Lock die existierenden Daten und nimmt den
+  // idempotenten Pfad.
+  //
+  // Fast-Path-Check (ohne Lock) bleibt als Optimierung erhalten — vermeidet
+  // den Lock-Overhead im Normal-Fall (Page-Reload nach erfolgreichem Save).
   if (parsed.verein.vereinId) {
     const [existing] = await db
       .select({ id: clubs.id, slug: clubs.slug })
@@ -85,6 +94,53 @@ export async function finalizeOnboarding(input: z.infer<typeof finalizeSchema>) 
   const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
 
   const result = await db.transaction(async (tx) => {
+    // Advisory-Lock per vereinId — serialisiert concurrent finalizeOnboarding-
+    // Calls für den gleichen Verein. hashtextextended returnt bigint, das
+    // ist der Wert-Typ den pg_advisory_xact_lock nutzt. Lock wird automatisch
+    // bei tx-Commit/Rollback released.
+    await tx.execute(
+      sql`SELECT pg_advisory_xact_lock(hashtextextended(${parsed.verein.vereinId}, 0))`
+    );
+
+    // Re-check unter Lock — der Fast-Path-Check oben ist race-anfällig, hier
+    // unter dem Advisory-Lock haben wir Garantie dass kein paralleler Insert
+    // dazwischenkommt. Wenn ein anderer Request gerade Erfolg hatte, sehen
+    // wir hier den committed Verein und können idempotent returnen.
+    if (parsed.verein.vereinId) {
+      const [racedExisting] = await tx
+        .select({ id: clubs.id, slug: clubs.slug })
+        .from(clubs)
+        .where(eq(clubs.fussballdeVereinId, parsed.verein.vereinId))
+        .limit(1);
+
+      if (racedExisting) {
+        const [racedMembership] = await tx
+          .select()
+          .from(clubMemberships)
+          .where(eq(clubMemberships.clubId, racedExisting.id))
+          .limit(1);
+
+        if (!racedMembership || racedMembership.userId !== user.id) {
+          throw new Error("Dieser Verein ist bereits bei KickPact registriert.");
+        }
+
+        const [racedTeam] = await tx
+          .select({ id: teams.id, slug: teams.fussballdeSlug })
+          .from(teams)
+          .where(eq(teams.clubId, racedExisting.id))
+          .limit(1);
+
+        if (!racedTeam)
+          throw new Error("Verein gefunden, aber kein Team — bitte Support kontaktieren.");
+
+        return {
+          idempotent: true as const,
+          club: { id: racedExisting.id, slug: racedExisting.slug },
+          team: { id: racedTeam.id }
+        };
+      }
+    }
+
     const [club] = await tx
       .insert(clubs)
       .values({
@@ -146,13 +202,19 @@ export async function finalizeOnboarding(input: z.infer<typeof finalizeSchema>) 
       status: "trialing"
     });
 
-    return { club, team };
+    return { idempotent: false as const, club, team };
   });
 
-  const invitation = await createInvitation({
-    teamId: result.team.id,
-    createdByUserId: user.id
-  });
+  // Invitation-Handling außerhalb der Transaktion. Bei idempotentem Pfad
+  // (Race-Detection) eine existierende pending Invitation finden, sonst neu
+  // anlegen — vermeidet Duplikate bei Double-Submit.
+  const invitation = result.idempotent
+    ? await (async () => {
+        const existing = await listInvitationsForTeam(result.team.id);
+        const pending = existing.find((i) => i.status === "pending");
+        return pending ?? (await createInvitation({ teamId: result.team.id, createdByUserId: user.id }));
+      })()
+    : await createInvitation({ teamId: result.team.id, createdByUserId: user.id });
 
   return {
     clubSlug: result.club.slug,
