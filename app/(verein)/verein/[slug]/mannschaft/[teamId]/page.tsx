@@ -8,7 +8,6 @@ import { sponsors } from "@/lib/db/schema/sponsors";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { listMatchesForTeam, getMatchChargesSummaryForTeam } from "@/lib/db/queries/matches";
 import { listClubSeasonPledges } from "@/lib/db/queries/club-dashboard";
-import { SeasonResultForm } from "./_components/season-result-form";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
 import { inngest } from "@/lib/inngest/client";
@@ -179,22 +178,12 @@ export default async function TeamDetailPage({
         </section>
       )}
 
-      {/* Saison-Ergebnis eintragen (für evaluate-season) */}
-      <SeasonResultForm
+      {/* Saison-Endstand: read-only Block, Bearbeitung in Einstellungen/Saison */}
+      <SeasonStatusBlock
+        slug={slug}
         teamId={team.id}
         saison={team.saison}
-        current={
-          seasonResult
-            ? {
-                finalPosition: seasonResult.finalPosition,
-                teamsInLeague: seasonResult.teamsInLeague,
-                promoted: seasonResult.promoted,
-                relegated: seasonResult.relegated,
-                cupRoundReached: seasonResult.cupRoundReached,
-                customNotes: seasonResult.customNotes
-              }
-            : null
-        }
+        result={seasonResult}
       />
 
       {/* Spiele */}
@@ -274,5 +263,88 @@ export default async function TeamDetailPage({
         )}
       </section>
     </div>
+  );
+}
+
+interface SeasonStatusResult {
+  finalPosition: number | null;
+  teamsInLeague: number | null;
+  promoted: boolean;
+  relegated: boolean;
+  cupRoundReached: string | null;
+  customNotes: string | null;
+}
+
+function SeasonStatusBlock({
+  slug,
+  teamId,
+  saison,
+  result
+}: {
+  slug: string;
+  teamId: string;
+  saison: string;
+  result: SeasonStatusResult | null;
+}) {
+  const settingsHref = `/verein/${slug}/mannschaft/${teamId}/einstellungen/saison`;
+
+  if (!result) {
+    return (
+      <section
+        aria-label={`Saison-Endstand ${saison}`}
+        className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-4 md:p-5"
+      >
+        <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+          Saison-Endstand {saison}
+        </h3>
+        <p className="mt-1 text-xs md:text-sm text-brand-night-navy/70">
+          Saison läuft noch — Endstand wird am Saisonende automatisch übernommen.{" "}
+          <Link href={settingsHref} className="text-accent hover:underline font-semibold">
+            Manuell setzen
+          </Link>
+          .
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section
+      aria-label={`Saison-Endstand ${saison}`}
+      className="rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5"
+    >
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+            Saison-Endstand {saison}
+          </h3>
+          <div className="mt-2 text-xs md:text-sm text-brand-night-navy/70 space-y-0.5">
+            {result.finalPosition && (
+              <div>
+                📊 Endplatz: <strong>{result.finalPosition}</strong>
+                {result.teamsInLeague && ` von ${result.teamsInLeague}`}
+              </div>
+            )}
+            {result.promoted && <div>⬆️ Aufstieg geschafft</div>}
+            {result.relegated && <div>⬇️ Abgestiegen</div>}
+            {result.cupRoundReached && <div>🏆 Pokal: {result.cupRoundReached}</div>}
+            {result.customNotes && <div>📝 {result.customNotes}</div>}
+            {!result.finalPosition &&
+              !result.promoted &&
+              !result.relegated &&
+              !result.cupRoundReached &&
+              !result.customNotes && (
+                <div className="text-brand-night-navy/50">Noch keine Details eingetragen.</div>
+              )}
+          </div>
+        </div>
+        <Link
+          href={settingsHref}
+          className="text-xs md:text-sm font-semibold text-accent hover:underline shrink-0"
+        >
+          Bearbeiten →
+        </Link>
+      </div>
+    </section>
   );
 }
