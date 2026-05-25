@@ -4,7 +4,7 @@ import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { clubs, clubMemberships } from "@/lib/db/schema";
-import { requireUser } from "@/lib/auth/session";
+import { requireUserOrThrow } from "@/lib/auth/session";
 
 const updateStammdatenSchema = z.object({
   clubId: z.string().min(1),
@@ -28,7 +28,7 @@ export type UpdateStammdatenInput = z.infer<typeof updateStammdatenSchema>;
  * Vereins-Einstellungen läuft, nicht den Wizard.
  */
 export async function updateDraftStammdaten(input: UpdateStammdatenInput): Promise<{ ok: true }> {
-  const user = await requireUser();
+  const user = await requireUserOrThrow();
   const parsed = updateStammdatenSchema.parse(input);
 
   const [membership] = await db

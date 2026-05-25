@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { clubs, clubMemberships } from "@/lib/db/schema";
-import { requireUser } from "@/lib/auth/session";
+import { requireUserOrThrow } from "@/lib/auth/session";
 
 const completeSchema = z.object({
   clubId: z.string().min(1)
@@ -34,7 +34,7 @@ export interface CompleteOnboardingResult {
 export async function completeOnboarding(
   input: CompleteOnboardingInput
 ): Promise<CompleteOnboardingResult> {
-  const user = await requireUser();
+  const user = await requireUserOrThrow();
   const parsed = completeSchema.parse(input);
 
   const [row] = await db

@@ -43,6 +43,11 @@ export function SponsorenStep({ clubId, clubSlug, role, baseUrl, teams }: Props)
           router.push(`/verein/${result.clubSlug}`);
         }
       } catch (e) {
+        if (e instanceof Error && e.message === "SESSION_EXPIRED") {
+          toast.error("Session abgelaufen — bitte neu einloggen.");
+          window.location.href = "/login";
+          return;
+        }
         const msg = e instanceof Error ? e.message : "Konnte Onboarding nicht abschließen.";
         toast.error(msg);
       }

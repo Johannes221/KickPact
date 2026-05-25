@@ -11,7 +11,7 @@ import {
   subscriptions,
   teamLicenses
 } from "@/lib/db/schema";
-import { requireUser } from "@/lib/auth/session";
+import { requireUserOrThrow } from "@/lib/auth/session";
 import { createInvitation, listInvitationsForTeam } from "@/lib/db/queries/invitations";
 
 const teamSchema = z.object({
@@ -68,7 +68,7 @@ export interface CreateDraftResult {
  * Beitritts-Anfrage via /verein/.../zugriff-anfragen).
  */
 export async function createDraftClub(input: CreateDraftInput): Promise<CreateDraftResult> {
-  const user = await requireUser();
+  const user = await requireUserOrThrow();
   const parsed = createDraftSchema.parse(input);
 
   const teamList = parsed.role === "mannschaft" ? [parsed.team] : parsed.teams;

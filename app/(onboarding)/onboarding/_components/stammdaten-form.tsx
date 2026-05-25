@@ -71,6 +71,11 @@ export function StammdatenForm({ clubId, role, defaultValues }: Props) {
         });
         router.push(`/onboarding/${role}/sponsoren`);
       } catch (e) {
+        if (e instanceof Error && e.message === "SESSION_EXPIRED") {
+          toast.error("Session abgelaufen — bitte neu einloggen.");
+          window.location.href = "/login";
+          return;
+        }
         const msg = e instanceof Error ? e.message : "Konnte Stammdaten nicht speichern.";
         setSubmitError(msg);
         toast.error(msg);

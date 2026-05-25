@@ -10,7 +10,12 @@ vi.mock("@/lib/auth/session", () => ({
   requireUser: vi.fn().mockImplementation(async () => ({
     id: mockUserId.current,
     email: `${mockUserId.current}@kickpact.local`
-  }))
+  })),
+  requireUserOrThrow: vi.fn().mockImplementation(async () => ({
+    id: mockUserId.current,
+    email: `${mockUserId.current}@kickpact.local`
+  })),
+  SESSION_EXPIRED_MESSAGE: "SESSION_EXPIRED"
 }));
 
 vi.mock("next/cache", () => ({

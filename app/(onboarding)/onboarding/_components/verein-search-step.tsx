@@ -147,6 +147,14 @@ export function VereinSearchStep({ role }: Props) {
         track("verein_onboarding_step2_completed", { role, teamCount: picked.length });
         router.push(`/onboarding/${role}/stammdaten`);
       } catch (e) {
+        // Session-Verlust während der Server-Action (Better-Auth Cookie
+        // intermittierend nicht sichtbar SSR-side) — hard reload zwingt
+        // Browser zur frischen Cookie-Auswertung, dann redirect zu /login.
+        if (e instanceof Error && e.message === "SESSION_EXPIRED") {
+          toast.error("Session abgelaufen — bitte neu einloggen.");
+          window.location.href = "/login";
+          return;
+        }
         const msg = e instanceof Error ? e.message : "Verein konnte nicht angelegt werden.";
         toast.error(msg);
       }
