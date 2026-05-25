@@ -31,7 +31,12 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Run unit + integration tests
-        run: npm test
+        # singleFork → keine parallelen Worker. Test-DB-Pollution-Workaround:
+        # tests/setup/db.ts macht non-transactional db.delete() pro Tabelle,
+        # was bei parallelen Forks zu FK-Violations führt (siehe Inventur
+        # 2026-05-25). Proper Fix wäre BEGIN+ROLLBACK pro Test-File. Bis
+        # dahin serialisieren wir.
+        run: npm run test:ci
         env:
           DATABASE_URL_TEST: postgres://test:test@localhost:54329/kickpact_test
 
