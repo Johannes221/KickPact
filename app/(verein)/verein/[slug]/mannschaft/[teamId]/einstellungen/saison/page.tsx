@@ -2,7 +2,7 @@ import Link from "next/link";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { teams, seasonResults } from "@/lib/db/schema";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { SeasonResultForm } from "../../_components/season-result-form";
 
 export const metadata = { title: "Saison-Ergebnis · Einstellungen · KickPact" };
@@ -19,7 +19,7 @@ export default async function TeamEinstellungenSaisonPage({
   params: Promise<{ slug: string; teamId: string }>;
 }) {
   const { slug, teamId } = await params;
-  const { club } = await assertClubAccess(slug, "admin");
+  const { club } = await assertTeamPageAccess(slug, teamId, "trainer");
 
   const [team] = await db
     .select({ id: teams.id, name: teams.name, saison: teams.saison })

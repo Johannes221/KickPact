@@ -50,6 +50,7 @@ export async function resetTestDb(): Promise<void> {
   await db.execute(/* sql */ `
     TRUNCATE
       invoice_items,
+      invoice_counters,
       invoices,
       charges,
       event_approvals,
@@ -62,8 +63,14 @@ export async function resetTestDb(): Promise<void> {
       sponsor_invitations,
       sponsors,
       season_results,
+      seasons,
       team_licenses,
       subscriptions,
+      processed_stripe_events,
+      sent_notifications,
+      club_verifications,
+      club_membership_requests,
+      team_memberships,
       club_memberships,
       teams,
       clubs,

@@ -4,7 +4,7 @@ import { teams, matches as matchesTable } from "@/lib/db/schema";
 import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
 import { charges } from "@/lib/db/schema/charges";
 import { sponsors } from "@/lib/db/schema/sponsors";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertTeamPageAccess } from "@/lib/auth/scope";
 import {
   getTriggerLabel,
   categorizeTrigger,
@@ -25,7 +25,7 @@ export default async function FinanzenPage({
   params: Promise<{ slug: string; teamId: string }>;
 }) {
   const { slug, teamId } = await params;
-  const { club } = await assertClubAccess(slug, "viewer");
+  const { club } = await assertTeamPageAccess(slug, teamId, "viewer");
   const [team] = await db
     .select({ id: teams.id })
     .from(teams)

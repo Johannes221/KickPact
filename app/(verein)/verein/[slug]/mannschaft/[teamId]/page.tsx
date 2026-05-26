@@ -5,7 +5,7 @@ import { teams, seasonResults } from "@/lib/db/schema";
 import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
 import { charges as chargesTable } from "@/lib/db/schema/charges";
 import { sponsors } from "@/lib/db/schema/sponsors";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { listMatchesForTeam, getMatchChargesSummaryForTeam } from "@/lib/db/queries/matches";
 import { listClubSeasonPledges } from "@/lib/db/queries/club-dashboard";
 import { TRIGGER_META } from "@/lib/triggers/labels";
@@ -24,7 +24,7 @@ export default async function TeamDetailPage({
   params: Promise<{ slug: string; teamId: string }>;
 }) {
   const { slug, teamId } = await params;
-  const { club } = await assertClubAccess(slug, "viewer");
+  const { club } = await assertTeamPageAccess(slug, teamId, "viewer");
 
   const [team] = await db
     .select()

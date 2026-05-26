@@ -2,7 +2,7 @@ import Link from "next/link";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { teams } from "@/lib/db/schema";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { getDocumentSignedUrl } from "@/lib/storage/documents";
 import { TeamStammdatenForm } from "./_components/team-stammdaten-form";
 import { TeamLifecyclePanel } from "./_components/team-lifecycle-panel";
@@ -23,7 +23,7 @@ export default async function TeamEinstellungenPage({
   params: Promise<{ slug: string; teamId: string }>;
 }) {
   const { slug, teamId } = await params;
-  const { club } = await assertClubAccess(slug, "admin");
+  const { club } = await assertTeamPageAccess(slug, teamId, "trainer");
 
   const [team] = await db
     .select({

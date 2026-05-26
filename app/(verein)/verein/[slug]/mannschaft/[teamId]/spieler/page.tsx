@@ -2,7 +2,7 @@ import Link from "next/link";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { teams } from "@/lib/db/schema";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { listRosterForTeam } from "@/lib/db/queries/team-lifecycle";
 import { RosterList } from "./_components/roster-list";
 
@@ -23,7 +23,7 @@ export default async function SpielerPage({
   const { slug, teamId } = await params;
   // Lesen ist viewer-OK; Block-Toggle prüft separat (trainer-Level) in der
   // Server-Action.
-  const { club, role } = await assertClubAccess(slug, "viewer");
+  const { club, role } = await assertTeamPageAccess(slug, teamId, "viewer");
 
   const [team] = await db
     .select({

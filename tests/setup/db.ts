@@ -8,6 +8,8 @@ import {
   teamMemberships,
   teams,
   sponsors,
+  sponsorInquiries,
+  sponsorInvitations,
   pledges,
   pledgeRules,
   matches,
@@ -17,9 +19,13 @@ import {
   teamLicenses,
   invoices,
   invoiceItems,
+  invoiceCounters,
   eventApprovals,
   players,
-  seasons
+  seasons,
+  seasonResults,
+  sentNotifications,
+  processedStripeEvents
 } from "@/lib/db/schema";
 
 /**
@@ -27,6 +33,11 @@ import {
  * Order respects FK constraints.
  */
 export async function resetTestDb() {
+  // No-FK tables first (safe to delete in any order)
+  await db.delete(sentNotifications);
+  await db.delete(processedStripeEvents);
+  await db.delete(invoiceCounters);
+
   await db.delete(invoiceItems);
   await db.delete(invoices);
   await db.delete(eventApprovals);
@@ -35,10 +46,13 @@ export async function resetTestDb() {
   await db.delete(matches);
   await db.delete(pledgeRules);
   await db.delete(pledges);
+  await db.delete(sponsorInquiries);
+  await db.delete(sponsorInvitations);
   await db.delete(sponsors);
   await db.delete(teamLicenses);
   await db.delete(subscriptions);
   await db.delete(players);
+  await db.delete(seasonResults);
   await db.delete(teamMemberships);
   await db.delete(clubVerifications);
   await db.delete(clubMembershipRequests);

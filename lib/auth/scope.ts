@@ -155,6 +155,39 @@ export async function assertTeamAccess(
 }
 
 /**
+ * Page-Guard für /verein/[slug]/mannschaft/[teamId]/*-Routen.
+ *
+ * Kombiniert assertTeamAccess (Berechtigung auf das konkrete Team) mit einem
+ * Slug-Cosmetic-Check: falls die URL einen Slug enthält, der nicht zum Verein
+ * des Teams gehört, wird auf die korrekte URL umgeleitet. Verhindert sowohl
+ * das Sibling-Team-Datenleck (Team-Trainer von A sah Team B) als auch
+ * URL-Mismatch (z.B. fremder Verein-Slug + eigenes Team).
+ *
+ * Gibt den vollen Access-Context inkl. {club: {id, slug, name}} zurück,
+ * damit Pages den Club für UI/Links nutzen können ohne extra DB-Lookup.
+ */
+export async function assertTeamPageAccess(
+  clubSlug: string,
+  teamId: string,
+  minRole: TeamRole = "viewer"
+) {
+  const access = await assertTeamAccess(teamId, minRole);
+
+  const [club] = await db
+    .select({ id: clubs.id, slug: clubs.slug, name: clubs.name })
+    .from(clubs)
+    .where(eq(clubs.id, access.clubId))
+    .limit(1);
+  if (!club) redirect("/dashboard");
+
+  if (club.slug !== clubSlug) {
+    redirect(`/verein/${club.slug}/mannschaft/${teamId}`);
+  }
+
+  return { ...access, club };
+}
+
+/**
  * Wie assertClubAccess, aber leitet User mit Mannschafts-Lizenz (basic/pro)
  * sofort zur Team-Page um. Nur Vereinslizenz-Inhaber sehen die Club-Top-
  * Routes (Dashboard / Mannschaften / Sponsoren / Ereignisse / Abrechnungen).

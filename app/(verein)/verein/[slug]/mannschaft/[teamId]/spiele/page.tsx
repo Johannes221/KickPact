@@ -2,7 +2,7 @@ import Link from "next/link";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { teams } from "@/lib/db/schema";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { listMatchesForTeam, getMatchChargesSummaryForTeam } from "@/lib/db/queries/matches";
 
 export const metadata = { title: "Spiele · KickPact" };
@@ -40,7 +40,7 @@ export default async function SpielePage({
   const sp = await searchParams;
   const resultFilter: ResultFilter = (sp.result as ResultFilter) ?? "all";
 
-  const { club } = await assertClubAccess(slug, "viewer");
+  const { club } = await assertTeamPageAccess(slug, teamId, "viewer");
   const [team] = await db
     .select()
     .from(teams)

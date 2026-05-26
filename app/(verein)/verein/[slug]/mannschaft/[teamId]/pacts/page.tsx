@@ -5,7 +5,7 @@ import { teams } from "@/lib/db/schema";
 import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
 import { sponsors } from "@/lib/db/schema/sponsors";
 import { charges } from "@/lib/db/schema/charges";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { getTriggerLabel, categorizeTrigger } from "@/lib/billing/trigger-labels";
 
 export const metadata = { title: "Pacts · KickPact" };
@@ -35,7 +35,7 @@ export default async function PactsPage({
   const status: FilterStatus = (sp.status as FilterStatus) ?? "active";
   const kind: FilterKind = (sp.kind as FilterKind) ?? "all";
 
-  const { club } = await assertClubAccess(slug, "viewer");
+  const { club } = await assertTeamPageAccess(slug, teamId, "viewer");
   const [team] = await db
     .select({ id: teams.id })
     .from(teams)
