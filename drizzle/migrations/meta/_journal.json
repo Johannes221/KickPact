@@ -176,6 +176,13 @@
       "when": 1780300000000,
       "tag": "0024_match_admin_note",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1780480000000,
+      "tag": "0025_team_verifications",
+      "breakpoints": true
     }
   ]
 }

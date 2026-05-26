@@ -30,6 +30,29 @@ export const clubVerificationDocTypeEnum = pgEnum(
 );
 
 /**
+ * Mannschafts-Verifikation (Spec 2026-05-26 §1.7).
+ *
+ * Trainer/Mannschafts-Verwalter ohne Vereinslizenz muss beim Onboarding einen
+ * Nachweis erbringen, dass er die Mannschaft tatsächlich betreut. Manuelle
+ * Prüfung durch Plattform-Admin in `/admin/verifications`.
+ */
+export const teamVerificationStatusEnum = pgEnum(
+  "team_verification_status",
+  ["pending", "approved", "rejected", "revoked"]
+);
+
+export const teamVerificationDocTypeEnum = pgEnum(
+  "team_verification_doc_type",
+  [
+    "trainer_license",      // DFB-Trainerschein / Trainerlizenz
+    "club_letter",          // Formloses Vereinsbestätigungs-Schreiben
+    "team_photo",           // Foto mit Mannschaft in Trikot
+    "fussballde_entry",     // Spielleitungs-Eintrag auf Fußball.de
+    "sonstiges"             // Freitext-Nachweis
+  ]
+);
+
+/**
  * Onboarding-Status pro Club. Tracked als state machine: draft → stammdaten_complete → completed.
  * Bestehende Clubs bekommen per Migration-Default "completed" (Backwards-Compat).
  * Wird vom Onboarding-Resume-Dispatcher (`/onboarding/page.tsx`) gelesen, um Halbfertige
@@ -132,6 +155,16 @@ export const teams = pgTable(
      * oder `local://...`, aufgelöst via `getDocumentSignedUrl`.
      */
     logoUrl: text("logo_url"),
+    /**
+     * Mannschafts-Verifikations-Status (Spec §1.7). NULL = nicht verifiziert,
+     * gesetzt = approved durch Plattform-Admin. Withhold-Gate: bei NULL werden
+     * Sponsoren-Rechnungen erzeugt aber nicht versendet (analog clubs.verifiedAt).
+     *
+     * Mannschaften unter Vereinslizenz erben die Club-Verifikation und brauchen
+     * keine eigene team_verification — der Anwendungs-Code prüft per
+     * `teams.licensedUnderClubId IS NOT NULL` zusätzlich auf Club-Verifikation.
+     */
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({
@@ -242,6 +275,40 @@ export const clubVerifications = pgTable(
   (t) => ({
     clubStatusIdx: index("club_verifications_club_status_idx").on(t.clubId, t.status),
     pendingIdx: index("club_verifications_pending_idx")
+      .on(t.submittedAt)
+      .where(sql`${t.status} = 'pending'`)
+  })
+);
+
+/**
+ * Mannschafts-Verifikation analog clubVerifications. Spec §1.7:
+ * "Mannschaft-Onboarding ohne Vereins-Admin existiert im Code, aber
+ * Nachweis-Pflicht fehlt (Sicherheitsrisiko: Fremder könnte fremde
+ * Mannschaft claimen)."
+ */
+export const teamVerifications = pgTable(
+  "team_verifications",
+  {
+    id: text("id").primaryKey().$defaultFn(() => createId()),
+    teamId: text("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+    submittedByUserId: text("submitted_by_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    docType: teamVerificationDocTypeEnum("doc_type").notNull(),
+    docFilename: text("doc_filename").notNull(),
+    docStorageKey: text("doc_storage_key").notNull(),
+    docMimeType: text("doc_mime_type").notNull(),
+    docSizeBytes: integer("doc_size_bytes").notNull(),
+    submitterRole: text("submitter_role").notNull(),       // "trainer" | "betreuer" | "kapitaen" | "sonstiges"
+    submitterFullName: text("submitter_full_name").notNull(),
+    submitterNotes: text("submitter_notes"),
+    status: teamVerificationStatusEnum("status").notNull().default("pending"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    reviewedByUserId: text("reviewed_by_user_id").references(() => users.id, { onDelete: "set null" }),
+    rejectionReason: text("rejection_reason"),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow()
+  },
+  (t) => ({
+    teamStatusIdx: index("team_verifications_team_status_idx").on(t.teamId, t.status),
+    pendingIdx: index("team_verifications_pending_idx")
       .on(t.submittedAt)
       .where(sql`${t.status} = 'pending'`)
   })
