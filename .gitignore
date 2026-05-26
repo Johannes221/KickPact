@@ -48,3 +48,6 @@ drift-report.md
 
 # Sentry — generiert beim Build, enthält SENTRY_AUTH_TOKEN
 .env.sentry-build-plugin
+
+# Playwright MCP — console/snapshot dumps aus dev-debug
+.playwright-mcp/
