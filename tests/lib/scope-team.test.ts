@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createId } from "@paralleldrive/cuid2";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   users,
@@ -8,7 +9,7 @@ import {
   clubMemberships,
   teamMemberships
 } from "@/lib/db/schema";
-import { resolveTeamAccess } from "@/lib/auth/scope";
+import { resolveTeamAccess, resolveTeamPageAccess } from "@/lib/auth/scope";
 import { resetTestDb } from "../setup/db";
 
 interface Fixture {
@@ -140,5 +141,96 @@ describe("resolveTeamAccess", () => {
     if (!r.granted) return;
     expect(r.scope).toBe("team");
     expect(r.role).toBe("trainer");
+  });
+});
+
+/**
+ * resolveTeamPageAccess deckt die Page-Guard-Schicht ab: Berechtigung +
+ * Slug-Cosmetic-Match. Diese Tests verhindern Regression der HIGH-Findings
+ * aus dem Rollen-Audit (2026-05-26).
+ */
+describe("resolveTeamPageAccess", () => {
+  async function seedWithSlug(): Promise<Fixture & { clubSlug: string }> {
+    const fx = await seed();
+    const [club] = await db
+      .select({ slug: clubs.slug })
+      .from(clubs)
+      .where(eq(clubs.id, fx.clubId))
+      .limit(1);
+    return { ...fx, clubSlug: club!.slug };
+  }
+
+  beforeEach(async () => {
+    await resetTestDb();
+  });
+
+  it("denies when user has no membership", async () => {
+    const { userId, teamId, clubSlug } = await seedWithSlug();
+    const d = await resolveTeamPageAccess(userId, clubSlug, teamId, "viewer");
+    expect(d.kind).toBe("denied");
+  });
+
+  it("grants when team-only-trainer accesses own team (was broken pre-fix)", async () => {
+    const { userId, teamId, clubSlug } = await seedWithSlug();
+    await db.insert(teamMemberships).values({ userId, teamId, role: "trainer" });
+    const d = await resolveTeamPageAccess(userId, clubSlug, teamId, "viewer");
+    expect(d.kind).toBe("granted");
+    if (d.kind !== "granted") return;
+    expect(d.access.scope).toBe("team");
+    expect(d.club.slug).toBe(clubSlug);
+  });
+
+  it("denies when team-only-trainer tries to access sibling team", async () => {
+    const { userId, teamId, otherTeamId, clubSlug } = await seedWithSlug();
+    await db.insert(teamMemberships).values({ userId, teamId, role: "trainer" });
+    const d = await resolveTeamPageAccess(userId, clubSlug, otherTeamId, "viewer");
+    expect(d.kind).toBe("denied");
+  });
+
+  it("grants team-trainer level on team-settings (HIGH-2 fix)", async () => {
+    const { userId, teamId, clubSlug } = await seedWithSlug();
+    await db.insert(teamMemberships).values({ userId, teamId, role: "trainer" });
+    const d = await resolveTeamPageAccess(userId, clubSlug, teamId, "trainer");
+    expect(d.kind).toBe("granted");
+  });
+
+  it("denies team-viewer when trainer level is required", async () => {
+    const { userId, teamId, clubSlug } = await seedWithSlug();
+    await db.insert(teamMemberships).values({ userId, teamId, role: "viewer" });
+    const d = await resolveTeamPageAccess(userId, clubSlug, teamId, "trainer");
+    expect(d.kind).toBe("denied");
+  });
+
+  it("grants club-admin access to any team in the club", async () => {
+    const { userId, clubId, teamId, otherTeamId, clubSlug } = await seedWithSlug();
+    await db.insert(clubMemberships).values({ userId, clubId, role: "admin" });
+    const d1 = await resolveTeamPageAccess(userId, clubSlug, teamId, "trainer");
+    const d2 = await resolveTeamPageAccess(userId, clubSlug, otherTeamId, "trainer");
+    expect(d1.kind).toBe("granted");
+    expect(d2.kind).toBe("granted");
+  });
+
+  it("redirects to correct slug when URL slug does not match team's club", async () => {
+    const { userId, teamId } = await seedWithSlug();
+    await db.insert(teamMemberships).values({ userId, teamId, role: "trainer" });
+    const d = await resolveTeamPageAccess(userId, "wrong-slug", teamId, "viewer");
+    expect(d.kind).toBe("redirect-slug");
+    if (d.kind === "redirect-slug") {
+      expect(d.correctSlug).toMatch(/^c-/); // seed verwendet "c-{cuid-prefix}"
+    }
+  });
+
+  it("denies when team does not exist (no club leak)", async () => {
+    const userId = createId();
+    await db.insert(users).values({
+      id: userId,
+      email: `t-${userId}@kickpact.local`,
+      emailVerified: true,
+      name: "X",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+    const d = await resolveTeamPageAccess(userId, "any-slug", "nonexistent-team", "viewer");
+    expect(d.kind).toBe("denied");
   });
 });

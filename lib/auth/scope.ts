@@ -154,6 +154,43 @@ export async function assertTeamAccess(
   return { user, ...access };
 }
 
+export type TeamPageAccessDecision =
+  | { kind: "denied" }
+  | { kind: "redirect-slug"; correctSlug: string }
+  | {
+      kind: "granted";
+      access: TeamAccessResult & { granted: true };
+      club: { id: string; slug: string; name: string };
+    };
+
+/**
+ * Pure resolver für die Team-Page-Routen — kapselt Berechtigungs-Check +
+ * Slug-Cosmetic-Match. Auth-frei testbar; `assertTeamPageAccess` wickelt das
+ * mit `requireUser` + `redirect` zur Page-Guard-Variante.
+ */
+export async function resolveTeamPageAccess(
+  userId: string,
+  clubSlug: string,
+  teamId: string,
+  minRole: TeamRole = "viewer"
+): Promise<TeamPageAccessDecision> {
+  const access = await resolveTeamAccess(userId, teamId, minRole);
+  if (!access.granted) return { kind: "denied" };
+
+  const [club] = await db
+    .select({ id: clubs.id, slug: clubs.slug, name: clubs.name })
+    .from(clubs)
+    .where(eq(clubs.id, access.clubId))
+    .limit(1);
+  if (!club) return { kind: "denied" };
+
+  if (club.slug !== clubSlug) {
+    return { kind: "redirect-slug", correctSlug: club.slug };
+  }
+
+  return { kind: "granted", access, club };
+}
+
 /**
  * Page-Guard für /verein/[slug]/mannschaft/[teamId]/*-Routen.
  *
@@ -171,20 +208,15 @@ export async function assertTeamPageAccess(
   teamId: string,
   minRole: TeamRole = "viewer"
 ) {
-  const access = await assertTeamAccess(teamId, minRole);
+  const user = await requireUser();
+  const decision = await resolveTeamPageAccess(user.id, clubSlug, teamId, minRole);
 
-  const [club] = await db
-    .select({ id: clubs.id, slug: clubs.slug, name: clubs.name })
-    .from(clubs)
-    .where(eq(clubs.id, access.clubId))
-    .limit(1);
-  if (!club) redirect("/dashboard");
-
-  if (club.slug !== clubSlug) {
-    redirect(`/verein/${club.slug}/mannschaft/${teamId}`);
+  if (decision.kind === "denied") redirect("/dashboard");
+  if (decision.kind === "redirect-slug") {
+    redirect(`/verein/${decision.correctSlug}/mannschaft/${teamId}`);
   }
 
-  return { ...access, club };
+  return { user, ...decision.access, club: decision.club };
 }
 
 /**
