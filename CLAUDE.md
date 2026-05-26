@@ -6,8 +6,10 @@ KickPact ist eine Plattform für performance-basiertes Sponsoring im Amateurfuß
 
 ## Source of Truth
 
-- **Spec:** [docs/superpowers/specs/2026-05-19-kickpact-v1-design.md](docs/superpowers/specs/2026-05-19-kickpact-v1-design.md)
-- **Aktiver Plan:** [docs/superpowers/plans/2026-05-19-kickpact-foundation.md](docs/superpowers/plans/2026-05-19-kickpact-foundation.md)
+- **Konsolidierte Spec (Primary):** [docs/superpowers/specs/2026-05-26-v1-final-scope-consolidation.md](docs/superpowers/specs/2026-05-26-v1-final-scope-consolidation.md) — bei Konflikt mit älteren Specs gilt dieses Dokument.
+- **Detail-Specs:** [docs/superpowers/specs/](docs/superpowers/specs/) — Identity-Roles, Scraper-Validation, Trust-Payment.
+- **Aktive Pläne:** [docs/superpowers/plans/](docs/superpowers/plans/) — abgeschlossene unter `plans/archive/`.
+- **Tagesaktueller Stand:** [STATE.md](STATE.md).
 
 ## Stack-Konventionen
 
