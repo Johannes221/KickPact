@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const config: NextConfig = {
   experimental: {
@@ -23,4 +24,25 @@ const config: NextConfig = {
   }
 };
 
-export default config;
+// Sentry-Wrapper: source-map upload + auto-instrumentation für Server Actions.
+// Org/Project lesen wir aus env, damit Forks/local-dev nicht versuchen Maps
+// hochzuladen. Wenn SENTRY_AUTH_TOKEN fehlt → source-map upload silently skip.
+export default withSentryConfig(config, {
+  org: process.env.SENTRY_ORG ?? "kickpact",
+  project: process.env.SENTRY_PROJECT ?? "kickpact",
+  silent: !process.env.CI,
+
+  // Source-Maps werden nur in prod-builds erzeugt + hochgeladen.
+  widenClientFileUpload: true,
+
+  // Source-Maps nach Upload lokal löschen → kein public-Leak in .next/static.
+  sourcemaps: {
+    filesToDeleteAfterUpload: [".next/static/**/*.map"]
+  },
+
+  // Tree-shake Sentry-Logger in Client-Bundles (~10 KB Ersparnis).
+  disableLogger: true,
+
+  // Automatic Vercel-Cron-Monitoring deaktiviert (KickPact nutzt Inngest).
+  automaticVercelMonitors: false
+});

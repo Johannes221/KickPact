@@ -1,6 +1,12 @@
 import { and, desc, eq, ne } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { clubs, clubVerifications, users } from "@/lib/db/schema";
+import {
+  clubs,
+  clubVerifications,
+  teams,
+  teamVerifications,
+  users
+} from "@/lib/db/schema";
 
 export type VerificationStatus = "pending" | "approved" | "rejected" | "revoked";
 export type VerificationDocType =
@@ -186,4 +192,167 @@ export async function rejectVerification(args: RejectArgs): Promise<void> {
       rejectionReason: args.reason
     })
     .where(eq(clubVerifications.id, args.verificationId));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Team-Verifications (Spec 2026-05-26 §1.7)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type TeamVerificationDocType =
+  | "trainer_license"
+  | "club_letter"
+  | "team_photo"
+  | "fussballde_entry"
+  | "sonstiges";
+
+export interface TeamVerification {
+  id: string;
+  teamId: string;
+  submittedByUserId: string;
+  docType: TeamVerificationDocType;
+  docFilename: string;
+  docStorageKey: string;
+  docMimeType: string;
+  docSizeBytes: number;
+  submitterRole: string;
+  submitterFullName: string;
+  submitterNotes: string | null;
+  status: VerificationStatus;
+  reviewedAt: Date | null;
+  reviewedByUserId: string | null;
+  rejectionReason: string | null;
+  submittedAt: Date;
+}
+
+export interface CreateTeamSubmissionArgs {
+  teamId: string;
+  submittedByUserId: string;
+  docType: TeamVerificationDocType;
+  docFilename: string;
+  docStorageKey: string;
+  docMimeType: string;
+  docSizeBytes: number;
+  submitterRole: string;
+  submitterFullName: string;
+  submitterNotes: string | null;
+}
+
+export async function createTeamVerificationSubmission(
+  args: CreateTeamSubmissionArgs
+): Promise<TeamVerification> {
+  const [row] = await db.insert(teamVerifications).values(args).returning();
+  return row as TeamVerification;
+}
+
+export interface PendingTeamVerificationRow extends TeamVerification {
+  submitterEmail: string;
+  teamName: string;
+  teamSaison: string;
+  clubName: string;
+  clubSlug: string;
+}
+
+export async function listPendingTeamVerifications(): Promise<
+  PendingTeamVerificationRow[]
+> {
+  const rows = await db
+    .select({
+      id: teamVerifications.id,
+      teamId: teamVerifications.teamId,
+      submittedByUserId: teamVerifications.submittedByUserId,
+      docType: teamVerifications.docType,
+      docFilename: teamVerifications.docFilename,
+      docStorageKey: teamVerifications.docStorageKey,
+      docMimeType: teamVerifications.docMimeType,
+      docSizeBytes: teamVerifications.docSizeBytes,
+      submitterRole: teamVerifications.submitterRole,
+      submitterFullName: teamVerifications.submitterFullName,
+      submitterNotes: teamVerifications.submitterNotes,
+      status: teamVerifications.status,
+      reviewedAt: teamVerifications.reviewedAt,
+      reviewedByUserId: teamVerifications.reviewedByUserId,
+      rejectionReason: teamVerifications.rejectionReason,
+      submittedAt: teamVerifications.submittedAt,
+      submitterEmail: users.email,
+      teamName: teams.name,
+      teamSaison: teams.saison,
+      clubName: clubs.name,
+      clubSlug: clubs.slug
+    })
+    .from(teamVerifications)
+    .innerJoin(users, eq(teamVerifications.submittedByUserId, users.id))
+    .innerJoin(teams, eq(teamVerifications.teamId, teams.id))
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(eq(teamVerifications.status, "pending"))
+    .orderBy(teamVerifications.submittedAt);
+
+  return rows as PendingTeamVerificationRow[];
+}
+
+export async function getActiveVerificationForTeam(
+  teamId: string
+): Promise<TeamVerification | null> {
+  const [row] = await db
+    .select()
+    .from(teamVerifications)
+    .where(
+      and(
+        eq(teamVerifications.teamId, teamId),
+        ne(teamVerifications.status, "revoked")
+      )
+    )
+    .orderBy(desc(teamVerifications.submittedAt))
+    .limit(1);
+  return (row as TeamVerification | undefined) ?? null;
+}
+
+export async function approveTeamVerification(args: ApproveArgs): Promise<void> {
+  const [existing] = await db
+    .select()
+    .from(teamVerifications)
+    .where(eq(teamVerifications.id, args.verificationId))
+    .limit(1);
+  if (!existing) throw new Error(`team verification not found: ${args.verificationId}`);
+  if (existing.status !== "pending") {
+    throw new Error(`team verification not pending (status=${existing.status})`);
+  }
+
+  const now = new Date();
+  await db.transaction(async (tx) => {
+    await tx
+      .update(teamVerifications)
+      .set({
+        status: "approved",
+        reviewedAt: now,
+        reviewedByUserId: args.reviewedByUserId
+      })
+      .where(eq(teamVerifications.id, args.verificationId));
+
+    await tx
+      .update(teams)
+      .set({ verifiedAt: now })
+      .where(eq(teams.id, existing.teamId));
+  });
+}
+
+export async function rejectTeamVerification(args: RejectArgs): Promise<void> {
+  const [existing] = await db
+    .select()
+    .from(teamVerifications)
+    .where(eq(teamVerifications.id, args.verificationId))
+    .limit(1);
+  if (!existing) throw new Error(`team verification not found: ${args.verificationId}`);
+  if (existing.status !== "pending") {
+    throw new Error(`team verification not pending (status=${existing.status})`);
+  }
+
+  await db
+    .update(teamVerifications)
+    .set({
+      status: "rejected",
+      reviewedAt: new Date(),
+      reviewedByUserId: args.reviewedByUserId,
+      rejectionReason: args.reason
+    })
+    .where(eq(teamVerifications.id, args.verificationId));
 }

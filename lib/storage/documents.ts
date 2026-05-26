@@ -145,3 +145,18 @@ export function buildVerificationKey(args: {
     .slice(0, 100);
   return `verifications/${args.clubId}/${args.verificationId}-${safe}`;
 }
+
+/**
+ * Builds a storage-key for a team-verification document.
+ * Path-convention: verifications/teams/<teamId>/<verificationId>-<sanitized-filename>.
+ */
+export function buildTeamVerificationKey(args: {
+  teamId: string;
+  verificationId: string;
+  filename: string;
+}): string {
+  const safe = args.filename
+    .replace(/[^a-zA-Z0-9_.\-]/g, "_")
+    .slice(0, 100);
+  return `verifications/teams/${args.teamId}/${args.verificationId}-${safe}`;
+}
