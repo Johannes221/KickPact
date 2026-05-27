@@ -5,11 +5,19 @@ import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { assertPlatformAdmin } from "@/lib/auth/admin";
 import { db } from "@/lib/db/client";
-import { clubs, clubVerifications, users } from "@/lib/db/schema";
+import {
+  clubs,
+  clubVerifications,
+  teams,
+  teamVerifications,
+  users
+} from "@/lib/db/schema";
 import { invoices } from "@/lib/db/schema/charges";
 import {
   approveVerification,
-  rejectVerification
+  rejectVerification,
+  approveTeamVerification,
+  rejectTeamVerification
 } from "@/lib/db/queries/verifications";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { verificationApprovedEmail } from "@/lib/mail/templates/verification-approved";
@@ -145,4 +153,125 @@ async function releaseWithheldInvoices(
     .where(and(eq(invoices.clubId, clubId), eq(invoices.status, "withheld")))
     .returning({ id: invoices.id });
   return result.length;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Team-Verifications (Spec 2026-05-26 §1.7)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function approveTeamAction(input: { verificationId: string }) {
+  const parsed = approveSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
+  const { user: admin } = await assertPlatformAdmin();
+
+  const baseInfo = await loadTeamVerificationInfo(parsed.data.verificationId);
+  if (!baseInfo) {
+    return { ok: false as const, error: "Verification nicht gefunden" };
+  }
+
+  await approveTeamVerification({
+    verificationId: parsed.data.verificationId,
+    reviewedByUserId: admin.id
+  });
+
+  const releasedCount = await releaseWithheldInvoicesForTeam(baseInfo.teamId);
+
+  const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+  const dashboardUrl = `${base}/verein/${baseInfo.clubSlug}/mannschaft/${baseInfo.teamId}`;
+  const mail = verificationApprovedEmail({
+    clubName: baseInfo.teamName,
+    dashboardUrl,
+    withheldInvoiceCount: releasedCount
+  });
+  await resend.emails
+    .send({
+      from: MAIL_FROM,
+      to: baseInfo.submitterEmail,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text
+    })
+    .catch((err) => console.error("[team-verification-approved] mail failed", err));
+
+  revalidatePath("/admin/verifications");
+  return { ok: true as const, releasedCount };
+}
+
+export async function rejectTeamAction(input: {
+  verificationId: string;
+  reason: string;
+}) {
+  const parsed = rejectSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: "Begründung mind. 3 Zeichen" };
+  const { user: admin } = await assertPlatformAdmin();
+
+  const baseInfo = await loadTeamVerificationInfo(parsed.data.verificationId);
+  if (!baseInfo) {
+    return { ok: false as const, error: "Verification nicht gefunden" };
+  }
+
+  await rejectTeamVerification({
+    verificationId: parsed.data.verificationId,
+    reviewedByUserId: admin.id,
+    reason: parsed.data.reason
+  });
+
+  const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+  const reuploadUrl = `${base}/verein/${encodeURIComponent(baseInfo.clubSlug)}/mannschaft/${baseInfo.teamId}/verifikation`;
+  const mail = verificationRejectedEmail({
+    clubName: baseInfo.teamName,
+    reason: parsed.data.reason,
+    reuploadUrl
+  });
+  await resend.emails
+    .send({
+      from: MAIL_FROM,
+      to: baseInfo.submitterEmail,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text
+    })
+    .catch((err) => console.error("[team-verification-rejected] mail failed", err));
+
+  revalidatePath("/admin/verifications");
+  return { ok: true as const };
+}
+
+async function loadTeamVerificationInfo(verificationId: string): Promise<{
+  teamId: string;
+  teamName: string;
+  clubSlug: string;
+  submitterEmail: string;
+} | null> {
+  const [row] = await db
+    .select({
+      teamId: teams.id,
+      teamName: teams.name,
+      clubSlug: clubs.slug,
+      submitterEmail: users.email
+    })
+    .from(teamVerifications)
+    .innerJoin(teams, eq(teamVerifications.teamId, teams.id))
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .innerJoin(users, eq(teamVerifications.submittedByUserId, users.id))
+    .where(eq(teamVerifications.id, verificationId))
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * Release withheld invoices für ein konkretes Team. Wenn das Team nicht
+ * Teil einer Vereinslizenz ist, hat die Withhold-Logik die Rechnungen mit
+ * `invoices.teamId = teamId` und `status = 'withheld'` markiert. Hier flippen
+ * wir auf 'sent'.
+ *
+ * NOTE: Aktuell ist invoices.teamId NICHT im Schema — invoices haben nur
+ * clubId. Phase B5 entscheidet, ob wir das via clubId+pledge.teamId joinen
+ * (komplex) oder ob wir invoices.teamId als nullable Spalte hinzufügen
+ * (sauberer). Für jetzt ist diese Funktion ein No-Op stub, der die
+ * Approval-Action nicht crashen lässt — die echte Withhold-Logik kommt in B5.
+ */
+async function releaseWithheldInvoicesForTeam(teamId: string): Promise<number> {
+  void teamId;
+  return 0;
 }

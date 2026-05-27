@@ -195,7 +195,9 @@ export async function rejectVerification(args: RejectArgs): Promise<void> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Team-Verifications (Spec 2026-05-26 §1.7)
+// Team-Verifications (Spec 2026-05-26 §1.7) — analog clubVerifications.
+// Bei autarken Mannschaften (ohne Vereinslizenz) muss der/die Mannschafts-
+// Verwalter/in einen Nachweis erbringen, dass die Mannschaft betreut wird.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type TeamVerificationDocType =
@@ -252,6 +254,9 @@ export interface PendingTeamVerificationRow extends TeamVerification {
   clubSlug: string;
 }
 
+/**
+ * Operator-inbox query: alle pending Team-Verifications, älteste zuerst.
+ */
 export async function listPendingTeamVerifications(): Promise<
   PendingTeamVerificationRow[]
 > {
@@ -306,6 +311,10 @@ export async function getActiveVerificationForTeam(
   return (row as TeamVerification | undefined) ?? null;
 }
 
+/**
+ * Approve setzt teams.verified_at = now() im selben Transaktions-Schritt.
+ * Wirft wenn Verifikation nicht existiert oder nicht pending (Idempotenz).
+ */
 export async function approveTeamVerification(args: ApproveArgs): Promise<void> {
   const [existing] = await db
     .select()

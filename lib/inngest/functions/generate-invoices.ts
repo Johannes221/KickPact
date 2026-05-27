@@ -1,4 +1,4 @@
-import { eq, sql, inArray } from "drizzle-orm";
+import { eq, sql, inArray, and, isNull } from "drizzle-orm";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
@@ -11,7 +11,8 @@ import {
   clubMemberships,
   users,
   teams,
-  teamLicenses
+  teamLicenses,
+  pledges
 } from "@/lib/db/schema";
 import { highestPlanFrom } from "@/lib/mail/reply-to-pure";
 import type { PlanKey } from "@/lib/stripe/pricing";
@@ -231,11 +232,29 @@ export const generateInvoices = inngest.createFunction(
 
           const storageUrl = await storePdf(`${cl.id}/${invoiceNumber}.pdf`, pdfBuf);
 
-          // Phase E1 Withhold-Gate: Unverified clubs → invoice + PDF created,
-          // but status='withheld' and mail send is skipped. After approve-
-          // verification (Phase E2), withheld invoices for that club are re-
-          // released in a batch.
+          // Phase E1 + Spec 2026-05-26 §1.7 Withhold-Gate:
+          //   - Unverified clubs → invoice + PDF created, status='withheld'.
+          //   - Unverified teams (Spec §1.7): falls IRGENDEINES der Teams,
+          //     die in dieser Rechnung beteiligt sind, nicht verifiziert ist,
+          //     wird ebenfalls withheld. Bei Approval (Club oder Team) wird
+          //     re-evaluiert.
           const clubVerified = cl.verifiedAt !== null;
+
+          // Sammel alle teamIds, die zu den Charges dieser Rechnung gehören.
+          // Items kommen aus `group.items`, die jeweils einen chargeId + pledge
+          // referenzieren. Wir queryen die pledges → teams Beziehung direkt.
+          const chargeIds = group.items.map((i) => i.chargeId);
+          const involvedTeams = await db
+            .selectDistinct({ teamId: pledges.teamId, verifiedAt: teams.verifiedAt })
+            .from(charges)
+            .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+            .innerJoin(teams, eq(pledges.teamId, teams.id))
+            .where(inArray(charges.id, chargeIds));
+          const allTeamsVerified = involvedTeams.every(
+            (t) => t.verifiedAt !== null
+          );
+
+          const verified = clubVerified && allTeamsVerified;
 
           const inserted = await db.transaction(async (tx) => {
             const [inv] = await tx
@@ -246,8 +265,8 @@ export const generateInvoices = inngest.createFunction(
                 period: periodStr,
                 totalCents: total,
                 pdfUrl: storageUrl,
-                status: clubVerified ? "sent" : "withheld",
-                sentAt: clubVerified ? new Date() : null
+                status: verified ? "sent" : "withheld",
+                sentAt: verified ? new Date() : null
               })
               .onConflictDoNothing()
               .returning();
@@ -291,7 +310,7 @@ export const generateInvoices = inngest.createFunction(
             invoiceId: inserted.id,
             invoiceNumber,
             clubId: cl.id,
-            clubVerified,
+            clubVerified: verified,
             sponsorEmail: spRow.user.email,
             sponsorName: spRow.sponsor.displayName,
             adminEmails,
@@ -311,12 +330,11 @@ export const generateInvoices = inngest.createFunction(
         invoicesCreated += 1;
         const pdfBuf = Buffer.from(result.pdfBase64, "base64");
 
-        // Phase E1 Withhold-Gate: For unverified clubs, the invoice + PDF
-        // exist (status='withheld' from the DB insert above) but NO mails go
-        // out — sponsor or club-internal. Phase E2's approve-verification
-        // re-releases withheld invoices in a batch.
+        // Phase E1+§1.7 Withhold-Gate: invoice exists (status='withheld')
+        // but NO mails go out until club AND all involved teams are verified.
+        // Re-release happens via approve-verification for club or team.
         if (!result.clubVerified) {
-          logger.info("invoice withheld — club not verified", {
+          logger.info("invoice withheld — club or team not verified", {
             invoiceId: result.invoiceId,
             clubId: result.clubId,
             invoiceNumber: result.invoiceNumber
