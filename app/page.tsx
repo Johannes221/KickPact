@@ -19,7 +19,7 @@ export const metadata = {
     title: "KickPact — Performance-Sponsoring für Amateurfußball",
     description:
       "Sponsere deinen Lieblingsverein pro Spielereignis. Weniger als 1 € pro Spieler im Monat.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630 }]
+    // opengraph-image.tsx generates the OG image automatically via Next.js App Router
   }
 };
 

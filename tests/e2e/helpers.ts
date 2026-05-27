@@ -42,12 +42,57 @@ export async function loginAsTestUser(
       "E2E_TEST_BYPASS_KEY ist nicht gesetzt. Test sollte vorher per test.skip() übersprungen werden."
     );
   }
+  // page.request ist ein isolierter API-Context: Response-Cookies werden NICHT
+  // automatisch in den Browser-Context übertragen. Stattdessen navigieren wir
+  // direkt auf die Stub-URL — dann setzt der Server den Cookie im Browser-Context.
+  // Wir übergeben die Parameter als Query-String (GET) damit der Browser-Navigation
+  // kein JSON-Body schicken muss; der Endpoint unterstützt alternativ GET.
+  //
+  // Alternativer Ansatz: page.context().addCookies() nach page.request.post().
+  // Wir wählen addCookies() weil wir den Server-Response-Header korrekt lesen.
   const response = await page.request.post("/api/test-auth/magic-link-stub", {
     headers: { "x-test-bypass": key, "content-type": "application/json" },
     data: { email, name: opts.name }
   });
   expect(response.ok(), `Stub-Endpoint hat ${response.status()} geliefert`).toBeTruthy();
   const body = (await response.json()) as { userId: string; email: string };
+
+  // Cookie aus dem Response-Header extrahieren und in den Browser-Context laden.
+  // Playwright gibt Set-Cookie-Header über response.headersArray() zurück.
+  const headers = response.headersArray();
+  const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "https://kickpact.schartl.dev";
+  const url = new URL(baseUrl);
+  for (const { name, value } of headers) {
+    if (name.toLowerCase() !== "set-cookie") continue;
+    // Minimalparser: Name=Value; HttpOnly; Secure; SameSite=Lax; Path=/; Expires=...
+    const parts = value.split(";").map((p) => p.trim());
+    const [cookieNameValue, ...attrs] = parts;
+    const eqIdx = cookieNameValue.indexOf("=");
+    const cookieName = cookieNameValue.slice(0, eqIdx);
+    const cookieValue = cookieNameValue.slice(eqIdx + 1);
+    const attrMap: Record<string, string | boolean> = {};
+    for (const attr of attrs) {
+      const [k, v] = attr.split("=").map((s) => s.trim());
+      attrMap[k.toLowerCase()] = v ?? true;
+    }
+    await page.context().addCookies([
+      {
+        name: cookieName,
+        value: cookieValue,
+        domain: url.hostname,
+        path: (attrMap["path"] as string) ?? "/",
+        httpOnly: "httponly" in attrMap,
+        secure: "secure" in attrMap,
+        sameSite: (() => {
+          const ss = ((attrMap["samesite"] as string) ?? "").toLowerCase();
+          if (ss === "strict") return "Strict";
+          if (ss === "none") return "None";
+          return "Lax";
+        })()
+      }
+    ]);
+  }
+
   return body;
 }
 

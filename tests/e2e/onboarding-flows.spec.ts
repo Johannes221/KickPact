@@ -272,16 +272,18 @@ test.describe("Onboarding · Realistic-Data-Smokes (auth required)", () => {
     const email = testEmail("dossenheim");
     await loginAsTestUser(page, email, { name: "Dossenheim Tester" });
 
-    await page.goto("/onboarding/verein/1");
+    // /onboarding/verein/1 redirectet zu /onboarding (Legacy-URL).
+    // Der neue Wizard-Einstieg ist /onboarding/verein/verein.
+    await page.goto("/onboarding/verein/verein");
     // Step 1 muss als eingeloggter User rendern, kein Redirect auf /login.
     await expect(page).not.toHaveURL(/\/login/);
 
-    // Vereinssuche-Input vorhanden.
-    const search = page.getByPlaceholder(/Heidelberg|Verein|Suchen/i).first();
+    // Vereinssuche-Input vorhanden — Placeholder ist "z.B. FC Heidelberg".
+    const search = page.getByPlaceholder(/FC Heidelberg|Heidelberg|Verein|Suchen/i).first();
     await expect(search).toBeVisible();
     await search.fill("Dossenheim");
-    // Suchen-Button kann verschieden labeled sein — robuster Selector.
-    const submit = page.getByRole("button", { name: /(Suchen|Weiter)/i }).first();
+    // Suchen-Button
+    const submit = page.getByRole("button", { name: /Suchen/i }).first();
     await expect(submit).toBeVisible();
   });
 
@@ -293,9 +295,9 @@ test.describe("Onboarding · Realistic-Data-Smokes (auth required)", () => {
     const email = testEmail("schriesheim");
     await loginAsTestUser(page, email, { name: "Schriesheim Tester" });
 
-    await page.goto("/onboarding/verein/1");
+    await page.goto("/onboarding/verein/verein");
     await expect(page).not.toHaveURL(/\/login/);
-    const search = page.getByPlaceholder(/Heidelberg|Verein|Suchen/i).first();
+    const search = page.getByPlaceholder(/FC Heidelberg|Heidelberg|Verein|Suchen/i).first();
     await expect(search).toBeVisible();
     await search.fill("Schriesheim");
   });
@@ -308,9 +310,9 @@ test.describe("Onboarding · Realistic-Data-Smokes (auth required)", () => {
     const email = testEmail("neuenheim");
     await loginAsTestUser(page, email, { name: "Neuenheim Tester" });
 
-    await page.goto("/onboarding/verein/1");
+    await page.goto("/onboarding/verein/verein");
     await expect(page).not.toHaveURL(/\/login/);
-    const search = page.getByPlaceholder(/Heidelberg|Verein|Suchen/i).first();
+    const search = page.getByPlaceholder(/FC Heidelberg|Heidelberg|Verein|Suchen/i).first();
     await expect(search).toBeVisible();
     await search.fill("Neuenheim");
   });

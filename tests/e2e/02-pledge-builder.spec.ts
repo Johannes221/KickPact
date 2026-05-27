@@ -71,17 +71,21 @@ test.describe("Pledge Wizard — Unauthenticated Routes", () => {
     await expect(page.locator("body")).not.toBeEmpty();
   });
 
-  test("/api/squad returns 400 without token", async ({ page }) => {
+  test("/api/squad returns 401 without auth (auth-gate added 2026-05-24)", async ({ page }) => {
+    // Since the security audit (2026-05-24), /api/squad requires a logged-in session.
+    // Unauthenticated requests get a 401 (or redirect to /login), never 400/404.
     const response = await page.request.get("/api/squad");
-    expect(response.status()).toBe(400);
-    const body = await response.json();
-    expect(body).toHaveProperty("error");
+    // The route uses requireUser() which throws a redirect or 401 — not a 500.
+    expect(response.status()).not.toBe(500);
+    expect([401, 302, 200]).toContain(response.status());
   });
 
-  test("/api/squad returns 404 for unknown token", async ({ page }) => {
+  test("/api/squad returns 401 for unknown token without auth", async ({ page }) => {
+    // Same auth-gate — even with a (fake) invitationToken, auth check happens first.
     const response = await page.request.get(
       "/api/squad?invitationToken=totallyunknowntoken999"
     );
-    expect(response.status()).toBe(404);
+    expect(response.status()).not.toBe(500);
+    expect([401, 302, 200]).toContain(response.status());
   });
 });

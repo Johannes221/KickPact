@@ -8,7 +8,8 @@ import { test, expect } from "@playwright/test";
 test.describe("Vereins-Onboarding", () => {
   test("Login-Seite lädt und zeigt Magic-Link-Form", async ({ page }) => {
     await page.goto("/login");
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    // CardTitle rendert als <div>, nicht als <h1> — daher getByText statt getByRole("heading").
+    await expect(page.getByText("Login").first()).toBeVisible();
     // Magic-Link Email-Input vorhanden
     await expect(page.locator("input[type='email'], input[name='email']")).toBeVisible();
   });
