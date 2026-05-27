@@ -159,9 +159,10 @@ describe("releaseWithheldInvoicesForClub", () => {
   it("flips withheld → sent and returns count", async () => {
     const { clubId, invoiceId } = await seedWithheldInvoice({ clubVerified: true });
 
-    const count = await releaseWithheldInvoicesForClub(clubId);
+    const result = await releaseWithheldInvoicesForClub(clubId);
 
-    expect(count).toBe(1);
+    expect(result.count).toBe(1);
+    expect(result.invoiceIds).toContain(invoiceId);
     expect(await getInvoiceStatus(invoiceId)).toBe("sent");
   });
 
@@ -173,8 +174,9 @@ describe("releaseWithheldInvoicesForClub", () => {
       .set({ status: "sent" })
       .where(eq(invoices.id, invoiceId));
 
-    const count = await releaseWithheldInvoicesForClub(clubId);
-    expect(count).toBe(0);
+    const result = await releaseWithheldInvoicesForClub(clubId);
+    expect(result.count).toBe(0);
+    expect(result.invoiceIds).toHaveLength(0);
   });
 
   it("releases multiple withheld invoices in one call", async () => {
@@ -204,8 +206,9 @@ describe("releaseWithheldInvoicesForClub", () => {
       ids.push(invId);
     }
 
-    const count = await releaseWithheldInvoicesForClub(clubId);
-    expect(count).toBe(2);
+    const result = await releaseWithheldInvoicesForClub(clubId);
+    expect(result.count).toBe(2);
+    expect(result.invoiceIds).toHaveLength(2);
     for (const id of ids) {
       expect(await getInvoiceStatus(id)).toBe("sent");
     }
@@ -227,9 +230,10 @@ describe("releaseWithheldInvoicesForTeam", () => {
       teamVerified: true
     });
 
-    const count = await releaseWithheldInvoicesForTeam(teamId);
+    const result = await releaseWithheldInvoicesForTeam(teamId);
 
-    expect(count).toBe(1);
+    expect(result.count).toBe(1);
+    expect(result.invoiceIds).toContain(invoiceId);
     expect(await getInvoiceStatus(invoiceId)).toBe("sent");
   });
 
@@ -239,9 +243,10 @@ describe("releaseWithheldInvoicesForTeam", () => {
       teamVerified: true
     });
 
-    const count = await releaseWithheldInvoicesForTeam(teamId);
+    const result = await releaseWithheldInvoicesForTeam(teamId);
 
-    expect(count).toBe(0);
+    expect(result.count).toBe(0);
+    expect(result.invoiceIds).toHaveLength(0);
     expect(await getInvoiceStatus(invoiceId)).toBe("withheld");
   });
 
@@ -251,9 +256,10 @@ describe("releaseWithheldInvoicesForTeam", () => {
       teamVerified: false
     });
 
-    const count = await releaseWithheldInvoicesForTeam(teamId);
+    const result = await releaseWithheldInvoicesForTeam(teamId);
 
-    expect(count).toBe(0);
+    expect(result.count).toBe(0);
+    expect(result.invoiceIds).toHaveLength(0);
     expect(await getInvoiceStatus(invoiceId)).toBe("withheld");
   });
 
@@ -375,9 +381,10 @@ describe("releaseWithheldInvoicesForTeam", () => {
     ]);
 
     // Approve teamA → should NOT release invoice (teamB still unverified)
-    const count = await releaseWithheldInvoicesForTeam(teamAId);
+    const result = await releaseWithheldInvoicesForTeam(teamAId);
 
-    expect(count).toBe(0);
+    expect(result.count).toBe(0);
+    expect(result.invoiceIds).toHaveLength(0);
     expect(await getInvoiceStatus(invoiceId)).toBe("withheld");
   });
 
@@ -481,13 +488,15 @@ describe("releaseWithheldInvoicesForTeam", () => {
     ]);
 
     // Both teams verified → calling for teamA should release
-    const count = await releaseWithheldInvoicesForTeam(teamAId);
-    expect(count).toBe(1);
+    const result = await releaseWithheldInvoicesForTeam(teamAId);
+    expect(result.count).toBe(1);
+    expect(result.invoiceIds).toContain(invoiceId);
     expect(await getInvoiceStatus(invoiceId)).toBe("sent");
   });
 
   it("returns 0 for unknown teamId", async () => {
-    const count = await releaseWithheldInvoicesForTeam("nonexistent-id");
-    expect(count).toBe(0);
+    const result = await releaseWithheldInvoicesForTeam("nonexistent-id");
+    expect(result.count).toBe(0);
+    expect(result.invoiceIds).toHaveLength(0);
   });
 });

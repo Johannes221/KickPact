@@ -9,7 +9,8 @@ import {
   invoices,
   invoiceItems,
   charges,
-  pledges
+  pledges,
+  sponsors
 } from "@/lib/db/schema";
 
 export type VerificationStatus = "pending" | "approved" | "rejected" | "revoked";
@@ -374,20 +375,25 @@ export async function rejectTeamVerification(args: RejectArgs): Promise<void> {
 // Withhold-Release
 // ─────────────────────────────────────────────────────────────────────────────
 
+export interface ReleaseResult {
+  count: number;
+  invoiceIds: string[];
+}
+
 /**
  * Release withheld invoices for a club: flip status='sent'.
  * Called after a club verification is approved.
- * Returns the number of invoices released.
+ * Returns the count + IDs of released invoices (IDs used for sponsor mail).
  */
 export async function releaseWithheldInvoicesForClub(
   clubId: string
-): Promise<number> {
+): Promise<ReleaseResult> {
   const result = await db
     .update(invoices)
     .set({ status: "sent", sentAt: new Date() })
     .where(and(eq(invoices.clubId, clubId), eq(invoices.status, "withheld")))
     .returning({ id: invoices.id });
-  return result.length;
+  return { count: result.length, invoiceIds: result.map((r) => r.id) };
 }
 
 /**
@@ -403,21 +409,21 @@ export async function releaseWithheldInvoicesForClub(
  */
 export async function releaseWithheldInvoicesForTeam(
   teamId: string
-): Promise<number> {
+): Promise<ReleaseResult> {
   // 1. Resolve club + verify it is itself already approved
   const [teamRow] = await db
     .select({ clubId: teams.clubId })
     .from(teams)
     .where(eq(teams.id, teamId))
     .limit(1);
-  if (!teamRow) return 0;
+  if (!teamRow) return { count: 0, invoiceIds: [] };
 
   const [clubRow] = await db
     .select({ verifiedAt: clubs.verifiedAt })
     .from(clubs)
     .where(eq(clubs.id, teamRow.clubId))
     .limit(1);
-  if (!clubRow?.verifiedAt) return 0;
+  if (!clubRow?.verifiedAt) return { count: 0, invoiceIds: [] };
 
   // 2. Collect all withheld invoices for the club
   const withheld = await db
@@ -426,7 +432,7 @@ export async function releaseWithheldInvoicesForTeam(
     .where(
       and(eq(invoices.clubId, teamRow.clubId), eq(invoices.status, "withheld"))
     );
-  if (withheld.length === 0) return 0;
+  if (withheld.length === 0) return { count: 0, invoiceIds: [] };
 
   const withheldIds = withheld.map((r) => r.id);
 
@@ -446,7 +452,7 @@ export async function releaseWithheldInvoicesForTeam(
 
   const blockedIds = new Set(stillBlocked.map((r) => r.invoiceId));
   const toRelease = withheldIds.filter((id) => !blockedIds.has(id));
-  if (toRelease.length === 0) return 0;
+  if (toRelease.length === 0) return { count: 0, invoiceIds: [] };
 
   const released = await db
     .update(invoices)
@@ -454,5 +460,53 @@ export async function releaseWithheldInvoicesForTeam(
     .where(inArray(invoices.id, toRelease))
     .returning({ id: invoices.id });
 
-  return released.length;
+  const invoiceIds = released.map((r) => r.id);
+  return { count: invoiceIds.length, invoiceIds };
+}
+
+export interface ReleasedInvoiceSponsorInfo {
+  sponsorEmail: string;
+  sponsorName: string;
+  invoiceCount: number;
+}
+
+/**
+ * Given a list of just-released invoice IDs, return one entry per sponsor
+ * with their email, display name, and how many invoices were released for them.
+ * Used to send the Phase-E3 notification mails.
+ *
+ * Pass the IDs returned by releaseWithheldInvoicesForClub / ...ForTeam
+ * directly — no time-based heuristic needed.
+ */
+export async function getSponsorMailInfoForInvoices(
+  invoiceIds: string[]
+): Promise<ReleasedInvoiceSponsorInfo[]> {
+  if (invoiceIds.length === 0) return [];
+
+  const rows = await db
+    .select({
+      sponsorEmail: users.email,
+      sponsorName: sponsors.displayName,
+      invoiceId: invoices.id
+    })
+    .from(invoices)
+    .innerJoin(sponsors, eq(invoices.sponsorId, sponsors.id))
+    .innerJoin(users, eq(sponsors.userId, users.id))
+    .where(inArray(invoices.id, invoiceIds));
+
+  // Group by sponsor email so each sponsor gets exactly one mail
+  const byEmail = new Map<string, ReleasedInvoiceSponsorInfo>();
+  for (const r of rows) {
+    const existing = byEmail.get(r.sponsorEmail);
+    if (existing) {
+      existing.invoiceCount++;
+    } else {
+      byEmail.set(r.sponsorEmail, {
+        sponsorEmail: r.sponsorEmail,
+        sponsorName: r.sponsorName,
+        invoiceCount: 1
+      });
+    }
+  }
+  return [...byEmail.values()];
 }

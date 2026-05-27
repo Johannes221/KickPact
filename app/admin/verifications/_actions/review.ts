@@ -18,11 +18,13 @@ import {
   approveTeamVerification,
   rejectTeamVerification,
   releaseWithheldInvoicesForClub,
-  releaseWithheldInvoicesForTeam
+  releaseWithheldInvoicesForTeam,
+  getSponsorMailInfoForInvoices
 } from "@/lib/db/queries/verifications";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { verificationApprovedEmail } from "@/lib/mail/templates/verification-approved";
 import { verificationRejectedEmail } from "@/lib/mail/templates/verification-rejected";
+import { invoiceReleasedEmail } from "@/lib/mail/templates/invoice-released";
 
 const approveSchema = z.object({ verificationId: z.string().min(1) });
 const rejectSchema = z.object({
@@ -46,7 +48,7 @@ export async function approveAction(input: { verificationId: string }) {
   });
 
   // Release withheld invoices for this club: set status='sent'.
-  const releasedCount = await releaseWithheldInvoicesForClub(baseInfo.clubId);
+  const { count: releasedCount, invoiceIds } = await releaseWithheldInvoicesForClub(baseInfo.clubId);
 
   // Notify submitter
   const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
@@ -65,6 +67,33 @@ export async function approveAction(input: { verificationId: string }) {
       text: mail.text
     })
     .catch((err) => console.error("[verification-approved] mail failed", err));
+
+  // E3: Notify sponsors whose withheld invoices were just released
+  if (invoiceIds.length > 0) {
+    const sponsorInfos = await getSponsorMailInfoForInvoices(invoiceIds);
+    const sponsorDashboardUrl = `${base}/sponsor/rechnungen`;
+    await Promise.allSettled(
+      sponsorInfos.map((info) => {
+        const sponsorMail = invoiceReleasedEmail({
+          sponsorName: info.sponsorName,
+          entityName: baseInfo.clubName,
+          invoiceCount: info.invoiceCount,
+          dashboardUrl: sponsorDashboardUrl
+        });
+        return resend.emails
+          .send({
+            from: MAIL_FROM,
+            to: info.sponsorEmail,
+            subject: sponsorMail.subject,
+            html: sponsorMail.html,
+            text: sponsorMail.text
+          })
+          .catch((err) =>
+            console.error("[invoice-released] mail failed for", info.sponsorEmail, err)
+          );
+      })
+    );
+  }
 
   revalidatePath("/admin/verifications");
   return { ok: true as const, releasedCount };
@@ -153,7 +182,7 @@ export async function approveTeamAction(input: { verificationId: string }) {
     reviewedByUserId: admin.id
   });
 
-  const releasedCount = await releaseWithheldInvoicesForTeam(baseInfo.teamId);
+  const { count: releasedCount, invoiceIds } = await releaseWithheldInvoicesForTeam(baseInfo.teamId);
 
   const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
   const dashboardUrl = `${base}/verein/${baseInfo.clubSlug}/mannschaft/${baseInfo.teamId}`;
@@ -171,6 +200,33 @@ export async function approveTeamAction(input: { verificationId: string }) {
       text: mail.text
     })
     .catch((err) => console.error("[team-verification-approved] mail failed", err));
+
+  // E3: Notify sponsors whose withheld invoices were just released
+  if (invoiceIds.length > 0) {
+    const sponsorInfos = await getSponsorMailInfoForInvoices(invoiceIds);
+    const sponsorDashboardUrl = `${base}/sponsor/rechnungen`;
+    await Promise.allSettled(
+      sponsorInfos.map((info) => {
+        const sponsorMail = invoiceReleasedEmail({
+          sponsorName: info.sponsorName,
+          entityName: baseInfo.teamName,
+          invoiceCount: info.invoiceCount,
+          dashboardUrl: sponsorDashboardUrl
+        });
+        return resend.emails
+          .send({
+            from: MAIL_FROM,
+            to: info.sponsorEmail,
+            subject: sponsorMail.subject,
+            html: sponsorMail.html,
+            text: sponsorMail.text
+          })
+          .catch((err) =>
+            console.error("[invoice-released] mail failed for", info.sponsorEmail, err)
+          );
+      })
+    );
+  }
 
   revalidatePath("/admin/verifications");
   return { ok: true as const, releasedCount };
