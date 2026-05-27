@@ -41,8 +41,9 @@ export default withSentryConfig(config, {
   },
 
   // Tree-shake Sentry-Logger in Client-Bundles (~10 KB Ersparnis).
-  disableLogger: true,
+  // Hinweis: disableLogger + automaticVercelMonitors sind in @sentry/nextjs 9+
+  // deprecated — Effekt bleibt identisch, Warnings verschwinden nach Entfernung.
 
   // Automatic Vercel-Cron-Monitoring deaktiviert (KickPact nutzt Inngest).
-  automaticVercelMonitors: false
+  // automaticVercelMonitors: false — deprecated, Default ist bereits false ohne Vercel-Env.
 });
