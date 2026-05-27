@@ -246,50 +246,142 @@ export async function searchVereine(suchbegriff: string): Promise<VereinHit[]> {
   });
 }
 
+/**
+ * Leitet die aktuelle Saison aus dem Systemdatum ab.
+ * Deutsche Amateur-Saisons laufen Aug → Jun:
+ *   Mai 2026 → Saison 25/26 → "2526"
+ *   Sep 2026 → Saison 26/27 → "2627"
+ */
+function currentSaisonCode(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1; // 1-indexed
+  const startYear = month >= 7 ? year : year - 1;
+  return String(startYear).slice(-2) + String(startYear + 1).slice(-2);
+}
+
+/**
+ * Vereinfachter URL-Slug aus Team-Name (Umlaute → ASCII, Sonderzeichen → Bindestrich).
+ * Der Wert weicht vom echten fussball.de-Slug ab; er dient nur als Platzhalter
+ * für Display-URLs. Alle AJAX-Calls (ajax.team.prev.games) benötigen nur teamId.
+ */
+function slugifyTeamName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export async function getMannschaften(
   vereinId: string,
   slug: string,
   vereinName?: string
 ): Promise<MannschaftHit[]> {
   return withPage(async (page) => {
-    const url = `https://www.fussball.de/verein/${slug}/-/id/${vereinId}#!/`;
-    // Siehe searchVereine — domcontentloaded + selector statt networkidle,
-    // sonst hängen wir am long-polling Tracker.
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 15000 });
-    await assertNotCaptcha(page);
-    await page
-      .waitForSelector('a[href*="/mannschaft/"]', { timeout: 8000 })
-      .catch(() => {
-        // Kein Mannschafts-Link → Verein hat keine Teams, returnen leer.
-      });
+    // ─── Strategie A: ajax.club.matchplan ────────────────────────────────────
+    // fussball.de rendert die Team-Liste auf der Verein-Hauptseite über eine
+    // Angular-SPA, die Team-Links erst nach Tab-Klick lädt — unzuverlässig.
+    // Der Vereinsspielplan-Endpoint enthält dagegen ein <select>-Widget, dessen
+    // <option value="<TEAM_ID>"> alle Teams des Vereins als echte IDs liefert.
+    // Kein JavaScript-Rendering nötig — der HTML-Response ist sofort nutzbar.
+    let strategyAResults: MannschaftHit[] = [];
+    try {
+      const matchplanUrl = `https://www.fussball.de/ajax.club.matchplan/-/id/${vereinId}/mode/PAGE/show-filter/true`;
+      await page.goto(matchplanUrl, { waitUntil: "domcontentloaded", timeout: 15000 });
+      await assertNotCaptcha(page);
 
-    const raw = (await page.evaluate(`(function() {
-      var results = [];
-      var seen = new Set();
-      document.querySelectorAll('a[href*="/mannschaft/"]').forEach(function(link) {
-        var href = link.href || link.getAttribute("href") || "";
-        var m = href.match(/\\/mannschaft\\/([^/]+)\\/-\\/saison\\/(\\d+)\\/team-id\\/([A-Z0-9]+)/);
-        if (m && !seen.has(m[3])) {
-          seen.add(m[3]);
-          var name = (link.textContent || "").replace(/\\s+/g, " ").trim() || m[1];
-          results.push({ name: name, slug: m[1], saison: m[2], teamId: m[3], url: href });
-        }
-      });
-      return results;
-    })()`)) as MannschaftHit[];
+      const saison = currentSaisonCode();
 
-    if (!vereinName) return raw;
+      strategyAResults = (await page.evaluate(`(function(saison) {
+        var results = [];
+        var seen = new Set();
+        // Das Team-Filter-Select enthält alle Mannschaften als <option value="<teamId>">
+        document.querySelectorAll('select option[value]').forEach(function(opt) {
+          var teamId = opt.getAttribute('value');
+          // teamId ist immer 32 Zeichen Großbuchstaben+Zahlen (fussball.de-ID-Format)
+          if (!teamId || teamId.length < 20 || !/^[A-Z0-9]+$/.test(teamId)) return;
+          if (seen.has(teamId)) return;
+          seen.add(teamId);
+          var name = (opt.textContent || '').replace(/\\s+/g, ' ').trim();
+          results.push({
+            name: name,
+            slug: '', // Platzhalter — wird unten durch slugifyTeamName gefüllt
+            saison: saison,
+            teamId: teamId,
+            url: ''
+          });
+        });
+        return results;
+      })(${JSON.stringify(saison)})`)) as MannschaftHit[];
 
-    // Filter heuristik: nur Mannschaften behalten, deren Name mindestens einen
-    // signifikanten Token (≥3 Zeichen, nicht rein numerisch) aus dem Vereinsnamen
-    // enthält. Verhindert Cross-Contamination durch Gegner-Links aus dem Spielplan-Widget.
+      // Slug + URL ableiten (Best-Effort — echte slugs weichen ab, AJAX braucht nur teamId)
+      strategyAResults = strategyAResults.map((t) => ({
+        ...t,
+        slug: slugifyTeamName(t.name),
+        url: `https://www.fussball.de/mannschaft/${slugifyTeamName(t.name)}/-/saison/${t.saison}/team-id/${t.teamId}`,
+      }));
+    } catch (err) {
+      if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
+      // Strategie A gescheitert — Fallback auf B
+    }
+
+    // ─── Strategie B: Verein-Hauptseite (bisheriger Ansatz, Fallback) ─────────
+    // Nur ausgeführt wenn Strategie A 0 Ergebnisse liefert.
+    // Achtung: liefert primär Gegner-Links aus dem "Letzte Spiele"-Widget;
+    // vereinName-Filter ist hier zwingend um Cross-Contamination zu vermeiden.
+    let strategyBResults: MannschaftHit[] = [];
+    if (strategyAResults.length === 0) {
+      try {
+        const vereinUrl = `https://www.fussball.de/verein/${slug}/-/id/${vereinId}#!/`;
+        await page.goto(vereinUrl, { waitUntil: "domcontentloaded", timeout: 15000 });
+        await assertNotCaptcha(page);
+        await page
+          .waitForSelector('a[href*="/mannschaft/"]', { timeout: 8000 })
+          .catch(() => {});
+
+        strategyBResults = (await page.evaluate(`(function() {
+          var results = [];
+          var seen = new Set();
+          document.querySelectorAll('a[href*="/mannschaft/"]').forEach(function(link) {
+            var href = link.href || link.getAttribute("href") || "";
+            var m = href.match(/\\/mannschaft\\/([^/]+)\\/-\\/saison\\/(\\d+)\\/team-id\\/([A-Z0-9]+)/);
+            if (m && !seen.has(m[3])) {
+              seen.add(m[3]);
+              var name = (link.textContent || "").replace(/\\s+/g, " ").trim() || m[1];
+              results.push({ name: name, slug: m[1], saison: m[2], teamId: m[3], url: href });
+            }
+          });
+          return results;
+        })()`)) as MannschaftHit[];
+      } catch (err) {
+        if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
+      }
+    }
+
+    // ─── Merge + Deduplication ────────────────────────────────────────────────
+    const seen = new Set<string>();
+    const merged: MannschaftHit[] = [];
+    for (const t of [...strategyAResults, ...strategyBResults]) {
+      if (!seen.has(t.teamId)) {
+        seen.add(t.teamId);
+        merged.push(t);
+      }
+    }
+
+    if (!vereinName) return merged;
+
+    // ─── vereinName-Filter ────────────────────────────────────────────────────
+    // Nur Mannschaften behalten, deren Name mindestens einen signifikanten Token
+    // (≥3 Zeichen, nicht rein numerisch) aus dem Vereinsnamen enthält.
+    // Nötig für Strategie B (Gegner-Links) und als Qualitätssicherung für A.
     const tokens = vereinName
       .toLowerCase()
       .split(/\s+/)
       .filter((t) => t.length >= 3 && !/^\d+$/.test(t));
-    if (tokens.length === 0) return raw;
+    if (tokens.length === 0) return merged;
 
-    return raw.filter((team) => {
+    return merged.filter((team) => {
       const tLower = team.name.toLowerCase();
       return tokens.some((tok) => tLower.includes(tok));
     });
