@@ -1,6 +1,9 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { Trash2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   DataTable,
   type DataTableColumn,
@@ -8,6 +11,18 @@ import {
 } from "@/components/ui/data-table";
 import { triggerEmoji, triggerLabel } from "@/lib/triggers/labels";
 import type { ClubChargeRow } from "@/lib/db/queries/club-reporting";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { cancelChargeAction } from "../_actions/cancel";
 
 function eur(cents: number): string {
   return (cents / 100).toLocaleString("de-DE", {
@@ -40,6 +55,8 @@ interface ChargesTableProps {
     | "sponsorDisplayName"
     | "teamName";
   dir?: SortDirection;
+  /** When true, a cancel button is shown for confirmed/pending charges. */
+  canEdit?: boolean;
 }
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
@@ -69,6 +86,11 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+/** Whether a charge in this status can still be cancelled. */
+function isCancellable(status: string): boolean {
+  return status === "confirmed" || status === "pending_approval";
+}
+
 export function ChargesTable({
   rows,
   slug,
@@ -77,8 +99,34 @@ export function ChargesTable({
   total,
   totalPages,
   sort,
-  dir
+  dir,
+  canEdit = false
 }: ChargesTableProps) {
+  const [pending, startTransition] = useTransition();
+  // The charge currently targeted by the cancel dialog
+  const [cancelTarget, setCancelTarget] = useState<ClubChargeRow | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+
+  function openCancel(row: ClubChargeRow) {
+    setCancelTarget(row);
+    setCancelReason("");
+  }
+
+  function handleConfirmCancel() {
+    if (!cancelTarget) return;
+    const target = cancelTarget;
+    setCancelTarget(null);
+    startTransition(async () => {
+      const res = await cancelChargeAction({
+        clubSlug: slug,
+        chargeId: target.id,
+        reason: cancelReason || undefined
+      });
+      if (!res.ok) toast.error(res.error);
+      else toast.success("Charge storniert.");
+    });
+  }
+
   const columns: Array<DataTableColumn<ClubChargeRow>> = [
     {
       key: "matchDate",
@@ -160,29 +208,103 @@ export function ChargesTable({
       key: "actions",
       label: "",
       align: "right",
-      render: (r) =>
-        r.matchId ? (
-          <Link
-            href={`/verein/${slug}/spiel/${r.matchId}`}
-            className="text-xs font-semibold text-accent-dark hover:underline"
-          >
-            Spiel ›
-          </Link>
-        ) : null
+      render: (r) => (
+        <div className="flex items-center justify-end gap-2">
+          {r.matchId && (
+            <Link
+              href={`/verein/${slug}/spiel/${r.matchId}`}
+              className="text-xs font-semibold text-accent-dark hover:underline"
+            >
+              Spiel ›
+            </Link>
+          )}
+          {canEdit && isCancellable(r.status) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0 text-brand-night-navy/40 hover:text-red-600 hover:bg-red-50"
+              title="Charge stornieren"
+              disabled={pending}
+              onClick={() => openCancel(r)}
+            >
+              {pending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          )}
+        </div>
+      )
     }
   ];
 
   return (
-    <DataTable<ClubChargeRow>
-      rows={rows}
-      columns={columns}
-      page={page}
-      pageSize={pageSize}
-      total={total}
-      totalPages={totalPages}
-      sort={sort}
-      dir={dir}
-      emptyState="Keine Charges für die aktuellen Filter."
-    />
+    <>
+      <DataTable<ClubChargeRow>
+        rows={rows}
+        columns={columns}
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        totalPages={totalPages}
+        sort={sort}
+        dir={dir}
+        emptyState="Keine Charges für die aktuellen Filter."
+      />
+
+      {/* Storno-Bestätigungsdialog */}
+      <Dialog
+        open={cancelTarget !== null}
+        onOpenChange={(open) => { if (!open) setCancelTarget(null); }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Charge stornieren?</DialogTitle>
+            <DialogDescription>
+              {cancelTarget && (
+                <>
+                  <strong>{cancelTarget.sponsorDisplayName}</strong> ·{" "}
+                  {triggerEmoji(cancelTarget.triggerType)}{" "}
+                  {triggerLabel(cancelTarget.triggerType)} ·{" "}
+                  <strong>{eur(cancelTarget.amountCents)}</strong>
+                  {cancelTarget.matchDate && (
+                    <> · {fmtDate(cancelTarget.matchDate)}</>
+                  )}
+                  <br />
+                  <span className="text-brand-night-navy/60 text-xs mt-1 block">
+                    Bereits abgerechnete Charges können nicht storniert werden.
+                  </span>
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-2 space-y-1.5">
+            <Label htmlFor="cancel-reason" className="text-sm font-semibold">
+              Grund (optional)
+            </Label>
+            <Textarea
+              id="cancel-reason"
+              placeholder="z.B. Scraper-Fehler, falsches Ergebnis …"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              rows={2}
+              maxLength={200}
+              className="text-sm resize-none"
+            />
+          </div>
+
+          <DialogFooter className="gap-2 mt-2">
+            <Button variant="outline" onClick={() => setCancelTarget(null)} disabled={pending}>
+              Abbrechen
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmCancel} disabled={pending}>
+              {pending ? "…" : "Charge stornieren"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

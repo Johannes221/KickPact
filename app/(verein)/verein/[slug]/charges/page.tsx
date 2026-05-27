@@ -36,7 +36,8 @@ export default async function ChargesPage({
   searchParams: Promise<SP>;
 }) {
   const { slug } = await params;
-  const { club } = await assertVereinAdminOrRedirect(slug, "viewer");
+  const { club, role } = await assertVereinAdminOrRedirect(slug, "viewer");
+  const canEdit = role === "admin" || role === "trainer";
 
   const sp = await searchParams;
   const spGet = {
@@ -166,6 +167,7 @@ export default async function ChargesPage({
         totalPages={result.totalPages}
         sort={sort}
         dir={dir}
+        canEdit={canEdit}
       />
     </div>
   );

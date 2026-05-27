@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, lte, ne, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lte, ne, notInArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { charges, pledges, matches, teams, eventApprovals } from "@/lib/db/schema";
 
@@ -115,6 +115,45 @@ export async function invalidateChargesForMatch(
         );
     }
   });
+}
+
+/**
+ * Cancel a single charge by club admin/trainer.
+ *
+ * Rules:
+ *  - Only `confirmed` or `pending_approval` charges can be cancelled.
+ *    `invoiced` charges have already been billed — touching them is accounting,
+ *    not an ops action.
+ *  - The charge must belong to the given club (via pledge → team → club).
+ *
+ * Returns `true` when cancelled, `false` when the charge was not found,
+ * already in a terminal state, or doesn't belong to the club.
+ */
+export async function cancelChargeForClub(
+  chargeId: string,
+  clubId: string,
+  reason: string
+): Promise<boolean> {
+  const result = await db
+    .update(charges)
+    .set({ status: "cancelled", cancelledReason: reason })
+    .where(
+      and(
+        eq(charges.id, chargeId),
+        notInArray(charges.status, ["cancelled", "invoiced"]),
+        // Tenant check: charge.pledgeId → pledges.teamId → teams.clubId
+        inArray(
+          charges.pledgeId,
+          db
+            .select({ id: pledges.id })
+            .from(pledges)
+            .innerJoin(teams, eq(pledges.teamId, teams.id))
+            .where(eq(teams.clubId, clubId))
+        )
+      )
+    )
+    .returning({ id: charges.id });
+  return result.length > 0;
 }
 
 /**
