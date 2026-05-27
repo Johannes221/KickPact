@@ -7,7 +7,7 @@
 
 - **Branch:** `main` (synced mit `origin/main`)
 - **Staging:** https://kickpact.schartl.dev (Coolify-Auto-Deploy on push)
-- **Letzter Commit:** `c855596` — chore: drop pledgeProxiesJson + deprecate Spieler-Opt-out
+- **Letzter Commit:** `e93ea73` — feat: SEO (sitemap + robots + OG) + E2E-Specs Onboarding
 - **Working-Tree:** clean · **Stashes:** keine
 - **Coolify:** post_deployment_command = `npm run db:migrate` (ab sofort automatisch)
 
@@ -15,6 +15,7 @@
 
 | Commit | Was |
 |--------|-----|
+| `e93ea73` | **SEO** sitemap.ts + robots.ts + OG-Metadata + E2E-Specs (9 Tests) |
 | `c855596` | **Cleanup** pledgeProxiesJson-Drop (Migration 0027) + Spieler-Opt-out deprecated |
 | `192bd83` | **Sommerpause** isSommerpause-Guard + Cron pause/resume + Migration 0026 |
 | (vorher) | **P1** E3 Withheld-Release-Mail, Pledge-Edit/End, Mobile FAB, Storno |
@@ -38,8 +39,9 @@
 | Admin-Platform-Tooling | ✅ live |
 | Reporting + CSV + Filter | ✅ live |
 | Mannschafts-Lifecycle | ✅ live |
-| SEO Sitemap + OG | 📝 nächster Schritt |
-| Production-Domain kickpact.com | 📝 wartet auf GO |
+| SEO Sitemap + OG | ✅ live (sitemap.ts + robots.ts + OG-Metadata) |
+| E2E-Specs Onboarding | ✅ tests/e2e/onboarding.spec.ts (9 Tests) |
+| Production-Domain kickpact.com | 🔧 Coolify FQDN gesetzt — DNS A-Record ausstehend (CF-UI) |
 
 ## Tests
 
