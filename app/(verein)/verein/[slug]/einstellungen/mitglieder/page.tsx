@@ -10,6 +10,8 @@ import {
 import { RequestsTable } from "./_components/requests-table";
 import { MembersTable } from "./_components/members-table";
 import { InviteForm } from "./_components/invite-form";
+import { PendingInvitationsTable } from "./_components/pending-invitations-table";
+import { listPendingTeamMemberInvitationsForClub } from "@/lib/db/queries/invitations";
 
 export const metadata = { title: "Mitglieder · KickPact" };
 
@@ -21,8 +23,9 @@ export default async function MitgliederPage({
   const { slug } = await params;
   const { user, club } = await assertClubAccess(slug, "admin");
 
-  const [pendingRequests, clubMems, teamMems, clubAdminCount, clubTeams] = await Promise.all([
+  const [pendingRequests, pendingInvitations, clubMems, teamMems, clubAdminCount, clubTeams] = await Promise.all([
     listPendingRequestsForClub(club.id),
+    listPendingTeamMemberInvitationsForClub(club.id),
     db
       .select({
         userId: clubMemberships.userId,
@@ -81,6 +84,36 @@ export default async function MitgliederPage({
           und ist mit einem Klick drin.
         </p>
         <InviteForm clubSlug={slug} teams={clubTeams} />
+      </section>
+
+      {/* Offene Einladungen */}
+      <section>
+        <h3 className="font-display font-black text-xl tracking-tight text-brand-night-navy mb-1">
+          Offene Einladungen
+          {pendingInvitations.length > 0 && (
+            <span className="ml-2 inline-flex items-center rounded-full bg-accent/10 px-2 py-0.5 text-xs font-bold text-accent">
+              {pendingInvitations.length}
+            </span>
+          )}
+        </h3>
+        <p className="text-sm text-brand-night-navy/60 mb-3">
+          Links, die noch nicht angenommen wurden. Kopieren, erneuern (neuer 30-Tage-Link)
+          oder widerrufen.
+        </p>
+        <PendingInvitationsTable
+          clubSlug={slug}
+          rows={pendingInvitations.map((inv) => ({
+            id: inv.id,
+            token: inv.token,
+            recipientEmail: inv.recipientEmail,
+            role: inv.role,
+            teamId: inv.teamId,
+            teamName: inv.teamName,
+            createdAt: inv.createdAt,
+            expiresAt: inv.expiresAt
+          }))}
+          baseUrl={process.env.BETTER_AUTH_URL ?? "http://localhost:3000"}
+        />
       </section>
 
       {/* Offene Anfragen */}

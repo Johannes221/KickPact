@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { and, eq, gt, sql } from "drizzle-orm";
+import { and, eq, gt, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { sponsorInvitations } from "@/lib/db/schema/invitations";
 import { teams, clubMemberships, teamMemberships } from "@/lib/db/schema/clubs";
@@ -211,4 +211,163 @@ export async function revokeInvitation(invitationId: string, clubId: string) {
     .update(sponsorInvitations)
     .set({ status: "revoked" })
     .where(eq(sponsorInvitations.id, invitationId));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Team-Member Invitations (Pending-Inbox + Revoke + Refresh)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface PendingTeamMemberInvitation {
+  id: string;
+  token: string;
+  recipientEmail: string | null;
+  role: "trainer" | "viewer";
+  /** null = Verein-weite Einladung */
+  teamId: string | null;
+  teamName: string | null;
+  clubId: string | null;
+  createdAt: Date;
+  expiresAt: Date;
+}
+
+/**
+ * Alle offenen (pending, nicht abgelaufenen) team-member-Einladungen eines
+ * Vereins — egal ob Verein-weit (clubId) oder Mannschafts-spezifisch (teamId).
+ * Neueste zuerst.
+ */
+export async function listPendingTeamMemberInvitationsForClub(
+  clubId: string
+): Promise<PendingTeamMemberInvitation[]> {
+  const rows = await db
+    .select({
+      id: sponsorInvitations.id,
+      token: sponsorInvitations.token,
+      recipientEmail: sponsorInvitations.recipientEmail,
+      role: sponsorInvitations.role,
+      teamId: sponsorInvitations.teamId,
+      teamName: teams.name,
+      clubId: sponsorInvitations.clubId,
+      createdAt: sponsorInvitations.createdAt,
+      expiresAt: sponsorInvitations.expiresAt
+    })
+    .from(sponsorInvitations)
+    .leftJoin(teams, eq(sponsorInvitations.teamId, teams.id))
+    .where(
+      and(
+        eq(sponsorInvitations.kind, "team-member"),
+        eq(sponsorInvitations.status, "pending"),
+        gt(sponsorInvitations.expiresAt, new Date()),
+        or(
+          eq(sponsorInvitations.clubId, clubId),
+          eq(teams.clubId, clubId)
+        )
+      )
+    )
+    .orderBy(sql`${sponsorInvitations.createdAt} desc`);
+
+  return rows.map((r) => ({
+    ...r,
+    role: (r.role ?? "viewer") as "trainer" | "viewer"
+  }));
+}
+
+/**
+ * Widerruft eine team-member-Einladung. Tenant-Check: die Einladung muss
+ * zu diesem Club gehören (entweder direkt über clubId oder via team.clubId).
+ */
+export async function revokeTeamMemberInvitation(
+  invitationId: string,
+  clubId: string
+): Promise<void> {
+  // Verify the invitation belongs to this club
+  const [row] = await db
+    .select({
+      id: sponsorInvitations.id,
+      invClubId: sponsorInvitations.clubId,
+      teamClubId: teams.clubId
+    })
+    .from(sponsorInvitations)
+    .leftJoin(teams, eq(sponsorInvitations.teamId, teams.id))
+    .where(
+      and(
+        eq(sponsorInvitations.id, invitationId),
+        eq(sponsorInvitations.kind, "team-member")
+      )
+    )
+    .limit(1);
+
+  if (
+    !row ||
+    (row.invClubId !== clubId && row.teamClubId !== clubId)
+  ) {
+    throw new Error("Einladung nicht gefunden oder nicht autorisiert");
+  }
+
+  await db
+    .update(sponsorInvitations)
+    .set({ status: "revoked" })
+    .where(eq(sponsorInvitations.id, invitationId));
+}
+
+/**
+ * Verlängert eine team-member-Einladung um weitere 30 Tage (Refresh-Token).
+ * Legt einen neuen Token an und revokiert den alten — damit alte Links nicht
+ * mehr gültig sind. Gibt die neue Einladung zurück.
+ */
+export async function refreshTeamMemberInvitation(
+  invitationId: string,
+  clubId: string
+): Promise<{ token: string }> {
+  const [existing] = await db
+    .select({
+      id: sponsorInvitations.id,
+      invClubId: sponsorInvitations.clubId,
+      teamId: sponsorInvitations.teamId,
+      teamClubId: teams.clubId,
+      role: sponsorInvitations.role,
+      createdByUserId: sponsorInvitations.createdByUserId,
+      recipientEmail: sponsorInvitations.recipientEmail,
+      recipientName: sponsorInvitations.recipientName
+    })
+    .from(sponsorInvitations)
+    .leftJoin(teams, eq(sponsorInvitations.teamId, teams.id))
+    .where(
+      and(
+        eq(sponsorInvitations.id, invitationId),
+        eq(sponsorInvitations.kind, "team-member"),
+        eq(sponsorInvitations.status, "pending")
+      )
+    )
+    .limit(1);
+
+  if (
+    !existing ||
+    (existing.invClubId !== clubId && existing.teamClubId !== clubId)
+  ) {
+    throw new Error("Einladung nicht gefunden oder nicht autorisiert");
+  }
+
+  // Revoke old
+  await db
+    .update(sponsorInvitations)
+    .set({ status: "revoked" })
+    .where(eq(sponsorInvitations.id, invitationId));
+
+  // Create fresh
+  const newToken = randomBytes(24).toString("base64url");
+  const expiresAt = new Date(Date.now() + INVITATION_TTL_DAYS * 24 * 60 * 60 * 1000);
+
+  await db.insert(sponsorInvitations).values({
+    kind: "team-member",
+    teamId: existing.teamId ?? null,
+    clubId: existing.invClubId ?? null,
+    role: existing.role,
+    createdByUserId: existing.createdByUserId,
+    recipientEmail: existing.recipientEmail ?? null,
+    recipientName: existing.recipientName ?? null,
+    token: newToken,
+    expiresAt
+  });
+
+  return { token: newToken };
 }

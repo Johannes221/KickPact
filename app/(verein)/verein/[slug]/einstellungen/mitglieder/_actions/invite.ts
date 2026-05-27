@@ -7,7 +7,11 @@ import { requireUser } from "@/lib/auth/session";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { db } from "@/lib/db/client";
 import { teams } from "@/lib/db/schema";
-import { createTeamMemberInvitation } from "@/lib/db/queries/invitations";
+import {
+  createTeamMemberInvitation,
+  revokeTeamMemberInvitation,
+  refreshTeamMemberInvitation
+} from "@/lib/db/queries/invitations";
 
 const inviteSchema = z.object({
   clubSlug: z.string().min(1),
@@ -60,4 +64,53 @@ export async function inviteTeamMemberAction(
 
   revalidatePath(`/verein/${club.slug}/einstellungen/mitglieder`);
   return { ok: true, token: invite.token, inviteUrl };
+}
+
+const idSchema = z.object({
+  clubSlug: z.string().min(1),
+  invitationId: z.string().min(1)
+});
+
+export type InvitationActionResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+export async function revokeTeamMemberInvitationAction(
+  input: z.infer<typeof idSchema>
+): Promise<InvitationActionResult> {
+  const parsed = idSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Ungültige Eingabe" };
+
+  const { club } = await assertClubAccess(parsed.data.clubSlug, "admin");
+  try {
+    await revokeTeamMemberInvitation(parsed.data.invitationId, club.id);
+  } catch {
+    return { ok: false, error: "Einladung konnte nicht widerrufen werden." };
+  }
+  revalidatePath(`/verein/${club.slug}/einstellungen/mitglieder`);
+  return { ok: true };
+}
+
+export type RefreshInvitationResult =
+  | { ok: true; inviteUrl: string }
+  | { ok: false; error: string };
+
+export async function refreshTeamMemberInvitationAction(
+  input: z.infer<typeof idSchema>
+): Promise<RefreshInvitationResult> {
+  const parsed = idSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Ungültige Eingabe" };
+
+  const { club } = await assertClubAccess(parsed.data.clubSlug, "admin");
+  try {
+    const { token } = await refreshTeamMemberInvitation(
+      parsed.data.invitationId,
+      club.id
+    );
+    const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+    revalidatePath(`/verein/${club.slug}/einstellungen/mitglieder`);
+    return { ok: true, inviteUrl: `${base}/team-einladung/${token}` };
+  } catch {
+    return { ok: false, error: "Einladung konnte nicht erneuert werden." };
+  }
 }
