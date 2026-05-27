@@ -7,6 +7,7 @@ import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { db } from "@/lib/db/client";
 import { sponsors, clubMemberships, clubs } from "@/lib/db/schema";
 import { VereinHeaderShell } from "./_components/verein-header-shell";
+import { VereinFAB } from "./_components/verein-fab";
 
 export default async function VereinLayout({
   params,
@@ -16,7 +17,7 @@ export default async function VereinLayout({
   children: React.ReactNode;
 }) {
   const { slug } = await params;
-  const { club, user } = await assertClubAccess(slug, "viewer");
+  const { club, user, role: clubRole } = await assertClubAccess(slug, "viewer");
   const gate = await getSubscriptionGate(club.id);
 
   // Hat dieser User auch ein Sponsor-Profil?
@@ -137,6 +138,9 @@ export default async function VereinLayout({
       )}
 
       {children}
+
+      {/* Mobile FAB — only visible on small screens */}
+      <VereinFAB slug={slug} clubRole={clubRole} />
 
       <footer className="mt-12 md:mt-16 pt-6 border-t border-brand-neutral/40 text-xs text-brand-night-navy/50 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
         <nav className="flex flex-wrap gap-3 md:gap-4">
