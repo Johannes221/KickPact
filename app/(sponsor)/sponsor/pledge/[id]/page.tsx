@@ -6,6 +6,7 @@ import { pledges, pledgeRules, sponsors, teams, clubs, charges } from "@/lib/db/
 import { requireUser } from "@/lib/auth/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PledgeStatusToggle } from "./_components/pledge-status-toggle";
+import { PledgeCapEditor } from "./_components/pledge-cap-editor";
 
 export const metadata = { title: "Pledge · KickPact" };
 
@@ -100,10 +101,21 @@ export default async function PledgeDetailPage({
           label="Laufzeit"
           value={`${pledge.startsAt.toLocaleDateString("de-DE")} – ${pledge.endsAt.toLocaleDateString("de-DE")}`}
         />
-        <StatCard
-          label="Monats-Cap"
-          value={pledge.monthlyCapCents ? eur(pledge.monthlyCapCents) : "ohne Cap"}
-        />
+        {/* Monats-Cap is editable inline for active/paused pledges */}
+        <Card className="border-brand-neutral/40">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
+              Monats-Cap
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PledgeCapEditor
+              pledgeId={pledge.id}
+              currentCapCents={pledge.monthlyCapCents ?? null}
+              isEnded={pledge.status === "ended"}
+            />
+          </CardContent>
+        </Card>
       </div>
 
       <div className="mt-4 flex justify-end">
