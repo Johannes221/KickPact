@@ -8,6 +8,8 @@ import { trialReminders } from "./trial-reminders";
 import { verifyResults } from "./verify-results";
 import { pauseSeasonPasses } from "./pause-season-passes";
 import { resumeSeasonPasses } from "./resume-season-passes";
+import { pausePledgesSommerpause } from "./pause-pledges-sommerpause";
+import { resumePledgesSommerpause } from "./resume-pledges-sommerpause";
 import { expireApprovals, endPledges } from "./lifecycle-cleanup";
 import { expireTrials } from "./expire-trials";
 import { cleanupSessions } from "./cleanup-sessions";
@@ -25,6 +27,8 @@ export const functions = [
   verifyResults,
   pauseSeasonPasses,
   resumeSeasonPasses,
+  pausePledgesSommerpause,
+  resumePledgesSommerpause,
   expireApprovals,
   endPledges,
   expireTrials,

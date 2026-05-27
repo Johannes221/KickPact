@@ -183,6 +183,13 @@
       "when": 1780480000000,
       "tag": "0025_team_verifications",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1748390000000,
+      "tag": "0026_pledges_sommerpause_paused",
+      "breakpoints": true
     }
   ]
 }

@@ -65,6 +65,12 @@ export const pledges = pgTable(
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull().defaultNow(),
     endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
     monthlyCapCents: integer("monthly_cap_cents"),
+    /**
+     * True when this pledge was auto-paused by the Sommerpause cron (June 1).
+     * The resume cron (August 1) only un-pauses pledges with this flag set,
+     * so manually-paused pledges are never accidentally resumed.
+     */
+    sommerpausePaused: boolean("sommerpause_paused").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({
