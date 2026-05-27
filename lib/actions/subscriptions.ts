@@ -96,12 +96,19 @@ export async function createCheckoutSession(opts: {
     }
   }
 
+  // Trial nur wenn echter App-Trial noch läuft: status='trialing' UND noch
+  // kein Stripe-Abo (stripeSubscriptionId IS NULL). Nach Trial-Ende (cancelled,
+  // past_due etc.) kein zweiter kostenloser Trial.
+  const isAppTrial =
+    existing?.status === "trialing" &&
+    !existing?.stripeSubscriptionId;
+
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: {
-      trial_period_days: TRIAL_DAYS,
+      ...(isAppTrial ? { trial_period_days: TRIAL_DAYS } : {}),
       metadata: { clubId: club.id, plan: opts.plan, cycle }
     },
     success_url: `${baseUrl}/verein/${club.slug}?subscribed=1`,

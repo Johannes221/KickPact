@@ -4,8 +4,6 @@ import { clubs, subscriptions, teamLicenses, teams } from "@/lib/db/schema";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { isStripeConfigured } from "@/lib/stripe/client";
 import {
-  PLANS,
-  PLAN_ORDER,
   CYCLE_LABELS,
   TRIAL_DAYS,
   type PlanKey,
@@ -13,6 +11,7 @@ import {
 } from "@/lib/stripe/pricing";
 import { highestPlanFrom } from "@/lib/mail/reply-to-pure";
 import { CheckoutButtons } from "./_components/checkout-buttons";
+import { AboCycleToggle } from "./_components/abo-cycle-toggle";
 
 export const metadata = { title: "Abo · KickPact" };
 
@@ -93,63 +92,17 @@ export default async function AboPage({
         />
       )}
 
-      {/* Plan-Wahl (für Erstbucher oder Wechsel) */}
+      {/* Plan-Wahl (für Erstbucher oder Wechsel) — inkl. Cycle-Toggle */}
       <div>
         <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy mb-3">
           {sub ? "Plan wechseln" : "Plan wählen"}
         </h3>
-        <div className="grid gap-3 md:gap-4 md:grid-cols-3 items-stretch">
-          {PLAN_ORDER.map((key) => {
-            const plan = PLANS[key];
-            return (
-              <div
-                key={key}
-                className={
-                  "flex flex-col rounded-2xl border p-4 md:p-5 " +
-                  (key === "pro"
-                    ? "border-accent bg-accent/5"
-                    : "border-brand-neutral/40 bg-white")
-                }
-              >
-                <div className="flex items-baseline justify-between">
-                  <h3 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
-                    {plan.label}
-                  </h3>
-                  {key === "pro" && (
-                    <span className="rounded-full bg-accent text-white text-[0.55rem] uppercase tracking-widest font-bold px-2 py-1">
-                      empfohlen
-                    </span>
-                  )}
-                </div>
-                <div className="mt-2 md:mt-3 flex items-baseline gap-2">
-                  <span className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
-                    {plan.cycles[currentCycle].display}
-                  </span>
-                  <span className="text-xs text-brand-night-navy/60">
-                    {plan.cycles[currentCycle].caption}
-                  </span>
-                </div>
-                <ul className="mt-3 md:mt-4 flex-1 space-y-1.5 text-xs md:text-sm text-brand-night-navy/80">
-                  {plan.features.slice(0, 4).map((f) => (
-                    <li key={f} className="flex gap-1.5">
-                      <span className="text-accent">✓</span>
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-4 md:mt-5">
-                  <CheckoutButtons
-                    clubSlug={slug}
-                    plan={plan.key}
-                    stripeReady={stripeReady}
-                    currentStatus={sub?.status ?? null}
-                    cycle={currentCycle}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <AboCycleToggle
+          clubSlug={slug}
+          stripeReady={stripeReady}
+          currentStatus={sub?.status ?? null}
+          initialCycle={currentCycle}
+        />
       </div>
     </div>
   );

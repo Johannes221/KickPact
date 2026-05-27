@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import type Stripe from "stripe";
 import { getStripe, getStripeWebhookSecret, isStripeConfigured } from "@/lib/stripe/client";
 import { db } from "@/lib/db/client";
-import { subscriptions, teamLicenses, processedStripeEvents } from "@/lib/db/schema";
+import { subscriptions, teamLicenses, teams, processedStripeEvents } from "@/lib/db/schema";
 import { trackServer } from "@/lib/analytics/track-server";
 import { priceIdToPlanCycle } from "@/lib/stripe/pricing";
 
@@ -149,6 +149,19 @@ export async function POST(req: NextRequest) {
           .update(subscriptions)
           .set({ status: "cancelled", updatedAt: new Date() })
           .where(eq(subscriptions.clubId, clubId));
+        // teamLicenses auf cancelled spiegeln.
+        await db
+          .update(teamLicenses)
+          .set({ status: "cancelled" })
+          .where(
+            inArray(
+              teamLicenses.teamId,
+              db
+                .select({ id: teams.id })
+                .from(teams)
+                .where(eq(teams.clubId, clubId))
+            )
+          );
         break;
       }
       case "invoice.payment_failed": {
@@ -171,6 +184,27 @@ export async function POST(req: NextRequest) {
           .update(subscriptions)
           .set({ status: "active", updatedAt: new Date() })
           .where(eq(subscriptions.stripeCustomerId, customerId));
+        // Auch teamLicenses auf active setzen — vorher blieb status dauerhaft
+        // auf 'trialing' auch nach erfolgreichem Checkout.
+        const [sub] = await db
+          .select({ clubId: subscriptions.clubId })
+          .from(subscriptions)
+          .where(eq(subscriptions.stripeCustomerId, customerId))
+          .limit(1);
+        if (sub?.clubId) {
+          await db
+            .update(teamLicenses)
+            .set({ status: "active" })
+            .where(
+              inArray(
+                teamLicenses.teamId,
+                db
+                  .select({ id: teams.id })
+                  .from(teams)
+                  .where(eq(teams.clubId, sub.clubId))
+              )
+            );
+        }
         break;
       }
       default:

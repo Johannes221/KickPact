@@ -14,11 +14,15 @@ function eur(cents: number): string {
 }
 
 export default async function VereinDashboard({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { slug } = await params;
+  const sp = await searchParams;
+  const showSubscribedBanner = sp.subscribed === "1";
   const { club } = await assertVereinAdminOrRedirect(slug, "viewer");
 
   // Month-start in UTC for "this month" stats
@@ -70,6 +74,17 @@ export default async function VereinDashboard({
   const teamCount = teamRows.length;
 
   return (
+    <div className="space-y-4">
+      {showSubscribedBanner && (
+        <div
+          role="alert"
+          className="rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900"
+        >
+          Abonnement aktiviert — du bist jetzt dabei! Dein Abo wird in wenigen
+          Sekunden aktiviert. Seite neu laden falls der Status noch nicht
+          aktuell ist.
+        </div>
+      )}
     <div className="grid gap-3 md:gap-4 md:grid-cols-2">
       <DashboardTile
         icon="🏆"
@@ -123,6 +138,7 @@ export default async function VereinDashboard({
         variant="cta"
         className="md:col-span-2"
       />
+    </div>
     </div>
   );
 }

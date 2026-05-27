@@ -17,6 +17,7 @@ import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
 import { subscriptions, clubs, clubMemberships, users } from "@/lib/db/schema";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
+import { trialExpiredEmail } from "@/lib/mail/templates/trial-expired";
 
 const baseUrl = process.env.BETTER_AUTH_URL ?? "https://kickpact.schartl.dev";
 
@@ -73,20 +74,17 @@ export const expireTrials = inngest.createFunction(
       if (adminEmails.length === 0) continue;
 
       await step.run(`mail-${sub.clubId}`, async () => {
+        const aboUrl = `${baseUrl}/verein/${sub.clubSlug}/abo`;
+        const { subject, html, text } = trialExpiredEmail({
+          clubName: sub.clubName,
+          aboUrl
+        });
         const send = await resend.emails.send({
           from: MAIL_FROM,
           to: adminEmails,
-          subject: `Trial für ${sub.clubName} ist abgelaufen — bitte Plan wählen`,
-          text:
-            `Hi,\n\n` +
-            `dein KickPact-Trial für ${sub.clubName} ist heute abgelaufen.\n\n` +
-            `Damit die Plattform weiter läuft und Sponsor-Charges erzeugt werden,\n` +
-            `wähle bitte einen Plan im Abo-Dashboard:\n` +
-            `${baseUrl}/verein/${sub.clubSlug}/abo\n\n` +
-            `Bis zum Plan-Abschluss ist die Mannschaft auf Read-Only — Crawler,\n` +
-            `Charge-Erzeugung und PDF-Versand pausieren.\n\n` +
-            `Bei Fragen einfach auf diese Mail antworten.\n\n` +
-            `KickPact`,
+          subject,
+          html,
+          text,
           headers: {
             "Idempotency-Key": `trial-expired-${sub.clubId}-${now.toISOString().slice(0, 10)}`
           }
