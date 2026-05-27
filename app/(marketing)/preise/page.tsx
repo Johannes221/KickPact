@@ -11,10 +11,16 @@ import { Button } from "@/components/ui/button";
 import { PricingToggle } from "./_components/pricing-toggle";
 
 export const metadata = {
-  title: "Preise — KickPact",
+  title: "Preise & Pakete – Vereinssponsoring ohne versteckte Kosten",
   description:
-    "Performance-Sponsoring im Amateurfußball. 0 % Provision auf Pledges. " +
-    "Saison-Pass mit 2 Monaten geschenkt. Ab 5 €/Mannschaft/Monat."
+    "Transparente Preise für Amateurfußball-Sponsoring: 0 % Provision auf Pledges, " +
+    "Saison-Pass mit 2 Monaten geschenkt, ab 5 €/Mannschaft/Monat. " +
+    "Weniger als 1 € pro Spieler im Monat.",
+  keywords: [
+    "Vereinssponsoring Kosten",
+    "Amateurfußball Sponsoring Preis",
+    "Sponsor Amateurverein günstig",
+  ],
 };
 
 // ---------------------------------------------------------------------------

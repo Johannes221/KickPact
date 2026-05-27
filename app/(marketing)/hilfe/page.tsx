@@ -3,10 +3,15 @@ import { getAllArticles, getCategories } from "@/lib/help-center/articles";
 import { HilfeSearch } from "./_components/search";
 
 export const metadata = {
-  title: "Hilfe-Center — KickPact",
+  title: "Hilfe & FAQ – Amateurfußball Sponsoring mit KickPact",
   description:
-    "Antworten auf die häufigsten Fragen: Tarife, Pledges, Trigger, Abrechnung, " +
-    "Crawler. Self-Service-Doku für Vereine und Sponsoren."
+    "Antworten rund um KickPact: Vereinssponsoring einrichten, Amateurverein verknüpfen, " +
+    "Sponsoren-Pledges anlegen, Spielereignisse tracken und Rechnungen verstehen.",
+  keywords: [
+    "Amateurfußball Sponsoring Fragen",
+    "Vereinssponsoring einrichten",
+    "KickPact Hilfe",
+  ],
 };
 
 export default async function HilfePage() {

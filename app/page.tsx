@@ -12,15 +12,21 @@ import { RolesTabs } from "./_components/roles-tabs";
 import { RotatingTrigger } from "@/components/landing/rotating-trigger";
 
 export const metadata = {
-  title: "KickPact — Performance-Sponsoring für Amateurfußball",
+  title: "Amateurfußball Sponsoring – einfach, automatisch, fair",
   description:
-    "Sponsere deinen Lieblingsverein pro Spielereignis. Weniger als 1 € pro Spieler im Monat.",
+    "Verbinde deinen Amateurverein mit lokalen Sponsoren. Sponsoren zahlen pro Tor, Sieg oder Einsatz – vollautomatisch abgerechnet. Kein Papierkram, weniger als 1 € pro Spieler im Monat.",
+  keywords: [
+    "Amateurfußball Sponsoring",
+    "Vereinssponsoring Fußball",
+    "Sponsor Amateurverein finden",
+    "Performance Sponsoring Sport",
+    "Fußballverein Sponsor",
+  ],
   openGraph: {
-    title: "KickPact — Performance-Sponsoring für Amateurfußball",
+    title: "Amateurfußball Sponsoring – einfach, automatisch, fair",
     description:
-      "Sponsere deinen Lieblingsverein pro Spielereignis. Weniger als 1 € pro Spieler im Monat.",
-    // opengraph-image.tsx generates the OG image automatically via Next.js App Router
-  }
+      "Sponsoren zahlen pro Tor, Sieg oder Einsatz. Vollautomatisch abgerechnet. Weniger als 1 € pro Spieler im Monat.",
+  },
 };
 
 // Echte Mannschaftsfotos mit KickPact-Branding (lokale Assets).

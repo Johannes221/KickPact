@@ -1,4 +1,5 @@
 import "./globals.css";
+import type { Metadata } from "next";
 import { Inter, Montserrat_Alternates } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shared/app-header";
@@ -28,22 +29,47 @@ const displayFont = Montserrat_Alternates({
   display: "swap"
 });
 
-export const metadata = {
-  title: "KickPact — Performance-Sponsoring für Amateurfußball",
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://kickpact.com";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: "KickPact – Sponsoring für Amateurfußball",
+    template: "%s – KickPact",
+  },
   description:
-    "Sponsere deinen Lieblingsverein pro Spielereignis. Weniger als 1 € pro Spieler im Monat.",
+    "Performance-basiertes Sponsoring für Amateurfußball. Sponsoren zahlen pro Tor, Sieg oder Einsatz – vollautomatisch abgerechnet. Weniger als 1 € pro Spieler im Monat.",
+  keywords: [
+    "Amateurfußball Sponsoring",
+    "Vereinssponsoring Fußball",
+    "Sponsor Amateurverein finden",
+    "Performance Sponsoring Sport",
+    "Fußballverein Sponsor automatisch",
+    "KickPact",
+  ],
   openGraph: {
     type: "website",
     locale: "de_DE",
     siteName: "KickPact",
-    title: "KickPact — Performance-Sponsoring für Amateurfußball",
+    title: "KickPact – Sponsoring für Amateurfußball",
     description:
-      "Sponsere deinen Lieblingsverein pro Spielereignis. Weniger als 1 € pro Spieler im Monat.",
-    // opengraph-image.tsx generates the OG image automatically via Next.js App Router
+      "Performance-basiertes Sponsoring für Amateurfußball. Sponsoren zahlen pro Tor, Sieg oder Einsatz – vollautomatisch abgerechnet.",
+    url: BASE_URL,
   },
   twitter: {
-    card: "summary_large_image"
-  }
+    card: "summary_large_image",
+    title: "KickPact – Sponsoring für Amateurfußball",
+    description:
+      "Sponsoren zahlen pro Tor, Sieg oder Einsatz. Weniger als 1 € pro Spieler im Monat.",
+  },
+  robots: {
+    // Individuelle Seiten können das überschreiben; Staging-Blocking läuft via robots.ts
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: BASE_URL,
+  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -68,6 +94,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="de" className={`${inter.variable} ${displayFont.variable}`}>
       <head>
         <PlausibleScript />
+        {/* Schema.org Organization — hilft Google KickPact als Marke zu verstehen */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "KickPact",
+              url: BASE_URL,
+              description:
+                "Performance-basiertes Sponsoring im Amateurfußball. Sponsoren zahlen pro Tor, Sieg oder Einsatz – vollautomatisch abgerechnet.",
+              foundingDate: "2026",
+              areaServed: "DE",
+              serviceType: "Sports Sponsorship Platform",
+            }),
+          }}
+        />
       </head>
       <body className="font-sans bg-brand-off-white text-brand-night-navy">
         {/* Skip-Link für Tastatur-Nutzer: standardmäßig visuell versteckt,
