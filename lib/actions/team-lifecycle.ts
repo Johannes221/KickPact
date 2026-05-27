@@ -433,6 +433,9 @@ export type OptOutLinkResult = {
 };
 
 /**
+ * @deprecated Spieler-Opt-out-Feature ist deprecated. UI-Einstiegspunkt entfernt.
+ * Code bleibt als Reference. Nicht aus neuen Features verwenden.
+ *
  * Generiert einen signed Opt-out-Link für einen Spieler. Nutzt
  * BETTER_AUTH_SECRET. Token läuft 30 Tage. Nur Admins können Links
  * erzeugen — der Link selbst ist dann ohne Login einlösbar.
@@ -469,6 +472,8 @@ export async function generatePlayerOptOutLink(
 }
 
 /**
+ * @deprecated Spieler-Opt-out-Feature ist deprecated. Code bleibt als Reference.
+ *
  * Inspect-Action für die public Confirm-Page. Verifiziert Token und liefert
  * Spielername + Team-Kontext zurück. Fehler-Returns statt Throws, weil das
  * Result direkt in der UI angezeigt wird.
@@ -517,6 +522,8 @@ export async function inspectPlayerOptOutToken(token: string): Promise<
 }
 
 /**
+ * @deprecated Spieler-Opt-out-Feature ist deprecated. Code bleibt als Reference.
+ *
  * Confirm-Action für `/spieler-opt-out`. Verifiziert Token, setzt blocked=true,
  * anonymisiert den Namen und benachrichtigt die Club-Admins. Idempotent: ein
  * zweiter Confirm-Call für denselben Spieler wirft NICHT (Replay-Schutz ist

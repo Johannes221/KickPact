@@ -1,6 +1,8 @@
 import {
   pgTable, text, timestamp, jsonb, pgEnum, index
 } from "drizzle-orm/pg-core";
+// pledgeProxiesJson (pledge_proxies_json) wurde mit Migration 0027 entfernt.
+// Spec §Familie-Proxy ist deprecated — Code unter lib/validations/sponsor.ts ist Reference.
 import { createId } from "@paralleldrive/cuid2";
 import { users } from "./auth";
 
@@ -21,9 +23,6 @@ export const sponsors = pgTable(
       country: string;
     } | null>(),
     businessTaxId: text("business_tax_id"),
-    pledgeProxiesJson: jsonb("pledge_proxies_json").$type<
-      Array<{ name: string; sharePercent: number; note?: string }> | null
-    >(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({

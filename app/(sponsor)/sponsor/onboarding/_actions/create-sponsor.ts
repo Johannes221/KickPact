@@ -10,15 +10,6 @@ export async function createSponsor(input: SponsorOnboardingInput, invitationTok
   const user = await requireUser();
   const parsed = sponsorOnboardingSchema.parse(input);
 
-  // Proxies: leeres Array → null (Spalte nullable, semantisch "kein Proxy aktiv")
-  const proxies = parsed.pledgeProxies && parsed.pledgeProxies.length > 0
-    ? parsed.pledgeProxies.map((p) => ({
-        name: p.name,
-        sharePercent: p.sharePercent,
-        ...(p.note ? { note: p.note } : {})
-      }))
-    : null;
-
   const [sponsor] = await db
     .insert(sponsors)
     .values({
@@ -35,8 +26,7 @@ export async function createSponsor(input: SponsorOnboardingInput, invitationTok
               country: "DE"
             }
           : null,
-      businessTaxId: parsed.type === "business" ? parsed.businessTaxId || null : null,
-      pledgeProxiesJson: proxies
+      businessTaxId: parsed.type === "business" ? parsed.businessTaxId || null : null
     })
     .returning();
 

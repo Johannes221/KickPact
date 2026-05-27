@@ -63,8 +63,7 @@ export const anonymizeAccounts = inngest.createFunction(
               displayName: DELETED_SPONSOR_DISPLAY,
               businessName: null,
               businessAddressJson: null,
-              businessTaxId: null,
-              pledgeProxiesJson: null
+              businessTaxId: null
             })
             .where(eq(sponsors.userId, u.id));
 

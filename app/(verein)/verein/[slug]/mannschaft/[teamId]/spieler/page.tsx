@@ -86,7 +86,6 @@ export default async function SpielerPage({
           canEdit={canEdit}
           clubSlug={slug}
           teamId={teamId}
-          isAdmin={role === "admin"}
         />
       )}
     </div>

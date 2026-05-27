@@ -4,21 +4,17 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  togglePlayerBlock,
-  generatePlayerOptOutLink
-} from "@/lib/actions/team-lifecycle";
+import { togglePlayerBlock } from "@/lib/actions/team-lifecycle";
 import type { RosterPlayer } from "@/lib/db/queries/team-lifecycle";
 
 interface Props {
   players: RosterPlayer[];
   canEdit: boolean;
-  isAdmin: boolean;
   clubSlug: string;
   teamId: string;
 }
 
-export function RosterList({ players, canEdit, isAdmin }: Props) {
+export function RosterList({ players, canEdit }: Props) {
   const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -45,19 +41,6 @@ export function RosterList({ players, canEdit, isAdmin }: Props) {
         setBusyId(null);
       }
     });
-  }
-
-  async function handleCopyOptOutLink(player: RosterPlayer) {
-    setBusyId(player.id);
-    try {
-      const { url } = await generatePlayerOptOutLink(player.id);
-      await navigator.clipboard.writeText(url);
-      toast.success("Opt-out-Link in Zwischenablage kopiert.");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Fehler.");
-    } finally {
-      setBusyId(null);
-    }
   }
 
   return (
@@ -96,16 +79,6 @@ export function RosterList({ players, canEdit, isAdmin }: Props) {
           </div>
           {canEdit && (
             <div className="flex gap-2 shrink-0">
-              {isAdmin && !p.blocked && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleCopyOptOutLink(p)}
-                  disabled={pending && busyId === p.id}
-                >
-                  Opt-out-Link
-                </Button>
-              )}
               <Button
                 variant={p.blocked ? "accent" : "outline"}
                 size="sm"
