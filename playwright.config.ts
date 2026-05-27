@@ -7,13 +7,13 @@ import path from "node:path";
 loadEnv({ path: path.resolve(process.cwd(), ".env.local") });
 
 export default defineConfig({
-  testDir: "./tests/e2e",
+  testDir: "tests/e2e",
   timeout: 30_000,
-  retries: 0,
+  retries: 1,
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
-    trace: "on-first-retry",
-    screenshot: "only-on-failure"
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "https://kickpact.schartl.dev",
+    screenshot: "only-on-failure",
+    video: "retain-on-failure"
   },
   projects: [
     {
@@ -21,7 +21,7 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] }
     }
   ],
-  // Kein webServer hier — Tests müssen gegen laufende App laufen
-  // Für CI: PLAYWRIGHT_BASE_URL setzen
+  // Kein webServer hier — Tests laufen gegen laufende App (lokal oder Staging).
+  // Für CI: PLAYWRIGHT_BASE_URL setzen. Für local-dev: PLAYWRIGHT_BASE_URL=http://localhost:3000
   reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]]
 });

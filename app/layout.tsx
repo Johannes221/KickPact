@@ -29,8 +29,21 @@ const displayFont = Montserrat_Alternates({
 });
 
 export const metadata = {
-  title: "KickPact — Mehr als ein Spiel",
-  description: "Performance-basiertes Sponsoring im Amateurfußball"
+  title: "KickPact — Performance-Sponsoring für Amateurfußball",
+  description:
+    "Sponsere deinen Lieblingsverein pro Spielereignis. Weniger als 1 € pro Spieler im Monat.",
+  openGraph: {
+    type: "website",
+    locale: "de_DE",
+    siteName: "KickPact",
+    title: "KickPact — Performance-Sponsoring für Amateurfußball",
+    description:
+      "Sponsere deinen Lieblingsverein pro Spielereignis. Weniger als 1 € pro Spieler im Monat.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }]
+  },
+  twitter: {
+    card: "summary_large_image"
+  }
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

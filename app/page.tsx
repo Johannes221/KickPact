@@ -11,7 +11,17 @@ import {
 import { RolesTabs } from "./_components/roles-tabs";
 import { RotatingTrigger } from "@/components/landing/rotating-trigger";
 
-export const metadata = { title: "KickPact — Mehr als ein Spiel" };
+export const metadata = {
+  title: "KickPact — Performance-Sponsoring für Amateurfußball",
+  description:
+    "Sponsere deinen Lieblingsverein pro Spielereignis. Weniger als 1 € pro Spieler im Monat.",
+  openGraph: {
+    title: "KickPact — Performance-Sponsoring für Amateurfußball",
+    description:
+      "Sponsere deinen Lieblingsverein pro Spielereignis. Weniger als 1 € pro Spieler im Monat.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }]
+  }
+};
 
 // Echte Mannschaftsfotos mit KickPact-Branding (lokale Assets).
 const PHOTOS = {
