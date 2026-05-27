@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { assertPlatformAdmin } from "@/lib/auth/admin";
 import { db } from "@/lib/db/client";
@@ -12,12 +12,13 @@ import {
   teamVerifications,
   users
 } from "@/lib/db/schema";
-import { invoices } from "@/lib/db/schema/charges";
 import {
   approveVerification,
   rejectVerification,
   approveTeamVerification,
-  rejectTeamVerification
+  rejectTeamVerification,
+  releaseWithheldInvoicesForClub,
+  releaseWithheldInvoicesForTeam
 } from "@/lib/db/queries/verifications";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { verificationApprovedEmail } from "@/lib/mail/templates/verification-approved";
@@ -44,8 +45,8 @@ export async function approveAction(input: { verificationId: string }) {
     reviewedByUserId: admin.id
   });
 
-  // Release withheld invoices for this club: set status='sent', send mails.
-  const releasedCount = await releaseWithheldInvoices(baseInfo.clubId, baseInfo.clubName);
+  // Release withheld invoices for this club: set status='sent'.
+  const releasedCount = await releaseWithheldInvoicesForClub(baseInfo.clubId);
 
   // Notify submitter
   const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
@@ -131,28 +132,6 @@ async function loadVerificationInfo(verificationId: string): Promise<{
     .where(eq(clubVerifications.id, verificationId))
     .limit(1);
   return row ?? null;
-}
-
-/**
- * After approve, release any withheld invoices for this club: flip
- * status='sent' (the PDF + invoice row already exist from when generate-invoices
- * ran). Returns the count of released invoices for the mail body.
- *
- * NOTE: Phase E2 does NOT re-send the mail to the sponsor — the click-through
- * URL on the sponsor side will simply show a no-longer-withheld invoice next
- * time they look. Auto-mailing released invoices is a Phase E3 nicety.
- */
-async function releaseWithheldInvoices(
-  clubId: string,
-  clubName: string
-): Promise<number> {
-  void clubName; // Reserved for future mail body
-  const result = await db
-    .update(invoices)
-    .set({ status: "sent" })
-    .where(and(eq(invoices.clubId, clubId), eq(invoices.status, "withheld")))
-    .returning({ id: invoices.id });
-  return result.length;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -259,19 +238,3 @@ async function loadTeamVerificationInfo(verificationId: string): Promise<{
   return row ?? null;
 }
 
-/**
- * Release withheld invoices für ein konkretes Team. Wenn das Team nicht
- * Teil einer Vereinslizenz ist, hat die Withhold-Logik die Rechnungen mit
- * `invoices.teamId = teamId` und `status = 'withheld'` markiert. Hier flippen
- * wir auf 'sent'.
- *
- * NOTE: Aktuell ist invoices.teamId NICHT im Schema — invoices haben nur
- * clubId. Phase B5 entscheidet, ob wir das via clubId+pledge.teamId joinen
- * (komplex) oder ob wir invoices.teamId als nullable Spalte hinzufügen
- * (sauberer). Für jetzt ist diese Funktion ein No-Op stub, der die
- * Approval-Action nicht crashen lässt — die echte Withhold-Logik kommt in B5.
- */
-async function releaseWithheldInvoicesForTeam(teamId: string): Promise<number> {
-  void teamId;
-  return 0;
-}

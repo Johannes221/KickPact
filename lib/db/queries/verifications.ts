@@ -1,11 +1,15 @@
-import { and, desc, eq, ne } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, ne } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   clubs,
   clubVerifications,
   teams,
   teamVerifications,
-  users
+  users,
+  invoices,
+  invoiceItems,
+  charges,
+  pledges
 } from "@/lib/db/schema";
 
 export type VerificationStatus = "pending" | "approved" | "rejected" | "revoked";
@@ -364,4 +368,91 @@ export async function rejectTeamVerification(args: RejectArgs): Promise<void> {
       rejectionReason: args.reason
     })
     .where(eq(teamVerifications.id, args.verificationId));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Withhold-Release
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Release withheld invoices for a club: flip status='sent'.
+ * Called after a club verification is approved.
+ * Returns the number of invoices released.
+ */
+export async function releaseWithheldInvoicesForClub(
+  clubId: string
+): Promise<number> {
+  const result = await db
+    .update(invoices)
+    .set({ status: "sent", sentAt: new Date() })
+    .where(and(eq(invoices.clubId, clubId), eq(invoices.status, "withheld")))
+    .returning({ id: invoices.id });
+  return result.length;
+}
+
+/**
+ * Release withheld invoices after a team verification is approved.
+ *
+ * An invoice is released only when BOTH conditions hold:
+ *   1. The club linked to the invoice is verified (clubs.verifiedAt IS NOT NULL)
+ *   2. ALL teams involved in the invoice (via invoice_items→charges→pledges→teams)
+ *      are verified.
+ *
+ * This avoids a schema change (no invoices.teamId needed).
+ * Returns the number of invoices released.
+ */
+export async function releaseWithheldInvoicesForTeam(
+  teamId: string
+): Promise<number> {
+  // 1. Resolve club + verify it is itself already approved
+  const [teamRow] = await db
+    .select({ clubId: teams.clubId })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  if (!teamRow) return 0;
+
+  const [clubRow] = await db
+    .select({ verifiedAt: clubs.verifiedAt })
+    .from(clubs)
+    .where(eq(clubs.id, teamRow.clubId))
+    .limit(1);
+  if (!clubRow?.verifiedAt) return 0;
+
+  // 2. Collect all withheld invoices for the club
+  const withheld = await db
+    .select({ id: invoices.id })
+    .from(invoices)
+    .where(
+      and(eq(invoices.clubId, teamRow.clubId), eq(invoices.status, "withheld"))
+    );
+  if (withheld.length === 0) return 0;
+
+  const withheldIds = withheld.map((r) => r.id);
+
+  // 3. Find invoices still blocked by at least one unverified team
+  const stillBlocked = await db
+    .selectDistinct({ invoiceId: invoiceItems.invoiceId })
+    .from(invoiceItems)
+    .innerJoin(charges, eq(invoiceItems.chargeId, charges.id))
+    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .where(
+      and(
+        inArray(invoiceItems.invoiceId, withheldIds),
+        isNull(teams.verifiedAt)
+      )
+    );
+
+  const blockedIds = new Set(stillBlocked.map((r) => r.invoiceId));
+  const toRelease = withheldIds.filter((id) => !blockedIds.has(id));
+  if (toRelease.length === 0) return 0;
+
+  const released = await db
+    .update(invoices)
+    .set({ status: "sent", sentAt: new Date() })
+    .where(inArray(invoices.id, toRelease))
+    .returning({ id: invoices.id });
+
+  return released.length;
 }
