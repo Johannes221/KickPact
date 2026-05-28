@@ -1,17 +1,17 @@
 /**
  * Pricing-Tabelle synchron zu docs/pricing.md (Source of Truth) und /preise-Page.
  *
- * 3 Tiers (basic / pro / verein) × 3 Billing-Cycles (monthly / season / annual)
+ * 3 Tiers (basic / pro / verein) × 3 Billing-Cycles (monthly / season_end / annual)
  * = 9 Stripe-Price-IDs.
  *
  * Stripe-Setup:
  * - Pro Plan + Billing-Cycle eine eigene Stripe-Price-ID, Env-Variable folgt
- *   dem Muster STRIPE_<PLAN>_<CYCLE>_PRICE_ID, z.B. STRIPE_PRO_SEASON_PRICE_ID.
+ *   dem Muster STRIPE_<PLAN>_<CYCLE>_PRICE_ID, z.B. STRIPE_PRO_SEASON_END_PRICE_ID.
  *
  * Trial: 30 Tage (in Stripe Subscription oder via subscription_data.trial_period_days).
  */
 export type PlanKey = "basic" | "pro" | "verein";
-export type BillingCycle = "monthly" | "season" | "annual";
+export type BillingCycle = "monthly" | "season_end" | "annual";
 
 export interface CyclePrice {
   /** Voll-Preis in Cent (z.B. 14900 = 149 €). */
@@ -50,7 +50,7 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
         display: "5 €",
         caption: "/ Mannschaft / Monat"
       },
-      season: {
+      season_end: {
         amountCents: 3900,
         display: "39 €",
         caption: "/ Saison · 3,90 €/Mon",
@@ -84,7 +84,7 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
         display: "19 €",
         caption: "/ Mannschaft / Monat"
       },
-      season: {
+      season_end: {
         amountCents: 14900,
         display: "149 €",
         caption: "/ Saison · 14,90 €/Mon",
@@ -119,7 +119,7 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
         display: "49 €",
         caption: "/ Verein / Monat"
       },
-      season: {
+      season_end: {
         amountCents: 38900,
         display: "389 €",
         caption: "/ Saison · 38,90 €/Mon",
@@ -149,22 +149,22 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
 export const PLAN_ORDER: PlanKey[] = ["basic", "pro", "verein"];
 
 /** Geordnete Liste für UI-Iteration (Monatlich → Saison-Pass → Annual). */
-export const CYCLE_ORDER: BillingCycle[] = ["monthly", "season", "annual"];
+export const CYCLE_ORDER: BillingCycle[] = ["monthly", "season_end", "annual"];
 
 export const CYCLE_LABELS: Record<BillingCycle, string> = {
   monthly: "Monatlich",
-  season: "Saison-Pass",
+  season_end: "Saison-Pass",
   annual: "Annual"
 };
 
 export const CYCLE_SUBLABELS: Record<BillingCycle, string> = {
   monthly: "jederzeit kündbar",
-  season: "Aug–Mai · 35 % sparen",
+  season_end: "Aug–Mai · 35 % sparen",
   annual: "12 Mon. · ~17 % sparen"
 };
 
 /** Default-Auswahl im Wizard und auf der Pricing-Page. */
-export const DEFAULT_CYCLE: BillingCycle = "season";
+export const DEFAULT_CYCLE: BillingCycle = "season_end";
 
 export function getStripePriceId(
   plan: PlanKey,
@@ -208,7 +208,7 @@ export function getMonthlyEquivalent(
 ): number {
   const total = PLANS[plan].cycles[cycle].amountCents;
   if (cycle === "monthly") return total;
-  if (cycle === "season") return Math.round(total / 10);
+  if (cycle === "season_end") return Math.round(total / 10);
   return Math.round(total / 12);
 }
 
@@ -226,7 +226,7 @@ export function getSavings(
   if (cycle === "monthly") return { absoluteCents: 0, percent: 0 };
   const monthly = PLANS[plan].cycles.monthly.amountCents;
   const total = PLANS[plan].cycles[cycle].amountCents;
-  const baseline = monthly * (cycle === "season" ? 10 : 12);
+  const baseline = monthly * (cycle === "season_end" ? 10 : 12);
   const absoluteCents = baseline - total;
   const percent = baseline > 0 ? Math.round((absoluteCents / baseline) * 100) : 0;
   return { absoluteCents, percent };

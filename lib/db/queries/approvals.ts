@@ -90,6 +90,24 @@ export async function countPendingForSponsor(userId: string): Promise<number> {
 }
 
 /**
+ * Holt ein Approval ohne Tenant-Check (für Token-basierte Flows).
+ * Liefert null wenn nicht gefunden.
+ */
+export async function getApprovalById(approvalId: string) {
+  const [row] = await db
+    .select({
+      approval: eventApprovals,
+      pledgeRuleId: pledgeRules.id,
+      matchEventId: eventApprovals.matchEventId
+    })
+    .from(eventApprovals)
+    .innerJoin(pledgeRules, eq(eventApprovals.pledgeRuleId, pledgeRules.id))
+    .where(eq(eventApprovals.id, approvalId))
+    .limit(1);
+  return row ?? null;
+}
+
+/**
  * Holt ein Approval mit Tenant-Check (gehört dem User?).
  * Liefert null wenn nicht gefunden oder nicht owned.
  */

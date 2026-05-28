@@ -63,7 +63,7 @@ export function AboCycleToggle({
               >
                 <span className="flex items-center justify-center gap-1.5 leading-none">
                   <span>{CYCLE_LABELS[c]}</span>
-                  {c === "season" && (
+                  {c === "season_end" && (
                     <span
                       className={cn(
                         "rounded-full px-1.5 py-[0.15rem] text-[0.5rem] font-bold uppercase tracking-wider leading-none",

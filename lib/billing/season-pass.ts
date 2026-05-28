@@ -42,7 +42,7 @@ export async function pauseSeasonPassSubscriptions(
     .from(subscriptions)
     .where(
       and(
-        eq(subscriptions.billingCycle, "season"),
+        eq(subscriptions.billingCycle, "season_end"),
         eq(subscriptions.status, "active")
       )
     );
@@ -86,7 +86,7 @@ export async function resumeSeasonPassSubscriptions(
     .from(subscriptions)
     .where(
       and(
-        eq(subscriptions.billingCycle, "season"),
+        eq(subscriptions.billingCycle, "season_end"),
         eq(subscriptions.status, "paused")
       )
     );

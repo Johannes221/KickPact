@@ -14,6 +14,7 @@ import {
 } from "@/lib/db/schema";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { approvalReminderEmail } from "@/lib/mail/templates/approval-reminder";
+import { signApprovalToken } from "@/lib/auth/approval-token";
 
 function eur(cents: number) {
   return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
@@ -125,13 +126,19 @@ export const approvalReminders = inngest.createFunction(
         const mail = approvalReminderEmail({
           sponsorName: group.name,
           pendingCount: group.items.length,
-          items: group.items.map((i) => ({
-            teamName: i.teamName,
-            clubName: i.clubName,
-            eventLabel: `${eventLabel(i.matchEventType, i.matchEventSubtype)}${i.matchEventMinute !== null ? ` (${i.matchEventMinute}')` : ""}`,
-            amountEur: eur(i.amountCents),
-            matchDate: new Date(i.matchDatum).toLocaleDateString("de-DE")
-          })),
+          items: group.items.map((i) => {
+            const confirmToken = signApprovalToken(i.approvalId, "confirm");
+            const disputeToken = signApprovalToken(i.approvalId, "dispute");
+            return {
+              teamName: i.teamName,
+              clubName: i.clubName,
+              eventLabel: `${eventLabel(i.matchEventType, i.matchEventSubtype)}${i.matchEventMinute !== null ? ` (${i.matchEventMinute}')` : ""}`,
+              amountEur: eur(i.amountCents),
+              matchDate: new Date(i.matchDatum).toLocaleDateString("de-DE"),
+              confirmUrl: `${baseUrl}/approve?token=${confirmToken}`,
+              disputeUrl: `${baseUrl}/approve?token=${disputeToken}`
+            };
+          }),
           inboxUrl
         });
         await resend.emails.send({

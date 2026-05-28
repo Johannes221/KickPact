@@ -10,6 +10,7 @@ const NAV_ITEMS: Array<{ href: string; label: string }> = [
   { href: "/admin/vereine", label: "Vereine" },
   { href: "/admin/users", label: "User" },
   { href: "/admin/crawler", label: "Crawler" },
+  { href: "/admin/rechnungen", label: "Rechnungen" },
   { href: "/admin/stripe", label: "Stripe" },
   { href: "/admin/mail", label: "Mail" }
 ];

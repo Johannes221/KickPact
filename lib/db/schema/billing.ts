@@ -6,9 +6,10 @@ import { clubs, teams } from "./clubs";
 export const planEnum = pgEnum("plan", ["basic", "pro", "verein"]);
 
 // Pricing v2: 3 Billing-Cycles. Default monatlich.
+// 2026-05-28: 'season' → 'season_end' (spec-konform, Migration 0028).
 export const billingCycleEnum = pgEnum("billing_cycle", [
   "monthly",
-  "season",
+  "season_end",
   "annual"
 ]);
 
@@ -42,7 +43,7 @@ export const subscriptions = pgTable("subscriptions", {
   stripeCustomerId: text("stripe_customer_id").unique(),
   stripeSubscriptionId: text("stripe_subscription_id").unique(),
   status: subscriptionStatusEnum("status").notNull().default("trialing"),
-  // Pricing v2: Billing-Cycle pro Subscription (monthly|season|annual).
+  // Pricing v2: Billing-Cycle pro Subscription (monthly|season_end|annual).
   billingCycle: billingCycleEnum("billing_cycle").notNull().default("monthly"),
   trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
   currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),

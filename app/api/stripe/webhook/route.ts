@@ -175,6 +175,15 @@ export async function POST(req: NextRequest) {
           .where(eq(subscriptions.stripeCustomerId, customerId));
         break;
       }
+      case "customer.subscription.trial_will_end": {
+        // Stripe sendet diesen Event 3 Tage vor Trial-Ende proaktiv.
+        // Die eigentliche Reminder-Logik übernimmt der trial-reminders Inngest-Cron.
+        // Wir loggen + geben 200 zurück, damit Stripe nicht endlos retried.
+        const sub = event.data.object as Stripe.Subscription;
+        const clubId = (sub.metadata?.clubId as string) ?? null;
+        console.info("[stripe-webhook] trial_will_end", { subId: sub.id, clubId });
+        break;
+      }
       case "invoice.paid": {
         const inv = event.data.object as Stripe.Invoice;
         const customerId =

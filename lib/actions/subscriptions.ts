@@ -159,7 +159,7 @@ export async function startCheckoutAndRedirect(formData: FormData) {
   const plan = String(formData.get("plan")) as PlanKey;
   const cycleRaw = formData.get("cycle");
   const cycle =
-    cycleRaw === "monthly" || cycleRaw === "season" || cycleRaw === "annual"
+    cycleRaw === "monthly" || cycleRaw === "season_end" || cycleRaw === "annual"
       ? (cycleRaw as BillingCycle)
       : undefined;
   const { url } = await createCheckoutSession({ clubSlug, plan, cycle });

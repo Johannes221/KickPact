@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { createInvitationAction, revokeInvitationAction } from "../_actions/invitations";
+import { resendInvitationAction } from "../_actions/resend-invitation";
 import { toast } from "sonner";
 
 interface Team {
@@ -79,6 +80,17 @@ export function SponsorsManager({
         router.refresh();
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Fehler");
+      }
+    });
+  }
+
+  function resend(invId: string) {
+    startTransition(async () => {
+      const res = await resendInvitationAction({ clubSlug, invitationId: invId });
+      if (!res.ok) toast.error(res.error ?? "Fehler beim Erneuern");
+      else {
+        toast.success("Einladung erneuert — neuer Link ist aktiv");
+        router.refresh();
       }
     });
   }
@@ -190,15 +202,25 @@ export function SponsorsManager({
                   Kopieren
                 </Button>
                 {i.status === "pending" && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => revoke(i.id)}
-                    disabled={pending}
-                    className="text-brand-alert-red hover:bg-brand-alert-red/5 hover:text-brand-alert-red"
-                  >
-                    Zurückziehen
-                  </Button>
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => resend(i.id)}
+                      disabled={pending}
+                    >
+                      Erneut senden
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => revoke(i.id)}
+                      disabled={pending}
+                      className="text-brand-alert-red hover:bg-brand-alert-red/5 hover:text-brand-alert-red"
+                    >
+                      Zurückziehen
+                    </Button>
+                  </>
                 )}
               </div>
             </li>
