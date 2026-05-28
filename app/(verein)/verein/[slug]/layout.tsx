@@ -1,13 +1,15 @@
 import Link from "next/link";
-import { eq } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { getActiveVerificationForClub } from "@/lib/db/queries/verifications";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { db } from "@/lib/db/client";
-import { sponsors, clubMemberships, clubs } from "@/lib/db/schema";
+import { sponsors, clubMemberships, clubs, teams } from "@/lib/db/schema";
+import { pledges } from "@/lib/db/schema/pledges";
 import { VereinHeaderShell } from "./_components/verein-header-shell";
 import { VereinFAB } from "./_components/verein-fab";
+import { TrialBanner } from "./_components/trial-banner";
 
 export default async function VereinLayout({
   params,
@@ -50,12 +52,34 @@ export default async function VereinLayout({
   // auf Mannschafts-Routen ausgeblendet wird (basic/pro: Mannschaft ist der
   // primäre Scope, Vereins-Header wäre nur Lärm).
   let effectivePlan: "basic" | "pro" | "verein" | null = null;
+  let firstTeamId: string | null = null;
   try {
     const ids = await getUserIdentities(user.id);
-    effectivePlan =
-      ids.clubs.find((c) => c.clubId === club.id)?.effectivePlan ?? null;
+    const thisClub = ids.clubs.find((c) => c.clubId === club.id);
+    effectivePlan = thisClub?.effectivePlan ?? null;
+    firstTeamId = thisClub?.firstTeamId ?? null;
   } catch {
     // Layout darf nicht wegen Identity-Lookup kippen.
+  }
+
+  // Abo-Link je nach Plan: basic/pro pflegen ihr Abo im Mannschafts-Kontext,
+  // Vereinslizenzen im Vereins-Abo.
+  const isSingleTeamPlan = effectivePlan === "basic" || effectivePlan === "pro";
+  const aboHref =
+    isSingleTeamPlan && firstTeamId
+      ? `/verein/${slug}/mannschaft/${firstTeamId}/abo`
+      : `/verein/${slug}/abo`;
+
+  // Verlust-Aversion im Trial-Banner: wie viele aktive Pledges hängen an den
+  // Mannschaften dieses Vereins. Nur relevant/abgefragt während des Trials.
+  let activePledgeCount = 0;
+  if (gate.status === "trialing") {
+    const [row] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(pledges)
+      .innerJoin(teams, eq(pledges.teamId, teams.id))
+      .where(and(eq(teams.clubId, club.id), eq(pledges.status, "active")));
+    activePledgeCount = Number(row?.n ?? 0);
   }
 
   return (
@@ -92,22 +116,15 @@ export default async function VereinLayout({
         </div>
       )}
 
-      {/* Trial-Countdown-Banner */}
-      {gate.status === "trialing" && gate.trialEndsAt && (() => {
-        const daysLeft = Math.max(0, Math.ceil((gate.trialEndsAt!.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-        if (daysLeft > 14) return null;
-        return (
-          <div className="mb-5 md:mb-8 rounded-2xl border border-accent/30 bg-accent/5 p-4 md:p-5">
-            <p className="text-sm text-accent-dark">
-              <strong>Trial läuft noch {daysLeft} {daysLeft === 1 ? "Tag" : "Tage"}.</strong>{" "}
-              Aktiviere dein Abo um ununterbrochenes Sponsoring sicherzustellen.{" "}
-              <Link href={`/verein/${slug}/abo`} className="underline font-semibold">
-                Abo aktivieren →
-              </Link>
-            </p>
-          </div>
-        );
-      })()}
+      {/* Trial-Countdown-Banner — immer während des Trials sichtbar, mit
+          Verlust-Aversion + plan-korrektem Abo-Link. */}
+      {gate.status === "trialing" && gate.trialEndsAt && (
+        <TrialBanner
+          trialEndsAt={gate.trialEndsAt}
+          aboHref={aboHref}
+          activePledgeCount={activePledgeCount}
+        />
+      )}
 
       {/* Subscription-Warnbanner */}
       {gate.status === "past_due" && !gate.isReadOnly && (
@@ -116,7 +133,7 @@ export default async function VereinLayout({
             <strong>Zahlung überfällig.</strong> Wir konnten deine Stripe-Subscription nicht
             einziehen. Du hast noch {gate.daysUntilReadOnly} Tage, bevor KickPact in den
             Read-Only-Modus geht.{" "}
-            <Link href={`/verein/${slug}/abo`} className="underline font-semibold text-amber-900">
+            <Link href={aboHref} className="underline font-semibold text-amber-900">
               Abo verwalten →
             </Link>
           </p>
@@ -130,7 +147,7 @@ export default async function VereinLayout({
               {gate.status === "cancelled" ? "Abo gekündigt." : "Read-Only-Modus aktiv."}
             </strong>{" "}
             Neue Pacts + Match-Events sind blockiert, bestehende Daten bleiben sichtbar.{" "}
-            <Link href={`/verein/${slug}/abo`} className="underline font-semibold text-rose-900">
+            <Link href={aboHref} className="underline font-semibold text-rose-900">
               Abo reaktivieren →
             </Link>
           </p>
