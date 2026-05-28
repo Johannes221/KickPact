@@ -7,18 +7,19 @@
 
 - **Branch:** `main` (synced mit `origin/main`)
 - **Staging:** https://kickpact.schartl.dev (Coolify-Auto-Deploy on push)
-- **Letzter Commit:** `e93ea73` — feat: SEO (sitemap + robots + OG) + E2E-Specs Onboarding
+- **Letzter Commit:** `74d255d` — fix(crawler): getMannschaften div.club-teams Filter (120→28 Teams)
 - **Working-Tree:** clean · **Stashes:** keine
 - **Coolify:** post_deployment_command = `npm run db:migrate` (ab sofort automatisch)
 
-## Zuletzt gebaut (2026-05-27)
+## Zuletzt gebaut (2026-05-28)
 
 | Commit | Was |
 |--------|-----|
+| `74d255d` | **fix(crawler)** getMannschaften: `div.club-teams` statt matchplan → 120+ → 28 Teams |
+| `5d70972` | **Usertest-Readiness** Approval ohne Login + Admin-Invoice + Resend + Fixes |
+| `e2fa410` | **Trial-to-Paid-Fix** Billing-Toggle + Test-Clock |
+| `6489ffa` | **SEO** sitemap + robots + keyword metadata + Schema.org + Deployment Strategy |
 | `e93ea73` | **SEO** sitemap.ts + robots.ts + OG-Metadata + E2E-Specs (9 Tests) |
-| `c855596` | **Cleanup** pledgeProxiesJson-Drop (Migration 0027) + Spieler-Opt-out deprecated |
-| `192bd83` | **Sommerpause** isSommerpause-Guard + Cron pause/resume + Migration 0026 |
-| (vorher) | **P1** E3 Withheld-Release-Mail, Pledge-Edit/End, Mobile FAB, Storno |
 
 ## Feature-Status
 
