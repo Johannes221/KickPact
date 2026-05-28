@@ -79,3 +79,93 @@ export function activeIdentityFromPath(pathname: string): ActiveIdentity {
   }
   return { kind: "neutral" };
 }
+
+const ROLE_LABEL: Record<"admin" | "trainer" | "viewer", string> = {
+  admin: "Admin",
+  trainer: "Trainer",
+  viewer: "Viewer"
+};
+
+/**
+ * Ein flacher, render-fertiger Eintrag im Rollen-Switcher (Header + Mobile-Nav).
+ * `matches` erlaubt es, den aktuell aktiven Eintrag aus einer `ActiveIdentity`
+ * (aus dem Pfad abgeleitet) zu bestimmen, ohne kind-spezifische Vergleiche
+ * an der Aufrufstelle zu duplizieren.
+ */
+export interface IdentityEntry {
+  kind: "club" | "team" | "sponsor";
+  id: string;
+  href: string;
+  label: string;
+  subline: string;
+  matches: (a: ActiveIdentity) => boolean;
+}
+
+/**
+ * Wandelt das Identity-Snapshot eines Users in eine flache Liste von
+ * Switcher-Einträgen. Einzige Quelle der Wahrheit für Header + Mobile-Nav.
+ *
+ * Kern-Regel: Ein Club mit Mannschafts-Lizenz (basic/pro) erscheint NICHT als
+ * Verein, sondern als Mannschaft — der Verein ist dort nur namensgebender
+ * Container, der primäre Kontext ist die Mannschaft. Nur echte Vereinslizenzen
+ * (`effectivePlan === "verein"`) erscheinen als Club-Eintrag.
+ */
+export function flattenIdentities(ids: UserIdentities): IdentityEntry[] {
+  const entries: IdentityEntry[] = [];
+  for (const c of ids.clubs) {
+    const isSingleTeamPlan =
+      c.effectivePlan === "basic" || c.effectivePlan === "pro";
+    if (isSingleTeamPlan && c.firstTeamId) {
+      const teamId = c.firstTeamId;
+      const slug = c.slug;
+      entries.push({
+        kind: "team",
+        id: `club-team-${teamId}`,
+        href: `/verein/${slug}/mannschaft/${teamId}`,
+        label: c.firstTeamName ?? c.name,
+        subline: ROLE_LABEL[c.role],
+        matches: (a) =>
+          a.kind === "team" && a.slug === slug && a.teamId === teamId
+      });
+    } else {
+      const slug = c.slug;
+      entries.push({
+        kind: "club",
+        id: `club-${c.clubId}`,
+        href: `/verein/${slug}`,
+        label: c.name,
+        subline: ROLE_LABEL[c.role],
+        matches: (a) => a.kind === "club" && a.slug === slug
+      });
+    }
+  }
+  for (const t of ids.teamOnly) {
+    entries.push({
+      kind: "team",
+      id: `team-${t.teamId}`,
+      href: `/verein/${t.clubSlug}/mannschaft/${t.teamId}`,
+      label: t.teamName,
+      subline: `${t.clubName} · ${ROLE_LABEL[t.role]}`,
+      matches: (a) =>
+        a.kind === "team" && a.slug === t.clubSlug && a.teamId === t.teamId
+    });
+  }
+  if (ids.sponsor) {
+    const sp = ids.sponsor;
+    entries.push({
+      kind: "sponsor",
+      id: `sponsor-${sp.id}`,
+      href: "/sponsor",
+      label: sp.displayName,
+      subline: "Sponsor",
+      matches: (a) => a.kind === "sponsor"
+    });
+  }
+  return entries;
+}
+
+export function identityEmoji(kind: IdentityEntry["kind"]): string {
+  if (kind === "club") return "🏟️";
+  if (kind === "team") return "⚽";
+  return "💚";
+}

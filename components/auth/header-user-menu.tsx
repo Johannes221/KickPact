@@ -15,62 +15,12 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { activeIdentityFromPath, type ActiveIdentity } from "@/lib/auth/identity-routing";
+import {
+  activeIdentityFromPath,
+  flattenIdentities,
+  identityEmoji
+} from "@/lib/auth/identity-routing";
 import type { UserIdentities } from "@/lib/db/queries/user-identities";
-
-const ROLE_LABEL: Record<"admin" | "trainer" | "viewer", string> = {
-  admin: "Admin",
-  trainer: "Trainer",
-  viewer: "Viewer"
-};
-
-type IdentityEntry =
-  | { kind: "club"; id: string; href: string; label: string; subline: string; matches: (a: ActiveIdentity) => boolean }
-  | { kind: "team"; id: string; href: string; label: string; subline: string; matches: (a: ActiveIdentity) => boolean }
-  | { kind: "sponsor"; id: string; href: string; label: string; subline: string; matches: (a: ActiveIdentity) => boolean };
-
-function flattenIdentities(ids: UserIdentities): IdentityEntry[] {
-  const entries: IdentityEntry[] = [];
-  for (const c of ids.clubs) {
-    entries.push({
-      kind: "club",
-      id: `club-${c.clubId}`,
-      href: `/verein/${c.slug}`,
-      label: c.name,
-      subline: ROLE_LABEL[c.role],
-      matches: (a) => a.kind === "club" && a.slug === c.slug
-    });
-  }
-  for (const t of ids.teamOnly) {
-    entries.push({
-      kind: "team",
-      id: `team-${t.teamId}`,
-      href: `/verein/${t.clubSlug}/mannschaft/${t.teamId}`,
-      label: t.teamName,
-      subline: `${t.clubName} · ${ROLE_LABEL[t.role]}`,
-      matches: (a) =>
-        a.kind === "team" && a.slug === t.clubSlug && a.teamId === t.teamId
-    });
-  }
-  if (ids.sponsor) {
-    const sp = ids.sponsor;
-    entries.push({
-      kind: "sponsor",
-      id: `sponsor-${sp.id}`,
-      href: "/sponsor",
-      label: sp.displayName,
-      subline: "Sponsor",
-      matches: (a) => a.kind === "sponsor"
-    });
-  }
-  return entries;
-}
-
-function emojiFor(kind: IdentityEntry["kind"]): string {
-  if (kind === "club") return "🏟️";
-  if (kind === "team") return "⚽";
-  return "💚";
-}
 
 export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
   const { data: session, isPending } = useSession();
@@ -217,7 +167,7 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
               className="cursor-pointer text-brand-night-navy bg-accent/5 focus:bg-accent/10 focus:text-accent-dark"
             >
               <Link href={currentEntry.href}>
-                <span className="mr-2 text-base">{emojiFor(currentEntry.kind)}</span>
+                <span className="mr-2 text-base">{identityEmoji(currentEntry.kind)}</span>
                 <span className="flex-1 truncate">
                   <span className="block truncate font-semibold">{currentEntry.label}</span>
                   <span className="block truncate text-[0.7rem] text-brand-night-navy/60">
@@ -244,7 +194,7 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
                 className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
               >
                 <Link href={e.href}>
-                  <span className="mr-2 text-base">{emojiFor(e.kind)}</span>
+                  <span className="mr-2 text-base">{identityEmoji(e.kind)}</span>
                   <span className="flex-1 truncate">
                     <span className="block truncate font-medium">{e.label}</span>
                     <span className="block truncate text-[0.7rem] text-brand-night-navy/60">

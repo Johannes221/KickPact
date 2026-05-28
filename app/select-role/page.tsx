@@ -40,31 +40,66 @@ export default async function SelectRolePage() {
       </div>
 
       <div className="grid gap-4 md:gap-5 md:grid-cols-2">
-        {identities.clubs.map((c) => (
-          <Link
-            key={`club-${c.clubId}`}
-            href={`/verein/${c.slug}`}
-            className="group flex items-start gap-4 rounded-2xl border border-brand-neutral/40 bg-white p-5 transition-all hover:border-accent hover:shadow-md"
-          >
-            <div className="text-3xl shrink-0">🏟️</div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-baseline justify-between gap-2">
-                <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy truncate">
-                  {c.name}
-                </h2>
-                <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-widest text-accent-dark">
-                  {ROLE_LABEL[c.role]}
-                </span>
+        {identities.clubs.map((c) => {
+          // basic/pro = Mannschafts-Lizenz: als Mannschaft darstellen und direkt
+          // in die Team-Page verlinken — der Verein ist nur Container. Nur echte
+          // Vereinslizenzen erscheinen als Vereins-Karte.
+          const asTeam =
+            (c.effectivePlan === "basic" || c.effectivePlan === "pro") &&
+            c.firstTeamId;
+          if (asTeam) {
+            return (
+              <Link
+                key={`club-team-${c.firstTeamId}`}
+                href={`/verein/${c.slug}/mannschaft/${c.firstTeamId}`}
+                className="group flex items-start gap-4 rounded-2xl border border-brand-neutral/40 bg-white p-5 transition-all hover:border-accent hover:shadow-md"
+              >
+                <div className="text-3xl shrink-0">⚽</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy truncate">
+                      {c.firstTeamName ?? c.name}
+                    </h2>
+                    <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-widest text-accent-dark">
+                      {ROLE_LABEL[c.role]}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-brand-night-navy/60 truncate">
+                    {c.name} · {c.sponsorCount} aktive Sponsor{c.sponsorCount === 1 ? "" : "en"}
+                  </p>
+                  <div className="mt-3 inline-flex items-center text-xs font-semibold text-accent group-hover:translate-x-0.5 transition-transform">
+                    Weiter →
+                  </div>
+                </div>
+              </Link>
+            );
+          }
+          return (
+            <Link
+              key={`club-${c.clubId}`}
+              href={`/verein/${c.slug}`}
+              className="group flex items-start gap-4 rounded-2xl border border-brand-neutral/40 bg-white p-5 transition-all hover:border-accent hover:shadow-md"
+            >
+              <div className="text-3xl shrink-0">🏟️</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline justify-between gap-2">
+                  <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy truncate">
+                    {c.name}
+                  </h2>
+                  <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-widest text-accent-dark">
+                    {ROLE_LABEL[c.role]}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-brand-night-navy/60">
+                  {c.teamCount} Mannschaft{c.teamCount === 1 ? "" : "en"} · {c.sponsorCount} aktive Sponsor{c.sponsorCount === 1 ? "" : "en"}
+                </p>
+                <div className="mt-3 inline-flex items-center text-xs font-semibold text-accent group-hover:translate-x-0.5 transition-transform">
+                  Weiter →
+                </div>
               </div>
-              <p className="mt-1 text-xs text-brand-night-navy/60">
-                {c.teamCount} Mannschaft{c.teamCount === 1 ? "" : "en"} · {c.sponsorCount} aktive Sponsor{c.sponsorCount === 1 ? "" : "en"}
-              </p>
-              <div className="mt-3 inline-flex items-center text-xs font-semibold text-accent group-hover:translate-x-0.5 transition-transform">
-                Weiter →
-              </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
 
         {identities.teamOnly.map((t) => (
           <Link

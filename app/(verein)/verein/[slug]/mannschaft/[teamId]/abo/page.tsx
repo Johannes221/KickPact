@@ -1,23 +1,22 @@
-import { redirect } from "next/navigation";
+import { assertTeamPageAccess } from "@/lib/auth/scope";
+import { AboPanel } from "../../../abo/_components/abo-panel";
+
+export const metadata = { title: "Abo · KickPact" };
 
 /**
- * Team-Scope /abo ist aktuell ein Redirect auf die Club-Level /abo-Page.
+ * Mannschafts-Abo. Rendert dieselbe Abo-Verwaltung wie die Vereins-Seite,
+ * aber im Mannschafts-Kontext (TeamSubNav, kein Vereins-Header) — der primäre
+ * Kontext für basic/pro-Lizenzen. Die Subscription selbst lebt auf Club-Ebene,
+ * deshalb arbeitet das Panel mit der clubId der Mannschaft.
  *
- * Hintergrund: Subscription + Stripe-Customer leben auf Club-Ebene (eine
- * Subscription pro Club, n Team-Licenses dranhängend). Für basic/pro-User,
- * die nur eine Mannschaft haben, gibt es keinen funktionalen Unterschied
- * zwischen Team- und Club-Abo — Stripe-Checkout, Plan-Wechsel, Cancel
- * passieren alle auf /verein/[slug]/abo.
- *
- * Wird der Tab im team-sub-nav.tsx aus dem Nav für basic/pro gefiltert
- * sobald das hier konkrete Team-spezifische UI bekommt (z.B. License-
- * Status der einzelnen Mannschaft im Vereinslizenz-Bündel).
+ * Trainer-Level reicht: der Team-Trainer verwaltet das Abo seiner Mannschaft.
  */
 export default async function TeamAboPage({
   params
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; teamId: string }>;
 }) {
-  const { slug } = await params;
-  redirect(`/verein/${slug}/abo`);
+  const { slug, teamId } = await params;
+  const { club } = await assertTeamPageAccess(slug, teamId, "trainer");
+  return <AboPanel clubId={club.id} clubSlug={slug} />;
 }

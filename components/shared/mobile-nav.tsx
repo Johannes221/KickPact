@@ -17,63 +17,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSession, signOut } from "@/lib/auth/client";
-import { activeIdentityFromPath, type ActiveIdentity } from "@/lib/auth/identity-routing";
+import {
+  activeIdentityFromPath,
+  flattenIdentities,
+  identityEmoji
+} from "@/lib/auth/identity-routing";
 import type { UserIdentities } from "@/lib/db/queries/user-identities";
 import { cn } from "@/lib/utils";
-
-const ROLE_LABEL: Record<"admin" | "trainer" | "viewer", string> = {
-  admin: "Admin",
-  trainer: "Trainer",
-  viewer: "Viewer"
-};
-
-type IdentityEntry =
-  | { kind: "club"; id: string; href: string; label: string; subline: string; matches: (a: ActiveIdentity) => boolean }
-  | { kind: "team"; id: string; href: string; label: string; subline: string; matches: (a: ActiveIdentity) => boolean }
-  | { kind: "sponsor"; id: string; href: string; label: string; subline: string; matches: (a: ActiveIdentity) => boolean };
-
-function flattenIdentities(ids: UserIdentities): IdentityEntry[] {
-  const entries: IdentityEntry[] = [];
-  for (const c of ids.clubs) {
-    entries.push({
-      kind: "club",
-      id: `club-${c.clubId}`,
-      href: `/verein/${c.slug}`,
-      label: c.name,
-      subline: ROLE_LABEL[c.role],
-      matches: (a) => a.kind === "club" && a.slug === c.slug
-    });
-  }
-  for (const t of ids.teamOnly) {
-    entries.push({
-      kind: "team",
-      id: `team-${t.teamId}`,
-      href: `/verein/${t.clubSlug}/mannschaft/${t.teamId}`,
-      label: t.teamName,
-      subline: `${t.clubName} · ${ROLE_LABEL[t.role]}`,
-      matches: (a) =>
-        a.kind === "team" && a.slug === t.clubSlug && a.teamId === t.teamId
-    });
-  }
-  if (ids.sponsor) {
-    const sp = ids.sponsor;
-    entries.push({
-      kind: "sponsor",
-      id: `sponsor-${sp.id}`,
-      href: "/sponsor",
-      label: sp.displayName,
-      subline: "Sponsor",
-      matches: (a) => a.kind === "sponsor"
-    });
-  }
-  return entries;
-}
-
-function emojiFor(kind: IdentityEntry["kind"]): string {
-  if (kind === "club") return "🏟️";
-  if (kind === "team") return "⚽";
-  return "💚";
-}
 
 const PUBLIC_NAV = [
   { href: "/preise", label: "Preise" },
@@ -219,7 +169,7 @@ export function MobileNav({ onHero = false }: { onHero?: boolean }) {
                       className="flex min-h-12 items-center gap-3 rounded-xl border border-accent/40 bg-accent/5 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     >
                       <span className="text-xl" aria-hidden>
-                        {emojiFor(currentEntry.kind)}
+                        {identityEmoji(currentEntry.kind)}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-semibold text-brand-night-navy">
@@ -248,7 +198,7 @@ export function MobileNav({ onHero = false }: { onHero?: boolean }) {
                             className="flex min-h-12 items-center gap-3 rounded-xl border border-brand-neutral/30 bg-white px-3 py-2 hover:border-accent/40 hover:bg-accent/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                           >
                             <span className="text-xl" aria-hidden>
-                              {emojiFor(e.kind)}
+                              {identityEmoji(e.kind)}
                             </span>
                             <span className="min-w-0 flex-1">
                               <span className="block truncate text-sm font-medium text-brand-night-navy">

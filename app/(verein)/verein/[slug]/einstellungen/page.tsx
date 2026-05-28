@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import Link from "next/link";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { db } from "@/lib/db/client";
 import { clubs } from "@/lib/db/schema";
 import { EinstellungenForm } from "./_components/einstellungen-form";
@@ -13,7 +13,7 @@ export default async function EinstellungenPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { club } = await assertClubAccess(slug, "admin");
+  const { club } = await assertVereinAdminOrRedirect(slug, "admin");
 
   const [clubData] = await db
     .select()

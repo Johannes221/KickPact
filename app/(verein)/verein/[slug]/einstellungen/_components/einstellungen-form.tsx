@@ -38,10 +38,17 @@ type FormValues = z.infer<typeof schema>;
 
 export function EinstellungenForm({
   slug,
-  defaultValues
+  defaultValues,
+  variant = "verein"
 }: {
   slug: string;
   defaultValues: UpdateClubInput;
+  /**
+   * Steuert nur die Beschriftung des Stammdaten-Blocks. Im Mannschafts-Kontext
+   * (basic/pro) ist die Mannschaft die Billing-Entität — technisch wird aber
+   * dieselbe club-Row editiert (eine Subscription/IBAN pro Club).
+   */
+  variant?: "verein" | "mannschaft";
 }) {
   const [pending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
@@ -72,7 +79,7 @@ export function EinstellungenForm({
         {/* Vereinsdaten */}
         <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-5">
           <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
-            Vereins-Stammdaten
+            {variant === "mannschaft" ? "Rechnungs-Stammdaten" : "Vereins-Stammdaten"}
           </h3>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -81,7 +88,9 @@ export function EinstellungenForm({
               name="name"
               render={({ field }) => (
                 <FormItem className="sm:col-span-2">
-                  <FormLabel>Vereinsname</FormLabel>
+                  <FormLabel>
+                    {variant === "mannschaft" ? "Name auf Rechnungen" : "Vereinsname"}
+                  </FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="FC Musterstadt 1920 e.V." />
                   </FormControl>

@@ -1,17 +1,18 @@
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { teams } from "@/lib/db/schema";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { TeamSubNav } from "./_components/team-sub-nav";
 
 /**
- * Team-Scope-Layout für Mannschafts-Admins.
+ * Team-Scope-Layout für Mannschafts-Trainer + Verein-Admins.
  *
  * Lädt einmal Team- + Club-Header-Daten und mountet die TeamSubNav, die
  * zwischen Übersicht / Pacts / Spiele / Finanzen / Abo / Einstellungen
- * navigiert. Auth-Check minimal über assertClubAccess; der Plan-spezifische
- * Redirect (basic/pro vs verein) sitzt im Club-Layout darüber.
+ * navigiert. Auth-Check über `assertTeamPageAccess`: erlaubt sowohl Club-Scope
+ * (Verein-Admin/-Trainer) als auch reinen Team-Scope (Team-Trainer ohne
+ * Club-Membership) und leitet bei falschem Slug auf die korrekte URL um.
  *
  * `effectivePlan` wird via `getUserIdentities` für genau diesen Club aufgelöst
  * und an `TeamSubNav` durchgereicht: Bei Vereinslizenz blendet das Team-Menü
@@ -25,12 +26,12 @@ export default async function TeamScopeLayout({
   params: Promise<{ slug: string; teamId: string }>;
 }) {
   const { slug, teamId } = await params;
-  const { club, user } = await assertClubAccess(slug, "viewer");
+  const { club, user } = await assertTeamPageAccess(slug, teamId, "viewer");
 
   const [team] = await db
     .select({ name: teams.name, clubId: teams.clubId })
     .from(teams)
-    .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
+    .where(eq(teams.id, teamId))
     .limit(1);
 
   // Fall-through wenn Team nicht zum Club gehört oder nicht existiert —

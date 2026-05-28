@@ -32,6 +32,11 @@ export interface UserIdentityClub {
    * `null`, wenn der Club (noch) kein Team hat.
    */
   firstTeamId: string | null;
+  /**
+   * Name des ersten Teams — der Header zeigt bei basic/pro-Lizenzen diesen
+   * statt des Vereinsnamens, weil die Mannschaft dort der primäre Kontext ist.
+   */
+  firstTeamName: string | null;
 }
 
 export interface UserIdentityTeamOnly {
@@ -121,20 +126,21 @@ export async function getUserIdentities(userId: string): Promise<UserIdentities>
             ),
       // First active team per club, ordered by created_at (oldest first).
       clubIds.length === 0
-        ? Promise.resolve(new Map<string, string>())
+        ? Promise.resolve(new Map<string, { id: string; name: string }>())
         : db
             .select({
               clubId: teams.clubId,
               teamId: teams.id,
+              teamName: teams.name,
               createdAt: teams.createdAt
             })
             .from(teams)
             .where(and(inArray(teams.clubId, clubIds), eq(teams.isActive, true)))
             .orderBy(asc(teams.createdAt), asc(teams.id))
             .then((rows) => {
-              const m = new Map<string, string>();
+              const m = new Map<string, { id: string; name: string }>();
               for (const r of rows) {
-                if (!m.has(r.clubId)) m.set(r.clubId, r.teamId);
+                if (!m.has(r.clubId)) m.set(r.clubId, { id: r.teamId, name: r.teamName });
               }
               return m;
             }),
@@ -180,7 +186,8 @@ export async function getUserIdentities(userId: string): Promise<UserIdentities>
     teamCount: teamCounts.get(r.clubId) ?? 0,
     sponsorCount: sponsorCountsByClub.get(r.clubId) ?? 0,
     effectivePlan: highestPlan(plansByClub.get(r.clubId)),
-    firstTeamId: firstTeamByClub.get(r.clubId) ?? null
+    firstTeamId: firstTeamByClub.get(r.clubId)?.id ?? null,
+    firstTeamName: firstTeamByClub.get(r.clubId)?.name ?? null
   }));
 
   // ── Team-only memberships (excluding teams whose club is already above) ─

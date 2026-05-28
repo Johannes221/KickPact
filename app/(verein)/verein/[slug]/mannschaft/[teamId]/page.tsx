@@ -87,12 +87,11 @@ export default async function TeamDetailPage({
 
   return (
     <div className="space-y-8">
-      {/* Breadcrumb */}
+      {/* Mannschafts-Titel. Kein "Vereins-Dashboard"-Breadcrumb: bei
+          Mannschafts-Lizenz ist die Mannschaft der oberste Kontext; Vereins-
+          Admins navigieren über die VereinSubNav im Header darüber zurück. */}
       <div>
-        <Link href={`/verein/${slug}`} className="text-sm text-brand-night-navy/60 hover:text-accent">
-          ← Vereins-Dashboard
-        </Link>
-        <h2 className="mt-1.5 font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
           {team.name}
         </h2>
         <p className="text-sm text-brand-night-navy/60">Saison {team.saison}</p>

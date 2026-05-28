@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
+import { teams, clubs } from "@/lib/db/schema";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { getDocumentSignedUrl } from "@/lib/storage/documents";
 import { TeamStammdatenForm } from "./_components/team-stammdaten-form";
 import { TeamLifecyclePanel } from "./_components/team-lifecycle-panel";
+import { EinstellungenForm } from "../../../einstellungen/_components/einstellungen-form";
 
 export const metadata = { title: "Einstellungen · Mannschaft · KickPact" };
 
@@ -55,6 +56,26 @@ export default async function TeamEinstellungenPage({
     }
   }
 
+  // Rechnungs-/Zahlungsdaten leben auf der club-Row (eine Billing-Entität pro
+  // Club). Bei Mannschafts-Lizenz ist die Mannschaft diese Entität — daher
+  // hier im Mannschafts-Kontext editierbar, statt im Vereins-Dashboard.
+  const [clubData] = await db
+    .select({
+      name: clubs.name,
+      ort: clubs.ort,
+      addressJson: clubs.addressJson,
+      isSmallBusiness: clubs.isSmallBusiness,
+      taxId: clubs.taxId,
+      iban: clubs.iban
+    })
+    .from(clubs)
+    .where(eq(clubs.id, club.id))
+    .limit(1);
+  const billingAddr = clubData?.addressJson as
+    | { street?: string; zip?: string; city?: string }
+    | null
+    | undefined;
+
   const base = `/verein/${slug}/mannschaft/${teamId}/einstellungen`;
 
   return (
@@ -84,6 +105,36 @@ export default async function TeamEinstellungenPage({
           logoUrl={logoDisplayUrl}
         />
       </section>
+
+      {/* Rechnungs- & Zahlungsdaten (Absender, Adresse, Steuer, IBAN).
+          Erscheinen auf den PDF-Rechnungen an die Sponsoren. */}
+      {clubData && (
+        <section className="space-y-4">
+          <header>
+            <h3 className="font-display font-black text-lg tracking-tight text-brand-night-navy">
+              Rechnungs- &amp; Zahlungsdaten
+            </h3>
+            <p className="mt-0.5 text-sm text-brand-night-navy/60">
+              Absender, Adresse, Steuer-Status und IBAN für die Rechnungen an
+              deine Sponsoren.
+            </p>
+          </header>
+          <EinstellungenForm
+            slug={slug}
+            variant="mannschaft"
+            defaultValues={{
+              name: clubData.name,
+              ort: clubData.ort ?? "",
+              street: billingAddr?.street ?? "",
+              zip: billingAddr?.zip ?? "",
+              city: billingAddr?.city ?? "",
+              isSmallBusiness: clubData.isSmallBusiness,
+              taxId: clubData.taxId ?? "",
+              iban: clubData.iban ?? ""
+            }}
+          />
+        </section>
+      )}
 
       {/* Lifecycle */}
       <section className="space-y-4 rounded-2xl border border-brand-neutral/40 bg-white p-5">

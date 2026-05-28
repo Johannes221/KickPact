@@ -1,4 +1,4 @@
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { VerificationForm } from "./_components/verification-form";
 
 export const metadata = { title: "Verein verifizieren · KickPact" };
@@ -15,7 +15,7 @@ export default async function VereinVerifikationPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { club } = await assertClubAccess(slug, "admin");
+  const { club } = await assertVereinAdminOrRedirect(slug, "admin");
 
   return (
     <div className="space-y-6">
