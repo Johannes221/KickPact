@@ -10,7 +10,9 @@ import { listMatchesForTeam, getMatchChargesSummaryForTeam } from "@/lib/db/quer
 import { listClubSeasonPledges } from "@/lib/db/queries/club-dashboard";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
+import { clubs } from "@/lib/db/schema";
 import { inngest } from "@/lib/inngest/client";
+import { TeamSetupChecklist } from "./_components/team-setup-checklist";
 
 export const metadata = { title: "Mannschaft · KickPact" };
 
@@ -70,6 +72,38 @@ export default async function TeamDetailPage({
   }
   const totalCharges = [...chargesSummary.values()].reduce((s, v) => s + v, 0);
 
+  // Setup-Checkliste: Daten für "Anstehende Aufgaben".
+  const [[clubBilling], [pledgeCountRow]] = await Promise.all([
+    db.select({ iban: clubs.iban }).from(clubs).where(eq(clubs.id, club.id)).limit(1),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(pledges)
+      .where(eq(pledges.teamId, team.id))
+  ]);
+  const hasIban = !!clubBilling?.iban;
+  const hasSponsor = Number(pledgeCountRow?.n ?? 0) > 0;
+  const teamBase = `/verein/${slug}/mannschaft/${team.id}`;
+  const checklistItems = [
+    {
+      done: !!team.verifiedAt,
+      label: "Mannschaft verifizieren",
+      hint: "Nachweis hochladen — bis dahin werden Rechnungen zurückgehalten.",
+      href: `${teamBase}/verifikation`
+    },
+    {
+      done: hasIban,
+      label: "Zahlungsdaten hinterlegen",
+      hint: "IBAN für die Sponsoren-Rechnungen in den Einstellungen eintragen.",
+      href: `${teamBase}/einstellungen`
+    },
+    {
+      done: hasSponsor,
+      label: "Ersten Sponsor gewinnen",
+      hint: "Lege einen Pact an oder lade einen Sponsor ein.",
+      href: `${teamBase}/pacts`
+    }
+  ];
+
   // Falls noch keine Spiele für dieses Team vorhanden sind, einen On-Demand-Crawl
   // anstoßen. Dedup über Event-ID (1h-Bucket) verhindert Mehrfach-Trigger bei Reloads.
   if (matchRows.length === 0 && team.fussballdeTeamId) {
@@ -96,6 +130,8 @@ export default async function TeamDetailPage({
         </h2>
         <p className="text-sm text-brand-night-navy/60">Saison {team.saison}</p>
       </div>
+
+      <TeamSetupChecklist items={checklistItems} />
 
       {/* Saison-Stats */}
       {finishedMatches.length > 0 && (
