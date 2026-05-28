@@ -63,7 +63,8 @@ export function VereinFAB({ slug, clubRole }: VereinFABProps) {
   return (
     <>
       {/* Fixed FAB — mobile only (hidden md+) */}
-      <div className="md:hidden fixed bottom-6 right-5 z-40">
+      {/* Über der Bottom-Tab-Bar positioniert (bar ~56px + safe-area). */}
+      <div className="md:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-5 z-40">
         <Button
           size="icon"
           className="h-14 w-14 rounded-full shadow-xl bg-accent hover:bg-accent-dark text-white transition-transform active:scale-95"

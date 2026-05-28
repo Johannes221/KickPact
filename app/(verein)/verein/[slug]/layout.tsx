@@ -83,7 +83,7 @@ export default async function VereinLayout({
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-5 md:px-6 py-8 md:py-12">
+    <main className="mx-auto max-w-5xl px-5 md:px-6 pt-8 md:pt-12 pb-28 md:pb-12">
       {/* Header-Bereich: Vereinsname + Sub-Nav.
           Auf /verein/<slug>/mannschaft/<teamId>... bei basic/pro-Lizenzen
           ausgeblendet — der TeamSubNav übernimmt dort die Navigation. */}
