@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
       "Monats-Verbrauch EUR",
       "Lifetime EUR",
       "Cap-Auslastung %",
-      "Pledge-ID",
+      "Pact-ID",
       "Rule-ID"
     ],
     rows: rows.map((r) => {

@@ -130,7 +130,7 @@ function TeamTile({ team }: { team: DiscoverableTeam }) {
             <div className="mt-6 space-y-3">
               {!team.clubVerifiedAt && (
                 <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
-                  Dieser Verein ist noch nicht verifiziert. Pledges sind möglich, aber wir
+                  Dieser Verein ist noch nicht verifiziert. Pacts sind möglich, aber wir
                   senden dir erst eine Rechnung, sobald KickPact die Vereinsvertretung
                   bestätigt hat.
                 </div>

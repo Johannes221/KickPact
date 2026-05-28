@@ -129,7 +129,7 @@ export default async function VereinLayout({
             <strong>
               {gate.status === "cancelled" ? "Abo gekündigt." : "Read-Only-Modus aktiv."}
             </strong>{" "}
-            Neue Pledges + Match-Events sind blockiert, bestehende Daten bleiben sichtbar.{" "}
+            Neue Pacts + Match-Events sind blockiert, bestehende Daten bleiben sichtbar.{" "}
             <Link href={`/verein/${slug}/abo`} className="underline font-semibold text-rose-900">
               Abo reaktivieren →
             </Link>

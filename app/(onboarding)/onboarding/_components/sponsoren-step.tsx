@@ -94,7 +94,7 @@ export function SponsorenStep({ clubId, clubSlug, role, baseUrl, teams }: Props)
           })}
           <p className="text-xs text-brand-night-navy/50">
             Du kannst die Links jederzeit über dein Dashboard erneut abrufen. Sponsoren
-            registrieren sich über den Link und legen Pledges selbst fest (z.B. „5 € pro
+            registrieren sich über den Link und legen Pacts selbst fest (z.B. „5 € pro
             Tor").
           </p>
         </CardContent>

@@ -101,9 +101,9 @@ export default async function AdminDashboardPage() {
         />
         <KpiTile
           emoji="🎯"
-          label="Ø Pledge"
+          label="Ø Pact"
           value={eur(kpis.avgPledgeAmountCents)}
-          caption="Mittelwert aller aktiven Pledge-Rules"
+          caption="Mittelwert aller aktiven Pact-Regeln"
         />
         <KpiTile
           emoji="⚡"

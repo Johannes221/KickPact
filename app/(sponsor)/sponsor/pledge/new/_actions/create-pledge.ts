@@ -111,7 +111,7 @@ export async function createPledge(input: PledgeInput) {
   } catch (e) {
     if (e instanceof PlanCapExceededError) {
       throw new Error(
-        `Limit erreicht: ${e.cap === "sponsors" ? "max. Sponsoren" : "max. Pledge-Rules"} ` +
+        `Limit erreicht: ${e.cap === "sponsors" ? "max. Sponsoren" : "max. Pact-Regeln"} ` +
           `auf dem ${e.plan}-Tier (${e.current}/${e.limit}). Bitte Verein auf Pro upgraden.`
       );
     }

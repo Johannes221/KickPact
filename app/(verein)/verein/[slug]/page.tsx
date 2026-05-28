@@ -115,7 +115,7 @@ export default async function VereinDashboard({
         primary={String(activePledgeCount)}
         secondary={
           activePledgeCount === 0
-            ? "Noch keine Pledges aktiv"
+            ? "Noch keine Pacts aktiv"
             : "Tippen für die volle Sponsoren-Liste"
         }
         href={`/verein/${slug}/sponsoren`}
@@ -133,7 +133,7 @@ export default async function VereinDashboard({
         icon="🤝"
         title="Einladungslink teilen"
         primary="Sponsoren werben"
-        secondary="WhatsApp · Mail · Stammtisch — Sponsoren legen Pledges selbst fest"
+        secondary="WhatsApp · Mail · Stammtisch — Sponsoren legen Pacts selbst fest"
         href={`/verein/${slug}/sponsoren`}
         variant="cta"
         className="md:col-span-2"

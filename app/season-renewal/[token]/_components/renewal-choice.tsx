@@ -68,7 +68,7 @@ export function RenewalChoice({
   if (alreadyCloned) {
     return (
       <div className="mt-6 rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">
-        Deine Pledge wurde bereits auf die Saison <strong>{nextSaison}</strong>{" "}
+        Dein Pact wurde bereits auf die Saison <strong>{nextSaison}</strong>{" "}
         verlängert. Du musst nichts weiter tun.
       </div>
     );
@@ -78,7 +78,7 @@ export function RenewalChoice({
     return (
       <div className="mt-6 space-y-4">
         <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">
-          <strong>Verlängert!</strong> Deine Pledge läuft nahtlos in die Saison{" "}
+          <strong>Verlängert!</strong> Dein Pact läuft nahtlos in die Saison{" "}
           <strong>{state.targetSaison}</strong>.
         </div>
         <p className="text-sm text-brand-night-navy/60">
@@ -93,7 +93,7 @@ export function RenewalChoice({
     return (
       <div className="mt-6 space-y-4">
         <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-4 text-sm text-brand-night-navy/80">
-          <strong>Verstanden.</strong> Deine Pledge läuft regulär zum
+          <strong>Verstanden.</strong> Dein Pact läuft regulär zum
           Saisonende aus. Wir schicken dir dann eine Übersicht aller Charges
           dieser Saison.
         </div>

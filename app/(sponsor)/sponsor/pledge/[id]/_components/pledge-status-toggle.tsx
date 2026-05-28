@@ -31,7 +31,7 @@ export function PledgeStatusToggle({
     startTransition(async () => {
       const res = await setPledgeStatus(pledgeId, isPaused ? "active" : "paused");
       if (res.error) toast.error(res.error);
-      else toast.success(isPaused ? "Pledge reaktiviert ✓" : "Pledge pausiert.");
+      else toast.success(isPaused ? "Pact reaktiviert ✓" : "Pact pausiert.");
     });
   }
 
@@ -53,7 +53,7 @@ export function PledgeStatusToggle({
           disabled={pending}
           onClick={toggle}
         >
-          {pending ? "…" : isPaused ? "Pledge reaktivieren" : "Pledge pausieren"}
+          {pending ? "…" : isPaused ? "Pact reaktivieren" : "Pact pausieren"}
         </Button>
         <Button
           variant="outline"

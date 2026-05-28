@@ -69,7 +69,7 @@ export default async function UserDetailPage({
                   <th className="px-3 py-2 text-left font-semibold">Display-Name</th>
                   <th className="px-3 py-2 text-left font-semibold">Typ</th>
                   <th className="px-3 py-2 text-left font-semibold">Erstellt</th>
-                  <th className="px-3 py-2 text-right font-semibold">Pledges</th>
+                  <th className="px-3 py-2 text-right font-semibold">Pacts</th>
                   <th className="px-3 py-2 text-right font-semibold">Charges-Total</th>
                 </tr>
               </thead>
@@ -138,11 +138,11 @@ export default async function UserDetailPage({
 
       <section>
         <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy mb-2">
-          Letzte 20 Pledges
+          Letzte 20 Pacts
         </h3>
         {recentPledges.length === 0 ? (
           <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-4 text-sm text-brand-night-navy/60">
-            Keine Pledges.
+            Keine Pacts.
           </div>
         ) : (
           <div className="rounded-2xl border border-brand-neutral/40 bg-white overflow-x-auto">

@@ -210,7 +210,7 @@ export function PledgesTable({
       totalPages={totalPages}
       sort={sort}
       dir={dir}
-      emptyState="Keine Pledges für die aktuellen Filter."
+      emptyState="Keine Pacts für die aktuellen Filter."
     />
   );
 }

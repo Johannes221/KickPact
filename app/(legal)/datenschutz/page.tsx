@@ -53,7 +53,7 @@ export default function DatenschutzPage() {
         </li>
         <li>
           <strong>Profil- &amp; Vereinsdaten:</strong> Name, Rolle (Verein, Sponsor,
-          Spieler-Bezug), Verein/Mannschaft, Pledge-Konfigurationen.
+          Spieler-Bezug), Verein/Mannschaft, Pact-Konfigurationen.
         </li>
         <li>
           <strong>Rechnungsdaten:</strong> Daten, die für die Erstellung der
@@ -81,8 +81,8 @@ export default function DatenschutzPage() {
           lit. b DSGVO — Vertragserfüllung).
         </li>
         <li>
-          <strong>Pledge-Verwaltung &amp; Performance-Tracking</strong> — Berechnung
-          der Beträge anhand der Sponsor-Pledges und der öffentlichen
+          <strong>Pact-Verwaltung &amp; Performance-Tracking</strong> — Berechnung
+          der Beträge anhand der Sponsor-Pacts und der öffentlichen
           DFB-Spielergebnisse.
         </li>
         <li>
@@ -173,7 +173,7 @@ export default function DatenschutzPage() {
         5. Verarbeitung öffentlicher DFB-Spielerdaten
       </h2>
       <p className="mt-2">
-        Damit Sponsor-Wetten („Pledge pro Tor", „Pledge pro Hattrick" etc.)
+        Damit Sponsor-Wetten („Pact pro Tor", „Pact pro Hattrick" etc.)
         korrekt ausgewertet werden können, ruft KickPact öffentlich zugängliche
         Spielergebnisse, Spielereignisse (Tore, Karten, Auswechslungen) und
         Spielernamen von{" "}
@@ -185,7 +185,7 @@ export default function DatenschutzPage() {
       <p className="mt-3">
         <strong>Rechtsgrundlage</strong> ist Art. 6 Abs. 1 lit. f DSGVO
         (berechtigtes Interesse). Unser berechtigtes Interesse besteht in der
-        Bereitstellung des Kernzwecks von KickPact — Pledge-Auswertung anhand
+        Bereitstellung des Kernzwecks von KickPact — Pact-Auswertung anhand
         überprüfbarer, öffentlich publizierter Spielresultate. Ohne diese
         Verarbeitung wäre die Dienstleistung nicht erbringbar. Wir verarbeiten
         ausschließlich Daten, die der DFB-Landesverband auf den öffentlichen
@@ -200,7 +200,7 @@ export default function DatenschutzPage() {
         reichert sie nicht mit
         zusätzlichen Daten an und gibt sie ausschließlich an die mit der
         Mannschaft verknüpften Sponsoren weiter (geschlossener Empfängerkreis,
-        eingeloggt + Pledge an die Mannschaft aktiv). Eine darüber hinausgehende
+        eingeloggt + Pact an die Mannschaft aktiv). Eine darüber hinausgehende
         öffentliche Veröffentlichung findet nicht statt. Bei Jugendmannschaften
         (Spieler unter 18 Jahren) erfolgt die Verarbeitung nur, solange der
         zuständige Landesverband die Daten auch auf den öffentlichen
@@ -256,7 +256,7 @@ export default function DatenschutzPage() {
         , eine cookiefreie und DSGVO-konforme Webanalyse-Lösung. Es werden{" "}
         <strong>keine personenbezogenen Daten</strong> gespeichert; nur
         aggregierte Zugriffszahlen (Seitenaufrufe, Quellen, Geräte-Typen,
-        anonyme Conversion-Events wie „Signup begonnen" oder „Pledge angelegt").
+        anonyme Conversion-Events wie „Signup begonnen" oder „Pact angelegt").
         Plausible setzt keine Cookies, erzeugt kein Geräte-Fingerprinting und
         verfolgt Nutzer nicht über Websites hinweg. Server-Standort: Deutschland
         (Hetzner Online GmbH, Falkenstein).

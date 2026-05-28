@@ -284,7 +284,7 @@ export default async function HomePage() {
               </div>
 
               <h3 className="mt-6 text-sm font-semibold uppercase tracking-wider text-neutral-500">
-                Input · Pledge &quot;Tante Erna&quot;
+                Input · Pact &quot;Tante Erna&quot;
               </h3>
               <ul className="mt-2 space-y-1.5 rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-sm">
                 {demo.rules.map((r) => (
@@ -351,7 +351,7 @@ export default async function HomePage() {
             </li>
             <li>
               <span className="font-mono text-xs text-accent">✓ Plan 2</span> Better
-              Auth (Magic-Link + Google + Apple), Onboarding, Pledge-Setup
+              Auth (Magic-Link + Google + Apple), Onboarding, Pact-Setup
             </li>
             <li>
               <span className="font-mono text-xs text-accent">✓ Plan 3</span>{" "}
@@ -367,7 +367,7 @@ export default async function HomePage() {
             </li>
             <li>
               <span className="font-mono text-xs text-accent">✓ Extra</span>{" "}
-              Saison-Wetten (DB + evaluate-season Cron + Pledge-Builder + Trainer-Form)
+              Saison-Wetten (DB + evaluate-season Cron + Pact-Setup + Trainer-Form)
             </li>
             <li>
               <span className="font-mono text-xs text-accent">✓ Extra</span>{" "}

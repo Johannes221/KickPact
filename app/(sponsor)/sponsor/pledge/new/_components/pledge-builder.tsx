@@ -538,7 +538,7 @@ export function PledgeBuilder() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <FormLabel className="text-sm font-semibold text-brand-night-navy">
-                          Pledge endet zur Saison
+                          Pact endet zur Saison
                         </FormLabel>
                         <p className="text-xs text-brand-night-navy/60 mt-1">
                           Empfohlen — kein „läuft weiter ohne mich"-Effekt.

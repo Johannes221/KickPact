@@ -41,7 +41,7 @@ export default async function RechnungenPage({
         </div>
         <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 md:p-8">
           <p className="text-sm md:text-base text-brand-night-navy/70">
-            Du brauchst zuerst ein Sponsor-Profil und mindestens einen aktiven Pledge,
+            Du brauchst zuerst ein Sponsor-Profil und mindestens einen aktiven Pact,
             bevor Rechnungen hier erscheinen.
           </p>
         </div>
@@ -90,7 +90,7 @@ export default async function RechnungenPage({
             Noch keine Rechnung
           </p>
           <p className="mt-1.5 md:mt-2 text-sm text-brand-night-navy/60 max-w-md">
-            Sobald deine Mannschaft Spiele gespielt hat und deine Pledges getriggert wurden,
+            Sobald deine Mannschaft Spiele gespielt hat und deine Pacts getriggert wurden,
             kommt am 1. des Folgemonats die Rechnung — direkt vom Verein, KickPact leitet sie
             an dich weiter.
           </p>

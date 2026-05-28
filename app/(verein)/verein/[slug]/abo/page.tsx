@@ -176,7 +176,7 @@ function UpgradePathsCard({
       {currentPlan === "basic" && (
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl border border-accent/30 bg-white p-3">
           <div className="text-sm text-brand-night-navy/80">
-            <strong>Basic → Pro</strong> · ∞ Sponsoren · ∞ Pledge-Rules ·
+            <strong>Basic → Pro</strong> · ∞ Sponsoren · ∞ Pact-Regeln ·
             Saison-Wetten · Vereins-Branding auf PDF & Mail.
           </div>
           <CheckoutButtons

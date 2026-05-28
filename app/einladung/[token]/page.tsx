@@ -105,7 +105,7 @@ export default async function InvitationPage({
       <Card className="mt-6 md:mt-10 border-brand-neutral/40">
         <CardContent className="pt-5 md:pt-6">
           <p className="text-sm text-brand-night-navy/80 leading-relaxed">
-            Lege einen Pledge an — z.B. <em>5 € pro Tor</em> oder <em>10 € pro Sieg</em>. Du
+            Lege einen Pact an — z.B. <em>5 € pro Tor</em> oder <em>10 € pro Sieg</em>. Du
             zahlst nur, wenn die Mannschaft auch wirklich performt. Am Monatsende bekommst
             du eine Rechnung vom Verein über das, was tatsächlich zusammenkam.
           </p>
@@ -124,7 +124,7 @@ export default async function InvitationPage({
                     : `/login?invitation=${token}`
                 }
               >
-                {isLoggedIn ? "Pledge anlegen →" : "Login / Account anlegen →"}
+                {isLoggedIn ? "Pact anlegen →" : "Login / Account anlegen →"}
               </Link>
             </Button>
           </div>

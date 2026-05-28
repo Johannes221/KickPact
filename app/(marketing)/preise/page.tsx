@@ -13,7 +13,7 @@ import { PricingToggle } from "./_components/pricing-toggle";
 export const metadata = {
   title: "Preise & Pakete – Vereinssponsoring ohne versteckte Kosten",
   description:
-    "Transparente Preise für Amateurfußball-Sponsoring: 0 % Provision auf Pledges, " +
+    "Transparente Preise für Amateurfußball-Sponsoring: 0 % Provision auf Pacts, " +
     "Saison-Pass mit 2 Monaten geschenkt, ab 5 €/Mannschaft/Monat. " +
     "Weniger als 1 € pro Spieler im Monat.",
   keywords: [
@@ -82,20 +82,20 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
     a: "Ab 3 Mannschaften: mathematisch günstiger als 3× Pro (49 € vs. 57 €). Plus Master-Cockpit, Sammelrechnung, Cross-Team-Sponsor-View. Bei 50 Spielern bist du unter 1 € pro Spieler — bei 200 Spielern bei 0,25 €."
   },
   {
-    q: "Wirklich 0 % Provision auf Pledges?",
-    a: "Ja, in allen Tarifen. KickPact stellt die Plattform und wickelt Tracking, PDF-Rechnungen und Sponsor-Inbox ab — finanziert wird das über die Lizenzgebühr. Was Sponsoren versprechen, kommt 1:1 bei eurer Mannschaft an."
+    q: "Wirklich 0 % Provision auf Pacts?",
+    a: "Ja, in allen Tarifen. KickPact stellt die Plattform und wickelt Tracking, PDF-Rechnungen und Sponsor-Inbox ab — finanziert wird das über die Lizenzgebühr. Was Sponsoren per Pact versprechen, kommt 1:1 bei eurer Mannschaft an."
   },
   {
     q: "Was ist mit der Umsatzsteuer?",
-    a: "Alle Preise zzgl. 19 % USt. Auf der Rechnung wird die USt. separat ausgewiesen. Vereine ohne Vorsteuerabzug zahlen brutto, gewerbliche Sponsoren können die USt. ihrer eigenen Pledges geltend machen."
+    a: "Alle Preise zzgl. 19 % USt. Auf der Rechnung wird die USt. separat ausgewiesen. Vereine ohne Vorsteuerabzug zahlen brutto, gewerbliche Sponsoren können die USt. ihrer eigenen Pacts geltend machen."
   },
   {
     q: "Was passiert wenn ich von Basic auf Pro upgrade?",
-    a: "Sofort: Sponsor- und Pledge-Rule-Caps fallen weg, Saison-Wetten + Custom-Trigger werden freigeschaltet, dein Vereins-Logo erscheint auf der nächsten PDF-Rechnung. Bestehende Pledges laufen unverändert weiter, beim Monatsabo wird pro-rated abgerechnet."
+    a: "Sofort: Sponsor- und Pact-Regelgrenzen fallen weg, Saison-Wetten + Custom-Trigger werden freigeschaltet, dein Vereins-Logo erscheint auf der nächsten PDF-Rechnung. Bestehende Pacts laufen unverändert weiter, beim Monatsabo wird pro-rated abgerechnet."
   },
   {
     q: "Was passiert bei einem Disput?",
-    a: "Sponsoren bestätigen oder bestreiten jedes Event innerhalb von 7 Tagen. Bei Streit erscheinen Event-Beweise (Spielnachweis, ggf. Trainer-Foto), und der Verein kann den Pledge stornieren. Monats-Rechnung wird erst danach final erstellt — kein Geld fließt für strittige Events."
+    a: "Sponsoren bestätigen oder bestreiten jedes Event innerhalb von 7 Tagen. Bei Streit erscheinen Event-Beweise (Spielnachweis, ggf. Trainer-Foto), und der Verein kann den Pact stornieren. Monats-Rechnung wird erst danach final erstellt — kein Geld fließt für strittige Events."
   }
 ];
 

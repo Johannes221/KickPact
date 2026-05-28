@@ -71,7 +71,7 @@ const MATRIX: MatrixGroup[] = [
         values: { basic: 5, pro: "infinity", verein: "infinity" }
       },
       {
-        label: "Pledge-Rules pro Sponsor",
+        label: "Pact-Regeln pro Sponsor",
         values: { basic: 3, pro: "infinity", verein: "infinity" }
       },
       {
@@ -114,7 +114,7 @@ const MATRIX: MatrixGroup[] = [
         values: { basic: true, pro: true, verein: true }
       },
       {
-        label: "Pledge-Discovery (öffentl. Profil)",
+        label: "Pact-Discovery (öffentl. Profil)",
         values: { basic: false, pro: true, verein: true }
       },
       {

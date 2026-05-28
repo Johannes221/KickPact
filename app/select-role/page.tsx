@@ -103,7 +103,7 @@ export default async function SelectRolePage() {
                 {identities.sponsor.displayName}
               </h2>
               <p className="mt-1 text-xs text-brand-night-navy/60">
-                {identities.sponsor.activePledgeCount} aktive Pledge{identities.sponsor.activePledgeCount === 1 ? "" : "s"}
+                {identities.sponsor.activePledgeCount} aktive Pact{identities.sponsor.activePledgeCount === 1 ? "" : "s"}
                 {identities.sponsor.thisMonthCents > 0 && (
                   <> · {eur(identities.sponsor.thisMonthCents)} diesen Monat</>
                 )}

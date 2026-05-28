@@ -102,7 +102,7 @@ export default function LandingPage() {
               und rechnet automatisch ab. <strong>100 % geht direkt an eure Mannschaft.</strong>
             </p>
 
-            {/* Beispiel-Chips: sofort verständlich wie ein Pledge aussieht */}
+            {/* Beispiel-Chips: sofort verständlich wie ein Pact aussieht */}
             <div className="animate-fade-up delay-2 mt-4 md:mt-5 flex flex-wrap gap-1.5 md:gap-2">
               <PledgeChip emoji="⚽" amount="3 €" label="pro Tor" />
               <PledgeChip emoji="🏆" amount="50 €" label="pro Sieg" />
@@ -256,7 +256,7 @@ export default function LandingPage() {
           </div>
           <p className="mt-6 md:mt-8 text-xs md:text-sm text-brand-night-navy/60 text-center max-w-2xl mx-auto">
             <strong>Du legst deinen Betrag selbst fest.</strong> Pro Trigger einzeln, mit optionalem
-            Monats-Cap, jederzeit anpassbar. Es gibt keine Mindest-Pledge-Höhe.
+            Monats-Cap, jederzeit anpassbar. Es gibt keine Mindest-Pact-Höhe.
           </p>
           <InlineCTA caption="Bereit für eure eigene Story?" />
         </div>
@@ -279,7 +279,7 @@ export default function LandingPage() {
           <Step
             num="02"
             title="Sponsoren einladen"
-            body="Du teilst einen Einladungslink — per WhatsApp, Mail, am Stammtisch. Jeder Sponsor legt seine Pledges selbst fest."
+            body="Du teilst einen Einladungslink — per WhatsApp, Mail, am Stammtisch. Jeder Sponsor legt seine Pacts selbst fest."
           />
           <Step
             num="03"
@@ -308,7 +308,7 @@ export default function LandingPage() {
         </div>
         <div className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-14 -mt-8 md:-mt-12 relative">
           <h2 className="font-display font-black text-2xl md:text-4xl tracking-tight">
-            Was kann ein <span className="text-accent">Pledge</span> sein?
+            Was kann ein <span className="text-accent">Pact</span> sein?
           </h2>
           <p className="mt-2 text-white/80 max-w-2xl text-xs md:text-sm">
             Vom simplen Tor bis zum Saison-Aufstieg.{" "}
@@ -487,27 +487,27 @@ export default function LandingPage() {
           <Accordion type="single" collapsible className="mt-5 md:mt-6">
             <FaqItem
               q="Mannschaft oder Verein — was ist der Unterschied?"
-              a={'Jede Mannschaft ist bei KickPact eigenständig. Trainer/Betreuer melden sich für ihre Mannschaft an, verwalten Sponsoren und Pledges selbst — keine Vorstands-Politik. Hat dein Verein mehrere Teams (Herren, Jugend, Damen, Senioren) und einen Master-Admin der alles zentral steuern soll, gibt es die Vereinslizenz: 49 €/Monat all-in für alle Mannschaften des Vereins, mit konsolidierter Rechnung und übergreifender Sponsor-Übersicht.'}
+              a={'Jede Mannschaft ist bei KickPact eigenständig. Trainer/Betreuer melden sich für ihre Mannschaft an, verwalten Sponsoren und Pacts selbst — keine Vorstands-Politik. Hat dein Verein mehrere Teams (Herren, Jugend, Damen, Senioren) und einen Master-Admin der alles zentral steuern soll, gibt es die Vereinslizenz: 49 €/Monat all-in für alle Mannschaften des Vereins, mit konsolidierter Rechnung und übergreifender Sponsor-Übersicht.'}
             />
             <FaqItem
               q="Sind die Beträge irgendwie vorgegeben?"
-              a="Nein. Beträge sind komplett frei wählbar — von 0,50 € bis 500 € pro Event. Familie nimmt oft 1–5 €/Tor, Unternehmen 25–100 €/Sieg. Im Pledge-Wizard siehst du eine Worst-Case-Hochrechnung, damit du nicht überraschend mehr zahlst als gedacht. Plus optionaler Monats-Cap."
+              a="Nein. Beträge sind komplett frei wählbar — von 0,50 € bis 500 € pro Event. Familie nimmt oft 1–5 €/Tor, Unternehmen 25–100 €/Sieg. Im Pact-Setup siehst du eine Worst-Case-Hochrechnung, damit du nicht überraschend mehr zahlst als gedacht. Plus optionaler Monats-Cap."
             />
             <FaqItem
               q="Wie funktionieren die Saison-Wetten?"
-              a={'Saison-Wetten sind Pledges, die nicht pro Spiel sondern erst am Saisons-Ende abrechnen — z.B. 200 € für Aufstieg, 100 € für Klassenerhalt, 50 € für Platz 1–5. KickPact liest die End-Tabelle automatisch; wenn das Ziel erreicht wurde, geht der volle Betrag an den Verein. Wenn nicht, zahlt der Sponsor nichts.'}
+              a={'Saison-Wetten sind Pacts, die nicht pro Spiel sondern erst am Saisons-Ende abrechnen — z.B. 200 € für Aufstieg, 100 € für Klassenerhalt, 50 € für Platz 1–5. KickPact liest die End-Tabelle automatisch; wenn das Ziel erreicht wurde, geht der volle Betrag an den Verein. Wenn nicht, zahlt der Sponsor nichts.'}
             />
             <FaqItem
               q="Funktioniert das auch für Junioren-Mannschaften?"
-              a={'Ja. Solange eure Mannschaft öffentlich gelistet ist, holen wir die Spielergebnisse automatisch. Bei Junioren kannst du einen Elternteil als Sponsor-Manager hinterlegen — er sammelt Pledges von Oma, Onkel, Freunden und behält den Überblick, ohne dass jeder eine eigene Mail-Adresse braucht. Familien-Sponsoring auch ohne Smartphone für Linus aus der C-Jugend.'}
+              a={'Ja. Solange eure Mannschaft öffentlich gelistet ist, holen wir die Spielergebnisse automatisch. Bei Junioren kannst du einen Elternteil als Sponsor-Manager hinterlegen — er sammelt Pacts von Oma, Onkel, Freunden und behält den Überblick, ohne dass jeder eine eigene Mail-Adresse braucht. Familien-Sponsoring auch ohne Smartphone für Linus aus der C-Jugend.'}
             />
             <FaqItem
               q="Sind die Beträge für den Sponsor steuerlich absetzbar?"
               a="Bei Unternehmens-Sponsoren: ja, als Werbeleistung. KickPact erzeugt eine ordentliche Vereins-Rechnung mit USt-ID (oder §19-Kleinunternehmer-Hinweis). Bei Privatpersonen (Familie, Freunde) gilt der allgemeine Status — keine Steuervorteile, aber auch keine Pflichten."
             />
             <FaqItem
-              q="Kann ich einen Pledge auf einen bestimmten Spieler binden?"
-              a={'Ja. Beispiel: "3 € wenn Schmidt ein Tor schießt." Im Pledge-Setup wählst du den Trigger „Tor von Spieler X", suchst den Spieler über das Spielerprofil aus, und KickPact erkennt automatisch nach jedem Spiel ob Schmidt getroffen hat. Bei nicht zuordenbaren Spielern (z.B. Junioren ohne öffentliches Profil) meldet der Trainer manuell.'}
+              q="Kann ich einen Pact auf einen bestimmten Spieler binden?"
+              a={'Ja. Beispiel: "3 € wenn Schmidt ein Tor schießt." Im Pact-Setup wählst du den Trigger „Tor von Spieler X", suchst den Spieler über das Spielerprofil aus, und KickPact erkennt automatisch nach jedem Spiel ob Schmidt getroffen hat. Bei nicht zuordenbaren Spielern (z.B. Junioren ohne öffentliches Profil) meldet der Trainer manuell.'}
             />
             <FaqItem
               q="Was passiert wenn meine Mannschaft schlecht spielt?"
@@ -515,7 +515,7 @@ export default function LandingPage() {
             />
             <FaqItem
               q="Wie verhindere ich, dass ein Sponsor von einer hohen Rechnung überrascht wird?"
-              a='Jeder Pledge kann einen optionalen Monats-Cap haben (z.B. "maximal 50 € pro Monat egal was passiert"). Wir empfehlen das aktiv im Pledge-Wizard. Außerdem zeigt KickPact dem Sponsor immer eine Worst-Case-Schätzung.'
+              a='Jeder Pact kann einen optionalen Monats-Cap haben (z.B. "maximal 50 € pro Monat egal was passiert"). Wir empfehlen das aktiv im Pact-Setup. Außerdem zeigt KickPact dem Sponsor immer eine Worst-Case-Schätzung.'
             />
             <FaqItem
               q="Was, wenn der Trainer einen Spezial-Event falsch meldet?"
@@ -523,7 +523,7 @@ export default function LandingPage() {
             />
             <FaqItem
               q="Kann ich jederzeit kündigen?"
-              a="Ja, das Abo ist monatlich kündbar. Nach Kündigung läuft KickPact noch bis Monatsende weiter. Bestehende Pledges enden zum Saison-Ende; Sponsoren können erneuern."
+              a="Ja, das Abo ist monatlich kündbar. Nach Kündigung läuft KickPact noch bis Monatsende weiter. Bestehende Pacts enden zum Saison-Ende; Sponsoren können erneuern."
             />
             <FaqItem
               q="Müssen Vereine USt-pflichtig sein?"

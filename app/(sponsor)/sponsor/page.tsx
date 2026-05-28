@@ -139,11 +139,11 @@ export default async function SponsorDashboard() {
 
         <DashboardTile
           icon="🤝"
-          title="Meine Pledges"
+          title="Meine Pacts"
           primary={String(activePledgeCount)}
           secondary={
             activePledgeCount === 0
-              ? "Noch keine aktiven Pledges"
+              ? "Noch keine aktiven Pacts"
               : "Tippen für Übersicht"
           }
           href="/sponsor/pledge"

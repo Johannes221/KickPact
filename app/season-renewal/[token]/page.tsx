@@ -2,7 +2,7 @@ import { inspectSeasonRenewalToken } from "@/lib/actions/season-renewal";
 import { RenewalChoice } from "./_components/renewal-choice";
 
 export const metadata = {
-  title: "Pledge verlängern · KickPact",
+  title: "Pact verlängern · KickPact",
   robots: { index: false, follow: false }
 };
 
@@ -30,7 +30,7 @@ export default async function SeasonRenewalPage({
     return (
       <main className="mx-auto max-w-xl px-5 py-12">
         <h1 className="font-display font-black text-3xl text-brand-night-navy">
-          Pledge-Verlängerung
+          Pact-Verlängerung
         </h1>
         <p className="mt-4 text-sm text-brand-night-navy/70">
           Dieser Link ist unvollständig. Bitte nutze den vollständigen Link aus
@@ -46,7 +46,7 @@ export default async function SeasonRenewalPage({
     return (
       <main className="mx-auto max-w-xl px-5 py-12">
         <h1 className="font-display font-black text-3xl text-brand-night-navy">
-          Pledge-Verlängerung
+          Pact-Verlängerung
         </h1>
         <div className="mt-6 rounded-lg border border-brand-alert-red/30 bg-brand-alert-red/5 p-4 text-sm text-brand-alert-red">
           {inspection.error}
@@ -58,15 +58,15 @@ export default async function SeasonRenewalPage({
   return (
     <main className="mx-auto max-w-xl px-5 py-12">
       <h1 className="font-display font-black text-3xl text-brand-night-navy">
-        Pledge verlängern?
+        Pact verlängern?
       </h1>
 
       <div className="mt-6 rounded-lg border border-brand-neutral/40 bg-white p-4 space-y-2 text-sm">
         <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
-          Deine Pledge
+          Dein Pact
         </div>
         <p className="text-brand-night-navy">
-          Hi <strong>{inspection.sponsorName}</strong>, deine Pledge für{" "}
+          Hi <strong>{inspection.sponsorName}</strong>, dein Pact für{" "}
           <strong>{inspection.teamName}</strong> bei{" "}
           <strong>{inspection.clubName}</strong> läuft mit der Saison{" "}
           <strong>{inspection.currentSaison}</strong> aus.

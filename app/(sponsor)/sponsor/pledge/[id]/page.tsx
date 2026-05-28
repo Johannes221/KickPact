@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PledgeStatusToggle } from "./_components/pledge-status-toggle";
 import { PledgeCapEditor } from "./_components/pledge-cap-editor";
 
-export const metadata = { title: "Pledge · KickPact" };
+export const metadata = { title: "Pact · KickPact" };
 
 const TRIGGER_LABELS: Record<string, string> = {
   goal_total: "Pro Tor",

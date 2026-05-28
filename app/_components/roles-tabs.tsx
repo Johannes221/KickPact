@@ -59,7 +59,7 @@ export function RolesTabs() {
           </div>
           <div className="md:col-span-2">
             <ExampleCard
-              title="Beispiel-Pledges"
+              title="Beispiel-Pacts"
               subtitle="1. Herren · so könnte's aussehen"
               lines={[
                 { label: "Tante Erna", value: "5 €/Tor · 10 €/Sieg" },
@@ -67,7 +67,7 @@ export function RolesTabs() {
                 { label: "Opa Heinz", value: "200 € auf Aufstieg" },
                 { label: "Onkel Tom", value: "10 €/Spezial-Tor" }
               ]}
-              total="Pledges frei wählbar"
+              total="Pacts frei wählbar"
               hint="Jeder Sponsor wählt selbst — von 50 Cent bis 500 € pro Event"
             />
           </div>
@@ -88,7 +88,7 @@ export function RolesTabs() {
             </p>
             <ul className="space-y-2.5 md:space-y-3 text-white/80 text-sm md:text-base">
               <Bullet>
-                Frei wählbare Pledges — von „1 € pro Tor" bis „50 € pro Comeback-Sieg" ist
+                Frei wählbare Pacts — von „1 € pro Tor" bis „50 € pro Comeback-Sieg" ist
                 alles drin.
               </Bullet>
               <Bullet>

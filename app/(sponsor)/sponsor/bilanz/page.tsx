@@ -109,7 +109,7 @@ export default async function BilanzPage({
         <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 md:p-8">
           <p className="text-sm md:text-base text-brand-night-navy/70">
             Du brauchst zuerst ein Sponsor-Profil und mindestens einen aktiven
-            Pledge, bevor hier eine Bilanz erscheint.
+            Pact, bevor hier eine Bilanz erscheint.
           </p>
         </div>
       </div>
@@ -151,7 +151,7 @@ export default async function BilanzPage({
           secondary={`${balance.eventsCount} ${balance.eventsCount === 1 ? "Ereignis" : "Ereignisse"}`}
         />
         <KpiTile
-          label="Pledges aktiv"
+          label="Pacts aktiv"
           primary={String(balance.pledgeCount)}
           secondary="im Zeitraum getriggert"
         />

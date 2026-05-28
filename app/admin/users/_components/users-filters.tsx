@@ -88,7 +88,7 @@ export function UsersFilters() {
             navigate({ pledges: e.target.checked ? "1" : "" });
           }}
         />
-        hat Pledges
+        hat Pacts
       </label>
       <button
         type="submit"

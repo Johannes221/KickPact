@@ -84,7 +84,7 @@ export function UsersTable({
     },
     {
       key: "pledgeCount",
-      label: "Pledges",
+      label: "Pacts",
       align: "right",
       render: (row) => (
         <span className="font-mono tabular-nums">{row.pledgeCount}</span>

@@ -6,7 +6,7 @@ export const metadata = {
   title: "Hilfe & FAQ – Amateurfußball Sponsoring mit KickPact",
   description:
     "Antworten rund um KickPact: Vereinssponsoring einrichten, Amateurverein verknüpfen, " +
-    "Sponsoren-Pledges anlegen, Spielereignisse tracken und Rechnungen verstehen.",
+    "Sponsoren-Pacts anlegen, Spielereignisse tracken und Rechnungen verstehen.",
   keywords: [
     "Amateurfußball Sponsoring Fragen",
     "Vereinssponsoring einrichten",
@@ -40,7 +40,7 @@ export default async function HilfePage() {
           Wir haben die Antwort.
         </h1>
         <p className="mt-3 max-w-2xl mx-auto text-sm md:text-base text-brand-night-navy/60">
-          Self-Service-Doku für Vereine und Sponsoren. Tarife, Pledges, Trigger,
+          Self-Service-Doku für Vereine und Sponsoren. Tarife, Pacts, Trigger,
           Abrechnung — alles, was du wissen musst, in {articles.length} Artikeln.
         </p>
       </div>

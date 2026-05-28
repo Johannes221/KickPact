@@ -23,7 +23,7 @@ const ROLE_META: Record<
       "Du willst Sponsoring für eine einzelne Mannschaft — Sponsoren versprechen pro Tor, Sieg, Comeback. Geld direkt in eure Kasse.",
     bullets: [
       "Onboarding in 90 Sek. — wir finden eure Mannschaft automatisch",
-      "Einladungslink → Sponsoren legen Pledges selbst fest",
+      "Einladungslink → Sponsoren legen Pacts selbst fest",
       "30 Tage gratis, danach 9 € / Mon."
     ]
   },
@@ -44,7 +44,7 @@ const ROLE_META: Record<
     tagline:
       "Du willst eine Mannschaft unterstützen — pro Tor, pro Sieg, pro Comeback. Du behältst die Kontrolle mit optionalem Cap.",
     bullets: [
-      "Frei wählbare Pledges — von 1 € pro Tor bis 50 € pro Sieg",
+      "Frei wählbare Pacts — von 1 € pro Tor bis 50 € pro Sieg",
       "100 % geht an die Mannschaft — wir zwacken nichts ab",
       "Du brauchst keinen Einladungslink, kannst aber einen verwenden"
     ]

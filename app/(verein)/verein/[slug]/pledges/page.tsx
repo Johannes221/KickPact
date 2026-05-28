@@ -13,7 +13,7 @@ import { FilterBar, type FilterDefinition } from "@/components/shared/filter-bar
 import { CsvExportButton } from "@/components/shared/csv-export-button";
 import { PledgesTable } from "./_components/pledges-table";
 
-export const metadata = { title: "Pledges · KickPact" };
+export const metadata = { title: "Pacts · KickPact" };
 
 type SP = {
   page?: string;
@@ -122,16 +122,16 @@ export default async function PledgesPage({
     <div className="space-y-5 md:space-y-8">
       <div>
         <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
-          Pledges
+          Pacts
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">
-          Alle Sponsor-Wetten (pro Pledge-Rule) im Verein. Filter, Sortierung
+          Alle Sponsor-Wetten (pro Pact-Regel) im Verein. Filter, Sortierung
           und CSV-Export.
         </p>
       </div>
 
       <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard label="Pledge-Rules" value={String(result.total)} />
+        <StatCard label="Pact-Regeln" value={String(result.total)} />
         <StatCard
           label="€ / Event (Seite)"
           value={eur(totalMonthlyCommitmentCents)}

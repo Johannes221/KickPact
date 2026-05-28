@@ -90,7 +90,7 @@ export default async function SponsorDetailPage({
           hint={`${new Date().getFullYear()}`}
         />
         <Tile
-          label="Aktive Pledges"
+          label="Aktive Pacts"
           value={String(overview.totals.activePledges)}
         />
         <Tile
@@ -107,7 +107,7 @@ export default async function SponsorDetailPage({
         </h3>
         {overview.teams.length === 0 ? (
           <p className="text-sm text-brand-night-navy/60">
-            Dieser Sponsor hat aktuell keine Pledges in diesem Verein.
+            Dieser Sponsor hat aktuell keine Pacts in diesem Verein.
           </p>
         ) : (
           <ul className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
@@ -123,7 +123,7 @@ export default async function SponsorDetailPage({
                   <div className="font-semibold text-brand-night-navy">{t.teamName}</div>
                   <div className="text-xs text-brand-night-navy/50 mt-0.5">
                     {t.saison} · {t.pledgeCount}{" "}
-                    {t.pledgeCount === 1 ? "Pledge" : "Pledges"}
+                    {t.pledgeCount === 1 ? "Pact" : "Pacts"}
                   </div>
                 </Link>
               </li>
@@ -179,10 +179,10 @@ export default async function SponsorDetailPage({
       {/* Pledges */}
       <section>
         <h3 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy mb-3 md:mb-4">
-          Pledges ({pledgeRows.length})
+          Pacts ({pledgeRows.length})
         </h3>
         {pledgeRows.length === 0 ? (
-          <p className="text-sm text-brand-night-navy/60">Keine Pledges.</p>
+          <p className="text-sm text-brand-night-navy/60">Keine Pacts.</p>
         ) : (
           <div className="overflow-x-auto rounded-2xl border border-brand-neutral/40 bg-white">
             <table className="w-full text-sm">

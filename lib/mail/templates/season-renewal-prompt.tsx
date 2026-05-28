@@ -25,10 +25,10 @@ export function seasonRenewalPromptEmail(args: {
   });
 
   return {
-    subject: `Pledge ${teamName} verlängern auf Saison ${nextSaison}?`,
+    subject: `Pact ${teamName} verlängern auf Saison ${nextSaison}?`,
     text: `Hi ${sponsorName},
 
-deine Pledge für ${teamName} (${clubName}) läuft mit der Saison ${currentSaison}
+dein Pact für ${teamName} (${clubName}) läuft mit der Saison ${currentSaison}
 am ${endsLabel} aus.
 
 Möchtest du nahtlos auf die nächste Saison ${nextSaison} verlängern?
@@ -52,7 +52,7 @@ Wenn du gar nicht reagierst, läuft alles automatisch aus — du musst nichts tu
 
       <h2 style="font-size: 20px; margin: 0 0 8px; color:#1A1A2E;">Hi ${sponsorName},</h2>
       <p style="color: #1A1A2E; margin: 0 0 16px; line-height: 1.6;">
-        deine Pledge für <strong>${teamName}</strong> bei <strong>${clubName}</strong> läuft
+        dein Pact für <strong>${teamName}</strong> bei <strong>${clubName}</strong> läuft
         mit der Saison <strong>${currentSaison}</strong> am <strong>${endsLabel}</strong> aus.
       </p>
       <p style="color: #1A1A2E; margin: 0 0 24px; line-height: 1.6;">
@@ -72,7 +72,7 @@ Wenn du gar nicht reagierst, läuft alles automatisch aus — du musst nichts tu
       </table>
 
       <p style="color:#525252; font-size: 13px; line-height: 1.6; margin: 24px 0 0;">
-        Wenn du gar nicht reagierst, läuft deine Pledge einfach aus — keine weiteren
+        Wenn du gar nicht reagierst, läuft dein Pact einfach aus — keine weiteren
         Charges, keine Rechnung.
       </p>
 
