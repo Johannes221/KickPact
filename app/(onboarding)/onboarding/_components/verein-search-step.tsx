@@ -328,7 +328,9 @@ export function VereinSearchStep({ role }: Props) {
               onClick={handleSubmit}
               disabled={pending || selectedTeamIds.size === 0}
             >
-              {pending ? "Lege Verein an…" : "Verein anlegen →"}
+              {pending
+                ? role === "mannschaft" ? "Lege Mannschaft an…" : "Lege Verein an…"
+                : role === "mannschaft" ? "Mannschaft anlegen →" : "Verein anlegen →"}
             </Button>
           </div>
         </div>

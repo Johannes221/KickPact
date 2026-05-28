@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { isAppleConfigured } from "@/lib/auth/apple-client-secret";
 import { getServerSession } from "@/lib/auth/session";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
+import { getActiveDraftForUser } from "@/lib/db/queries/onboarding-draft";
 import { pickAuthenticatedSignupDestination } from "@/lib/auth/signup-destination";
 
 export const metadata = { title: "Bei KickPact starten · KickPact" };
@@ -83,6 +84,14 @@ export default async function SignupPage({
   // entscheiden rolle-aware wohin der User gehört, und redirecten dorthin.
   const session = await getServerSession();
   if (session?.user) {
+    // Erst Draft-Check: User hat noch einen offenen Onboarding-Wizard →
+    // direkt zum Resume-Dispatcher. Ohne diesen Check würde getUserIdentities
+    // (das Draft-Clubs filtert!) 0 Identities zurückgeben und der User sieht
+    // "Wie willst du starten?" obwohl er eigentlich Schritt 2 oder 3 noch
+    // abschließen muss.
+    const draft = await getActiveDraftForUser(session.user.id);
+    if (draft) redirect("/onboarding");
+
     const identities = await getUserIdentities(session.user.id);
     const destination = pickAuthenticatedSignupDestination(identities, role);
     if (destination !== "/signup") {
