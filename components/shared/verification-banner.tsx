@@ -1,20 +1,39 @@
 import Link from "next/link";
-import type { ClubVerification } from "@/lib/db/queries/verifications";
+import type { VerificationStatus } from "@/lib/db/queries/verifications";
 
 export interface VerificationBannerProps {
-  clubSlug: string;
-  verification: Pick<ClubVerification, "status" | "rejectionReason"> | null;
+  /** Ziel-URL des Upload-Formulars (Verein- bzw. Mannschafts-Verifikation). */
+  uploadUrl: string;
+  verification: { status: VerificationStatus; rejectionReason: string | null } | null;
+  /** Steuert die Wortwahl (Verein vs. Mannschaft). Default: verein. */
+  scope?: "verein" | "mannschaft";
 }
 
+const COPY = {
+  verein: {
+    entity: "Verein",
+    cta: "Lade eine Bescheinigung hoch (Vereinsregister-Auszug, Vorstandsbeschluss, …)."
+  },
+  mannschaft: {
+    entity: "Mannschaft",
+    cta: "Lade einen Nachweis hoch (Trainerlizenz, Vereinsbestätigung, Mannschaftsfoto, Fußball.de-Eintrag, …)."
+  }
+} as const;
+
 /**
- * Yellow banner shown on Verein-pages when clubs.verifiedAt IS NULL.
- * Three states keyed on the latest verification submission:
- *   - no submission → call-to-action "Bescheinigung hochladen"
- *   - pending      → "wir prüfen — kann 1-2 Tage dauern"
- *   - rejected     → reason + "neu hochladen"
+ * Gelber Banner, der auf Verein-/Mannschafts-Seiten erscheint, solange die
+ * Entität nicht verifiziert ist (verifiedAt IS NULL). Drei Zustände je nach
+ * letzter Einreichung:
+ *   - keine Einreichung → Call-to-Action "Nachweis hochladen"
+ *   - pending          → "wir prüfen — kann 1-2 Tage dauern"
+ *   - rejected         → Grund + "neu hochladen"
  */
-export function VerificationBanner({ clubSlug, verification }: VerificationBannerProps) {
-  const uploadUrl = `/verein/${encodeURIComponent(clubSlug)}/verifikation`;
+export function VerificationBanner({
+  uploadUrl,
+  verification,
+  scope = "verein"
+}: VerificationBannerProps) {
+  const { entity, cta } = COPY[scope];
 
   if (!verification) {
     return (
@@ -23,17 +42,17 @@ export function VerificationBanner({ clubSlug, verification }: VerificationBanne
           <span className="text-2xl shrink-0" aria-hidden>⏳</span>
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-sm text-amber-900">
-              Verein noch nicht verifiziert
+              {entity} noch nicht verifiziert
             </div>
             <p className="mt-1 text-xs text-amber-900/80">
-              Lade eine Bescheinigung hoch (Vereinsregister-Auszug, Vorstandsbeschluss, …).
-              Bis dahin werden Rechnungen zurückgehalten und Sponsoren sehen einen Hinweis.
+              {cta} Bis dahin werden Rechnungen zurückgehalten und Sponsoren sehen
+              einen Hinweis.
             </p>
             <Link
               href={uploadUrl}
               className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-amber-900 underline"
             >
-              Bescheinigung hochladen →
+              Nachweis hochladen →
             </Link>
           </div>
         </div>
@@ -48,7 +67,7 @@ export function VerificationBanner({ clubSlug, verification }: VerificationBanne
           <span className="text-2xl shrink-0" aria-hidden>📋</span>
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-sm text-amber-900">
-              Wir prüfen deine Bescheinigung
+              Wir prüfen deinen Nachweis
             </div>
             <p className="mt-1 text-xs text-amber-900/80">
               Innerhalb von 1–2 Werktagen meldet sich unser Team. Bis dahin laufen Pledges,
@@ -67,7 +86,7 @@ export function VerificationBanner({ clubSlug, verification }: VerificationBanne
           <span className="text-2xl shrink-0" aria-hidden>⚠️</span>
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-sm text-brand-alert-red">
-              Bescheinigung abgelehnt
+              Nachweis abgelehnt
             </div>
             {verification.rejectionReason && (
               <blockquote className="mt-1 border-l-2 border-brand-alert-red/40 pl-3 text-xs italic text-brand-night-navy/70">
@@ -78,7 +97,7 @@ export function VerificationBanner({ clubSlug, verification }: VerificationBanne
               href={uploadUrl}
               className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-alert-red underline"
             >
-              Neue Bescheinigung hochladen →
+              Neuen Nachweis hochladen →
             </Link>
           </div>
         </div>

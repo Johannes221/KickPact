@@ -74,7 +74,11 @@ export function VereinHeaderShell({
       </div>
 
       {!verifiedAt && (
-        <VerificationBanner clubSlug={slug} verification={verification} />
+        <VerificationBanner
+          uploadUrl={`/verein/${slug}/verifikation`}
+          verification={verification}
+          scope="verein"
+        />
       )}
 
       <VereinSubNav slug={slug} clubName={clubName} />
