@@ -21,10 +21,11 @@ import { isSommerpause } from "@/lib/utils/sommerpause";
 export const crawlMatches = inngest.createFunction(
   { id: "crawl-matches", concurrency: { limit: 2 } },
   [
-    // Audit 2026-05-24 Phase 5 / Task 5.2: Crawler-Throttling.
-    // Vorher alle 6h — Amateurfußball-Spielzeit ist Sa/So, 4 Runs/Tag sind
-    // Verschwendung + erhöhen fussball.de-Bann-Risiko. Jetzt einmal nachts.
-    { cron: "0 3 * * *" },
+    // Crawler-Throttling. Amateurfußball-Spielzeit ist Sa/So — zu häufige Runs
+    // sind Verschwendung + erhöhen fussball.de-Bann-Risiko. Zweimal täglich
+    // (mittags + abends, UTC → 12:00/20:00 CEST in der Sommerzeit): mittags
+    // zieht Vortags-/Vormittagsspiele, abends die Samstag-/Sonntag-Ergebnisse.
+    { cron: "0 10,18 * * *" },
     { event: "crawler/manual" },
     { event: "crawler/team.crawl" }
   ],
