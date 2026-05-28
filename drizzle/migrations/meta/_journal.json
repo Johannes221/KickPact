@@ -187,21 +187,21 @@
     {
       "idx": 26,
       "version": "7",
-      "when": 1748390000000,
+      "when": 1780660000000,
       "tag": "0026_pledges_sommerpause_paused",
       "breakpoints": true
     },
     {
       "idx": 27,
       "version": "7",
-      "when": 1748500000000,
+      "when": 1780840000000,
       "tag": "0027_drop_sponsors_pledge_proxies_json",
       "breakpoints": true
     },
     {
       "idx": 28,
       "version": "7",
-      "when": 1748649600000,
+      "when": 1781020000000,
       "tag": "0028_billing_cycle_season_end",
       "breakpoints": true
     }
