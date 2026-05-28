@@ -30,6 +30,14 @@ export async function listMatchEvents(matchId: string) {
     .orderBy(matchEvents.minute);
 }
 
+/**
+ * Liefert ALLE Spiele einer Mannschaft (vergangen + kommend), neueste zuerst.
+ *
+ * Kein Status-Filter — geplante (`scheduled`) Spiele kommen genauso zurück wie
+ * gespielte (`finished`). Die UI im `app/`-Layer baut darauf ihre Filter (Heim/
+ * Auswärts, Hin-/Rückrunde, Saison) — diese Query liefert nur die Rohdaten
+ * sauber sortiert.
+ */
 export async function listMatchesForTeam(teamId: string, limit = 20) {
   return db
     .select()
@@ -37,6 +45,71 @@ export async function listMatchesForTeam(teamId: string, limit = 20) {
     .where(eq(matches.teamId, teamId))
     .orderBy(desc(matches.datum))
     .limit(limit);
+}
+
+/** Parse fussball.de "DD.MM.YYYY" (oder 2-stelliges Jahr) in einen UTC-Date. */
+function parseDatumDdMmYyyy(s: string): Date {
+  const [dd, mm, yy] = s.split(".");
+  const yyyy = yy.length === 2 ? "20" + yy : yy;
+  return new Date(`${yyyy}-${mm}-${dd}T12:00:00Z`);
+}
+
+/**
+ * Persistiert ein noch nicht gespieltes Spiel als Stub-Row mit
+ * `status = "scheduled"`. Es werden bewusst KEINE Events angelegt, KEIN
+ * Ergebnis gesetzt und vom Caller KEIN `match/finished`-Event emittiert — ein
+ * geplantes Spiel darf keine Charges erzeugen.
+ *
+ * Idempotent: existiert die Row schon (per fussballdeSpielId) und ist noch
+ * `scheduled`, werden nur Datum/Teamnamen nachgeführt (Spielverlegung). Ist die
+ * Row bereits `finished` (oder anders), wird NICHTS angefasst — der finished-
+ * Pfad ist autoritativ und soll nicht von einem stale next.games-Eintrag
+ * zurückgesetzt werden.
+ *
+ * @returns `inserted: true` wenn eine neue Row angelegt wurde, sonst `false`.
+ */
+export async function upsertScheduledMatch(args: {
+  teamId: string;
+  fussballdeSpielId: string;
+  datum: string; // DD.MM.YYYY
+  heimName: string;
+  gastName: string;
+}): Promise<{ matchId: string; inserted: boolean }> {
+  const { teamId, fussballdeSpielId, datum, heimName, gastName } = args;
+  const parsedDatum = parseDatumDdMmYyyy(datum);
+
+  const [existing] = await db
+    .select({ id: matches.id, status: matches.status })
+    .from(matches)
+    .where(eq(matches.fussballdeSpielId, fussballdeSpielId))
+    .limit(1);
+
+  if (existing) {
+    // Nur reine scheduled-Rows nachführen — finished/cancelled/etc. nie überschreiben.
+    if (existing.status === "scheduled") {
+      await db
+        .update(matches)
+        .set({ datum: parsedDatum, heimName, gastName })
+        .where(eq(matches.id, existing.id));
+    }
+    return { matchId: existing.id, inserted: false };
+  }
+
+  const [row] = await db
+    .insert(matches)
+    .values({
+      teamId,
+      fussballdeSpielId,
+      datum: parsedDatum,
+      heimName,
+      gastName,
+      status: "scheduled"
+      // ergebnis*/halbzeit*/contentHash bleiben NULL — kein Detail-Scrape.
+    })
+    .returning({ id: matches.id });
+
+  if (!row) throw new Error("upsertScheduledMatch failed");
+  return { matchId: row.id, inserted: true };
 }
 
 /** Liefert Charges-Summe pro Match für eine Mannschaft (für die Match-Liste). */

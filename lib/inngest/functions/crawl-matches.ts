@@ -14,6 +14,7 @@ import {
   type ActiveTeam
 } from "@/lib/db/queries/crawler";
 import { invalidateChargesForMatch } from "@/lib/db/queries/charges";
+import { upsertScheduledMatch } from "@/lib/db/queries/matches";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { isSommerpause } from "@/lib/utils/sommerpause";
 
@@ -64,6 +65,7 @@ export const crawlMatches = inngest.createFunction(
 
     let totalNewMatches = 0;
     let totalUpdatedMatches = 0;
+    let totalScheduledMatches = 0;
     let skippedReadOnly = 0;
     let skippedInvalid = 0;
     for (const team of targetTeams) {
@@ -94,20 +96,57 @@ export const crawlMatches = inngest.createFunction(
         getSpiele(team.fussballdeTeamId, team.fussballdeSlug, team.saison)
       );
 
-      // Checkpoint 1: sanity-check each list entry before we spend a full detail request on it
-      const validSpiele = spiele.filter((s) => {
-        const v = validateSpielListItem(s);
-        if (!v.valid) {
-          logger.warn("skipped list item: validation failed", {
-            spielId: s.spielId,
-            datum: s.datum,
-            reason: v.reason,
+      // ─── Geplante (kommende) Spiele ────────────────────────────────────────
+      // next.games liefert Spiele in der Zukunft. Diese werden als scheduled-
+      // Stub persistiert: KEIN Detail-Scrape, KEINE Events, KEINE Charges,
+      // KEIN match/finished-Emit. validateSpielListItem verwirft Zukunftsdaten
+      // (by design für gespielte Spiele) — deshalb laufen scheduled-Items NICHT
+      // durch diesen Filter, sondern durch eine leichtgewichtige Eigenprüfung.
+      const scheduledSpiele = spiele.filter((s) => s.status === "scheduled");
+      for (const spiel of scheduledSpiele) {
+        // Minimal-Sanity: spielId + Teamnamen müssen plausibel sein (sonst Stub-
+        // Müll). Wir reusen NICHT validateSpielListItem (rejected Zukunftsdatum).
+        const idOk = /^[A-Z0-9]{6,}$/i.test(spiel.spielId.trim());
+        const namesOk =
+          spiel.heim.trim().length >= 2 && spiel.gast.trim().length >= 2;
+        if (!idOk || !namesOk) {
+          logger.warn("skipped scheduled list item: implausible", {
+            spielId: spiel.spielId,
+            datum: spiel.datum,
             teamId: team.id
           });
           skippedInvalid++;
+          continue;
         }
-        return v.valid;
-      });
+        const { inserted } = await step.run(`schedule-${spiel.spielId}`, () =>
+          upsertScheduledMatch({
+            teamId: team.id,
+            fussballdeSpielId: spiel.spielId,
+            datum: spiel.datum,
+            heimName: spiel.heim,
+            gastName: spiel.gast
+          })
+        );
+        if (inserted) totalScheduledMatches++;
+      }
+
+      // ─── Gespielte Spiele ──────────────────────────────────────────────────
+      // Checkpoint 1: sanity-check each list entry before we spend a full detail request on it
+      const validSpiele = spiele
+        .filter((s) => s.status === "finished")
+        .filter((s) => {
+          const v = validateSpielListItem(s);
+          if (!v.valid) {
+            logger.warn("skipped list item: validation failed", {
+              spielId: s.spielId,
+              datum: s.datum,
+              reason: v.reason,
+              teamId: team.id
+            });
+            skippedInvalid++;
+          }
+          return v.valid;
+        });
 
       for (const spiel of validSpiele) {
         const existing = await step.run(`check-${spiel.spielId}`, () =>
@@ -193,6 +232,7 @@ export const crawlMatches = inngest.createFunction(
     return {
       newMatches: totalNewMatches,
       updatedMatches: totalUpdatedMatches,
+      scheduledMatches: totalScheduledMatches,
       skippedReadOnly,
       skippedInvalid
     };

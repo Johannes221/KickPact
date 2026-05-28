@@ -141,7 +141,18 @@ export interface SpielListItem {
   heim: string;
   gast: string;
   ergebnis: string;
+  /**
+   * True wenn das Spiel-Datum in der Vergangenheit liegt (gespielt), false für
+   * heutige/kommende Spiele (geplant). Früher hardcoded `true` — jetzt aus dem
+   * Match-Datum abgeleitet, damit der `next.games`-Pfad korrekte Flags liefert.
+   */
   vergangen: boolean;
+  /**
+   * Abgeleiteter Persistenz-Status für die DB. `finished` = gespielt (Detail-
+   * Scrape + Charge-Emission erlaubt). `scheduled` = noch nicht gespielt
+   * (KEINE Charges/Events — nur Stub-Row für die Spielplan-Ansicht).
+   */
+  status: "finished" | "scheduled";
   url: string;
 }
 
@@ -412,7 +423,12 @@ const EXTRACT_MATCHES_JS = `(function() {
     if (parts.length !== 3) return;
     var yr = parts[2].length === 2 ? "20" + parts[2] : parts[2];
     var matchDate = new Date(yr + "-" + parts[1] + "-" + parts[0]);
-    if (!matchDate || matchDate >= today) return;
+    if (isNaN(matchDate.getTime())) return;
+    // Früher: "if (matchDate >= today) return;" — verwarf heutige/kommende
+    // Spiele. Jetzt lassen wir ALLE Spiele durch (prev + next) und leiten pro
+    // Spiel ein korrektes Flag ab. Ein Spiel "heute" gilt als geplant, bis es
+    // gespielt + auf fussball.de mit Ergebnis nachgeführt wurde.
+    var vergangen = matchDate < today;
     seen.add(m[2]);
 
     var tds = Array.from(tr.querySelectorAll("td")).map(function(td) {
@@ -427,7 +443,8 @@ const EXTRACT_MATCHES_JS = `(function() {
       heim: teamTds[0] || "",
       gast: teamTds[1] || "",
       ergebnis: "",
-      vergangen: true,
+      vergangen: vergangen,
+      status: vergangen ? "finished" : "scheduled",
       url: href
     });
   });
@@ -435,6 +452,79 @@ const EXTRACT_MATCHES_JS = `(function() {
   return results;
 })()`;
 
+/** fussball.de returns ~10 matches per page; 8 pages ≈ 80 matches covers a full season. */
+const MAX_PAGES = 8;
+
+/**
+ * Paginiert einen `ajax.team.{prev|next}.games`-Endpoint durch und merged die
+ * extrahierten Spiele in `into`. Bricht ab, sobald eine Seite leer ist oder nur
+ * noch Duplikate liefert (Pagination erschöpft). Captcha-Fehler werden laut
+ * durchgereicht — sonst still abgebrochen (Netz-Hickup ist tolerierbar, andere
+ * Strategien liefern dann die Daten).
+ *
+ * `kind` ist nur für die URL relevant ("prev" = vergangene, "next" = kommende
+ * Spiele). Die Extraktion (EXTRACT_MATCHES_JS) leitet `vergangen`/`status` rein
+ * aus dem Match-Datum ab — also funktioniert sie für beide Endpoints identisch.
+ */
+async function paginateTeamGames(
+  page: Page,
+  kind: "prev" | "next",
+  teamId: string,
+  into: Map<string, SpielListItem>,
+  saison?: string
+): Promise<void> {
+  for (let idx = 0; idx < MAX_PAGES; idx++) {
+    const base = `https://www.fussball.de/ajax.team.${kind}.games/-/mode/PAGE/team-id/${teamId}`;
+    const saisonSeg = saison ? `/saison/${saison}` : "";
+    const indexSeg = idx === 0 ? "" : `/index/${idx}`;
+    const ajaxUrl = `${base}${saisonSeg}${indexSeg}`;
+    try {
+      await page.goto(ajaxUrl, { waitUntil: "networkidle", timeout: 20000 });
+      await assertNotCaptcha(page);
+      await page.waitForTimeout(800);
+      const pageResults = (await page.evaluate(EXTRACT_MATCHES_JS)) as SpielListItem[];
+      if (pageResults.length === 0) break; // no more data
+      let newCount = 0;
+      for (const r of pageResults) {
+        if (!into.has(r.spielId)) {
+          into.set(r.spielId, r);
+          newCount++;
+        }
+      }
+      if (newCount === 0) break; // all duplicates → pagination exhausted
+    } catch (err) {
+      // Captcha errors are loud signals — rethrow so the whole crawl fails.
+      if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
+      break;
+    }
+  }
+}
+
+/**
+ * Liefert alle Spiele einer Mannschaft — VERGANGENE und KOMMENDE — für die
+ * komplette Saison (soweit fussball.de das hergibt).
+ *
+ * Strategien (in dieser Reihenfolge gemerged, dedupliziert per spielId):
+ *   1a. ajax.team.prev.games (ohne saison)  — ~10 jüngste vergangene Spiele
+ *   1b. ajax.team.prev.games + saison        — Hinrunde der angefragten Saison
+ *   1c. ajax.team.next.games (ohne saison)   — ~10 kommende Spiele
+ *   1d. ajax.team.next.games + saison        — kommende Spiele der Saison
+ *   2.  Haupt-Team-Seite Spielplan + Hinrunde-Tab
+ *
+ * Jedes Item bekommt `vergangen` + `status` ("finished"/"scheduled") aus dem
+ * Match-Datum abgeleitet — der Caller (crawl-matches) entscheidet darüber, ob
+ * Detail-Scrape + Charges laufen.
+ *
+ * KNOWN LIMITATION / TODO (Phase 8): Für Mannschaften ganz am Saisonanfang
+ * (alle Spiele in der Zukunft) oder mit >~10 noch ausstehenden Spielen kann die
+ * Saison unvollständig sein — fussball.de cappt `prev`/`next` bei ~10 und
+ * ignoriert teils den saison-Parameter. Der robuste Weg wäre der Liga-Spielplan
+ * über die `wam_competitions_*.json` → Spieltagsübersicht (`/spieltagsuebersicht/
+ * .../-/staffel/{staffelId}-G`), gefiltert auf den Team-Namen. Das ist mehrstufig
+ * (Detail-Seite → competition-JSON → staffel-Seiten → Namens-Match über
+ * Vorsaison-Aliase) und captcha-riskant; bewusst NICHT in diesem Backend-Change.
+ * prev+next decken in der laufenden Saison den Großteil ab.
+ */
 export async function getSpiele(
   teamId: string,
   slug: string,
@@ -443,60 +533,15 @@ export async function getSpiele(
   return withPage(async (page) => {
     const allResults = new Map<string, SpielListItem>();
 
-    // Strategy 1a: paginate through ajax.team.prev.games (returns current half-season)
-    // fussball.de returns ~10 matches per page; try up to 8 pages (≈80 matches, full season)
-    const MAX_PAGES = 8;
-    for (let idx = 0; idx < MAX_PAGES; idx++) {
-      const ajaxUrl = idx === 0
-        ? `https://www.fussball.de/ajax.team.prev.games/-/mode/PAGE/team-id/${teamId}`
-        : `https://www.fussball.de/ajax.team.prev.games/-/mode/PAGE/team-id/${teamId}/index/${idx}`;
-      try {
-        await page.goto(ajaxUrl, { waitUntil: "networkidle", timeout: 20000 });
-        await assertNotCaptcha(page);
-        await page.waitForTimeout(800);
-        const pageResults = await page.evaluate(EXTRACT_MATCHES_JS) as SpielListItem[];
-        if (pageResults.length === 0) break; // no more data
-        let newCount = 0;
-        for (const r of pageResults) {
-          if (!allResults.has(r.spielId)) {
-            allResults.set(r.spielId, r);
-            newCount++;
-          }
-        }
-        if (newCount === 0) break; // all duplicates → we've exhausted pages
-      } catch (err) {
-        // Captcha errors are loud signals — rethrow so the whole crawl fails.
-        if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
-        break;
-      }
-    }
+    // Strategy 1a/1b: vergangene Spiele (ohne + mit saison-Parameter)
+    await paginateTeamGames(page, "prev", teamId, allResults);
+    await paginateTeamGames(page, "prev", teamId, allResults, saison);
 
-    // Strategy 1b: saison-specific AJAX — explicitly requests the full season including Hinrunde
-    // fussball.de sometimes gates Hinrunde behind a saison parameter
-    for (let idx = 0; idx < MAX_PAGES; idx++) {
-      const ajaxUrl = idx === 0
-        ? `https://www.fussball.de/ajax.team.prev.games/-/mode/PAGE/team-id/${teamId}/saison/${saison}`
-        : `https://www.fussball.de/ajax.team.prev.games/-/mode/PAGE/team-id/${teamId}/saison/${saison}/index/${idx}`;
-      try {
-        await page.goto(ajaxUrl, { waitUntil: "networkidle", timeout: 20000 });
-        await assertNotCaptcha(page);
-        await page.waitForTimeout(800);
-        const pageResults = await page.evaluate(EXTRACT_MATCHES_JS) as SpielListItem[];
-        if (pageResults.length === 0) break;
-        let newCount = 0;
-        for (const r of pageResults) {
-          if (!allResults.has(r.spielId)) {
-            allResults.set(r.spielId, r);
-            newCount++;
-          }
-        }
-        if (newCount === 0) break;
-      } catch (err) {
-        // Captcha errors are loud signals — rethrow so the whole crawl fails.
-        if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
-        break;
-      }
-    }
+    // Strategy 1c/1d: kommende Spiele (ohne + mit saison-Parameter)
+    // ajax.team.next.games hat dieselbe Tabellen-Struktur wie prev — die
+    // Extraktion ist identisch, nur der Endpoint unterscheidet sich.
+    await paginateTeamGames(page, "next", teamId, allResults);
+    await paginateTeamGames(page, "next", teamId, allResults, saison);
 
     // Strategy 2: main team page Spielplan — shows both halves; also click Hinrunde tab
     // fussball.de defaults to Rückrunde tab; we click Hinrunde to capture first-half games
