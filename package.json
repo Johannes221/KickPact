@@ -45,7 +45,7 @@
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
     "gray-matter": "^4.0.3",
-    "inngest": "3.27.5",
+    "inngest": "^3.54.2",
     "lucide-react": "^1.16.0",
     "marked": "^18.0.4",
     "next": "15.0.3",
