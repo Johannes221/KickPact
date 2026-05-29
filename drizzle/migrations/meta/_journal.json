@@ -239,6 +239,27 @@
       "when": 1782360200000,
       "tag": "0033_team_admin_backfill",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1782360300000,
+      "tag": "0034_user_is_platform_admin",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1782360400000,
+      "tag": "0035_operator_audit_log",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1782360500000,
+      "tag": "0036_support_tickets",
+      "breakpoints": true
     }
   ]
 }

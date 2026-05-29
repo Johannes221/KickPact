@@ -15,15 +15,13 @@
  * Cron: täglich 04:00 UTC (nach Session-Cleanup).
  */
 
-import { and, eq, isNotNull, lt } from "drizzle-orm";
+import { and, isNotNull, lt } from "drizzle-orm";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
-import { users, sponsors, accounts, sessions } from "@/lib/db/schema";
+import { users } from "@/lib/db/schema";
+import { anonymizeUserAccount } from "@/lib/db/queries/user-admin";
 
 const COOLDOWN_DAYS = 14;
-const DELETED_EMAIL_DOMAIN = "kickpact.invalid";
-const DELETED_NAME = "Gelöschter Nutzer";
-const DELETED_SPONSOR_DISPLAY = "Gelöschter Sponsor";
 
 export const anonymizeAccounts = inngest.createFunction(
   { id: "anonymize-accounts", concurrency: { limit: 1 } },
@@ -50,38 +48,9 @@ export const anonymizeAccounts = inngest.createFunction(
 
     let anonymized = 0;
     for (const u of due) {
-      await step.run(`anon-${u.id}`, async () => {
-        await db.transaction(async (tx) => {
-          // OAuth-Accounts + Sessions löschen (kein Login mehr möglich)
-          await tx.delete(accounts).where(eq(accounts.userId, u.id));
-          await tx.delete(sessions).where(eq(sessions.userId, u.id));
-
-          // Sponsor-Profile anonymisieren (Pledges bleiben gültig für Audit/Invoices)
-          await tx
-            .update(sponsors)
-            .set({
-              displayName: DELETED_SPONSOR_DISPLAY,
-              businessName: null,
-              businessAddressJson: null,
-              businessTaxId: null
-            })
-            .where(eq(sponsors.userId, u.id));
-
-          // User-Row: notNull+unique email → ersetze durch tomb-stone
-          // (kann nicht NULL gesetzt werden wegen Better-Auth-Schema-Constraints)
-          await tx
-            .update(users)
-            .set({
-              email: `deleted-${u.id}@${DELETED_EMAIL_DOMAIN}`,
-              name: DELETED_NAME,
-              image: null,
-              emailVerified: false,
-              deletionRequestedAt: null, // damit der Cron's-Filter den Row nicht nochmal greift
-              updatedAt: new Date()
-            })
-            .where(eq(users.id, u.id));
-        });
-      });
+      // Anonymisierungs-Logik ist mit der Operator-Sofort-Aktion geteilt
+      // (lib/db/queries/user-admin.ts), damit beide Pfade identisch bleiben.
+      await step.run(`anon-${u.id}`, () => anonymizeUserAccount(u.id));
       anonymized += 1;
     }
 

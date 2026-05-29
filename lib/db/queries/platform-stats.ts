@@ -680,6 +680,7 @@ export interface UserDetail {
     email: string;
     name: string | null;
     emailVerified: boolean;
+    isPlatformAdmin: boolean;
     createdAt: Date;
     deletionRequestedAt: Date | null;
   };
@@ -781,6 +782,7 @@ export async function getUserDetail(userId: string): Promise<UserDetail | null> 
       email: user.email,
       name: user.name,
       emailVerified: user.emailVerified,
+      isPlatformAdmin: user.isPlatformAdmin,
       createdAt: user.createdAt,
       deletionRequestedAt: user.deletionRequestedAt
     },

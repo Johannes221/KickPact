@@ -13,6 +13,13 @@ export const users = pgTable("users", {
    * Zeitstempel. Steuer-relevante Rechnungsdaten bleiben § 147 AO erhalten.
    */
   deletionRequestedAt: timestamp("deletion_requested_at", { withTimezone: true }),
+  /**
+   * Plattform-Operator-Flag. Ersetzt die frühere ENV-Allowlist
+   * KICKPACT_ADMIN_EMAILS. Nur dedizierte Operator-Accounts (Backoffice
+   * /admin) haben dies true; gesetzt manuell via Seed/Migration, nie über
+   * self-service. Operator-Login läuft zwingend über Passwort, nicht Magic-Link.
+   */
+  isPlatformAdmin: boolean("is_platform_admin").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
 });

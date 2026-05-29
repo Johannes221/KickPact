@@ -10,3 +10,4 @@ export * from "./sponsor-inquiries";
 export * from "./season-results";
 export * from "./seasons";
 export * from "./system";
+export * from "./support";

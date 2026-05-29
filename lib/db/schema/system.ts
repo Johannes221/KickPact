@@ -1,4 +1,6 @@
-import { pgTable, text, timestamp, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, primaryKey, jsonb, index } from "drizzle-orm/pg-core";
+import { createId } from "@paralleldrive/cuid2";
+import { users } from "./auth";
 
 /**
  * Audit 2026-05-24 Phase 3 / Task 3.1: Stripe-Webhook-Idempotency.
@@ -33,5 +35,37 @@ export const sentNotifications = pgTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.kind, t.key] })
+  })
+);
+
+/**
+ * Operator-Admin-Panel (Spec 2026-05-29) — Phase B: Audit-Log.
+ *
+ * Append-only Protokoll JEDER mutierenden Operator-Aktion im /admin-Backoffice.
+ * Pflicht-Querschnitt, weil der Operator fremde Accounts, Stammdaten, Geld und
+ * Verifizierungen ändern kann — Nachvollziehbarkeit für Streit-/DSGVO-Fälle.
+ *
+ * `action` ist ein punkt-getrennter Slug (z.B. "verification.approve",
+ * "club.block", "crawl.trigger"). `targetType`/`targetId` zeigen auf das
+ * betroffene Objekt. `diffJson` hält optional Vorher/Nachher- oder Kontext-Daten.
+ * Es gibt bewusst KEIN updatedAt/Delete — Einträge werden nie verändert.
+ */
+export const operatorAuditLog = pgTable(
+  "operator_audit_log",
+  {
+    id: text("id").primaryKey().$defaultFn(() => createId()),
+    operatorUserId: text("operator_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    action: text("action").notNull(),
+    targetType: text("target_type"),
+    targetId: text("target_id"),
+    summary: text("summary").notNull(),
+    diffJson: jsonb("diff_json"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+  },
+  (t) => ({
+    createdIdx: index("operator_audit_log_created_idx").on(t.createdAt),
+    targetIdx: index("operator_audit_log_target_idx").on(t.targetType, t.targetId)
   })
 );

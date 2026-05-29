@@ -82,10 +82,10 @@ export default async function HilfePage() {
       </div>
 
       <div className="mt-12 md:mt-16 text-center text-sm text-brand-night-navy/60">
-        Antwort nicht dabei? Schreib uns:{" "}
-        <a href="mailto:support@kickpact.de" className="font-semibold text-accent hover:underline">
-          support@kickpact.de
-        </a>
+        Antwort nicht dabei?{" "}
+        <Link href="/hilfe/kontakt" className="font-semibold text-accent hover:underline">
+          Schreib uns über das Kontaktformular
+        </Link>
       </div>
     </main>
   );

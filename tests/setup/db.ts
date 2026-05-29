@@ -26,7 +26,10 @@ import {
   seasons,
   seasonResults,
   sentNotifications,
-  processedStripeEvents
+  processedStripeEvents,
+  operatorAuditLog,
+  supportTickets,
+  supportTicketReplies
 } from "@/lib/db/schema";
 
 /**
@@ -80,8 +83,12 @@ export async function resetTestDb() {
   await db.delete(clubVerifications);
   await db.delete(clubMembershipRequests);
   await db.delete(clubMemberships);
+  await db.delete(supportTicketReplies);
+  await db.delete(supportTickets);
   await db.delete(teams);
   await db.delete(clubs);
+  // operator_audit_log FK → users ist ON DELETE restrict, muss VOR users weg.
+  await db.delete(operatorAuditLog);
   await db.delete(users);
   await db.delete(seasons);
 }

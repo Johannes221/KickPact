@@ -1,10 +1,12 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { magicLink } from "better-auth/plugins";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema/auth";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { magicLinkEmail } from "@/lib/mail/templates/magic-link";
+import { adminPasswordResetEmail } from "@/lib/mail/templates/admin-password-reset";
 import { maskEmail } from "@/lib/utils/log-pii";
 
 // Social-Provider werden konditional registriert, damit fehlende Credentials
@@ -41,7 +43,35 @@ export const auth = betterAuth({
       verification: schema.verifications
     }
   }),
-  emailAndPassword: { enabled: false },
+  // Email+Passwort ist NUR für Plattform-Operator-Accounts (/admin) gedacht.
+  // disableSignUp:true verhindert, dass sich normale Nutzer ein Passwort-Konto
+  // anlegen — Operator-Accounts werden manuell per Seed erstellt. Normale Nutzer
+  // bleiben ausschließlich beim Magic-Link-Flow.
+  emailAndPassword: {
+    enabled: true,
+    disableSignUp: true,
+    minPasswordLength: 12,
+    requireEmailVerification: false,
+    resetPasswordTokenExpiresIn: 60 * 60,
+    sendResetPassword: async ({ user, url }) => {
+      const mail = adminPasswordResetEmail({ url, email: user.email });
+      const result = await resend.emails.send({
+        from: MAIL_FROM,
+        to: user.email,
+        subject: mail.subject,
+        html: mail.html,
+        text: mail.text
+      });
+      if (result.error) {
+        console.error("[adminPasswordReset] Resend send failed:", {
+          to: maskEmail(user.email),
+          error: result.error
+        });
+        throw new Error(`Reset-Mail konnte nicht verschickt werden: ${result.error.message}`);
+      }
+      console.log("[adminPasswordReset] sent", { to: maskEmail(user.email), id: result.data?.id });
+    }
+  },
   secret: process.env.BETTER_AUTH_SECRET!,
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3003",
   trustedOrigins: [process.env.BETTER_AUTH_URL ?? "http://localhost:3003"],
@@ -59,6 +89,18 @@ export const auth = betterAuth({
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {
+        // Operator-Accounts dürfen sich NICHT per Magic-Link einloggen — sonst
+        // wäre der passwortlose Pfad ein Bypass des Passwort-Logins für /admin.
+        // Wir verweigern den Versand still (kein Account-Enumeration-Hinweis).
+        const existing = await db
+          .select({ isPlatformAdmin: schema.users.isPlatformAdmin })
+          .from(schema.users)
+          .where(eq(schema.users.email, email.toLowerCase()))
+          .limit(1);
+        if (existing[0]?.isPlatformAdmin === true) {
+          console.warn("[magicLink] refused for platform-admin email", { to: maskEmail(email) });
+          return;
+        }
         const mail = magicLinkEmail({ url, email });
         const result = await resend.emails.send({
           from: MAIL_FROM,
