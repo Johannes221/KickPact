@@ -313,7 +313,7 @@ export function VereinSearchStep({ role }: Props) {
                     return (
                       <li key={t.teamId}>
                         <Link
-                          href={`/onboarding/zugriff-anfragen?clubSlug=${encodeURIComponent(t.registeredClubSlug ?? "")}`}
+                          href={`/onboarding/zugriff-anfragen?clubSlug=${encodeURIComponent(t.registeredClubSlug ?? "")}${t.registeredTeamDbId ? `&teamId=${encodeURIComponent(t.registeredTeamDbId)}` : ""}`}
                           className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50/60 p-4 transition-colors hover:bg-amber-50"
                         >
                           <span className="text-amber-600 text-lg" aria-hidden>🔒</span>

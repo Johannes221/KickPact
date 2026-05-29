@@ -47,6 +47,8 @@ export interface MannschaftWithStatus {
   isLocked: boolean;
   /** Slug des Containers, der die Mannschaft hält (für „Zugriff anfragen"). */
   registeredClubSlug: string | null;
+  /** DB-Team-ID der belegten Mannschaft (für die gezielte Zugriff-Anfrage). */
+  registeredTeamDbId: string | null;
   /** True, wenn die belegte Mannschaft dem aktuellen User gehört. */
   ownedByMe: boolean;
 }
@@ -79,11 +81,18 @@ export async function getMannschaftenAction(input: {
             // fremde schon → „Zugriff anfragen".
             isLocked: !ownedByMe,
             registeredClubSlug: collision.clubSlug,
+            registeredTeamDbId: collision.teamId,
             ownedByMe
           };
         }
         // none + scraped-unmanaged → frei wählbar.
-        return { ...m, isLocked: false, registeredClubSlug: null, ownedByMe: false };
+        return {
+          ...m,
+          isLocked: false,
+          registeredClubSlug: null,
+          registeredTeamDbId: null,
+          ownedByMe: false
+        };
       })
     );
 

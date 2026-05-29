@@ -23,24 +23,34 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
+interface FixedTeam {
+  id: string;
+  name: string;
+  saison: string;
+}
+
 export function RequestForm({
   clubSlug,
   clubName,
-  teams
+  teams,
+  fixedTeam = null
 }: {
   clubSlug: string;
   clubName: string;
   teams: Array<{ id: string; name: string; saison: string }>;
+  /** Wenn gesetzt: Anfrage zielt auf GENAU diese Mannschaft (Mannschafts-Modus). */
+  fixedTeam?: FixedTeam | null;
 }) {
   const router = useRouter();
+  const isTeamMode = Boolean(fixedTeam);
   const [pending, setPending] = useState(false);
   const conflictFileRef = useRef<HTMLInputElement>(null);
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       requestedRole: "trainer",
-      scope: "club",
-      requestedTeamId: null,
+      scope: isTeamMode ? "team" : "club",
+      requestedTeamId: fixedTeam?.id ?? null,
       message: "",
       isConflictClaim: false
     }
@@ -52,9 +62,9 @@ export function RequestForm({
     const fd = new FormData();
     fd.set("clubSlug", clubSlug);
     fd.set("requestedRole", values.requestedRole);
-    if (values.scope === "team" && values.requestedTeamId) {
-      fd.set("requestedTeamId", values.requestedTeamId);
-    }
+    // Im Mannschafts-Modus zielt die Anfrage immer auf die fixierte Mannschaft.
+    const teamId = isTeamMode ? fixedTeam?.id : values.scope === "team" ? values.requestedTeamId : null;
+    if (teamId) fd.set("requestedTeamId", teamId);
     if (values.message?.trim()) fd.set("message", values.message.trim());
     fd.set("isConflictClaim", String(values.isConflictClaim));
     if (values.isConflictClaim && conflictFileRef.current?.files?.[0]) {
@@ -91,13 +101,17 @@ export function RequestForm({
                   <FormLabel>Welche Rolle?</FormLabel>
                   <FormControl>
                     <RadioGroup value={field.value} onValueChange={field.onChange} className="grid gap-2">
-                      <Label className="flex items-center gap-3 rounded-lg border border-brand-neutral/40 bg-white p-3 cursor-pointer">
-                        <RadioGroupItem value="admin" id="r-admin" />
-                        <div>
-                          <div className="font-semibold text-sm">Admin</div>
-                          <div className="text-xs text-brand-night-navy/60">Vollzugriff inkl. Abo + Einstellungen</div>
-                        </div>
-                      </Label>
+                      {/* Admin nur im Vereins-Modus — eine einzelne Mannschaft
+                          „besitzt" man nicht als Verein-Admin, man betreut sie. */}
+                      {!isTeamMode && (
+                        <Label className="flex items-center gap-3 rounded-lg border border-brand-neutral/40 bg-white p-3 cursor-pointer">
+                          <RadioGroupItem value="admin" id="r-admin" />
+                          <div>
+                            <div className="font-semibold text-sm">Admin</div>
+                            <div className="text-xs text-brand-night-navy/60">Vollzugriff inkl. Abo + Einstellungen</div>
+                          </div>
+                        </Label>
+                      )}
                       <Label className="flex items-center gap-3 rounded-lg border border-brand-neutral/40 bg-white p-3 cursor-pointer">
                         <RadioGroupItem value="trainer" id="r-trainer" />
                         <div>
@@ -119,54 +133,60 @@ export function RequestForm({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="scope"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel>Umfang</FormLabel>
-                  <FormControl>
-                    <RadioGroup value={field.value} onValueChange={field.onChange} className="grid gap-2">
-                      <Label className="flex items-center gap-3 rounded-lg border border-brand-neutral/40 bg-white p-3 cursor-pointer">
-                        <RadioGroupItem value="club" id="s-club" />
-                        <div className="font-semibold text-sm">Ganzer Verein</div>
-                      </Label>
-                      <Label className="flex items-center gap-3 rounded-lg border border-brand-neutral/40 bg-white p-3 cursor-pointer">
-                        <RadioGroupItem value="team" id="s-team" />
-                        <div className="font-semibold text-sm">Nur eine Mannschaft</div>
-                      </Label>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Umfang + Mannschaftsauswahl nur im Vereins-Modus. Im Mannschafts-
+                Modus ist die Ziel-Mannschaft bereits durch den Link fixiert. */}
+            {!isTeamMode && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="scope"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel>Umfang</FormLabel>
+                      <FormControl>
+                        <RadioGroup value={field.value} onValueChange={field.onChange} className="grid gap-2">
+                          <Label className="flex items-center gap-3 rounded-lg border border-brand-neutral/40 bg-white p-3 cursor-pointer">
+                            <RadioGroupItem value="club" id="s-club" />
+                            <div className="font-semibold text-sm">Ganzer Verein</div>
+                          </Label>
+                          <Label className="flex items-center gap-3 rounded-lg border border-brand-neutral/40 bg-white p-3 cursor-pointer">
+                            <RadioGroupItem value="team" id="s-team" />
+                            <div className="font-semibold text-sm">Nur eine Mannschaft</div>
+                          </Label>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            {scope === "team" && (
-              <FormField
-                control={form.control}
-                name="requestedTeamId"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel>Welche Mannschaft?</FormLabel>
-                    <FormControl>
-                      <select
-                        className="w-full rounded-md border border-brand-neutral/40 bg-white px-3 py-2 text-sm"
-                        value={field.value ?? ""}
-                        onChange={(e) => field.onChange(e.target.value || null)}
-                      >
-                        <option value="">— wählen —</option>
-                        {teams.map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.name} · Saison {t.saison}
-                          </option>
-                        ))}
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                {scope === "team" && (
+                  <FormField
+                    control={form.control}
+                    name="requestedTeamId"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel>Welche Mannschaft?</FormLabel>
+                        <FormControl>
+                          <select
+                            className="w-full rounded-md border border-brand-neutral/40 bg-white px-3 py-2 text-sm"
+                            value={field.value ?? ""}
+                            onChange={(e) => field.onChange(e.target.value || null)}
+                          >
+                            <option value="">— wählen —</option>
+                            {teams.map((t) => (
+                              <option key={t.id} value={t.id}>
+                                {t.name} · Saison {t.saison}
+                              </option>
+                            ))}
+                          </select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
+              </>
             )}
 
             <FormField
@@ -198,15 +218,25 @@ export function RequestForm({
                   onChange={(e) => form.setValue("isConflictClaim", e.target.checked)}
                 />
                 <span className="text-sm">
-                  <strong>Ich bin der eigentliche Vereinsvertreter</strong> und der bestehende
-                  Account ist eine Falschanmeldung.
+                  {isTeamMode ? (
+                    <>
+                      <strong>Ich bin der eigentliche Vertreter dieser Mannschaft</strong> und der
+                      bestehende Account ist eine Falschanmeldung.
+                    </>
+                  ) : (
+                    <>
+                      <strong>Ich bin der eigentliche Vereinsvertreter</strong> und der bestehende
+                      Account ist eine Falschanmeldung.
+                    </>
+                  )}
                 </span>
               </label>
               {form.watch("isConflictClaim") && (
                 <div className="space-y-2 pt-2 border-t border-amber-200">
                   <p className="text-xs text-amber-900/80">
-                    Lade eine Bescheinigung hoch (Vereinsregister-Auszug, Vorstandsbeschluss, …).
-                    KickPact prüft beide Seiten und entscheidet anhand der stärkeren Beweisbasis.
+                    Optional: Lade eine Bescheinigung hoch (Vereinsregister-Auszug,
+                    Vorstandsbeschluss, …). Stärkt deine Anfrage — KickPact entscheidet anhand
+                    der besseren Beweisbasis.
                   </p>
                   <input
                     ref={conflictFileRef}

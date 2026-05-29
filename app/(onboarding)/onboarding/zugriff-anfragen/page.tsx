@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { clubs, teams } from "@/lib/db/schema";
@@ -10,9 +10,9 @@ export const metadata = { title: "Zugriff anfragen · KickPact" };
 export default async function ZugriffAnfragenPage({
   searchParams
 }: {
-  searchParams: Promise<{ clubSlug?: string }>;
+  searchParams: Promise<{ clubSlug?: string; teamId?: string }>;
 }) {
-  const { clubSlug } = await searchParams;
+  const { clubSlug, teamId } = await searchParams;
   if (!clubSlug) redirect("/onboarding");
 
   await requireUser();
@@ -29,6 +29,18 @@ export default async function ZugriffAnfragenPage({
     .from(teams)
     .where(eq(teams.clubId, club.id));
 
+  // Mannschafts-Modus: Anfrage zielt auf GENAU diese Mannschaft (kommt aus dem
+  // Onboarding-Flow via ?teamId). Sonst Fallback auf Vereins-Anfrage.
+  const fixedTeam = teamId
+    ? (
+        await db
+          .select({ id: teams.id, name: teams.name, saison: teams.saison })
+          .from(teams)
+          .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
+          .limit(1)
+      )[0] ?? null
+    : null;
+
   return (
     <main className="mx-auto max-w-2xl px-5 md:px-6 py-10 md:py-16">
       <div className="mb-8">
@@ -36,15 +48,21 @@ export default async function ZugriffAnfragenPage({
           Zugriff anfragen
         </div>
         <h1 className="mt-1 font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
-          {club.name}
+          {fixedTeam ? `${fixedTeam.name}` : club.name}
         </h1>
         <p className="mt-2 text-sm text-brand-night-navy/60">
-          Dieser Verein ist schon bei KickPact. Stell eine Anfrage — die Admins entscheiden,
-          ob du Zugriff bekommst.
+          {fixedTeam
+            ? "Diese Mannschaft wird schon bei KickPact betreut. Stell eine Anfrage — die Admins entscheiden, ob du Zugriff bekommst."
+            : "Dieser Verein ist schon bei KickPact. Stell eine Anfrage — die Admins entscheiden, ob du Zugriff bekommst."}
         </p>
       </div>
 
-      <RequestForm clubSlug={club.slug} clubName={club.name} teams={teamRows} />
+      <RequestForm
+        clubSlug={club.slug}
+        clubName={club.name}
+        teams={teamRows}
+        fixedTeam={fixedTeam}
+      />
     </main>
   );
 }

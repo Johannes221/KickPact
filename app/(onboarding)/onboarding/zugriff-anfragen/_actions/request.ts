@@ -53,16 +53,12 @@ export async function requestClubAccessAction(formData: FormData) {
     return { ok: true as const, alreadyMember: true, clubSlug: club.slug };
   }
 
-  // Conflict-claim path: validate + upload doc
+  // Conflict-claim path: Bescheinigung ist OPTIONAL. Wenn eine Datei mitkommt,
+  // wird sie validiert + gespeichert (stärkt die Anfrage); fehlt sie, läuft die
+  // Konflikt-Anfrage trotzdem durch — die Admins entscheiden dann ohne Nachweis.
   let conflictDocStorageKey: string | null = null;
-  if (parsed.data.isConflictClaim) {
-    const file = formData.get("conflictDoc");
-    if (!(file instanceof File)) {
-      return {
-        ok: false as const,
-        error: "Bei einer Konflikt-Anfrage musst du eine Bescheinigung hochladen."
-      };
-    }
+  const file = parsed.data.isConflictClaim ? formData.get("conflictDoc") : null;
+  if (parsed.data.isConflictClaim && file instanceof File) {
     const ALLOWED = new Set([
       "application/pdf",
       "image/jpeg",
