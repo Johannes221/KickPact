@@ -132,7 +132,7 @@ describe("createDraftClub", () => {
     expect(teamRows).toHaveLength(1);
   });
 
-  it("blockt Übernahme eines bereits anderem User gehörenden Vereins", async () => {
+  it("blockt DIESELBE Mannschaft eines fremden Users (Kollision pro Team)", async () => {
     const otherUser = await makeUser();
     await createDraftClub({
       role: "mannschaft",
@@ -150,6 +150,33 @@ describe("createDraftClub", () => {
     ).rejects.toThrow(/bereits bei KickPact/);
 
     expect(otherUser).toBeTruthy(); // make linter happy
+  });
+
+  it("erlaubt eine ANDERE Mannschaft desselben Vereins (eigener Container)", async () => {
+    // User A registriert die 1. Herren von V400.
+    await makeUser();
+    const a = await createDraftClub({
+      role: "mannschaft",
+      verein: { vereinId: "V400", name: "FC Test" },
+      team: { teamId: "T400", teamSlug: "h1", teamName: "1. Herren", saison: "2526" }
+    });
+
+    // User B registriert die 2. Herren desselben Vereins → eigener Container,
+    // KEIN Block (Kollision ist pro fussballde_team_id, nicht pro Verein).
+    await makeUser();
+    const b = await createDraftClub({
+      role: "mannschaft",
+      verein: { vereinId: "V400", name: "FC Test" },
+      team: { teamId: "T401", teamSlug: "h2", teamName: "2. Herren", saison: "2526" }
+    });
+
+    expect(b.clubId).not.toBe(a.clubId);
+
+    // Beide Container referenzieren denselben realen Verein.
+    const aClub = await db.select().from(clubs).where(eq(clubs.id, a.clubId));
+    const bClub = await db.select().from(clubs).where(eq(clubs.id, b.clubId));
+    expect(aClub[0].fussballdeVereinId).toBe("V400");
+    expect(bClub[0].fussballdeVereinId).toBe("V400");
   });
 });
 

@@ -1,16 +1,22 @@
 "use server";
 
 import { z } from "zod";
-import { and, eq, inArray } from "drizzle-orm";
 import { searchVereine, getMannschaften } from "@/lib/crawler/fussballde";
-import { db } from "@/lib/db/client";
-import { clubs, clubMemberships } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/auth/session";
+import { checkTeamCollision } from "@/lib/db/queries/onboarding-collision";
+import { db } from "@/lib/db/client";
+import { clubMemberships } from "@/lib/db/schema";
+import { and, eq } from "drizzle-orm";
 
 const searchSchema = z.object({
   query: z.string().min(2).max(80)
 });
 
+/**
+ * Vereinssuche. Liefert nur noch reine Treffer — KEIN Verein-Level-„belegt"
+ * mehr (Spec 2026-05-29 §4: Verein-Existenz allein ist bedeutungslos). Ob etwas
+ * belegt ist, entscheidet sich pro Mannschaft (siehe getMannschaftenAction).
+ */
 export async function searchVereineAction(input: { query: string }) {
   const parsed = searchSchema.safeParse(input);
   if (!parsed.success) {
@@ -18,66 +24,7 @@ export async function searchVereineAction(input: { query: string }) {
   }
   try {
     const hits = await searchVereine(parsed.data.query);
-    const limited = hits.slice(0, 15);
-
-    // Einen Verein nur dann als „belegt" markieren, wenn ein **fertig
-    // onboardeter** Club (onboardingStatus = 'completed') mit dieser fußball.de-
-    // Verein-ID existiert, der NICHT dem aktuellen User gehört. Sonst würde der
-    // eigene halbfertige Draft (oder ein fremder Draft) fälschlich als „Schon
-    // registriert → Zugriff anfragen" angezeigt — der User soll seinen eigenen
-    // Draft per Resume fortsetzen können, nicht bei sich selbst Zugriff anfragen.
-    const session = await getServerSession();
-    const currentUserId = session?.user?.id ?? null;
-
-    const fussballdeIds = limited.map((h) => h.vereinId);
-    const existing =
-      fussballdeIds.length === 0
-        ? []
-        : await db
-            .select({
-              id: clubs.id,
-              slug: clubs.slug,
-              fussballdeVereinId: clubs.fussballdeVereinId,
-              onboardingStatus: clubs.onboardingStatus
-            })
-            .from(clubs)
-            .where(inArray(clubs.fussballdeVereinId, fussballdeIds));
-
-    // Welche dieser Clubs gehören dem aktuellen User? (für Owner-Ausnahme)
-    const myClubIds = new Set<string>();
-    if (currentUserId && existing.length > 0) {
-      const myMems = await db
-        .select({ clubId: clubMemberships.clubId })
-        .from(clubMemberships)
-        .where(
-          and(
-            eq(clubMemberships.userId, currentUserId),
-            inArray(
-              clubMemberships.clubId,
-              existing.map((c) => c.id)
-            )
-          )
-        );
-      for (const m of myMems) myClubIds.add(m.clubId);
-    }
-
-    const claimedMap = new Map<string, string>();
-    for (const c of existing) {
-      if (!c.fussballdeVereinId) continue;
-      const isCompleted = c.onboardingStatus === "completed";
-      const ownedByMe = myClubIds.has(c.id);
-      if (isCompleted && !ownedByMe) {
-        claimedMap.set(c.fussballdeVereinId, c.slug);
-      }
-    }
-
-    const enriched = limited.map((h) => ({
-      ...h,
-      isAlreadyClaimed: claimedMap.has(h.vereinId),
-      claimedClubSlug: claimedMap.get(h.vereinId) ?? null
-    }));
-
-    return { ok: true as const, results: enriched };
+    return { ok: true as const, results: hits.slice(0, 15) };
   } catch (e) {
     return {
       ok: false as const,
@@ -86,6 +33,28 @@ export async function searchVereineAction(input: { query: string }) {
   }
 }
 
+export interface MannschaftWithStatus {
+  name: string;
+  slug: string;
+  saison: string;
+  teamId: string;
+  url: string;
+  /**
+   * Belegt = aktiv betreute Mannschaft eines ANDEREN Users → nicht wählbar,
+   * stattdessen „Zugriff anfragen". `none`/`scraped-unmanaged` sind wählbar
+   * (letztere wird beim Anlegen in den eigenen Container umgehängt).
+   */
+  isLocked: boolean;
+  /** Slug des Containers, der die Mannschaft hält (für „Zugriff anfragen"). */
+  registeredClubSlug: string | null;
+  /** True, wenn die belegte Mannschaft dem aktuellen User gehört. */
+  ownedByMe: boolean;
+}
+
+/**
+ * Lädt die Mannschaften eines Vereins von fußball.de und reichert jede mit
+ * ihrem KickPact-Registrierungsstatus an (Kollision pro fussballde_team_id).
+ */
 export async function getMannschaftenAction(input: {
   vereinId: string;
   slug: string;
@@ -93,11 +62,45 @@ export async function getMannschaftenAction(input: {
 }) {
   try {
     const results = await getMannschaften(input.vereinId, input.slug, input.vereinName);
-    return { ok: true as const, results };
+
+    const session = await getServerSession();
+    const currentUserId = session?.user?.id ?? null;
+
+    const enriched: MannschaftWithStatus[] = await Promise.all(
+      results.map(async (m) => {
+        const collision = await checkTeamCollision(m.teamId, m.saison);
+        if (collision.kind === "actively-managed") {
+          const ownedByMe = currentUserId
+            ? await isClubMemberOf(collision.clubId, currentUserId)
+            : false;
+          return {
+            ...m,
+            // Eigene betreute Mannschaft ist nicht „gesperrt" (Resume möglich);
+            // fremde schon → „Zugriff anfragen".
+            isLocked: !ownedByMe,
+            registeredClubSlug: collision.clubSlug,
+            ownedByMe
+          };
+        }
+        // none + scraped-unmanaged → frei wählbar.
+        return { ...m, isLocked: false, registeredClubSlug: null, ownedByMe: false };
+      })
+    );
+
+    return { ok: true as const, results: enriched };
   } catch (e) {
     return {
       ok: false as const,
       error: e instanceof Error ? e.message : "Mannschaften laden fehlgeschlagen"
     };
   }
+}
+
+async function isClubMemberOf(clubId: string, userId: string): Promise<boolean> {
+  const [m] = await db
+    .select({ userId: clubMemberships.userId })
+    .from(clubMemberships)
+    .where(and(eq(clubMemberships.clubId, clubId), eq(clubMemberships.userId, userId)))
+    .limit(1);
+  return Boolean(m);
 }

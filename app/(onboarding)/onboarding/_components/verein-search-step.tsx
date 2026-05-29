@@ -8,7 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics/track";
-import { searchVereineAction, getMannschaftenAction } from "../verein/_actions/search";
+import {
+  searchVereineAction,
+  getMannschaftenAction,
+  type MannschaftWithStatus
+} from "../verein/_actions/search";
 import { createDraftClub } from "../_actions/create-draft-club";
 
 type VereinHit = {
@@ -16,16 +20,6 @@ type VereinHit = {
   ort: string | null;
   slug: string;
   vereinId: string;
-  url: string;
-  isAlreadyClaimed?: boolean;
-  claimedClubSlug?: string | null;
-};
-
-type Mannschaft = {
-  name: string;
-  slug: string;
-  saison: string;
-  teamId: string;
   url: string;
 };
 
@@ -50,7 +44,7 @@ export function VereinSearchStep({ role }: Props) {
   const [results, setResults] = useState<VereinHit[]>([]);
   const [searched, setSearched] = useState(false);
   const [chosenVerein, setChosenVerein] = useState<VereinHit | null>(null);
-  const [teams, setTeams] = useState<Mannschaft[]>([]);
+  const [teams, setTeams] = useState<MannschaftWithStatus[]>([]);
   const [teamsLoading, setTeamsLoading] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<Set<string>>(new Set());
   const [pending, startTransition] = useTransition();
@@ -94,6 +88,8 @@ export function VereinSearchStep({ role }: Props) {
   }
 
   function toggleTeam(teamId: string) {
+    // Belegte (fremd betreute) Mannschaften sind nicht wählbar.
+    if (teams.find((t) => t.teamId === teamId)?.isLocked) return;
     setSelectedTeamIds((prev) => {
       const next = new Set(prev);
       if (role === "mannschaft") {
@@ -199,46 +195,22 @@ export function VereinSearchStep({ role }: Props) {
             </p>
           ) : (
             <ul className="divide-y divide-brand-neutral/40">
-              {results.map((v) => {
-                if (v.isAlreadyClaimed) {
-                  return (
-                    <li key={v.vereinId}>
-                      <Link
-                        href={`/onboarding/zugriff-anfragen?clubSlug=${encodeURIComponent(v.claimedClubSlug ?? "")}`}
-                        className="flex w-full items-center justify-between p-4 text-left hover:bg-amber-50 transition-colors"
-                      >
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-amber-600" aria-hidden>🔒</span>
-                            <span className="font-semibold text-brand-night-navy">{v.name}</span>
-                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-amber-800">
-                              Schon registriert
-                            </span>
-                          </div>
-                          {v.ort && <div className="text-xs text-brand-night-navy/40 mt-0.5 ml-6">{v.ort}</div>}
-                        </div>
-                        <span className="text-amber-700 text-sm font-semibold">Zugriff anfragen →</span>
-                      </Link>
-                    </li>
-                  );
-                }
-                return (
-                  <li key={v.vereinId}>
-                    <button
-                      type="button"
-                      onClick={() => pickVerein(v)}
-                      disabled={pending}
-                      className="flex w-full items-center justify-between p-4 text-left hover:bg-accent/5 transition-colors"
-                    >
-                      <div>
-                        <div className="font-semibold text-brand-night-navy">{v.name}</div>
-                        {v.ort && <div className="text-xs text-brand-night-navy/40 mt-0.5">{v.ort}</div>}
-                      </div>
-                      <span className="text-accent text-xl">→</span>
-                    </button>
-                  </li>
-                );
-              })}
+              {results.map((v) => (
+                <li key={v.vereinId}>
+                  <button
+                    type="button"
+                    onClick={() => pickVerein(v)}
+                    disabled={pending}
+                    className="flex w-full items-center justify-between p-4 text-left hover:bg-accent/5 transition-colors"
+                  >
+                    <div>
+                      <div className="font-semibold text-brand-night-navy">{v.name}</div>
+                      {v.ort && <div className="text-xs text-brand-night-navy/40 mt-0.5">{v.ort}</div>}
+                    </div>
+                    <span className="text-accent text-xl">→</span>
+                  </button>
+                </li>
+              ))}
             </ul>
           )}
         </div>
@@ -286,6 +258,32 @@ export function VereinSearchStep({ role }: Props) {
             ) : (
               <ul className="mt-3 space-y-2">
                 {teams.map((t) => {
+                  // Belegt durch jemand anderen → nicht wählbar, „Zugriff anfragen".
+                  if (t.isLocked) {
+                    return (
+                      <li key={t.teamId}>
+                        <Link
+                          href={`/onboarding/zugriff-anfragen?clubSlug=${encodeURIComponent(t.registeredClubSlug ?? "")}`}
+                          className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50/60 p-4 transition-colors hover:bg-amber-50"
+                        >
+                          <span className="text-amber-600 text-lg" aria-hidden>🔒</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-brand-night-navy">{t.name}</span>
+                              <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-amber-800">
+                                bereits registriert
+                              </span>
+                            </div>
+                            <div className="text-xs text-brand-night-navy/40 mt-0.5">Saison {t.saison}</div>
+                          </div>
+                          <span className="text-amber-700 text-sm font-semibold whitespace-nowrap">
+                            Zugriff anfragen →
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  }
+
                   const checked = selectedTeamIds.has(t.teamId);
                   return (
                     <li key={t.teamId}>
@@ -305,7 +303,14 @@ export function VereinSearchStep({ role }: Props) {
                           className="h-4 w-4 accent-accent"
                         />
                         <div className="flex-1">
-                          <div className="font-semibold text-brand-night-navy">{t.name}</div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-brand-night-navy">{t.name}</span>
+                            {t.ownedByMe && (
+                              <span className="inline-flex items-center rounded-full bg-accent/10 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-accent-dark">
+                                von dir
+                              </span>
+                            )}
+                          </div>
                           <div className="text-xs text-brand-night-navy/40 mt-0.5">Saison {t.saison}</div>
                         </div>
                       </label>
