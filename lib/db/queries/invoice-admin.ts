@@ -13,6 +13,8 @@ export interface AdminInvoiceRow {
   sentAt: Date | null;
   paidMarkedAt: Date | null;
   markedPaidBySponsorAt: Date | null;
+  cancelledAt: Date | null;
+  reversalOfInvoiceId: string | null;
   createdAt: Date;
   sponsorName: string;
   sponsorEmail: string;
@@ -54,6 +56,8 @@ export async function listInvoicesForAdmin(opts?: {
       sentAt: invoices.sentAt,
       paidMarkedAt: invoices.paidMarkedAt,
       markedPaidBySponsorAt: invoices.markedPaidBySponsorAt,
+      cancelledAt: invoices.cancelledAt,
+      reversalOfInvoiceId: invoices.reversalOfInvoiceId,
       createdAt: invoices.createdAt,
       sponsorName: sponsors.displayName,
       sponsorEmail: users.email,

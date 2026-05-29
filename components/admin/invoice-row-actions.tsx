@@ -5,15 +5,18 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   markInvoicePaidAction,
-  sendInvoiceReminderAction
+  sendInvoiceReminderAction,
+  stornoInvoiceAction
 } from "@/app/admin/(panel)/_actions/invoice-actions";
 
 export function InvoiceRowActions({
   invoiceId,
-  paid
+  paid,
+  canStorno
 }: {
   invoiceId: string;
   paid: boolean;
+  canStorno: boolean;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -53,6 +56,24 @@ export function InvoiceRowActions({
       >
         Erinnerung
       </button>
+      {canStorno && (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => {
+            if (
+              !window.confirm(
+                "Echte Stornorechnung (Gutschrift) erzeugen? Die Original-Rechnung wird als storniert markiert."
+              )
+            )
+              return;
+            run(() => stornoInvoiceAction({ invoiceId }), "Stornorechnung erzeugt");
+          }}
+          className="rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+        >
+          Stornieren
+        </button>
+      )}
     </div>
   );
 }

@@ -87,14 +87,23 @@ export const invoices = pgTable(
      *   - sonst                                              → "Offen"
      */
     markedPaidBySponsorAt: timestamp("marked_paid_by_sponsor_at", { withTimezone: true }),
+    /**
+     * Storno (Spec 2026-05-29 §J): Wenn gesetzt, wurde diese Rechnung durch eine
+     * Stornorechnung aufgehoben. `reversalOfInvoiceId` zeigt von der
+     * Storno-Rechnung (eigene Zeile, negativer Betrag) auf die Original-Rechnung.
+     */
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    reversalOfInvoiceId: text("reversal_of_invoice_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({
-    uniqueSponsorPeriod: uniqueIndex("invoices_sponsor_club_period_idx").on(
-      t.sponsorId,
-      t.clubId,
-      t.period
-    )
+    // Verhindert Doppel-Generierung derselben Monatsrechnung. Partiell: gilt
+    // NUR für reguläre Rechnungen — Storno-Zeilen (reversal_of_invoice_id
+    // gesetzt) teilen sich (sponsor, club, period) mit der Original-Rechnung
+    // und sind daher ausgenommen.
+    uniqueSponsorPeriod: uniqueIndex("invoices_sponsor_club_period_idx")
+      .on(t.sponsorId, t.clubId, t.period)
+      .where(sql`${t.reversalOfInvoiceId} IS NULL`)
   })
 );
 

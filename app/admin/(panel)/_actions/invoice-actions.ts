@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { assertPlatformAdmin } from "@/lib/auth/admin";
 import { markInvoicePaid, getInvoiceMailInfo } from "@/lib/db/queries/invoice-admin";
+import { createStornoInvoice } from "@/lib/invoicing/storno";
 import { recordOperatorAction } from "@/lib/db/queries/operator-audit";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { invoiceReminderEmail } from "@/lib/mail/templates/invoice-reminder";
@@ -38,6 +39,43 @@ export async function markInvoicePaidAction(input: { invoiceId: string; paid: bo
 
   revalidatePath("/admin/rechnungen");
   return { ok: true as const };
+}
+
+const STORNO_REASONS: Record<string, string> = {
+  not_found: "Rechnung nicht gefunden.",
+  already_cancelled: "Rechnung ist bereits storniert.",
+  is_storno: "Eine Stornorechnung kann nicht erneut storniert werden.",
+  wrong_status: "Nur versendete oder bezahlte Rechnungen können storniert werden.",
+  no_pdf: "Zur Rechnung fehlt das PDF/die Nummer — Storno nicht möglich."
+};
+
+export async function stornoInvoiceAction(input: { invoiceId: string }) {
+  const parsed = z.object({ invoiceId: z.string().min(1) }).safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
+  const { user: admin } = await assertPlatformAdmin();
+
+  let result;
+  try {
+    result = await createStornoInvoice(parsed.data.invoiceId);
+  } catch (e) {
+    console.error("[invoice] storno failed", e);
+    return { ok: false as const, error: "Fehler beim Erzeugen der Stornorechnung." };
+  }
+  if (!result.ok) {
+    return { ok: false as const, error: STORNO_REASONS[result.reason] ?? "Storno nicht möglich." };
+  }
+
+  await recordOperatorAction({
+    operatorUserId: admin.id,
+    action: "invoice.storno",
+    targetType: "invoice",
+    targetId: parsed.data.invoiceId,
+    summary: `Stornorechnung ${result.stornoNumber} erzeugt (${eur(result.amountCents)})`,
+    diff: { stornoInvoiceId: result.stornoInvoiceId, stornoNumber: result.stornoNumber }
+  });
+
+  revalidatePath("/admin/rechnungen");
+  return { ok: true as const, stornoNumber: result.stornoNumber };
 }
 
 export async function sendInvoiceReminderAction(input: { invoiceId: string }) {

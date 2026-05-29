@@ -149,6 +149,12 @@ export interface InvoiceData {
    * When `undefined` (or no IBAN), the QR block is not rendered.
    */
   girocodeDataUrl?: string | null;
+  /**
+   * Wenn gesetzt, wird das Dokument als STORNORECHNUNG (Gutschrift) gerendert:
+   * Titel "Stornorechnung", Referenz auf die Original-Rechnungsnummer, keine
+   * Zahlungsaufforderung (Beträge sind negativ = Gutschrift).
+   */
+  stornoOfNumber?: string | null;
 }
 
 function eur(cents: number): string {
@@ -165,11 +171,13 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
     day: "2-digit"
   });
 
+  const isStorno = Boolean(data.stornoOfNumber);
+
   return (
     <Document
-      title={`Rechnung ${data.invoiceNumber}`}
+      title={`${isStorno ? "Stornorechnung" : "Rechnung"} ${data.invoiceNumber}`}
       author={data.club.name}
-      subject={`KickPact-Rechnung für ${data.period}`}
+      subject={`KickPact-${isStorno ? "Stornorechnung" : "Rechnung"} für ${data.period}`}
     >
       <Page size="A4" style={s.page}>
         {/* Header: Verein links, Sponsor rechts */}
@@ -210,13 +218,21 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
 
         {/* Meta */}
         <View style={s.meta}>
-          <Text style={s.invoiceTitle}>Rechnung {data.invoiceNumber}</Text>
+          <Text style={s.invoiceTitle}>
+            {isStorno ? "Stornorechnung" : "Rechnung"} {data.invoiceNumber}
+          </Text>
+          {isStorno ? (
+            <View style={s.metaRow}>
+              <Text style={s.metaLabel}>Storno zu Rechnung</Text>
+              <Text>{data.stornoOfNumber}</Text>
+            </View>
+          ) : null}
           <View style={s.metaRow}>
             <Text style={s.metaLabel}>Leistungszeitraum</Text>
             <Text>{data.period}</Text>
           </View>
           <View style={s.metaRow}>
-            <Text style={s.metaLabel}>Rechnungsdatum</Text>
+            <Text style={s.metaLabel}>{isStorno ? "Stornodatum" : "Rechnungsdatum"}</Text>
             <Text>{issued}</Text>
           </View>
         </View>
@@ -267,7 +283,14 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
 
         {/* Zahlungs-Block — IBAN prominent + Girocode-QR rechts (sofern beide
             vorhanden). Banking-App scannt → SEPA-Formular vorausgefüllt. */}
-        {data.club.iban ? (
+        {isStorno ? (
+          <Text style={s.ustNote}>
+            Diese Stornorechnung hebt die oben referenzierte Rechnung auf. Bereits
+            gezahlte Beträge werden erstattet bzw. verrechnet. Es ist keine Zahlung erforderlich.
+          </Text>
+        ) : null}
+
+        {!isStorno && data.club.iban ? (
           <View style={s.payBox} wrap={false}>
             <View style={s.payBoxText}>
               <Text style={s.payBoxLabel}>Zahlung</Text>
@@ -295,8 +318,10 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
             Basic: KickPact-Branding sichtbar.
             Pro / Vereinslizenz: Vereins-Branding ohne KickPact-Hinweis. */}
         <Text style={s.footer} fixed>
-          Bitte überweisen Sie den Gesamtbetrag innerhalb von 14 Tagen
-          {data.club.iban ? ` auf IBAN ${data.club.iban}` : ""}.{"\n"}
+          {isStorno
+            ? "Stornorechnung — keine Zahlung erforderlich."
+            : `Bitte überweisen Sie den Gesamtbetrag innerhalb von 14 Tagen${data.club.iban ? ` auf IBAN ${data.club.iban}` : ""}.`}
+          {"\n"}
           {(data.plan ?? "basic") === "basic"
             ? "Erzeugt mit KickPact · Performance-Sponsoring im Amateurfußball · kickpact.de"
             : `${data.club.name} · ${data.club.address.zip} ${data.club.address.city}`}

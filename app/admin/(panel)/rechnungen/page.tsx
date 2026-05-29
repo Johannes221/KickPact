@@ -173,6 +173,16 @@ export default async function AdminRechnungenPage({
                       <span className={`rounded-md px-2 py-1 text-xs font-semibold ${STATUS_PILL[inv.status]}`}>
                         {STATUS_LABELS[inv.status]}
                       </span>
+                      {inv.reversalOfInvoiceId && (
+                        <span className="ml-1 rounded-md bg-brand-night-navy/10 px-1.5 py-0.5 text-[0.7rem] font-semibold text-brand-night-navy/70">
+                          Storno
+                        </span>
+                      )}
+                      {inv.cancelledAt && (
+                        <span className="ml-1 rounded-md bg-rose-100 px-1.5 py-0.5 text-[0.7rem] font-semibold text-rose-700">
+                          storniert
+                        </span>
+                      )}
                       {inv.markedPaidBySponsorAt && !inv.paidMarkedAt && (
                         <span className="ml-1 text-[0.7rem] text-amber-700">Sponsor-Claim</span>
                       )}
@@ -188,7 +198,15 @@ export default async function AdminRechnungenPage({
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <InvoiceRowActions invoiceId={inv.id} paid={Boolean(inv.paidMarkedAt)} />
+                      <InvoiceRowActions
+                        invoiceId={inv.id}
+                        paid={Boolean(inv.paidMarkedAt)}
+                        canStorno={
+                          (inv.status === "sent" || inv.status === "paid") &&
+                          !inv.cancelledAt &&
+                          !inv.reversalOfInvoiceId
+                        }
+                      />
                     </td>
                   </tr>
                 );
