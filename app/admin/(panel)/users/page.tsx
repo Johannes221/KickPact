@@ -4,7 +4,7 @@ import {
   type AdminUserSortKey
 } from "@/lib/db/queries/platform-stats";
 import { parsePaginationFromSearchParams } from "@/lib/db/queries/_helpers/paginate";
-import { parseSortFromSearchParams } from "@/components/ui/data-table";
+import { parseSortFromSearchParams } from "@/components/ui/data-table-utils";
 import { UsersTable } from "./_components/users-table";
 import { UsersFilters } from "./_components/users-filters";
 

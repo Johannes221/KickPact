@@ -6,7 +6,7 @@ import {
   matchEvents,
   players
 } from "@/lib/db/schema";
-import type { SpielDetails, SpielListItem } from "@/lib/crawler/fussballde";
+import type { SpielDetails, SpielListItem, KaderPlayer } from "@/lib/crawler/fussballde";
 
 export interface ActiveTeam {
   id: string;
@@ -386,4 +386,58 @@ async function writeMatchEvents(
   }
 
   return eventRows.length;
+}
+
+/**
+ * Persistiert den fussball.de-Kader eines Teams in `players`. Idempotent:
+ * mehrfaches Crawlen erzeugt keine Duplikate.
+ *
+ * Warum überhaupt? Ohne diesen Schritt entstehen `players` erst aus den
+ * Match-Events des ersten gecrawlten Spiels. Direkt nach dem Onboarding ist
+ * der Kader dann leer → "Tor von Spieler X"-Pacts (goal_by_player) lassen sich
+ * nicht einrichten. Dieser Schritt füllt den Kader beim (Onboarding-)Crawl.
+ *
+ * Dedup-Strategie (der Unique-Index `players_team_fussballde_idx` greift nur,
+ * wenn `fussballde_player_id` NOT NULL ist):
+ *  - Spieler MIT spielerId → Batch-INSERT onConflictDoNothing.
+ *  - Spieler OHNE spielerId → per Name gegen bestehende Zeilen deduplizieren.
+ * Bestehende Zeilen werden NICHT überschrieben (respektiert DSGVO-`blocked`).
+ */
+export async function persistKader(
+  teamId: string,
+  kader: KaderPlayer[]
+): Promise<number> {
+  let inserted = 0;
+
+  const withId = kader.filter((p) => p.spielerId && p.name.trim().length > 0);
+  if (withId.length > 0) {
+    await db
+      .insert(players)
+      .values(
+        withId.map((p) => ({
+          teamId,
+          fussballdePlayerId: p.spielerId!,
+          name: p.name
+        }))
+      )
+      .onConflictDoNothing();
+    inserted += withId.length;
+  }
+
+  const withoutId = kader.filter((p) => !p.spielerId && p.name.trim().length > 0);
+  if (withoutId.length > 0) {
+    const names = [...new Set(withoutId.map((p) => p.name))];
+    const existing = await db
+      .select({ name: players.name })
+      .from(players)
+      .where(and(eq(players.teamId, teamId), inArray(players.name, names)));
+    const existingNames = new Set(existing.map((r) => r.name));
+    const toInsert = names.filter((n) => !existingNames.has(n));
+    if (toInsert.length > 0) {
+      await db.insert(players).values(toInsert.map((name) => ({ teamId, name })));
+      inserted += toInsert.length;
+    }
+  }
+
+  return inserted;
 }

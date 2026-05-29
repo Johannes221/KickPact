@@ -104,7 +104,7 @@ export default async function MatchDetailPage({
                 {match.heimName}
               </div>
               <div className="text-xs text-brand-night-navy/50 mt-1">
-                {isHeim ? `← ${team.name}` : "Gastteam"}
+                {isHeim ? `← ${team.name}` : "Heimteam"}
               </div>
             </div>
             <div className="shrink-0 text-center">
@@ -124,7 +124,7 @@ export default async function MatchDetailPage({
                 {match.gastName}
               </div>
               <div className="text-xs text-brand-night-navy/50 mt-1">
-                {!isHeim ? `${team.name} →` : "Heimteam"}
+                {!isHeim ? `${team.name} →` : "Gastteam"}
               </div>
             </div>
           </div>

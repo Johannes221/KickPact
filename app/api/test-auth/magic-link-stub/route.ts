@@ -122,8 +122,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const secret = process.env.BETTER_AUTH_SECRET!;
   const signedSessionToken = await signCookieToken(sessionToken, secret);
 
-  const cookieName = process.env.BETTER_AUTH_COOKIE_NAME ?? "better-auth.session_token";
   const isHttps = (process.env.BETTER_AUTH_URL ?? "").startsWith("https://");
+  // Better-Auth verwendet bei useSecureCookies (=> HTTPS) den `__Secure-`-Prefix
+  // (z.B. `__Secure-better-auth.session_token`). Ohne diesen Prefix liest
+  // getSignedCookie() den Cookie auf HTTPS nicht — der Bypass wäre auf
+  // Staging/Prod wirkungslos. Auf HTTP bleibt der Name ungeprefixt.
+  const baseCookieName =
+    process.env.BETTER_AUTH_COOKIE_NAME ?? "better-auth.session_token";
+  const cookieName = isHttps ? `__Secure-${baseCookieName}` : baseCookieName;
   const res = NextResponse.json({ userId, email });
   res.cookies.set({
     name: cookieName,

@@ -29,8 +29,12 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { ALLOWED_PAGE_SIZES } from "@/lib/db/queries/_helpers/paginate";
+import type { SortDirection } from "./data-table-utils";
 
-export type SortDirection = "asc" | "desc";
+// Re-exported so existing `import { SortDirection } from ".../data-table"`
+// keep working. The pure helper `parseSortFromSearchParams` now lives in
+// data-table-utils.ts (server-safe) — see note there.
+export type { SortDirection };
 
 export interface DataTableColumn<TRow> {
   /** Unique key. Used as `sort=<key>` URL param when `sortable`. */
@@ -287,22 +291,5 @@ export function DataTable<TRow>({
       </div>
     </div>
   );
-}
-
-/**
- * Helper for Server Components: parse `sort` + `dir` from searchParams with
- * an explicit allowlist of sortable keys. Returns `undefined` for invalid keys.
- */
-export function parseSortFromSearchParams<TKey extends string>(
-  sp: { get: (key: string) => string | null },
-  allowed: readonly TKey[]
-): { sort: TKey | undefined; dir: SortDirection } {
-  const rawSort = sp.get("sort");
-  const rawDir = sp.get("dir");
-  const sort = rawSort && (allowed as readonly string[]).includes(rawSort)
-    ? (rawSort as TKey)
-    : undefined;
-  const dir: SortDirection = rawDir === "asc" ? "asc" : "desc";
-  return { sort, dir };
 }
 

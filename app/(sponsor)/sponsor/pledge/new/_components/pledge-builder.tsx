@@ -698,6 +698,7 @@ function TriggerToggle({
     <button
       type="button"
       onClick={onToggle}
+      aria-pressed={enabled}
       className={
         "text-left rounded-xl border p-3 transition-colors " +
         (enabled
