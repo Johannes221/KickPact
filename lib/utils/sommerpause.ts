@@ -27,3 +27,26 @@ export function isSommerpause(date: Date = new Date()): boolean {
   const month = date.getUTCMonth(); // 0-indexed
   return month >= SOMMERPAUSE_START_MONTH && month < SOMMERPAUSE_END_MONTH;
 }
+
+/** Tag im Juli (UTC), ab dem der Crawler wieder läuft. */
+const CRAWLER_RESUME_DAY = 15;
+
+/**
+ * Crawler-spezifisches Pause-Fenster — enger als die Billing-Sommerpause.
+ *
+ * Während `isSommerpause` (Juni–Juli) für Pledge-/Billing-Pausen gilt, soll der
+ * Crawler schon ab **Mitte Juli** wieder laufen. Grund: Die Spielpläne der neuen
+ * Saison werden auf fussball.de typischerweise im Juli veröffentlicht — der
+ * Crawler muss die kommenden Spiele (scheduled-Stubs via next.games) einsammeln,
+ * BEVOR die ersten Rundenspiele (~August) angepfiffen werden. Ein paar leere
+ * Scrape-Runs im Juli sind günstiger als verpasste Saisonauftakt-Daten.
+ *
+ * Fenster: [1. Juni, 15. Juli). Override via SOMMERPAUSE_OVERRIDE_DISABLED.
+ */
+export function isCrawlerSommerpause(date: Date = new Date()): boolean {
+  if (process.env.SOMMERPAUSE_OVERRIDE_DISABLED === "true") return false;
+  const month = date.getUTCMonth(); // 0-indexed
+  if (month === SOMMERPAUSE_START_MONTH) return true; // ganzer Juni
+  if (month === 6 && date.getUTCDate() < CRAWLER_RESUME_DAY) return true; // Juli bis 14.
+  return false;
+}

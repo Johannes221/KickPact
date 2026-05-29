@@ -1,4 +1,4 @@
-import { and, eq, gte, lt, lte, inArray, sql } from "drizzle-orm";
+import { and, eq, gte, lte, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   pledges,
@@ -78,8 +78,12 @@ export async function getMonthlyChargedCents(pledgeId: string, asOf: Date): Prom
     .where(
       and(
         eq(charges.pledgeId, pledgeId),
-        gte(sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt})`, monthStart),
-        lt(sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt})`, monthEnd),
+        // COALESCE(...) ist ein rohes SQL-Fragment ohne Spalten-Typ — Drizzle
+        // kann daher den Bind-Typ für ein Date nicht ableiten und postgres.js
+        // wirft "Received an instance of Date". Daher Datum als ISO-String
+        // binden (Postgres castet zu timestamptz).
+        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${monthStart.toISOString()}`,
+        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) < ${monthEnd.toISOString()}`,
         inArray(charges.status, ["confirmed", "pending_approval", "invoiced"])
       )
     );

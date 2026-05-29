@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { isSommerpause } from "@/lib/utils/sommerpause";
+import { isSommerpause, isCrawlerSommerpause } from "@/lib/utils/sommerpause";
 
 describe("isSommerpause", () => {
   afterEach(() => {
@@ -27,5 +27,34 @@ describe("isSommerpause", () => {
   it("returns false when SOMMERPAUSE_OVERRIDE_DISABLED=true", () => {
     process.env.SOMMERPAUSE_OVERRIDE_DISABLED = "true";
     expect(isSommerpause(new Date("2026-07-15"))).toBe(false);
+  });
+});
+
+describe("isCrawlerSommerpause", () => {
+  afterEach(() => {
+    delete process.env.SOMMERPAUSE_OVERRIDE_DISABLED;
+    vi.restoreAllMocks();
+  });
+
+  it.each([
+    // Crawler pausiert: ganzer Juni + Juli bis 14.
+    ["2026-06-01", true],
+    ["2026-06-30", true],
+    ["2026-07-01", true],
+    ["2026-07-14", true],
+    // Crawler läuft wieder ab 15. Juli — fängt neue Saison-Spielpläne
+    ["2026-07-15", false],
+    ["2026-07-31", false],
+    ["2026-08-01", false],
+    // Außerhalb des Sommers
+    ["2026-05-31", false],
+    ["2026-03-15", false]
+  ])("%s → %s", (dateStr, expected) => {
+    expect(isCrawlerSommerpause(new Date(dateStr))).toBe(expected);
+  });
+
+  it("returns false when SOMMERPAUSE_OVERRIDE_DISABLED=true", () => {
+    process.env.SOMMERPAUSE_OVERRIDE_DISABLED = "true";
+    expect(isCrawlerSommerpause(new Date("2026-06-15"))).toBe(false);
   });
 });
