@@ -162,6 +162,21 @@ async function buildMatchInput(matchId: string) {
   };
 }
 
+/**
+ * Drizzle wraps the underlying PostgresError, so the "duplicate key"/"unique"
+ * text lives on the wrapped `cause` (Postgres code 23505), not on the
+ * top-level `.message` ("Failed query: ..."). Walk the cause chain to detect
+ * a unique-constraint violation regardless of where it surfaced.
+ */
+function isUniqueViolation(err: unknown): boolean {
+  let cur: unknown = err;
+  while (cur instanceof Error) {
+    if (/unique|duplicate/i.test(cur.message)) return true;
+    cur = cur.cause;
+  }
+  return false;
+}
+
 describe.skipIf(isIntegrationDbDisabled)("evaluate-match — end-to-end pipeline", () => {
   beforeAll(async () => {
     await resetTestDb();
@@ -238,8 +253,7 @@ describe.skipIf(isIntegrationDbDisabled)("evaluate-match — end-to-end pipeline
           confirmedAt: new Date()
         });
       } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        if (msg.includes("unique") || msg.includes("duplicate")) collisions++;
+        if (isUniqueViolation(e)) collisions++;
         else throw e;
       }
     }

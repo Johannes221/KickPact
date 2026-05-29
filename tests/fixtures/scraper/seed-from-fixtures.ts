@@ -95,11 +95,18 @@ export async function seedClubFromFixture(clubKey: string): Promise<SeedResult> 
   });
 
   const teamIds: Record<string, string> = {};
+  // Multiple config teams can share a search token (e.g. "Herren 1/2/3" all
+  // reduce to "herren"). Track assigned captured teams so each config key maps
+  // to a distinct Mannschaft — otherwise they'd collide on teams_fussballde_idx.
+  const usedFussballdeTeamIds = new Set<string>();
   for (const teamCfg of cfg.teams) {
     const searchToken = teamCfg.searchName.toLowerCase().split(" ")[0];
-    const match = mannschaften.find((m) =>
-      m.name.toLowerCase().includes(searchToken)
+    const match = mannschaften.find(
+      (m) =>
+        m.name.toLowerCase().includes(searchToken) &&
+        !usedFussballdeTeamIds.has(m.teamId)
     );
+    if (match) usedFussballdeTeamIds.add(match.teamId);
 
     const teamDbId = `t_${clubKey}_${teamCfg.key}`;
     await db.insert(teams).values({
