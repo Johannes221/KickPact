@@ -11,6 +11,8 @@ import {
   findMatchByFussballdeId,
   insertMatchWithEvents,
   updateMatchWithEvents,
+  markCrawlStarted,
+  markCrawlCompleted,
   type ActiveTeam
 } from "@/lib/db/queries/crawler";
 import { invalidateChargesForMatch } from "@/lib/db/queries/charges";
@@ -72,6 +74,10 @@ export const crawlMatches = inngest.createFunction(
     let skippedReadOnly = 0;
     let skippedInvalid = 0;
     for (const team of targetTeams) {
+      // Crawl-Start markieren → Dashboard zeigt das „Spiele werden geladen"-
+      // Banner für die Dauer dieses Laufs (siehe lib/crawler/crawl-status.ts).
+      await step.run(`crawl-start-${team.id}`, () => markCrawlStarted(team.id));
+
       // Read-Only-Clubs überspringen — spart fussball.de-Calls für inaktive Vereine.
       //
       // Audit 2026-05-24 Phase 2 / Task 2.4: bewusst symmetrisch — wenn der
@@ -91,6 +97,8 @@ export const crawlMatches = inngest.createFunction(
           clubId: team.clubId,
           teamId: team.id
         });
+        // Crawl als abgeschlossen markieren, sonst hinge das Banner am Stale-Guard.
+        await step.run(`crawl-done-ro-${team.id}`, () => markCrawlCompleted(team.id));
         skippedReadOnly++;
         continue;
       }
@@ -230,6 +238,9 @@ export const crawlMatches = inngest.createFunction(
 
         totalNewMatches++;
       }
+
+      // Team fertig gecrawlt → Banner kann ausgeblendet werden.
+      await step.run(`crawl-done-${team.id}`, () => markCrawlCompleted(team.id));
     }
 
     return {

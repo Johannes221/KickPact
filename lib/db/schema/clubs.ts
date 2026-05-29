@@ -165,6 +165,16 @@ export const teams = pgTable(
      * `teams.licensedUnderClubId IS NOT NULL` zusätzlich auf Club-Verifikation.
      */
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    /**
+     * Crawl-Status für die „Spiele werden geladen"-UX. `crawlStartedAt` wird
+     * gesetzt, sobald ein Crawl für dieses Team angestoßen wird (beim Onboarding-
+     * Insert und am Anfang jeder Crawler-Iteration), `crawlCompletedAt` wenn der
+     * Crawl durchgelaufen ist. Ein Team gilt als „crawling", solange
+     * crawlStartedAt gesetzt ist, crawlCompletedAt davor liegt (oder NULL ist)
+     * UND der Start jünger als der Stale-Guard ist (siehe lib/crawler/crawl-status.ts).
+     */
+    crawlStartedAt: timestamp("crawl_started_at", { withTimezone: true }),
+    crawlCompletedAt: timestamp("crawl_completed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({

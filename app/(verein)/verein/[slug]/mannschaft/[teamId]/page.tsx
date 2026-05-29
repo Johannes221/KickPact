@@ -12,7 +12,10 @@ import { TRIGGER_META } from "@/lib/triggers/labels";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
 import { clubs } from "@/lib/db/schema";
 import { inngest } from "@/lib/inngest/client";
+import { isTeamCrawling } from "@/lib/crawler/crawl-status";
+import { markCrawlStarted } from "@/lib/db/queries/crawler";
 import { TeamSetupChecklist } from "./_components/team-setup-checklist";
+import { CrawlAutoRefresh } from "./_components/crawl-auto-refresh";
 
 export const metadata = { title: "Mannschaft · KickPact" };
 
@@ -104,9 +107,17 @@ export default async function TeamDetailPage({
     }
   ];
 
-  // Falls noch keine Spiele für dieses Team vorhanden sind, einen On-Demand-Crawl
-  // anstoßen. Dedup über Event-ID (1h-Bucket) verhindert Mehrfach-Trigger bei Reloads.
-  if (matchRows.length === 0 && team.fussballdeTeamId) {
+  // Läuft gerade ein Crawl für dieses Team? Steuert das „Spiele werden geladen"-
+  // Banner + das Client-Polling (CrawlAutoRefresh).
+  let isCrawling = isTeamCrawling(team.crawlStartedAt, team.crawlCompletedAt);
+
+  // Falls noch keine Spiele da sind UND aktuell kein Crawl läuft → On-Demand-Crawl
+  // anstoßen. Dedup über Event-ID (1h-Bucket) verhindert Mehrfach-Trigger bei
+  // Reloads. crawlStartedAt wird direkt gesetzt, damit das Banner sofort in
+  // diesem Render erscheint (statt erst beim ersten Crawler-Step).
+  if (matchRows.length === 0 && team.fussballdeTeamId && !isCrawling) {
+    await markCrawlStarted(team.id);
+    isCrawling = true;
     const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000));
     inngest
       .send({
@@ -231,16 +242,35 @@ export default async function TeamDetailPage({
             {matchRows.length} Spiel{matchRows.length === 1 ? "" : "e"}
           </span>
         </div>
-        {matchRows.length === 0 ? (
-          <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60">
+        {/* Crawl-Banner: erscheint solange der Job läuft — auch wenn schon
+            Spiele geladen sind. Neue Spiele tauchen per Auto-Refresh nach und
+            nach darunter auf. */}
+        {isCrawling && (
+          <div className="mb-3 rounded-lg border border-accent/30 bg-accent/5 p-4 text-sm text-brand-night-navy/70">
             <div className="flex items-center gap-3">
-              <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse" />
+              <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-accent animate-pulse" />
               <span>
-                Wir suchen aktuell nach den letzten Spielen. Das kann ein paar Minuten dauern —
-                sobald neue Spiele auftauchen, erscheinen sie hier automatisch.
+                Spiele werden aktuell geladen. Das kann einen Moment dauern — sie
+                tauchen nach und nach hier auf, ganz automatisch.
               </span>
             </div>
           </div>
+        )}
+
+        {/* Unsichtbarer Poller (nur aktiv während des Crawls). */}
+        <CrawlAutoRefresh
+          teamId={team.id}
+          isCrawling={isCrawling}
+          matchCount={matchRows.length}
+        />
+
+        {matchRows.length === 0 ? (
+          !isCrawling && (
+            <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60">
+              Für diese Mannschaft wurden noch keine Spiele gefunden. Sobald die
+              Saison startet, erscheinen sie hier automatisch.
+            </div>
+          )
         ) : (
           <ul className="space-y-2">
             {matchRows.map((m) => {

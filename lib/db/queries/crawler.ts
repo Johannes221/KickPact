@@ -87,6 +87,40 @@ export async function getRecentFinishedMatches(
   );
 }
 
+/**
+ * Markiert den Beginn eines Crawls für ein Team. Setzt crawlCompletedAt auf
+ * NULL zurück, damit isTeamCrawling() für die Dauer des Laufs true liefert.
+ */
+export async function markCrawlStarted(teamId: string): Promise<void> {
+  await db
+    .update(teams)
+    .set({ crawlStartedAt: new Date(), crawlCompletedAt: null })
+    .where(eq(teams.id, teamId));
+}
+
+/** Markiert das Ende eines Crawls — danach gilt das Team als nicht mehr crawling. */
+export async function markCrawlCompleted(teamId: string): Promise<void> {
+  await db
+    .update(teams)
+    .set({ crawlCompletedAt: new Date() })
+    .where(eq(teams.id, teamId));
+}
+
+/** Liest die Crawl-Timestamps für die Status-API (Polling). */
+export async function getTeamCrawlState(
+  teamId: string
+): Promise<{ crawlStartedAt: Date | null; crawlCompletedAt: Date | null } | null> {
+  const [row] = await db
+    .select({
+      crawlStartedAt: teams.crawlStartedAt,
+      crawlCompletedAt: teams.crawlCompletedAt
+    })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  return row ?? null;
+}
+
 export async function getActiveTeamById(teamId: string): Promise<ActiveTeam | null> {
   const [row] = await db
     .select({

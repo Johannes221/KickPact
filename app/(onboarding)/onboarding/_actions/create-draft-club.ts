@@ -160,7 +160,12 @@ export async function createDraftClub(input: CreateDraftInput): Promise<CreateDr
           saison: t.saison,
           fussballdeTeamId: t.teamId,
           fussballdeSlug: t.teamSlug,
-          isActive: true
+          isActive: true,
+          // Sofort als „crawl-pending" markieren: gleich nach dem Onboarding
+          // wird der Crawl getriggert. Damit zeigt das Team-Dashboard direkt
+          // das „Spiele werden geladen"-Banner, ohne auf den ersten Crawler-
+          // Step warten zu müssen.
+          crawlStartedAt: new Date()
         }))
       )
       .returning({ id: teams.id });

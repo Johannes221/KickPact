@@ -204,6 +204,13 @@
       "when": 1781020000000,
       "tag": "0028_billing_cycle_season_end",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1782000000000,
+      "tag": "0029_team_crawl_status",
+      "breakpoints": true
     }
   ]
 }
