@@ -1,6 +1,26 @@
 import Link from "next/link";
-import { getPlatformKpis, getTopClubsThisMonth } from "@/lib/db/queries/platform-stats";
+import {
+  getPlatformKpis,
+  getTopClubsForMonth,
+  currentMonthStr
+} from "@/lib/db/queries/platform-stats";
 import { MrrChart } from "./_components/mrr-chart";
+
+function lastMonths(count: number): string[] {
+  const out: string[] = [];
+  const d = new Date();
+  d.setDate(1);
+  for (let i = 0; i < count; i++) {
+    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    d.setMonth(d.getMonth() - 1);
+  }
+  return out;
+}
+
+function monthLabel(m: string): string {
+  const [y, mo] = m.split("-").map((n) => parseInt(n, 10));
+  return new Date(y, mo - 1, 1).toLocaleDateString("de-DE", { month: "short", year: "2-digit" });
+}
 
 export const metadata = { title: "Dashboard · Admin · KickPact" };
 export const dynamic = "force-dynamic";
@@ -66,10 +86,17 @@ function KpiTile({ label, value, caption, emoji }: TileProps) {
   );
 }
 
-export default async function AdminDashboardPage() {
+export default async function AdminDashboardPage({
+  searchParams
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
+  const { month: monthParam } = await searchParams;
+  const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : currentMonthStr();
+  const months = lastMonths(6);
   const [kpis, topClubs] = await Promise.all([
     getPlatformKpis(),
-    getTopClubsThisMonth(5)
+    getTopClubsForMonth(month, 5)
   ]);
 
   return (
@@ -105,28 +132,47 @@ export default async function AdminDashboardPage() {
           value={eur(kpis.avgPledgeAmountCents)}
           caption="Mittelwert aller aktiven Pact-Regeln"
         />
-        <KpiTile
-          emoji="⚡"
-          label="Top-Trigger"
-          value={
-            kpis.topTrigger
-              ? triggerLabel(kpis.topTrigger.triggerType)
-              : "—"
-          }
-          caption={
-            kpis.topTrigger
-              ? `${kpis.topTrigger.chargeCount.toLocaleString("de-DE")} Charges`
-              : "Noch keine Daten"
-          }
-        />
+        <Link href="/admin/sponsoring" className="block transition-transform hover:-translate-y-0.5">
+          <KpiTile
+            emoji="⚡"
+            label="Top-Trigger"
+            value={
+              kpis.topTrigger
+                ? triggerLabel(kpis.topTrigger.triggerType)
+                : "—"
+            }
+            caption={
+              kpis.topTrigger
+                ? `${kpis.topTrigger.chargeCount.toLocaleString("de-DE")} Charges · Charges ansehen →`
+                : "Noch keine Daten"
+            }
+          />
+        </Link>
       </div>
 
       <MrrChart series={kpis.mrrSeries} />
 
       <section>
-        <h2 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy mb-3">
-          Top-5 Vereine (diesen Monat)
-        </h2>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+            Top-5 Vereine · {monthLabel(month)}
+          </h2>
+          <div className="flex flex-wrap gap-1">
+            {months.map((m) => (
+              <Link
+                key={m}
+                href={m === currentMonthStr() ? "/admin/dashboard" : `/admin/dashboard?month=${m}`}
+                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
+                  m === month
+                    ? "bg-brand-night-navy text-white"
+                    : "bg-brand-off-white text-brand-night-navy/60 hover:bg-white border border-brand-neutral/40"
+                }`}
+              >
+                {monthLabel(m)}
+              </Link>
+            ))}
+          </div>
+        </div>
         {topClubs.length === 0 ? (
           <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60">
             Noch keine Charges in diesem Monat.

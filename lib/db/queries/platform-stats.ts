@@ -246,9 +246,24 @@ export interface TopClubRow {
 }
 
 export async function getTopClubsThisMonth(limit = 5): Promise<TopClubRow[]> {
-  const monthStart = new Date();
-  monthStart.setDate(1);
-  monthStart.setHours(0, 0, 0, 0);
+  return getTopClubsForMonth(currentMonthStr(), limit);
+}
+
+/** "YYYY-MM" des aktuellen Monats (lokale Zeit). */
+export function currentMonthStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/**
+ * Top-N Vereine nach Charge-Summe in einem bestimmten Monat ("YYYY-MM").
+ * Ungültiges Format fällt auf den aktuellen Monat zurück.
+ */
+export async function getTopClubsForMonth(month: string, limit = 5): Promise<TopClubRow[]> {
+  const m = /^\d{4}-\d{2}$/.test(month) ? month : currentMonthStr();
+  const [y, mo] = m.split("-").map((n) => parseInt(n, 10));
+  const monthStart = new Date(y, mo - 1, 1, 0, 0, 0, 0);
+  const monthEnd = new Date(y, mo, 1, 0, 0, 0, 0);
 
   const rows = await db
     .select({
@@ -262,7 +277,13 @@ export async function getTopClubsThisMonth(limit = 5): Promise<TopClubRow[]> {
     .innerJoin(pledges, eq(pledges.id, charges.pledgeId))
     .innerJoin(teams, eq(teams.id, pledges.teamId))
     .innerJoin(clubs, eq(clubs.id, teams.clubId))
-    .where(and(gte(charges.createdAt, monthStart), ne(charges.status, "cancelled")))
+    .where(
+      and(
+        gte(charges.createdAt, monthStart),
+        lt(charges.createdAt, monthEnd),
+        ne(charges.status, "cancelled")
+      )
+    )
     .groupBy(clubs.id, clubs.name, clubs.slug)
     .orderBy(desc(sql`SUM(${charges.amountCents})`))
     .limit(limit);
