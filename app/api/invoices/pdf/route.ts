@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { invoices, clubs, sponsors } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { assertClubAccess } from "@/lib/auth/scope";
+import { isPlatformAdminEmail } from "@/lib/auth/admin";
 import { readLocalPdf } from "@/lib/invoicing/storage";
 
 export const runtime = "nodejs";
@@ -47,10 +48,14 @@ export async function GET(req: NextRequest) {
 
   const isOwner = row.sponsorUserId === user.id;
   if (!isOwner) {
-    try {
-      await assertClubAccess(row.clubSlug, "admin");
-    } catch {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    // Plattform-Operator darf jede Rechnung herunterladen (Backoffice/Support).
+    const isOperator = await isPlatformAdminEmail(user.email);
+    if (!isOperator) {
+      try {
+        await assertClubAccess(row.clubSlug, "admin");
+      } catch {
+        return NextResponse.json({ error: "forbidden" }, { status: 403 });
+      }
     }
   }
 
