@@ -13,6 +13,7 @@ import { isSeasonTrigger } from "@/lib/db/schema/pledges";
 import { clubs } from "@/lib/db/schema";
 import { inngest } from "@/lib/inngest/client";
 import { isTeamCrawling } from "@/lib/crawler/crawl-status";
+import { detectTeamSide } from "@/lib/crawler/team-side";
 import { markCrawlStarted } from "@/lib/db/queries/crawler";
 import { TeamSetupChecklist } from "./_components/team-setup-checklist";
 import { CrawlAutoRefresh } from "./_components/crawl-auto-refresh";
@@ -61,10 +62,13 @@ export default async function TeamDetailPage({
   const finishedMatches = matchRows.filter(
     (m) => m.status === "finished" && m.ergebnisHeim !== null
   );
-  const teamWord = team.name.toLowerCase().split(" ")[0];
+  // Heim/Auswärts robust bestimmen — Vereinsname als Token-Quelle, weil der
+  // Mannschafts-Name (z.B. "1. Herren") oft keinen Vereins-Token enthält und
+  // die Stats sonst gespiegelt werden (Tore + S/U/N vertauscht).
+  const teamNames = [team.name, club.name];
   let wins = 0, losses = 0, draws = 0, goalsFor = 0, goalsAgainst = 0;
   for (const m of finishedMatches) {
-    const isHeim = m.heimName.toLowerCase().includes(teamWord);
+    const isHeim = detectTeamSide(teamNames, m.heimName) === "heim";
     const gF = isHeim ? (m.ergebnisHeim ?? 0) : (m.ergebnisGast ?? 0);
     const gA = isHeim ? (m.ergebnisGast ?? 0) : (m.ergebnisHeim ?? 0);
     goalsFor += gF;
@@ -274,7 +278,7 @@ export default async function TeamDetailPage({
         ) : (
           <ul className="space-y-2">
             {matchRows.map((m) => {
-              const isHeim = m.heimName.toLowerCase().includes(teamWord);
+              const isHeim = detectTeamSide(teamNames, m.heimName) === "heim";
               const gF = isHeim ? (m.ergebnisHeim ?? null) : (m.ergebnisGast ?? null);
               const gA = isHeim ? (m.ergebnisGast ?? null) : (m.ergebnisHeim ?? null);
               const matchCharges = chargesSummary.get(m.id) ?? 0;

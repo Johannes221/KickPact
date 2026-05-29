@@ -65,4 +65,37 @@ describe("detectTeamSide", () => {
       "heim",
     );
   });
+
+  // Regression: Mannschafts-Name ohne Vereins-Token (z.B. "1. Herren" nach
+  // getMannschaften-Rewrite). Ohne Vereinsname kippt die Erkennung immer auf
+  // "gast" → invertierte Stats + falsche Charge-Seite. Mit [team, club] als
+  // Token-Quelle wird der Vereins-Token ("schriesheim") korrekt erkannt.
+  describe("Vereinsname als zusätzliche Token-Quelle (Array)", () => {
+    it("'1. Herren' + Club erkennt Heim korrekt", () => {
+      expect(
+        detectTeamSide(["1. Herren", "SV Schriesheim"], "SV Schriesheim"),
+      ).toBe("heim");
+    });
+
+    it("'1. Herren' + Club erkennt Auswärts korrekt", () => {
+      expect(
+        detectTeamSide(["1. Herren", "SV Schriesheim"], "SG Hohensachsen"),
+      ).toBe("gast");
+    });
+
+    it("'1. Herren' ohne Club-Token fällt (dokumentiert) auf gast zurück", () => {
+      // Nur der Squad-Name → kein signifikanter Token → "gast" (genau der Bug,
+      // den der Club-Name-Fix behebt).
+      expect(detectTeamSide("1. Herren", "SV Schriesheim")).toBe("gast");
+    });
+
+    it("leere/undefined Namen im Array werden ignoriert", () => {
+      expect(
+        detectTeamSide(["1. Herren", ""], "SV Schriesheim"),
+      ).toBe("gast");
+      expect(
+        detectTeamSide(["2. Mannschaft", "FC Sportfreunde 1910 Dossenheim"], "FC Sportfreunde 1910 Dossenheim II"),
+      ).toBe("heim");
+    });
+  });
 });

@@ -6,6 +6,7 @@ import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
 import { sponsors } from "@/lib/db/schema/sponsors";
 import { users } from "@/lib/db/schema/auth";
 import { TRIGGER_META } from "@/lib/triggers/labels";
+import { detectTeamSide } from "@/lib/crawler/team-side";
 
 export async function getMatchById(matchId: string, clubSlug: string) {
   const [row] = await db
@@ -284,9 +285,11 @@ export async function listMatchesForTeamFiltered(
       id: teams.id,
       clubId: teams.clubId,
       name: teams.name,
+      clubName: clubs.name,
       fussballdeTeamId: teams.fussballdeTeamId
     })
     .from(teams)
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
     .where(eq(teams.id, teamId))
     .limit(1);
   if (!anchorTeam) return [];
@@ -311,7 +314,7 @@ export async function listMatchesForTeamFiltered(
   }
   const teamSaisonMap = new Map(siblingTeams.map((t) => [t.id, t.saison] as const));
 
-  const teamFirstWord = anchorTeam.name.toLowerCase().split(" ")[0] ?? "";
+  const anchorNames = [anchorTeam.name, anchorTeam.clubName];
 
   // 2) Query matches mit Aggregaten
   const dateConditions: SQL[] = [];
@@ -354,7 +357,7 @@ export async function listMatchesForTeamFiltered(
 
   // 3) Map + result derivation
   const mapped: MatchListRow[] = rows.map((r) => {
-    const isHeim = r.heimName.toLowerCase().includes(teamFirstWord);
+    const isHeim = detectTeamSide(anchorNames, r.heimName) === "heim";
     let derived: MatchListRow["result"] = null;
     if (r.ergebnisHeim !== null && r.ergebnisGast !== null) {
       const ours = isHeim ? r.ergebnisHeim : r.ergebnisGast;

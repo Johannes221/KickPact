@@ -60,7 +60,10 @@ export async function addManualEvent(input: AddManualEventInput) {
   // Audit 2026-05-24 Phase 2 Task 2.7: vorher split(" ")[0] → bei
   // "Herren - FC Sportfreunde 1910 Dossenheim 3" greift first word "herren"
   // nicht im heimName → teamSide=gast → Manual-Events feuern für falsche Seite.
-  const teamSide = detectTeamSide(target.team.name, target.match.heimName);
+  const teamSide = detectTeamSide(
+    [target.team.name, target.club.name],
+    target.match.heimName
+  );
 
   // Falls Trainer ein Event auf der "anderen Seite" einträgt (also nicht teamSide):
   // wir erlauben es trotzdem in DB, evaluieren aber NUR wenn side === teamSide

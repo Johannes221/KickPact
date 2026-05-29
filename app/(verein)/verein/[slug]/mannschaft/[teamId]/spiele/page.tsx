@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { teams } from "@/lib/db/schema";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { listMatchesForTeam, getMatchChargesSummaryForTeam } from "@/lib/db/queries/matches";
+import { detectTeamSide } from "@/lib/crawler/team-side";
 
 export const metadata = { title: "Spiele · KickPact" };
 
@@ -79,9 +80,9 @@ export default async function SpielePage({
   const matches = await listMatchesForTeam(team.id, 300);
   const chargesByMatch = await getMatchChargesSummaryForTeam(team.id);
 
-  const teamWord = team.name.toLowerCase().split(" ")[0];
+  const teamNames = [team.name, club.name];
   const enriched = matches.map((m) => {
-    const isHeim = m.heimName?.toLowerCase().includes(teamWord) ?? false;
+    const isHeim = m.heimName ? detectTeamSide(teamNames, m.heimName) === "heim" : false;
     const res = getResult(m, isHeim);
     const isScheduled = m.status === "scheduled" || res === "open";
     return {

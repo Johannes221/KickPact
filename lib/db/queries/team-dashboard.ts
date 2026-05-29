@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import {
   matches,
   teams,
+  clubs,
   pledges,
   pledgeRules,
   charges,
@@ -11,6 +12,7 @@ import {
 } from "@/lib/db/schema";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
+import { detectTeamSide } from "@/lib/crawler/team-side";
 
 /**
  * Live-Statistik für die Team-Übersicht (Hero-KPI-Cards).
@@ -67,17 +69,19 @@ export async function getTeamHeroKpis(teamId: string): Promise<TeamHeroKpis> {
     .orderBy(matches.datum)
     .limit(1);
 
-  // Bestimme Gegner aus dem Team-Namen (heuristisch — wie in der Page)
+  // Gegner bestimmen — Heim/Auswärts robust via detectTeamSide (Vereinsname
+  // als Token-Quelle, weil der Mannschafts-Name oft keinen Vereins-Token hat).
   let opponent: string | null = null;
   if (nextMatch) {
     const [team] = await db
-      .select({ name: teams.name })
+      .select({ name: teams.name, clubName: clubs.name })
       .from(teams)
+      .innerJoin(clubs, eq(teams.clubId, clubs.id))
       .where(eq(teams.id, teamId))
       .limit(1);
     if (team) {
-      const teamWord = team.name.toLowerCase().split(" ")[0];
-      const isHeim = nextMatch.heimName.toLowerCase().includes(teamWord);
+      const isHeim =
+        detectTeamSide([team.name, team.clubName], nextMatch.heimName) === "heim";
       opponent = isHeim ? nextMatch.gastName : nextMatch.heimName;
     }
   }

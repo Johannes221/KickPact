@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { getMatchById, listMatchEvents, listMatchCharges } from "@/lib/db/queries/matches";
+import { detectTeamSide } from "@/lib/crawler/team-side";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MatchEventsList } from "./_components/match-events-list";
 import { ManualEventEditor } from "./_components/manual-event-editor";
@@ -40,9 +41,9 @@ export default async function MatchDetailPage({
     day: "numeric"
   });
 
-  // Welche Seite ist unser Team?
-  const teamFirstWord = team.name.toLowerCase().split(" ")[0];
-  const isHeim = match.heimName.toLowerCase().includes(teamFirstWord);
+  // Welche Seite ist unser Team? Vereinsname als zusätzliche Token-Quelle,
+  // weil der Mannschafts-Name (z.B. "1. Herren") oft keinen Vereins-Token hat.
+  const isHeim = detectTeamSide([team.name, access.club.name], match.heimName) === "heim";
   const unsereSeite = isHeim ? "heim" : "gast";
   const unsereGoals = isHeim ? (match.ergebnisHeim ?? 0) : (match.ergebnisGast ?? 0);
   const gegnerGoals = isHeim ? (match.ergebnisGast ?? 0) : (match.ergebnisHeim ?? 0);

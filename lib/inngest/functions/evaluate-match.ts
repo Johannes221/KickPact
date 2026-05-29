@@ -1,7 +1,7 @@
 import { and, eq, gte, lt, inArray, sql } from "drizzle-orm";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
-import { matches, matchEvents, teams, charges, pledges } from "@/lib/db/schema";
+import { matches, matchEvents, teams, charges, pledges, clubs } from "@/lib/db/schema";
 import { evaluateTriggers, type MatchInput } from "@/lib/crawler/triggers";
 import { detectTeamSide } from "@/lib/crawler/team-side";
 import { loadActivePledgeRulesForTeam } from "@/lib/db/queries/evaluation";
@@ -19,7 +19,14 @@ export const evaluateMatch = inngest.createFunction(
       const events = await db.select().from(matchEvents).where(eq(matchEvents.matchId, matchId));
       const [t] = await db.select().from(teams).where(eq(teams.id, teamId)).limit(1);
       if (!t) throw new Error(`team ${teamId} not found`);
-      return { m, events, t };
+      // Vereinsname mitladen — detectTeamSide braucht ihn als Token-Quelle, weil
+      // der Mannschafts-Name (z.B. "1. Herren") oft keinen Vereins-Token enthält.
+      const [c] = await db
+        .select({ name: clubs.name })
+        .from(clubs)
+        .where(eq(clubs.id, t.clubId))
+        .limit(1);
+      return { m, events, t, clubName: c?.name ?? null };
     });
 
     // Read-Only-Gate: keine neuen Charges für pausierte Vereine.
@@ -34,9 +41,13 @@ export const evaluateMatch = inngest.createFunction(
       return { proposals: 0, inserted: 0, cappedOrSkipped: 0, skippedReadOnly: true };
     }
 
-    // Determine teamSide: uses all significant words (≥5 chars) from team name,
-    // not just first word (which may be a role prefix like "Herren").
-    const teamSide = detectTeamSide(matchData.t.name, matchData.m.heimName);
+    // Determine teamSide: nutzt signifikante Wörter (≥5 Zeichen) aus Mannschafts-
+    // UND Vereinsname. Letzterer ist nötig, weil der Mannschafts-Name (z.B.
+    // "1. Herren") oft keinen identifizierenden Token enthält.
+    const teamSide = detectTeamSide(
+      [matchData.t.name, matchData.clubName ?? ""],
+      matchData.m.heimName
+    );
 
     const input: MatchInput = {
       id: matchData.m.id,
