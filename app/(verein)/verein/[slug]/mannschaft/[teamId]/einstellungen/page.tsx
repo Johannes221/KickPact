@@ -109,7 +109,7 @@ export default async function TeamEinstellungenPage({
       {/* Rechnungs- & Zahlungsdaten (Absender, Adresse, Steuer, IBAN).
           Erscheinen auf den PDF-Rechnungen an die Sponsoren. */}
       {clubData && (
-        <section className="space-y-4">
+        <section id="zahlungsdaten" className="scroll-mt-24 space-y-4">
           <header>
             <h3 className="font-display font-black text-lg tracking-tight text-brand-night-navy">
               Rechnungs- &amp; Zahlungsdaten
@@ -156,6 +156,28 @@ export default async function TeamEinstellungenPage({
           Weitere Bereiche
         </h3>
         <ul className="space-y-3">
+          <li>
+            <Link
+              href={`/verein/${slug}/verifikation`}
+              className="block rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5 hover:border-accent/40 hover:bg-brand-off-white/60 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h4 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+                    Verein verifizieren
+                  </h4>
+                  <p className="mt-1 text-sm text-brand-night-navy/60">
+                    Nachweis hochladen (Trainerlizenz, Vereinsbestätigung …). Bis dahin
+                    werden Sponsoren-Rechnungen zurückgehalten und du kannst keine Sponsoren
+                    einladen.
+                  </p>
+                </div>
+                <span className="text-brand-night-navy/30" aria-hidden>
+                  →
+                </span>
+              </div>
+            </Link>
+          </li>
           <li>
             <Link
               href={`${base}/mitglieder`}

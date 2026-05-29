@@ -103,9 +103,9 @@ export default async function TeamDetailPage({
     },
     {
       done: hasIban,
-      label: "Zahlungsdaten hinterlegen",
-      hint: "IBAN für die Sponsoren-Rechnungen in den Einstellungen eintragen.",
-      href: `${teamBase}/einstellungen`
+      label: "IBAN / Rechnungsdaten hinterlegen",
+      hint: "IBAN + Absenderdaten für die Sponsoren-Rechnungen eintragen.",
+      href: `${teamBase}/einstellungen#zahlungsdaten`
     },
     {
       done: hasSponsor,

@@ -1,4 +1,4 @@
-import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
+import { assertClubAccess } from "@/lib/auth/scope";
 import { VerificationForm } from "./_components/verification-form";
 
 export const metadata = { title: "Verein verifizieren · KickPact" };
@@ -15,7 +15,11 @@ export default async function VereinVerifikationPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { club } = await assertVereinAdminOrRedirect(slug, "admin");
+  // assertClubAccess (nicht assertVereinAdminOrRedirect): auch Solo-Mannschafts-
+  // Admins (basic/pro) müssen IHREN Container verifizieren können. Der Plan-
+  // Redirect von assertVereinAdminOrRedirect schickte sie sonst zur Team-Seite
+  // zurück → „Verifizieren" führte ins Leere.
+  const { club } = await assertClubAccess(slug, "admin");
 
   return (
     <div className="space-y-6">
