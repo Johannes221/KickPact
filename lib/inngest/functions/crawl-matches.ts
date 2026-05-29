@@ -16,7 +16,7 @@ import {
 import { invalidateChargesForMatch } from "@/lib/db/queries/charges";
 import { upsertScheduledMatch } from "@/lib/db/queries/matches";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
-import { isSommerpause } from "@/lib/utils/sommerpause";
+import { isCrawlerSommerpause } from "@/lib/utils/sommerpause";
 
 export const crawlMatches = inngest.createFunction(
   { id: "crawl-matches", concurrency: { limit: 2 } },
@@ -30,11 +30,13 @@ export const crawlMatches = inngest.createFunction(
     { event: "crawler/team.crawl" }
   ],
   async ({ event, step, logger }) => {
-    // Sommerpause-Guard: Cron-Runs werden während der Sommerpause (Juni–Juli)
-    // übersprungen. Manuelle Triggers (crawler/manual, crawler/team.crawl) laufen
-    // immer durch — damit können Admins bei Bedarf manuell crawlen.
+    // Sommerpause-Guard: Cron-Runs werden während der Crawler-Sommerpause
+    // (Juni bis Mitte Juli) übersprungen. Ab Mitte Juli läuft der Crawler wieder,
+    // um die neuen Saison-Spielpläne (scheduled-Stubs) vor Saisonauftakt zu
+    // erfassen — engeres Fenster als die Billing-Sommerpause (isSommerpause).
+    // Manuelle Triggers (crawler/manual, crawler/team.crawl) laufen immer durch.
     const isCronRun = event?.name !== "crawler/manual" && event?.name !== "crawler/team.crawl";
-    if (isCronRun && isSommerpause()) {
+    if (isCronRun && isCrawlerSommerpause()) {
       logger.info("crawl-matches: Sommerpause aktiv — Cron übersprungen.");
       return { skipped: true, reason: "sommerpause", newMatches: 0, updatedMatches: 0 };
     }
