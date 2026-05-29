@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getVereinDetail } from "@/lib/db/queries/platform-stats";
 import { ClubActions } from "./_components/club-actions";
+import { ClubEditForm } from "@/components/admin/club-edit-form";
+import { TeamRowActions } from "@/components/admin/team-row-actions";
 
 export const metadata = { title: "Verein-Detail · Admin · KickPact" };
 export const dynamic = "force-dynamic";
@@ -49,7 +51,11 @@ export default async function VereinDetailPage({
           </h2>
           <div className="text-xs text-brand-night-navy/60 font-mono">{club.slug}</div>
         </div>
-        <ClubActions clubSlug={club.slug} />
+        <ClubActions
+          clubSlug={club.slug}
+          verified={Boolean(club.verifiedAt)}
+          subStatus={subscription?.status ?? null}
+        />
       </div>
 
       <section className="grid gap-4 md:grid-cols-2">
@@ -107,6 +113,23 @@ export default async function VereinDetailPage({
         </Card>
       </section>
 
+      <section className="space-y-3">
+        <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+          Stammdaten bearbeiten
+        </h3>
+        <div className="rounded-2xl border border-brand-neutral/40 bg-white p-4">
+          <ClubEditForm
+            clubSlug={club.slug}
+            defaults={{
+              name: club.name,
+              ort: club.ort ?? "",
+              iban: club.iban ?? "",
+              taxId: club.taxId ?? ""
+            }}
+          />
+        </div>
+      </section>
+
       <section>
         <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy mb-2">
           Members ({members.length})
@@ -162,12 +185,14 @@ export default async function VereinDetailPage({
                 <th className="px-3 py-2 text-left font-semibold">License-Status</th>
                 <th className="px-3 py-2 text-left font-semibold">Aktiv</th>
                 <th className="px-3 py-2 text-left font-semibold">Discover</th>
+                <th className="px-3 py-2 text-left font-semibold">Verifiziert</th>
+                <th className="px-3 py-2 text-left font-semibold">Aktionen</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-neutral/30">
               {teams.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-sm text-brand-night-navy/50">
+                  <td colSpan={8} className="px-3 py-6 text-center text-sm text-brand-night-navy/50">
                     Keine Teams.
                   </td>
                 </tr>
@@ -193,6 +218,22 @@ export default async function VereinDetailPage({
                     ) : (
                       <span className="text-brand-night-navy/40">—</span>
                     )}
+                  </td>
+                  <td className="px-3 py-2">
+                    {t.verifiedAt ? (
+                      <span className="text-emerald-700">✓</span>
+                    ) : (
+                      <span className="text-brand-night-navy/40">—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    <TeamRowActions
+                      teamId={t.id}
+                      name={t.name}
+                      isActive={t.isActive}
+                      discoverable={t.discoverable}
+                      verified={Boolean(t.verifiedAt)}
+                    />
                   </td>
                 </tr>
               ))}

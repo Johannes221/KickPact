@@ -427,6 +427,7 @@ export interface VereinDetail {
     ort: string | null;
     addressJson: unknown;
     iban: string | null;
+    taxId: string | null;
     verifiedAt: Date | null;
     createdAt: Date;
     onboardingStatus: string;
@@ -454,6 +455,7 @@ export interface VereinDetail {
     saison: string;
     isActive: boolean;
     discoverable: boolean;
+    verifiedAt: Date | null;
     plan: string | null;
     licenseStatus: string | null;
   }>;
@@ -498,6 +500,7 @@ export async function getVereinDetail(slug: string): Promise<VereinDetail | null
       saison: teams.saison,
       isActive: teams.isActive,
       discoverable: teams.discoverable,
+      verifiedAt: teams.verifiedAt,
       plan: teamLicenses.plan,
       licenseStatus: teamLicenses.status
     })
@@ -532,6 +535,7 @@ export async function getVereinDetail(slug: string): Promise<VereinDetail | null
       ort: club.ort,
       addressJson: club.addressJson,
       iban: club.iban,
+      taxId: club.taxId,
       verifiedAt: club.verifiedAt,
       createdAt: club.createdAt,
       onboardingStatus: club.onboardingStatus,
