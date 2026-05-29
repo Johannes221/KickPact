@@ -98,11 +98,26 @@ export async function markCrawlStarted(teamId: string): Promise<void> {
     .where(eq(teams.id, teamId));
 }
 
-/** Markiert das Ende eines Crawls — danach gilt das Team als nicht mehr crawling. */
+/**
+ * Markiert das Ende eines Crawls — danach gilt das Team als nicht mehr crawling.
+ * Ein erfolgreicher Abschluss räumt einen zuvor gesetzten Fehler.
+ */
 export async function markCrawlCompleted(teamId: string): Promise<void> {
   await db
     .update(teams)
-    .set({ crawlCompletedAt: new Date() })
+    .set({ crawlCompletedAt: new Date(), crawlLastError: null, crawlLastErrorAt: null })
+    .where(eq(teams.id, teamId));
+}
+
+/**
+ * Hält einen fehlgeschlagenen Team-Crawl fest (für die Operator-Diagnose).
+ * Wird vom crawl-matches-Job im per-Team-catch aufgerufen; markCrawlCompleted
+ * räumt den Fehler beim nächsten erfolgreichen Lauf.
+ */
+export async function markCrawlError(teamId: string, message: string): Promise<void> {
+  await db
+    .update(teams)
+    .set({ crawlLastError: message.slice(0, 1000), crawlLastErrorAt: new Date() })
     .where(eq(teams.id, teamId));
 }
 

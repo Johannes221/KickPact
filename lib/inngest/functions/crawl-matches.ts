@@ -13,6 +13,7 @@ import {
   updateMatchWithEvents,
   markCrawlStarted,
   markCrawlCompleted,
+  markCrawlError,
   type ActiveTeam
 } from "@/lib/db/queries/crawler";
 import { invalidateChargesForMatch } from "@/lib/db/queries/charges";
@@ -74,6 +75,7 @@ export const crawlMatches = inngest.createFunction(
     let skippedReadOnly = 0;
     let skippedInvalid = 0;
     for (const team of targetTeams) {
+     try {
       // Crawl-Start markieren → Dashboard zeigt das „Spiele werden geladen"-
       // Banner für die Dauer dieses Laufs (siehe lib/crawler/crawl-status.ts).
       await step.run(`crawl-start-${team.id}`, () => markCrawlStarted(team.id));
@@ -241,6 +243,15 @@ export const crawlMatches = inngest.createFunction(
 
       // Team fertig gecrawlt → Banner kann ausgeblendet werden.
       await step.run(`crawl-done-${team.id}`, () => markCrawlCompleted(team.id));
+     } catch (err) {
+        // Ein fehlerhaftes Team killt nicht den ganzen Lauf: Fehler festhalten
+        // (Operator-Diagnose unter /admin/crawler) und mit dem nächsten Team
+        // weitermachen. markCrawlCompleted räumt den Fehler beim nächsten Erfolg.
+        const msg = err instanceof Error ? err.message : String(err);
+        logger.error("team crawl failed", { teamId: team.id, error: msg });
+        await step.run(`crawl-error-${team.id}`, () => markCrawlError(team.id, msg));
+        continue;
+     }
     }
 
     return {

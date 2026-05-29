@@ -24,6 +24,8 @@ export interface CrawlerTeamHealth {
   finishedMatchCount: number;
   /** Rounded to integer percent. 0 if matchCount==0. */
   finishedPercent: number;
+  lastError: string | null;
+  lastErrorAt: Date | null;
 }
 
 export async function getCrawlerHealth(): Promise<CrawlerTeamHealth[]> {
@@ -38,6 +40,8 @@ export async function getCrawlerHealth(): Promise<CrawlerTeamHealth[]> {
     lastCrawledAt: Date | null;
     matchCount: number;
     finishedMatchCount: number;
+    lastError: string | null;
+    lastErrorAt: Date | null;
   }>(sql`
     SELECT
       t.id AS "teamId",
@@ -47,6 +51,8 @@ export async function getCrawlerHealth(): Promise<CrawlerTeamHealth[]> {
       c.name AS "clubName",
       c.slug AS "clubSlug",
       t.fussballde_team_id AS "fussballdeTeamId",
+      t.crawl_last_error AS "lastError",
+      t.crawl_last_error_at AS "lastErrorAt",
       (
         SELECT MAX(m.crawled_at)
         FROM matches m
@@ -61,7 +67,7 @@ export async function getCrawlerHealth(): Promise<CrawlerTeamHealth[]> {
     INNER JOIN clubs c ON c.id = t.club_id
     WHERE t.is_active = true
       AND t.fussballde_team_id IS NOT NULL
-    ORDER BY "lastCrawledAt" ASC NULLS FIRST, c.name ASC
+    ORDER BY t.crawl_last_error_at DESC NULLS LAST, "lastCrawledAt" ASC NULLS FIRST, c.name ASC
   `);
 
   return rows.map((r) => {
@@ -80,7 +86,9 @@ export async function getCrawlerHealth(): Promise<CrawlerTeamHealth[]> {
       lastCrawledAt: r.lastCrawledAt ? new Date(r.lastCrawledAt) : null,
       matchCount,
       finishedMatchCount,
-      finishedPercent
+      finishedPercent,
+      lastError: r.lastError,
+      lastErrorAt: r.lastErrorAt ? new Date(r.lastErrorAt) : null
     };
   });
 }

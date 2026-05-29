@@ -179,6 +179,14 @@ export const teams = pgTable(
      */
     crawlStartedAt: timestamp("crawl_started_at", { withTimezone: true }),
     crawlCompletedAt: timestamp("crawl_completed_at", { withTimezone: true }),
+    /**
+     * Letzter Crawl-Fehler (Klartext) + Zeitpunkt. Gesetzt vom crawl-matches-
+     * Job, wenn ein Team-Crawl scheitert (try/catch pro Team); beim nächsten
+     * erfolgreichen Abschluss (markCrawlCompleted) wieder geleert. Dient der
+     * Operator-Diagnose unter /admin/crawler.
+     */
+    crawlLastError: text("crawl_last_error"),
+    crawlLastErrorAt: timestamp("crawl_last_error_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({

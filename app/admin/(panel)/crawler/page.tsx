@@ -25,10 +25,11 @@ export default async function CrawlerPage() {
   const staleTeams = health.filter(
     (t) => !t.lastCrawledAt || Date.now() - t.lastCrawledAt.getTime() > 1000 * 60 * 60 * 48
   ).length;
+  const errorTeams = health.filter((t) => t.lastError).length;
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
         <div className="rounded-2xl border border-brand-neutral/40 bg-white p-4">
           <div className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
             Aktive Teams (gecrawlt)
@@ -53,6 +54,14 @@ export default async function CrawlerPage() {
             {recentCrawls.length}
           </div>
         </div>
+        <div className={`rounded-2xl border p-4 ${errorTeams > 0 ? "border-rose-300 bg-rose-50" : "border-brand-neutral/40 bg-white"}`}>
+          <div className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
+            Mit Fehler
+          </div>
+          <div className={`mt-1 font-display font-black text-2xl tabular-nums ${errorTeams > 0 ? "text-rose-700" : "text-brand-night-navy"}`}>
+            {errorTeams}
+          </div>
+        </div>
       </div>
 
       <section>
@@ -68,13 +77,14 @@ export default async function CrawlerPage() {
                 <th className="px-3 py-2 text-left font-semibold">Letzter Crawl</th>
                 <th className="px-3 py-2 text-right font-semibold">Matches</th>
                 <th className="px-3 py-2 text-right font-semibold">Finished %</th>
+                <th className="px-3 py-2 text-left font-semibold">Fehler</th>
                 <th className="px-3 py-2 text-right font-semibold">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-neutral/30">
               {health.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-sm text-brand-night-navy/50">
+                  <td colSpan={7} className="px-3 py-6 text-center text-sm text-brand-night-navy/50">
                     Keine aktiven Teams mit Fußball.de-ID.
                   </td>
                 </tr>
@@ -114,6 +124,25 @@ export default async function CrawlerPage() {
                     </td>
                     <td className="px-3 py-2 text-right font-mono tabular-nums">
                       {t.finishedPercent}%
+                    </td>
+                    <td className="px-3 py-2 max-w-[16rem]">
+                      {t.lastError ? (
+                        <div>
+                          <span className="rounded-md bg-rose-100 px-2 py-0.5 text-[0.7rem] font-semibold text-rose-700">
+                            Fehler
+                          </span>
+                          <div className="mt-0.5 truncate text-[0.7rem] text-brand-night-navy/60" title={t.lastError}>
+                            {t.lastError}
+                          </div>
+                          {t.lastErrorAt && (
+                            <div className="text-[0.65rem] text-brand-night-navy/40 font-mono">
+                              {t.lastErrorAt.toLocaleString("de-DE")}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-brand-night-navy/30 text-xs">—</span>
+                      )}
                     </td>
                     <td className="px-3 py-2 text-right">
                       <CrawlButton teamId={t.teamId} />
