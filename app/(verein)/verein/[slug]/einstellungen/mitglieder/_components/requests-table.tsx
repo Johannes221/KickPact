@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { approveRequestAction, rejectRequestAction } from "../_actions/approve-reject";
+
+type ActionResult = { ok: true } | { ok: false; error: string };
 
 interface PendingRequest {
   id: string;
@@ -23,10 +24,14 @@ const ROLE_LABEL: Record<"admin" | "trainer" | "viewer", string> = {
 
 export function RequestsTable({
   clubSlug,
-  requests
+  requests,
+  approveAction,
+  rejectAction
 }: {
   clubSlug: string;
   requests: PendingRequest[];
+  approveAction: (input: { requestId: string; clubSlug: string }) => Promise<ActionResult>;
+  rejectAction: (input: { requestId: string; clubSlug: string; reason?: string }) => Promise<ActionResult>;
 }) {
   const [pending, startTransition] = useTransition();
   const [rejectFor, setRejectFor] = useState<string | null>(null);
@@ -34,7 +39,7 @@ export function RequestsTable({
 
   function onApprove(id: string) {
     startTransition(async () => {
-      const res = await approveRequestAction({ requestId: id, clubSlug });
+      const res = await approveAction({ requestId: id, clubSlug });
       if (!res.ok) toast.error(res.error);
       else toast.success("Zugriff freigegeben");
     });
@@ -42,7 +47,7 @@ export function RequestsTable({
 
   function onReject(id: string) {
     startTransition(async () => {
-      const res = await rejectRequestAction({
+      const res = await rejectAction({
         requestId: id,
         clubSlug,
         reason: reason.trim() || undefined

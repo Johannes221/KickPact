@@ -17,6 +17,6 @@ export default async function TeamAboPage({
   params: Promise<{ slug: string; teamId: string }>;
 }) {
   const { slug, teamId } = await params;
-  const { club } = await assertTeamPageAccess(slug, teamId, "trainer");
+  const { club } = await assertTeamPageAccess(slug, teamId, "admin");
   return <AboPanel clubId={club.id} clubSlug={slug} />;
 }

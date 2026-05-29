@@ -19,7 +19,7 @@ const LAST_ADMIN_ERROR =
   "Du bist der letzte Admin — demoten nicht möglich. Befördere zuerst eine andere Person.";
 
 const clubRoleSchema = z.enum(["admin", "trainer", "viewer"]);
-const teamRoleSchema = z.enum(["trainer", "viewer"]);
+const teamRoleSchema = z.enum(["admin", "viewer"]);
 
 const changeRoleSchema = z.discriminatedUnion("scope", [
   z.object({

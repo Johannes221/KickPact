@@ -1,5 +1,5 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Montserrat_Alternates } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shared/app-header";
@@ -70,6 +70,25 @@ export const metadata: Metadata = {
   alternates: {
     canonical: BASE_URL,
   },
+  // Native-App-Vorbereitung (Capacitor/iOS): standalone-Statusbar-Verhalten,
+  // wenn die App via WebView-Wrapper läuft. Im Browser ohne Effekt.
+  appleWebApp: {
+    capable: true,
+    title: "KickPact",
+    statusBarStyle: "default",
+  },
+};
+
+// viewport-fit=cover ist die Voraussetzung dafür, dass env(safe-area-inset-*)
+// auf iOS überhaupt Werte != 0 liefert (Notch/Home-Indicator). Die Bottom-Tab-
+// Bar und der Header nutzen diese Insets bereits — ohne cover bleiben sie 0.
+// themeColor matcht den Off-White-Body, damit die iOS-Statusbar nahtlos wirkt.
+// Auf dem Desktop-Browser hat das keinerlei sichtbaren Effekt.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#F5F8F5",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

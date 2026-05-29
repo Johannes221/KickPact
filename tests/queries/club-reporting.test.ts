@@ -291,6 +291,31 @@ async function seed() {
       ergebnisHeim: 3,
       ergebnisGast: 0,
       status: "finished"
+    },
+    // Zweite Spiele pro Team — tragen je die zweite Charge (c_2/c_4), damit der
+    // partielle Unique-Index charges_unique_match_trigger_idx
+    // (pledge_rule_id, match_id, trigger_type) nicht verletzt wird.
+    {
+      id: "m_3",
+      teamId: "team_1",
+      fussballdeSpielId: "fs_3",
+      datum: new Date(Date.UTC(2025, 8, 15, 14, 0)),
+      heimName: "Team 1",
+      gastName: "FC Z",
+      ergebnisHeim: 1,
+      ergebnisGast: 0,
+      status: "finished"
+    },
+    {
+      id: "m_4",
+      teamId: "team_2",
+      fussballdeSpielId: "fs_4",
+      datum: new Date(Date.UTC(2025, 8, 22, 14, 0)),
+      heimName: "Team 2",
+      gastName: "FC W",
+      ergebnisHeim: 2,
+      ergebnisGast: 2,
+      status: "finished"
     }
   ]);
 
@@ -310,7 +335,7 @@ async function seed() {
       id: "c_2",
       pledgeId: "pl_1",
       pledgeRuleId: "pr_1",
-      matchId: "m_1",
+      matchId: "m_3",
       triggerType: "goal_total",
       amountCents: 1000,
       status: "confirmed",
@@ -330,7 +355,7 @@ async function seed() {
       id: "c_4",
       pledgeId: "pl_2",
       pledgeRuleId: "pr_2",
-      matchId: "m_2",
+      matchId: "m_4",
       triggerType: "win",
       amountCents: 500,
       status: "confirmed",

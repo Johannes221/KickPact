@@ -24,7 +24,7 @@ export default async function TeamVerifikationPage({
   params: Promise<{ slug: string; teamId: string }>;
 }) {
   const { slug, teamId } = await params;
-  const { club } = await assertTeamPageAccess(slug, teamId, "trainer");
+  const { club } = await assertTeamPageAccess(slug, teamId, "admin");
 
   const [team] = await db
     .select({

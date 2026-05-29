@@ -21,7 +21,14 @@ const inviteSchema = z.object({
   teamId: z.string().min(1).optional().nullable()
 });
 
-export type InviteTeamMemberInput = z.infer<typeof inviteSchema>;
+// Param-Typ bewusst breit (role: string), damit das generische InviteForm
+// (das role als string liefert) zuweisbar bleibt. Zod validiert zur Laufzeit.
+export interface InviteTeamMemberInput {
+  clubSlug: string;
+  email: string;
+  role: string;
+  teamId?: string | null;
+}
 
 export type InviteTeamMemberResult =
   | { ok: true; token: string; inviteUrl: string }

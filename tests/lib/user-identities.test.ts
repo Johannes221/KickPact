@@ -77,13 +77,13 @@ describe("getUserIdentities", () => {
   it("returns a team-only identity when user has only a team membership", async () => {
     const userId = await makeUser("teamonly");
     const { teamId, clubId } = await makeClubWithTeam("b");
-    await db.insert(teamMemberships).values({ userId, teamId, role: "trainer" });
+    await db.insert(teamMemberships).values({ userId, teamId, role: "admin" });
 
     const r = await getUserIdentities(userId);
     expect(r.clubs).toEqual([]);
     expect(r.teamOnly).toHaveLength(1);
     expect(r.teamOnly[0].teamId).toBe(teamId);
-    expect(r.teamOnly[0].role).toBe("trainer");
+    expect(r.teamOnly[0].role).toBe("admin");
     expect(r.teamOnly[0].saison).toBe("2526");
     expect(r.sponsor).toBeNull();
     void clubId;
@@ -121,7 +121,7 @@ describe("getUserIdentities", () => {
     const { clubId } = await makeClubWithTeam("d");
     const { teamId: otherTeamId } = await makeClubWithTeam("e");
     await db.insert(clubMemberships).values({ userId, clubId, role: "admin" });
-    await db.insert(teamMemberships).values({ userId, teamId: otherTeamId, role: "trainer" });
+    await db.insert(teamMemberships).values({ userId, teamId: otherTeamId, role: "admin" });
     await db.insert(sponsors).values({
       id: createId(),
       userId,

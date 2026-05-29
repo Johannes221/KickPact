@@ -158,7 +158,7 @@ describe("membership-requests queries", () => {
     expect(updated?.respondedByUserId).toBe(adminId);
   });
 
-  it("approveRequest (team-scoped, role=trainer) inserts teamMembership row", async () => {
+  it("approveRequest (team-scoped, role=trainer) maps to team-admin", async () => {
     const requesterId = await seedUser("rqt");
     const adminId = await seedUser("admt");
     const { clubId, teamId } = await seedClubWithTeam("apprteam");
@@ -175,7 +175,8 @@ describe("membership-requests queries", () => {
       .where(eq(teamMemberships.userId, requesterId));
     expect(tmem).toBeDefined();
     expect(tmem.teamId).toBe(teamId);
-    expect(tmem.role).toBe("trainer");
+    // Team-Ebene kennt nur admin|viewer; jede Nicht-viewer-Anfrage → admin.
+    expect(tmem.role).toBe("admin");
 
     // No club-wide membership created
     const clubMems = await db
@@ -185,7 +186,7 @@ describe("membership-requests queries", () => {
     expect(clubMems).toHaveLength(0);
   });
 
-  it("approveRequest (team-scoped, role=admin) downgrades to team-trainer at team level", async () => {
+  it("approveRequest (team-scoped, role=admin) grants team-admin", async () => {
     const requesterId = await seedUser("rqta");
     const adminId = await seedUser("admta");
     const { clubId, teamId } = await seedClubWithTeam("apprteamadm");
@@ -200,7 +201,25 @@ describe("membership-requests queries", () => {
       .select()
       .from(teamMemberships)
       .where(eq(teamMemberships.userId, requesterId));
-    expect(tmem.role).toBe("trainer"); // admin doesn't exist at team level; maps to trainer
+    expect(tmem.role).toBe("admin");
+  });
+
+  it("approveRequest (team-scoped, role=viewer) grants team-viewer", async () => {
+    const requesterId = await seedUser("rqtv");
+    const adminId = await seedUser("admtv");
+    const { clubId, teamId } = await seedClubWithTeam("apprteamview");
+
+    const req = await createRequest({
+      userId: requesterId, clubId, requestedRole: "viewer", requestedTeamId: teamId, message: null
+    });
+
+    await approveRequest({ requestId: req.id, respondedByUserId: adminId });
+
+    const [tmem] = await db
+      .select()
+      .from(teamMemberships)
+      .where(eq(teamMemberships.userId, requesterId));
+    expect(tmem.role).toBe("viewer");
   });
 
   it("rejectRequest marks request rejected and stores reason; no membership row created", async () => {
@@ -287,8 +306,8 @@ describe("membership management queries", () => {
     const { teamId } = await seedClubWithTeam("tmscope");
     await db.insert(teamMemberships).values({ userId, teamId, role: "viewer" });
 
-    const updated = await changeTeamMembershipRole(teamId, userId, "trainer");
-    expect(updated?.role).toBe("trainer");
+    const updated = await changeTeamMembershipRole(teamId, userId, "admin");
+    expect(updated?.role).toBe("admin");
 
     const ok = await revokeTeamMembership(teamId, userId);
     expect(ok).toBe(true);

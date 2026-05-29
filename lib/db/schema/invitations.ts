@@ -14,11 +14,12 @@ export const invitationKindEnum = pgEnum("invitation_kind", ["sponsor", "team-me
 
 /**
  * Rolle, die ein `team-member`-Invite gewähren soll. Nullable für
- * `sponsor`-Invites. Für `team-member` ist `trainer` oder `viewer`
- * erlaubt — `admin` wird über existierende Mitglieder-Promotion vergeben,
- * nicht über Invites.
+ * `sponsor`-Invites. Validierung pro Scope:
+ *  - Club-Invite (`clubId` gesetzt): `trainer` | `viewer` — Club-`admin` wird
+ *    über Mitglieder-Promotion vergeben, nicht via Invite.
+ *  - Team-Invite (`teamId` gesetzt): `admin` (Mannschaftsadmin) | `viewer`.
  */
-export const invitationRoleEnum = pgEnum("invitation_role", ["trainer", "viewer"]);
+export const invitationRoleEnum = pgEnum("invitation_role", ["admin", "trainer", "viewer"]);
 
 export const sponsorInvitations = pgTable("sponsor_invitations", {
   id: text("id").primaryKey().$defaultFn(() => createId()),

@@ -2,15 +2,39 @@ import { randomBytes } from "node:crypto";
 import { and, eq, gt, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { sponsorInvitations } from "@/lib/db/schema/invitations";
-import { teams, clubMemberships, teamMemberships } from "@/lib/db/schema/clubs";
+import { teams, clubs, clubMemberships, teamMemberships } from "@/lib/db/schema/clubs";
 
 const INVITATION_TTL_DAYS = 30;
 
 export type InvitationKind = "sponsor" | "team-member";
-export type InvitationRole = "trainer" | "viewer";
+// admin = Mannschaftsadmin (nur Team-Invites). trainer = Club-Trainer (nur
+// Club-Invites). viewer in beiden Scopes. Scope-Validierung in den Actions.
+export type InvitationRole = "admin" | "trainer" | "viewer";
 
 function generateToken(): string {
   return randomBytes(24).toString("base64url");
+}
+
+/**
+ * Liefert `clubs.verifiedAt` des **Container-Vereins** einer Mannschaft
+ * (`teams.clubId` → `clubs.verifiedAt`). Sponsoren-Gate (Design 2026-05-29 §3.5/§6):
+ * Sponsoren dürfen erst eingeladen werden, wenn dieser Wert gesetzt ist.
+ *
+ * Ziel ist bewusst der Container des Teams — nicht der Slug-Verein —, da eine
+ * Mannschaft nach dem Identity-Refactor in einem anderen Container hängen kann.
+ *
+ * Gibt `undefined` zurück, wenn die Mannschaft nicht existiert.
+ */
+export async function getTeamContainerVerifiedAt(
+  teamId: string
+): Promise<Date | null | undefined> {
+  const [row] = await db
+    .select({ verifiedAt: clubs.verifiedAt })
+    .from(teams)
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  return row?.verifiedAt;
 }
 
 export async function createInvitation(args: {
@@ -119,12 +143,15 @@ export async function acceptTeamMemberInvitation(args: {
   }
 
   if (invite.teamId) {
+    // Team-Ebene kennt nur admin|viewer. Legacy-Invites mit role='trainer'
+    // (vor dem Rename) werden zu admin koerziert.
+    const teamRole = invite.role === "viewer" ? "viewer" : "admin";
     await db
       .insert(teamMemberships)
       .values({
         userId: args.userId,
         teamId: invite.teamId,
-        role: invite.role,
+        role: teamRole,
         invitedByUserId: invite.createdByUserId
       })
       .onConflictDoNothing();
@@ -132,7 +159,7 @@ export async function acceptTeamMemberInvitation(args: {
       .update(sponsorInvitations)
       .set({ status: "used", usedAt: new Date(), usedByUserId: args.userId })
       .where(eq(sponsorInvitations.token, args.token));
-    return { scope: "team", teamId: invite.teamId, role: invite.role };
+    return { scope: "team", teamId: invite.teamId, role: teamRole };
   }
 
   if (invite.clubId) {
@@ -221,7 +248,7 @@ export interface PendingTeamMemberInvitation {
   id: string;
   token: string;
   recipientEmail: string | null;
-  role: "trainer" | "viewer";
+  role: "admin" | "trainer" | "viewer";
   /** null = Verein-weite Einladung */
   teamId: string | null;
   teamName: string | null;
@@ -267,8 +294,142 @@ export async function listPendingTeamMemberInvitationsForClub(
 
   return rows.map((r) => ({
     ...r,
-    role: (r.role ?? "viewer") as "trainer" | "viewer"
+    role: (r.role ?? "viewer") as "admin" | "trainer" | "viewer"
   }));
+}
+
+/**
+ * Liefert die teamId einer team-member-Einladung (für Berechtigungs-Lookup in
+ * den team-scoped Actions), oder null.
+ */
+export async function getTeamMemberInvitationTeamId(
+  invitationId: string
+): Promise<string | null> {
+  const [row] = await db
+    .select({ teamId: sponsorInvitations.teamId })
+    .from(sponsorInvitations)
+    .where(
+      and(
+        eq(sponsorInvitations.id, invitationId),
+        eq(sponsorInvitations.kind, "team-member")
+      )
+    )
+    .limit(1);
+  return row?.teamId ?? null;
+}
+
+/**
+ * Offene (pending, nicht abgelaufene) team-member-Einladungen einer einzelnen
+ * Mannschaft. Für die team-scoped Mitglieder-Seite. Neueste zuerst.
+ */
+export async function listPendingTeamMemberInvitationsForTeam(
+  teamId: string
+): Promise<PendingTeamMemberInvitation[]> {
+  const rows = await db
+    .select({
+      id: sponsorInvitations.id,
+      token: sponsorInvitations.token,
+      recipientEmail: sponsorInvitations.recipientEmail,
+      role: sponsorInvitations.role,
+      teamId: sponsorInvitations.teamId,
+      teamName: teams.name,
+      clubId: sponsorInvitations.clubId,
+      createdAt: sponsorInvitations.createdAt,
+      expiresAt: sponsorInvitations.expiresAt
+    })
+    .from(sponsorInvitations)
+    .leftJoin(teams, eq(sponsorInvitations.teamId, teams.id))
+    .where(
+      and(
+        eq(sponsorInvitations.kind, "team-member"),
+        eq(sponsorInvitations.status, "pending"),
+        gt(sponsorInvitations.expiresAt, new Date()),
+        eq(sponsorInvitations.teamId, teamId)
+      )
+    )
+    .orderBy(sql`${sponsorInvitations.createdAt} desc`);
+
+  return rows.map((r) => ({
+    ...r,
+    role: (r.role ?? "viewer") as "admin" | "trainer" | "viewer"
+  }));
+}
+
+/**
+ * Widerruft eine team-member-Einladung mit Team-Tenant-Check: die Einladung
+ * muss zu genau dieser Mannschaft gehören. Für die team-scoped Seite.
+ */
+export async function revokeTeamInvitationForTeam(
+  invitationId: string,
+  teamId: string
+): Promise<void> {
+  const [row] = await db
+    .select({ id: sponsorInvitations.id, teamId: sponsorInvitations.teamId })
+    .from(sponsorInvitations)
+    .where(
+      and(
+        eq(sponsorInvitations.id, invitationId),
+        eq(sponsorInvitations.kind, "team-member")
+      )
+    )
+    .limit(1);
+  if (!row || row.teamId !== teamId) {
+    throw new Error("Einladung nicht gefunden oder nicht autorisiert");
+  }
+  await db
+    .update(sponsorInvitations)
+    .set({ status: "revoked" })
+    .where(eq(sponsorInvitations.id, invitationId));
+}
+
+/**
+ * Erneuert eine team-member-Einladung dieser Mannschaft um 30 Tage (neuer
+ * Token, alter wird revokiert). Team-Tenant-Check.
+ */
+export async function refreshTeamInvitationForTeam(
+  invitationId: string,
+  teamId: string
+): Promise<{ token: string }> {
+  const [existing] = await db
+    .select({
+      id: sponsorInvitations.id,
+      teamId: sponsorInvitations.teamId,
+      role: sponsorInvitations.role,
+      createdByUserId: sponsorInvitations.createdByUserId,
+      recipientEmail: sponsorInvitations.recipientEmail,
+      recipientName: sponsorInvitations.recipientName
+    })
+    .from(sponsorInvitations)
+    .where(
+      and(
+        eq(sponsorInvitations.id, invitationId),
+        eq(sponsorInvitations.kind, "team-member"),
+        eq(sponsorInvitations.status, "pending")
+      )
+    )
+    .limit(1);
+  if (!existing || existing.teamId !== teamId) {
+    throw new Error("Einladung nicht gefunden oder nicht autorisiert");
+  }
+
+  await db
+    .update(sponsorInvitations)
+    .set({ status: "revoked" })
+    .where(eq(sponsorInvitations.id, invitationId));
+
+  const newToken = randomBytes(24).toString("base64url");
+  const expiresAt = new Date(Date.now() + INVITATION_TTL_DAYS * 24 * 60 * 60 * 1000);
+  await db.insert(sponsorInvitations).values({
+    kind: "team-member",
+    teamId: existing.teamId,
+    role: existing.role,
+    createdByUserId: existing.createdByUserId,
+    recipientEmail: existing.recipientEmail ?? null,
+    recipientName: existing.recipientName ?? null,
+    token: newToken,
+    expiresAt
+  });
+  return { token: newToken };
 }
 
 /**

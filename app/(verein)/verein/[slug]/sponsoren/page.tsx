@@ -2,6 +2,7 @@ import { and, eq, inArray, desc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   teams,
+  clubs,
   sponsorInvitations,
   sponsors,
   pledges,
@@ -23,8 +24,20 @@ export default async function SponsorenPage({
   const { slug } = await params;
   const { club } = await assertVereinAdminOrRedirect(slug, "viewer");
 
-  // Teams of this club
-  const teamRows = await db.select().from(teams).where(eq(teams.clubId, club.id));
+  // Teams of this club — inkl. Container-Verifizierung (Sponsoren-Gate, Design
+  // 2026-05-29 §3.5/§6). Das Gate prüft den Container-Verein DER MANNSCHAFT
+  // (teams.clubId → clubs.verifiedAt), der vom Slug-Verein abweichen kann.
+  const teamRows = await db
+    .select({
+      id: teams.id,
+      name: teams.name,
+      discoverable: teams.discoverable,
+      publicTagline: teams.publicTagline,
+      containerVerifiedAt: clubs.verifiedAt
+    })
+    .from(teams)
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(eq(teams.clubId, club.id));
   const teamIds = teamRows.map((t) => t.id);
 
   // Active invitations for these teams
@@ -89,7 +102,11 @@ export default async function SponsorenPage({
     <div className="space-y-6 md:space-y-10">
       <SponsorsManager
         clubSlug={slug}
-        teams={teamRows.map((t) => ({ id: t.id, name: t.name }))}
+        teams={teamRows.map((t) => ({
+          id: t.id,
+          name: t.name,
+          canInvite: t.containerVerifiedAt !== null
+        }))}
         invitations={invitations.map((i) => ({
           id: i.inv.id,
           token: i.inv.token,

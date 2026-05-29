@@ -24,7 +24,7 @@ export default async function TeamEinstellungenPage({
   params: Promise<{ slug: string; teamId: string }>;
 }) {
   const { slug, teamId } = await params;
-  const { club } = await assertTeamPageAccess(slug, teamId, "trainer");
+  const { club } = await assertTeamPageAccess(slug, teamId, "admin");
 
   const [team] = await db
     .select({
@@ -156,6 +156,27 @@ export default async function TeamEinstellungenPage({
           Weitere Bereiche
         </h3>
         <ul className="space-y-3">
+          <li>
+            <Link
+              href={`${base}/mitglieder`}
+              className="block rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5 hover:border-accent/40 hover:bg-brand-off-white/60 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h4 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+                    Mitglieder &amp; Zugriff
+                  </h4>
+                  <p className="mt-1 text-sm text-brand-night-navy/60">
+                    Mannschaftsadmins und Viewer einladen, Rollen ändern,
+                    Zugriffs-Anfragen freigeben.
+                  </p>
+                </div>
+                <span className="text-brand-night-navy/30" aria-hidden>
+                  →
+                </span>
+              </div>
+            </Link>
+          </li>
           <li>
             <Link
               href={`${base}/saison`}

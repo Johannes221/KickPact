@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
+import { teams, clubs } from "@/lib/db/schema";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
-import { getActiveVerificationForTeam } from "@/lib/db/queries/verifications";
+import { getActiveVerificationForClub } from "@/lib/db/queries/verifications";
 import { VerificationBanner } from "@/components/shared/verification-banner";
 import { TeamSubNav } from "./_components/team-sub-nav";
 
@@ -31,7 +31,7 @@ export default async function TeamScopeLayout({
   const { club, user } = await assertTeamPageAccess(slug, teamId, "viewer");
 
   const [team] = await db
-    .select({ name: teams.name, clubId: teams.clubId, verifiedAt: teams.verifiedAt })
+    .select({ name: teams.name, clubId: teams.clubId })
     .from(teams)
     .where(eq(teams.id, teamId))
     .limit(1);
@@ -40,12 +40,21 @@ export default async function TeamScopeLayout({
   // die Page selbst rendert dann den "nicht gefunden"-Block.
   const teamName = team?.name ?? "Mannschaft";
 
-  // Verifikations-Gate: solange teams.verifiedAt null ist, Banner mit dem
-  // aktuellen Einreichungs-Status zeigen. Rechnungen werden bis zur Freigabe
-  // zurückgehalten (Withhold-Gate in der Invoice-Generierung).
-  const teamVerification =
-    team && !team.verifiedAt ? await getActiveVerificationForTeam(teamId) : null;
-  const teamUnverified = !!team && !team.verifiedAt;
+  // Verifikations-Gate (Spec 2026-05-29 §3.2): `clubs.verifiedAt` des Container-
+  // Vereins ist das einzige Gate. Solange der Container nicht verifiziert ist,
+  // Banner mit dem aktuellen Club-Einreichungs-Status zeigen. Rechnungen werden
+  // bis zur Freigabe zurückgehalten (Withhold-Gate in der Invoice-Generierung).
+  const [containerClub] = team
+    ? await db
+        .select({ verifiedAt: clubs.verifiedAt })
+        .from(clubs)
+        .where(eq(clubs.id, team.clubId))
+        .limit(1)
+    : [];
+  const clubUnverified = !!team && !containerClub?.verifiedAt;
+  const clubVerification = clubUnverified
+    ? await getActiveVerificationForClub(team.clubId)
+    : null;
 
   // Effective-Plan dieses Clubs auflösen (verein > pro > basic).
   // Bei Lookup-Fehler oder fehlender Identity-Row → null (Tab-Filter behält
@@ -68,11 +77,11 @@ export default async function TeamScopeLayout({
         clubName={club.name}
         effectivePlan={effectivePlan}
       />
-      {teamUnverified && (
+      {clubUnverified && (
         <VerificationBanner
-          uploadUrl={`/verein/${slug}/mannschaft/${teamId}/verifikation`}
-          verification={teamVerification}
-          scope="mannschaft"
+          uploadUrl={`/verein/${slug}/verifikation`}
+          verification={clubVerification}
+          scope="verein"
         />
       )}
       {children}

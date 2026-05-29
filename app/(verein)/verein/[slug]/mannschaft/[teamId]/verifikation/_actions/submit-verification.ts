@@ -74,9 +74,9 @@ export async function submitTeamVerificationAction(
     return { ok: false, error: "Datei darf max. 10 MB groß sein." };
   }
 
-  // Access-Check über Team-Scope: Team-Trainer ohne Club-Membership soll auch
-  // einreichen können.
-  await assertTeamAccess(parsed.data.teamId, "trainer");
+  // Access-Check über Team-Scope: Mannschaftsadmin ohne Club-Membership soll
+  // auch einreichen können.
+  await assertTeamAccess(parsed.data.teamId, "admin");
 
   const [team] = await db
     .select({ id: teams.id, name: teams.name, clubId: teams.clubId })

@@ -4,16 +4,15 @@ import { useState, useTransition } from "react";
 import { Copy, RefreshCw, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  revokeTeamMemberInvitationAction,
-  refreshTeamMemberInvitationAction
-} from "../_actions/invite";
+
+type ActionResult = { ok: true } | { ok: false; error: string };
+type RefreshResult = { ok: true; inviteUrl: string } | { ok: false; error: string };
 
 export interface PendingInvitationRow {
   id: string;
   token: string;
   recipientEmail: string | null;
-  role: "trainer" | "viewer";
+  role: "admin" | "trainer" | "viewer";
   teamId: string | null;
   teamName: string | null;
   createdAt: Date;
@@ -21,6 +20,7 @@ export interface PendingInvitationRow {
 }
 
 const ROLE_LABEL: Record<string, string> = {
+  admin: "Mannschaftsadmin",
   trainer: "Trainer",
   viewer: "Viewer"
 };
@@ -32,11 +32,18 @@ function daysLeft(date: Date): number {
 export function PendingInvitationsTable({
   clubSlug,
   rows,
-  baseUrl
+  baseUrl,
+  revokeAction,
+  refreshAction,
+  showTeamColumn = true
 }: {
   clubSlug: string;
   rows: PendingInvitationRow[];
   baseUrl: string;
+  revokeAction: (input: { clubSlug: string; invitationId: string }) => Promise<ActionResult>;
+  refreshAction: (input: { clubSlug: string; invitationId: string }) => Promise<RefreshResult>;
+  /** Team-Seite: false, da alle Invites dieselbe Mannschaft betreffen. */
+  showTeamColumn?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   // Tracks which invitation is being acted on
@@ -66,7 +73,7 @@ export function PendingInvitationsTable({
   function handleRevoke(id: string) {
     setActiveId(id);
     startTransition(async () => {
-      const res = await revokeTeamMemberInvitationAction({ clubSlug, invitationId: id });
+      const res = await revokeAction({ clubSlug, invitationId: id });
       setActiveId(null);
       if (!res.ok) {
         toast.error(res.error);
@@ -79,7 +86,7 @@ export function PendingInvitationsTable({
   function handleRefresh(id: string) {
     setActiveId(id);
     startTransition(async () => {
-      const res = await refreshTeamMemberInvitationAction({ clubSlug, invitationId: id });
+      const res = await refreshAction({ clubSlug, invitationId: id });
       setActiveId(null);
       if (!res.ok) {
         toast.error(res.error);
@@ -102,9 +109,11 @@ export function PendingInvitationsTable({
             <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-widest text-brand-night-navy/60">
               Rolle
             </th>
-            <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-widest text-brand-night-navy/60 hidden sm:table-cell">
-              Zugriff
-            </th>
+            {showTeamColumn && (
+              <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-widest text-brand-night-navy/60 hidden sm:table-cell">
+                Zugriff
+              </th>
+            )}
             <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-widest text-brand-night-navy/60 hidden md:table-cell">
               Läuft ab
             </th>
@@ -128,16 +137,18 @@ export function PendingInvitationsTable({
                 </td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                    row.role === "trainer"
-                      ? "bg-accent/10 text-accent"
-                      : "bg-brand-neutral/20 text-brand-night-navy/70"
+                    row.role === "viewer"
+                      ? "bg-brand-neutral/20 text-brand-night-navy/70"
+                      : "bg-accent/10 text-accent"
                   }`}>
                     {ROLE_LABEL[row.role] ?? row.role}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-brand-night-navy/70 hidden sm:table-cell">
-                  {row.teamName ?? "Ganzer Verein"}
-                </td>
+                {showTeamColumn && (
+                  <td className="px-4 py-3 text-brand-night-navy/70 hidden sm:table-cell">
+                    {row.teamName ?? "Ganzer Verein"}
+                  </td>
+                )}
                 <td className="px-4 py-3 hidden md:table-cell">
                   <span className={`text-xs ${days <= 3 ? "text-red-600 font-semibold" : "text-brand-night-navy/60"}`}>
                     {days === 0 ? "Heute" : `${days}d`}

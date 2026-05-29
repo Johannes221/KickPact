@@ -7,7 +7,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { users } from "./auth";
 
 export const memberRoleEnum = pgEnum("member_role", ["admin", "trainer", "viewer"]);
-export const teamMemberRoleEnum = pgEnum("team_member_role", ["trainer", "viewer"]);
+export const teamMemberRoleEnum = pgEnum("team_member_role", ["admin", "viewer"]);
 export const clubMembershipRequestStatusEnum = pgEnum(
   "club_membership_request_status",
   ["pending", "approved", "rejected"]
@@ -79,7 +79,7 @@ export const clubs = pgTable(
     slug: text("slug").notNull().unique(),
     name: text("name").notNull(),
     ort: text("ort"),
-    fussballdeVereinId: text("fussballde_verein_id").unique(),
+    fussballdeVereinId: text("fussballde_verein_id"),
     taxId: text("tax_id"),
     isSmallBusiness: boolean("is_small_business").notNull().default(false),
     addressJson: jsonb("address_json").$type<{
@@ -108,6 +108,10 @@ export const clubs = pgTable(
   },
   (t) => ({
     slugIdx: uniqueIndex("clubs_slug_idx").on(t.slug),
+    // fussballde_verein_id ist nicht mehr unique: jede Solo-Mannschaft bekommt
+    // einen eigenen Container, mehrere Container können denselben realen Verein
+    // referenzieren. Index nur für Lookup (Kollisions-/Lizenz-Check).
+    vereinIdIdx: index("clubs_fussballde_verein_idx").on(t.fussballdeVereinId),
     // Resume-Dispatcher-Query: "alle Draft-Clubs dieses Users". Partial index, weil
     // im Steady-State 99.x% aller Clubs completed sind.
     draftIdx: index("clubs_draft_idx")

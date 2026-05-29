@@ -63,9 +63,31 @@ export async function assertClubWriteAccess(
   return { ...ctx, gate };
 }
 
-type TeamRole = "trainer" | "viewer";
+type TeamRole = "admin" | "viewer";
 
-const TEAM_RANK: Record<TeamRole, number> = { viewer: 1, trainer: 2 };
+const TEAM_RANK: Record<TeamRole, number> = { viewer: 1, admin: 2 };
+
+/**
+ * Ein Team ist „vereinsgeführt", wenn seine Lizenz unter der Vereinslizenz
+ * gebündelt ist (plan='verein' ODER parentClubLicenseId gesetzt). Sonst gilt
+ * es als autark (eigene basic/pro-Lizenz oder noch ohne Lizenz).
+ *
+ * Steuert den Club-Admin-Durchgriff: nur vereinsgeführte Teams sind dem
+ * Verein-Admin unterstellt. Autarke Teams beziehen ihren Zugriff ausschließlich
+ * aus team_memberships.
+ */
+export async function isTeamUnderClubLicense(teamId: string): Promise<boolean> {
+  const [lic] = await db
+    .select({
+      plan: teamLicenses.plan,
+      parentId: teamLicenses.parentClubLicenseId
+    })
+    .from(teamLicenses)
+    .where(eq(teamLicenses.teamId, teamId))
+    .limit(1);
+  if (!lic) return false;
+  return lic.plan === "verein" || lic.parentId !== null;
+}
 
 export type TeamAccessResult =
   | { granted: true; scope: "club"; role: Role; teamId: string; clubId: string }
@@ -92,7 +114,10 @@ export async function resolveTeamAccess(
     .limit(1);
   if (!team) return { granted: false };
 
-  // Club-level first — admins and trainers of the parent club see everything.
+  // Club-level first — admins and trainers of the parent club see everything,
+  // ABER nur bei vereinsgeführten Teams. Autarke Teams (eigene Lizenz, nicht
+  // unter Vereinslizenz) sind dem Verein-Admin nicht unterstellt; dort kommt
+  // der Zugriff ausschließlich aus team_memberships (siehe unten).
   const [clubMem] = await db
     .select({ role: clubMemberships.role })
     .from(clubMemberships)
@@ -103,8 +128,8 @@ export async function resolveTeamAccess(
       )
     )
     .limit(1);
-  if (clubMem) {
-    if (ROLE_RANK[clubMem.role] >= ROLE_RANK[minRole]) {
+  if (clubMem && ROLE_RANK[clubMem.role] >= ROLE_RANK[minRole]) {
+    if (await isTeamUnderClubLicense(team.id)) {
       return {
         granted: true,
         scope: "club",
@@ -254,5 +279,54 @@ export async function assertVereinAdminOrRedirect(
 
   // Sonst (basic, pro, oder keine Lizenz): zur Team-Page des ersten Teams
   redirect(`/verein/${clubSlug}/mannschaft/${teamRows[0].id}`);
+}
+
+/**
+ * Darf der User die Mitglieder (Mannschaftsadmins/Viewer) dieser Mannschaft
+ * verwalten? Zentrale „volle Delegation"-Regel (Spec 2026-05-29 §5.1):
+ *
+ *   - direkter team_memberships-Admin dieses Teams, ODER
+ *   - Club-Admin eines Clubs, unter dessen Vereinslizenz das Team läuft.
+ *
+ * Auth-frei testbar; nimmt userId statt requireUser, damit der Helper in
+ * Unit-Tests ohne Session aufrufbar ist.
+ */
+export async function canManageTeamMembers(
+  userId: string,
+  teamId: string
+): Promise<boolean> {
+  const [teamMem] = await db
+    .select({ role: teamMemberships.role })
+    .from(teamMemberships)
+    .where(
+      and(
+        eq(teamMemberships.userId, userId),
+        eq(teamMemberships.teamId, teamId)
+      )
+    )
+    .limit(1);
+  if (teamMem?.role === "admin") return true;
+
+  const [team] = await db
+    .select({ clubId: teams.clubId })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  if (!team) return false;
+
+  const [clubMem] = await db
+    .select({ role: clubMemberships.role })
+    .from(clubMemberships)
+    .where(
+      and(
+        eq(clubMemberships.userId, userId),
+        eq(clubMemberships.clubId, team.clubId)
+      )
+    )
+    .limit(1);
+  if (clubMem?.role === "admin" && (await isTeamUnderClubLicense(teamId))) {
+    return true;
+  }
+  return false;
 }
 

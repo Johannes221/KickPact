@@ -44,7 +44,7 @@ export interface UserIdentityTeamOnly {
   teamName: string;
   clubSlug: string;
   clubName: string;
-  role: "trainer" | "viewer";
+  role: "admin" | "viewer";
   saison: string;
 }
 

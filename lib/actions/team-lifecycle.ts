@@ -9,6 +9,7 @@ import {
   clubs,
   teams,
   teamLicenses,
+  teamMemberships,
   subscriptions,
   players,
   clubMemberships,
@@ -106,7 +107,7 @@ export async function createTeamForExistingClub(
   input: CreateTeamInput
 ): Promise<{ teamId: string }> {
   const parsed = createTeamSchema.parse(input);
-  const { club } = await assertClubWriteAccess(parsed.clubSlug, "admin");
+  const { user, club } = await assertClubWriteAccess(parsed.clubSlug, "admin");
 
   // Subscription muss existieren (Onboarding legt eine Trial-Sub an).
   const [sub] = await db
@@ -176,6 +177,19 @@ export async function createTeamForExistingClub(
       status: "trialing",
       parentClubLicenseId: hasVereinPlan ? vereinLicense!.id : null
     });
+
+    // Autarke Mannschaft (basic/pro, nicht unter Vereinslizenz): der Club-Admin-
+    // Durchgriff greift hier NICHT (Lizenz-Gating). Ersteller direkt als
+    // Mannschaftsadmin eintragen, sonst kein Zugriff auf die eigene Mannschaft.
+    // Vereinsgeführte Teams brauchen das nicht — der Durchgriff bleibt.
+    if (!hasVereinPlan) {
+      await tx.insert(teamMemberships).values({
+        userId: user.id,
+        teamId: insertedTeam.id,
+        role: "admin",
+        invitedByUserId: user.id
+      });
+    }
 
     return insertedTeam.id;
   });

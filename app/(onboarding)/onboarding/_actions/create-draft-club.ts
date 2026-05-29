@@ -8,6 +8,7 @@ import {
   clubs,
   teams,
   clubMemberships,
+  teamMemberships,
   subscriptions,
   teamLicenses
 } from "@/lib/db/schema";
@@ -177,6 +178,19 @@ export async function createDraftClub(input: CreateDraftInput): Promise<CreateDr
         plan: planForLicenses as "pro" | "verein",
         stripeSubscriptionItemId: null,
         status: "trialing" as const
+      }))
+    );
+
+    // Ersteller direkt als Mannschaftsadmin jeder Mannschaft eintragen. Bei
+    // autarken Teams (pro-Plan) kommt der Zugriff NUR aus team_memberships —
+    // der Club-Admin-Durchgriff greift dort nicht (Lizenz-Gating). Ohne diesen
+    // Eintrag würde sich der Owner aus seiner eigenen Mannschaft aussperren.
+    await tx.insert(teamMemberships).values(
+      insertedTeams.map((t) => ({
+        userId: user.id,
+        teamId: t.id,
+        role: "admin" as const,
+        invitedByUserId: user.id
       }))
     );
 

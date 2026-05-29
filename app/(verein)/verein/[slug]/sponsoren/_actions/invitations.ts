@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { assertClubWriteAccess } from "@/lib/auth/scope";
-import { createInvitation, revokeInvitation } from "@/lib/db/queries/invitations";
+import {
+  createInvitation,
+  getTeamContainerVerifiedAt,
+  revokeInvitation
+} from "@/lib/db/queries/invitations";
 
 const createSchema = z.object({
   clubSlug: z.string().min(1),
@@ -18,6 +22,17 @@ export async function createInvitationAction(input: {
 }) {
   const parsed = createSchema.parse(input);
   const { user } = await assertClubWriteAccess(parsed.clubSlug, "admin");
+
+  // Sponsoren-Gate (Design 2026-05-29 §3.5/§6): Einladungen sind erst erlaubt,
+  // wenn der Container-Verein DER MANNSCHAFT verifiziert ist — nicht der
+  // Slug-Verein, da der Container nach dem Identity-Refactor abweichen kann.
+  const verifiedAt = await getTeamContainerVerifiedAt(parsed.teamId);
+  if (!verifiedAt) {
+    throw new Error(
+      "Bitte zuerst den Verein verifizieren, dann kannst du Sponsoren einladen."
+    );
+  }
+
   const inv = await createInvitation({
     teamId: parsed.teamId,
     createdByUserId: user.id,

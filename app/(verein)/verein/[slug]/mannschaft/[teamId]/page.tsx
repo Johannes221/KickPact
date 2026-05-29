@@ -81,7 +81,11 @@ export default async function TeamDetailPage({
 
   // Setup-Checkliste: Daten für "Anstehende Aufgaben".
   const [[clubBilling], [pledgeCountRow]] = await Promise.all([
-    db.select({ iban: clubs.iban }).from(clubs).where(eq(clubs.id, club.id)).limit(1),
+    db
+      .select({ iban: clubs.iban, verifiedAt: clubs.verifiedAt })
+      .from(clubs)
+      .where(eq(clubs.id, club.id))
+      .limit(1),
     db
       .select({ n: sql<number>`count(*)::int` })
       .from(pledges)
@@ -92,10 +96,10 @@ export default async function TeamDetailPage({
   const teamBase = `/verein/${slug}/mannschaft/${team.id}`;
   const checklistItems = [
     {
-      done: !!team.verifiedAt,
-      label: "Mannschaft verifizieren",
+      done: !!clubBilling?.verifiedAt,
+      label: "Verein verifizieren",
       hint: "Nachweis hochladen — bis dahin werden Rechnungen zurückgehalten.",
-      href: `${teamBase}/verifikation`
+      href: `/verein/${slug}/verifikation`
     },
     {
       done: hasIban,

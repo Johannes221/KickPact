@@ -1,4 +1,4 @@
-import { eq, sql, inArray, and, isNull } from "drizzle-orm";
+import { eq, sql, inArray } from "drizzle-orm";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
@@ -11,8 +11,7 @@ import {
   clubMemberships,
   users,
   teams,
-  teamLicenses,
-  pledges
+  teamLicenses
 } from "@/lib/db/schema";
 import { highestPlanFrom } from "@/lib/mail/reply-to-pure";
 import type { PlanKey } from "@/lib/stripe/pricing";
@@ -227,29 +226,12 @@ export const generateInvoices = inngest.createFunction(
 
           const storageUrl = await storePdf(`${cl.id}/${invoiceNumber}.pdf`, pdfBuf);
 
-          // Phase E1 + Spec 2026-05-26 §1.7 Withhold-Gate:
-          //   - Unverified clubs → invoice + PDF created, status='withheld'.
-          //   - Unverified teams (Spec §1.7): falls IRGENDEINES der Teams,
-          //     die in dieser Rechnung beteiligt sind, nicht verifiziert ist,
-          //     wird ebenfalls withheld. Bei Approval (Club oder Team) wird
-          //     re-evaluiert.
-          const clubVerified = cl.verifiedAt !== null;
-
-          // Sammel alle teamIds, die zu den Charges dieser Rechnung gehören.
-          // Items kommen aus `group.items`, die jeweils einen chargeId + pledge
-          // referenzieren. Wir queryen die pledges → teams Beziehung direkt.
-          const chargeIds = group.items.map((i) => i.chargeId);
-          const involvedTeams = await db
-            .selectDistinct({ teamId: pledges.teamId, verifiedAt: teams.verifiedAt })
-            .from(charges)
-            .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-            .innerJoin(teams, eq(pledges.teamId, teams.id))
-            .where(inArray(charges.id, chargeIds));
-          const allTeamsVerified = involvedTeams.every(
-            (t) => t.verifiedAt !== null
-          );
-
-          const verified = clubVerified && allTeamsVerified;
+          // Phase E1 + Spec 2026-05-29 §3.2 Withhold-Gate:
+          //   `clubs.verifiedAt` ist das einzige Verifizierungs-Gate. Ist der
+          //   Container-Verein nicht verifiziert → Rechnung + PDF werden erstellt,
+          //   aber status='withheld'. Bei Club-Approval wird re-evaluiert.
+          //   (Das frühere team-level Gate `teams.verifiedAt` ist deaktiviert.)
+          const verified = cl.verifiedAt !== null;
 
           const inserted = await db.transaction(async (tx) => {
             const [inv] = await tx
@@ -325,11 +307,11 @@ export const generateInvoices = inngest.createFunction(
         invoicesCreated += 1;
         const pdfBuf = Buffer.from(result.pdfBase64, "base64");
 
-        // Phase E1+§1.7 Withhold-Gate: invoice exists (status='withheld')
-        // but NO mails go out until club AND all involved teams are verified.
-        // Re-release happens via approve-verification for club or team.
+        // Phase E1 + Spec 2026-05-29 §3.2 Withhold-Gate: invoice exists
+        // (status='withheld') but NO mails go out until the container-club is
+        // verified. Re-release happens via approve-verification for the club.
         if (!result.clubVerified) {
-          logger.info("invoice withheld — club or team not verified", {
+          logger.info("invoice withheld — club not verified", {
             invoiceId: result.invoiceId,
             clubId: result.clubId,
             invoiceNumber: result.invoiceNumber

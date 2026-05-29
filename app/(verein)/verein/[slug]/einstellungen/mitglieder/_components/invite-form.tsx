@@ -13,26 +13,61 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { inviteTeamMemberAction } from "../_actions/invite";
 
 export interface InviteFormTeam {
   id: string;
   name: string;
 }
 
+export interface InviteRoleOption {
+  value: string;
+  label: string;
+}
+
+// Geteilte Input-Signatur. Club-Action nutzt clubSlug + teamId (null=Verein-weit);
+// Team-Action nutzt teamId (fix) + role.
+export interface InviteSubmit {
+  clubSlug: string;
+  email: string;
+  role: string;
+  teamId: string | null;
+}
+
+type InviteResult =
+  | { ok: true; inviteUrl: string }
+  | { ok: false; error: string };
+
+/**
+ * Einladungs-Formular, scope-agnostisch.
+ *
+ * - Club-Scope: `teams` setzen → Scope-Selector (Verein-weit / einzelne
+ *   Mannschaft); Rollen z.B. trainer/viewer.
+ * - Team-Scope: `fixedTeamId` setzen, `teams` weglassen → kein Selector;
+ *   Rollen admin/viewer.
+ */
 export function InviteForm({
   clubSlug,
-  teams
+  inviteAction,
+  roleOptions,
+  defaultRole,
+  teams,
+  fixedTeamId
 }: {
   clubSlug: string;
-  teams: InviteFormTeam[];
+  inviteAction: (input: InviteSubmit) => Promise<InviteResult>;
+  roleOptions: InviteRoleOption[];
+  defaultRole: string;
+  teams?: InviteFormTeam[];
+  fixedTeamId?: string;
 }) {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"trainer" | "viewer">("trainer");
-  // Scope-Wert: "club" = Vereins-weite Mitgliedschaft, sonst Team-Id
+  const [role, setRole] = useState<string>(defaultRole);
+  // Club-Scope-Wert: "club" = Verein-weit, sonst Team-Id. Im Team-Scope ungenutzt.
   const [scope, setScope] = useState<string>("club");
   const [pending, startTransition] = useTransition();
   const [lastInvite, setLastInvite] = useState<string | null>(null);
+
+  const showScopeSelector = Array.isArray(teams);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -40,12 +75,17 @@ export function InviteForm({
       toast.error("E-Mail eintragen, dann geht's weiter.");
       return;
     }
+    const teamId = showScopeSelector
+      ? scope === "club"
+        ? null
+        : scope
+      : (fixedTeamId ?? null);
     startTransition(async () => {
-      const res = await inviteTeamMemberAction({
+      const res = await inviteAction({
         clubSlug,
         email: email.trim(),
         role,
-        teamId: scope === "club" ? null : scope
+        teamId
       });
       if (!res.ok) {
         toast.error(res.error);
@@ -78,7 +118,7 @@ export function InviteForm({
           <Input
             id="invite-email"
             type="email"
-            placeholder="trainer@example.de"
+            placeholder="person@example.de"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={pending}
@@ -89,39 +129,44 @@ export function InviteForm({
           <Label htmlFor="invite-role" className="text-xs font-bold uppercase tracking-widest text-brand-night-navy/60">
             Rolle
           </Label>
-          <Select value={role} onValueChange={(v) => setRole(v as "trainer" | "viewer")} disabled={pending}>
+          <Select value={role} onValueChange={setRole} disabled={pending}>
             <SelectTrigger id="invite-role">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="trainer">Trainer — kann Spiele + Events pflegen</SelectItem>
-              <SelectItem value="viewer">Viewer — sieht alles, ändert nichts</SelectItem>
+              {roleOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="invite-scope" className="text-xs font-bold uppercase tracking-widest text-brand-night-navy/60">
-          Zugriff
-        </Label>
-        <Select value={scope} onValueChange={setScope} disabled={pending}>
-          <SelectTrigger id="invite-scope">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="club">Ganzer Verein</SelectItem>
-            {teams.map((t) => (
-              <SelectItem key={t.id} value={t.id}>
-                Nur Mannschaft: {t.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-brand-night-navy/55">
-          Verein-weit = sieht alle Mannschaften. Mannschaft-spezifisch = nur diese eine.
-        </p>
-      </div>
+      {showScopeSelector && (
+        <div className="space-y-1.5">
+          <Label htmlFor="invite-scope" className="text-xs font-bold uppercase tracking-widest text-brand-night-navy/60">
+            Zugriff
+          </Label>
+          <Select value={scope} onValueChange={setScope} disabled={pending}>
+            <SelectTrigger id="invite-scope">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="club">Ganzer Verein</SelectItem>
+              {teams!.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  Nur Mannschaft: {t.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-brand-night-navy/55">
+            Verein-weit = sieht alle Mannschaften. Mannschaft-spezifisch = nur diese eine.
+          </p>
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-xs text-brand-night-navy/55">

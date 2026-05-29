@@ -10,6 +10,7 @@
    - [2026-05-22-identity-roles-mobile-ia-design.md](2026-05-22-identity-roles-mobile-ia-design.md) — Rollen-Modell, Identity-Routing, Mobile-IA
    - [2026-05-22-scraper-realdata-validation-design.md](2026-05-22-scraper-realdata-validation-design.md) — Fußball.de-Crawler-Strategie, Drift-Detection
    - [2026-05-25-trust-and-payment-model-design.md](2026-05-25-trust-and-payment-model-design.md) — Non-Custodial-Modell, Verifikation, Withhold-Gate
+   - [2026-05-29-onboarding-identity-logic-design.md](2026-05-29-onboarding-identity-logic-design.md) — Onboarding-Kollisionslogik (Team-Schlüssel), eigener Container pro Solo-Mannschaft, Sponsoren-Gate via `clubs.verifiedAt`
 
 ## Workflow
 

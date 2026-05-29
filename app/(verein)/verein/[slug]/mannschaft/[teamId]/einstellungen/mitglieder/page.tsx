@@ -1,104 +1,102 @@
 import Link from "next/link";
-import { and, asc, eq } from "drizzle-orm";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
+import { assertTeamPageAccess, canManageTeamMembers } from "@/lib/auth/scope";
 import { db } from "@/lib/db/client";
-import { clubMemberships, teamMemberships, users, teams } from "@/lib/db/schema";
+import { teamMemberships, teams, users } from "@/lib/db/schema";
 import {
-  countClubAdmins,
-  listPendingRequestsForClub
+  listPendingRequestsForTeam,
+  countTeamAdmins
 } from "@/lib/db/queries/membership-requests";
-import { RequestsTable } from "./_components/requests-table";
-import { MembersTable } from "./_components/members-table";
-import { InviteForm } from "./_components/invite-form";
-import { PendingInvitationsTable } from "./_components/pending-invitations-table";
-import { listPendingTeamMemberInvitationsForClub } from "@/lib/db/queries/invitations";
-import { changeRoleAction, revokeAction } from "./_actions/manage";
-import { approveRequestAction, rejectRequestAction } from "./_actions/approve-reject";
+import { listPendingTeamMemberInvitationsForTeam } from "@/lib/db/queries/invitations";
+import { MembersTable } from "@/app/(verein)/verein/[slug]/einstellungen/mitglieder/_components/members-table";
+import { InviteForm } from "@/app/(verein)/verein/[slug]/einstellungen/mitglieder/_components/invite-form";
+import { RequestsTable } from "@/app/(verein)/verein/[slug]/einstellungen/mitglieder/_components/requests-table";
+import { PendingInvitationsTable } from "@/app/(verein)/verein/[slug]/einstellungen/mitglieder/_components/pending-invitations-table";
 import {
   inviteTeamMemberAction,
   revokeTeamMemberInvitationAction,
   refreshTeamMemberInvitationAction
 } from "./_actions/invite";
+import { changeRoleAction, revokeAction } from "./_actions/manage";
+import { approveRequestAction, rejectRequestAction } from "./_actions/approve-reject";
 
-export const metadata = { title: "Mitglieder · KickPact" };
+export const metadata = { title: "Mitglieder · Mannschaft · KickPact" };
 
-export default async function MitgliederPage({
+export default async function TeamMitgliederPage({
   params
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; teamId: string }>;
 }) {
-  const { slug } = await params;
-  const { user, club } = await assertClubAccess(slug, "admin");
+  const { slug, teamId } = await params;
+  const { user, club } = await assertTeamPageAccess(slug, teamId, "viewer");
 
-  const [pendingRequests, pendingInvitations, clubMems, teamMems, clubAdminCount, clubTeams] = await Promise.all([
-    listPendingRequestsForClub(club.id),
-    listPendingTeamMemberInvitationsForClub(club.id),
-    db
-      .select({
-        userId: clubMemberships.userId,
-        email: users.email,
-        role: clubMemberships.role,
-        createdAt: clubMemberships.createdAt
-      })
-      .from(clubMemberships)
-      .innerJoin(users, eq(clubMemberships.userId, users.id))
-      .where(eq(clubMemberships.clubId, club.id)),
-    db
-      .select({
-        userId: teamMemberships.userId,
-        email: users.email,
-        role: teamMemberships.role,
-        teamName: teams.name,
-        teamId: teams.id,
-        createdAt: teamMemberships.createdAt
-      })
-      .from(teamMemberships)
-      .innerJoin(teams, eq(teamMemberships.teamId, teams.id))
-      .innerJoin(users, eq(teamMemberships.userId, users.id))
-      .where(eq(teams.clubId, club.id)),
-    countClubAdmins(club.id),
-    db
-      .select({ id: teams.id, name: teams.name })
-      .from(teams)
-      .where(and(eq(teams.clubId, club.id), eq(teams.isActive, true)))
-      .orderBy(asc(teams.name))
-  ]);
+  // Nur Mannschaftsadmins (oder Verein-Admins vereinsgeführter Teams) dürfen
+  // hier verwalten. Viewer landen zurück auf den Einstellungen.
+  if (!(await canManageTeamMembers(user.id, teamId))) {
+    redirect(`/verein/${slug}/mannschaft/${teamId}/einstellungen`);
+  }
+
+  const [team] = await db
+    .select({ id: teams.id, name: teams.name })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  if (!team) redirect(`/verein/${slug}/mannschaft/${teamId}/einstellungen`);
+
+  const [members, pendingInvitations, pendingRequests, teamAdminCount] =
+    await Promise.all([
+      db
+        .select({
+          userId: teamMemberships.userId,
+          email: users.email,
+          role: teamMemberships.role
+        })
+        .from(teamMemberships)
+        .innerJoin(users, eq(teamMemberships.userId, users.id))
+        .where(eq(teamMemberships.teamId, teamId)),
+      listPendingTeamMemberInvitationsForTeam(teamId),
+      listPendingRequestsForTeam(teamId),
+      countTeamAdmins(teamId)
+    ]);
+
+  const base = `/verein/${slug}/mannschaft/${teamId}/einstellungen`;
 
   return (
     <div className="space-y-10">
       <div>
         <Link
-          href={`/verein/${slug}/einstellungen`}
+          href={base}
           className="text-sm text-brand-night-navy/60 hover:text-accent"
         >
           ← Einstellungen
         </Link>
         <h2 className="mt-1.5 font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
-          Mitglieder
+          Mitglieder &amp; Zugriff
         </h2>
         <p className="text-sm text-brand-night-navy/60">
-          Wer hat Zugriff auf {club.name} — und wer will Zugriff.
+          Wer hat Zugriff auf {team.name} — und wer will Zugriff.
         </p>
       </div>
 
-      {/* Trainer/Viewer einladen */}
+      {/* Einladen */}
       <section>
         <h3 className="font-display font-black text-xl tracking-tight text-brand-night-navy mb-1">
-          Trainer oder Viewer einladen
+          Mannschaftsadmin oder Viewer einladen
         </h3>
         <p className="text-sm text-brand-night-navy/60 mb-3">
-          Erzeugt einen Einladungs-Link. Schick ihn an die Person — sie loggt sich ein
-          und ist mit einem Klick drin.
+          Erzeugt einen Einladungs-Link. Schick ihn an die Person — sie loggt
+          sich ein und ist mit einem Klick drin.
         </p>
         <InviteForm
           clubSlug={slug}
           inviteAction={inviteTeamMemberAction}
+          fixedTeamId={teamId}
           roleOptions={[
-            { value: "trainer", label: "Trainer — kann Spiele + Events pflegen" },
+            { value: "admin", label: "Mannschaftsadmin — darf alles" },
             { value: "viewer", label: "Viewer — sieht alles, ändert nichts" }
           ]}
-          defaultRole="trainer"
-          teams={clubTeams}
+          defaultRole="admin"
         />
       </section>
 
@@ -113,11 +111,12 @@ export default async function MitgliederPage({
           )}
         </h3>
         <p className="text-sm text-brand-night-navy/60 mb-3">
-          Links, die noch nicht angenommen wurden. Kopieren, erneuern (neuer 30-Tage-Link)
-          oder widerrufen.
+          Links, die noch nicht angenommen wurden. Kopieren, erneuern oder
+          widerrufen.
         </p>
         <PendingInvitationsTable
           clubSlug={slug}
+          showTeamColumn={false}
           rows={pendingInvitations.map((inv) => ({
             id: inv.id,
             token: inv.token,
@@ -157,24 +156,19 @@ export default async function MitgliederPage({
         <h3 className="font-display font-black text-xl tracking-tight text-brand-night-navy mb-3">
           Aktive Mitglieder
         </h3>
-
         <MembersTable
           clubSlug={slug}
           currentUserId={user.id}
-          clubAdminCount={clubAdminCount}
+          clubMembers={[]}
+          teamAdminCount={teamAdminCount}
           changeRoleAction={changeRoleAction}
           revokeAction={revokeAction}
-          clubMembers={clubMems.map((m) => ({
-            userId: m.userId,
-            email: m.email,
-            role: m.role
-          }))}
-          teamMembers={teamMems.map((m) => ({
+          teamMembers={members.map((m) => ({
             userId: m.userId,
             email: m.email,
             role: m.role,
-            teamId: m.teamId,
-            teamName: m.teamName
+            teamId: team.id,
+            teamName: team.name
           }))}
         />
       </section>

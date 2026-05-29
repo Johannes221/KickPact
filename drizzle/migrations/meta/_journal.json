@@ -211,6 +211,34 @@
       "when": 1782000000000,
       "tag": "0029_team_crawl_status",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1782180000000,
+      "tag": "0030_drop_club_verein_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1782360000000,
+      "tag": "0031_team_admin_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1782360100000,
+      "tag": "0032_invitation_role_add_admin",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1782360200000,
+      "tag": "0033_team_admin_backfill",
+      "breakpoints": true
     }
   ]
 }

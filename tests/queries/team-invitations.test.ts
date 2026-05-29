@@ -209,7 +209,7 @@ describe("acceptTeamMemberInvitation", () => {
         token: "tok",
         kind: "team-member",
         status: "pending",
-        role: "trainer",
+        role: "admin",
         teamId: "t1",
         clubId: null,
         createdByUserId: "admin1"
@@ -219,7 +219,7 @@ describe("acceptTeamMemberInvitation", () => {
     const result = await acceptTeamMemberInvitation({ token: "tok", userId: "u1" });
     expect(result.scope).toBe("team");
     expect(result.teamId).toBe("t1");
-    expect(result.role).toBe("trainer");
+    expect(result.role).toBe("admin");
 
     // Verifiziere, dass insert UND update aufgerufen wurden
     const insertCalls = dbMock.calls.filter((c) => c.method === "insert");

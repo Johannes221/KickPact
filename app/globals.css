@@ -9,6 +9,16 @@
 html, body { height: 100%; }
 body { @apply bg-white text-neutral-900 antialiased; }
 
+/* Safe-Area-Helfer für den späteren Capacitor/iOS-Wrapper. Greifen nur, wenn
+   viewport-fit=cover gesetzt ist (siehe app/layout.tsx) UND ein Notch/Home-
+   Indicator existiert — im normalen Browser sind die env()-Werte 0, die Klassen
+   also komplett inert. Wiederverwendbar für fixed Header/Footer/Sheets. */
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.pl-safe { padding-left: env(safe-area-inset-left); }
+.pr-safe { padding-right: env(safe-area-inset-right); }
+.min-h-safe-top { min-height: env(safe-area-inset-top); }
+
 /* Ken-Burns Slow-Zoom für Hero-Background */
 @keyframes ken-burns {
   0%   { transform: scale(1.04) translate3d(0, 0, 0); }

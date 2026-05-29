@@ -11,7 +11,7 @@ import {
 export type MembershipRequestStatus = "pending" | "approved" | "rejected";
 export type RequestedRole = "admin" | "trainer" | "viewer";
 export type ClubRole = "admin" | "trainer" | "viewer";
-export type TeamRole = "trainer" | "viewer";
+export type TeamRole = "admin" | "viewer";
 
 export interface CreateRequestArgs {
   userId: string;
@@ -102,6 +102,41 @@ export async function listPendingRequestsForClub(clubId: string): Promise<Pendin
   return rows as PendingRequestRow[];
 }
 
+/**
+ * Lists pending requests scoped to a single team (requestedTeamId = teamId),
+ * newest first. For the team-scoped Mitglieder inbox.
+ */
+export async function listPendingRequestsForTeam(teamId: string): Promise<PendingRequestRow[]> {
+  const rows = await db
+    .select({
+      id: clubMembershipRequests.id,
+      userId: clubMembershipRequests.userId,
+      clubId: clubMembershipRequests.clubId,
+      requestedRole: clubMembershipRequests.requestedRole,
+      requestedTeamId: clubMembershipRequests.requestedTeamId,
+      message: clubMembershipRequests.message,
+      status: clubMembershipRequests.status,
+      responseMessage: clubMembershipRequests.responseMessage,
+      respondedAt: clubMembershipRequests.respondedAt,
+      respondedByUserId: clubMembershipRequests.respondedByUserId,
+      createdAt: clubMembershipRequests.createdAt,
+      requesterEmail: users.email,
+      requestedTeamName: teams.name
+    })
+    .from(clubMembershipRequests)
+    .innerJoin(users, eq(clubMembershipRequests.userId, users.id))
+    .leftJoin(teams, eq(clubMembershipRequests.requestedTeamId, teams.id))
+    .where(
+      and(
+        eq(clubMembershipRequests.requestedTeamId, teamId),
+        eq(clubMembershipRequests.status, "pending")
+      )
+    )
+    .orderBy(desc(clubMembershipRequests.createdAt));
+
+  return rows as PendingRequestRow[];
+}
+
 export async function getRequestById(requestId: string): Promise<MembershipRequest | null> {
   const [row] = await db
     .select()
@@ -121,8 +156,8 @@ export interface ApproveArgs {
  * (clubMemberships for scope=club, teamMemberships for scope=team), then
  * marks the request approved. Returns the updated request.
  *
- * Team-scope mapping: requestedRole "admin" maps to team-level "trainer"
- * (admin doesn't exist at team scope). Other roles pass through directly.
+ * Team-scope mapping: nur "viewer" bleibt viewer, jede andere angefragte Rolle
+ * (admin/trainer) wird zum Mannschaftsadmin. Team-Ebene kennt nur admin|viewer.
  *
  * No-ops cleanly if the membership already exists (e.g. concurrent approves).
  */
@@ -134,8 +169,8 @@ export async function approveRequest(args: ApproveArgs): Promise<MembershipReque
   }
 
   if (req.requestedTeamId) {
-    // Team-scoped: trainer | viewer (admin downgrades to trainer)
-    const teamRole = req.requestedRole === "viewer" ? "viewer" : "trainer";
+    // Team-scoped: admin | viewer (alles außer viewer → Mannschaftsadmin)
+    const teamRole = req.requestedRole === "viewer" ? "viewer" : "admin";
     await db
       .insert(teamMemberships)
       .values({
@@ -220,6 +255,25 @@ export async function countClubAdmins(clubId: string): Promise<number> {
 }
 
 /**
+ * Counts the team admins for a given team. Used by the last-admin guard on the
+ * team-scoped Mitglieder page: the last team admin of an AUTARK team must not
+ * be demoted/revoked, otherwise the team would be unmanageable (no club
+ * durchgriff to fall back on).
+ */
+export async function countTeamAdmins(teamId: string): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(teamMemberships)
+    .where(
+      and(
+        eq(teamMemberships.teamId, teamId),
+        eq(teamMemberships.role, "admin")
+      )
+    );
+  return row?.count ?? 0;
+}
+
+/**
  * Updates a club-level membership role for a given user. No-ops cleanly when
  * the membership row does not exist (returns null).
  */
@@ -264,6 +318,28 @@ export async function revokeClubMembership(
     )
     .returning({ userId: clubMemberships.userId });
   return deleted.length > 0;
+}
+
+/**
+ * Returns the current team-membership role for a user, or null if none.
+ * Used by the last-team-admin guard to decide whether a demote/revoke would
+ * remove the sole admin.
+ */
+export async function getTeamMembershipRole(
+  teamId: string,
+  userId: string
+): Promise<TeamRole | null> {
+  const [row] = await db
+    .select({ role: teamMemberships.role })
+    .from(teamMemberships)
+    .where(
+      and(
+        eq(teamMemberships.teamId, teamId),
+        eq(teamMemberships.userId, userId)
+      )
+    )
+    .limit(1);
+  return (row?.role as TeamRole | undefined) ?? null;
 }
 
 /**

@@ -7,7 +7,9 @@ import {
   clubs,
   teams,
   clubMemberships,
-  teamMemberships
+  teamMemberships,
+  subscriptions,
+  teamLicenses
 } from "@/lib/db/schema";
 import { resolveTeamAccess, resolveTeamPageAccess } from "@/lib/auth/scope";
 import { resetTestDb } from "../setup/db";
@@ -45,6 +47,20 @@ async function seed(): Promise<Fixture> {
   return { userId, clubId, teamId, otherTeamId };
 }
 
+/**
+ * Macht ein Team „vereinsgeführt" (unter Vereinslizenz). Voraussetzung dafür,
+ * dass der Club-Admin-/Trainer-Durchgriff in resolveTeamAccess greift.
+ */
+async function grantVereinsLizenz(clubId: string, teamId: string) {
+  await db.insert(subscriptions).values({ clubId }).onConflictDoNothing();
+  await db.insert(teamLicenses).values({
+    subscriptionClubId: clubId,
+    teamId,
+    plan: "verein",
+    status: "active"
+  });
+}
+
 describe("resolveTeamAccess", () => {
   beforeEach(async () => {
     await resetTestDb();
@@ -70,9 +86,10 @@ describe("resolveTeamAccess", () => {
     expect(r.granted).toBe(false);
   });
 
-  it("grants club-admin access at scope=club", async () => {
+  it("grants club-admin access at scope=club (vereinsgeführt)", async () => {
     const { userId, clubId, teamId } = await seed();
     await db.insert(clubMemberships).values({ userId, clubId, role: "admin" });
+    await grantVereinsLizenz(clubId, teamId);
     const r = await resolveTeamAccess(userId, teamId, "viewer");
     expect(r.granted).toBe(true);
     if (!r.granted) return;
@@ -80,9 +97,10 @@ describe("resolveTeamAccess", () => {
     expect(r.role).toBe("admin");
   });
 
-  it("grants club-trainer access when only viewer is required", async () => {
+  it("grants club-trainer access when only viewer is required (vereinsgeführt)", async () => {
     const { userId, clubId, teamId } = await seed();
     await db.insert(clubMemberships).values({ userId, clubId, role: "trainer" });
+    await grantVereinsLizenz(clubId, teamId);
     const r = await resolveTeamAccess(userId, teamId, "viewer");
     expect(r.granted).toBe(true);
     if (!r.granted) return;
@@ -90,41 +108,62 @@ describe("resolveTeamAccess", () => {
     expect(r.role).toBe("trainer");
   });
 
-  it("denies club-viewer when trainer is required", async () => {
+  it("denies club-viewer when admin is required (vereinsgeführt)", async () => {
     const { userId, clubId, teamId } = await seed();
     await db.insert(clubMemberships).values({ userId, clubId, role: "viewer" });
-    const r = await resolveTeamAccess(userId, teamId, "trainer");
+    await grantVereinsLizenz(clubId, teamId);
+    const r = await resolveTeamAccess(userId, teamId, "admin");
     expect(r.granted).toBe(false);
   });
 
-  it("grants team-trainer access at scope=team", async () => {
-    const { userId, teamId } = await seed();
-    await db.insert(teamMemberships).values({ userId, teamId, role: "trainer" });
-    const r = await resolveTeamAccess(userId, teamId, "trainer");
+  it("denies club-admin durchgriff on an AUTARK team (no Vereinslizenz)", async () => {
+    const { userId, clubId, teamId } = await seed();
+    await db.insert(clubMemberships).values({ userId, clubId, role: "admin" });
+    // Keine Vereinslizenz → autark → kein Durchgriff.
+    const r = await resolveTeamAccess(userId, teamId, "viewer");
+    expect(r.granted).toBe(false);
+  });
+
+  it("grants autark-team access via direct team-membership despite gating", async () => {
+    const { userId, clubId, teamId } = await seed();
+    await db.insert(clubMemberships).values({ userId, clubId, role: "admin" });
+    await db.insert(teamMemberships).values({ userId, teamId, role: "admin" });
+    const r = await resolveTeamAccess(userId, teamId, "admin");
     expect(r.granted).toBe(true);
     if (!r.granted) return;
     expect(r.scope).toBe("team");
-    expect(r.role).toBe("trainer");
+    expect(r.role).toBe("admin");
   });
 
-  it("denies team-viewer when trainer is required", async () => {
+  it("grants team-admin access at scope=team", async () => {
+    const { userId, teamId } = await seed();
+    await db.insert(teamMemberships).values({ userId, teamId, role: "admin" });
+    const r = await resolveTeamAccess(userId, teamId, "admin");
+    expect(r.granted).toBe(true);
+    if (!r.granted) return;
+    expect(r.scope).toBe("team");
+    expect(r.role).toBe("admin");
+  });
+
+  it("denies team-viewer when admin is required", async () => {
     const { userId, teamId } = await seed();
     await db.insert(teamMemberships).values({ userId, teamId, role: "viewer" });
-    const r = await resolveTeamAccess(userId, teamId, "trainer");
+    const r = await resolveTeamAccess(userId, teamId, "admin");
     expect(r.granted).toBe(false);
   });
 
   it("does not grant access to a different team within the same club via team-membership", async () => {
     const { userId, teamId, otherTeamId } = await seed();
-    await db.insert(teamMemberships).values({ userId, teamId, role: "trainer" });
+    await db.insert(teamMemberships).values({ userId, teamId, role: "admin" });
     const r = await resolveTeamAccess(userId, otherTeamId, "viewer");
     expect(r.granted).toBe(false);
   });
 
-  it("prefers club-scope over team-scope when both exist", async () => {
+  it("prefers club-scope over team-scope when both exist (vereinsgeführt)", async () => {
     const { userId, clubId, teamId } = await seed();
     await db.insert(clubMemberships).values({ userId, clubId, role: "admin" });
     await db.insert(teamMemberships).values({ userId, teamId, role: "viewer" });
+    await grantVereinsLizenz(clubId, teamId);
     const r = await resolveTeamAccess(userId, teamId, "viewer");
     expect(r.granted).toBe(true);
     if (!r.granted) return;
@@ -132,15 +171,16 @@ describe("resolveTeamAccess", () => {
     expect(r.role).toBe("admin");
   });
 
-  it("falls back to team-trainer when club-viewer does not satisfy minRole", async () => {
+  it("falls back to team-admin when club-viewer does not satisfy minRole", async () => {
     const { userId, clubId, teamId } = await seed();
     await db.insert(clubMemberships).values({ userId, clubId, role: "viewer" });
-    await db.insert(teamMemberships).values({ userId, teamId, role: "trainer" });
-    const r = await resolveTeamAccess(userId, teamId, "trainer");
+    await db.insert(teamMemberships).values({ userId, teamId, role: "admin" });
+    await grantVereinsLizenz(clubId, teamId);
+    const r = await resolveTeamAccess(userId, teamId, "admin");
     expect(r.granted).toBe(true);
     if (!r.granted) return;
     expect(r.scope).toBe("team");
-    expect(r.role).toBe("trainer");
+    expect(r.role).toBe("admin");
   });
 });
 
@@ -170,9 +210,9 @@ describe("resolveTeamPageAccess", () => {
     expect(d.kind).toBe("denied");
   });
 
-  it("grants when team-only-trainer accesses own team (was broken pre-fix)", async () => {
+  it("grants when team-only-admin accesses own team (was broken pre-fix)", async () => {
     const { userId, teamId, clubSlug } = await seedWithSlug();
-    await db.insert(teamMemberships).values({ userId, teamId, role: "trainer" });
+    await db.insert(teamMemberships).values({ userId, teamId, role: "admin" });
     const d = await resolveTeamPageAccess(userId, clubSlug, teamId, "viewer");
     expect(d.kind).toBe("granted");
     if (d.kind !== "granted") return;
@@ -180,39 +220,41 @@ describe("resolveTeamPageAccess", () => {
     expect(d.club.slug).toBe(clubSlug);
   });
 
-  it("denies when team-only-trainer tries to access sibling team", async () => {
+  it("denies when team-only-admin tries to access sibling team", async () => {
     const { userId, teamId, otherTeamId, clubSlug } = await seedWithSlug();
-    await db.insert(teamMemberships).values({ userId, teamId, role: "trainer" });
+    await db.insert(teamMemberships).values({ userId, teamId, role: "admin" });
     const d = await resolveTeamPageAccess(userId, clubSlug, otherTeamId, "viewer");
     expect(d.kind).toBe("denied");
   });
 
-  it("grants team-trainer level on team-settings (HIGH-2 fix)", async () => {
+  it("grants team-admin level on team-settings (HIGH-2 fix)", async () => {
     const { userId, teamId, clubSlug } = await seedWithSlug();
-    await db.insert(teamMemberships).values({ userId, teamId, role: "trainer" });
-    const d = await resolveTeamPageAccess(userId, clubSlug, teamId, "trainer");
+    await db.insert(teamMemberships).values({ userId, teamId, role: "admin" });
+    const d = await resolveTeamPageAccess(userId, clubSlug, teamId, "admin");
     expect(d.kind).toBe("granted");
   });
 
-  it("denies team-viewer when trainer level is required", async () => {
+  it("denies team-viewer when admin level is required", async () => {
     const { userId, teamId, clubSlug } = await seedWithSlug();
     await db.insert(teamMemberships).values({ userId, teamId, role: "viewer" });
-    const d = await resolveTeamPageAccess(userId, clubSlug, teamId, "trainer");
+    const d = await resolveTeamPageAccess(userId, clubSlug, teamId, "admin");
     expect(d.kind).toBe("denied");
   });
 
-  it("grants club-admin access to any team in the club", async () => {
+  it("grants club-admin access to any vereinsgeführt team in the club", async () => {
     const { userId, clubId, teamId, otherTeamId, clubSlug } = await seedWithSlug();
     await db.insert(clubMemberships).values({ userId, clubId, role: "admin" });
-    const d1 = await resolveTeamPageAccess(userId, clubSlug, teamId, "trainer");
-    const d2 = await resolveTeamPageAccess(userId, clubSlug, otherTeamId, "trainer");
+    await grantVereinsLizenz(clubId, teamId);
+    await grantVereinsLizenz(clubId, otherTeamId);
+    const d1 = await resolveTeamPageAccess(userId, clubSlug, teamId, "admin");
+    const d2 = await resolveTeamPageAccess(userId, clubSlug, otherTeamId, "admin");
     expect(d1.kind).toBe("granted");
     expect(d2.kind).toBe("granted");
   });
 
   it("redirects to correct slug when URL slug does not match team's club", async () => {
     const { userId, teamId } = await seedWithSlug();
-    await db.insert(teamMemberships).values({ userId, teamId, role: "trainer" });
+    await db.insert(teamMemberships).values({ userId, teamId, role: "admin" });
     const d = await resolveTeamPageAccess(userId, "wrong-slug", teamId, "viewer");
     expect(d.kind).toBe("redirect-slug");
     if (d.kind === "redirect-slug") {

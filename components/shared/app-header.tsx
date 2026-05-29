@@ -59,7 +59,9 @@ export function AppHeader({ authenticated, dashboardHref }: AppHeaderProps) {
     <>
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+          // pt-safe: auf iOS rückt die Header-Bar unter den Notch/Statusbar;
+          // im Browser ist env(safe-area-inset-top)=0, also kein Effekt.
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-300 pt-[env(safe-area-inset-top)]",
           scrolled
             ? "bg-white/90 backdrop-blur-md border-b border-brand-neutral/40 shadow-sm"
             : "bg-transparent border-b border-transparent"
@@ -130,7 +132,9 @@ export function AppHeader({ authenticated, dashboardHref }: AppHeaderProps) {
       {/* Spacer auf Nicht-Landing-Pages, damit Content nicht unter dem
           fixed Header verschwindet. Landing nutzt full-bleed Hero, der
           absichtlich hinter den transparenten Header reicht. */}
-      {!isLanding && <div aria-hidden className="h-[60px]" />}
+      {!isLanding && (
+        <div aria-hidden className="h-[calc(60px+env(safe-area-inset-top))]" />
+      )}
     </>
   );
 }

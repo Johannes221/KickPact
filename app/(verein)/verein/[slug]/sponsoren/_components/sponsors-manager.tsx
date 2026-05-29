@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,6 +25,8 @@ import { toast } from "sonner";
 interface Team {
   id: string;
   name: string;
+  /** false = Container-Verein der Mannschaft noch nicht verifiziert → Invite gesperrt. */
+  canInvite: boolean;
 }
 
 interface Invitation {
@@ -50,9 +53,17 @@ export function SponsorsManager({
   const [selectedTeam, setSelectedTeam] = useState(teams[0]?.id ?? "");
   const [recipientName, setRecipientName] = useState("");
 
+  // Sponsoren-Gate (Design 2026-05-29 §3.5/§6): Invite ist gesperrt, bis der
+  // Container-Verein der gewählten Mannschaft verifiziert ist.
+  const canInvite = teams.find((t) => t.id === selectedTeam)?.canInvite ?? false;
+
   function createNew() {
     if (!selectedTeam) {
       toast.error("Bitte Mannschaft wählen");
+      return;
+    }
+    if (!canInvite) {
+      toast.error("Bitte zuerst den Verein verifizieren.");
       return;
     }
     startTransition(async () => {
@@ -148,11 +159,27 @@ export function SponsorsManager({
               />
             </div>
           </div>
-          <div className="flex justify-end">
-            <Button variant="accent" onClick={createNew} disabled={pending}>
-              {pending ? "…" : "+ Einladung erstellen"}
-            </Button>
-          </div>
+          <p className="text-xs text-brand-night-navy/60">
+            Schützt deine Sponsoren — kein Geld an unverifizierte Vereine.
+          </p>
+          {canInvite ? (
+            <div className="flex justify-end">
+              <Button variant="accent" onClick={createNew} disabled={pending}>
+                {pending ? "…" : "+ Einladung erstellen"}
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-end gap-1">
+              <Button asChild variant="accent">
+                <Link href={`/verein/${clubSlug}/verifikation`}>
+                  Erst Verein verifizieren
+                </Link>
+              </Button>
+              <span className="text-xs text-brand-night-navy/60">
+                Sponsoren-Einladungen sind frei, sobald der Verein verifiziert ist.
+              </span>
+            </div>
+          )}
         </CardContent>
       </Card>
 

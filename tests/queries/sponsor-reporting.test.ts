@@ -382,6 +382,20 @@ async function seed() {
       ergebnisHeim: 3,
       ergebnisGast: 0,
       status: "finished"
+    },
+    // Zweites September-Spiel von team_1 — trägt die zweite goal_total-Charge
+    // (c_2), damit der partielle Unique-Index charges_unique_match_trigger_idx
+    // (pledge_rule_id, match_id, trigger_type) nicht verletzt wird.
+    {
+      id: "m_3",
+      teamId: "team_1",
+      fussballdeSpielId: "fs_3",
+      datum: new Date(Date.UTC(2025, 8, 15, 14, 0)),
+      heimName: "Team 1",
+      gastName: "FC Z",
+      ergebnisHeim: 1,
+      ergebnisGast: 0,
+      status: "finished"
     }
   ]);
 
@@ -403,7 +417,7 @@ async function seed() {
       id: "c_2",
       pledgeId: "pl_1",
       pledgeRuleId: "pr_1",
-      matchId: "m_1",
+      matchId: "m_3",
       triggerType: "goal_total",
       amountCents: 1000,
       status: "confirmed",
