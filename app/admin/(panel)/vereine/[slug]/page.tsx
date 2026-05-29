@@ -4,6 +4,8 @@ import { getVereinDetail } from "@/lib/db/queries/platform-stats";
 import { ClubActions } from "./_components/club-actions";
 import { ClubEditForm } from "@/components/admin/club-edit-form";
 import { TeamRowActions } from "@/components/admin/team-row-actions";
+import { StripeClubActions } from "@/components/admin/stripe-club-actions";
+import { isStripeConfigured } from "@/lib/stripe/client";
 
 export const metadata = { title: "Verein-Detail · Admin · KickPact" };
 export const dynamic = "force-dynamic";
@@ -35,6 +37,7 @@ export default async function VereinDetailPage({
   if (!detail) notFound();
 
   const { club, subscription, members, teams, recentCharges } = detail;
+  const stripeConfigured = isStripeConfigured();
 
   return (
     <div className="space-y-8">
@@ -104,6 +107,13 @@ export default async function VereinDetailPage({
                   {subscription.stripeCustomerId ?? "—"}
                 </span>
               </DefRow>
+              <div className="border-t border-brand-neutral/20 pt-2 mt-1">
+                <StripeClubActions
+                  clubSlug={club.slug}
+                  hasStripeSub={Boolean(subscription.stripeSubscriptionId)}
+                  stripeConfigured={stripeConfigured}
+                />
+              </div>
             </>
           ) : (
             <div className="text-sm text-brand-night-navy/60">
