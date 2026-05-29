@@ -76,15 +76,23 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3003",
   trustedOrigins: [process.env.BETTER_AUTH_URL ?? "http://localhost:3003"],
   socialProviders: Object.keys(socialProviders).length > 0 ? socialProviders : undefined,
-  // Audit 2026-05-24 Phase 4 / Task 4.5: Rate-Limit gegen Magic-Link-Mail-Spam.
-  // Ohne dieses Limit könnte ein Angreifer eine User-Inbox via wiederholten
-  // Login-Attempts fluten (Resend-Kostenangriff + User-Annoyance). 5 Requests
-  // pro 60s pro IP ist großzügig genug für legitime "habe Mail nicht bekommen,
-  // bitte nochmal"-Retries, blockt aber Skript-Spam.
+  // Rate-Limit: Das GLOBALE max gilt für ALLE /api/auth/*-Endpoints — auch für
+  // /get-session, das das Layout bei JEDEM Page-Load aufruft. Ein knappes Limit
+  // (vorher max:5/60s) sperrte daher normale Navigation aus (429 nach ~5 Klicks
+  // pro Minute, SSR rendert dann anonym). Deshalb: großzügiges globales Limit,
+  // Spam-relevante Endpoints bekommen eigene strenge customRules. (Better-Auth
+  // schützt /sign-in/* ohnehin eingebaut mit 3/10s.)
   rateLimit: {
     enabled: true,
     window: 60,
-    max: 5
+    max: 120,
+    customRules: {
+      // Magic-Link-Versand streng halten (Resend-Kostenangriff + Inbox-Spam).
+      // Großzügig genug für legitime "habe Mail nicht bekommen"-Retries.
+      "/sign-in/magic-link": { window: 60, max: 5 },
+      // Session-Check ist ein read-only Hot-Path (jeder Page-Load) → nicht limitieren.
+      "/get-session": false
+    }
   },
   plugins: [
     magicLink({

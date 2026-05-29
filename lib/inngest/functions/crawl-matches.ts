@@ -2,7 +2,8 @@ import { inngest } from "@/lib/inngest/client";
 import {
   getSpiele,
   getSpielDetails,
-  computeMatchHash
+  computeMatchHash,
+  getKader
 } from "@/lib/crawler/fussballde";
 import { validateSpielListItem, validateSpielDetails } from "@/lib/crawler/validator";
 import {
@@ -13,6 +14,7 @@ import {
   updateMatchWithEvents,
   markCrawlStarted,
   markCrawlCompleted,
+  persistKader,
   type ActiveTeam
 } from "@/lib/db/queries/crawler";
 import { invalidateChargesForMatch } from "@/lib/db/queries/charges";
@@ -102,6 +104,27 @@ export const crawlMatches = inngest.createFunction(
         skippedReadOnly++;
         continue;
       }
+
+      // Kader scrapen + persistieren, damit "Tor von Spieler X"-Pacts
+      // (goal_by_player) direkt nach dem Onboarding einrichtbar sind — sonst
+      // entstehen Spieler erst aus den Events des ersten gecrawlten Spiels.
+      // Non-fatal: ein Kader-Fehler darf den Match-Crawl nicht abbrechen.
+      await step.run(`squad-${team.id}`, async () => {
+        try {
+          const kader = await getKader(
+            team.fussballdeTeamId,
+            team.fussballdeSlug,
+            team.saison
+          );
+          return await persistKader(team.id, kader);
+        } catch (err) {
+          logger.warn("squad scrape failed (non-fatal)", {
+            teamId: team.id,
+            err: String(err)
+          });
+          return 0;
+        }
+      });
 
       const spiele = await step.run(`get-spiele-${team.id}`, () =>
         getSpiele(team.fussballdeTeamId, team.fussballdeSlug, team.saison)

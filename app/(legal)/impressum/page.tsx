@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Impressum — KickPact",
+  title: "Impressum",
   description: "Anbieterkennzeichnung gemäß § 5 TMG."
 };
 

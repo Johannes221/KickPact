@@ -183,8 +183,6 @@ export default async function SpielePage({
         <div className="rounded-2xl border border-brand-neutral/30 bg-white overflow-hidden">
           <ul className="divide-y divide-brand-neutral/15">
             {filtered.map((m) => {
-              const own = m.isHeim ? m.ergebnisHeim : m.ergebnisGast;
-              const opp = m.isHeim ? m.ergebnisGast : m.ergebnisHeim;
               const badge = m.isScheduled
                 ? { label: "·", cls: "bg-brand-night-navy/10 text-brand-night-navy/60" }
                 : m.result === "win"
@@ -220,7 +218,7 @@ export default async function SpielePage({
                   ) : (
                     <>
                       <span className="shrink-0 font-bold tabular-nums">
-                        {own ?? "—"}:{opp ?? "—"}
+                        {m.ergebnisHeim ?? "—"}:{m.ergebnisGast ?? "—"}
                       </span>
                       {m.chargesSum > 0 && (
                         <span className="hidden sm:inline-block shrink-0 text-xs font-semibold text-accent-dark tabular-nums">

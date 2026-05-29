@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "AGB — KickPact",
+  title: "AGB",
   description: "Allgemeine Geschäftsbedingungen für die Nutzung von KickPact."
 };
 

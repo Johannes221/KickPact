@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Datenschutz — KickPact",
+  title: "Datenschutz",
   description: "Wie KickPact mit personenbezogenen Daten umgeht — DSGVO-konform."
 };
 

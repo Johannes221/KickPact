@@ -4,7 +4,7 @@ import { sponsors, pledges, teams, clubs, charges } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { triggerLabel } from "@/lib/triggers/labels";
 import { parsePaginationFromSearchParams } from "@/lib/db/queries/_helpers/paginate";
-import { parseSortFromSearchParams } from "@/components/ui/data-table";
+import { parseSortFromSearchParams } from "@/components/ui/data-table-utils";
 import {
   listChargesForSponsor,
   SPONSOR_CHARGE_SORT_KEYS,

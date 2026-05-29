@@ -4,7 +4,7 @@ import {
   type AdminVereinSortKey
 } from "@/lib/db/queries/platform-stats";
 import { parsePaginationFromSearchParams } from "@/lib/db/queries/_helpers/paginate";
-import { parseSortFromSearchParams } from "@/components/ui/data-table";
+import { parseSortFromSearchParams } from "@/components/ui/data-table-utils";
 import { VereineTable } from "./_components/vereine-table";
 import { VereineFilters } from "./_components/vereine-filters";
 
