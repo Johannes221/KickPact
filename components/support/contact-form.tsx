@@ -15,7 +15,9 @@ const schema = z.object({
   email: z.string().email("Bitte gültige E-Mail eingeben"),
   category: z.enum(["frage", "bug", "abrechnung", "sonstiges"]),
   subject: z.string().min(3, "Bitte Betreff angeben").max(150),
-  message: z.string().min(10, "Bitte beschreibe dein Anliegen (mind. 10 Zeichen)").max(5000)
+  message: z.string().min(10, "Bitte beschreibe dein Anliegen (mind. 10 Zeichen)").max(5000),
+  // Honeypot — für Menschen unsichtbar (siehe Markup unten).
+  website: z.string().optional()
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -36,7 +38,8 @@ export function ContactForm({ defaults }: { defaults?: { name?: string; email?: 
       email: defaults?.email ?? "",
       category: "frage",
       subject: "",
-      message: ""
+      message: "",
+      website: ""
     }
   });
 
@@ -69,6 +72,13 @@ export function ContactForm({ defaults }: { defaults?: { name?: string; email?: 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* Honeypot: absichtlich versteckt; nur Bots füllen das aus. */}
+        <div aria-hidden="true" className="absolute left-[-9999px] h-0 w-0 overflow-hidden">
+          <label>
+            Website
+            <input type="text" tabIndex={-1} autoComplete="off" {...form.register("website")} />
+          </label>
+        </div>
         <FormField
           control={form.control}
           name="name"

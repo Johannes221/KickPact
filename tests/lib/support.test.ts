@@ -7,7 +7,8 @@ import {
   listSupportTickets,
   getSupportTicket,
   addSupportReply,
-  setSupportTicketStatus
+  setSupportTicketStatus,
+  countRecentTicketsByEmail
 } from "@/lib/db/queries/support";
 import { resetTestDb } from "../setup/db";
 import { isIntegrationDbDisabled } from "../setup/integration-db";
@@ -68,6 +69,26 @@ describe.skipIf(isIntegrationDbDisabled)("support tickets", () => {
     const closed = await listSupportTickets({ status: "closed" });
     expect(closed.total).toBe(1);
     expect(closed.tickets[0].id).toBe(closedId);
+  });
+
+  it("counts recent tickets by email (rate-limit basis)", async () => {
+    await createSupportTicket({
+      name: "A",
+      email: "Rate@Example.de",
+      category: "frage",
+      subject: "1",
+      message: "Nachricht eins."
+    });
+    await createSupportTicket({
+      name: "A",
+      email: "rate@example.de",
+      category: "frage",
+      subject: "2",
+      message: "Nachricht zwei."
+    });
+    expect(await countRecentTicketsByEmail("rate@example.de", 60)).toBe(2);
+    expect(await countRecentTicketsByEmail("rate@example.de", 0)).toBe(0);
+    expect(await countRecentTicketsByEmail("other@example.de", 60)).toBe(0);
   });
 
   it("adds a reply, moves open→waiting, and returns the thread", async () => {

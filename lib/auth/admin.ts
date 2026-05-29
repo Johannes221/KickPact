@@ -13,6 +13,15 @@ import { getServerSession } from "./session";
  * verweigert den Versand für Operator-Mails (siehe lib/auth/server.ts), damit
  * der Operator-Zugang nicht über den passwortlosen Pfad umgangen werden kann.
  */
+/** E-Mails aller Plattform-Operatoren (für interne Benachrichtigungen). */
+export async function listPlatformAdminEmails(): Promise<string[]> {
+  const rows = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(eq(users.isPlatformAdmin, true));
+  return rows.map((r) => r.email);
+}
+
 export async function isPlatformAdminEmail(email: string): Promise<boolean> {
   const row = await db
     .select({ isPlatformAdmin: users.isPlatformAdmin })

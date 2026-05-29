@@ -1,6 +1,19 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { supportTickets, supportTicketReplies } from "@/lib/db/schema";
+
+/**
+ * Zählt Tickets derselben E-Mail innerhalb der letzten `minutes` — Basis für
+ * ein einfaches Anti-Spam-Rate-Limit im öffentlichen Kontaktformular.
+ */
+export async function countRecentTicketsByEmail(email: string, minutes: number): Promise<number> {
+  const since = new Date(Date.now() - minutes * 60_000);
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(supportTickets)
+    .where(and(eq(supportTickets.email, email.toLowerCase()), gte(supportTickets.createdAt, since)));
+  return row?.count ?? 0;
+}
 
 export type SupportCategory = "frage" | "bug" | "abrechnung" | "sonstiges";
 export type SupportStatus = "open" | "in_progress" | "waiting" | "closed";

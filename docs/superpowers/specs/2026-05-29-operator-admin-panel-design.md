@@ -201,5 +201,14 @@ Begründung: Operator kann fremde Accounts/Geld verändern (impersonate, Stammda
 - **R1 — ENTSCHIEDEN:** Dedizierter Operator-Account, getrennt (siehe §3.1).
 - **R2 — ENTSCHIEDEN (2026-05-29):** Kein Impersonate/Login-as. Zu sensibel ohne Extra-Plugin. Support-Reproduktion notfalls per Magic-Link an den Nutzer.
 - **R3 — ENTSCHIEDEN:** Support-Antworten direkt aus dem Panel als Resend-Mail; Verlauf bleibt am Ticket (Phase C).
-- **R4** (Phase H): Refunds/Plan-Änderungen — im Panel (Stripe-API) oder bewusst nur im Stripe-Dashboard belassen (weniger Risiko)?
-- **R5** (Phase F): Storno/Gutschrift von Rechnungen — rechtlich: braucht es eine echte Storno-Rechnung (fortlaufende Nummer) oder reicht Status `cancelled`?
+- **R4 — ENTSCHIEDEN (2026-05-29):** Stripe-Aktionen im Panel via Stripe-API (Refund, Plan/Cycle ändern, Trial verlängern). Umsetzung als Phase I.
+- **R5 — ENTSCHIEDEN (2026-05-29):** Echte **Storno-Rechnung** (Gutschrift) — zieht neue Nummer aus dem bestehenden Nummernkreis ([lib/invoicing/numbering.ts](../../../lib/invoicing/numbering.ts)), verweist auf die Original-Rechnung, erzeugt Storno-PDF. Betrifft die monatlichen **Verein→Sponsor-Performance-Rechnungen** (`invoices`-Tabelle), nicht die Stripe-Abo-Gebühren. Umsetzung als Phase J.
+
+## 7. Restumfang nach P1+P2 (beschlossen 2026-05-29)
+
+A–G sind umgesetzt + committet. Verbleibend, „eine Phase nach der anderen":
+
+- **Phase H (Komfort):** (a) Crawler-Fehler-Logs + gezielter Retry · (b) Mail Template-Vorschau + Resend · (c) Dashboard-Drilldowns + Datums-Range · (d) Support-Formular Rate-Limit + Operator-Benachrichtigung bei neuem Ticket.
+- **Phase I (R4):** Stripe-Aktionen im Panel (Refund, Plan/Cycle, Trial verlängern) via Stripe-API; jede Aktion audit-logged.
+- **Phase J (R5):** Echte Storno-Rechnung für Sponsoren-Rechnungen.
+- **Approval-Streit:** bleibt „nur stornieren" — der Sponsor hat das letzte Wort, der Operator erzeugt keine Charge gegen den Sponsor-Willen. Kein weiterer Bau nötig.
