@@ -1,3 +1,7 @@
+import { renderTemplatePreviews } from "@/lib/mail/preview";
+import { assertPlatformAdmin } from "@/lib/auth/admin";
+import { MailPreview } from "@/components/admin/mail-preview";
+
 export const metadata = { title: "Mail · Admin · KickPact" };
 export const dynamic = "force-dynamic";
 
@@ -54,10 +58,24 @@ function eventColor(event: string | undefined): string {
 }
 
 export default async function MailPage() {
-  const { data, error } = await fetchResendEmails();
+  const [{ data, error }, { user }] = await Promise.all([
+    fetchResendEmails(),
+    assertPlatformAdmin()
+  ]);
+  const templates = renderTemplatePreviews();
 
   return (
     <div className="space-y-8">
+      <section className="space-y-3">
+        <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+          Template-Vorschau & Test-Versand
+        </h3>
+        <MailPreview
+          templates={templates.map((t) => ({ key: t.key, label: t.label, subject: t.subject, html: t.html }))}
+          defaultTo={user.email}
+        />
+      </section>
+
       <div>
         <p className="text-sm text-brand-night-navy/60">
           Letzte 50 Emails aus Resend. Bounces, Complaints + Re-Send via{" "}
