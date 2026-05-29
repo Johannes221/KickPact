@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { HeaderStatusDot } from "@/components/shared/status-bar";
 import {
   activeIdentityFromPath,
   flattenIdentities,
@@ -125,11 +126,14 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
             onHero && "text-white hover:bg-white/10 hover:text-white"
           )}
         >
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-accent text-white text-xs font-bold">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+          <span className="relative inline-flex">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-accent text-white text-xs font-bold">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <HeaderStatusDot />
+          </span>
           <span
             className={cn(
               "hidden md:inline max-w-[12rem] truncate font-medium",

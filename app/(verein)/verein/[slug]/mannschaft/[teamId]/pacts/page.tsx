@@ -1,5 +1,4 @@
 import { eq, and, desc, sum, sql } from "drizzle-orm";
-import Link from "next/link";
 import { db } from "@/lib/db/client";
 import { teams } from "@/lib/db/schema";
 import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
@@ -7,6 +6,7 @@ import { sponsors } from "@/lib/db/schema/sponsors";
 import { charges } from "@/lib/db/schema/charges";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { getTriggerLabel, categorizeTrigger } from "@/lib/billing/trigger-labels";
+import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
 
 export const metadata = { title: "Pacts · KickPact" };
 
@@ -84,42 +84,33 @@ export default async function PactsPage({
         </p>
       </div>
 
-      {/* Filter-Bar */}
-      <div className="flex flex-wrap gap-2 items-center">
-        {/* Status */}
-        <div className="flex gap-1 rounded-xl border border-brand-neutral/30 bg-brand-off-white p-1">
+      {/* Filter — beschriftete, scrollbare Chip-Reihen (mobile-first) */}
+      <div className="space-y-2">
+        <FilterRow label="Status">
           {(["active", "paused", "ended", "all"] as FilterStatus[]).map((s) => (
-            <Link
+            <FilterChip
               key={s}
               href={`${base}?status=${s}&kind=${kind}`}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${
-                status === s
-                  ? "bg-white text-brand-night-navy shadow-sm"
-                  : "text-brand-night-navy/60 hover:text-brand-night-navy"
-              }`}
+              active={status === s}
             >
               {s === "all" ? "Alle" : statusBadge(s).label}
-            </Link>
+            </FilterChip>
           ))}
-        </div>
-        {/* Kind */}
-        <div className="flex gap-1 rounded-xl border border-brand-neutral/30 bg-brand-off-white p-1">
+        </FilterRow>
+        <FilterRow label="Art">
           {(["all", "auto", "manual", "season"] as FilterKind[]).map((k) => (
-            <Link
+            <FilterChip
               key={k}
               href={`${base}?status=${status}&kind=${k}`}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${
-                kind === k
-                  ? "bg-white text-brand-night-navy shadow-sm"
-                  : "text-brand-night-navy/60 hover:text-brand-night-navy"
-              }`}
+              active={kind === k}
             >
               {k === "all" ? "Alle" : k === "auto" ? "Auto" : k === "manual" ? "Manuell" : "Saison"}
-            </Link>
+            </FilterChip>
           ))}
-        </div>
-        <div className="text-xs text-brand-night-navy/50 ml-auto">{filtered.length} Pacts</div>
+        </FilterRow>
       </div>
+
+      <div className="text-xs text-brand-night-navy/50">{filtered.length} Pacts</div>
 
       {filtered.length === 0 ? (
         <div className="rounded-2xl border border-brand-neutral/30 bg-white p-8 text-center text-sm text-brand-night-navy/60">

@@ -55,7 +55,16 @@ const TONE_RANK: Record<StatusTone, number> = { info: 0, warn: 1, danger: 2 };
 
 const DISMISS_KEY = "kp_status_dismissed_until";
 const COLLAPSE_KEY = "kp_status_collapsed";
+const HAS_ITEMS_KEY = "kp_status_has_items";
+/** Tab-lokales Event: StatusBar ↔ HeaderStatusDot synchron halten. */
+const STATUS_EVENT = "kp-status-change";
 const DISMISS_DAYS = 3;
+
+function emitStatusChange() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(STATUS_EVENT));
+  }
+}
 
 /**
  * Kompaktes, gebündeltes Status-Element für Trial / Verifizierung / Zahlung.
@@ -86,6 +95,18 @@ export function StatusBar({ items }: { items: StatusItem[] }) {
     }
   }, []);
 
+  // Spiegelt "es gibt offene Hinweise" nach localStorage, damit der
+  // HeaderStatusDot (anderer Baum) den Punkt zeigen kann, wenn weggeklickt wurde.
+  useEffect(() => {
+    try {
+      if (items.length > 0) localStorage.setItem(HAS_ITEMS_KEY, "1");
+      else localStorage.removeItem(HAS_ITEMS_KEY);
+    } catch {
+      /* ignore */
+    }
+    emitStatusChange();
+  }, [items.length]);
+
   if (items.length === 0) return null;
 
   const hasDanger = items.some((i) => i.tone === "danger");
@@ -107,6 +128,7 @@ export function StatusBar({ items }: { items: StatusItem[] }) {
       /* ignore */
     }
     setDismissed(true);
+    emitStatusChange();
   };
 
   const setCollapse = (next: boolean) => {
@@ -247,5 +269,43 @@ export function StatusBar({ items }: { items: StatusItem[] }) {
         })}
       </ul>
     </section>
+  );
+}
+
+/**
+ * Kleiner roter Hinweis-Punkt (z.B. am Avatar), der erscheint, wenn die
+ * StatusBar weggeklickt wurde, aber noch offene Hinweise existieren. Liest die
+ * von der StatusBar gesetzten localStorage-Flags und aktualisiert sich tab-lokal
+ * über das `kp-status-change`-Event (localStorage-Writes feuern im selben Tab
+ * kein natives `storage`-Event).
+ */
+export function HeaderStatusDot() {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const read = () => {
+      try {
+        const until = Number(localStorage.getItem(DISMISS_KEY) ?? 0);
+        const hasItems = localStorage.getItem(HAS_ITEMS_KEY) === "1";
+        setShow(hasItems && Date.now() < until);
+      } catch {
+        setShow(false);
+      }
+    };
+    read();
+    window.addEventListener(STATUS_EVENT, read);
+    window.addEventListener("focus", read);
+    return () => {
+      window.removeEventListener(STATUS_EVENT, read);
+      window.removeEventListener("focus", read);
+    };
+  }, []);
+
+  if (!show) return null;
+  return (
+    <span
+      className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full bg-brand-alert-red ring-2 ring-white"
+      aria-label="Offene Hinweise"
+    />
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Trophy, Medal, ArrowUp, ArrowDown, StickyNote } from "lucide-react";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { teams, seasonResults } from "@/lib/db/schema";
@@ -208,7 +209,9 @@ export default async function TeamDetailPage({
                   key={`${r.pledgeId}-${r.ruleId}`}
                   className="rounded-xl border border-brand-neutral/40 bg-white p-3 flex items-center gap-3"
                 >
-                  <span className="text-2xl shrink-0">{meta?.emoji ?? "🏆"}</span>
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/10 text-accent-dark">
+                    <Trophy className="h-[1.15rem] w-[1.15rem]" aria-hidden />
+                  </span>
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-sm text-brand-night-navy">
                       {meta?.label ?? r.triggerType}
@@ -394,17 +397,40 @@ function SeasonStatusBlock({
           <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
             Saison-Endstand {saison}
           </h3>
-          <div className="mt-2 text-xs md:text-sm text-brand-night-navy/70 space-y-0.5">
+          <div className="mt-2 text-xs md:text-sm text-brand-night-navy/70 space-y-1">
             {result.finalPosition && (
-              <div>
-                📊 Endplatz: <strong>{result.finalPosition}</strong>
-                {result.teamsInLeague && ` von ${result.teamsInLeague}`}
+              <div className="flex items-center gap-1.5">
+                <Medal className="h-4 w-4 shrink-0 text-brand-night-navy/40" aria-hidden />
+                <span>
+                  Endplatz: <strong>{result.finalPosition}</strong>
+                  {result.teamsInLeague && ` von ${result.teamsInLeague}`}
+                </span>
               </div>
             )}
-            {result.promoted && <div>⬆️ Aufstieg geschafft</div>}
-            {result.relegated && <div>⬇️ Abgestiegen</div>}
-            {result.cupRoundReached && <div>🏆 Pokal: {result.cupRoundReached}</div>}
-            {result.customNotes && <div>📝 {result.customNotes}</div>}
+            {result.promoted && (
+              <div className="flex items-center gap-1.5">
+                <ArrowUp className="h-4 w-4 shrink-0 text-accent-dark" aria-hidden />
+                <span>Aufstieg geschafft</span>
+              </div>
+            )}
+            {result.relegated && (
+              <div className="flex items-center gap-1.5">
+                <ArrowDown className="h-4 w-4 shrink-0 text-brand-alert-red" aria-hidden />
+                <span>Abgestiegen</span>
+              </div>
+            )}
+            {result.cupRoundReached && (
+              <div className="flex items-center gap-1.5">
+                <Trophy className="h-4 w-4 shrink-0 text-brand-night-navy/40" aria-hidden />
+                <span>Pokal: {result.cupRoundReached}</span>
+              </div>
+            )}
+            {result.customNotes && (
+              <div className="flex items-center gap-1.5">
+                <StickyNote className="h-4 w-4 shrink-0 text-brand-night-navy/40" aria-hidden />
+                <span>{result.customNotes}</span>
+              </div>
+            )}
             {!result.finalPosition &&
               !result.promoted &&
               !result.relegated &&

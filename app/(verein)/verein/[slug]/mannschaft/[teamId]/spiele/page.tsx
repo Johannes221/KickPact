@@ -5,6 +5,7 @@ import { teams } from "@/lib/db/schema";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { listMatchesForTeam, getMatchChargesSummaryForTeam } from "@/lib/db/queries/matches";
 import { detectTeamSide } from "@/lib/crawler/team-side";
+import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
 
 export const metadata = { title: "Spiele · KickPact" };
 
@@ -252,39 +253,5 @@ export default async function SpielePage({
         </div>
       )}
     </div>
-  );
-}
-
-function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="w-16 shrink-0 text-[0.65rem] uppercase tracking-widest font-semibold text-brand-night-navy/40">
-        {label}
-      </span>
-      <div className="flex gap-1 overflow-x-auto no-scrollbar">{children}</div>
-    </div>
-  );
-}
-
-function FilterChip({
-  href,
-  active,
-  children
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors ${
-        active
-          ? "bg-brand-night-navy text-white"
-          : "bg-brand-off-white text-brand-night-navy/60 hover:text-brand-night-navy"
-      }`}
-    >
-      {children}
-    </Link>
   );
 }
