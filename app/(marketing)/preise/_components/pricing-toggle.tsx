@@ -7,7 +7,7 @@ import { Check, X, Infinity as InfinityIcon } from "lucide-react";
 import {
   PLANS,
   PLAN_ORDER,
-  CYCLE_ORDER,
+  SELECTABLE_CYCLES,
   CYCLE_LABELS,
   CYCLE_SUBLABELS,
   DEFAULT_CYCLE,
@@ -201,7 +201,7 @@ export function PricingToggle() {
           aria-label="Abrechnungs-Intervall"
           className="flex w-full max-w-md md:max-w-none md:w-auto flex-col md:flex-row md:inline-flex items-stretch rounded-2xl bg-white p-1.5 ring-1 ring-brand-neutral/40 shadow-sm gap-1 md:gap-0"
         >
-          {CYCLE_ORDER.map((c) => {
+          {SELECTABLE_CYCLES.map((c) => {
             const active = c === cycle;
             return (
               <button

@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   PLANS,
   PLAN_ORDER,
-  CYCLE_ORDER,
+  SELECTABLE_CYCLES,
   CYCLE_LABELS,
   CYCLE_SUBLABELS,
   type BillingCycle,
@@ -39,7 +39,7 @@ export function AboCycleToggle({
           aria-label="Abrechnungs-Intervall"
           className="flex w-full md:w-auto flex-col md:flex-row md:inline-flex items-stretch rounded-2xl bg-white p-1.5 ring-1 ring-brand-neutral/40 shadow-sm gap-1 md:gap-0"
         >
-          {CYCLE_ORDER.map((c) => {
+          {SELECTABLE_CYCLES.map((c) => {
             const active = c === cycle;
             return (
               <button

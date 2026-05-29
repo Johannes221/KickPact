@@ -148,8 +148,20 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
 /** Geordnete Liste für UI-Iteration (Basic → Pro → Vereinslizenz). */
 export const PLAN_ORDER: PlanKey[] = ["basic", "pro", "verein"];
 
-/** Geordnete Liste für UI-Iteration (Monatlich → Saison-Pass → Annual). */
+/**
+ * Kanonische Liste ALLER Billing-Cycles — für interne Logik (Preis-Definitionen,
+ * Env-Var-Iteration, Reverse-Lookup `priceIdToPlanCycle` im Stripe-Webhook).
+ * NICHT zum UI-Rendern verwenden — dafür `SELECTABLE_CYCLES`.
+ */
 export const CYCLE_ORDER: BillingCycle[] = ["monthly", "season_end", "annual"];
+
+/**
+ * Im UI **anwählbare** Billing-Cycles (Monatlich → Saison-Pass). „annual" ist
+ * bewusst raus — wir bieten aktuell nur Monatlich + Saison an. Enum-Wert +
+ * Preis-IDs bleiben bestehen (keine Migration, Webhook erkennt Altbestände
+ * weiterhin), werden aber nirgends mehr zur Auswahl gerendert.
+ */
+export const SELECTABLE_CYCLES: BillingCycle[] = ["monthly", "season_end"];
 
 export const CYCLE_LABELS: Record<BillingCycle, string> = {
   monthly: "Monatlich",

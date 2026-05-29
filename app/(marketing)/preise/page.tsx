@@ -59,7 +59,7 @@ const PER_PLAYER_ROWS: ReadonlyArray<{
 const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   {
     q: "Was passiert in der Sommerpause (Juni/Juli)?",
-    a: "Beim Saison-Pass wird die Subscription automatisch von 1. Juni bis 31. Juli pausiert — kein €, kein Crawler, deine Daten bleiben sichtbar. Zum 1. August läuft alles automatisch wieder an. Beim Annual-Plan läuft die Saison durch, sinnvoll für Hallenfußball oder ganzjährige Setups."
+    a: "Beim Saison-Pass wird die Subscription automatisch von 1. Juni bis 31. Juli pausiert — kein €, kein Crawler, deine Daten bleiben sichtbar. Zum 1. August läuft alles automatisch wieder an."
   },
   {
     q: "Was wenn ich mitten in der Saison einsteige?",
@@ -70,12 +70,8 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
     a: "Saison-Wetten (Aufstieg, Klassenerhalt, Tabellenplatz …) sind nur bis zum 5. Spieltag buchbar — danach ist es Insider-Spiel, kein Sponsoring. Bestehende Wetten bleiben aktiv, neue erst wieder zur nächsten Saison ab Juli."
   },
   {
-    q: "Was ist der Unterschied Saison-Pass vs. Annual?",
-    a: "Saison-Pass läuft 10 Monate (Aug–Mai) aktiv + 2 Monate kostenlos pausiert, ist pro aktivem Monat günstiger. Annual läuft 12 Monate durch, lohnt sich wenn auch im Sommer Matches stattfinden (Hallenfußball, Veteranen-Turniere)."
-  },
-  {
     q: "Kann ich monatlich kündigen?",
-    a: "Monatsabo: jederzeit zum Ende des Abrechnungsmonats. Saison-Pass: bis 1. Juli für die kommende Saison, sonst läuft er automatisch um eine Saison weiter. Annual: 30 Tage vor Laufzeit-Ende."
+    a: "Monatsabo: jederzeit zum Ende des Abrechnungsmonats. Saison-Pass: bis 1. Juli für die kommende Saison, sonst läuft er automatisch um eine Saison weiter."
   },
   {
     q: "Wann lohnt sich die Vereinslizenz?",
