@@ -16,6 +16,7 @@ describe("getTeamSubNavTabs", () => {
     expect(tabs.map((t) => t.href)).toEqual([
       "",
       "/pacts",
+      "/sponsoren",
       "/spiele",
       "/finanzen",
       "/abo",
@@ -28,6 +29,7 @@ describe("getTeamSubNavTabs", () => {
     expect(tabs.map((t) => t.href)).toEqual([
       "",
       "/pacts",
+      "/sponsoren",
       "/spiele",
       "/finanzen",
       "/abo",
@@ -40,6 +42,7 @@ describe("getTeamSubNavTabs", () => {
     expect(tabs.map((t) => t.href)).toEqual([
       "",
       "/pacts",
+      "/sponsoren",
       "/spiele",
       "/finanzen"
     ]);
@@ -52,6 +55,7 @@ describe("getTeamSubNavTabs", () => {
     expect(tabs.map((t) => t.href)).toEqual([
       "",
       "/pacts",
+      "/sponsoren",
       "/spiele",
       "/finanzen",
       "/abo",

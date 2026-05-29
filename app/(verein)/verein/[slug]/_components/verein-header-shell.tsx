@@ -2,16 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Zap } from "lucide-react";
 import { VereinSubNav } from "./verein-sub-nav";
-import { VerificationBanner } from "@/components/shared/verification-banner";
 import type { EffectivePlan } from "@/lib/db/queries/user-identities";
-import type { VerificationBannerProps } from "@/components/shared/verification-banner";
 
 interface Props {
   slug: string;
   clubName: string;
-  verifiedAt: Date | null;
-  verification: VerificationBannerProps["verification"];
   hasSponsorProfile: boolean;
   effectivePlan: EffectivePlan | null;
 }
@@ -32,8 +29,6 @@ interface Props {
 export function VereinHeaderShell({
   slug,
   clubName,
-  verifiedAt,
-  verification,
   hasSponsorProfile,
   effectivePlan
 }: Props) {
@@ -67,19 +62,11 @@ export function VereinHeaderShell({
             href="/sponsor"
             className="shrink-0 mt-1 inline-flex items-center gap-1.5 rounded-full border border-brand-neutral/40 bg-white px-3 py-1.5 text-xs font-semibold text-brand-night-navy/70 hover:bg-brand-off-white hover:text-brand-night-navy transition-colors"
           >
-            <span className="text-base leading-none">⚡</span>
+            <Zap className="h-4 w-4" aria-hidden />
             Sponsor-Bereich
           </Link>
         )}
       </div>
-
-      {!verifiedAt && (
-        <VerificationBanner
-          uploadUrl={`/verein/${slug}/verifikation`}
-          verification={verification}
-          scope="verein"
-        />
-      )}
 
       <VereinSubNav slug={slug} clubName={clubName} />
     </div>

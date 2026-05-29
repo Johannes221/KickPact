@@ -9,7 +9,7 @@ import { sponsors, clubMemberships, clubs, teams } from "@/lib/db/schema";
 import { pledges } from "@/lib/db/schema/pledges";
 import { VereinHeaderShell } from "./_components/verein-header-shell";
 import { VereinFAB } from "./_components/verein-fab";
-import { TrialBanner } from "./_components/trial-banner";
+import { StatusBar, type StatusItem } from "@/components/shared/status-bar";
 
 export default async function VereinLayout({
   params,
@@ -82,16 +82,103 @@ export default async function VereinLayout({
     activePledgeCount = Number(row?.n ?? 0);
   }
 
+  // Alle Status-Hinweise (Verifizierung / Trial / Zahlung) in EIN kompaktes,
+  // wegklickbares Element bündeln statt mehrerer großflächiger Banner.
+  const statusItems: StatusItem[] = [];
+
+  if (!verifiedAt) {
+    if (!verification) {
+      statusItems.push({
+        id: "verify",
+        tone: "warn",
+        iconKey: "shield-alert",
+        title: "Verein noch nicht verifiziert",
+        detail:
+          "Lade einen Nachweis hoch — bis dahin werden Rechnungen zurückgehalten.",
+        actionLabel: "Hochladen",
+        actionHref: `/verein/${slug}/verifikation`
+      });
+    } else if (verification.status === "pending") {
+      statusItems.push({
+        id: "verify",
+        tone: "info",
+        iconKey: "shield-check",
+        title: "Nachweis wird geprüft",
+        detail:
+          "Antwort in 1–2 Werktagen. Bis dahin werden Rechnungen zurückgehalten."
+      });
+    } else if (verification.status === "rejected") {
+      statusItems.push({
+        id: "verify",
+        tone: "danger",
+        iconKey: "shield-alert",
+        title: "Nachweis abgelehnt",
+        detail:
+          verification.rejectionReason ??
+          "Bitte lade einen neuen Nachweis hoch.",
+        actionLabel: "Neu hochladen",
+        actionHref: `/verein/${slug}/verifikation`
+      });
+    }
+  }
+
+  if (gate.status === "trialing" && gate.trialEndsAt) {
+    const daysLeft = Math.max(
+      0,
+      Math.ceil((gate.trialEndsAt.getTime() - Date.now()) / 86_400_000)
+    );
+    const endDate = gate.trialEndsAt.toLocaleDateString("de-DE", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric"
+    });
+    statusItems.push({
+      id: "trial",
+      tone: daysLeft <= 3 ? "danger" : daysLeft <= 7 ? "warn" : "info",
+      iconKey: "hourglass",
+      title: `Pro-Trial — noch ${daysLeft} ${daysLeft === 1 ? "Tag" : "Tage"}`,
+      detail:
+        activePledgeCount > 0
+          ? `Endet am ${endDate}. Aktiviere dein Abo, damit deine ${activePledgeCount} aktiven Pledge${activePledgeCount === 1 ? "" : "s"} weiterlaufen.`
+          : `Endet am ${endDate}. Aktiviere dein Abo, damit das Sponsoring nahtlos weiterläuft.`,
+      actionLabel: "Aktivieren",
+      actionHref: aboHref
+    });
+  }
+
+  if (gate.status === "past_due" && !gate.isReadOnly) {
+    statusItems.push({
+      id: "past_due",
+      tone: "warn",
+      iconKey: "clock",
+      title: "Zahlung überfällig",
+      detail: `Noch ${gate.daysUntilReadOnly} Tage bis zum Read-Only-Modus.`,
+      actionLabel: "Verwalten",
+      actionHref: aboHref
+    });
+  }
+
+  if (gate.isReadOnly) {
+    statusItems.push({
+      id: "readonly",
+      tone: "danger",
+      iconKey: "lock",
+      title: gate.status === "cancelled" ? "Abo gekündigt" : "Read-Only-Modus aktiv",
+      detail:
+        "Neue Pacts + Match-Events sind blockiert. Bestehende Daten bleiben sichtbar.",
+      actionLabel: "Reaktivieren",
+      actionHref: aboHref
+    });
+  }
+
   return (
-    <main className="mx-auto max-w-5xl px-5 md:px-6 pt-8 md:pt-12 pb-28 md:pb-12">
+    <main className="mx-auto max-w-5xl px-4 md:px-6 pt-4 md:pt-8 pb-28 md:pb-12">
       {/* Header-Bereich: Vereinsname + Sub-Nav.
           Auf /verein/<slug>/mannschaft/<teamId>... bei basic/pro-Lizenzen
           ausgeblendet — der TeamSubNav übernimmt dort die Navigation. */}
       <VereinHeaderShell
         slug={slug}
         clubName={club.name}
-        verifiedAt={verifiedAt}
-        verification={verification}
         hasSponsorProfile={!!sponsorRow}
         effectivePlan={effectivePlan}
       />
@@ -116,43 +203,10 @@ export default async function VereinLayout({
         </div>
       )}
 
-      {/* Trial-Countdown-Banner — immer während des Trials sichtbar, mit
-          Verlust-Aversion + plan-korrektem Abo-Link. */}
-      {gate.status === "trialing" && gate.trialEndsAt && (
-        <TrialBanner
-          trialEndsAt={gate.trialEndsAt}
-          aboHref={aboHref}
-          activePledgeCount={activePledgeCount}
-        />
-      )}
-
-      {/* Subscription-Warnbanner */}
-      {gate.status === "past_due" && !gate.isReadOnly && (
-        <div className="mb-5 md:mb-8 rounded-2xl border border-amber-300 bg-amber-50 p-4 md:p-5">
-          <p className="text-sm text-amber-900">
-            <strong>Zahlung überfällig.</strong> Wir konnten deine Stripe-Subscription nicht
-            einziehen. Du hast noch {gate.daysUntilReadOnly} Tage, bevor KickPact in den
-            Read-Only-Modus geht.{" "}
-            <Link href={aboHref} className="underline font-semibold text-amber-900">
-              Abo verwalten →
-            </Link>
-          </p>
-        </div>
-      )}
-
-      {gate.isReadOnly && (
-        <div className="mb-5 md:mb-8 rounded-2xl border border-rose-300 bg-rose-50 p-4 md:p-5">
-          <p className="text-sm text-rose-900">
-            <strong>
-              {gate.status === "cancelled" ? "Abo gekündigt." : "Read-Only-Modus aktiv."}
-            </strong>{" "}
-            Neue Pacts + Match-Events sind blockiert, bestehende Daten bleiben sichtbar.{" "}
-            <Link href={aboHref} className="underline font-semibold text-rose-900">
-              Abo reaktivieren →
-            </Link>
-          </p>
-        </div>
-      )}
+      {/* Gebündelte Status-Hinweise (Verifizierung / Trial / Zahlung) —
+          kompakt, kollabierbar, wegklickbar. Ersetzt die früheren
+          großflächigen Einzel-Banner. */}
+      <StatusBar items={statusItems} />
 
       {children}
 

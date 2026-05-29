@@ -2,18 +2,28 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Goal,
+  HandCoins,
+  Handshake,
+  ChartColumnIncreasing,
+  FileText,
+  Gem,
+  Settings
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BottomTabBar } from "@/components/shared/bottom-tab-bar";
 
 const TABS = [
-  { label: "Dashboard", href: "", emoji: "🏟️" },
-  { label: "Ereignisse", href: "/ereignisse", emoji: "⚽" },
-  { label: "Sponsoren", href: "/sponsoren", emoji: "💚" },
-  { label: "Pacts", href: "/pledges", emoji: "🎯" },
-  { label: "Charges", href: "/charges", emoji: "📊" },
-  { label: "Abrechnungen", href: "/abrechnungen", emoji: "📄" },
-  { label: "Abo", href: "/abo", emoji: "💎" },
-  { label: "Einstellungen", href: "/einstellungen", emoji: "⚙️" }
+  { label: "Dashboard", href: "", icon: LayoutDashboard },
+  { label: "Ereignisse", href: "/ereignisse", icon: Goal },
+  { label: "Sponsoren", href: "/sponsoren", icon: HandCoins },
+  { label: "Pacts", href: "/pledges", icon: Handshake },
+  { label: "Charges", href: "/charges", icon: ChartColumnIncreasing },
+  { label: "Abrechnungen", href: "/abrechnungen", icon: FileText },
+  { label: "Abo", href: "/abo", icon: Gem },
+  { label: "Einstellungen", href: "/einstellungen", icon: Settings }
 ];
 
 export function VereinSubNav({ slug, clubName }: { slug: string; clubName: string }) {
@@ -57,9 +67,9 @@ export function VereinSubNav({ slug, clubName }: { slug: string; clubName: strin
         </div>
         <BottomTabBar
           contextLabel="Verein"
-          items={TABS.map(({ label, href, emoji }) => ({
+          items={TABS.map(({ label, href, icon }) => ({
             label,
-            emoji,
+            icon,
             href: `${base}${href}`
           }))}
         />

@@ -110,8 +110,8 @@ export default async function TeamDetailPage({
     {
       done: hasSponsor,
       label: "Ersten Sponsor gewinnen",
-      hint: "Lege einen Pact an oder lade einen Sponsor ein.",
-      href: `${teamBase}/pacts`
+      hint: "Einladungslink teilen oder Sponsor einladen.",
+      href: `${teamBase}/sponsoren`
     }
   ];
 
@@ -139,15 +139,18 @@ export default async function TeamDetailPage({
   }
 
   return (
-    <div className="space-y-8">
-      {/* Mannschafts-Titel. Kein "Vereins-Dashboard"-Breadcrumb: bei
-          Mannschafts-Lizenz ist die Mannschaft der oberste Kontext; Vereins-
-          Admins navigieren über die VereinSubNav im Header darüber zurück. */}
-      <div>
-        <h2 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+    <div className="space-y-5 md:space-y-6">
+      {/* Mannschafts-Titel — einzeilig (truncate), Saison als kompakter Chip
+          rechts. Kein "Vereins-Dashboard"-Breadcrumb: bei Mannschafts-Lizenz ist
+          die Mannschaft der oberste Kontext; Vereins-Admins navigieren über die
+          VereinSubNav im Header darüber zurück. */}
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="min-w-0 truncate font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
           {team.name}
         </h2>
-        <p className="text-sm text-brand-night-navy/60">Saison {team.saison}</p>
+        <span className="shrink-0 rounded-full border border-brand-neutral/40 bg-white px-2.5 py-1 text-xs font-semibold text-brand-night-navy/60">
+          {team.saison}
+        </span>
       </div>
 
       <TeamSetupChecklist items={checklistItems} />

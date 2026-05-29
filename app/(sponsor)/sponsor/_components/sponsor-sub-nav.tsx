@@ -1,18 +1,28 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  House,
+  TrendingUp,
+  ChartColumnIncreasing,
+  Target,
+  Inbox,
+  FileText,
+  Compass,
+  User
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BottomTabBar } from "@/components/shared/bottom-tab-bar";
 
 const TABS = [
-  { label: "Übersicht", href: "/sponsor", emoji: "🏠" },
-  { label: "Bilanz", href: "/sponsor/bilanz", emoji: "📈" },
-  { label: "Charges", href: "/sponsor/charges", emoji: "📊" },
-  { label: "Wetten", href: "/sponsor/pledge", emoji: "🎯" },
-  { label: "Inbox", href: "/sponsor/inbox", emoji: "📥" },
-  { label: "Rechnungen", href: "/sponsor/rechnungen", emoji: "📄" },
-  { label: "Discover", href: "/sponsor/discover", emoji: "🔍" },
-  { label: "Profil", href: "/sponsor/profil", emoji: "👤" }
+  { label: "Übersicht", href: "/sponsor", icon: House },
+  { label: "Bilanz", href: "/sponsor/bilanz", icon: TrendingUp },
+  { label: "Charges", href: "/sponsor/charges", icon: ChartColumnIncreasing },
+  { label: "Wetten", href: "/sponsor/pledge", icon: Target },
+  { label: "Inbox", href: "/sponsor/inbox", icon: Inbox },
+  { label: "Rechnungen", href: "/sponsor/rechnungen", icon: FileText },
+  { label: "Discover", href: "/sponsor/discover", icon: Compass },
+  { label: "Profil", href: "/sponsor/profil", icon: User }
 ];
 
 // Mobile-Reihenfolge: die 4 wichtigsten zuerst (werden zu Bottom-Tabs),
@@ -69,7 +79,7 @@ export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
           const tab = TABS.find((t) => t.href === href)!;
           return {
             label: tab.label,
-            emoji: tab.emoji,
+            icon: tab.icon,
             href: tab.href,
             badge: tab.href === "/sponsor/inbox" ? pendingCount : undefined
           };

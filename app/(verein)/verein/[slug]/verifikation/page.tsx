@@ -6,7 +6,7 @@ export const metadata = { title: "Verein verifizieren · KickPact" };
 /**
  * Asynchrone Verein-Verifikation (PDF-Upload). Seit dem 2026-05 Onboarding-
  * Rewrite läuft das nicht mehr blockierend im Wizard, sondern als opt-in
- * Aktion über den `VerificationBanner` im Vereins-Layout. Bis zur Verifikation
+ * Aktion über die `StatusBar` im Vereins-Layout. Bis zur Verifikation
  * werden Sponsoren-Rechnungen zurückgehalten — das Trial selbst läuft trotzdem.
  */
 export default async function VereinVerifikationPage({

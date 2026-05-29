@@ -2,6 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Handshake,
+  Heart,
+  Goal,
+  Wallet,
+  Gem,
+  Settings,
+  type LucideIcon
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BottomTabBar } from "@/components/shared/bottom-tab-bar";
 import type { EffectivePlan } from "@/lib/db/queries/user-identities";
@@ -28,16 +38,17 @@ import type { EffectivePlan } from "@/lib/db/queries/user-identities";
 export type TeamSubNavTab = {
   label: string;
   href: string;
-  emoji: string;
+  icon: LucideIcon;
 };
 
 const ALL_TABS: readonly TeamSubNavTab[] = [
-  { label: "Übersicht", href: "", emoji: "🏟️" },
-  { label: "Pacts", href: "/pacts", emoji: "🤝" },
-  { label: "Spiele", href: "/spiele", emoji: "⚽" },
-  { label: "Finanzen", href: "/finanzen", emoji: "💰" },
-  { label: "Abo", href: "/abo", emoji: "💎" },
-  { label: "Einstellungen", href: "/einstellungen", emoji: "⚙️" }
+  { label: "Übersicht", href: "", icon: LayoutDashboard },
+  { label: "Pacts", href: "/pacts", icon: Handshake },
+  { label: "Sponsoren", href: "/sponsoren", icon: Heart },
+  { label: "Spiele", href: "/spiele", icon: Goal },
+  { label: "Finanzen", href: "/finanzen", icon: Wallet },
+  { label: "Abo", href: "/abo", icon: Gem },
+  { label: "Einstellungen", href: "/einstellungen", icon: Settings }
 ] as const;
 
 /**
@@ -116,9 +127,9 @@ export function TeamSubNav({
         </div>
         <BottomTabBar
           contextLabel="Mannschaft"
-          items={tabs.map(({ label, href, emoji }) => ({
+          items={tabs.map(({ label, href, icon }) => ({
             label,
-            emoji,
+            icon,
             href: `${base}${href}`
           }))}
         />

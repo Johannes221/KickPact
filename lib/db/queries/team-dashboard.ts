@@ -179,6 +179,54 @@ export async function getTopSponsorsForTeam(
   }));
 }
 
+export interface TeamSponsorRow {
+  sponsorId: string;
+  displayName: string;
+  /** Aktive Pacts (pledges.status='active') dieses Sponsors auf der Mannschaft. */
+  activePacts: number;
+  /** Alle Pacts (jeder Status). */
+  totalPacts: number;
+  /** Bestätigte/abgerechnete Charges-Summe dieses Sponsors auf der Mannschaft. */
+  chargedCents: number;
+}
+
+/**
+ * Alle Sponsoren EINER Mannschaft (für den Sponsoren-Tab) — inkl. Sponsoren, die
+ * zwar einen Pact haben, aber noch keine Charges. Sortiert: aktive Pacts zuerst,
+ * dann nach abgerechnetem Betrag.
+ */
+export async function listSponsorsForTeam(teamId: string): Promise<TeamSponsorRow[]> {
+  const rows = await db
+    .select({
+      sponsorId: sponsors.id,
+      displayName: sponsors.displayName,
+      activePacts: sql<number>`count(*) FILTER (WHERE ${pledges.status} = 'active')::int`,
+      totalPacts: sql<number>`count(*)::int`,
+      chargedCents: sql<number>`COALESCE(SUM((
+        SELECT SUM(c.amount_cents) FROM ${charges} c
+        WHERE c.pledge_id = ${pledges.id} AND c.status IN ('confirmed','invoiced')
+      )), 0)::int`
+    })
+    .from(pledges)
+    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .where(eq(pledges.teamId, teamId))
+    .groupBy(sponsors.id, sponsors.displayName)
+    .orderBy(
+      sql`count(*) FILTER (WHERE ${pledges.status} = 'active') DESC, COALESCE(SUM((
+        SELECT SUM(c.amount_cents) FROM ${charges} c
+        WHERE c.pledge_id = ${pledges.id} AND c.status IN ('confirmed','invoiced')
+      )), 0) DESC`
+    );
+
+  return rows.map((r) => ({
+    sponsorId: r.sponsorId,
+    displayName: r.displayName,
+    activePacts: Number(r.activePacts ?? 0),
+    totalPacts: Number(r.totalPacts ?? 0),
+    chargedCents: Number(r.chargedCents ?? 0)
+  }));
+}
+
 // ---------------- Pacts (Tab 2) ----------------
 
 export type PactKind = "auto" | "manual" | "season";
