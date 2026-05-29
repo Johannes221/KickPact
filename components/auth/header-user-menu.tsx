@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useSession, signOut } from "@/lib/auth/client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -24,7 +24,6 @@ import type { UserIdentities } from "@/lib/db/queries/user-identities";
 
 export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
   const { data: session, isPending } = useSession();
-  const router = useRouter();
   const pathname = usePathname() ?? "/";
   const [identities, setIdentities] = useState<UserIdentities | null>(null);
 
@@ -230,9 +229,15 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
         <DropdownMenuItem
           className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
           onSelect={async () => {
-            await signOut();
-            router.push("/");
-            router.refresh();
+            // Harter Reload statt router.push/refresh: signOut() löscht das
+            // Session-Cookie serverseitig, aber der useSession-Nanostore (client)
+            // behält den User im Cache → soft-refresh zeigt weiter "angemeldet".
+            // window.location erzwingt frische Cookie-Auswertung + Store-Reset.
+            try {
+              await signOut();
+            } finally {
+              window.location.href = "/";
+            }
           }}
         >
           <span className="mr-2 text-base">↩</span>Abmelden

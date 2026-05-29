@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import {
   Sheet,
@@ -42,7 +42,6 @@ const SECONDARY_NAV = [
 export function MobileNav({ onHero = false }: { onHero?: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname() ?? "/";
-  const router = useRouter();
   const { data: session, isPending } = useSession();
   const [identities, setIdentities] = useState<UserIdentities | null>(null);
 
@@ -264,10 +263,16 @@ export function MobileNav({ onHero = false }: { onHero?: boolean }) {
               variant="outline"
               className="min-h-12 w-full justify-center"
               onClick={async () => {
-                await signOut();
+                // Harter Reload: signOut() löscht das Cookie serverseitig, aber
+                // der useSession-Nanostore behält den User im Cache → soft-
+                // refresh zeigt weiter "angemeldet". window.location erzwingt
+                // frische Cookie-Auswertung + Store-Reset.
                 setOpen(false);
-                router.push("/");
-                router.refresh();
+                try {
+                  await signOut();
+                } finally {
+                  window.location.href = "/";
+                }
               }}
             >
               Abmelden

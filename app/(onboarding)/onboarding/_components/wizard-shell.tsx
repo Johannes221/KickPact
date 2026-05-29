@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const STEPS_LABELS = ["Verein & Mannschaft", "Stammdaten", "Sponsoren einladen"] as const;
@@ -6,6 +7,8 @@ interface Props {
   step: 1 | 2 | 3;
   role: "mannschaft" | "verein";
   children: React.ReactNode;
+  /** Optionaler „← Zurück"-Link zum vorherigen Step. */
+  backHref?: string;
 }
 
 /**
@@ -16,7 +19,7 @@ interface Props {
  * Tabs sind read-only (Klick navigiert NICHT zurück) — Resume regelt der
  * Dispatcher, freie Navigation würde die State-Machine umgehen.
  */
-export function WizardShell({ step, role, children }: Props) {
+export function WizardShell({ step, role, children, backHref }: Props) {
   const headline = role === "verein" ? "Verein anlegen" : "Mannschaft anlegen";
   const subline =
     role === "verein"
@@ -25,6 +28,16 @@ export function WizardShell({ step, role, children }: Props) {
 
   return (
     <main className="mx-auto max-w-3xl px-5 md:px-6 py-8 md:py-12">
+      {backHref && (
+        <div className="mb-3">
+          <Link
+            href={backHref}
+            className="inline-flex items-center gap-1 text-sm font-medium text-brand-night-navy/60 hover:text-brand-night-navy transition-colors"
+          >
+            ← Zurück
+          </Link>
+        </div>
+      )}
       <div className="mb-6 md:mb-10">
         <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
           {headline}

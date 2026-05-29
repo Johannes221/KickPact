@@ -40,7 +40,7 @@ export default async function MannschaftFlowStep3() {
   );
 
   return (
-    <WizardShell step={3} role="mannschaft">
+    <WizardShell step={3} role="mannschaft" backHref="/onboarding/mannschaft/stammdaten">
       <SponsorenStep
         clubId={draft.clubId}
         clubSlug={draft.slug}

@@ -28,7 +28,7 @@ export default async function VereinFlowStep2() {
     .limit(1);
 
   return (
-    <WizardShell step={2} role="verein">
+    <WizardShell step={2} role="verein" backHref="/onboarding/verein/verein?change=1">
       <StammdatenForm
         clubId={draft.clubId}
         role="verein"

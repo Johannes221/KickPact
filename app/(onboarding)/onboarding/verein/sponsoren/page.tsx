@@ -44,7 +44,7 @@ export default async function VereinFlowStep3() {
   );
 
   return (
-    <WizardShell step={3} role="verein">
+    <WizardShell step={3} role="verein" backHref="/onboarding/verein/stammdaten">
       <SponsorenStep
         clubId={draft.clubId}
         clubSlug={draft.slug}
