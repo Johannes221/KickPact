@@ -115,10 +115,15 @@ Eine Club-Subscription kann künftig aus **Stripe ODER Apple** stammen. Das Enti
 3. **Doppel-Abo verhindern:** Hat ein Club bereits ein Stripe-Abo, darf der In-App-Kauf nicht zusätzlich abrechnen — und umgekehrt. Vor dem IAP-Kauf serverseitig den bestehenden Provider prüfen und ggf. blocken/erklären.
 4. **B2B-Mapping:** Apple-IAP hängt am **persönlichen Apple-ID** des Käufers, KickPact-Abo am **Club**. Das Entitlement muss am Club hängen, nicht am Apple-Account. Sauber via RevenueCat `appUserID = clubId`. Edge-Case dokumentieren: Käufer verlässt den Club → Abo-Verwaltung (Kündigen/Refund) liegt weiter in dessen Apple-Account.
 
-### Offene Sub-Entscheidung: Source-of-Truth
-- **Empfohlen — RevenueCat:** abstrahiert StoreKit + App-Store-Notifications, liefert eine einheitliche Entitlement-API und kann **auch Stripe einlesen** → ein einziger „ist-aktiv"-Check für beide Provider. Zusatzsystem + Kosten ab Umsatzschwelle, spart aber den größten Teil der Reconciliation-Arbeit.
-- **Self-built:** eigener Apple-Webhook + eigene Abgleichslogik in `subscriptions`. Keine Drittkosten, deutlich mehr Eigen-Code und Fehlerquellen (Renewals, Grace-Period, Refunds, Sandbox-vs-Prod).
-→ Zu entscheiden vor WS-7. Tendenz RevenueCat wegen Dual-Provider-Komplexität.
+### Source-of-Truth: RevenueCat (festgelegt 2026-05-29)
+**Entscheidung: RevenueCat** als einheitliche Entitlement-Schicht für beide Provider.
+- Abstrahiert StoreKit + App Store Server Notifications und liefert eine einheitliche Entitlement-API.
+- Kann **auch Stripe einlesen** → ein einziger „ist-aktiv?"-Check für Web- **und** App-Abos, statt zwei getrennte Abgleichspfade.
+- `appUserID = clubId` löst das B2B-Mapping (Entitlement am Club, nicht am Apple-Account).
+- Trade-off bewusst akzeptiert: Zusatzsystem + Kosten ab Umsatzschwelle — dafür entfällt der Großteil der selbstgebauten Reconciliation (Renewals/Grace-Period/Refunds/Sandbox-vs-Prod).
+- Verworfen: Self-built Apple-Webhook + eigene Abgleichslogik — zu viel fehleranfälliger Eigen-Code bei Dual-Provider.
+
+**Konsequenz fürs Schema:** Statt roher `apple_*`-Spalten genügt in `subscriptions` ein `provider`-Feld + die RevenueCat-Referenz; RevenueCat ist die Wahrheit, unsere Tabelle der gecachte Spiegel (befüllt via RevenueCat-Webhook).
 
 ### UI-Verzweigung
 - iOS-Kontext (`Capacitor.isNativePlatform()`): Kauf-Flow zeigt **StoreKit-Produkte**, nicht den Stripe-Button. Keine Web-Preis-Hinweise (Anti-Steering).
