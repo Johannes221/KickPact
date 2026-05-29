@@ -15,6 +15,41 @@ import {
 } from "../verein/_actions/search";
 import { createDraftClub } from "../_actions/create-draft-club";
 
+/**
+ * Erkennt den „Server Action … was not found on the server"-Fehler. Tritt auf,
+ * wenn der Browser-Tab noch altes Client-JS hält, nachdem ein Deploy die
+ * (gehashten) Server-Action-IDs geändert hat. Kein echter Bug — der Tab ist
+ * schlicht veraltet.
+ */
+function isStaleServerAction(e: unknown): boolean {
+  if (!(e instanceof Error)) return false;
+  const m = e.message || "";
+  return (
+    e.name === "UnrecognizedActionError" ||
+    /server action.*was not found/i.test(m) ||
+    /failed-to-find-server-action/i.test(m)
+  );
+}
+
+/**
+ * Recovery für den Stale-Action-Fehler: einmal pro Tab automatisch neu laden
+ * (holt frisches Client-JS mit den korrekten Action-IDs). Der sessionStorage-
+ * Guard verhindert eine Reload-Schleife, falls der Server tatsächlich kaputt ist.
+ */
+function reloadForStaleAction(): void {
+  try {
+    if (sessionStorage.getItem("kp_stale_action_reloaded") === "1") {
+      toast.error("Neue Version verfügbar — bitte die Seite manuell neu laden (Cmd/Strg+R).");
+      return;
+    }
+    sessionStorage.setItem("kp_stale_action_reloaded", "1");
+  } catch {
+    /* sessionStorage evtl. nicht verfügbar — dann eben direkt neu laden. */
+  }
+  toast.message("Neue Version verfügbar — Seite wird aktualisiert…");
+  window.location.reload();
+}
+
 type VereinHit = {
   name: string;
   ort: string | null;
@@ -55,14 +90,19 @@ export function VereinSearchStep({ role }: Props) {
       return;
     }
     startTransition(async () => {
-      const res = await searchVereineAction({ query });
-      if (!res.ok) {
-        toast.error(res.error);
-        return;
+      try {
+        const res = await searchVereineAction({ query });
+        if (!res.ok) {
+          toast.error(res.error);
+          return;
+        }
+        setResults(res.results);
+        setSearched(true);
+        if (res.results.length === 0) toast.info("Keine Treffer. Anderer Suchbegriff?");
+      } catch (e) {
+        if (isStaleServerAction(e)) return reloadForStaleAction();
+        toast.error(e instanceof Error ? e.message : "Suche fehlgeschlagen.");
       }
-      setResults(res.results);
-      setSearched(true);
-      if (res.results.length === 0) toast.info("Keine Treffer. Anderer Suchbegriff?");
     });
   }
 
@@ -71,20 +111,29 @@ export function VereinSearchStep({ role }: Props) {
     setSelectedTeamIds(new Set());
     setTeams([]);
     setTeamsLoading(true);
-    const res = await getMannschaftenAction({
-      vereinId: v.vereinId,
-      slug: v.slug,
-      vereinName: v.name
-    });
-    setTeamsLoading(false);
-    if (!res.ok) {
-      toast.error(res.error);
+    try {
+      const res = await getMannschaftenAction({
+        vereinId: v.vereinId,
+        slug: v.slug,
+        vereinName: v.name
+      });
+      if (!res.ok) {
+        toast.error(res.error);
+        setChosenVerein(null);
+        return;
+      }
+      setTeams(res.results);
+      if (res.results.length === 0) toast.info("Keine Mannschaften gefunden.");
+      track("verein_onboarding_step1_completed");
+    } catch (e) {
       setChosenVerein(null);
-      return;
+      if (isStaleServerAction(e)) return reloadForStaleAction();
+      toast.error(e instanceof Error ? e.message : "Mannschaften konnten nicht geladen werden.");
+    } finally {
+      // IMMER zurücksetzen — sonst hängt der „Lade Mannschaften…"-Spinner ewig,
+      // wenn die Action (z.B. stale nach Deploy) wirft.
+      setTeamsLoading(false);
     }
-    setTeams(res.results);
-    if (res.results.length === 0) toast.info("Keine Mannschaften gefunden.");
-    track("verein_onboarding_step1_completed");
   }
 
   function toggleTeam(teamId: string) {
@@ -151,6 +200,7 @@ export function VereinSearchStep({ role }: Props) {
           window.location.href = "/login";
           return;
         }
+        if (isStaleServerAction(e)) return reloadForStaleAction();
         const msg = e instanceof Error ? e.message : "Verein konnte nicht angelegt werden.";
         toast.error(msg);
       }
