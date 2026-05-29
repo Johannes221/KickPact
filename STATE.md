@@ -44,6 +44,21 @@
 | E2E-Specs Onboarding | ✅ tests/e2e/onboarding.spec.ts (9 Tests) |
 | Production-Domain kickpact.com | 🔧 Coolify FQDN gesetzt — DNS A-Record ausstehend (CF-UI) |
 
+## Go-Live TODO — Stripe (vor Production-Launch)
+
+> Aktuell läuft Stripe im Test-Mode der Sandbox **"Eventapp Sandbox"** (`acct_1SIYtA…`).
+> Für Production eine eigene Live-Umgebung aufsetzen. **Modell ist Abo (`mode: subscription`)** →
+> nur recurring-fähige Methoden möglich. Klarna/Sofort gehen NICHT (Einmalzahlung).
+
+- [ ] **Live-Account aktivieren**: Geschäftsdaten, Inhaber-Identität, Auszahlungs-Bankkonto in Stripe hinterlegen + verifizieren lassen.
+- [ ] **Zahlungsmethoden im Live-Mode aktivieren** (Settings → Payment methods):
+      Karte ✅, **SEPA-Lastschrift** (Terms akzeptieren), **PayPal** (Business verknüpfen), Link, Apple/Google Pay.
+- [ ] **9 Price-IDs im Live-Mode neu anlegen** (Basic/Pro/Verein × Monthly/Saison/Annual) — Test- und Live-Objekte sind getrennt.
+- [ ] **Live-Webhook-Endpoint** anlegen → neuen `whsec_…` ziehen.
+- [ ] **Env auf Live umstellen**: `STRIPE_SECRET_KEY=sk_live_…`, `STRIPE_WEBHOOK_SECRET=whsec_…`, alle `STRIPE_*_PRICE_ID` (in `.env.local` + Coolify-Staging/Prod-Secrets).
+- [ ] **Kein Code-Change nötig** — Checkout nutzt Dynamic Payment Methods, zeigt automatisch alles aktivierte + abo-fähige. `payment_method_types` NICHT hart setzen.
+- [ ] **SEPA-Settlement beachten**: Bestätigung erst nach Tagen (Rücklastschrift-Risiko) → Status-Handling über `invoice.paid`-Webhook (bereits implementiert) verifizieren.
+
 ## Tests
 
 Alle grün (exit 0) · letzte Ausführung 2026-05-27
