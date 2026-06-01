@@ -7,6 +7,7 @@ import { charges } from "@/lib/db/schema/charges";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { getTriggerLabel, categorizeTrigger } from "@/lib/billing/trigger-labels";
 import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
+import { AvailableTriggers } from "./_components/available-triggers";
 
 export const metadata = { title: "Pacts · KickPact" };
 
@@ -194,6 +195,9 @@ export default async function PactsPage({
           </div>
         </>
       )}
+
+      {/* Transparenz: welche Wetten-Typen Sponsoren überhaupt wählen können. */}
+      <AvailableTriggers />
     </div>
   );
 }
