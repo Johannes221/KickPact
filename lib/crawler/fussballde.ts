@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { chromium, type Page } from "playwright";
+import { saisonStartDate } from "@/lib/utils/saison";
 
 /**
  * Audit 2026-05-24 Phase 5 / Task 5.2: User-Agent-Rotation gegen fussball.de-Bann.
@@ -271,6 +272,15 @@ function currentSaisonCode(): string {
   return String(startYear).slice(-2) + String(startYear + 1).slice(-2);
 }
 
+/** Parst ein DD.MM.YYYY- oder DD.MM.YY-Datum zu einem Timestamp (ms) oder null. */
+function parseSpielDatum(datum: string): number | null {
+  const p = datum.split(".");
+  if (p.length !== 3) return null;
+  const y = p[2].length === 2 ? "20" + p[2] : p[2];
+  const t = new Date(`${y}-${p[1]}-${p[0]}`).getTime();
+  return isNaN(t) ? null : t;
+}
+
 /**
  * Vereinfachter URL-Slug aus Team-Name (Umlaute → ASCII, Sonderzeichen → Bindestrich).
  * Der Wert weicht vom echten fussball.de-Slug ab; er dient nur als Platzhalter
@@ -435,14 +445,30 @@ const EXTRACT_MATCHES_JS = `(function() {
     var tds = Array.from(tr.querySelectorAll("td")).map(function(td) {
       return (td.textContent || "").replace(/\\s+/g, " ").trim();
     });
-    var teamTds = tds.filter(function(t) { return t && t !== ":" && t !== "Zum Spiel" && t !== "Nichtantritt GAST" && t !== "Nichtantritt HEIM"; });
+
+    // Robuste Heim/Gast-Extraktion ueber den ":"-Separator zwischen den beiden
+    // Teamnamen. Frueher fix tds[0]/tds[1] genommen — das brach auf der Haupt-
+    // Team-Seite, wo die Zeile mit Datum/Wettbewerb/Kategorie-Zellen beginnt
+    // (z.B. ["Di, 30.07.24 | 20:00","Freundschaftsspiel","Herren","Heim",":",
+    // "Gast",...]) und Datum + "Freundschaftsspiel" faelschlich als Teamnamen
+    // landeten. Heim = naechste nicht-leere Zelle VOR dem ersten ":", Gast =
+    // naechste nicht-leere Zelle DANACH.
+    var IGNORE = { ":": 1, "Zum Spiel": 1, "Nichtantritt GAST": 1, "Nichtantritt HEIM": 1 };
+    var sepIdx = -1;
+    for (var si = 0; si < tds.length; si++) { if (tds[si] === ":") { sepIdx = si; break; } }
+    var heim = "", gast = "";
+    if (sepIdx > 0) {
+      for (var hi = sepIdx - 1; hi >= 0; hi--) { if (tds[hi] && !IGNORE[tds[hi]]) { heim = tds[hi]; break; } }
+      for (var gi = sepIdx + 1; gi < tds.length; gi++) { if (tds[gi] && !IGNORE[tds[gi]]) { gast = tds[gi]; break; } }
+    }
+    if (!heim || !gast) return; // unparsebar (kein sauberer Separator) → ueberspringen
 
     results.push({
       spielId: m[2],
       slug: m[1],
       datum: currentDatum,
-      heim: teamTds[0] || "",
-      gast: teamTds[1] || "",
+      heim: heim,
+      gast: gast,
       ergebnis: "",
       vergangen: vergangen,
       status: vergangen ? "finished" : "scheduled",
@@ -552,64 +578,43 @@ export async function getSpiele(
   return withPage(async (page) => {
     const allResults = new Map<string, SpielListItem>();
 
-    // Strategy 1a/1b: vergangene Spiele (ohne + mit saison-Parameter)
+    // Vergangene Spiele (ohne + mit saison-Parameter). `prev.games` liefert die
+    // jüngsten gespielten Spiele SAUBER geparst (echte Vereinsnamen).
     await paginateTeamGames(page, "prev", teamId, allResults);
     await paginateTeamGames(page, "prev", teamId, allResults, saison);
 
-    // Strategy 1c/1d: kommende Spiele (ohne + mit saison-Parameter)
-    // ajax.team.next.games hat dieselbe Tabellen-Struktur wie prev — die
-    // Extraktion ist identisch, nur der Endpoint unterscheidet sich.
+    // Kommende Spiele (ohne + mit saison-Parameter). Gleiche Tabellen-Struktur.
     await paginateTeamGames(page, "next", teamId, allResults);
     await paginateTeamGames(page, "next", teamId, allResults, saison);
 
-    // Strategy 2: main team page Spielplan — shows both halves; also click Hinrunde tab
-    // fussball.de defaults to Rückrunde tab; we click Hinrunde to capture first-half games
-    try {
-      const mainUrl = `https://www.fussball.de/mannschaft/${slug}/-/saison/${saison}/team-id/${teamId}#!/`;
-      await page.goto(mainUrl, { waitUntil: "networkidle", timeout: 30000 });
-      await assertNotCaptcha(page);
-      await page.waitForTimeout(2000);
+    // HINWEIS: Die Haupt-Team-Seite (`/mannschaft/{slug}/.../saison/{saison}`)
+    // wird BEWUSST NICHT mehr gescraped. Sie war die Quelle zweier Bugs:
+    //   1. Saison-Pollution: ihr Default-View mischt uralte Vorsaison-Spiele
+    //      (inkl. Freundschaftsspiele unter dem alten Vereinsnamen) hinein.
+    //   2. Parse-Korruption: ihre Match-Zeile beginnt mit Datum/Wettbewerb/
+    //      Kategorie-Zellen → früher landeten "Di, 30.07.24 | 20:00" und
+    //      "Freundschaftsspiel" als Heim/Gast in der DB.
+    // prev/next.games decken die laufende Saison sauber ab; bei aktivem
+    // (nächtlichem) Crawl akkumuliert die DB die Saison fortlaufend.
 
-      // Extract whatever is currently visible (usually Rückrunde)
-      const mainResults = await page.evaluate(EXTRACT_MATCHES_JS) as SpielListItem[];
-      for (const r of mainResults) {
-        if (!allResults.has(r.spielId)) allResults.set(r.spielId, r);
-      }
+    // Saison-Filter: nur Spiele AB Saisonstart (1. Juli des Saison-Codes)
+    // behalten. Schützt gegen Leckage alter Saisons über tiefe prev.games-
+    // Pagination und gegen den ignorierten saison-Parameter. KEINE Obergrenze
+    // → kommende (auch nächste Saison) Spiele bleiben erhalten ("Kommend").
+    const start = saisonStartDate(saison);
+    const startMs = start ? start.getTime() : null;
 
-      // Click Hinrunde / Vorrunde tab to capture first-half games
-      const tabClicked = await page.evaluate(`(function() {
-        var els = Array.from(document.querySelectorAll('a, button, span, li'));
-        var tab = els.find(function(el) {
-          var t = (el.textContent || '').toLowerCase().replace(/\\s+/g, '').trim();
-          return t === 'hinrunde' || t === 'vorrunde' || t === 'hinserie';
-        });
-        if (tab) { tab.click(); return true; }
-        return false;
-      })()`) as boolean;
+    const raw = Array.from(allResults.values()).filter((g) => {
+      const t = parseSpielDatum(g.datum);
+      if (t === null) return false; // unparsebares Datum → raus
+      if (startMs !== null && t < startMs) return false; // vor Saisonstart → raus
+      return true;
+    });
 
-      if (tabClicked) {
-        await page.waitForTimeout(2000);
-        const hinrundeResults = await page.evaluate(EXTRACT_MATCHES_JS) as SpielListItem[];
-        for (const r of hinrundeResults) {
-          if (!allResults.has(r.spielId)) allResults.set(r.spielId, r);
-        }
-      }
-    } catch (err) {
-      // Captcha errors are loud signals — rethrow so the whole crawl fails.
-      if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
-      // ignore other errors (network hiccup on Strategy 2 is OK — we already
-      // have data from Strategy 1)
-    }
-
-    const raw = Array.from(allResults.values());
     raw.sort((a, b) => {
-      const parse = (d: string): number => {
-        const p = d.split(".");
-        if (p.length !== 3) return 0;
-        const y = p[2].length === 2 ? "20" + p[2] : p[2];
-        return new Date(`${y}-${p[1]}-${p[0]}`).getTime();
-      };
-      return parse(b.datum) - parse(a.datum);
+      const ta = parseSpielDatum(a.datum) ?? 0;
+      const tb = parseSpielDatum(b.datum) ?? 0;
+      return tb - ta;
     });
 
     return raw;

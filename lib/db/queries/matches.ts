@@ -7,6 +7,7 @@ import { sponsors } from "@/lib/db/schema/sponsors";
 import { users } from "@/lib/db/schema/auth";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { detectTeamSide } from "@/lib/crawler/team-side";
+import { saisonStartDate } from "@/lib/utils/saison";
 
 export async function getMatchById(matchId: string, clubSlug: string) {
   const [row] = await db
@@ -43,10 +44,24 @@ export async function listMatchEvents(matchId: string) {
  * sauber sortiert.
  */
 export async function listMatchesForTeam(teamId: string, limit = 20) {
+  // Display-Gate: nur Spiele AB Saisonstart der Mannschaft zeigen. Verhindert,
+  // dass versehentlich persistierte Alt-Saison-Spiele (vor dem Scraper-Fix
+  // 2026-06-01) Dashboard + Spiele-Liste verschmutzen. Robuste „immer nur die
+  // aktuelle Saison"-Garantie, unabhängig vom DB-Zustand.
+  const [t] = await db
+    .select({ saison: teams.saison })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  const fromDate = t ? saisonStartDate(t.saison) : null;
+
+  const conditions = [eq(matches.teamId, teamId)];
+  if (fromDate) conditions.push(gte(matches.datum, fromDate));
+
   return db
     .select()
     .from(matches)
-    .where(eq(matches.teamId, teamId))
+    .where(and(...conditions))
     .orderBy(desc(matches.datum))
     .limit(limit);
 }
