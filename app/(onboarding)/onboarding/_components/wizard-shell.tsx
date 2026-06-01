@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-const STEPS_LABELS = ["Verein & Mannschaft", "Stammdaten", "Sponsoren einladen"] as const;
+const STEPS_LABELS = ["Verein & Mannschaft", "Stammdaten"] as const;
 
 interface Props {
-  step: 1 | 2 | 3;
+  step: 1 | 2;
   role: "mannschaft" | "verein";
   children: React.ReactNode;
   /** Optionaler „← Zurück"-Link zum vorherigen Step. */
@@ -12,9 +12,11 @@ interface Props {
 }
 
 /**
- * Shared 3-Step Wizard-Shell. Server-Component — kein State, kein Hook.
- * Wird von `/onboarding/{mannschaft|verein}/{verein|stammdaten|sponsoren}/page.tsx`
- * gemountet.
+ * Shared 2-Step Wizard-Shell. Server-Component — kein State, kein Hook.
+ * Wird von `/onboarding/{mannschaft|verein}/{verein|stammdaten}/page.tsx`
+ * gemountet. Nach Schritt 2 (Stammdaten) wird direkt abgeschlossen und ins
+ * Dashboard geleitet — Sponsoren einladen ist dort eine Aufgabe (kein eigener
+ * Wizard-Schritt mehr).
  *
  * Tabs sind read-only (Klick navigiert NICHT zurück) — Resume regelt der
  * Dispatcher, freie Navigation würde die State-Machine umgehen.
@@ -23,8 +25,8 @@ export function WizardShell({ step, role, children, backHref }: Props) {
   const headline = role === "verein" ? "Verein anlegen" : "Mannschaft anlegen";
   const subline =
     role === "verein"
-      ? "3 Schritte, ca. 3 Minuten. Du startest direkt in 30 Tagen Vereinslizenz-Trial — keine Kreditkarte."
-      : "3 Schritte, ca. 3 Minuten. Du startest direkt in 30 Tagen Pro-Trial — keine Kreditkarte.";
+      ? "2 Schritte, ca. 2 Minuten. Du startest direkt in 30 Tagen Vereinslizenz-Trial — keine Kreditkarte."
+      : "2 Schritte, ca. 2 Minuten. Du startest direkt in 30 Tagen Pro-Trial — keine Kreditkarte.";
 
   return (
     <main className="mx-auto max-w-3xl px-5 md:px-6 py-8 md:py-12">

@@ -18,6 +18,7 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { track } from "@/lib/analytics/track";
+import { completeOnboarding } from "../_actions/complete-onboarding";
 import { updateDraftStammdaten } from "../_actions/update-draft-stammdaten";
 
 const formSchema = z.object({
@@ -69,7 +70,13 @@ export function StammdatenForm({ clubId, role, defaultValues }: Props) {
           taxId: values.taxId || undefined,
           iban: values.iban || undefined
         });
-        router.push(`/onboarding/${role}/sponsoren`);
+        // Sponsoren-Schritt entfernt: nach den Stammdaten direkt abschließen und
+        // ins Dashboard. Der Verein-Container leitet basic/pro automatisch zur
+        // Mannschafts-Seite weiter (Vereinslizenz bleibt auf der Vereins-Übersicht).
+        // Sponsoren einladen ist jetzt eine Dashboard-Aufgabe (Sponsoren-Tab).
+        const result = await completeOnboarding({ clubId });
+        track("verein_onboarding_completed", { role });
+        router.push(`/verein/${result.clubSlug}`);
       } catch (e) {
         if (e instanceof Error && e.message === "SESSION_EXPIRED") {
           toast.error("Session abgelaufen — bitte neu einloggen.");

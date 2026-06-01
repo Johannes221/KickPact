@@ -191,16 +191,16 @@ describe("nextOnboardingStep", () => {
     expect(nextOnboardingStep(draft())).toBe("/onboarding/mannschaft/stammdaten");
   });
 
-  it("status=draft + has stammdaten (edge case) → sponsoren step", () => {
+  it("status=draft + has stammdaten → zurück zum Stammdaten-Step (Re-Submit schließt ab)", () => {
     expect(nextOnboardingStep(draft({ hasStammdaten: true }))).toBe(
-      "/onboarding/mannschaft/sponsoren"
+      "/onboarding/mannschaft/stammdaten"
     );
   });
 
-  it("status=stammdaten_complete → sponsoren step", () => {
+  it("status=stammdaten_complete → Stammdaten-Step (Sponsoren-Step entfernt)", () => {
     expect(
       nextOnboardingStep(draft({ onboardingStatus: "stammdaten_complete", hasStammdaten: true }))
-    ).toBe("/onboarding/mannschaft/sponsoren");
+    ).toBe("/onboarding/mannschaft/stammdaten");
   });
 
   it("verein-role routes to /onboarding/verein/...", () => {

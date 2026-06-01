@@ -79,12 +79,10 @@ export async function getActiveDraftForUser(userId: string): Promise<OnboardingD
  * Pur — keine DB-Zugriffe. Unit-testbar.
  */
 export function nextOnboardingStep(draft: OnboardingDraft): string {
-  const base = `/onboarding/${draft.onboardingRole}`;
-  if (draft.onboardingStatus === "draft") {
-    // Hat schon Stammdaten? Dann darf User direkt zu Sponsoren. Edge-Case
-    // wenn Stammdaten-Edit ohne Status-Bump passiert wäre — sicherer Fallback.
-    return draft.hasStammdaten ? `${base}/sponsoren` : `${base}/stammdaten`;
-  }
-  // stammdaten_complete → Sponsoren-Step
-  return `${base}/sponsoren`;
+  // Sponsoren-Schritt entfernt (2026-06): nach den Stammdaten wird das
+  // Onboarding direkt abgeschlossen (siehe StammdatenForm → completeOnboarding →
+  // Dashboard). Ein noch offener Draft führt daher IMMER (zurück) auf den
+  // Stammdaten-Step; erneutes Absenden schließt ab und leitet ins Dashboard.
+  // Die Einladung lebt jetzt als Dashboard-Aufgabe (Sponsoren-Tab).
+  return `/onboarding/${draft.onboardingRole}/stammdaten`;
 }
