@@ -1,6 +1,6 @@
 {
-  "id": "7b716f53-5c84-4f13-b58d-1bcb7bd9ef05",
-  "prevId": "934785ee-3172-4ac5-8da4-69c67cccc797",
+  "id": "66da863a-1bc6-4aa8-a3a4-e81ce4a65e1f",
+  "prevId": "7b716f53-5c84-4f13-b58d-1bcb7bd9ef05",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -231,6 +231,19 @@
           "primaryKey": false,
           "notNull": false
         },
+        "deletion_requested_at": {
+          "name": "deletion_requested_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_platform_admin": {
+          "name": "is_platform_admin",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -376,6 +389,19 @@
         },
         "responded_by_user_id": {
           "name": "responded_by_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_conflict_claim": {
+          "name": "is_conflict_claim",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "conflict_doc_storage_key": {
+          "name": "conflict_doc_storage_key",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -574,6 +600,197 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.club_verifications": {
+      "name": "club_verifications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "club_id": {
+          "name": "club_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submitted_by_user_id": {
+          "name": "submitted_by_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doc_type": {
+          "name": "doc_type",
+          "type": "club_verification_doc_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doc_filename": {
+          "name": "doc_filename",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doc_storage_key": {
+          "name": "doc_storage_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doc_mime_type": {
+          "name": "doc_mime_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doc_size_bytes": {
+          "name": "doc_size_bytes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submitter_role": {
+          "name": "submitter_role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submitter_full_name": {
+          "name": "submitter_full_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submitter_notes": {
+          "name": "submitter_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "club_verification_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "reviewed_at": {
+          "name": "reviewed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reviewed_by_user_id": {
+          "name": "reviewed_by_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rejection_reason": {
+          "name": "rejection_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "club_verifications_club_status_idx": {
+          "name": "club_verifications_club_status_idx",
+          "columns": [
+            {
+              "expression": "club_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "club_verifications_pending_idx": {
+          "name": "club_verifications_pending_idx",
+          "columns": [
+            {
+              "expression": "submitted_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"club_verifications\".\"status\" = 'pending'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "club_verifications_club_id_clubs_id_fk": {
+          "name": "club_verifications_club_id_clubs_id_fk",
+          "tableFrom": "club_verifications",
+          "tableTo": "clubs",
+          "columnsFrom": [
+            "club_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "club_verifications_submitted_by_user_id_users_id_fk": {
+          "name": "club_verifications_submitted_by_user_id_users_id_fk",
+          "tableFrom": "club_verifications",
+          "tableTo": "users",
+          "columnsFrom": [
+            "submitted_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "club_verifications_reviewed_by_user_id_users_id_fk": {
+          "name": "club_verifications_reviewed_by_user_id_users_id_fk",
+          "tableFrom": "club_verifications",
+          "tableTo": "users",
+          "columnsFrom": [
+            "reviewed_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.clubs": {
       "name": "clubs",
       "schema": "",
@@ -639,6 +856,41 @@
           "primaryKey": false,
           "notNull": false
         },
+        "verified_at": {
+          "name": "verified_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "onboarding_status": {
+          "name": "onboarding_status",
+          "type": "onboarding_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'completed'"
+        },
+        "onboarding_role": {
+          "name": "onboarding_role",
+          "type": "onboarding_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'verein'"
+        },
+        "onboarding_started_at": {
+          "name": "onboarding_started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "onboarding_completed_at": {
+          "name": "onboarding_completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -669,6 +921,37 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "clubs_fussballde_verein_idx": {
+          "name": "clubs_fussballde_verein_idx",
+          "columns": [
+            {
+              "expression": "fussballde_verein_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "clubs_draft_idx": {
+          "name": "clubs_draft_idx",
+          "columns": [
+            {
+              "expression": "onboarding_status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"clubs\".\"onboarding_status\" != 'completed'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -679,13 +962,6 @@
           "nullsNotDistinct": false,
           "columns": [
             "slug"
-          ]
-        },
-        "clubs_fussballde_verein_id_unique": {
-          "name": "clubs_fussballde_verein_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "fussballde_verein_id"
           ]
         }
       },
@@ -891,6 +1167,197 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.team_verifications": {
+      "name": "team_verifications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submitted_by_user_id": {
+          "name": "submitted_by_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doc_type": {
+          "name": "doc_type",
+          "type": "team_verification_doc_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doc_filename": {
+          "name": "doc_filename",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doc_storage_key": {
+          "name": "doc_storage_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doc_mime_type": {
+          "name": "doc_mime_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doc_size_bytes": {
+          "name": "doc_size_bytes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submitter_role": {
+          "name": "submitter_role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submitter_full_name": {
+          "name": "submitter_full_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submitter_notes": {
+          "name": "submitter_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "team_verification_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "reviewed_at": {
+          "name": "reviewed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reviewed_by_user_id": {
+          "name": "reviewed_by_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rejection_reason": {
+          "name": "rejection_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "team_verifications_team_status_idx": {
+          "name": "team_verifications_team_status_idx",
+          "columns": [
+            {
+              "expression": "team_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "team_verifications_pending_idx": {
+          "name": "team_verifications_pending_idx",
+          "columns": [
+            {
+              "expression": "submitted_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"team_verifications\".\"status\" = 'pending'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "team_verifications_team_id_teams_id_fk": {
+          "name": "team_verifications_team_id_teams_id_fk",
+          "tableFrom": "team_verifications",
+          "tableTo": "teams",
+          "columnsFrom": [
+            "team_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "team_verifications_submitted_by_user_id_users_id_fk": {
+          "name": "team_verifications_submitted_by_user_id_users_id_fk",
+          "tableFrom": "team_verifications",
+          "tableTo": "users",
+          "columnsFrom": [
+            "submitted_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "team_verifications_reviewed_by_user_id_users_id_fk": {
+          "name": "team_verifications_reviewed_by_user_id_users_id_fk",
+          "tableFrom": "team_verifications",
+          "tableTo": "users",
+          "columnsFrom": [
+            "reviewed_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.teams": {
       "name": "teams",
       "schema": "",
@@ -948,6 +1415,60 @@
         "public_tagline": {
           "name": "public_tagline",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "public_slug": {
+          "name": "public_slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "public_name": {
+          "name": "public_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "public_goals": {
+          "name": "public_goals",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "logo_url": {
+          "name": "logo_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "verified_at": {
+          "name": "verified_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "crawl_started_at": {
+          "name": "crawl_started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "crawl_completed_at": {
+          "name": "crawl_completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "crawl_last_error": {
+          "name": "crawl_last_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "crawl_last_error_at": {
+          "name": "crawl_last_error_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         },
@@ -1018,6 +1539,22 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "teams_public_slug_idx": {
+          "name": "teams_public_slug_idx",
+          "columns": [
+            {
+              "expression": "public_slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"teams\".\"public_slug\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -1085,12 +1622,6 @@
         "business_tax_id": {
           "name": "business_tax_id",
           "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "pledge_proxies_json": {
-          "name": "pledge_proxies_json",
-          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },
@@ -1181,6 +1712,25 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "cap_cents": {
+          "name": "cap_cents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cap_period": {
+          "name": "cap_period",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
         },
         "requires_approval": {
           "name": "requires_approval",
@@ -1283,6 +1833,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "sommerpause_paused": {
+          "name": "sommerpause_paused",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -1734,6 +2291,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "admin_note": {
+          "name": "admin_note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "crawled_at": {
           "name": "crawled_at",
           "type": "timestamp with time zone",
@@ -2036,6 +2599,67 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.invoice_counters": {
+      "name": "invoice_counters",
+      "schema": "",
+      "columns": {
+        "club_id": {
+          "name": "club_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "year": {
+          "name": "year",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "counter": {
+          "name": "counter",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "invoice_counters_club_id_clubs_id_fk": {
+          "name": "invoice_counters_club_id_clubs_id_fk",
+          "tableFrom": "invoice_counters",
+          "tableTo": "clubs",
+          "columnsFrom": [
+            "club_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "invoice_counters_club_id_year_pk": {
+          "name": "invoice_counters_club_id_year_pk",
+          "columns": [
+            "club_id",
+            "year"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.invoice_items": {
       "name": "invoice_items",
       "schema": "",
@@ -2172,6 +2796,24 @@
           "primaryKey": false,
           "notNull": false
         },
+        "marked_paid_by_sponsor_at": {
+          "name": "marked_paid_by_sponsor_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cancelled_at": {
+          "name": "cancelled_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reversal_of_invoice_id": {
+          "name": "reversal_of_invoice_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -2204,6 +2846,7 @@
             }
           ],
           "isUnique": true,
+          "where": "\"invoices\".\"reversal_of_invoice_id\" IS NULL",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -2273,6 +2916,14 @@
           "notNull": true,
           "default": "'trialing'"
         },
+        "billing_cycle": {
+          "name": "billing_cycle",
+          "type": "billing_cycle",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'monthly'"
+        },
         "trial_ends_at": {
           "name": "trial_ends_at",
           "type": "timestamp with time zone",
@@ -2281,6 +2932,12 @@
         },
         "current_period_end": {
           "name": "current_period_end",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "paused_until": {
+          "name": "paused_until",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
@@ -2381,6 +3038,12 @@
           "notNull": true,
           "default": "'trialing'"
         },
+        "parent_club_license_id": {
+          "name": "parent_club_license_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "activated_at": {
           "name": "activated_at",
           "type": "timestamp with time zone",
@@ -2401,6 +3064,21 @@
           "columns": [
             {
               "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "team_licenses_parent_idx": {
+          "name": "team_licenses_parent_idx",
+          "columns": [
+            {
+              "expression": "parent_club_license_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2438,6 +3116,19 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
+        },
+        "team_licenses_parent_club_license_id_team_licenses_id_fk": {
+          "name": "team_licenses_parent_club_license_id_team_licenses_id_fk",
+          "tableFrom": "team_licenses",
+          "tableTo": "team_licenses",
+          "columnsFrom": [
+            "parent_club_license_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2470,11 +3161,32 @@
           "primaryKey": false,
           "notNull": true
         },
+        "kind": {
+          "name": "kind",
+          "type": "invitation_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'sponsor'"
+        },
         "team_id": {
           "name": "team_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "club_id": {
+          "name": "club_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "role": {
+          "name": "role",
+          "type": "invitation_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_by_user_id": {
           "name": "created_by_user_id",
@@ -2484,6 +3196,12 @@
         },
         "recipient_name": {
           "name": "recipient_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recipient_email": {
+          "name": "recipient_email",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -2530,6 +3248,19 @@
           "tableTo": "teams",
           "columnsFrom": [
             "team_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sponsor_invitations_club_id_clubs_id_fk": {
+          "name": "sponsor_invitations_club_id_clubs_id_fk",
+          "tableFrom": "sponsor_invitations",
+          "tableTo": "clubs",
+          "columnsFrom": [
+            "club_id"
           ],
           "columnsTo": [
             "id"
@@ -2731,6 +3462,98 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.sponsor_leads": {
+      "name": "sponsor_leads",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "handled_at": {
+          "name": "handled_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "sponsor_leads_team_idx": {
+          "name": "sponsor_leads_team_idx",
+          "columns": [
+            {
+              "expression": "team_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sponsor_leads_team_id_teams_id_fk": {
+          "name": "sponsor_leads_team_id_teams_id_fk",
+          "tableFrom": "sponsor_leads",
+          "tableTo": "teams",
+          "columnsFrom": [
+            "team_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.season_results": {
       "name": "season_results",
       "schema": "",
@@ -2842,6 +3665,526 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.seasons": {
+      "name": "seasons",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "region": {
+          "name": "region",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'DFB'"
+        },
+        "starts_at": {
+          "name": "starts_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ends_at": {
+          "name": "ends_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "matchday_5_at": {
+          "name": "matchday_5_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "seasons_range_idx": {
+          "name": "seasons_range_idx",
+          "columns": [
+            {
+              "expression": "starts_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ends_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "seasons_code_unique": {
+          "name": "seasons_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "code"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.operator_audit_log": {
+      "name": "operator_audit_log",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "operator_user_id": {
+          "name": "operator_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "action": {
+          "name": "action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "target_type": {
+          "name": "target_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_id": {
+          "name": "target_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "summary": {
+          "name": "summary",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "diff_json": {
+          "name": "diff_json",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "operator_audit_log_created_idx": {
+          "name": "operator_audit_log_created_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "operator_audit_log_target_idx": {
+          "name": "operator_audit_log_target_idx",
+          "columns": [
+            {
+              "expression": "target_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "target_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "operator_audit_log_operator_user_id_users_id_fk": {
+          "name": "operator_audit_log_operator_user_id_users_id_fk",
+          "tableFrom": "operator_audit_log",
+          "tableTo": "users",
+          "columnsFrom": [
+            "operator_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.processed_stripe_events": {
+      "name": "processed_stripe_events",
+      "schema": "",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "processed_at": {
+          "name": "processed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sent_notifications": {
+      "name": "sent_notifications",
+      "schema": "",
+      "columns": {
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sent_at": {
+          "name": "sent_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "sent_notifications_kind_key_pk": {
+          "name": "sent_notifications_kind_key_pk",
+          "columns": [
+            "kind",
+            "key"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.support_ticket_replies": {
+      "name": "support_ticket_replies",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "ticket_id": {
+          "name": "ticket_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operator_user_id": {
+          "name": "operator_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mail_id": {
+          "name": "mail_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "support_ticket_replies_ticket_idx": {
+          "name": "support_ticket_replies_ticket_idx",
+          "columns": [
+            {
+              "expression": "ticket_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "support_ticket_replies_ticket_id_support_tickets_id_fk": {
+          "name": "support_ticket_replies_ticket_id_support_tickets_id_fk",
+          "tableFrom": "support_ticket_replies",
+          "tableTo": "support_tickets",
+          "columnsFrom": [
+            "ticket_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "support_ticket_replies_operator_user_id_users_id_fk": {
+          "name": "support_ticket_replies_operator_user_id_users_id_fk",
+          "tableFrom": "support_ticket_replies",
+          "tableTo": "users",
+          "columnsFrom": [
+            "operator_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.support_tickets": {
+      "name": "support_tickets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category": {
+          "name": "category",
+          "type": "support_ticket_category",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'frage'"
+        },
+        "subject": {
+          "name": "subject",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "support_ticket_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "club_id": {
+          "name": "club_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "support_tickets_status_idx": {
+          "name": "support_tickets_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "support_tickets_created_idx": {
+          "name": "support_tickets_created_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "support_tickets_user_id_users_id_fk": {
+          "name": "support_tickets_user_id_users_id_fk",
+          "tableFrom": "support_tickets",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "support_tickets_club_id_clubs_id_fk": {
+          "name": "support_tickets_club_id_clubs_id_fk",
+          "tableFrom": "support_tickets",
+          "tableTo": "clubs",
+          "columnsFrom": [
+            "club_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -2854,6 +4197,27 @@
         "rejected"
       ]
     },
+    "public.club_verification_doc_type": {
+      "name": "club_verification_doc_type",
+      "schema": "public",
+      "values": [
+        "vereinsregister_auszug",
+        "vorstands_beschluss",
+        "vereinssatzung",
+        "mitgliederversammlung_protokoll",
+        "sonstiges"
+      ]
+    },
+    "public.club_verification_status": {
+      "name": "club_verification_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "approved",
+        "rejected",
+        "revoked"
+      ]
+    },
     "public.member_role": {
       "name": "member_role",
       "schema": "public",
@@ -2863,12 +4227,50 @@
         "viewer"
       ]
     },
+    "public.onboarding_role": {
+      "name": "onboarding_role",
+      "schema": "public",
+      "values": [
+        "mannschaft",
+        "verein"
+      ]
+    },
+    "public.onboarding_status": {
+      "name": "onboarding_status",
+      "schema": "public",
+      "values": [
+        "draft",
+        "stammdaten_complete",
+        "completed"
+      ]
+    },
     "public.team_member_role": {
       "name": "team_member_role",
       "schema": "public",
       "values": [
-        "trainer",
+        "admin",
         "viewer"
+      ]
+    },
+    "public.team_verification_doc_type": {
+      "name": "team_verification_doc_type",
+      "schema": "public",
+      "values": [
+        "trainer_license",
+        "club_letter",
+        "team_photo",
+        "fussballde_entry",
+        "sonstiges"
+      ]
+    },
+    "public.team_verification_status": {
+      "name": "team_verification_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "approved",
+        "rejected",
+        "revoked"
       ]
     },
     "public.sponsor_type": {
@@ -2979,7 +4381,17 @@
       "values": [
         "draft",
         "sent",
-        "paid"
+        "paid",
+        "withheld"
+      ]
+    },
+    "public.billing_cycle": {
+      "name": "billing_cycle",
+      "schema": "public",
+      "values": [
+        "monthly",
+        "season_end",
+        "annual"
       ]
     },
     "public.license_status": {
@@ -2990,7 +4402,8 @@
         "active",
         "past_due",
         "cancelled",
-        "read_only"
+        "read_only",
+        "paused"
       ]
     },
     "public.plan": {
@@ -2998,7 +4411,8 @@
       "schema": "public",
       "values": [
         "basic",
-        "pro"
+        "pro",
+        "verein"
       ]
     },
     "public.subscription_status": {
@@ -3009,7 +4423,25 @@
         "active",
         "past_due",
         "cancelled",
-        "incomplete"
+        "incomplete",
+        "paused"
+      ]
+    },
+    "public.invitation_kind": {
+      "name": "invitation_kind",
+      "schema": "public",
+      "values": [
+        "sponsor",
+        "team-member"
+      ]
+    },
+    "public.invitation_role": {
+      "name": "invitation_role",
+      "schema": "public",
+      "values": [
+        "admin",
+        "trainer",
+        "viewer"
       ]
     },
     "public.invitation_status": {
@@ -3029,6 +4461,26 @@
         "accepted",
         "rejected",
         "expired"
+      ]
+    },
+    "public.support_ticket_category": {
+      "name": "support_ticket_category",
+      "schema": "public",
+      "values": [
+        "frage",
+        "bug",
+        "abrechnung",
+        "sonstiges"
+      ]
+    },
+    "public.support_ticket_status": {
+      "name": "support_ticket_status",
+      "schema": "public",
+      "values": [
+        "open",
+        "in_progress",
+        "waiting",
+        "closed"
       ]
     }
   },
