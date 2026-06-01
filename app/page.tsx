@@ -1,5 +1,23 @@
 import Link from "next/link";
 import Image from "next/image";
+import {
+  Goal,
+  Trophy,
+  ArrowUp,
+  Pencil,
+  UserRound,
+  Shield,
+  Flame,
+  Target,
+  Sparkles,
+  Gem,
+  LifeBuoy,
+  Medal,
+  Crown,
+  ShieldCheck,
+  Flag,
+  type LucideIcon
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -104,10 +122,10 @@ export default function LandingPage() {
 
             {/* Beispiel-Chips: sofort verständlich wie ein Pact aussieht */}
             <div className="animate-fade-up delay-2 mt-4 md:mt-5 flex flex-wrap gap-1.5 md:gap-2">
-              <PledgeChip emoji="⚽" amount="3 €" label="pro Tor" />
-              <PledgeChip emoji="🏆" amount="50 €" label="pro Sieg" />
-              <PledgeChip emoji="⬆️" amount="200 €" label="pro Aufstieg" />
-              <PledgeChip emoji="✏️" amount="frei wählbar" muted />
+              <PledgeChip icon={Goal} amount="3 €" label="pro Tor" />
+              <PledgeChip icon={Trophy} amount="50 €" label="pro Sieg" />
+              <PledgeChip icon={ArrowUp} amount="200 €" label="pro Aufstieg" />
+              <PledgeChip icon={Pencil} amount="frei wählbar" muted />
             </div>
 
             <div className="animate-fade-up delay-3 mt-5 md:mt-6 flex flex-col sm:flex-row gap-3">
@@ -316,49 +334,49 @@ export default function LandingPage() {
           </p>
           <div className="mt-6 md:mt-8 grid gap-2.5 md:gap-3 grid-cols-2 lg:grid-cols-4">
             <TriggerCard
-              emoji="⚽"
+              icon={Goal}
               name="Pro Tor"
               examples={["z.B. 5 € · 10 € · 25 €"]}
               auto
             />
             <TriggerCard
-              emoji="💚"
+              icon={UserRound}
               name="Pro Spieler-Tor"
               examples={["z.B. 3 € wenn Schmidt trifft"]}
               auto
               highlight
             />
             <TriggerCard
-              emoji="🏆"
+              icon={Trophy}
               name="Pro Sieg"
               examples={["z.B. 10 € · 25 € · 50 €"]}
               auto
             />
             <TriggerCard
-              emoji="🛡️"
+              icon={Shield}
               name="Pro Zu-Null"
               examples={["z.B. 5 € · 15 € · 30 €"]}
               auto
             />
             <TriggerCard
-              emoji="🔥"
+              icon={Flame}
               name="Pro Comeback"
               examples={["z.B. 20 € · 50 € · 100 €"]}
               auto
             />
             <TriggerCard
-              emoji="🎯"
+              icon={Target}
               name="Pro Hattrick"
               examples={["z.B. 25 € · 50 € · 100 €"]}
               auto
             />
             <TriggerCard
-              emoji="🎭"
+              icon={Sparkles}
               name="Pro Spezial-Tor"
               examples={["Kopfball, Volley, Elfmeter"]}
             />
             <TriggerCard
-              emoji="💎"
+              icon={Gem}
               name="Custom-Event"
               examples={["Bizeps-Tor · Trainer-Trinkrunde"]}
             />
@@ -391,14 +409,14 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="mt-6 md:mt-8 grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
-            <SeasonBetCard emoji="⬆️" name="Aufstieg" example="z.B. 200 €" detail="Wenn am Saison-Ende Platz 1 oder 2" />
-            <SeasonBetCard emoji="🛟" name="Klassenerhalt" example="z.B. 100 €" detail="Wenn nicht abgestiegen" highlight />
-            <SeasonBetCard emoji="🥇" name="Top 5" example="z.B. 75 €" detail="Wenn End-Tabellenplatz 1–5" />
-            <SeasonBetCard emoji="🎯" name="Platz 5–9" example="z.B. 50 €" detail="Solides Mittelfeld" />
-            <SeasonBetCard emoji="👑" name="Meister" example="z.B. 500 €" detail="Nur wenn Tabellenführer am Saisons-Ende" />
-            <SeasonBetCard emoji="🏆" name="Pokal-Halbfinale" example="z.B. 150 €" detail="Wenn HF im Verbands-/Kreispokal erreicht" />
-            <SeasonBetCard emoji="📉" name="Kein Abstieg" example="z.B. 80 €" detail="Sicherheits-Polster Variante" />
-            <SeasonBetCard emoji="🎺" name="Custom-Ziel" example="frei wählbar" detail={'z.B. "20 Tore mehr als letzte Saison"'} />
+            <SeasonBetCard icon={ArrowUp} name="Aufstieg" example="z.B. 200 €" detail="Wenn am Saison-Ende Platz 1 oder 2" />
+            <SeasonBetCard icon={LifeBuoy} name="Klassenerhalt" example="z.B. 100 €" detail="Wenn nicht abgestiegen" highlight />
+            <SeasonBetCard icon={Medal} name="Top 5" example="z.B. 75 €" detail="Wenn End-Tabellenplatz 1–5" />
+            <SeasonBetCard icon={Target} name="Platz 5–9" example="z.B. 50 €" detail="Solides Mittelfeld" />
+            <SeasonBetCard icon={Crown} name="Meister" example="z.B. 500 €" detail="Nur wenn Tabellenführer am Saisons-Ende" />
+            <SeasonBetCard icon={Trophy} name="Pokal-Halbfinale" example="z.B. 150 €" detail="Wenn HF im Verbands-/Kreispokal erreicht" />
+            <SeasonBetCard icon={ShieldCheck} name="Kein Abstieg" example="z.B. 80 €" detail="Sicherheits-Polster Variante" />
+            <SeasonBetCard icon={Flag} name="Custom-Ziel" example="frei wählbar" detail={'z.B. "20 Tore mehr als letzte Saison"'} />
           </div>
           <p className="mt-5 md:mt-6 text-xs md:text-sm text-brand-night-navy/70 max-w-2xl">
             Tabellen-Stände werden automatisch nach Saisonende gewertet.
@@ -619,12 +637,12 @@ function InlineCTA({
 }
 
 function PledgeChip({
-  emoji,
+  icon: Icon,
   amount,
   label,
   muted = false
 }: {
-  emoji: string;
+  icon: LucideIcon;
   amount: string;
   label?: string;
   muted?: boolean;
@@ -638,7 +656,7 @@ function PledgeChip({
           : "bg-white/85 ring-accent/30 text-brand-night-navy")
       }
     >
-      <span className="text-sm md:text-base leading-none">{emoji}</span>
+      <Icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-accent-dark" aria-hidden />
       <strong className={muted ? "font-semibold" : "font-bold text-accent-dark"}>
         {amount}
       </strong>
@@ -718,13 +736,13 @@ function StoryCard({
 }
 
 function TriggerCard({
-  emoji,
+  icon: Icon,
   name,
   examples,
   auto = false,
   highlight = false
 }: {
-  emoji: string;
+  icon: LucideIcon;
   name: string;
   examples: string[];
   auto?: boolean;
@@ -740,7 +758,9 @@ function TriggerCard({
       }
     >
       <div className="flex items-start justify-between">
-        <div className="text-xl md:text-2xl">{emoji}</div>
+        <span className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-accent">
+          <Icon className="h-[1.15rem] w-[1.15rem]" aria-hidden />
+        </span>
         <span
           className={
             "h-1.5 w-1.5 mt-2 rounded-full " + (auto ? "bg-accent" : "bg-white/60")
@@ -757,13 +777,13 @@ function TriggerCard({
 }
 
 function SeasonBetCard({
-  emoji,
+  icon: Icon,
   name,
   example,
   detail,
   highlight = false
 }: {
-  emoji: string;
+  icon: LucideIcon;
   name: string;
   example: string;
   detail: string;
@@ -779,7 +799,9 @@ function SeasonBetCard({
       }
     >
       <div className="flex items-center justify-between">
-        <div className="text-xl md:text-2xl">{emoji}</div>
+        <span className="grid h-9 w-9 place-items-center rounded-full bg-accent/10 text-accent-dark">
+          <Icon className="h-[1.15rem] w-[1.15rem]" aria-hidden />
+        </span>
         <div className="text-[0.65rem] md:text-xs font-bold text-accent-dark">{example}</div>
       </div>
       <div className="mt-2 md:mt-3 font-display font-black text-sm md:text-base tracking-tight text-brand-night-navy">

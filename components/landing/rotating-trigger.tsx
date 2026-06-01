@@ -1,24 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  Goal,
+  Trophy,
+  Shield,
+  ArrowUp,
+  Target,
+  Flame,
+  Sparkles,
+  type LucideIcon
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
  * Cycelt durch die wichtigsten Pledge-Trigger-Typen — visualisiert sofort:
- * "es geht um Spielereignisse, von Tor bis Aufstieg". Animation: Emoji
+ * "es geht um Spielereignisse, von Tor bis Aufstieg". Animation: Icon
  * poppt rein (Scale + Rotate), Wort fliegt von unten rein.
  *
  * Tempo: ~2.2s pro Trigger. Reduced-motion User bekommen statisches
  * "Jedes Tor".
  */
-const TRIGGERS = [
-  { emoji: "⚽", word: "Jedes Tor" },
-  { emoji: "🏆", word: "Jeder Sieg" },
-  { emoji: "🛡️", word: "Jedes Zu-Null" },
-  { emoji: "⬆️", word: "Jeder Aufstieg" },
-  { emoji: "🎯", word: "Jeder Hattrick" },
-  { emoji: "🔥", word: "Jedes Comeback" },
-  { emoji: "💎", word: "Jedes Spezial-Tor" }
+const TRIGGERS: { Icon: LucideIcon; word: string }[] = [
+  { Icon: Goal, word: "Jedes Tor" },
+  { Icon: Trophy, word: "Jeder Sieg" },
+  { Icon: Shield, word: "Jedes Zu-Null" },
+  { Icon: ArrowUp, word: "Jeder Aufstieg" },
+  { Icon: Target, word: "Jeder Hattrick" },
+  { Icon: Flame, word: "Jedes Comeback" },
+  { Icon: Sparkles, word: "Jedes Spezial-Tor" }
 ];
 
 export function RotatingTrigger({ className }: { className?: string }) {
@@ -42,23 +52,24 @@ export function RotatingTrigger({ className }: { className?: string }) {
   }, [prefersReducedMotion]);
 
   const current = TRIGGERS[idx];
+  const Icon = current.Icon;
 
   return (
     <span
       className={cn(
-        "inline-flex items-baseline gap-2 md:gap-3 align-baseline whitespace-nowrap",
+        "inline-flex items-center gap-2 md:gap-3 align-baseline whitespace-nowrap",
         className
       )}
     >
       <span
         key={`emoji-${idx}`}
         className={cn(
-          "inline-block translate-y-[0.05em]",
+          "inline-flex translate-y-[0.05em] text-accent",
           !prefersReducedMotion && "animate-trigger-pop"
         )}
         aria-hidden
       >
-        {current.emoji}
+        <Icon className="h-[0.85em] w-[0.85em]" strokeWidth={2.5} />
       </span>
       <span
         key={`word-${idx}`}

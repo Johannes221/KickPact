@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { TriangleAlert } from "lucide-react";
 
 /**
  * Root error boundary für alle App-Routes. Next.js mounted das hier wenn
@@ -35,8 +36,8 @@ export default function GlobalError({
   return (
     <main className="mx-auto max-w-2xl px-5 py-16 md:py-24">
       <div className="rounded-2xl border border-brand-alert-red/30 bg-brand-alert-red/5 p-6 md:p-8">
-        <div className="text-3xl mb-3" aria-hidden>
-          😬
+        <div className="mb-3 grid h-12 w-12 place-items-center rounded-full bg-brand-alert-red/10 text-brand-alert-red">
+          <TriangleAlert className="h-6 w-6" aria-hidden />
         </div>
         <h1 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
           Da ist was schiefgelaufen.

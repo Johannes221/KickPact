@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Goal, Building2, HandCoins, type LucideIcon } from "lucide-react";
 import { MagicLinkForm, type SignupRole } from "@/components/auth/magic-link-form";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,10 +16,10 @@ export const metadata = { title: "Bei KickPact starten · KickPact" };
 
 const ROLE_META: Record<
   SignupRole,
-  { emoji: string; title: string; tagline: string; bullets: string[] }
+  { icon: LucideIcon; title: string; tagline: string; bullets: string[] }
 > = {
   mannschaft: {
-    emoji: "⚽",
+    icon: Goal,
     title: "Als Mannschaft",
     tagline:
       "Du willst Sponsoring für eine einzelne Mannschaft — Sponsoren versprechen pro Tor, Sieg, Comeback. Geld direkt in eure Kasse.",
@@ -29,7 +30,7 @@ const ROLE_META: Record<
     ]
   },
   verein: {
-    emoji: "🏟️",
+    icon: Building2,
     title: "Als Verein",
     tagline:
       "Du repräsentierst einen ganzen Verein mit mehreren Mannschaften. Du wählst die Vereinslizenz im Plan-Schritt.",
@@ -40,7 +41,7 @@ const ROLE_META: Record<
     ]
   },
   sponsor: {
-    emoji: "💚",
+    icon: HandCoins,
     title: "Als Sponsor",
     tagline:
       "Du willst eine Mannschaft unterstützen — pro Tor, pro Sieg, pro Comeback. Du behältst die Kontrolle mit optionalem Cap.",
@@ -136,7 +137,9 @@ export default async function SignupPage({
                 href={`/signup?role=${r}&from=chooser`}
                 className="group flex flex-col gap-4 rounded-2xl border border-brand-neutral/40 bg-white p-6 transition-all hover:border-accent hover:shadow-md"
               >
-                <div className="text-4xl">{meta.emoji}</div>
+                <span className="grid h-14 w-14 place-items-center rounded-2xl bg-accent/10 text-accent-dark">
+                  <meta.icon className="h-7 w-7" aria-hidden />
+                </span>
                 <div>
                   <h2 className="font-display font-black text-xl tracking-tight text-brand-night-navy">
                     {meta.title}
@@ -187,7 +190,9 @@ export default async function SignupPage({
       )}
       <Card>
         <CardHeader>
-          <div className="text-3xl mb-1">{meta.emoji}</div>
+          <span className="mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-accent/10 text-accent-dark">
+            <meta.icon className="h-6 w-6" aria-hidden />
+          </span>
           <CardTitle className="font-display text-2xl md:text-3xl tracking-wide">
             {meta.title} registrieren
           </CardTitle>
@@ -255,7 +260,9 @@ function AuthenticatedRoleChooser() {
               href={ADD_ROLE_HREF[r]}
               className="group flex flex-col gap-4 rounded-2xl border border-brand-neutral/40 bg-white p-6 transition-all hover:border-accent hover:shadow-md"
             >
-              <div className="text-4xl">{meta.emoji}</div>
+              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-accent/10 text-accent-dark">
+                <meta.icon className="h-7 w-7" aria-hidden />
+              </span>
               <div>
                 <h2 className="font-display font-black text-xl tracking-tight text-brand-night-navy">
                   {meta.title}

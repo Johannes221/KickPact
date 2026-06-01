@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Goal, HandCoins } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 
@@ -12,13 +13,19 @@ export function RolesTabs() {
           value="verein"
           className="data-[state=active]:bg-accent data-[state=active]:text-white text-white/70 px-4 sm:px-6 py-2.5 font-semibold text-xs sm:text-sm"
         >
-          ⚽  Du bist Mannschaft
+          <span className="inline-flex items-center gap-1.5">
+            <Goal className="h-4 w-4" aria-hidden />
+            Du bist Mannschaft
+          </span>
         </TabsTrigger>
         <TabsTrigger
           value="sponsor"
           className="data-[state=active]:bg-accent data-[state=active]:text-white text-white/70 px-4 sm:px-6 py-2.5 font-semibold text-xs sm:text-sm"
         >
-          💚  Du bist Sponsor
+          <span className="inline-flex items-center gap-1.5">
+            <HandCoins className="h-4 w-4" aria-hidden />
+            Du bist Sponsor
+          </span>
         </TabsTrigger>
       </TabsList>
 
