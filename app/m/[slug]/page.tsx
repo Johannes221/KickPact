@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublicTeamProfileBySlug } from "@/lib/db/queries/sponsor-discover";
+import { getPublicTeamInsights } from "@/lib/db/queries/team-public-insights";
+import { ProfileHero } from "./_components/profile-hero";
+import { InsightsStrip } from "./_components/insights-strip";
+import { GalleryStrip } from "./_components/gallery-strip";
 import { SponsorInquiryForm } from "./_components/sponsor-inquiry-form";
 
 interface PageProps {
@@ -17,127 +21,99 @@ export async function generateMetadata({
   const description =
     profile.tagline ??
     `Unterstütze ${profile.displayName} (${profile.clubName}) mit performance-basiertem Sponsoring auf KickPact.`;
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
   return {
     title,
     description,
-    openGraph: { title, description, type: "profile" },
+    openGraph: {
+      title,
+      description,
+      type: "profile",
+      images: profile.coverUrl ? [`${base}${profile.coverUrl}`] : undefined
+    },
     robots: { index: true, follow: true }
   };
 }
 
 /**
  * Öffentliche Mannschafts-Profilseite (/m/{slug}). Erreichbar ohne Login.
- * Zeigt Logo, Name, Verein/Ort, Kurzbeschreibung, Ziele + „Sponsoring
- * anfragen". 404, wenn das Team nicht (mehr) öffentlich ist.
+ * Editorial/Stadion-Layout: dunkler Hero, Saison-Insights, Galerie, Über uns,
+ * How-it-works und Sponsoring-Anfrage. 404, wenn das Team nicht (mehr)
+ * öffentlich ist.
  */
 export default async function PublicTeamProfilePage({ params }: PageProps) {
   const { slug } = await params;
   const profile = await getPublicTeamProfileBySlug(slug);
   if (!profile) notFound();
 
-  const isVerified = !!(profile.clubVerifiedAt || profile.teamVerifiedAt);
-  const locationLine = [profile.clubName, profile.clubOrt]
-    .filter(Boolean)
-    .join(" · ");
+  const insights = profile.showInsights
+    ? await getPublicTeamInsights(
+        profile.teamId,
+        profile.teamName,
+        profile.clubName
+      )
+    : null;
+  const verified = !!(profile.teamVerifiedAt || profile.clubVerifiedAt);
 
   return (
-    <main className="mx-auto max-w-2xl px-5 pb-24 pt-4 md:px-6">
-      {/* Hero */}
-      <section className="rounded-3xl border border-brand-neutral/40 bg-white p-6 md:p-8">
-        <div className="flex flex-col items-center text-center sm:flex-row sm:items-center sm:text-left sm:gap-5">
-          <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-brand-neutral/40 bg-brand-off-white flex items-center justify-center">
-            {profile.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={profile.logoUrl}
-                alt={`Logo ${profile.displayName}`}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <span className="font-display font-black text-3xl text-brand-night-navy/30">
-                {profile.displayName.slice(0, 1).toUpperCase()}
-              </span>
-            )}
-          </div>
-          <div className="mt-4 sm:mt-0 min-w-0">
-            <h1 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy break-words">
-              {profile.displayName}
-            </h1>
-            {locationLine && (
-              <p className="mt-1 text-sm text-brand-night-navy/60">
-                {locationLine}
-              </p>
-            )}
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              <span className="inline-flex items-center rounded-full bg-brand-off-white border border-brand-neutral/40 px-2.5 py-1 text-xs font-semibold text-brand-night-navy">
-                Saison {profile.saison}
-              </span>
-              {isVerified && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-1 text-xs font-bold text-accent-dark ring-1 ring-accent/30">
-                  <svg
-                    className="h-3.5 w-3.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden
-                  >
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
-                  Verifiziert
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
+    <main className="mx-auto max-w-screen-sm bg-white pb-12">
+      <ProfileHero
+        displayName={profile.displayName}
+        clubName={profile.clubName}
+        league={profile.league}
+        clubOrt={profile.clubOrt}
+        saison={profile.saison}
+        verified={verified}
+        coverUrl={profile.coverUrl}
+        logoUrl={profile.logoUrl}
+      />
 
-        {profile.tagline && (
-          <p className="mt-5 text-base text-brand-night-navy/80 leading-relaxed">
-            {profile.tagline}
-          </p>
-        )}
-      </section>
+      {insights && <InsightsStrip insights={insights} />}
 
-      {/* Ziele */}
-      {profile.goals && (
-        <section className="mt-5 rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6">
-          <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy">
-            Unsere Ziele
-          </h2>
-          <p className="mt-2 whitespace-pre-line text-sm text-brand-night-navy/75 leading-relaxed">
-            {profile.goals}
-          </p>
+      <GalleryStrip images={profile.gallery} />
+
+      {(profile.tagline || profile.goals) && (
+        <section className="px-4 pt-5">
+          <div className="mb-2 text-[10px] font-extrabold uppercase tracking-wider text-accent">
+            Über uns
+          </div>
+          {profile.tagline && (
+            <p className="text-sm leading-relaxed text-brand-night-navy/90">
+              {profile.tagline}
+            </p>
+          )}
+          {profile.goals && (
+            <p className="mt-2 whitespace-pre-line text-sm text-brand-night-navy/70">
+              🎯 <span className="font-semibold">Unsere Ziele:</span>{" "}
+              {profile.goals}
+            </p>
+          )}
         </section>
       )}
 
-      {/* Wie Sponsoring funktioniert (kurzer Trust-Block) */}
-      <section className="mt-5 rounded-2xl border border-accent/30 bg-accent/5 p-5 md:p-6">
-        <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy">
-          So funktioniert Sponsoring auf KickPact
-        </h2>
-        <p className="mt-2 text-sm text-brand-night-navy/75 leading-relaxed">
-          Du versprichst einen Betrag pro Ereignis — z. B. <strong>5 € pro
-          Tor</strong>. KickPact erfasst die Spiele automatisch und rechnet am
-          Monatsende per Rechnung ab. Fair, transparent, ohne Aufwand für die
-          Mannschaft.
-        </p>
+      <section className="px-4 pt-5">
+        <div className="rounded-2xl border border-accent/30 bg-accent/10 p-4">
+          <h2 className="mb-1 font-display text-sm font-bold text-brand-night-navy">
+            So funktioniert Sponsoring auf KickPact
+          </h2>
+          <p className="text-xs leading-relaxed text-brand-night-navy/70">
+            Du versprichst einen Betrag pro Ereignis — z. B.{" "}
+            <strong>5 € pro Tor</strong>. KickPact erfasst die Spiele automatisch
+            und rechnet am Monatsende per Rechnung ab. Fair, transparent, ohne
+            Aufwand für die Mannschaft.
+          </p>
+        </div>
       </section>
 
-      {/* CTA: Sponsoring anfragen */}
-      <section
-        id="anfragen"
-        className="mt-5 rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6"
-      >
-        <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy">
-          Sponsoring anfragen
-        </h2>
-        <p className="mt-1 text-sm text-brand-night-navy/60">
-          Hinterlasse deine Kontaktdaten — {profile.displayName} meldet sich bei
-          dir.
-        </p>
-        <div className="mt-4">
+      <section id="anfragen" className="px-4 pt-5">
+        <div className="rounded-2xl bg-brand-night-navy/[0.04] p-4">
+          <h2 className="mb-1 font-display text-sm font-bold text-brand-night-navy">
+            Sponsoring anfragen
+          </h2>
+          <p className="mb-3 text-xs text-brand-night-navy/60">
+            Hinterlasse deine Kontaktdaten — {profile.displayName} meldet sich
+            bei dir.
+          </p>
           <SponsorInquiryForm
             teamSlug={profile.publicSlug}
             teamName={profile.displayName}
@@ -145,7 +121,7 @@ export default async function PublicTeamProfilePage({ params }: PageProps) {
         </div>
       </section>
 
-      <p className="mt-8 text-center text-xs text-brand-night-navy/40">
+      <p className="mt-8 px-4 text-center text-xs text-brand-night-navy/40">
         Performance-Sponsoring im Amateurfußball ·{" "}
         <a href="/" className="underline hover:text-accent-dark">
           KickPact
