@@ -23,10 +23,12 @@ Das volle Logo („KICKPACT"-Schriftzug) existiert als **Pixel-Grafik** (`wordma
 
 | Farbe | Dateien | Verwendung |
 |---|---|---|
-| `brand` | `logo-brand-horizontal.png`, `logo-brand-stacked.png` | **Hauptlogo**: grüne Marke + KICK navy + PACT grün. Helle Hintergründe. (nur PNG) |
+| **Standard (2-farbig)** | `logo-horizontal.png`, `logo-stacked.png` | ⭐ **PRIMÄRLOGO** — grüne Marke + KICK schwarz/navy + PACT grün. Default für alles auf hellen Hintergründen. (nur PNG) |
 | `green` | `logo-green-{horizontal,stacked}.{png,svg}` | komplett grün |
 | `navy` | `logo-navy-{horizontal,stacked}.{png,svg}` | komplett `#1A1A2E`, helle Hintergründe / Druck |
 | `white` | `logo-white-{horizontal,stacked}.{png,svg}` | komplett weiß, dunkle Hintergründe / Fotos |
+
+**Default-Regel:** Wenn nichts dagegen spricht, immer das Primärlogo (`logo-horizontal.png` / `logo-stacked.png`) verwenden. Die einfarbigen Varianten nur, wenn der Hintergrund oder das Medium (Druck, dunkle Fläche) es erfordert.
 
 ## Wortmarke allein
 
@@ -56,13 +58,13 @@ Die Component setzt das volle Logo aus `MarkSvg` + `wordmark.png` zusammen (sieh
 ```tsx
 import Image from "next/image";
 
-// Hauptlogo, horizontal
-<Image src="/brand/logo-brand-horizontal.png" alt="KickPact" width={912} height={120} />
+// Primärlogo, horizontal
+<Image src="/brand/logo-horizontal.png" alt="KickPact" width={912} height={120} />
 ```
 
 ### Off-Plattform (Social Media, Print, Email)
 
-- **Heller Hintergrund:** `logo-brand-*` (2-farbig) oder `logo-navy-*`
+- **Heller Hintergrund:** `logo-horizontal/stacked` (Primär, 2-farbig) oder `logo-navy-*`
 - **Dunkler Hintergrund:** `logo-white-*`
 - **Instagram-Profilbild:** `mark-green-on-white.png` (deckend weiß, sonst füllt IG die Transparenz schwarz)
 
