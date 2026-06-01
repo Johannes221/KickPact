@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TriggerIcon } from "@/components/shared/trigger-icon";
 import {
   Form,
   FormControl,
@@ -245,8 +246,9 @@ export function PledgeBuilder() {
                     className="flex flex-wrap items-end gap-3 rounded-xl border border-brand-neutral/40 bg-white p-4"
                   >
                     <div className="flex-1 min-w-[180px]">
-                      <div className="text-sm font-semibold text-brand-night-navy">
-                        {def?.emoji} {def?.label}
+                      <div className="flex items-center gap-1.5 text-sm font-semibold text-brand-night-navy">
+                        {def && <TriggerIcon type={def.type} className="h-4 w-4 shrink-0 text-accent-dark" />}
+                        {def?.label}
                       </div>
                       <div className="text-xs text-brand-night-navy/50 mt-0.5 leading-snug">
                         {def?.description}
@@ -597,9 +599,10 @@ export function PledgeBuilder() {
                       return (
                         <span
                           key={r.triggerType}
-                          className="inline-flex items-center gap-1 rounded-full bg-white border border-accent/30 px-2.5 py-1 text-xs font-medium text-brand-night-navy"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-white border border-accent/30 px-2.5 py-1 text-xs font-medium text-brand-night-navy"
                         >
-                          {def?.emoji} {def?.label} — {r.amountEur} €
+                          {def && <TriggerIcon type={def.type} className="h-3.5 w-3.5 shrink-0 text-accent-dark" />}
+                          {def?.label} — {r.amountEur} €
                         </span>
                       );
                     })}
@@ -706,8 +709,10 @@ function TriggerToggle({
           : "border-brand-neutral/40 bg-white hover:border-accent/40")
       }
     >
-      <div className="flex items-start gap-2">
-        <span className="text-xl">{def.emoji}</span>
+      <div className="flex items-start gap-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/10 text-accent-dark">
+          <TriggerIcon type={def.type} className="h-[1.15rem] w-[1.15rem]" />
+        </span>
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-sm text-brand-night-navy">{def.label}</div>
           <div className="text-xs text-brand-night-navy/60 mt-0.5 leading-snug">{def.description}</div>

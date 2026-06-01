@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { MatchEventIcon } from "@/components/shared/match-event-icon";
 import {
   Dialog,
   DialogContent,
@@ -33,18 +34,6 @@ function eventLabel(type: string, subtype: string | null): string {
     return subtype ?? "Spezial-Event";
   }
   return type;
-}
-
-function emoji(type: string, subtype: string | null): string {
-  if (type === "tor") return "⚽";
-  if (type === "karte") return subtype === "rot" ? "🟥" : "🟨";
-  if (type === "spezial") {
-    if (subtype === "kopfball") return "🎯";
-    if (subtype === "hackentor") return "🔥";
-    if (subtype === "elfmeter") return "💥";
-    return "🎭";
-  }
-  return "•";
 }
 
 export interface ApprovalRowData {
@@ -113,7 +102,9 @@ export function ApprovalRow({ data }: { data: ApprovalRowData }) {
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="text-3xl">{emoji(data.eventType, data.eventSubtype)}</div>
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-off-white">
+          <MatchEventIcon type={data.eventType} subtype={data.eventSubtype} className="h-5 w-5" />
+        </div>
         <div className="flex-1 min-w-0">
           <div className="font-display font-black text-lg tracking-tight text-brand-night-navy">
             {eventLabel(data.eventType, data.eventSubtype)}

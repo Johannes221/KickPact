@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { MatchChargeRow } from "@/lib/db/queries/matches";
 import { TRIGGER_META } from "@/lib/triggers/labels";
+import { MatchEventIcon } from "@/components/shared/match-event-icon";
 import { EventRowActions } from "./event-row-actions";
 
 type MatchEvent = {
@@ -12,22 +13,6 @@ type MatchEvent = {
   playerName: string | null;
   source: "scraped" | "manual";
 };
-
-function eventEmoji(type: MatchEvent["type"], subtype: string | null): string {
-  if (type === "tor") return "⚽";
-  if (type === "auswechslung") return "🔄";
-  if (type === "karte") {
-    if (subtype === "rot") return "🟥";
-    return "🟨";
-  }
-  if (type === "spezial") {
-    if (subtype === "kopfball") return "🎯";
-    if (subtype === "hackentor") return "🔥";
-    if (subtype === "elfmeter") return "💥";
-    return "🎭";
-  }
-  return "•";
-}
 
 function eventLabel(type: MatchEvent["type"], subtype: string | null): string {
   if (type === "tor") return "Tor";
@@ -97,7 +82,9 @@ export function MatchEventsList({
               <span className="font-mono text-xs text-brand-night-navy/50 w-10 tabular-nums shrink-0">
                 {e.minute !== null ? `${e.minute}'` : "—"}
               </span>
-              <span className="text-xl shrink-0">{eventEmoji(e.type, e.subtype)}</span>
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-off-white">
+                <MatchEventIcon type={e.type} subtype={e.subtype} className="h-[1.1rem] w-[1.1rem]" />
+              </span>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold text-brand-night-navy truncate">
                   {eventLabel(e.type, e.subtype)}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Trophy, Medal, ArrowUp, ArrowDown, StickyNote } from "lucide-react";
+import { TriggerIcon } from "@/components/shared/trigger-icon";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { teams, seasonResults } from "@/lib/db/schema";
@@ -210,7 +211,7 @@ export default async function TeamDetailPage({
                   className="rounded-xl border border-brand-neutral/40 bg-white p-3 flex items-center gap-3"
                 >
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/10 text-accent-dark">
-                    <Trophy className="h-[1.15rem] w-[1.15rem]" aria-hidden />
+                    <TriggerIcon type={r.triggerType} className="h-[1.15rem] w-[1.15rem]" />
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-sm text-brand-night-navy">

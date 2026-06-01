@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import type { EreignisRow } from "@/lib/db/queries/club-dashboard";
+import { TriggerIcon } from "@/components/shared/trigger-icon";
 
 const TRIGGER_LABELS: Record<string, { label: string; emoji: string }> = {
   goal_total:           { label: "Pro Tor",          emoji: "⚽" },
@@ -125,7 +126,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
                   : "border-brand-neutral/40 bg-white hover:border-accent/40")
               }
             >
-              <div className="text-lg">{meta?.emoji ?? "💚"}</div>
+              <TriggerIcon type={type} className="h-5 w-5 text-accent-dark" />
               <div className="mt-1 font-semibold text-xs text-brand-night-navy">{meta?.label ?? type}</div>
               <div className="mt-0.5 font-mono tabular-nums font-black text-sm text-accent">{eur(cents)}</div>
               <div className="flex items-center gap-1.5 text-[0.65rem] text-brand-night-navy/50 mt-0.5">
@@ -152,7 +153,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
           <option value="all">Alle Ereignisse</option>
           {triggerTypes.map((t) => (
             <option key={t} value={t}>
-              {TRIGGER_LABELS[t]?.emoji} {TRIGGER_LABELS[t]?.label ?? t}
+              {TRIGGER_LABELS[t]?.label ?? t}
             </option>
           ))}
         </select>
@@ -235,7 +236,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
                     {matchHref ? (
                       <Link href={matchHref} className="block">
                         <span className="inline-flex items-center gap-1.5 font-semibold text-brand-night-navy">
-                          <span>{meta?.emoji ?? "💚"}</span>
+                          <TriggerIcon type={r.triggerType} className="h-4 w-4 text-brand-night-navy/60" />
                           <span>{meta?.label ?? r.triggerType}</span>
                         </span>
                         {r.playerName && (
@@ -248,7 +249,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
                     ) : (
                       <>
                         <span className="inline-flex items-center gap-1.5 font-semibold text-brand-night-navy">
-                          <span>{meta?.emoji ?? "💚"}</span>
+                          <TriggerIcon type={r.triggerType} className="h-4 w-4 text-brand-night-navy/60" />
                           <span>{meta?.label ?? r.triggerType}</span>
                         </span>
                         {r.playerName && (
@@ -300,7 +301,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
             <div className="rounded-xl border border-brand-neutral/40 bg-white p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-base">{meta?.emoji ?? "💚"}</span>
+                  <TriggerIcon type={r.triggerType} className="mt-0.5 h-5 w-5 shrink-0 text-accent-dark" />
                   <div>
                     <div className="text-sm font-semibold text-brand-night-navy">
                       {triggerLabel(r)}
