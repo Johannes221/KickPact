@@ -29,6 +29,8 @@ const FUTURE_IDS = [
   "02NEXT001AA000000VS5489BUVSSD35NB",
   "02NEXT002BB000000VS5489BUVSSD35NB"
 ];
+/** Aus next.games, aber mit VERGANGENEM Datum (Ergebnis noch nicht eingetragen). */
+const NEXT_BUT_PAST_DATE_ID = "02NEXT003CC000000VS5489BUVSSD35NB";
 
 const ROUTES = [
   {
@@ -84,6 +86,19 @@ describe("getSpiele — prev + next extraction", () => {
       expect(m.vergangen).toBe(false);
       expect(m.status).toBe("scheduled");
     }
+  }, 120_000);
+
+  it("keeps a next.games match scheduled even if its date is in the past (no 0:0 phantom)", async () => {
+    // Regression: ein Spiel aus next.games, dessen Datum schon vorbei ist
+    // (fussball.de hat das Ergebnis noch nicht nachgeführt), darf NICHT per
+    // Datum als "finished" gelten — sonst scrapt der Detail-Scrape 0 Tore und
+    // ein 0:0-Phantom landet in der DB. Der Status kommt vom Endpoint.
+    const spiele = await withMockedBrowser(ROUTES, () =>
+      getSpiele(TEAM_ID, SLUG, SAISON)
+    );
+    const m = spiele.find((s) => s.spielId === NEXT_BUT_PAST_DATE_ID) as SpielListItem;
+    expect(m).toBeTruthy();
+    expect(m.status).toBe("scheduled");
   }, 120_000);
 
   it("normalises datum to DD.MM.YYYY for every row", async () => {

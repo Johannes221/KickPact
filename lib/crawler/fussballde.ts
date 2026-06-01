@@ -425,9 +425,10 @@ const EXTRACT_MATCHES_JS = `(function() {
     var matchDate = new Date(yr + "-" + parts[1] + "-" + parts[0]);
     if (isNaN(matchDate.getTime())) return;
     // Früher: "if (matchDate >= today) return;" — verwarf heutige/kommende
-    // Spiele. Jetzt lassen wir ALLE Spiele durch (prev + next) und leiten pro
-    // Spiel ein korrektes Flag ab. Ein Spiel "heute" gilt als geplant, bis es
-    // gespielt + auf fussball.de mit Ergebnis nachgeführt wurde.
+    // Spiele. Jetzt lassen wir ALLE Spiele durch (prev + next). vergangen ist
+    // rein datumsbasiert; der massgebliche status wird in paginateTeamGames vom
+    // ENDPOINT ueberschrieben (prev=finished, next=scheduled) — ein Spiel gilt
+    // erst als gespielt, wenn fussball.de es mit Ergebnis nach prev.games stellt.
     var vergangen = matchDate < today;
     seen.add(m[2]);
 
@@ -462,9 +463,12 @@ const MAX_PAGES = 8;
  * durchgereicht — sonst still abgebrochen (Netz-Hickup ist tolerierbar, andere
  * Strategien liefern dann die Daten).
  *
- * `kind` ist nur für die URL relevant ("prev" = vergangene, "next" = kommende
- * Spiele). Die Extraktion (EXTRACT_MATCHES_JS) leitet `vergangen`/`status` rein
- * aus dem Match-Datum ab — also funktioniert sie für beide Endpoints identisch.
+ * `kind` bestimmt sowohl die URL ("prev" = vergangene, "next" = kommende Spiele)
+ * ALS AUCH den `status`: prev → "finished" (Ergebnis liegt vor), next →
+ * "scheduled" (angesetzt, kein Ergebnis). Das verhindert 0:0-Phantome bei
+ * Spielen, deren Datum vorbei ist, deren Ergebnis fussball.de aber noch nicht
+ * eingetragen hat (die bleiben in next.games → scheduled). `vergangen` bleibt
+ * rein datumsbasiert (nur intern, wird downstream nicht gelesen).
  */
 async function paginateTeamGames(
   page: Page,
@@ -483,6 +487,19 @@ async function paginateTeamGames(
       await assertNotCaptcha(page);
       await page.waitForTimeout(800);
       const pageResults = (await page.evaluate(EXTRACT_MATCHES_JS)) as SpielListItem[];
+
+      // Status NICHT vom Datum, sondern vom ENDPOINT ableiten: `next.games`
+      // liefert ANGESETZTE Spiele (ohne Ergebnis) — auch wenn ihr Datum schon
+      // vorbei ist, weil fussball.de das Ergebnis noch nicht nachgeführt hat.
+      // Würden wir sie per `matchDate < today` als "finished" klassifizieren,
+      // scrapt der Detail-Scrape 0 Tore → ein 0:0-Phantom landet in der DB
+      // (Bug: zukünftiges/ungespieltes Spiel mit 0:0). Erst wenn das Ergebnis
+      // eingetragen ist, wandert das Spiel nach `prev.games` → dann "finished".
+      const endpointStatus = kind === "prev" ? "finished" : "scheduled";
+      for (const r of pageResults) {
+        r.status = endpointStatus;
+      }
+
       if (pageResults.length === 0) break; // no more data
       let newCount = 0;
       for (const r of pageResults) {
@@ -511,9 +528,11 @@ async function paginateTeamGames(
  *   1d. ajax.team.next.games + saison        — kommende Spiele der Saison
  *   2.  Haupt-Team-Seite Spielplan + Hinrunde-Tab
  *
- * Jedes Item bekommt `vergangen` + `status` ("finished"/"scheduled") aus dem
- * Match-Datum abgeleitet — der Caller (crawl-matches) entscheidet darüber, ob
- * Detail-Scrape + Charges laufen.
+ * Jedes Item bekommt `status` ("finished"/"scheduled") aus dem ENDPOINT
+ * abgeleitet (prev=finished, next=scheduled) — NICHT aus dem Datum. Der Caller
+ * (crawl-matches) entscheidet darüber, ob Detail-Scrape + Charges laufen. So
+ * landet ein Spiel, dessen Ergebnis noch nicht eingetragen ist, nie als 0:0 in
+ * der DB (es bleibt scheduled, bis es nach prev.games wandert).
  *
  * KNOWN LIMITATION / TODO (Phase 8): Für Mannschaften ganz am Saisonanfang
  * (alle Spiele in der Zukunft) oder mit >~10 noch ausstehenden Spielen kann die
