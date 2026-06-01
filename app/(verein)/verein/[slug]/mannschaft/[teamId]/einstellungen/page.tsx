@@ -158,18 +158,18 @@ export default async function TeamEinstellungenPage({
         <ul className="space-y-3">
           <li>
             <Link
-              href={`/verein/${slug}/verifikation`}
+              href={`${base}/verifikation`}
               className="block rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5 hover:border-accent/40 hover:bg-brand-off-white/60 transition-colors"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h4 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
-                    Verein verifizieren
+                    Mannschaft verifizieren
                   </h4>
                   <p className="mt-1 text-sm text-brand-night-navy/60">
-                    Nachweis hochladen (Trainerlizenz, Vereinsbestätigung …). Bis dahin
-                    werden Sponsoren-Rechnungen zurückgehalten und du kannst keine Sponsoren
-                    einladen.
+                    Nachweis hochladen (Trainerlizenz, Vereinsbestätigung, Mannschaftsfoto …).
+                    Bis dahin werden Sponsoren-Rechnungen zurückgehalten und du kannst keine
+                    Sponsoren einladen.
                   </p>
                 </div>
                 <span className="text-brand-night-navy/30" aria-hidden>
@@ -191,27 +191,6 @@ export default async function TeamEinstellungenPage({
                   <p className="mt-1 text-sm text-brand-night-navy/60">
                     Mannschaftsadmins und Viewer einladen, Rollen ändern,
                     Zugriffs-Anfragen freigeben.
-                  </p>
-                </div>
-                <span className="text-brand-night-navy/30" aria-hidden>
-                  →
-                </span>
-              </div>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href={`${base}/saison`}
-              className="block rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5 hover:border-accent/40 hover:bg-brand-off-white/60 transition-colors"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h4 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
-                    Saison-Ergebnis manuell setzen
-                  </h4>
-                  <p className="mt-1 text-sm text-brand-night-navy/60">
-                    Endstand, Auf-/Abstieg und Pokal-Runde eintragen. Nur nötig,
-                    wenn der Fußball.de-Crawler keine Daten liefert.
                   </p>
                 </div>
                 <span className="text-brand-night-navy/30" aria-hidden>

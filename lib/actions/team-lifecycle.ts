@@ -300,7 +300,7 @@ export async function reactivateTeam(teamId: string): Promise<void> {
 // ───────────────────────── uploadTeamLogo ──────────────────────────
 
 const ALLOWED_LOGO_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
-const MAX_LOGO_BYTES = 1_000_000; // 1 MB
+const MAX_LOGO_BYTES = 5_000_000; // 5 MB
 
 /**
  * Logo-Upload aus einer FormData (kommt aus `<form action={...}>` mit

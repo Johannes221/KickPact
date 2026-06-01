@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { HeaderUserMenu } from "@/components/auth/header-user-menu";
 import { Logo } from "@/components/shared/logo";
-import { MobileNav } from "@/components/shared/mobile-nav";
 import { cn } from "@/lib/utils";
 
 // Desktop-Center-Nav ist bewusst leer. „Preise" ist im Footer + als Inline-
@@ -120,12 +119,11 @@ export function AppHeader({ authenticated, dashboardHref }: AppHeaderProps) {
             })}
           </nav>
 
-          {/* Menüpunkte rechts: weiß auf Hero (Foto-Overlay liefert Kontrast),
-              dunkel auf gescrollter/normaler weißer Header-Bar.
-              Mobile: zusätzlich Hamburger-Button für Drawer. */}
+          {/* Rechts nur noch das Account-Menü (Avatar / Login). Das frühere
+              Hamburger-Menü (MobileNav) war redundant — Hauptnavigation läuft
+              über die Bottom-Tab-Bar, Account/Rollen/Logout über das Avatar-Menü. */}
           <div className="flex items-center gap-1 shrink-0">
             <HeaderUserMenu onHero={onHero} />
-            <MobileNav onHero={onHero} />
           </div>
         </div>
       </header>

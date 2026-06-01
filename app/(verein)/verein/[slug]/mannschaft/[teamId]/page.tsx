@@ -13,6 +13,7 @@ import { listClubSeasonPledges } from "@/lib/db/queries/club-dashboard";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
 import { clubs } from "@/lib/db/schema";
+import { teamLicenses } from "@/lib/db/schema/billing";
 import { inngest } from "@/lib/inngest/client";
 import { isTeamCrawling } from "@/lib/crawler/crawl-status";
 import { detectTeamSide } from "@/lib/crawler/team-side";
@@ -82,7 +83,7 @@ export default async function TeamDetailPage({
   const totalCharges = [...chargesSummary.values()].reduce((s, v) => s + v, 0);
 
   // Setup-Checkliste: Daten für "Anstehende Aufgaben".
-  const [[clubBilling], [pledgeCountRow]] = await Promise.all([
+  const [[clubBilling], [pledgeCountRow], [licenseRow]] = await Promise.all([
     db
       .select({ iban: clubs.iban, verifiedAt: clubs.verifiedAt })
       .from(clubs)
@@ -91,18 +92,36 @@ export default async function TeamDetailPage({
     db
       .select({ n: sql<number>`count(*)::int` })
       .from(pledges)
-      .where(eq(pledges.teamId, team.id))
+      .where(eq(pledges.teamId, team.id)),
+    db
+      .select({ plan: teamLicenses.plan })
+      .from(teamLicenses)
+      .where(eq(teamLicenses.teamId, team.id))
+      .limit(1)
   ]);
   const hasIban = !!clubBilling?.iban;
   const hasSponsor = Number(pledgeCountRow?.n ?? 0) > 0;
   const teamBase = `/verein/${slug}/mannschaft/${team.id}`;
+
+  // Verifikations-Scope: Einzel-Mannschaft (basic/pro) verifiziert die
+  // MANNSCHAFT selbst (team.verifiedAt). Nur bei Vereinslizenz (plan='verein')
+  // wird der VEREIN verifiziert und die Teams erben das (clubs.verifiedAt).
+  const isVereinslizenz = licenseRow?.plan === "verein";
+  const verifyItem = isVereinslizenz
+    ? {
+        done: !!clubBilling?.verifiedAt,
+        label: "Verein verifizieren",
+        hint: "Nachweis hochladen — bis dahin werden Rechnungen zurückgehalten.",
+        href: `/verein/${slug}/verifikation`
+      }
+    : {
+        done: !!team.verifiedAt,
+        label: "Mannschaft verifizieren",
+        hint: "Nachweis hochladen — bis dahin werden Rechnungen zurückgehalten.",
+        href: `${teamBase}/verifikation`
+      };
   const checklistItems = [
-    {
-      done: !!clubBilling?.verifiedAt,
-      label: "Verein verifizieren",
-      hint: "Nachweis hochladen — bis dahin werden Rechnungen zurückgehalten.",
-      href: `/verein/${slug}/verifikation`
-    },
+    verifyItem,
     {
       done: hasIban,
       label: "IBAN / Rechnungsdaten hinterlegen",

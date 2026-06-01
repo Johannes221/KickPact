@@ -18,7 +18,7 @@ interface Props {
 }
 
 const ALLOWED = ["image/png", "image/jpeg", "image/webp"];
-const MAX_BYTES = 1_000_000;
+const MAX_BYTES = 5_000_000;
 
 export function TeamStammdatenForm({ teamId, initialName, logoUrl }: Props) {
   const router = useRouter();
@@ -52,23 +52,29 @@ export function TeamStammdatenForm({ teamId, initialName, logoUrl }: Props) {
 
   function uploadFile(file: File) {
     if (!ALLOWED.includes(file.type)) {
-      toast.error("Nur PNG, JPEG oder WebP.");
+      toast.error(
+        `Format „${file.type || "unbekannt"}" wird nicht unterstützt — nur PNG, JPEG oder WebP.`
+      );
       return;
     }
     if (file.size > MAX_BYTES) {
-      toast.error("Logo zu groß (max. 1 MB).");
+      const mb = (file.size / 1_000_000).toFixed(1);
+      toast.error(`Logo zu groß (${mb} MB) — max. 5 MB erlaubt.`);
       return;
     }
+    toast.loading("Lade Logo hoch…", { id: "logo-upload" });
     const formData = new FormData();
     formData.append("teamId", teamId);
     formData.append("file", file);
     startLogoTransition(async () => {
       try {
         await uploadTeamLogoFromForm(formData);
-        toast.success("Logo aktualisiert.");
+        toast.success("Logo aktualisiert.", { id: "logo-upload" });
         router.refresh();
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Upload fehlgeschlagen.");
+        toast.error(e instanceof Error ? e.message : "Upload fehlgeschlagen.", {
+          id: "logo-upload"
+        });
       }
     });
   }
@@ -141,7 +147,7 @@ export function TeamStammdatenForm({ teamId, initialName, logoUrl }: Props) {
               {pendingLogo ? "Lade hoch…" : "Logo hierhin ziehen oder klicken"}
             </p>
             <p className="mt-1 text-xs text-brand-night-navy/50">
-              PNG, JPEG oder WebP · max. 1 MB
+              PNG, JPEG oder WebP · max. 5 MB
             </p>
           </div>
           <input
@@ -149,7 +155,12 @@ export function TeamStammdatenForm({ teamId, initialName, logoUrl }: Props) {
             type="file"
             accept={ALLOWED.join(",")}
             className="sr-only"
-            onChange={(e) => handleFiles(e.target.files)}
+            onChange={(e) => {
+              handleFiles(e.target.files);
+              // Input zurücksetzen, damit dieselbe Datei erneut ausgewählt
+              // werden kann (sonst feuert onChange beim zweiten Mal nicht).
+              e.target.value = "";
+            }}
           />
         </div>
       </div>
