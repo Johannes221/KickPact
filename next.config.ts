@@ -3,7 +3,15 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const config: NextConfig = {
   experimental: {
-    serverActions: { allowedOrigins: ["localhost:3000", "localhost:3003"] }
+    serverActions: {
+      allowedOrigins: ["localhost:3000", "localhost:3003"],
+      // Verifizierungs-Uploads erlauben Dokumente bis 10 MB (submit-verification.ts).
+      // Next.js drosselt Server-Action-Bodies per Default auf 1 MB → Uploads
+      // zwischen 1–10 MB warfen "Body exceeded 1 MB limit", BEVOR die Action
+      // (inkl. eigener 10-MB-Prüfung + freundlicher Fehlermeldung) lief.
+      // 12 MB = 10 MB Datei + Headroom für Multipart-/Feld-Overhead.
+      bodySizeLimit: "12mb"
+    }
   },
   // Help-Center liest Markdown via fs.readdir aus docs/help-center/articles/.
   // Auf Coolify/Vercel-Builds wird das docs/-Dir NICHT automatisch in den
