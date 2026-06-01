@@ -252,7 +252,7 @@ describe("uploadTeamLogo", () => {
         teamId,
         filename: "big.png",
         contentType: "image/png",
-        bytes: Buffer.alloc(2_000_000)
+        bytes: Buffer.alloc(11_000_000)
       })
     ).rejects.toThrow(/zu groß/);
   });

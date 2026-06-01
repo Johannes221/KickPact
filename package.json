@@ -45,6 +45,7 @@
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
     "gray-matter": "^4.0.3",
+    "heic-convert": "^2.1.0",
     "inngest": "^3.54.2",
     "lucide-react": "^1.16.0",
     "marked": "^18.0.4",
@@ -66,6 +67,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
+    "@types/heic-convert": "^2.1.0",
     "@types/node": "22.9.0",
     "@types/pdf-parse": "^1.1.5",
     "@types/qrcode": "^1.5.6",

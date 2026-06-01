@@ -17,6 +17,7 @@ import {
 } from "@/lib/db/schema";
 import { assertClubWriteAccess } from "@/lib/auth/scope";
 import { storeDocument } from "@/lib/storage/documents";
+import { normalizeImageUpload } from "@/lib/storage/images";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import {
   signOptOutToken,
@@ -299,13 +300,14 @@ export async function reactivateTeam(teamId: string): Promise<void> {
 
 // ───────────────────────── uploadTeamLogo ──────────────────────────
 
-const ALLOWED_LOGO_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
-const MAX_LOGO_BYTES = 5_000_000; // 5 MB
-
 /**
- * Logo-Upload aus einer FormData (kommt aus `<form action={...}>` mit
- * Client-Wrapper, der die Buffer-Konvertierung macht). Pure Server-Action,
- * akzeptiert direkt `Buffer`.
+ * Logo-Upload-Kern: Auth → Normalisierung (HEIC→JPEG, Format-/Größen-Check via
+ * lib/storage/images) → Storage → DB. Akzeptiert direkt einen `Buffer`.
+ *
+ * Aufgerufen vom Route-Handler `POST /api/teams/[teamId]/logo` (NICHT mehr als
+ * Server-Action über die Form — das 1-MB-Server-Action-Bodylimit hat iPhone-
+ * Fotos und größere Logos abgewiesen, siehe Sentry JAVASCRIPT-NEXTJS-9). Als
+ * normaler Funktionsaufruf aus dem Route-Handler greift dieses Limit nicht.
  */
 export async function uploadTeamLogo(input: {
   teamId: string;
@@ -313,14 +315,8 @@ export async function uploadTeamLogo(input: {
   contentType: string;
   bytes: Buffer;
 }): Promise<{ logoUrl: string }> {
-  if (!input.teamId || !input.filename || !input.contentType || !input.bytes) {
+  if (!input.teamId || !input.filename || !input.bytes) {
     throw new Error("Unvollständige Logo-Upload-Daten.");
-  }
-  if (!ALLOWED_LOGO_MIME.has(input.contentType)) {
-    throw new Error("Nur PNG, JPEG oder WebP erlaubt.");
-  }
-  if (input.bytes.byteLength > MAX_LOGO_BYTES) {
-    throw new Error("Logo zu groß (max. 1 MB).");
   }
 
   const [row] = await db
@@ -333,14 +329,19 @@ export async function uploadTeamLogo(input: {
 
   await assertClubWriteAccess(row.clubSlug, "admin");
 
-  const ext =
-    input.contentType === "image/png"
-      ? "png"
-      : input.contentType === "image/webp"
-        ? "webp"
-        : "jpg";
-  const key = `teams/${input.teamId}/logo-${createId()}.${ext}`;
-  const storageUrl = await storeDocument(key, input.bytes, input.contentType);
+  // Format + Größe validieren und HEIC/HEIF → JPEG konvertieren.
+  const normalized = await normalizeImageUpload({
+    bytes: input.bytes,
+    contentType: input.contentType,
+    filename: input.filename
+  });
+
+  const key = `teams/${input.teamId}/logo-${createId()}.${normalized.ext}`;
+  const storageUrl = await storeDocument(
+    key,
+    normalized.bytes,
+    normalized.contentType
+  );
 
   await db
     .update(teams)
@@ -351,26 +352,6 @@ export async function uploadTeamLogo(input: {
   revalidatePath(`/verein/${row.clubSlug}/mannschaft/${input.teamId}/einstellungen`);
 
   return { logoUrl: storageUrl };
-}
-
-/**
- * FormData-Wrapper für `uploadTeamLogo`. Wird direkt als `<form action>`
- * verwendet.
- */
-export async function uploadTeamLogoFromForm(formData: FormData): Promise<void> {
-  const teamId = formData.get("teamId");
-  const file = formData.get("file");
-  if (typeof teamId !== "string" || !teamId) throw new Error("teamId fehlt.");
-  if (!(file instanceof File)) throw new Error("Datei fehlt.");
-  if (file.size === 0) throw new Error("Datei ist leer.");
-
-  const buf = Buffer.from(await file.arrayBuffer());
-  await uploadTeamLogo({
-    teamId,
-    filename: file.name,
-    contentType: file.type,
-    bytes: buf
-  });
 }
 
 // ───────────────────────── togglePlayerBlock ──────────────────────────

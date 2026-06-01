@@ -52,3 +52,6 @@ drift-report.md
 
 # Playwright MCP — console/snapshot dumps aus dev-debug
 .playwright-mcp/
+
+# Brainstorming visual companion artifacts
+.superpowers/

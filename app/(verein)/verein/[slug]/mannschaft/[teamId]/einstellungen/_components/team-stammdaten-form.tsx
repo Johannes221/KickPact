@@ -6,10 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  renameTeam,
-  uploadTeamLogoFromForm
-} from "@/lib/actions/team-lifecycle";
+import { renameTeam } from "@/lib/actions/team-lifecycle";
 
 interface Props {
   teamId: string;
@@ -17,8 +14,13 @@ interface Props {
   logoUrl: string | null;
 }
 
-const ALLOWED = ["image/png", "image/jpeg", "image/webp"];
-const MAX_BYTES = 5_000_000;
+// Akzeptierte Endungen (inkl. iPhone-HEIC/HEIF — Server konvertiert nach JPEG).
+// MIME-Type-Prüfung bewusst lasch: Mobile-Browser senden gelegentlich einen
+// leeren `file.type`. Der Server validiert autoritativ via lib/storage/images.
+const ALLOWED_EXT = ["png", "jpg", "jpeg", "webp", "heic", "heif"];
+const ACCEPT_ATTR =
+  "image/png,image/jpeg,image/webp,image/heic,image/heif,.png,.jpg,.jpeg,.webp,.heic,.heif";
+const MAX_BYTES = 10_000_000;
 
 export function TeamStammdatenForm({ teamId, initialName, logoUrl }: Props) {
   const router = useRouter();
@@ -51,24 +53,34 @@ export function TeamStammdatenForm({ teamId, initialName, logoUrl }: Props) {
   }
 
   function uploadFile(file: File) {
-    if (!ALLOWED.includes(file.type)) {
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    const looksLikeImage = file.type.startsWith("image/") || ALLOWED_EXT.includes(ext);
+    if (!looksLikeImage) {
       toast.error(
-        `Format „${file.type || "unbekannt"}" wird nicht unterstützt — nur PNG, JPEG oder WebP.`
+        `Format „${file.type || ext || "unbekannt"}" wird nicht unterstützt — PNG, JPEG, WebP oder HEIC/HEIF.`
       );
       return;
     }
     if (file.size > MAX_BYTES) {
       const mb = (file.size / 1_000_000).toFixed(1);
-      toast.error(`Logo zu groß (${mb} MB) — max. 5 MB erlaubt.`);
+      toast.error(`Bild zu groß (${mb} MB) — max. 10 MB erlaubt.`);
       return;
     }
     toast.loading("Lade Logo hoch…", { id: "logo-upload" });
     const formData = new FormData();
-    formData.append("teamId", teamId);
     formData.append("file", file);
     startLogoTransition(async () => {
       try {
-        await uploadTeamLogoFromForm(formData);
+        const res = await fetch(`/api/teams/${teamId}/logo`, {
+          method: "POST",
+          body: formData
+        });
+        if (!res.ok) {
+          const data = (await res.json().catch(() => null)) as
+            | { message?: string }
+            | null;
+          throw new Error(data?.message ?? "Upload fehlgeschlagen.");
+        }
         toast.success("Logo aktualisiert.", { id: "logo-upload" });
         router.refresh();
       } catch (e) {
@@ -147,13 +159,13 @@ export function TeamStammdatenForm({ teamId, initialName, logoUrl }: Props) {
               {pendingLogo ? "Lade hoch…" : "Logo hierhin ziehen oder klicken"}
             </p>
             <p className="mt-1 text-xs text-brand-night-navy/50">
-              PNG, JPEG oder WebP · max. 5 MB
+              PNG, JPEG, WebP oder HEIC · max. 10 MB
             </p>
           </div>
           <input
             ref={fileInputRef}
             type="file"
-            accept={ALLOWED.join(",")}
+            accept={ACCEPT_ATTR}
             className="sr-only"
             onChange={(e) => {
               handleFiles(e.target.files);
