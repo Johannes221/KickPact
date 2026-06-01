@@ -3,7 +3,9 @@ import { db } from "@/lib/db/client";
 import { teams } from "@/lib/db/schema";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { getDocumentSignedUrl } from "@/lib/storage/documents";
+import { listTeamImages } from "@/lib/db/queries/team-images";
 import { PublicProfileForm } from "./_components/public-profile-form";
+import { MediaManager } from "./_components/media-manager";
 
 export const metadata = { title: "Öffentliches Profil · Mannschaft · KickPact" };
 
@@ -29,7 +31,9 @@ export default async function TeamProfilPage({
       publicName: teams.publicName,
       publicTagline: teams.publicTagline,
       publicGoals: teams.publicGoals,
-      logoUrl: teams.logoUrl
+      logoUrl: teams.logoUrl,
+      coverUrl: teams.coverUrl,
+      showInsights: teams.showInsights,
     })
     .from(teams)
     .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
@@ -51,6 +55,18 @@ export default async function TeamProfilPage({
       logoDisplayUrl = null;
     }
   }
+
+  // Galerie-Bilder laden und Serve-Endpoint-URLs bauen (stabil, kein Ablauf).
+  const galleryRows = await listTeamImages(teamId);
+  const gallery = galleryRows.map((g) => ({
+    id: g.id,
+    url: `/api/teams/${teamId}/image?slot=gallery&id=${g.id}`,
+  }));
+
+  // Cover-URL über den Serve-Endpoint (stable, team-scoped).
+  const coverDisplayUrl = team.coverUrl
+    ? `/api/teams/${teamId}/image?slot=cover`
+    : null;
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -76,6 +92,15 @@ export default async function TeamProfilPage({
         }}
         logoUrl={logoDisplayUrl}
         einstellungenHref={`/verein/${slug}/mannschaft/${teamId}/einstellungen`}
+      />
+
+      <hr className="border-brand-neutral/20" />
+
+      <MediaManager
+        teamId={team.id}
+        coverUrl={coverDisplayUrl}
+        gallery={gallery}
+        showInsights={team.showInsights}
       />
     </div>
   );
