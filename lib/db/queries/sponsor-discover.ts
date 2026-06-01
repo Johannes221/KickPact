@@ -1,7 +1,7 @@
 import { and, eq, ilike, or, sql, desc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { teams, clubs, sponsorInquiries } from "@/lib/db/schema";
-import { getDocumentSignedUrl } from "@/lib/storage/documents";
+import { listTeamImages } from "./team-images";
 
 export interface DiscoverableTeam {
   teamId: string;
@@ -87,8 +87,16 @@ export interface PublicTeamProfile {
   saison: string;
   tagline: string | null;
   goals: string | null;
-  /** Aufgelöste, anzeigbare Logo-URL (signed/served) oder null. */
+  /** Serve-Endpoint-URL für das Logo oder null. */
   logoUrl: string | null;
+  /** Liga-Bezeichnung aus dem Crawler oder null. */
+  league: string | null;
+  /** Ob Saison-Insights auf dem öffentlichen Profil angezeigt werden. */
+  showInsights: boolean;
+  /** Serve-Endpoint-URL für das Cover-Bild oder null. */
+  coverUrl: string | null;
+  /** Galerie-Bilder (max. 8) als Serve-Endpoint-URLs. */
+  gallery: { id: string; url: string }[];
   clubName: string;
   clubOrt: string | null;
   clubVerifiedAt: Date | null;
@@ -117,6 +125,9 @@ export async function getPublicTeamProfileBySlug(
       tagline: teams.publicTagline,
       goals: teams.publicGoals,
       logoUrl: teams.logoUrl,
+      coverUrl: teams.coverUrl,
+      league: teams.league,
+      showInsights: teams.showInsights,
       discoverable: teams.discoverable,
       isActive: teams.isActive,
       teamVerifiedAt: teams.verifiedAt,
@@ -132,14 +143,12 @@ export async function getPublicTeamProfileBySlug(
   if (!row || !row.publicSlug) return null;
   if (!row.discoverable || !row.isActive) return null;
 
-  let resolvedLogo: string | null = null;
-  if (row.logoUrl) {
-    try {
-      resolvedLogo = await getDocumentSignedUrl(row.logoUrl, 3600);
-    } catch {
-      resolvedLogo = null;
-    }
-  }
+  const logoUrl = row.logoUrl ? `/api/teams/${row.teamId}/image?slot=logo` : null;
+  const coverUrl = row.coverUrl ? `/api/teams/${row.teamId}/image?slot=cover` : null;
+  const gallery = (await listTeamImages(row.teamId)).map((g) => ({
+    id: g.id,
+    url: `/api/teams/${row.teamId}/image?slot=gallery&id=${g.id}`
+  }));
 
   return {
     teamId: row.teamId,
@@ -149,7 +158,11 @@ export async function getPublicTeamProfileBySlug(
     saison: row.saison,
     tagline: row.tagline,
     goals: row.goals,
-    logoUrl: resolvedLogo,
+    logoUrl,
+    league: row.league,
+    showInsights: row.showInsights,
+    coverUrl,
+    gallery,
     clubName: row.clubName,
     clubOrt: row.clubOrt,
     clubVerifiedAt: row.clubVerifiedAt,
