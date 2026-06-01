@@ -106,6 +106,12 @@ export async function createCheckoutSession(opts: {
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
+    // Explizite Methoden-Liste statt Stripe-Auto-Auswahl: ohne dies zeigt der
+    // Checkout ALLE im Dashboard aktivierten Methoden — u.a. Klarna/Sofort, die
+    // das wiederkehrende Abo-Modell NICHT unterstützen (Nutzer wählt sie → Fehler).
+    // card + sepa_debit + paypal sind recurring-tauglich und decken DE-Amateur-
+    // fußball ab. (SEPA/PayPal müssen im Stripe-Dashboard aktiviert sein.)
+    payment_method_types: ["card", "sepa_debit", "paypal"],
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: {
       ...(isAppTrial ? { trial_period_days: TRIAL_DAYS } : {}),
