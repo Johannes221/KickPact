@@ -5,6 +5,15 @@ import { db } from "@/lib/db/client";
 import { sponsors } from "@/lib/db/schema";
 import { pledges } from "@/lib/db/schema/pledges";
 import { charges } from "@/lib/db/schema/charges";
+import {
+  Banknote,
+  Handshake,
+  Coins,
+  Gauge,
+  Sparkles,
+  Compass,
+  HandCoins
+} from "lucide-react";
 import { DashboardTile } from "@/components/shared/dashboard-tile";
 import { getCapUsageForActivePledges } from "@/lib/db/queries/sponsor-reporting";
 
@@ -27,7 +36,9 @@ export default async function SponsorDashboard() {
   if (!sponsorRow) {
     return (
       <div className="max-w-xl mx-auto py-12 text-center space-y-4">
-        <div className="text-5xl">💚</div>
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-accent/10 text-accent-dark">
+          <HandCoins className="h-8 w-8" aria-hidden />
+        </div>
         <h1 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
           Bereit, Mannschaften zu sponsern?
         </h1>
@@ -126,7 +137,7 @@ export default async function SponsorDashboard() {
 
       <div className="grid gap-3 md:gap-4 md:grid-cols-2">
         <DashboardTile
-          icon="💸"
+          icon={Banknote}
           title="Diesen Monat"
           primary={eur(monthlyCents)}
           secondary={
@@ -138,7 +149,7 @@ export default async function SponsorDashboard() {
         />
 
         <DashboardTile
-          icon="🤝"
+          icon={Handshake}
           title="Meine Pacts"
           primary={String(activePledgeCount)}
           secondary={
@@ -166,7 +177,7 @@ export default async function SponsorDashboard() {
 
         {biggestRecent && biggestRecent.amountCents > 0 && (
           <DashboardTile
-            icon="⭐"
+            icon={Sparkles}
             title="Geilster Moment"
             primary={eur(biggestRecent.amountCents)}
             secondary={`Trigger: ${biggestRecent.triggerType}`}
@@ -175,7 +186,7 @@ export default async function SponsorDashboard() {
         )}
 
         <DashboardTile
-          icon="🔍"
+          icon={Compass}
           title="Neue Mannschaft entdecken"
           primary="Mannschaften finden"
           secondary="Lokale Vereine, die offen sind für Sponsoren"
@@ -205,7 +216,7 @@ function YearTotalTile({
 
   return (
     <DashboardTile
-      icon="📊"
+      icon={Coins}
       title="Jahres-Total"
       primary={eur(ytdCents)}
       secondary={deltaLabel}
@@ -232,7 +243,7 @@ function CapUsageTile({
   const labelCls = pct >= 90 ? "text-red-600" : "text-brand-night-navy/60";
   return (
     <DashboardTile
-      icon="📈"
+      icon={Gauge}
       title="Cap-Auslastung"
       primary={`${pct}%`}
       secondary={`${eur(chargedCents)} / ${eur(capCents)}`}

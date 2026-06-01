@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { ArrowRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface DashboardTileProps {
-  icon: string;                  // emoji or short string
+  icon: LucideIcon;              // Lucide-Icon-Komponente
   title: string;
   primary?: string;              // big number / value
   secondary?: string;            // sub-line
@@ -18,7 +19,7 @@ export interface DashboardTileProps {
  * link (anchor, not button — preserves right-click "open in new tab").
  */
 export function DashboardTile({
-  icon,
+  icon: Icon,
   title,
   primary,
   secondary,
@@ -72,25 +73,26 @@ export function DashboardTile({
             </div>
           )}
         </div>
-        <div
+        <span
           className={cn(
-            "text-2xl shrink-0",
-            variant === "cta" ? "opacity-90" : "opacity-80"
+            "grid h-10 w-10 shrink-0 place-items-center rounded-full",
+            variant === "cta" ? "bg-white/20 text-white" : "bg-accent/10 text-accent-dark"
           )}
           aria-hidden
         >
-          {icon}
-        </div>
+          <Icon className="h-[1.3rem] w-[1.3rem]" />
+        </span>
       </div>
       {children && <div className="mt-4">{children}</div>}
       {href && (
         <div
           className={cn(
-            "mt-4 inline-flex items-center text-xs font-semibold transition-transform group-hover:translate-x-0.5",
+            "mt-4 inline-flex items-center gap-1 text-xs font-semibold transition-transform group-hover:translate-x-0.5",
             variant === "cta" ? "text-white" : "text-accent"
           )}
         >
-          {variant === "cta" ? "Los geht's →" : "Öffnen →"}
+          {variant === "cta" ? "Los geht's" : "Öffnen"}
+          <ArrowRight className="h-3.5 w-3.5" aria-hidden />
         </div>
       )}
     </Tag>

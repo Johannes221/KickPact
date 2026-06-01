@@ -5,6 +5,7 @@ import { teams } from "@/lib/db/schema";
 import { charges } from "@/lib/db/schema/charges";
 import { pledges } from "@/lib/db/schema/pledges";
 import { matches } from "@/lib/db/schema/matches";
+import { TrendingUp, Users, HandCoins, Receipt, Share2 } from "lucide-react";
 import { DashboardTile } from "@/components/shared/dashboard-tile";
 
 export const metadata = { title: "Dashboard · KickPact" };
@@ -87,7 +88,7 @@ export default async function VereinDashboard({
       )}
     <div className="grid gap-3 md:gap-4 md:grid-cols-2">
       <DashboardTile
-        icon="🏆"
+        icon={TrendingUp}
         title="Diese Woche"
         primary={eur(weeklyChargeCents)}
         secondary={`${recentMatchCount} Spiel${recentMatchCount === 1 ? "" : "e"} · ${eur(monthlyChargeCents)} diesen Monat`}
@@ -95,7 +96,7 @@ export default async function VereinDashboard({
       />
 
       <DashboardTile
-        icon="⚽"
+        icon={Users}
         title="Mannschaften"
         primary={String(teamCount)}
         secondary={
@@ -110,7 +111,7 @@ export default async function VereinDashboard({
       />
 
       <DashboardTile
-        icon="💚"
+        icon={HandCoins}
         title="Aktive Sponsoren"
         primary={String(activePledgeCount)}
         secondary={
@@ -122,7 +123,7 @@ export default async function VereinDashboard({
       />
 
       <DashboardTile
-        icon="📄"
+        icon={Receipt}
         title="Letzte Abrechnungen"
         primary={eur(monthlyChargeCents)}
         secondary="Diesen Monat erfasst"
@@ -130,7 +131,7 @@ export default async function VereinDashboard({
       />
 
       <DashboardTile
-        icon="🤝"
+        icon={Share2}
         title="Einladungslink teilen"
         primary="Sponsoren werben"
         secondary="WhatsApp · Mail · Stammtisch — Sponsoren legen Pacts selbst fest"

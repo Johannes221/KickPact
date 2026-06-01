@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Goal, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardTile } from "@/components/shared/dashboard-tile";
 import {
@@ -18,7 +19,9 @@ export function DiscoverList({ teams }: { teams: DiscoverableTeam[] }) {
   if (teams.length === 0) {
     return (
       <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-6 md:p-8 text-center">
-        <div className="text-3xl mb-2">🔍</div>
+        <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-accent/10 text-accent-dark">
+          <Search className="h-6 w-6" aria-hidden />
+        </div>
         <p className="font-display font-black text-base md:text-lg text-brand-night-navy">
           Noch keine entdeckbaren Mannschaften
         </p>
@@ -75,7 +78,7 @@ function TeamTile({ team }: { team: DiscoverableTeam }) {
         aria-label={`Sponsoring anfragen: ${title}`}
       >
         <DashboardTile
-          icon="⚽"
+          icon={Goal}
           title={title}
           primary={primary}
           secondary={secondary}
