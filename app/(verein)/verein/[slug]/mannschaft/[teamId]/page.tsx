@@ -110,6 +110,12 @@ export default async function TeamDetailPage({
       href: `${teamBase}/einstellungen#zahlungsdaten`
     },
     {
+      done: !!team.logoUrl,
+      label: "Logo hinzufügen",
+      hint: "Euer Wappen erscheint auf dem Profil und den Sponsoren-Rechnungen.",
+      href: `${teamBase}/einstellungen`
+    },
+    {
       done: hasSponsor,
       label: "Ersten Sponsor gewinnen",
       hint: "Einladungslink teilen oder Sponsor einladen.",
