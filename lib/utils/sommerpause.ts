@@ -28,25 +28,31 @@ export function isSommerpause(date: Date = new Date()): boolean {
   return month >= SOMMERPAUSE_START_MONTH && month < SOMMERPAUSE_END_MONTH;
 }
 
+/** Tag im Juni (UTC), ab dem der Crawler in die Sommerpause geht. */
+const CRAWLER_PAUSE_START_DAY = 16;
 /** Tag im Juli (UTC), ab dem der Crawler wieder läuft. */
 const CRAWLER_RESUME_DAY = 15;
 
 /**
  * Crawler-spezifisches Pause-Fenster — enger als die Billing-Sommerpause.
  *
- * Während `isSommerpause` (Juni–Juli) für Pledge-/Billing-Pausen gilt, soll der
- * Crawler schon ab **Mitte Juli** wieder laufen. Grund: Die Spielpläne der neuen
- * Saison werden auf fussball.de typischerweise im Juli veröffentlicht — der
- * Crawler muss die kommenden Spiele (scheduled-Stubs via next.games) einsammeln,
- * BEVOR die ersten Rundenspiele (~August) angepfiffen werden. Ein paar leere
- * Scrape-Runs im Juli sind günstiger als verpasste Saisonauftakt-Daten.
+ * Während `isSommerpause` (Juni–Juli) für Pledge-/Billing-Pausen gilt, läuft der
+ * Crawler länger:
+ *  - ANFANG Juni (bis 15.) noch aktiv: Im Amateurfußball laufen Saison-Finale,
+ *    Nachhol- und Relegations-/Aufstiegsspiele bis in den Juni. Deren Ergebnisse
+ *    werden teils erst Tage später auf fussball.de eingetragen — der Crawler muss
+ *    sie noch einsammeln (sonst bleibt z.B. ein Sonntagsspiel ewig auf „—:—").
+ *  - 16. Juni – 14. Juli: echte Sommerpause (keine Spiele) → Crawler pausiert.
+ *  - Ab MITTE Juli wieder aktiv: die neuen Saison-Spielpläne erscheinen, der
+ *    Crawler sammelt die kommenden Spiele (scheduled-Stubs) vor Saisonauftakt.
  *
- * Fenster: [1. Juni, 15. Juli). Override via SOMMERPAUSE_OVERRIDE_DISABLED.
+ * Fenster: [16. Juni, 15. Juli). Override via SOMMERPAUSE_OVERRIDE_DISABLED.
  */
 export function isCrawlerSommerpause(date: Date = new Date()): boolean {
   if (process.env.SOMMERPAUSE_OVERRIDE_DISABLED === "true") return false;
   const month = date.getUTCMonth(); // 0-indexed
-  if (month === SOMMERPAUSE_START_MONTH) return true; // ganzer Juni
-  if (month === 6 && date.getUTCDate() < CRAWLER_RESUME_DAY) return true; // Juli bis 14.
+  const day = date.getUTCDate();
+  if (month === SOMMERPAUSE_START_MONTH && day >= CRAWLER_PAUSE_START_DAY) return true; // 16.–30. Juni
+  if (month === 6 && day < CRAWLER_RESUME_DAY) return true; // Juli bis 14.
   return false;
 }

@@ -26,17 +26,24 @@ import { isCrawlerSommerpause } from "@/lib/utils/sommerpause";
 export const crawlMatches = inngest.createFunction(
   { id: "crawl-matches", concurrency: { limit: 2 } },
   [
-    // Crawler-Throttling. Amateurfußball-Spielzeit ist Sa/So — zu häufige Runs
-    // sind Verschwendung + erhöhen fussball.de-Bann-Risiko. Zweimal täglich
-    // (mittags + abends, UTC → 12:00/20:00 CEST in der Sommerzeit): mittags
-    // zieht Vortags-/Vormittagsspiele, abends die Samstag-/Sonntag-Ergebnisse.
-    { cron: "0 10,18 * * *" },
+    // Spieltag-orientierter Crawl-Rhythmus (UTC; +2h = CEST in der Sommerzeit):
+    //  - Täglich 07:00 UTC (~09:00 CEST): Mop-up — was über Nacht eingetragen
+    //    wurde, ist spätestens am Folgetag drin (auch Mi/Fr-Nachholspiele).
+    //  - Sa+So 13/16/19 UTC (~15/18/21 CEST): Amateurfußball wird Sa/So gespielt,
+    //    Ergebnisse trudeln nachmittags/abends ein → mehrfach crawlen, damit sie
+    //    zeitnah im Dashboard stehen, statt erst am nächsten Tag.
+    // Frequenz an Spieltagen hoch, unter der Woche niedrig → wenig Leerläufe,
+    // geringeres fussball.de-Bann-Risiko. getActiveTeams() deckt ALLE
+    // registrierten, aktiven Mannschaften ab (eine pro KickPact-Onboarding).
+    { cron: "0 7 * * *" },
+    { cron: "0 13,16,19 * * 6,0" },
     { event: "crawler/manual" },
     { event: "crawler/team.crawl" }
   ],
   async ({ event, step, logger }) => {
     // Sommerpause-Guard: Cron-Runs werden während der Crawler-Sommerpause
-    // (Juni bis Mitte Juli) übersprungen. Ab Mitte Juli läuft der Crawler wieder,
+    // (Mitte Juni bis Mitte Juli) übersprungen. Anfang Juni läuft der Crawler
+    // noch (Saison-Finale/Relegation), ab Mitte Juli wieder,
     // um die neuen Saison-Spielpläne (scheduled-Stubs) vor Saisonauftakt zu
     // erfassen — engeres Fenster als die Billing-Sommerpause (isSommerpause).
     // Manuelle Triggers (crawler/manual, crawler/team.crawl) laufen immer durch.

@@ -37,8 +37,11 @@ describe("isCrawlerSommerpause", () => {
   });
 
   it.each([
-    // Crawler pausiert: ganzer Juni + Juli bis 14.
-    ["2026-06-01", true],
+    // Anfang Juni läuft der Crawler NOCH (Saison-Finale/Relegation,
+    // nachgetragene Ergebnisse) — erst ab 16. Juni Pause.
+    ["2026-06-01", false],
+    ["2026-06-15", false],
+    ["2026-06-16", true],
     ["2026-06-30", true],
     ["2026-07-01", true],
     ["2026-07-14", true],
@@ -55,6 +58,7 @@ describe("isCrawlerSommerpause", () => {
 
   it("returns false when SOMMERPAUSE_OVERRIDE_DISABLED=true", () => {
     process.env.SOMMERPAUSE_OVERRIDE_DISABLED = "true";
-    expect(isCrawlerSommerpause(new Date("2026-06-15"))).toBe(false);
+    // 20. Juni läge regulär in der Pause — Override hebt das auf.
+    expect(isCrawlerSommerpause(new Date("2026-06-20"))).toBe(false);
   });
 });
