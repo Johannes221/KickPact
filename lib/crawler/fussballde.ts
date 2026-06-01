@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { chromium, type Page } from "playwright";
+import { parse as parseHtml, type HTMLElement } from "node-html-parser";
 import { saisonStartDate } from "@/lib/utils/saison";
 
 /**
@@ -67,6 +68,55 @@ export async function withRetry<T>(
   }
   // unreachable — loop always returns or throws
   throw lastErr;
+}
+
+/**
+ * Holt eine fussball.de-Seite per plain HTTP (fetch) + HTML-Parser statt
+ * headless-Browser. fussball.de liefert die relevanten Inhalte (Spiel-Liste,
+ * Spiel-Detail inkl. Tor-Events, Kader) server-gerendert aus — ein echter
+ * Browser ist nicht nötig.
+ *
+ * Entscheidend (verifiziert 2026-06-01): Die Bot-Detection von fussball.de
+ * blockt den headless-Chromium von Datacenter-IPs (Prod-Crawl lieferte 0
+ * Spiele), NICHT aber plain-HTTP-Requests (curl/fetch vom selben Prod-Server
+ * liefert volle Daten). Plus: schneller, kein Chromium-im-Container, weniger
+ * Fehlerquellen. Retry auf 5xx/Netzfehler via withRetry.
+ */
+async function fetchHtml(url: string): Promise<HTMLElement> {
+  return withRetry(
+    async () => {
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": pickUserAgent(),
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "de-DE,de;q=0.9,en;q=0.8"
+        },
+        redirect: "follow"
+      });
+      if (res.status >= 500) throw new Error(`HTTP ${res.status}`); // transient
+      if (!res.ok) throw new Error(`HTTP ${res.status} für ${url}`);
+      const html = await res.text();
+      // Harte Block-/Captcha-Seite: nur bei KLEINER Seite + Block-Marker werfen.
+      // Echte Seiten (Liste ~28 KB, Detail ~190 KB) referenzieren teils "captcha"
+      // in Hidden-Forms → Längen-Guard verhindert False-Positives.
+      if (
+        html.length < 3000 &&
+        /g-recaptcha|datadome|captcha-delivery|zugriff verweigert|access denied/i.test(
+          html
+        )
+      ) {
+        throw new Error("Captcha/Block-Seite erkannt");
+      }
+      return parseHtml(html);
+    },
+    { maxAttempts: 3, baseDelayMs: 800 }
+  );
+}
+
+/** Normalisiert Whitespace eines Parser-Nodes (analog textContent.trim()). */
+function nodeText(el: { text?: string } | null | undefined): string {
+  return (el?.text ?? "").replace(/\s+/g, " ").trim();
 }
 
 /**
@@ -403,81 +453,100 @@ export async function getMannschaften(
   });
 }
 
-/** Shared JS that extracts match rows from fussball.de table HTML */
-const EXTRACT_MATCHES_JS = `(function() {
-  var results = [];
-  var seen = new Set();
-  var today = new Date();
-  today.setHours(0, 0, 0, 0);
+const IGNORE_TDS = new Set([
+  ":",
+  "Zum Spiel",
+  "Nichtantritt GAST",
+  "Nichtantritt HEIM"
+]);
 
-  var allTrs = Array.from(document.querySelectorAll("tr"));
-  var currentDatum = "";
-  allTrs.forEach(function(tr) {
-    if (tr.classList.contains("row-headline") || tr.classList.contains("row-competition")) {
-      var txt = (tr.textContent || "").replace(/\\s+/g, " ").trim();
-      var dm = txt.match(/(\\d{2}\\.\\d{2}\\.\\d{4})/);
-      var dm2 = txt.match(/(\\d{2}\\.\\d{2}\\.\\d{2})(?!\\d)/);
+/**
+ * Extrahiert Spiel-Zeilen aus dem geparsten fussball.de-Tabellen-HTML (Liste).
+ * Port von `EXTRACT_MATCHES_JS` (vorher `page.evaluate`) auf node-html-parser —
+ * läuft jetzt server-seitig ohne Browser. Logik identisch:
+ *  - Datum kommt aus `row-headline`/`row-competition`-Zeilen (carry-over).
+ *  - Heim/Gast über den ":"-Separator (robust gegen Datums-/Wettbewerb-Zellen).
+ */
+function extractMatchesFromHtml(root: HTMLElement): SpielListItem[] {
+  const results: SpielListItem[] = [];
+  const seen = new Set<string>();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let currentDatum = "";
+
+  for (const tr of root.querySelectorAll("tr")) {
+    if (
+      tr.classList.contains("row-headline") ||
+      tr.classList.contains("row-competition")
+    ) {
+      const txt = nodeText(tr);
+      const dm = txt.match(/(\d{2}\.\d{2}\.\d{4})/);
+      const dm2 = txt.match(/(\d{2}\.\d{2}\.\d{2})(?!\d)/);
       if (dm) currentDatum = dm[1];
       else if (dm2) currentDatum = dm2[1];
-      return;
+      continue;
     }
 
-    var link = tr.querySelector('a[href*="/spiel/"]');
-    if (!link) return;
-    var href = link.href || "";
-    var m = href.match(/\\/spiel\\/([^/]+)\\/-\\/spiel\\/([A-Z0-9]+)/);
-    if (!m || seen.has(m[2])) return;
-    if (!currentDatum) return;
+    const link = tr.querySelector('a[href*="/spiel/"]');
+    if (!link) continue;
+    const href = link.getAttribute("href") || "";
+    const m = href.match(/\/spiel\/([^/]+)\/-\/spiel\/([A-Z0-9]+)/);
+    if (!m || seen.has(m[2])) continue;
+    if (!currentDatum) continue;
 
-    var parts = currentDatum.split(".");
-    if (parts.length !== 3) return;
-    var yr = parts[2].length === 2 ? "20" + parts[2] : parts[2];
-    var matchDate = new Date(yr + "-" + parts[1] + "-" + parts[0]);
-    if (isNaN(matchDate.getTime())) return;
-    // Früher: "if (matchDate >= today) return;" — verwarf heutige/kommende
-    // Spiele. Jetzt lassen wir ALLE Spiele durch (prev + next). vergangen ist
-    // rein datumsbasiert; der massgebliche status wird in paginateTeamGames vom
-    // ENDPOINT ueberschrieben (prev=finished, next=scheduled) — ein Spiel gilt
-    // erst als gespielt, wenn fussball.de es mit Ergebnis nach prev.games stellt.
-    var vergangen = matchDate < today;
-    seen.add(m[2]);
+    const parts = currentDatum.split(".");
+    if (parts.length !== 3) continue;
+    const yr = parts[2].length === 2 ? "20" + parts[2] : parts[2];
+    const matchDate = new Date(`${yr}-${parts[1]}-${parts[0]}`);
+    if (isNaN(matchDate.getTime())) continue;
+    const vergangen = matchDate < today;
 
-    var tds = Array.from(tr.querySelectorAll("td")).map(function(td) {
-      return (td.textContent || "").replace(/\\s+/g, " ").trim();
-    });
-
-    // Robuste Heim/Gast-Extraktion ueber den ":"-Separator zwischen den beiden
-    // Teamnamen. Frueher fix tds[0]/tds[1] genommen — das brach auf der Haupt-
-    // Team-Seite, wo die Zeile mit Datum/Wettbewerb/Kategorie-Zellen beginnt
-    // (z.B. ["Di, 30.07.24 | 20:00","Freundschaftsspiel","Herren","Heim",":",
-    // "Gast",...]) und Datum + "Freundschaftsspiel" faelschlich als Teamnamen
-    // landeten. Heim = naechste nicht-leere Zelle VOR dem ersten ":", Gast =
-    // naechste nicht-leere Zelle DANACH.
-    var IGNORE = { ":": 1, "Zum Spiel": 1, "Nichtantritt GAST": 1, "Nichtantritt HEIM": 1 };
-    var sepIdx = -1;
-    for (var si = 0; si < tds.length; si++) { if (tds[si] === ":") { sepIdx = si; break; } }
-    var heim = "", gast = "";
+    const tds = tr.querySelectorAll("td").map((td) => nodeText(td));
+    // Heim = nächste nicht-leere Zelle VOR dem ersten ":", Gast = danach.
+    let sepIdx = -1;
+    for (let i = 0; i < tds.length; i++) {
+      if (tds[i] === ":") {
+        sepIdx = i;
+        break;
+      }
+    }
+    let heim = "";
+    let gast = "";
     if (sepIdx > 0) {
-      for (var hi = sepIdx - 1; hi >= 0; hi--) { if (tds[hi] && !IGNORE[tds[hi]]) { heim = tds[hi]; break; } }
-      for (var gi = sepIdx + 1; gi < tds.length; gi++) { if (tds[gi] && !IGNORE[tds[gi]]) { gast = tds[gi]; break; } }
+      for (let h = sepIdx - 1; h >= 0; h--) {
+        if (tds[h] && !IGNORE_TDS.has(tds[h])) {
+          heim = tds[h];
+          break;
+        }
+      }
+      for (let g = sepIdx + 1; g < tds.length; g++) {
+        if (tds[g] && !IGNORE_TDS.has(tds[g])) {
+          gast = tds[g];
+          break;
+        }
+      }
     }
-    if (!heim || !gast) return; // unparsebar (kein sauberer Separator) → ueberspringen
+    if (!heim || !gast) continue; // kein sauberer Separator → überspringen
 
+    seen.add(m[2]);
+    const fullHref = href.startsWith("http")
+      ? href
+      : `https://www.fussball.de${href}`;
     results.push({
       spielId: m[2],
       slug: m[1],
       datum: currentDatum,
-      heim: heim,
-      gast: gast,
+      heim,
+      gast,
       ergebnis: "",
-      vergangen: vergangen,
+      vergangen,
       status: vergangen ? "finished" : "scheduled",
-      url: href
+      url: fullHref
     });
-  });
+  }
 
   return results;
-})()`;
+}
 
 /** fussball.de returns ~10 matches per page; 8 pages ≈ 80 matches covers a full season. */
 const MAX_PAGES = 8;
@@ -497,7 +566,6 @@ const MAX_PAGES = 8;
  * rein datumsbasiert (nur intern, wird downstream nicht gelesen).
  */
 async function paginateTeamGames(
-  page: Page,
   kind: "prev" | "next",
   teamId: string,
   into: Map<string, SpielListItem>,
@@ -509,10 +577,8 @@ async function paginateTeamGames(
     const indexSeg = idx === 0 ? "" : `/index/${idx}`;
     const ajaxUrl = `${base}${saisonSeg}${indexSeg}`;
     try {
-      await page.goto(ajaxUrl, { waitUntil: "networkidle", timeout: 20000 });
-      await assertNotCaptcha(page);
-      await page.waitForTimeout(800);
-      const pageResults = (await page.evaluate(EXTRACT_MATCHES_JS)) as SpielListItem[];
+      const root = await fetchHtml(ajaxUrl);
+      const pageResults = extractMatchesFromHtml(root);
 
       // Status NICHT vom Datum, sondern vom ENDPOINT ableiten: `next.games`
       // liefert ANGESETZTE Spiele (ohne Ergebnis) — auch wenn ihr Datum schon
@@ -575,50 +641,42 @@ export async function getSpiele(
   slug: string,
   saison: string
 ): Promise<SpielListItem[]> {
-  return withPage(async (page) => {
-    const allResults = new Map<string, SpielListItem>();
+  void slug; // nicht mehr genutzt (Haupt-Team-Seite entfernt) — Signatur stabil
+  const allResults = new Map<string, SpielListItem>();
 
-    // Vergangene Spiele (ohne + mit saison-Parameter). `prev.games` liefert die
-    // jüngsten gespielten Spiele SAUBER geparst (echte Vereinsnamen).
-    await paginateTeamGames(page, "prev", teamId, allResults);
-    await paginateTeamGames(page, "prev", teamId, allResults, saison);
+  // Vergangene Spiele (ohne + mit saison-Parameter). `prev.games` liefert die
+  // jüngsten gespielten Spiele SAUBER geparst (echte Vereinsnamen).
+  await paginateTeamGames("prev", teamId, allResults);
+  await paginateTeamGames("prev", teamId, allResults, saison);
 
-    // Kommende Spiele (ohne + mit saison-Parameter). Gleiche Tabellen-Struktur.
-    await paginateTeamGames(page, "next", teamId, allResults);
-    await paginateTeamGames(page, "next", teamId, allResults, saison);
+  // Kommende Spiele (ohne + mit saison-Parameter). Gleiche Tabellen-Struktur.
+  await paginateTeamGames("next", teamId, allResults);
+  await paginateTeamGames("next", teamId, allResults, saison);
 
-    // HINWEIS: Die Haupt-Team-Seite (`/mannschaft/{slug}/.../saison/{saison}`)
-    // wird BEWUSST NICHT mehr gescraped. Sie war die Quelle zweier Bugs:
-    //   1. Saison-Pollution: ihr Default-View mischt uralte Vorsaison-Spiele
-    //      (inkl. Freundschaftsspiele unter dem alten Vereinsnamen) hinein.
-    //   2. Parse-Korruption: ihre Match-Zeile beginnt mit Datum/Wettbewerb/
-    //      Kategorie-Zellen → früher landeten "Di, 30.07.24 | 20:00" und
-    //      "Freundschaftsspiel" als Heim/Gast in der DB.
-    // prev/next.games decken die laufende Saison sauber ab; bei aktivem
-    // (nächtlichem) Crawl akkumuliert die DB die Saison fortlaufend.
+  // HINWEIS: Die Haupt-Team-Seite (`/mannschaft/{slug}/.../saison/{saison}`)
+  // wird BEWUSST NICHT gescraped. Sie war Quelle von Saison-Pollution (alte
+  // Vorsaison-Spiele) + Parse-Korruption. prev/next.games decken die laufende
+  // Saison sauber ab; bei aktivem Crawl akkumuliert die DB die Saison.
 
-    // Saison-Filter: nur Spiele AB Saisonstart (1. Juli des Saison-Codes)
-    // behalten. Schützt gegen Leckage alter Saisons über tiefe prev.games-
-    // Pagination und gegen den ignorierten saison-Parameter. KEINE Obergrenze
-    // → kommende (auch nächste Saison) Spiele bleiben erhalten ("Kommend").
-    const start = saisonStartDate(saison);
-    const startMs = start ? start.getTime() : null;
+  // Saison-Filter: nur Spiele AB Saisonstart (1. Juli des Saison-Codes). Keine
+  // Obergrenze → kommende (auch nächste Saison) Spiele bleiben erhalten.
+  const start = saisonStartDate(saison);
+  const startMs = start ? start.getTime() : null;
 
-    const raw = Array.from(allResults.values()).filter((g) => {
-      const t = parseSpielDatum(g.datum);
-      if (t === null) return false; // unparsebares Datum → raus
-      if (startMs !== null && t < startMs) return false; // vor Saisonstart → raus
-      return true;
-    });
-
-    raw.sort((a, b) => {
-      const ta = parseSpielDatum(a.datum) ?? 0;
-      const tb = parseSpielDatum(b.datum) ?? 0;
-      return tb - ta;
-    });
-
-    return raw;
+  const raw = Array.from(allResults.values()).filter((g) => {
+    const t = parseSpielDatum(g.datum);
+    if (t === null) return false;
+    if (startMs !== null && t < startMs) return false;
+    return true;
   });
+
+  raw.sort((a, b) => {
+    const ta = parseSpielDatum(a.datum) ?? 0;
+    const tb = parseSpielDatum(b.datum) ?? 0;
+    return tb - ta;
+  });
+
+  return raw;
 }
 
 const playerNameCache = new Map<string, string>();
@@ -628,25 +686,19 @@ function extractPlayerIdFromUrl(url: string): string | null {
   return m ? m[1] : null;
 }
 
-async function resolvePlayerName(page: Page, playerUrl: string): Promise<string> {
+async function resolvePlayerName(playerUrl: string): Promise<string> {
   const id = extractPlayerIdFromUrl(playerUrl);
   if (!id) return playerUrl;
   if (playerNameCache.has(id)) return playerNameCache.get(id)!;
 
   try {
-    await page.goto(playerUrl, { waitUntil: "networkidle", timeout: 20000 });
-    await assertNotCaptcha(page);
-    await page.waitForTimeout(1000);
-    const name = await page.evaluate(`(function() {
-      var title = document.title;
-      var m = title.match(/^(.+?)\\s*(?:Basisprofil|Profil|\\|)/i);
-      if (m) return m[1].trim();
-      return title.split("|")[0].trim();
-    })()`) as string
-    playerNameCache.set(id, name || id);
-    return playerNameCache.get(id)!;
+    const root = await fetchHtml(playerUrl);
+    const title = nodeText(root.querySelector("title"));
+    const m = title.match(/^(.+?)\s*(?:Basisprofil|Profil|\|)/i);
+    const name = (m ? m[1].trim() : title.split("|")[0].trim()) || id;
+    playerNameCache.set(id, name);
+    return name;
   } catch (err) {
-    // Captcha errors are loud signals — rethrow so the whole crawl fails.
     if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
     playerNameCache.set(id, id);
     return id;
@@ -657,118 +709,120 @@ export async function getSpielDetails(
   spielId: string,
   slug: string
 ): Promise<SpielDetails> {
-  return withPage(async (page) => {
-    const url = `https://www.fussball.de/spiel/${slug || "spiel"}/-/spiel/${spielId}#!/`;
-    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
-    await assertNotCaptcha(page);
-    await page.waitForTimeout(3000);
+  const url = `https://www.fussball.de/spiel/${slug || "spiel"}/-/spiel/${spielId}`;
+  const root = await fetchHtml(url);
 
-    const raw = await page.evaluate(`(function() {
-      var result = {
-        heim: "",
-        gast: "",
-        ergebnisHeim: 0,
-        ergebnisGast: 0,
-        halbzeitHeim: null,
-        halbzeitGast: null,
-        rawEvents: [],
-        spielerUrls: []
-      };
+  const heim = nodeText(root.querySelector(".team-home .team-name"));
+  const gast = nodeText(root.querySelector(".team-away .team-name"));
 
-      var heimEl = document.querySelector(".team-home .team-name");
-      result.heim = heimEl ? (heimEl.textContent || "").replace(/\\s+/g, " ").trim() : "";
-      var gastEl = document.querySelector(".team-away .team-name");
-      result.gast = gastEl ? (gastEl.textContent || "").replace(/\\s+/g, " ").trim() : "";
+  const matchCourse = root.querySelector(".match-course");
+  const rowEvents = matchCourse
+    ? matchCourse.querySelectorAll(".row-event")
+    : [];
 
-      var matchCourse = document.querySelector(".match-course");
-      var rowEvents = matchCourse ? Array.from(matchCourse.querySelectorAll(".row-event")) : [];
-      rowEvents.forEach(function(row) {
-        var isRight = row.classList.contains("event-right");
-        var isLeft = row.classList.contains("event-left");
-        var valignEl = row.querySelector(".valign-inner");
-        var minuteText = valignEl ? (valignEl.textContent || "").replace(/\\s+/g, "").replace("'", "").trim() : null;
-        var isGoal = row.querySelector(".hexagon.green") !== null;
-        var isSubstitute = row.querySelector(".icon-substitute") !== null;
-        var playerLinks = Array.from(row.querySelectorAll('a[href*="spielerprofil"]'))
-          .map(function(a) { return a.href; })
-          .filter(function(h) { return h.includes("/player-id/") || h.includes("/userid/"); });
+  type RawEv = {
+    typ: "TOR" | "AUSWECHSLUNG";
+    minute: number | null;
+    side: "heim" | "gast" | "unbekannt";
+    playerLinks: string[];
+  };
+  const rawEvents: RawEv[] = [];
+  const spielerUrls: string[] = [];
 
-        var side = isRight ? "gast" : isLeft ? "heim" : "unbekannt";
-        var minute = minuteText ? parseInt(minuteText, 10) : null;
+  for (const row of rowEvents) {
+    const isRight = row.classList.contains("event-right");
+    const isLeft = row.classList.contains("event-left");
+    const valign = row.querySelector(".valign-inner");
+    const minuteStr = valign
+      ? nodeText(valign).replace(/\s+/g, "").replace(/'/g, "")
+      : "";
+    const isGoal = row.querySelector(".hexagon.green") !== null;
+    const isSubstitute = row.querySelector(".icon-substitute") !== null;
+    const playerLinks = row
+      .querySelectorAll('a[href*="spielerprofil"]')
+      .map((a) => a.getAttribute("href") || "")
+      .filter((h) => h.includes("/player-id/") || h.includes("/userid/"))
+      .map((h) => (h.startsWith("http") ? h : `https://www.fussball.de${h}`));
 
-        if ((isGoal || isSubstitute) && playerLinks.length > 0) {
-          result.rawEvents.push({ typ: isGoal ? "TOR" : "AUSWECHSLUNG", minute: minute, side: side, playerLinks: playerLinks });
-          playerLinks.forEach(function(u) {
-            if (!result.spielerUrls.includes(u)) result.spielerUrls.push(u);
-          });
-        }
+    const side = isRight ? "gast" : isLeft ? "heim" : "unbekannt";
+    const minuteNum = minuteStr ? parseInt(minuteStr, 10) : NaN;
+    const minute = isNaN(minuteNum) ? null : minuteNum;
+
+    if ((isGoal || isSubstitute) && playerLinks.length > 0) {
+      rawEvents.push({
+        typ: isGoal ? "TOR" : "AUSWECHSLUNG",
+        minute,
+        side,
+        playerLinks
       });
-
-      var goals = result.rawEvents.filter(function(e) { return e.typ === "TOR"; });
-      result.ergebnisHeim = goals.filter(function(g) { return g.side === "heim"; }).length;
-      result.ergebnisGast = goals.filter(function(g) { return g.side === "gast"; }).length;
-
-      var firstHalfGoals = goals.filter(function(g) { return g.minute !== null && g.minute <= 45; });
-      result.halbzeitHeim = firstHalfGoals.filter(function(g) { return g.side === "heim"; }).length;
-      result.halbzeitGast = firstHalfGoals.filter(function(g) { return g.side === "gast"; }).length;
-
-      return result;
-    })()`) as { heim: string; gast: string; ergebnisHeim: number; ergebnisGast: number; halbzeitHeim: number | null; halbzeitGast: number | null; rawEvents: Array<{typ: string; minute: number | null; side: "heim" | "gast" | "unbekannt"; playerLinks: string[]}>; spielerUrls: string[] }
-
-    // Resolve player names sequentially (cached)
-    for (const u of raw.spielerUrls) {
-      const id = extractPlayerIdFromUrl(u);
-      if (!id || playerNameCache.has(id)) continue;
-      await page.waitForTimeout(800);
-      await resolvePlayerName(page, u);
+      for (const u of playerLinks) {
+        if (!spielerUrls.includes(u)) spielerUrls.push(u);
+      }
     }
+  }
 
-    // Build typed events
-    const events: ScrapedEvent[] = raw.rawEvents.map((ev) => {
-      if (ev.typ === "TOR" && ev.playerLinks[0]) {
-        const id = extractPlayerIdFromUrl(ev.playerLinks[0]);
-        return {
-          typ: "TOR",
-          minute: ev.minute,
-          side: ev.side,
-          spielerId: id ?? undefined,
-          spielerName: id ? (playerNameCache.get(id) ?? id) : undefined
-        };
-      }
-      if (ev.typ === "AUSWECHSLUNG" && ev.playerLinks.length >= 2) {
-        const reinId = extractPlayerIdFromUrl(ev.playerLinks[0]);
-        const rausId = extractPlayerIdFromUrl(ev.playerLinks[1]);
-        return {
-          typ: "AUSWECHSLUNG",
-          minute: ev.minute,
-          side: ev.side,
-          rein: {
-            id: reinId ?? "",
-            name: reinId ? (playerNameCache.get(reinId) ?? reinId) : ""
-          },
-          raus: {
-            id: rausId ?? "",
-            name: rausId ? (playerNameCache.get(rausId) ?? rausId) : ""
-          }
-        };
-      }
-      return { typ: ev.typ as "TOR" | "AUSWECHSLUNG", minute: ev.minute, side: ev.side };
-    });
+  const goals = rawEvents.filter((e) => e.typ === "TOR");
+  const ergebnisHeim = goals.filter((g) => g.side === "heim").length;
+  const ergebnisGast = goals.filter((g) => g.side === "gast").length;
+  const firstHalfGoals = goals.filter(
+    (g) => g.minute !== null && g.minute <= 45
+  );
+  const halbzeitHeim = firstHalfGoals.filter((g) => g.side === "heim").length;
+  const halbzeitGast = firstHalfGoals.filter((g) => g.side === "gast").length;
 
-    events.sort((a, b) => (a.minute ?? 999) - (b.minute ?? 999));
+  // Spielernamen auflösen (gecached, sequenziell mit kleinem Delay gegen
+  // Rate-Limiting). Jede Profilseite ist ein einzelner leichter fetch.
+  for (const u of spielerUrls) {
+    const id = extractPlayerIdFromUrl(u);
+    if (!id || playerNameCache.has(id)) continue;
+    await new Promise((r) => setTimeout(r, 250));
+    await resolvePlayerName(u);
+  }
 
-    return {
-      spielId,
-      heim: raw.heim,
-      gast: raw.gast,
-      ergebnis: { heim: raw.ergebnisHeim, gast: raw.ergebnisGast },
-      halbzeit:
-        raw.halbzeitHeim !== null && raw.halbzeitGast !== null
-          ? { heim: raw.halbzeitHeim, gast: raw.halbzeitGast }
-          : null,
-      events
-    };
+  const events: ScrapedEvent[] = rawEvents.map((ev) => {
+    if (ev.typ === "TOR" && ev.playerLinks[0]) {
+      const id = extractPlayerIdFromUrl(ev.playerLinks[0]);
+      return {
+        typ: "TOR",
+        minute: ev.minute,
+        side: ev.side,
+        spielerId: id ?? undefined,
+        spielerName: id ? (playerNameCache.get(id) ?? id) : undefined
+      };
+    }
+    if (ev.typ === "AUSWECHSLUNG" && ev.playerLinks.length >= 2) {
+      const reinId = extractPlayerIdFromUrl(ev.playerLinks[0]);
+      const rausId = extractPlayerIdFromUrl(ev.playerLinks[1]);
+      return {
+        typ: "AUSWECHSLUNG",
+        minute: ev.minute,
+        side: ev.side,
+        rein: {
+          id: reinId ?? "",
+          name: reinId ? (playerNameCache.get(reinId) ?? reinId) : ""
+        },
+        raus: {
+          id: rausId ?? "",
+          name: rausId ? (playerNameCache.get(rausId) ?? rausId) : ""
+        }
+      };
+    }
+    return { typ: ev.typ, minute: ev.minute, side: ev.side };
   });
+
+  events.sort((a, b) => (a.minute ?? 999) - (b.minute ?? 999));
+
+  return {
+    spielId,
+    heim,
+    gast,
+    ergebnis: { heim: ergebnisHeim, gast: ergebnisGast },
+    // Halbzeit-Stand aus den Tor-Events (Minute ≤ 45). Wie zuvor immer als
+    // Objekt (auch 0:0) — NICHT null, sonst ändert sich der content-hash aller
+    // bestehenden Matches und löst unnötige Re-Evaluation aus.
+    halbzeit: { heim: halbzeitHeim, gast: halbzeitGast },
+    events
+  };
 }
 
 export interface KaderPlayer {
