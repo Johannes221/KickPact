@@ -1,4 +1,4 @@
-import { and, eq, desc, asc, gte, lte, inArray, sql, type SQL } from "drizzle-orm";
+import { and, eq, ne, desc, asc, gte, lte, inArray, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { matches, matchEvents, teams, clubs } from "@/lib/db/schema";
 import { charges, charges as chargesTable } from "@/lib/db/schema/charges";
@@ -24,10 +24,13 @@ export async function getMatchById(matchId: string, clubSlug: string) {
 }
 
 export async function listMatchEvents(matchId: string) {
+  // Auswechslungen ausblenden: keine Wette/kein Trigger hängt an ihnen, sie
+  // machen die Ereignis-Liste nur unübersichtlich. Tore (und ggf. Karten/
+  // Spezial-Events) bleiben sichtbar.
   return db
     .select()
     .from(matchEvents)
-    .where(eq(matchEvents.matchId, matchId))
+    .where(and(eq(matchEvents.matchId, matchId), ne(matchEvents.type, "auswechslung")))
     .orderBy(matchEvents.minute);
 }
 

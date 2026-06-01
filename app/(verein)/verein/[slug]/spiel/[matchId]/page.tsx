@@ -99,8 +99,8 @@ export default async function MatchDetailPage({
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between gap-4">
-            <div className={`flex-1 text-right ${isHeim ? "font-semibold" : ""}`}>
-              <div className="font-display font-black text-xl tracking-tight text-brand-night-navy leading-tight">
+            <div className={`flex-1 min-w-0 text-right ${isHeim ? "font-semibold" : ""}`}>
+              <div className="font-display font-black text-base md:text-xl tracking-tight text-brand-night-navy leading-tight break-words hyphens-auto">
                 {match.heimName}
               </div>
               <div className="text-xs text-brand-night-navy/50 mt-1">
@@ -108,9 +108,9 @@ export default async function MatchDetailPage({
               </div>
             </div>
             <div className="shrink-0 text-center">
-              <div className="font-display font-black text-5xl md:text-6xl tracking-tight text-brand-night-navy tabular-nums">
+              <div className="font-display font-black text-4xl sm:text-5xl md:text-6xl tracking-tight text-brand-night-navy tabular-nums">
                 {match.ergebnisHeim ?? "—"}
-                <span className="text-brand-night-navy/30 mx-2">:</span>
+                <span className="text-brand-night-navy/30 mx-1.5 sm:mx-2">:</span>
                 {match.ergebnisGast ?? "—"}
               </div>
               {match.halbzeitHeim !== null && match.halbzeitGast !== null && (
@@ -119,8 +119,8 @@ export default async function MatchDetailPage({
                 </div>
               )}
             </div>
-            <div className={`flex-1 ${!isHeim ? "font-semibold" : ""}`}>
-              <div className="font-display font-black text-xl tracking-tight text-brand-night-navy leading-tight">
+            <div className={`flex-1 min-w-0 ${!isHeim ? "font-semibold" : ""}`}>
+              <div className="font-display font-black text-base md:text-xl tracking-tight text-brand-night-navy leading-tight break-words hyphens-auto">
                 {match.gastName}
               </div>
               <div className="text-xs text-brand-night-navy/50 mt-1">
