@@ -2,6 +2,7 @@ import Link from "next/link";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { teams, clubs } from "@/lib/db/schema";
+import { teamLicenses } from "@/lib/db/schema/billing";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { listInvitationsForTeam } from "@/lib/db/queries/invitations";
 import { listSponsorsForTeam } from "@/lib/db/queries/team-dashboard";
@@ -22,7 +23,7 @@ export default async function TeamSponsorenPage({
   const { club, role } = await assertTeamPageAccess(slug, teamId, "viewer");
 
   const [team] = await db
-    .select({ id: teams.id, name: teams.name })
+    .select({ id: teams.id, name: teams.name, verifiedAt: teams.verifiedAt })
     .from(teams)
     .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
     .limit(1);
@@ -35,13 +36,25 @@ export default async function TeamSponsorenPage({
     );
   }
 
-  const [[clubRow], invitations, sponsorRows] = await Promise.all([
+  const [[clubRow], [licenseRow], invitations, sponsorRows] = await Promise.all([
     db.select({ verifiedAt: clubs.verifiedAt }).from(clubs).where(eq(clubs.id, club.id)).limit(1),
+    db.select({ plan: teamLicenses.plan }).from(teamLicenses).where(eq(teamLicenses.teamId, team.id)).limit(1),
     listInvitationsForTeam(team.id),
     listSponsorsForTeam(team.id)
   ]);
 
-  const isVerified = !!clubRow?.verifiedAt;
+  // Verifikations-Scope analog zur Setup-Checkliste: Vereinslizenz verifiziert
+  // den Verein (Teams erben), Einzel-Mannschaft (basic/pro) verifiziert sich selbst.
+  const isVereinslizenz = licenseRow?.plan === "verein";
+  const isVerified = isVereinslizenz
+    ? !!clubRow?.verifiedAt
+    : !!team.verifiedAt;
+  const verifyEntity: "Mannschaft" | "Verein" = isVereinslizenz
+    ? "Verein"
+    : "Mannschaft";
+  const verifyHref = isVereinslizenz
+    ? `/verein/${slug}/verifikation`
+    : `/verein/${slug}/mannschaft/${teamId}/verifikation`;
   const canInvite = role === "admin" || role === "trainer";
   const pendingToken = invitations.find((i) => i.status === "pending")?.token ?? null;
 
@@ -62,6 +75,8 @@ export default async function TeamSponsorenPage({
         initialToken={pendingToken}
         isVerified={isVerified}
         canInvite={canInvite}
+        verifyEntity={verifyEntity}
+        verifyHref={verifyHref}
       />
 
       <section className="space-y-3">

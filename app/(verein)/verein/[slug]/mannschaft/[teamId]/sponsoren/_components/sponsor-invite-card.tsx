@@ -11,18 +11,33 @@ interface Props {
   slug: string;
   /** Offener Einladungs-Token (oder null, falls noch keiner existiert). */
   initialToken: string | null;
-  /** clubs.verifiedAt gesetzt? Steuert das Einladen-Gate. */
+  /** Verifizierung der relevanten Entität gesetzt? Steuert das Einladen-Gate. */
   isVerified: boolean;
   /** Trainer/Admin? Nur dann darf eingeladen werden. */
   canInvite: boolean;
+  /**
+   * Verifikations-Scope: „Mannschaft" (Einzel-Team, basic/pro) oder „Verein"
+   * (Vereinslizenz). Steuert Label + Ziel-Link des Gates.
+   */
+  verifyEntity: "Mannschaft" | "Verein";
+  /** Ziel-URL des „… verifizieren"-Links. */
+  verifyHref: string;
 }
 
 /**
  * Karte im Sponsoren-Tab: Einladungslink + Kopieren. Vor der Verifizierung
- * ausgegraut mit CTA „erst Verein verifizieren" — schützt Sponsoren davor, an
- * unverifizierte Vereine zu zahlen (Spec 2026-05-29 §3.5).
+ * ausgegraut mit CTA „erst … verifizieren" — schützt Sponsoren davor, an
+ * unverifizierte Mannschaften/Vereine zu zahlen (Spec 2026-05-29 §3.5).
  */
-export function SponsorInviteCard({ teamId, slug, initialToken, isVerified, canInvite }: Props) {
+export function SponsorInviteCard({
+  teamId,
+  slug: _slug,
+  initialToken,
+  isVerified,
+  canInvite,
+  verifyEntity,
+  verifyHref
+}: Props) {
   const [token, setToken] = useState<string | null>(initialToken);
   const [pending, startTransition] = useTransition();
 
@@ -48,23 +63,25 @@ export function SponsorInviteCard({ teamId, slug, initialToken, isVerified, canI
 
   // ── Gate: nicht verifiziert → Einladen gesperrt ────────────────────────────
   if (!isVerified) {
+    const article = verifyEntity === "Mannschaft" ? "deine" : "dein";
+    const plural = verifyEntity === "Mannschaft" ? "Mannschaften" : "Vereine";
     return (
       <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5">
         <div className="flex items-start gap-3">
           <span className="text-amber-600 text-lg shrink-0" aria-hidden>🔒</span>
           <div className="flex-1">
             <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
-              Erst Verein verifizieren
+              Erst {verifyEntity} verifizieren
             </h3>
             <p className="mt-1 text-sm text-brand-night-navy/70">
-              Schützt deine Sponsoren — kein Geld an unverifizierte Vereine. Sobald dein
-              Verein verifiziert ist, kannst du Sponsoren einladen.
+              Schützt deine Sponsoren — kein Geld an unverifizierte {plural}. Sobald{" "}
+              {article} {verifyEntity} verifiziert ist, kannst du Sponsoren einladen.
             </p>
             <Link
-              href={`/verein/${slug}/verifikation`}
+              href={verifyHref}
               className="mt-3 inline-flex items-center text-sm font-semibold text-accent hover:underline"
             >
-              Verein verifizieren →
+              {verifyEntity} verifizieren →
             </Link>
           </div>
         </div>
