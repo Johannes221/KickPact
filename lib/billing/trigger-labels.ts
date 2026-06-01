@@ -6,6 +6,8 @@
  * DB-Abhängigkeit — pure Lookup-Tabellen.
  */
 
+import { CUP_ROUND_LABELS, type CupRound } from "@/lib/triggers/cup-rounds";
+
 export type TriggerCategory = "auto" | "manual" | "season";
 
 /**
@@ -67,8 +69,11 @@ export function getTriggerLabel(
       return "Tabellenplatz";
     case "season_champion":
       return "Meisterschaft";
-    case "season_cup_round":
-      return "Pokal-Erfolg";
+    case "season_cup_round": {
+      const round = stringParam(params, "minRound", "min_round");
+      const label = round ? CUP_ROUND_LABELS[round as CupRound] : null;
+      return label ? `Pokal: ab ${label}` : "Pokal-Erfolg";
+    }
     case "season_custom":
       return "Saison-Ziel";
     default:

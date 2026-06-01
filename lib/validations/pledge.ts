@@ -22,12 +22,55 @@ export const TRIGGER_TYPES = [
 
 export type TriggerType = (typeof TRIGGER_TYPES)[number];
 
-export const pledgeRuleInputSchema = z.object({
-  triggerType: z.enum(TRIGGER_TYPES),
-  amountEur: z.number().min(0.5).max(500),
-  perMatchCapEur: z.number().optional(),
-  params: z.record(z.unknown()).default({})
-});
+/**
+ * Saison-Trigger feuern 1× am Saison-Ende (gebunden an EIN Ergebnis) — daher
+ * kein Perioden-Cap. Lokal definiert (statt Import aus dem DB-Schema), damit
+ * dieses Modul client-bundle-frei von drizzle bleibt.
+ */
+const SEASON_TRIGGER_TYPES = new Set<string>([
+  "season_promotion",
+  "season_no_relegation",
+  "season_table_position",
+  "season_champion",
+  "season_cup_round",
+  "season_custom"
+]);
+
+export function isSeasonTriggerType(t: string): boolean {
+  return SEASON_TRIGGER_TYPES.has(t);
+}
+
+export const CAP_PERIODS = ["month", "season"] as const;
+export type CapPeriod = (typeof CAP_PERIODS)[number];
+
+export const pledgeRuleInputSchema = z
+  .object({
+    triggerType: z.enum(TRIGGER_TYPES),
+    amountEur: z.number().min(0.5).max(500),
+    /** Optionaler Cap pro Wette, begrenzt pro `capPeriod`. Nicht bei Saison-Wetten. */
+    capEur: z.number().positive().max(100000).optional(),
+    capPeriod: z.enum(CAP_PERIODS).optional(),
+    params: z.record(z.unknown()).default({})
+  })
+  .superRefine((val, ctx) => {
+    if (SEASON_TRIGGER_TYPES.has(val.triggerType)) {
+      if (val.capEur !== undefined || val.capPeriod !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Saison-Wetten können keinen Cap haben.",
+          path: ["capEur"]
+        });
+      }
+      return;
+    }
+    if (val.capEur !== undefined && val.capPeriod === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Bitte Cap-Periode wählen (pro Monat oder pro Saison).",
+        path: ["capPeriod"]
+      });
+    }
+  });
 
 export const pledgeInputSchema = z.object({
   invitationToken: z.string().min(1, "Einladungs-Token fehlt"),
@@ -59,7 +102,8 @@ const TRIGGER_PARAM_KEY_MAP: Record<string, string> = {
   player_id: "playerId",
   min_pos: "minPosition",
   max_pos: "maxPosition",
-  max_position: "maxPosition"
+  max_position: "maxPosition",
+  min_round: "minRound"
 };
 
 export function normalizeTriggerParams(

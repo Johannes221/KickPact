@@ -19,12 +19,14 @@ import {
 } from "@/components/ui/form";
 import {
   pledgeInputSchema,
+  isSeasonTriggerType,
   type PledgeInput,
   type TriggerType,
 } from "@/lib/validations/pledge";
 import { createPledge } from "../_actions/create-pledge";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics/track";
+import { CUP_ROUND_ORDER, CUP_ROUND_LABELS } from "@/lib/triggers/cup-rounds";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -233,7 +235,8 @@ export function PledgeBuilder() {
                 Wie viel pro Ereignis?
               </h2>
               <p className="mt-1 text-sm text-brand-night-navy/60">
-                Leg fest, was jedes Ereignis wert ist. Der Spiel-Cap begrenzt pro Spiel.
+                Leg fest, was jedes Ereignis wert ist. Optional: ein Cap pro Wette —
+                begrenzt die Auszahlung pro Monat oder pro Saison (sinnvoll bei torreichen Teams).
               </p>
             </div>
 
@@ -275,28 +278,62 @@ export function PledgeBuilder() {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name={`rules.${index}.perMatchCapEur`}
-                      render={({ field }) => (
-                        <FormItem className="w-32">
-                          <FormLabel className="text-xs text-brand-night-navy/60">Spiel-Cap (€)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              step="1"
-                              min="0"
-                              placeholder="optional"
-                              value={field.value ?? ""}
-                              onChange={(e) =>
-                                field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Perioden-Cap nur für wiederkehrende Spiel-Wetten — Saison-Wetten
+                        feuern 1× und brauchen keinen Cap. */}
+                    {!isSeasonTriggerType(field.triggerType) && (
+                      <div className="flex items-end gap-2">
+                        <FormField
+                          control={form.control}
+                          name={`rules.${index}.capEur`}
+                          render={({ field: cf }) => (
+                            <FormItem className="w-28">
+                              <FormLabel className="text-xs text-brand-night-navy/60">Cap (€)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  step="1"
+                                  min="0"
+                                  placeholder="optional"
+                                  value={cf.value ?? ""}
+                                  onChange={(e) => {
+                                    const v = e.target.value === "" ? undefined : Number(e.target.value);
+                                    cf.onChange(v);
+                                    if (
+                                      v !== undefined &&
+                                      form.getValues(`rules.${index}.capPeriod`) === undefined
+                                    ) {
+                                      form.setValue(`rules.${index}.capPeriod`, "month");
+                                    }
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`rules.${index}.capPeriod`}
+                          render={({ field: pf }) => (
+                            <FormItem className="w-28">
+                              <FormLabel className="text-xs text-brand-night-navy/60">pro</FormLabel>
+                              <FormControl>
+                                <select
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                                  value={pf.value ?? "month"}
+                                  disabled={form.watch(`rules.${index}.capEur`) === undefined}
+                                  onChange={(e) => pf.onChange(e.target.value as "month" | "season")}
+                                >
+                                  <option value="month">Monat</option>
+                                  <option value="season">Saison</option>
+                                </select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
 
                     {field.triggerType === "goal_by_player" && (
                       <FormField
@@ -458,6 +495,40 @@ export function PledgeBuilder() {
                           )}
                         />
                       </div>
+                    )}
+
+                    {field.triggerType === "season_cup_round" && (
+                      <FormField
+                        control={form.control}
+                        name={`rules.${index}.params`}
+                        render={({ field: pf }) => (
+                          <FormItem className="w-56">
+                            <FormLabel className="text-xs text-brand-night-navy/60">Mindestens erreichte Runde</FormLabel>
+                            <FormControl>
+                              <select
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                value={(pf.value as Record<string, string>)?.min_round ?? ""}
+                                onChange={(e) =>
+                                  pf.onChange({
+                                    ...((pf.value as Record<string, unknown>) ?? {}),
+                                    min_round: e.target.value,
+                                  })
+                                }
+                              >
+                                <option value="">Runde wählen…</option>
+                                {CUP_ROUND_ORDER.map((r) => (
+                                  <option key={r} value={r}>
+                                    {CUP_ROUND_LABELS[r]}
+                                  </option>
+                                ))}
+                              </select>
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Zahlt 1×, wenn die Mannschaft mindestens diese Pokal-Runde erreicht.
+                            </FormDescription>
+                          </FormItem>
+                        )}
+                      />
                     )}
                   </div>
                 );
@@ -746,7 +817,7 @@ function TriggerToggle({
 // ─── Worst Case Helper ────────────────────────────────────────────────────────
 
 function estimateWorstCase(
-  rules: { triggerType: string; amountEur: number; perMatchCapEur?: number }[]
+  rules: { triggerType: string; amountEur: number; capEur?: number }[]
 ): number {
   const SAISON_GAMES = 18;
   const AVG_GOALS_PER_GAME = 2;
@@ -760,7 +831,7 @@ function estimateWorstCase(
 
   return Math.round(
     rules.reduce((total, r) => {
-      const cap = r.perMatchCapEur ?? r.amountEur * 99;
+      const cap = r.capEur ?? r.amountEur * 99;
       switch (r.triggerType) {
         case "goal_total":
         case "goal_by_player":

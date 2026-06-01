@@ -5,11 +5,13 @@ import { NextRequest } from "next/server";
 const {
   requireUserMock,
   findInvitationByTokenMock,
-  dbLimitFn
+  dbLimitFn,
+  getTeamPlayerNamesMock
 } = vi.hoisted(() => ({
   requireUserMock: vi.fn(),
   findInvitationByTokenMock: vi.fn(),
-  dbLimitFn: vi.fn()
+  dbLimitFn: vi.fn(),
+  getTeamPlayerNamesMock: vi.fn()
 }));
 
 vi.mock("@/lib/auth/session", () => ({
@@ -18,6 +20,10 @@ vi.mock("@/lib/auth/session", () => ({
 
 vi.mock("@/lib/db/queries/invitations", () => ({
   findInvitationByToken: findInvitationByTokenMock
+}));
+
+vi.mock("@/lib/db/queries/matches", () => ({
+  getTeamPlayerNames: getTeamPlayerNamesMock
 }));
 
 vi.mock("@/lib/crawler/fussballde", () => ({
@@ -47,6 +53,8 @@ beforeEach(() => {
   requireUserMock.mockReset();
   findInvitationByTokenMock.mockReset();
   dbLimitFn.mockReset();
+  getTeamPlayerNamesMock.mockReset();
+  getTeamPlayerNamesMock.mockResolvedValue([]);
 });
 
 describe("GET /api/squad", () => {
@@ -82,10 +90,13 @@ describe("GET /api/squad", () => {
     dbLimitFn.mockResolvedValue([
       { fussballdeTeamId: "ft1", fussballdeSlug: "fc-test" }
     ]);
+    // Aufgelaufene Spieler aus match_events — Union mit dem Kader, dedupliziert + sortiert.
+    getTeamPlayerNamesMock.mockResolvedValue(["Anton Aufgelaufen", "Max Mustermann"]);
 
     const res = await GET(makeReq("valid-token"));
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.players).toEqual(["Max Mustermann", "Erika Beispiel"]);
+    // Kader {Max, Erika} ∪ match_events {Anton, Max} → dedupliziert, alphabetisch (de).
+    expect(body.players).toEqual(["Anton Aufgelaufen", "Erika Beispiel", "Max Mustermann"]);
   });
 });

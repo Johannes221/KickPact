@@ -4,7 +4,11 @@ import { db } from "@/lib/db/client";
 import { matches, matchEvents, teams, charges, pledges, clubs } from "@/lib/db/schema";
 import { evaluateTriggers, type MatchInput } from "@/lib/crawler/triggers";
 import { detectTeamSide } from "@/lib/crawler/team-side";
-import { loadActivePledgeRulesForTeam } from "@/lib/db/queries/evaluation";
+import {
+  loadActivePledgeRulesForTeam,
+  sumRuleChargedCents,
+  ruleCapWindow
+} from "@/lib/db/queries/evaluation";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 
 export const evaluateMatch = inngest.createFunction(
@@ -75,6 +79,12 @@ export const evaluateMatch = inngest.createFunction(
 
     const proposals = evaluateTriggers(input, rules);
 
+    // Perioden-Cap pro Wette: ruleId → {capCents, capPeriod}. Enforcement DB-aware
+    // unten in der Insert-Transaktion (analog Pledge-Monats-Cap).
+    const ruleCapById = new Map(
+      rules.map((r) => [r.id, { capCents: r.capCents ?? null, capPeriod: r.capPeriod ?? null }])
+    );
+
     let inserted = 0;
     let cappedOrSkipped = 0;
     const matchDate = new Date(matchData.m.datum);
@@ -90,12 +100,30 @@ export const evaluateMatch = inngest.createFunction(
           try {
             return await db.transaction(async (tx) => {
               const [pledgeRow] = await tx
-                .select({ id: pledges.id, cap: pledges.monthlyCapCents })
+                .select({
+                  id: pledges.id,
+                  cap: pledges.monthlyCapCents,
+                  startsAt: pledges.startsAt,
+                  endsAt: pledges.endsAt
+                })
                 .from(pledges)
                 .where(eq(pledges.id, p.pledgeId))
                 .for("update")
                 .limit(1);
               if (!pledgeRow) return false;
+
+              // Perioden-Cap pro Wette (Monat/Saison) — vor dem Pledge-Monats-Cap.
+              const ruleCap = ruleCapById.get(p.pledgeRuleId);
+              if (ruleCap?.capCents != null && ruleCap.capPeriod) {
+                const { start, end } = ruleCapWindow(
+                  ruleCap.capPeriod,
+                  matchDate,
+                  pledgeRow.startsAt,
+                  pledgeRow.endsAt
+                );
+                const ruleCharged = await sumRuleChargedCents(tx, p.pledgeRuleId, start, end);
+                if (ruleCharged + p.amountCents > ruleCap.capCents) return false;
+              }
 
               if (pledgeRow.cap !== null) {
                 const monthStart = new Date(

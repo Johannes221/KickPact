@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { setSeasonResult } from "@/lib/actions/season-results";
+import { CUP_ROUND_ORDER, CUP_ROUND_LABELS } from "@/lib/triggers/cup-rounds";
 
 interface Current {
   finalPosition: number | null;
@@ -132,14 +133,11 @@ export function SeasonResultForm({
             className="mt-1.5 w-full rounded-lg border border-brand-neutral/40 bg-white px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           >
             <option value="">— keiner —</option>
-            <option value="vorrunde">Vorrunde</option>
-            <option value="1.runde">1. Runde</option>
-            <option value="2.runde">2. Runde</option>
-            <option value="achtelfinale">Achtelfinale</option>
-            <option value="viertelfinale">Viertelfinale</option>
-            <option value="halbfinale">Halbfinale</option>
-            <option value="finale">Finale</option>
-            <option value="sieger">Sieger</option>
+            {CUP_ROUND_ORDER.map((r) => (
+              <option key={r} value={r}>
+                {CUP_ROUND_LABELS[r]}
+              </option>
+            ))}
           </select>
         </label>
       </div>

@@ -87,7 +87,14 @@ export const pledgeRules = pgTable(
     triggerType: triggerTypeEnum("trigger_type").notNull(),
     triggerParamsJson: jsonb("trigger_params_json").$type<Record<string, unknown>>().default({}),
     amountCents: integer("amount_cents").notNull(),
+    /** @deprecated Pro-Spiel-Cap. Abgelöst durch capCents+capPeriod (Migration 0040). */
     perMatchCapCents: integer("per_match_cap_cents"),
+    /** Optionaler Cap-Betrag pro Wette (in Cent), begrenzt pro `capPeriod`. */
+    capCents: integer("cap_cents"),
+    /** Cap-Periode für `capCents`: pro Kalendermonat oder pro Saison. Nur Spiel-Wetten. */
+    capPeriod: text("cap_period").$type<"month" | "season">(),
+    /** Soft-Delete: false = vom Sponsor gelöscht. Vergangene Charges bleiben erhalten. */
+    active: boolean("active").notNull().default(true),
     requiresApproval: boolean("requires_approval").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },

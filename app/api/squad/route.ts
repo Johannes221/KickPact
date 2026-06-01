@@ -4,7 +4,7 @@ import { db } from "@/lib/db/client";
 import { teams } from "@/lib/db/schema";
 import { findInvitationByToken } from "@/lib/db/queries/invitations";
 import { getKader } from "@/lib/crawler/fussballde";
-import { getTeamScorerNames } from "@/lib/db/queries/matches";
+import { getTeamPlayerNames } from "@/lib/db/queries/matches";
 import { requireUser } from "@/lib/auth/session";
 
 export async function GET(req: NextRequest) {
@@ -44,10 +44,14 @@ export async function GET(req: NextRequest) {
     .where(eq(teams.id, teamId))
     .limit(1);
 
-  // 1) Live-Kader von fussball.de versuchen (frischeste, vollständigste Liste).
-  //    `.trim()` filtert die Whitespace-only-Namen raus, die der Crawler bei
-  //    manchen Teams liefert (E2E-Finding 2026-06-01: ~50 leere Dropdown-Einträge).
-  let players: string[] = [];
+  // Union aus zwei Quellen, damit ALLE wählbar sind, die je aufgelaufen sind
+  // ODER aktuell im Kader stehen:
+  //   1) Live-Kader von fussball.de (getrimmt — `.trim()` entfernt die
+  //      Whitespace-only-Namen, die der Crawler bei manchen Teams liefert;
+  //      E2E-Finding 2026-06-01: ~50 leere Dropdown-Einträge).
+  //   2) Alle bisher aufgelaufenen Spieler aus den gescrapten match_events.
+  const names = new Set<string>();
+
   if (team?.fussballdeTeamId && team?.fussballdeSlug) {
     // Determine current season: e.g. today=May 2026 → saison "2526"
     const now = new Date();
@@ -57,18 +61,17 @@ export async function GET(req: NextRequest) {
         : `${String(now.getFullYear() - 1).slice(2)}${String(now.getFullYear()).slice(2)}`;
     try {
       const kader = await getKader(team.fussballdeTeamId, team.fussballdeSlug, saison);
-      players = kader.map((p) => p.name?.trim() ?? "").filter((n) => n.length > 0);
+      for (const p of kader) {
+        const n = p.name?.trim();
+        if (n) names.add(n);
+      }
     } catch {
-      // Scraping failed — fall through to the match-events fallback below.
-      players = [];
+      // Scraping failed — die match_events-Quelle unten trägt die Liste.
     }
   }
 
-  // 2) Fallback: eigene Torschützen aus den gescrapten match_events. Greift, wenn
-  //    der Live-Kader leer/whitespace ist oder das Team keine fussball.de-IDs hat.
-  if (players.length === 0) {
-    players = await getTeamScorerNames(teamId);
-  }
+  for (const n of await getTeamPlayerNames(teamId)) names.add(n);
 
+  const players = [...names].sort((a, b) => a.localeCompare(b, "de"));
   return NextResponse.json({ players });
 }

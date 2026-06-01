@@ -483,17 +483,17 @@ export async function getMatchDetailForTeam(matchId: string, teamId: string) {
 }
 
 /**
- * Liefert die eindeutigen Namen der eigenen Torschützen einer Mannschaft aus den
- * gescrapten `match_events`. Fallback-Quelle für den Spieler-Picker im Pact-
- * Wizard, wenn der Live-fussball.de-Kader (getKader) keine brauchbaren Namen
- * liefert (E2E-Finding 2026-06-01: Kader-Dropdown war leer, obwohl
- * `match_events.player_name` echte Namen enthielt).
+ * Liefert die eindeutigen Namen aller Spieler, die für eine Mannschaft jemals
+ * aufgelaufen sind — aus den gescrapten `match_events` (Tore, Auswechslungen,
+ * Karten). Quelle für den Spieler-Picker im Pact-Wizard, ergänzend zum
+ * Live-fussball.de-Kader (E2E-Finding 2026-06-01: Kader-Dropdown war leer,
+ * obwohl `match_events.player_name` echte Namen enthielt).
  *
- * Pro Spiel wird via `detectTeamSide` die eigene Seite bestimmt und nur Tore
- * dieser Seite (mit nicht-leerem Spielernamen) gezählt — Gegner-Torschützen
+ * Pro Spiel wird via `detectTeamSide` die eigene Seite bestimmt und nur Events
+ * dieser Seite (mit nicht-leerem Spielernamen) berücksichtigt — Gegner-Spieler
  * tauchen also nicht auf. Alphabetisch sortiert.
  */
-export async function getTeamScorerNames(teamId: string): Promise<string[]> {
+export async function getTeamPlayerNames(teamId: string): Promise<string[]> {
   const [team] = await db
     .select({ name: teams.name, clubName: clubs.name })
     .from(teams)
@@ -510,7 +510,7 @@ export async function getTeamScorerNames(teamId: string): Promise<string[]> {
     })
     .from(matchEvents)
     .innerJoin(matches, eq(matchEvents.matchId, matches.id))
-    .where(and(eq(matches.teamId, teamId), eq(matchEvents.type, "tor")));
+    .where(eq(matches.teamId, teamId));
 
   const names = new Set<string>();
   for (const r of rows) {

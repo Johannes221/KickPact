@@ -74,6 +74,12 @@ describe("normalizeTriggerParams — key mapping", () => {
     });
   });
 
+  it("mappt min_round → minRound (season_cup_round)", () => {
+    expect(normalizeTriggerParams({ min_round: "halbfinale" })).toEqual({
+      minRound: "halbfinale"
+    });
+  });
+
   it("lässt bereits-camelCase- und unbekannte Keys unverändert", () => {
     expect(normalizeTriggerParams({ minGoals: 4, subtype: "kopfball" })).toEqual({
       minGoals: 4,

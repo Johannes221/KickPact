@@ -9,6 +9,7 @@ import {
   seasonResults
 } from "@/lib/db/schema";
 import { isSeasonTrigger, type SeasonTriggerType } from "@/lib/db/schema/pledges";
+import { cupRoundRank } from "@/lib/triggers/cup-rounds";
 
 /**
  * Parsed eine saison-String wie "2526" oder "2025/26" in Datums-Grenzen.
@@ -183,24 +184,13 @@ export function isTriggerHit(
       return result.finalPosition >= minPos && result.finalPosition <= maxPos;
     }
     case "season_cup_round": {
-      // Manuell: Sponsor bestätigt. Wir geben Charge mit pending_approval aus
-      // wenn cupRoundReached gesetzt ist; sonst false.
-      const minRound = (params.minRound as string | undefined)?.toLowerCase();
-      const reached = result.cupRoundReached?.toLowerCase();
-      if (!minRound || !reached) return false;
-      const order = [
-        "vorrunde",
-        "1.runde",
-        "2.runde",
-        "achtelfinale",
-        "viertelfinale",
-        "halbfinale",
-        "finale",
-        "sieger"
-      ];
-      const idxReached = order.indexOf(reached);
-      const idxMin = order.indexOf(minRound);
-      if (idxReached < 0 || idxMin < 0) return false;
+      // Manuell: Sponsor bestätigt. Feuert, wenn die erreichte Runde >= der vom
+      // Sponsor gewählten Ziel-Runde liegt. Defensiv beide Schreibweisen lesen,
+      // falls eine Row noch nicht durch Migration 0039 normalisiert wurde.
+      const minRound = (params.minRound ?? params.min_round) as string | undefined;
+      const idxMin = cupRoundRank(minRound);
+      const idxReached = cupRoundRank(result.cupRoundReached);
+      if (idxMin < 0 || idxReached < 0) return false;
       return idxReached >= idxMin;
     }
     case "season_custom":

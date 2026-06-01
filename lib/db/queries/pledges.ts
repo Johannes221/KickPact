@@ -30,7 +30,9 @@ export async function countPledgeRulesForSponsorOnTeam(
       and(
         eq(pledges.teamId, teamId),
         eq(pledges.sponsorId, sponsorId),
-        eq(pledges.status, "active")
+        eq(pledges.status, "active"),
+        // Soft-gelöschte Wetten zählen nicht gegen das Plan-Limit (Migration 0040).
+        eq(pledgeRules.active, true)
       )
     );
   return rows[0]?.value ?? 0;

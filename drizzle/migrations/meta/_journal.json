@@ -281,6 +281,13 @@
       "when": 1782360800000,
       "tag": "0039_normalize_trigger_params",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1782360900000,
+      "tag": "0040_pledge_rule_caps_crud",
+      "breakpoints": true
     }
   ]
 }

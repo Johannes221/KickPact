@@ -54,6 +54,10 @@ export interface PledgeRuleInput {
   triggerParams: Record<string, unknown>;
   amountCents: number;
   perMatchCapCents: number | null;
+  /** Perioden-Cap-Betrag (Cent). Enforcement DB-aware in evaluate-match/recalc, nicht hier. */
+  capCents?: number | null;
+  /** Perioden-Cap-Fenster für `capCents`. */
+  capPeriod?: "month" | "season" | null;
 }
 
 export interface ChargeProposal {

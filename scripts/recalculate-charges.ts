@@ -9,7 +9,12 @@ import { db } from "../lib/db/client";
 import { teams, matches as matchesTable, matchEvents, pledges, charges as chargesTable } from "../lib/db/schema";
 import { evaluateTriggers, type MatchInput } from "../lib/crawler/triggers";
 import { detectTeamSide } from "../lib/crawler/team-side";
-import { loadActivePledgeRulesForTeam, getMonthlyChargedCents } from "../lib/db/queries/evaluation";
+import {
+  loadActivePledgeRulesForTeam,
+  getMonthlyChargedCents,
+  sumRuleChargedCents,
+  ruleCapWindow
+} from "../lib/db/queries/evaluation";
 
 async function recalculateForTeam(team: { id: string; name: string }) {
   console.log(`\n=== ${team.name} ===`);
@@ -55,15 +60,37 @@ async function recalculateForTeam(team: { id: string; name: string }) {
 
     const results = evaluateTriggers(matchInput, pledgeRules);
 
+    // Perioden-Cap pro Wette: ruleId → {capCents, capPeriod}.
+    const ruleCapById = new Map(
+      pledgeRules.map((r) => [r.id, { capCents: r.capCents ?? null, capPeriod: r.capPeriod ?? null }])
+    );
+
     for (const result of results) {
       if (result.amountCents <= 0) continue;
 
       let cappedAmount = result.amountCents;
       const [pledgeRow] = await db
-        .select({ monthlyCapCents: pledges.monthlyCapCents })
+        .select({
+          monthlyCapCents: pledges.monthlyCapCents,
+          startsAt: pledges.startsAt,
+          endsAt: pledges.endsAt
+        })
         .from(pledges)
         .where(eq(pledges.id, result.pledgeId))
         .limit(1);
+
+      // Perioden-Cap pro Wette (all-or-nothing, wie in evaluate-match).
+      const ruleCap = ruleCapById.get(result.pledgeRuleId);
+      if (ruleCap?.capCents != null && ruleCap.capPeriod && pledgeRow) {
+        const { start, end } = ruleCapWindow(
+          ruleCap.capPeriod,
+          matchDate,
+          pledgeRow.startsAt,
+          pledgeRow.endsAt
+        );
+        const ruleCharged = await sumRuleChargedCents(db, result.pledgeRuleId, start, end);
+        if (ruleCharged + result.amountCents > ruleCap.capCents) continue;
+      }
 
       if (pledgeRow?.monthlyCapCents) {
         const alreadyCharged = await getMonthlyChargedCents(result.pledgeId, matchDate);

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { isTriggerHit } from "@/lib/inngest/functions/evaluate-season";
+import { normalizeTriggerParams } from "@/lib/validations/pledge";
 import type { seasonResults } from "@/lib/db/schema";
 
 type Result = typeof seasonResults.$inferSelect;
@@ -154,6 +155,30 @@ describe("evaluate-season isTriggerHit", () => {
           makeResult({ cupRoundReached: "Sieger" })
         )
       ).toBe(true);
+    });
+    it("feuert mit Wizard-Param (snake) nach Normalisierung", () => {
+      // So kommt es aus dem Pact-Wizard: `min_round` → normalize → `minRound`.
+      expect(
+        isTriggerHit(
+          "season_cup_round",
+          normalizeTriggerParams({ min_round: "halbfinale" }),
+          makeResult({ cupRoundReached: "finale" })
+        )
+      ).toBe(true);
+    });
+    it("Safety-Net: feuert auch mit NICHT-normalisiertem snake-Param", () => {
+      expect(
+        isTriggerHit(
+          "season_cup_round",
+          { min_round: "halbfinale" },
+          makeResult({ cupRoundReached: "finale" })
+        )
+      ).toBe(true);
+    });
+    it("feuert NICHT ohne gewählte Runde (leere Params — der alte Bug)", () => {
+      expect(
+        isTriggerHit("season_cup_round", {}, makeResult({ cupRoundReached: "finale" }))
+      ).toBe(false);
     });
   });
 

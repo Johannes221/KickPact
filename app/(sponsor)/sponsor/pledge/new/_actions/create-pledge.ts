@@ -177,9 +177,9 @@ export async function createPledge(input: PledgeInput) {
         triggerType: r.triggerType,
         triggerParamsJson: normalizeTriggerParams(r.params),
         amountCents: Math.round(r.amountEur * 100),
-        perMatchCapCents: r.perMatchCapEur
-          ? Math.round(r.perMatchCapEur * 100)
-          : null,
+        capCents: r.capEur ? Math.round(r.capEur * 100) : null,
+        capPeriod: r.capEur ? (r.capPeriod ?? null) : null,
+        perMatchCapCents: null,
         requiresApproval: MANUAL_TRIGGERS.has(r.triggerType)
       }))
     );

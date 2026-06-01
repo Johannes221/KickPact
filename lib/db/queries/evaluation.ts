@@ -24,7 +24,9 @@ export async function loadActivePledgeRulesForTeam(
       triggerType: pledgeRules.triggerType,
       triggerParams: pledgeRules.triggerParamsJson,
       amountCents: pledgeRules.amountCents,
-      perMatchCapCents: pledgeRules.perMatchCapCents
+      perMatchCapCents: pledgeRules.perMatchCapCents,
+      capCents: pledgeRules.capCents,
+      capPeriod: pledgeRules.capPeriod
     })
     .from(pledgeRules)
     .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
@@ -32,6 +34,8 @@ export async function loadActivePledgeRulesForTeam(
       and(
         eq(pledges.teamId, teamId),
         eq(pledges.status, "active"),
+        // Soft-Delete: vom Sponsor gelöschte Wetten feuern nicht mehr (Migration 0040).
+        eq(pledgeRules.active, true),
         lte(pledges.startsAt, asOf),
         gte(pledges.endsAt, asOf)
       )
@@ -47,8 +51,59 @@ export async function loadActivePledgeRulesForTeam(
       triggerType: r.triggerType as TriggerType,
       triggerParams: (r.triggerParams ?? {}) as Record<string, unknown>,
       amountCents: r.amountCents,
-      perMatchCapCents: r.perMatchCapCents
+      perMatchCapCents: r.perMatchCapCents,
+      capCents: r.capCents,
+      capPeriod: r.capPeriod
     }));
+}
+
+/**
+ * Summe der `confirmed`+`pending_approval`+`invoiced` Charges EINER pledge_rule
+ * in einem Zeitfenster — für den Perioden-Cap pro Wette (Monat/Saison).
+ * Fenster über `COALESCE(confirmedAt, createdAt)`, identisch zum Pledge-Monats-Cap
+ * (Konsistenz mit der Rechnungs-Periode in generate-invoices).
+ *
+ * `exec` akzeptiert die DB oder eine laufende Transaktion (tx), damit der
+ * Cap-Check in evaluate-match atomar unter `SELECT … FOR UPDATE` laufen kann.
+ */
+/**
+ * Liefert das Cap-Fenster `[start, end)` für eine Wette:
+ *  - `month`  → Kalendermonat des Spieldatums.
+ *  - `season` → Pledge-Laufzeit `[startsAt, endsAt]` (end exklusiv via +1ms).
+ */
+export function ruleCapWindow(
+  capPeriod: "month" | "season",
+  matchDate: Date,
+  pledgeStartsAt: Date,
+  pledgeEndsAt: Date
+): { start: Date; end: Date } {
+  if (capPeriod === "season") {
+    return { start: pledgeStartsAt, end: new Date(pledgeEndsAt.getTime() + 1) };
+  }
+  return {
+    start: new Date(matchDate.getFullYear(), matchDate.getMonth(), 1),
+    end: new Date(matchDate.getFullYear(), matchDate.getMonth() + 1, 1)
+  };
+}
+
+export async function sumRuleChargedCents(
+  exec: Pick<typeof db, "select">,
+  pledgeRuleId: string,
+  windowStart: Date,
+  windowEnd: Date
+): Promise<number> {
+  const [row] = await exec
+    .select({ total: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int` })
+    .from(charges)
+    .where(
+      and(
+        eq(charges.pledgeRuleId, pledgeRuleId),
+        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${windowStart.toISOString()}`,
+        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) < ${windowEnd.toISOString()}`,
+        inArray(charges.status, ["confirmed", "pending_approval", "invoiced"])
+      )
+    );
+  return row?.total ?? 0;
 }
 
 export async function getMatch(matchId: string) {
