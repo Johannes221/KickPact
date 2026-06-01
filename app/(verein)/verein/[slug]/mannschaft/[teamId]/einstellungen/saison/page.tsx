@@ -61,9 +61,9 @@ export default async function TeamEinstellungenSaisonPage({
       </div>
 
       <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-4 md:p-5 text-sm text-brand-night-navy/80 leading-relaxed">
-        Normalerweise übernimmt der Fußball.de-Crawler den Saison-Endstand automatisch
-        nach Saisonende. Trage hier nur dann manuell ein, wenn der Crawler keine Daten
-        liefert (z.B. abgebrochene Saison, kreisfreie Custom-Wertungen oder
+        Normalerweise wird der Saison-Endstand nach Saisonende automatisch
+        übernommen. Trage hier nur dann manuell ein, wenn keine automatischen Daten
+        vorliegen (z.B. abgebrochene Saison, kreisfreie Custom-Wertungen oder
         Pokal-Sondersituationen).
       </div>
 

@@ -236,7 +236,7 @@ export function ResultOverrideEditor({
                   <FormLabel>Grund für die Korrektur</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="z.B. Crawler hat Tor in der 89. Minute nicht erkannt."
+                      placeholder="z.B. Tor in der 89. Minute wurde nicht automatisch erkannt."
                       {...field}
                       rows={3}
                     />

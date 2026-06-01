@@ -182,9 +182,9 @@ function CurrentSubscriptionCard({
         {sub.status === "paused" && sub.pausedUntil && (
           <div className="rounded-lg bg-amber-50 border border-amber-300 px-3 py-2 text-amber-900">
             <strong>Sommerpause aktiv.</strong> Pausiert bis{" "}
-            {new Date(sub.pausedUntil).toLocaleDateString("de-DE")}. Crawler
-            stoppt, kein €-Charge — Saison-Pass läuft automatisch am 1.8.
-            weiter.
+            {new Date(sub.pausedUntil).toLocaleDateString("de-DE")}. Keine
+            automatischen Updates, kein €-Charge — Saison-Pass läuft automatisch
+            am 1.8. weiter.
           </div>
         )}
       </div>

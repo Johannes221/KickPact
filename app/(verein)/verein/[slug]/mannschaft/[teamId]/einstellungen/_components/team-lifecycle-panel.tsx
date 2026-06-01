@@ -54,8 +54,8 @@ export function TeamLifecyclePanel({ teamId, isActive }: Props) {
     return (
       <div className="space-y-3">
         <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-          Diese Mannschaft ist <strong>deaktiviert</strong>. Crawler überspringt
-          sie, neue Pacts sind blockiert.
+          Diese Mannschaft ist <strong>deaktiviert</strong>. Sie wird nicht mehr
+          automatisch aktualisiert, neue Pacts sind blockiert.
         </div>
         <Button
           variant="accent"
@@ -82,7 +82,7 @@ export function TeamLifecyclePanel({ teamId, isActive }: Props) {
             <span className="block">
               Nach der Deaktivierung:
             </span>
-            <span className="block">• Der Crawler überspringt diese Mannschaft</span>
+            <span className="block">• Die Mannschaft wird nicht mehr automatisch aktualisiert</span>
             <span className="block">• Neue Sponsoring-Pacts sind blockiert</span>
             <span className="block">• Bestehende Pacts laufen zum Saisonende aus</span>
             <span className="block pt-1 text-xs text-brand-night-navy/60">

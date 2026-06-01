@@ -66,7 +66,7 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     features: [
       "Alle Auto-Trigger (10 Typen) + Manual-Trigger",
       "Bis zu 5 Sponsoren, 3 Pledge-Rules pro Sponsor",
-      "Fußball.de-Crawler alle 6h",
+      "Automatische Spieldaten alle 6h",
       "Monatliche PDF-Rechnung",
       "Sponsor-Einladungslinks",
       "30 Tage gratis · 0 % Provision"

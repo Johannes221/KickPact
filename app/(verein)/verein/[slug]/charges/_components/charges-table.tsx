@@ -286,7 +286,7 @@ export function ChargesTable({
             </Label>
             <Textarea
               id="cancel-reason"
-              placeholder="z.B. Scraper-Fehler, falsches Ergebnis …"
+              placeholder="z.B. falsches Ergebnis, Korrektur …"
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
               rows={2}

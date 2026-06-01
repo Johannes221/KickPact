@@ -81,7 +81,7 @@ export default async function NeuesTeamPage({
 
       {!clubRow.fussballdeVereinId ? (
         <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-          Für diesen Verein ist keine Fußball.de-Verknüpfung hinterlegt.
+          Für diesen Verein ist keine Spieldaten-Verknüpfung hinterlegt.
           Bitte ergänze sie zuerst in den Vereins-Einstellungen.
         </div>
       ) : (

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Pencil, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -142,22 +143,24 @@ export function EventRowActions({
 
   return (
     <>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5">
         <button
           type="button"
           onClick={() => setEditOpen(true)}
-          className="text-[0.6rem] uppercase tracking-widest font-bold text-brand-night-navy/50 hover:text-accent px-1.5 py-0.5 rounded hover:bg-accent/10 transition-colors"
+          className="grid h-8 w-8 place-items-center rounded-md text-brand-night-navy/40 hover:text-accent hover:bg-accent/10 transition-colors"
           aria-label="Event bearbeiten"
+          title="Bearbeiten"
         >
-          Edit
+          <Pencil className="h-4 w-4" />
         </button>
         <button
           type="button"
           onClick={() => setDeleteOpen(true)}
-          className="text-[0.6rem] uppercase tracking-widest font-bold text-brand-night-navy/50 hover:text-brand-alert-red px-1.5 py-0.5 rounded hover:bg-brand-alert-red/10 transition-colors"
+          className="grid h-8 w-8 place-items-center rounded-md text-brand-night-navy/40 hover:text-brand-alert-red hover:bg-brand-alert-red/10 transition-colors"
           aria-label="Event löschen"
+          title="Löschen"
         >
-          Löschen
+          <Trash2 className="h-4 w-4" />
         </button>
       </div>
 

@@ -119,7 +119,7 @@ export function MatchEventsList({
                 )}
                 {e.source === "manual" && (
                   <span className="text-[0.6rem] uppercase tracking-widest font-bold text-accent-dark bg-accent/10 px-1.5 py-0.5 rounded">
-                    Manual
+                    Manuell
                   </span>
                 )}
                 {canEdit && (

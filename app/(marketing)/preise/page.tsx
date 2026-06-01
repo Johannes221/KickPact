@@ -59,7 +59,7 @@ const PER_PLAYER_ROWS: ReadonlyArray<{
 const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   {
     q: "Was passiert in der Sommerpause (Juni/Juli)?",
-    a: "Beim Saison-Pass wird die Subscription automatisch von 1. Juni bis 31. Juli pausiert — kein €, kein Crawler, deine Daten bleiben sichtbar. Zum 1. August läuft alles automatisch wieder an."
+    a: "Beim Saison-Pass wird die Subscription automatisch von 1. Juni bis 31. Juli pausiert — kein €, keine Abrechnung, deine Daten bleiben sichtbar. Zum 1. August läuft alles automatisch wieder an."
   },
   {
     q: "Was wenn ich mitten in der Saison einsteige?",

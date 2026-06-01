@@ -57,8 +57,8 @@ export default async function TeamVerifikationPage({
         </h2>
         <p className="mt-2 text-sm text-brand-night-navy/60">
           Lade einen Nachweis hoch, dass du die Mannschaft betreust (Trainerlizenz,
-          Vereinsbestätigung, Mannschaftsfoto oder ein Spielleitungs-Eintrag von
-          Fußball.de). Unser Team prüft innerhalb von 1–2 Werktagen. Bis dahin werden
+          Vereinsbestätigung, Mannschaftsfoto oder ein Spielleitungs-Eintrag).
+          Unser Team prüft innerhalb von 1–2 Werktagen. Bis dahin werden
           Sponsoren-Rechnungen zurückgehalten — alles andere läuft normal weiter.
         </p>
       </div>

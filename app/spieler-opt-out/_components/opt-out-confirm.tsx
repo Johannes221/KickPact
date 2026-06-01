@@ -36,8 +36,8 @@ export function OptOutConfirm({ token, playerName, teamName, clubName }: Props) 
       <div className="mt-6 space-y-4">
         <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">
           <strong>Du bist anonymisiert.</strong> Dein Name erscheint in
-          KickPact ab sofort als „Anonymisiert" und der Crawler ignoriert
-          Updates zu dir.
+          KickPact ab sofort als „Anonymisiert"; künftige automatische Updates
+          zu dir werden ignoriert.
         </div>
         <p className="text-sm text-brand-night-navy/60">
           Falls du es dir anders überlegst: kontaktiere{" "}
@@ -68,8 +68,8 @@ export function OptOutConfirm({ token, playerName, teamName, clubName }: Props) 
         </p>
         <p className="text-sm text-brand-night-navy/70">
           Dein bisheriger Eintrag ist „<strong>{playerName}</strong>". Nach
-          Bestätigung erscheint er als „Anonymisiert" und der Crawler
-          ignoriert künftige Updates.
+          Bestätigung erscheint er als „Anonymisiert"; künftige automatische
+          Updates werden ignoriert.
         </p>
       </div>
 

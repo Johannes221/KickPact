@@ -11,7 +11,7 @@ const GROUPS: Array<{
 }> = [
   {
     title: "Pro Spiel · automatisch erkannt",
-    hint: "KickPact liest diese Ereignisse nach jedem Spiel selbst von fußball.de.",
+    hint: "KickPact liest diese Ereignisse nach jedem Spiel automatisch aus.",
     match: (t) => TRIGGER_META[t].scope === "match" && TRIGGER_META[t].auto
   },
   {

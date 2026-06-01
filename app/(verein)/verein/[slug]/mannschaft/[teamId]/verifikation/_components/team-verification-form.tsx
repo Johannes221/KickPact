@@ -29,7 +29,7 @@ const DOC_TYPES: ReadonlyArray<{ value: string; label: string; hint: string }> =
   {
     value: "fussballde_entry",
     label: "Spielleitungs-Eintrag",
-    hint: "Screenshot des Fußball.de-Eintrags, der dich als Trainer/Betreuer zeigt"
+    hint: "Screenshot des öffentlichen Spielleitungs-Eintrags, der dich als Trainer/Betreuer zeigt"
   },
   {
     value: "sonstiges",

@@ -68,17 +68,17 @@ export default async function SpielerPage({
 
       <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-4 text-sm text-brand-night-navy/70">
         <p>
-          <strong>DSGVO-Hinweis:</strong> Spielernamen kommen aus dem
-          Fußball.de-Crawler. Wenn ein Spieler nicht öffentlich gelistet werden
-          möchte, blockiere ihn hier — der Name wird sofort durch
-          „Anonymisiert" ersetzt und der Crawler ignoriert künftige Updates.
+          <strong>DSGVO-Hinweis:</strong> Spielernamen werden automatisch aus
+          öffentlichen Spieldaten übernommen. Wenn ein Spieler nicht öffentlich
+          gelistet werden möchte, blockiere ihn hier — der Name wird sofort durch
+          „Anonymisiert" ersetzt und künftige automatische Updates werden ignoriert.
         </p>
       </div>
 
       {roster.length === 0 ? (
         <div className="rounded-lg border border-brand-neutral/40 bg-white p-6 text-sm text-brand-night-navy/60">
-          Noch keine Spieler. Der Crawler legt Spieler automatisch an, sobald
-          Fußball.de Match-Events liefert.
+          Noch keine Spieler. Spieler werden automatisch angelegt, sobald die
+          ersten Spieldaten erfasst wurden.
         </div>
       ) : (
         <RosterList
