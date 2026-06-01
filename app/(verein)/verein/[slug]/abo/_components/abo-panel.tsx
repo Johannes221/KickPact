@@ -100,9 +100,18 @@ export async function AboPanel({
 
       {/* Plan-Wahl (für Erstbucher oder Wechsel) — inkl. Cycle-Toggle */}
       <div>
-        <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy mb-3">
+        <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy mb-1">
           {sub ? "Plan wechseln" : "Plan wählen"}
         </h3>
+        {sub ? (
+          <p className="mb-3 text-xs text-brand-night-navy/55 leading-relaxed">
+            Pro Mannschaft gibt es <strong>genau ein Abo</strong>. Eine neue
+            Auswahl <strong>wechselt</strong> deinen bestehenden Plan — es wird
+            kein zweites Abo angelegt und du zahlst nie doppelt.
+          </p>
+        ) : (
+          <div className="mb-3" />
+        )}
         <AboCycleToggle
           clubSlug={clubSlug}
           stripeReady={stripeReady}
@@ -123,6 +132,17 @@ function CurrentSubscriptionCard({
   currentPlan: PlanKey;
   currentCycle: BillingCycle;
 }) {
+  // Verbleibende Trial-Tage (aufgerundet) — nur relevant im Trial-Status.
+  const trialDaysLeft =
+    sub.status === "trialing" && sub.trialEndsAt
+      ? Math.max(
+          0,
+          Math.ceil(
+            (new Date(sub.trialEndsAt).getTime() - Date.now()) / 86_400_000
+          )
+        )
+      : null;
+
   return (
     <div className="rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5 space-y-3">
       <div className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
@@ -134,10 +154,21 @@ function CurrentSubscriptionCard({
         <StatusPill status={sub.status} />
       </div>
       <div className="text-xs md:text-sm text-brand-night-navy/60 space-y-1">
-        {sub.trialEndsAt && sub.status === "trialing" && (
-          <div>
-            Trial endet am{" "}
-            <strong>{new Date(sub.trialEndsAt).toLocaleDateString("de-DE")}</strong>
+        {trialDaysLeft !== null && sub.trialEndsAt && (
+          <div className="rounded-lg bg-accent/5 border border-accent/30 px-3 py-2.5">
+            <div className="font-semibold text-brand-night-navy">
+              Pro-Trial — noch {trialDaysLeft}{" "}
+              {trialDaysLeft === 1 ? "Tag" : "Tage"} gratis
+            </div>
+            <p className="mt-1 text-xs leading-relaxed text-brand-night-navy/70">
+              Endet automatisch am{" "}
+              <strong>
+                {new Date(sub.trialEndsAt).toLocaleDateString("de-DE")}
+              </strong>
+              . Der Trial verlängert sich nicht von selbst und während des Tests
+              wird nichts abgebucht. Hinterlege bis dahin deine Zahlungsdaten —
+              sonst werden ab Trial-Ende die Sponsoren-Rechnungen pausiert.
+            </p>
           </div>
         )}
         {sub.currentPeriodEnd && sub.status === "active" && (
