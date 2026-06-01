@@ -12,3 +12,4 @@ export * from "./season-results";
 export * from "./seasons";
 export * from "./system";
 export * from "./support";
+export * from "./team-images";

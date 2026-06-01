@@ -71,6 +71,7 @@ export async function resetTestDb(): Promise<void> {
       club_verifications,
       club_membership_requests,
       team_memberships,
+      team_images,
       club_memberships,
       operator_audit_log,
       support_ticket_replies,

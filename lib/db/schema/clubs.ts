@@ -176,6 +176,21 @@ export const teams = pgTable(
      */
     logoUrl: text("logo_url"),
     /**
+     * Cover-Bild für das öffentliche Profil (Hero-Bereich).
+     * Storage-URL wie `logoUrl`. NULL = kein Cover gesetzt.
+     */
+    coverUrl: text("cover_url"),
+    /**
+     * Saison-Insights (Bilanz, Tore) auf dem öffentlichen Profil anzeigen.
+     * Default: true. Mannschafts-Admin kann das ausschalten.
+     */
+    showInsights: boolean("show_insights").notNull().default(true),
+    /**
+     * Liga-Name aus dem Crawler (fussball.de). Z.B. „Kreisliga A Heidelberg".
+     * NULL, wenn noch kein Crawl oder keine Liga gefunden.
+     */
+    league: text("league"),
+    /**
      * Mannschafts-Verifikations-Status (Spec §1.7). NULL = nicht verifiziert,
      * gesetzt = approved durch Plattform-Admin. Withhold-Gate: bei NULL werden
      * Sponsoren-Rechnungen erzeugt aber nicht versendet (analog clubs.verifiedAt).
