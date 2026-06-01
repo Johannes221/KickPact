@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Plus, Settings, LogOut } from "lucide-react";
+import { Plus, Settings, LogOut, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderStatusDot } from "@/components/shared/status-bar";
 import { IdentityIcon } from "@/components/shared/identity-icon";
@@ -28,15 +28,20 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
   const { data: session, isPending } = useSession();
   const pathname = usePathname() ?? "/";
   const [identities, setIdentities] = useState<UserIdentities | null>(null);
+  const [isOperator, setIsOperator] = useState(false);
 
   useEffect(() => {
     if (!session?.user) {
       setIdentities(null);
+      setIsOperator(false);
       return;
     }
     fetch("/api/user/roles")
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setIdentities(d))
+      .then((d) => {
+        setIdentities(d);
+        setIsOperator(Boolean((d as { isPlatformAdmin?: boolean } | null)?.isPlatformAdmin));
+      })
       .catch(() => {/* silent */});
   }, [session?.user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -212,15 +217,29 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
         )}
 
         <DropdownMenuSeparator className="bg-brand-neutral/40" />
-        <DropdownMenuItem
-          asChild
-          className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
-        >
-          <Link href="/signup">
-            <Plus className="mr-2 h-4 w-4" aria-hidden />
-            Neue Rolle hinzufügen
-          </Link>
-        </DropdownMenuItem>
+        {isOperator ? (
+          // Operator-Accounts haben keine Nutzer-Rolle und dürfen keine anlegen
+          // (keine Doppelrolle) → statt "Neue Rolle" der Weg ins Backoffice.
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
+          >
+            <Link href="/admin">
+              <ShieldCheck className="mr-2 h-4 w-4" aria-hidden />
+              Admin-Panel
+            </Link>
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
+          >
+            <Link href="/signup">
+              <Plus className="mr-2 h-4 w-4" aria-hidden />
+              Neue Rolle hinzufügen
+            </Link>
+          </DropdownMenuItem>
+        )}
 
         <DropdownMenuSeparator className="bg-brand-neutral/40" />
         <DropdownMenuItem

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
+import { isPlatformAdminEmail } from "@/lib/auth/admin";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { pickDashboardDestination } from "@/lib/auth/identity-routing";
 
@@ -18,6 +19,7 @@ function eur(cents: number): string {
 
 export default async function SelectRolePage() {
   const user = await requireUser();
+  if (await isPlatformAdminEmail(user.email)) redirect("/admin");
   const identities = await getUserIdentities(user.id);
 
   // If the user landed here with 0 or 1 identity (bookmark, refresh after

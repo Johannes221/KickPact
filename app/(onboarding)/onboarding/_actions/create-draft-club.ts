@@ -13,6 +13,7 @@ import {
   teamLicenses
 } from "@/lib/db/schema";
 import { requireUserOrThrow } from "@/lib/auth/session";
+import { assertNotPlatformAdminAction } from "@/lib/auth/admin";
 import { createInvitation, listInvitationsForTeam } from "@/lib/db/queries/invitations";
 import { checkTeamCollision } from "@/lib/db/queries/onboarding-collision";
 import { inngest } from "@/lib/inngest/client";
@@ -82,6 +83,7 @@ export interface CreateDraftResult {
  */
 export async function createDraftClub(input: CreateDraftInput): Promise<CreateDraftResult> {
   const user = await requireUserOrThrow();
+  await assertNotPlatformAdminAction(user.email);
   const parsed = createDraftSchema.parse(input);
 
   const teamList = parsed.role === "mannschaft" ? [parsed.team] : parsed.teams;

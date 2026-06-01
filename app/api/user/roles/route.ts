@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/session";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
+import { isPlatformAdminEmail } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -21,5 +22,6 @@ export async function GET() {
     );
   }
   const identities = await getUserIdentities(session.user.id);
-  return NextResponse.json(identities);
+  const isPlatformAdmin = await isPlatformAdminEmail(session.user.email);
+  return NextResponse.json({ ...identities, isPlatformAdmin });
 }

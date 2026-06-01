@@ -3,11 +3,13 @@
 import { db } from "@/lib/db/client";
 import { sponsors } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
+import { assertNotPlatformAdminAction } from "@/lib/auth/admin";
 import { sponsorOnboardingSchema, type SponsorOnboardingInput } from "@/lib/validations/sponsor";
 import { markInvitationUsed } from "@/lib/db/queries/invitations";
 
 export async function createSponsor(input: SponsorOnboardingInput, invitationToken?: string) {
   const user = await requireUser();
+  await assertNotPlatformAdminAction(user.email);
   const parsed = sponsorOnboardingSchema.parse(input);
 
   const [sponsor] = await db

@@ -22,6 +22,19 @@ export async function listPlatformAdminEmails(): Promise<string[]> {
   return rows.map((r) => r.email);
 }
 
+/**
+ * Guard für Rollen-Erstellungs-Actions: Plattform-Operatoren dürfen KEINE
+ * Vereins-/Mannschafts-/Sponsor-Rolle anlegen (keine Doppelrolle). Wirft in
+ * Server-Actions; der Client zeigt die Meldung als Toast.
+ */
+export async function assertNotPlatformAdminAction(email: string): Promise<void> {
+  if (await isPlatformAdminEmail(email)) {
+    throw new Error(
+      "Operator-Accounts können keine Vereins-, Mannschafts- oder Sponsor-Rolle anlegen."
+    );
+  }
+}
+
 export async function isPlatformAdminEmail(email: string): Promise<boolean> {
   const row = await db
     .select({ isPlatformAdmin: users.isPlatformAdmin })

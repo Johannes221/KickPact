@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
+import { isPlatformAdminEmail } from "@/lib/auth/admin";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { pickDashboardDestination } from "@/lib/auth/identity-routing";
 import { getActiveDraftForUser } from "@/lib/db/queries/onboarding-draft";
@@ -18,6 +19,10 @@ import { getActiveDraftForUser } from "@/lib/db/queries/onboarding-draft";
  */
 export default async function DashboardRedirect() {
   const user = await requireUser();
+
+  // Plattform-Operatoren gehören NICHT in die Nutzer-App (keine Doppelrolle) →
+  // direkt ins Backoffice.
+  if (await isPlatformAdminEmail(user.email)) redirect("/admin");
 
   const draft = await getActiveDraftForUser(user.id);
   if (draft) redirect("/onboarding");

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { clubs, clubMemberships } from "@/lib/db/schema";
 import { requireUserOrThrow } from "@/lib/auth/session";
+import { assertNotPlatformAdminAction } from "@/lib/auth/admin";
 
 const completeSchema = z.object({
   clubId: z.string().min(1)
@@ -35,6 +36,7 @@ export async function completeOnboarding(
   input: CompleteOnboardingInput
 ): Promise<CompleteOnboardingResult> {
   const user = await requireUserOrThrow();
+  await assertNotPlatformAdminAction(user.email);
   const parsed = completeSchema.parse(input);
 
   const [row] = await db
