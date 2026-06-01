@@ -25,8 +25,12 @@ import { toast } from "sonner";
 interface Team {
   id: string;
   name: string;
-  /** false = Container-Verein der Mannschaft noch nicht verifiziert → Invite gesperrt. */
+  /** false = relevante Entität (Mannschaft bzw. Verein) noch nicht verifiziert → Invite gesperrt. */
   canInvite: boolean;
+  /** Verifikations-Scope: Einzel-Mannschaft (basic/pro) vs. Vereinslizenz. */
+  verifyEntity: "Mannschaft" | "Verein";
+  /** Ziel-URL für „… verifizieren". */
+  verifyHref: string;
 }
 
 interface Invitation {
@@ -53,9 +57,20 @@ export function SponsorsManager({
   const [selectedTeam, setSelectedTeam] = useState(teams[0]?.id ?? "");
   const [recipientName, setRecipientName] = useState("");
 
-  // Sponsoren-Gate (Design 2026-05-29 §3.5/§6): Invite ist gesperrt, bis der
-  // Container-Verein der gewählten Mannschaft verifiziert ist.
-  const canInvite = teams.find((t) => t.id === selectedTeam)?.canInvite ?? false;
+  // Sponsoren-Gate (Design 2026-05-29 §3.5/§6): Invite ist gesperrt, bis die
+  // relevante Entität der gewählten Mannschaft verifiziert ist — bei Einzel-
+  // Mannschaft die Mannschaft selbst, bei Vereinslizenz der Verein.
+  const selected = teams.find((t) => t.id === selectedTeam);
+  const canInvite = selected?.canInvite ?? false;
+  const verifyEntity = selected?.verifyEntity ?? "Verein";
+  const verifyHref =
+    selected?.verifyHref ?? `/verein/${clubSlug}/verifikation`;
+  const verifyAccusative =
+    verifyEntity === "Mannschaft" ? "die Mannschaft" : "den Verein";
+  const verifyNominative =
+    verifyEntity === "Mannschaft" ? "die Mannschaft" : "der Verein";
+  const verifyPlural =
+    verifyEntity === "Mannschaft" ? "Mannschaften" : "Vereine";
 
   function createNew() {
     if (!selectedTeam) {
@@ -63,7 +78,7 @@ export function SponsorsManager({
       return;
     }
     if (!canInvite) {
-      toast.error("Bitte zuerst den Verein verifizieren.");
+      toast.error(`Bitte zuerst ${verifyAccusative} verifizieren.`);
       return;
     }
     startTransition(async () => {
@@ -160,7 +175,7 @@ export function SponsorsManager({
             </div>
           </div>
           <p className="text-xs text-brand-night-navy/60">
-            Schützt deine Sponsoren — kein Geld an unverifizierte Vereine.
+            Schützt deine Sponsoren — kein Geld an unverifizierte {verifyPlural}.
           </p>
           {canInvite ? (
             <div className="flex justify-end">
@@ -171,12 +186,11 @@ export function SponsorsManager({
           ) : (
             <div className="flex flex-col items-end gap-1">
               <Button asChild variant="accent">
-                <Link href={`/verein/${clubSlug}/verifikation`}>
-                  Erst Verein verifizieren
-                </Link>
+                <Link href={verifyHref}>Erst {verifyEntity} verifizieren</Link>
               </Button>
               <span className="text-xs text-brand-night-navy/60">
-                Sponsoren-Einladungen sind frei, sobald der Verein verifiziert ist.
+                Sponsoren-Einladungen sind frei, sobald {verifyNominative}{" "}
+                verifiziert ist.
               </span>
             </div>
           )}

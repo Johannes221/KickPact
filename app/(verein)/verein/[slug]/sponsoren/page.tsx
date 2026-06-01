@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import {
   teams,
   clubs,
+  teamLicenses,
   sponsorInvitations,
   sponsors,
   pledges,
@@ -33,10 +34,13 @@ export default async function SponsorenPage({
       name: teams.name,
       discoverable: teams.discoverable,
       publicTagline: teams.publicTagline,
-      containerVerifiedAt: clubs.verifiedAt
+      containerVerifiedAt: clubs.verifiedAt,
+      teamVerifiedAt: teams.verifiedAt,
+      plan: teamLicenses.plan
     })
     .from(teams)
     .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .leftJoin(teamLicenses, eq(teamLicenses.teamId, teams.id))
     .where(eq(teams.clubId, club.id));
   const teamIds = teamRows.map((t) => t.id);
 
@@ -102,11 +106,24 @@ export default async function SponsorenPage({
     <div className="space-y-6 md:space-y-10">
       <SponsorsManager
         clubSlug={slug}
-        teams={teamRows.map((t) => ({
-          id: t.id,
-          name: t.name,
-          canInvite: t.containerVerifiedAt !== null
-        }))}
+        teams={teamRows.map((t) => {
+          // Vereinslizenz → Verein-Verifikation (Teams erben). Einzel-Mannschaft
+          // (basic/pro) → eigene Mannschafts-Verifikation.
+          const isVereinslizenz = t.plan === "verein";
+          return {
+            id: t.id,
+            name: t.name,
+            canInvite: isVereinslizenz
+              ? t.containerVerifiedAt !== null
+              : t.teamVerifiedAt !== null,
+            verifyEntity: (isVereinslizenz
+              ? "Verein"
+              : "Mannschaft") as "Mannschaft" | "Verein",
+            verifyHref: isVereinslizenz
+              ? `/verein/${slug}/verifikation`
+              : `/verein/${slug}/mannschaft/${t.id}/verifikation`
+          };
+        })}
         invitations={invitations.map((i) => ({
           id: i.inv.id,
           token: i.inv.token,
