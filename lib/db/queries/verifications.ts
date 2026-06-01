@@ -5,6 +5,7 @@ import {
   clubVerifications,
   teams,
   teamVerifications,
+  teamLicenses,
   users,
   invoices,
   invoiceItems,
@@ -346,6 +347,31 @@ export async function approveTeamVerification(args: ApproveArgs): Promise<void> 
       .update(teams)
       .set({ verifiedAt: now })
       .where(eq(teams.id, existing.teamId));
+
+    // Mannschaftsabo-Modell: Bei einem Verein OHNE Vereinslizenz ist der
+    // Container-Club deckungsgleich mit der Mannschaft. Die Team-Verifizierung
+    // ist dann DIE Verifizierung → wir verifizieren den Container-Club mit,
+    // damit das Rechnungs-Gate (clubs.verifiedAt) greift. Bei echter
+    // Vereinslizenz bleibt die separate Vereins-Verifizierung das Gate.
+    const [teamRow] = await tx
+      .select({ clubId: teams.clubId })
+      .from(teams)
+      .where(eq(teams.id, existing.teamId))
+      .limit(1);
+    if (teamRow) {
+      const vereinLicense = await tx
+        .select({ id: teamLicenses.id })
+        .from(teamLicenses)
+        .innerJoin(teams, eq(teamLicenses.teamId, teams.id))
+        .where(and(eq(teams.clubId, teamRow.clubId), eq(teamLicenses.plan, "verein")))
+        .limit(1);
+      if (vereinLicense.length === 0) {
+        await tx
+          .update(clubs)
+          .set({ verifiedAt: now })
+          .where(and(eq(clubs.id, teamRow.clubId), isNull(clubs.verifiedAt)));
+      }
+    }
   });
 }
 
