@@ -8,10 +8,16 @@ import { getDocumentSignedUrl, readLocalDocument } from "@/lib/storage/documents
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Prüft, dass ein Storage-Key wirklich zu teams/<teamId>/ gehört. */
+/**
+ * Prüft, dass ein Storage-Key wirklich zur Mannschaft gehört. Akzeptiert
+ * beide Storage-Formate: R2 behält Slashes (`teams/<id>/…`), lokaler Storage
+ * ersetzt sie durch Unterstriche (`teams_<id>_…`, siehe storeDocument). Ohne
+ * die Unterstrich-Variante würden lokal/Volume gespeicherte Bilder fälschlich
+ * mit 404 abgelehnt.
+ */
 function isOwnTeamKey(key: string, teamId: string): boolean {
   const rel = key.replace(/^r2:\/\/[^/]+\//, "").replace(/^local:\/\//, "");
-  return rel.startsWith(`teams/${teamId}/`);
+  return rel.startsWith(`teams/${teamId}/`) || rel.startsWith(`teams_${teamId}_`);
 }
 
 function contentTypeFor(name: string): string {
