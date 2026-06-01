@@ -10,6 +10,7 @@ import {
   Wallet,
   Gem,
   Settings,
+  UserRound,
   type LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,11 +42,15 @@ export type TeamSubNavTab = {
   icon: LucideIcon;
 };
 
+// Reihenfolge ist bewusst: die ersten 4 sind das Mobile-Primärset
+// (BottomTabBar zeigt slice(0,4) + "Mehr" bei >5 Items). Der Rest landet
+// im "Mehr"-Sheet. Desktop zeigt alle horizontal in dieser Reihenfolge.
 const ALL_TABS: readonly TeamSubNavTab[] = [
   { label: "Übersicht", href: "", icon: LayoutDashboard },
   { label: "Pacts", href: "/pacts", icon: Handshake },
-  { label: "Sponsoren", href: "/sponsoren", icon: Heart },
   { label: "Spiele", href: "/spiele", icon: Goal },
+  { label: "Profil", href: "/profil", icon: UserRound },
+  { label: "Sponsoren", href: "/sponsoren", icon: Heart },
   { label: "Finanzen", href: "/finanzen", icon: Wallet },
   { label: "Abo", href: "/abo", icon: Gem },
   { label: "Einstellungen", href: "/einstellungen", icon: Settings }

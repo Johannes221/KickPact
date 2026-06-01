@@ -3,8 +3,6 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { teams, clubs } from "@/lib/db/schema";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
-import { getDocumentSignedUrl } from "@/lib/storage/documents";
-import { TeamStammdatenForm } from "./_components/team-stammdaten-form";
 import { TeamLifecyclePanel } from "./_components/team-lifecycle-panel";
 import { EinstellungenForm } from "../../../einstellungen/_components/einstellungen-form";
 
@@ -13,10 +11,13 @@ export const metadata = { title: "Einstellungen · Mannschaft · KickPact" };
 /**
  * Team-Einstellungen.
  *
- * Drei Sektionen:
- *   - Stammdaten (Name + Logo)
+ * Sektionen:
+ *   - Rechnungs- & Zahlungsdaten
  *   - Lifecycle (Deaktivieren / Reaktivieren)
- *   - Sub-Bereiche (Saison-Ergebnis)
+ *   - Weitere Bereiche (Mitglieder & Zugriff, Spieler & DSGVO)
+ *
+ * Stammdaten (Name/Logo) und Profil/Verifikations-Links leben jetzt
+ * unter „Mein Profil" (Tab /profil).
  */
 export default async function TeamEinstellungenPage({
   params
@@ -31,7 +32,6 @@ export default async function TeamEinstellungenPage({
       id: teams.id,
       name: teams.name,
       isActive: teams.isActive,
-      logoUrl: teams.logoUrl,
       saison: teams.saison
     })
     .from(teams)
@@ -44,16 +44,6 @@ export default async function TeamEinstellungenPage({
         Mannschaft nicht gefunden.
       </div>
     );
-  }
-
-  // Logo-URL ggf. via signed URL für R2 auflösen
-  let logoDisplayUrl: string | null = null;
-  if (team.logoUrl) {
-    try {
-      logoDisplayUrl = await getDocumentSignedUrl(team.logoUrl, 3600);
-    } catch {
-      logoDisplayUrl = null;
-    }
   }
 
   // Rechnungs-/Zahlungsdaten leben auf der club-Row (eine Billing-Entität pro
@@ -88,23 +78,6 @@ export default async function TeamEinstellungenPage({
           Konfiguration für {team.name}.
         </p>
       </div>
-
-      {/* Stammdaten */}
-      <section className="space-y-4 rounded-2xl border border-brand-neutral/40 bg-white p-5">
-        <header>
-          <h3 className="font-display font-black text-lg tracking-tight text-brand-night-navy">
-            Stammdaten
-          </h3>
-          <p className="mt-0.5 text-sm text-brand-night-navy/60">
-            Name und Logo der Mannschaft.
-          </p>
-        </header>
-        <TeamStammdatenForm
-          teamId={team.id}
-          initialName={team.name}
-          logoUrl={logoDisplayUrl}
-        />
-      </section>
 
       {/* Rechnungs- & Zahlungsdaten (Absender, Adresse, Steuer, IBAN).
           Erscheinen auf den PDF-Rechnungen an die Sponsoren. */}
@@ -156,49 +129,6 @@ export default async function TeamEinstellungenPage({
           Weitere Bereiche
         </h3>
         <ul className="space-y-3">
-          <li>
-            <Link
-              href={`${base}/verifikation`}
-              className="block rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5 hover:border-accent/40 hover:bg-brand-off-white/60 transition-colors"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h4 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
-                    Mannschaft verifizieren
-                  </h4>
-                  <p className="mt-1 text-sm text-brand-night-navy/60">
-                    Nachweis hochladen (Trainerlizenz, Vereinsbestätigung, Mannschaftsfoto …).
-                    Bis dahin werden Sponsoren-Rechnungen zurückgehalten und du kannst keine
-                    Sponsoren einladen.
-                  </p>
-                </div>
-                <span className="text-brand-night-navy/30" aria-hidden>
-                  →
-                </span>
-              </div>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href={`/verein/${slug}/mannschaft/${teamId}/profil`}
-              className="block rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5 hover:border-accent/40 hover:bg-brand-off-white/60 transition-colors"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h4 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
-                    Öffentliches Profil
-                  </h4>
-                  <p className="mt-1 text-sm text-brand-night-navy/60">
-                    Werde öffentlich, damit Sponsoren euch finden — teilbare
-                    Profil-URL mit Logo, Zielen und „Sponsoring anfragen".
-                  </p>
-                </div>
-                <span className="text-brand-night-navy/30" aria-hidden>
-                  →
-                </span>
-              </div>
-            </Link>
-          </li>
           <li>
             <Link
               href={`${base}/mitglieder`}
