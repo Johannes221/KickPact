@@ -37,24 +37,24 @@ export function RolesTabs() {
             </h3>
             <p className="text-white/80 leading-relaxed text-sm md:text-base">
               Klassisches Trikot-Sponsoring ist mühsam: einmal verkaufen, dann Stille. Mit
-              KickPact wird jeder Spieltag zur Sponsoren-Touchpoint — und eure Mannschaft
+              KickPact wird jeder Spieltag zur Sponsoren-Touchpoint, und eure Mannschaft
               bekommt nicht 1× im Jahr ein Trikot bezahlt, sondern jede Saison über eure
               Performance Geld direkt in die eigene Kasse.
             </p>
             <ul className="space-y-2.5 md:space-y-3 text-white/80 text-sm md:text-base">
               <Bullet>
-                Mannschafts-Onboarding in 90 Sekunden — wir finden eure Mannschaft automatisch.
+                Mannschafts-Onboarding in 90 Sekunden, wir finden eure Mannschaft automatisch.
               </Bullet>
               <Bullet>
-                Sponsoren über einen Einladungslink — Familie, Freunde, Stammtisch,
+                Sponsoren über einen Einladungslink: Familie, Freunde, Stammtisch,
                 lokale Firmen. Alle in einem System.
               </Bullet>
               <Bullet>
-                Vollautomatische Auswertung jedes Spiels — ihr macht nichts außer
+                Vollautomatische Auswertung jedes Spiels, ihr macht nichts außer
                 Spezial-Events nach Schlusspfiff melden (30 Sek am Smartphone).
               </Bullet>
               <Bullet>
-                Geld geht direkt an eure Mannschaftskasse — nicht in den Vereins-Topf.
+                Geld geht direkt an eure Mannschaftskasse, nicht in den Vereins-Topf.
                 Mehrere Teams im Verein? Vereinslizenz wählen.
               </Bullet>
             </ul>
@@ -75,7 +75,7 @@ export function RolesTabs() {
                 { label: "Onkel Tom", value: "10 €/Spezial-Tor" }
               ]}
               total="Pacts frei wählbar"
-              hint="Jeder Sponsor wählt selbst — von 50 Cent bis 500 € pro Event"
+              hint="Jeder Sponsor wählt selbst, von 50 Cent bis 500 € pro Event"
             />
           </div>
         </div>
@@ -89,23 +89,23 @@ export function RolesTabs() {
             </h3>
             <p className="text-white/80 leading-relaxed text-sm md:text-base">
               Du willst die Mannschaft deines Sohnes, deiner Tochter oder das Team aus
-              der Nachbarschaft unterstützen — aber 200 € einmal überweisen ist langweilig.
+              der Nachbarschaft unterstützen, aber 200 € einmal überweisen ist langweilig.
               Du willst mitfiebern. Mit KickPact versprichst du Beträge an Spielereignisse.
-              Je besser sie spielen, desto mehr fließt — direkt in ihre Mannschaftskasse.
+              Je besser sie spielen, desto mehr fließt, direkt in ihre Mannschaftskasse.
             </p>
             <ul className="space-y-2.5 md:space-y-3 text-white/80 text-sm md:text-base">
               <Bullet>
-                Frei wählbare Pacts — von „1 € pro Tor" bis „50 € pro Comeback-Sieg" ist
+                Frei wählbare Pacts: von „1 € pro Tor" bis „50 € pro Comeback-Sieg" ist
                 alles drin.
               </Bullet>
               <Bullet>
-                Sicher mit Cap: optional „max 50 € pro Monat" — du behältst die Kontrolle.
+                Sicher mit Cap: optional „max 50 € pro Monat", du behältst die Kontrolle.
               </Bullet>
               <Bullet>
-                100 % geht direkt an die Mannschaft — KickPact zwackt nichts ab.
+                100 % geht direkt an die Mannschaft, KickPact zwackt nichts ab.
               </Bullet>
               <Bullet>
-                Als Unternehmen: ordentliche Rechnung — steuerlich absetzbar als
+                Als Unternehmen: ordentliche Rechnung, steuerlich absetzbar als
                 Werbeleistung.
               </Bullet>
             </ul>
@@ -114,7 +114,7 @@ export function RolesTabs() {
                 <Link href="/signup?role=sponsor">Als Sponsor registrieren →</Link>
               </Button>
               <p className="text-xs text-white/50 pt-3 w-full">
-                Schon einen Einladungslink? Einfach öffnen — wir leiten dich automatisch ans
+                Schon einen Einladungslink? Einfach öffnen, wir leiten dich automatisch ans
                 richtige Sponsor-Setup weiter.
               </p>
             </div>
