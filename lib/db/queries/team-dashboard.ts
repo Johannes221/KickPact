@@ -227,6 +227,32 @@ export async function listSponsorsForTeam(teamId: string): Promise<TeamSponsorRo
   }));
 }
 
+// ---------------- Season Stats ----------------
+
+export interface TeamSeasonStats {
+  games: number; wins: number; draws: number; losses: number;
+  goalsFor: number; goalsAgainst: number;
+}
+
+/** Bilanz/Tore aus abgeschlossenen Matches. Heim/Auswärts robust über
+ *  Team- + Vereinsname (vgl. ursprüngliche Inline-Logik der Dashboard-Seite). */
+export async function computeTeamSeasonStats(
+  teamId: string, teamName: string, clubName: string
+): Promise<TeamSeasonStats> {
+  const rows = await db.select().from(matches).where(eq(matches.teamId, teamId));
+  const finished = rows.filter((m) => m.status === "finished" && m.ergebnisHeim !== null);
+  const names = [teamName, clubName];
+  let wins = 0, draws = 0, losses = 0, goalsFor = 0, goalsAgainst = 0;
+  for (const m of finished) {
+    const isHeim = detectTeamSide(names, m.heimName) === "heim";
+    const gF = isHeim ? (m.ergebnisHeim ?? 0) : (m.ergebnisGast ?? 0);
+    const gA = isHeim ? (m.ergebnisGast ?? 0) : (m.ergebnisHeim ?? 0);
+    goalsFor += gF; goalsAgainst += gA;
+    if (gF > gA) wins++; else if (gF < gA) losses++; else draws++;
+  }
+  return { games: finished.length, wins, draws, losses, goalsFor, goalsAgainst };
+}
+
 // ---------------- Pacts (Tab 2) ----------------
 
 export type PactKind = "auto" | "manual" | "season";

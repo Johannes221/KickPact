@@ -10,6 +10,7 @@ import { sponsors } from "@/lib/db/schema/sponsors";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { listMatchesForTeam, getMatchChargesSummaryForTeam } from "@/lib/db/queries/matches";
 import { listClubSeasonPledges } from "@/lib/db/queries/club-dashboard";
+import { computeTeamSeasonStats } from "@/lib/db/queries/team-dashboard";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
 import { clubs } from "@/lib/db/schema";
@@ -63,24 +64,9 @@ export default async function TeamDetailPage({
   ]);
 
   // Saison-Stats aus echten Matches berechnen
-  const finishedMatches = matchRows.filter(
-    (m) => m.status === "finished" && m.ergebnisHeim !== null
-  );
-  // Heim/Auswärts robust bestimmen — Vereinsname als Token-Quelle, weil der
-  // Mannschafts-Name (z.B. "1. Herren") oft keinen Vereins-Token enthält und
-  // die Stats sonst gespiegelt werden (Tore + S/U/N vertauscht).
+  const { games, wins, draws, losses, goalsFor, goalsAgainst } =
+    await computeTeamSeasonStats(team.id, team.name, club.name);
   const teamNames = [team.name, club.name];
-  let wins = 0, losses = 0, draws = 0, goalsFor = 0, goalsAgainst = 0;
-  for (const m of finishedMatches) {
-    const isHeim = detectTeamSide(teamNames, m.heimName) === "heim";
-    const gF = isHeim ? (m.ergebnisHeim ?? 0) : (m.ergebnisGast ?? 0);
-    const gA = isHeim ? (m.ergebnisGast ?? 0) : (m.ergebnisHeim ?? 0);
-    goalsFor += gF;
-    goalsAgainst += gA;
-    if (gF > gA) wins++;
-    else if (gF < gA) losses++;
-    else draws++;
-  }
   const totalCharges = [...chargesSummary.values()].reduce((s, v) => s + v, 0);
 
   // Setup-Checkliste: Daten für "Anstehende Aufgaben".
@@ -184,10 +170,10 @@ export default async function TeamDetailPage({
       <TeamSetupChecklist items={checklistItems} />
 
       {/* Saison-Stats */}
-      {finishedMatches.length > 0 && (
+      {games > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Spiele", value: finishedMatches.length },
+            { label: "Spiele", value: games },
             { label: "S/U/N", value: `${wins}/${draws}/${losses}` },
             { label: "Tore", value: `${goalsFor}:${goalsAgainst}` },
             {
