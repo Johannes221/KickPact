@@ -565,10 +565,14 @@ function extractMatchesFromHtml(root: HTMLElement): SpielListItem[] {
     const fullHref = href.startsWith("http")
       ? href
       : `https://www.fussball.de${href}`;
+    // Datum IMMER als DD.MM.YYYY speichern. Die `row-competition`-Zeile liefert
+    // ein 2-stelliges Jahr ("30.05.26"); `validateSpielListItem` verlangt aber
+    // DD.MM.YYYY und verwirft sonst ALLE Spiele (skippedInvalid) → nichts wird
+    // persistiert. `yr` ist oben bereits 4-stellig normalisiert.
     results.push({
       spielId: m[2],
       slug: m[1],
-      datum: currentDatum,
+      datum: `${parts[0]}.${parts[1]}.${yr}`,
       heim,
       gast,
       ergebnis: "",
