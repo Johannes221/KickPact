@@ -20,9 +20,7 @@ export function getTriggerLabel(
     case "goal_total":
       return "Pro Tor";
     case "goal_by_player": {
-      const name =
-        (params && typeof params.playerName === "string" && params.playerName) ||
-        null;
+      const name = stringParam(params, "playerName", "player_name");
       return name ? `Tor von ${name}` : "Pro Tor (Spieler)";
     }
     case "win":
@@ -38,13 +36,11 @@ export function getTriggerLabel(
     case "hattrick":
       return "Hattrick";
     case "goal_diff_min": {
-      const min =
-        params && typeof params.min_diff === "number" ? params.min_diff : null;
+      const min = numericParam(params, "minDiff", "min_diff");
       return min ? `Tordifferenz ≥ ${min}` : "Tordifferenz";
     }
     case "goals_scored_min": {
-      const min =
-        params && typeof params.min_goals === "number" ? params.min_goals : null;
+      const min = numericParam(params, "minGoals", "min_goals");
       return min ? `≥ ${min} Tore` : "Mehrere Tore";
     }
     case "special_goal": {
@@ -78,6 +74,35 @@ export function getTriggerLabel(
     default:
       return triggerType;
   }
+}
+
+/**
+ * Liest einen numerischen Param und toleriert dabei sowohl die canonical
+ * camelCase- als auch die Legacy-snake_case-Schreibweise (nicht-migrierte Rows).
+ */
+function numericParam(
+  params: Record<string, unknown> | null | undefined,
+  camel: string,
+  snake: string
+): number | null {
+  if (!params) return null;
+  for (const k of [camel, snake]) {
+    if (typeof params[k] === "number") return params[k] as number;
+  }
+  return null;
+}
+
+/** Wie {@link numericParam}, aber für String-Params. */
+function stringParam(
+  params: Record<string, unknown> | null | undefined,
+  camel: string,
+  snake: string
+): string | null {
+  if (!params) return null;
+  for (const k of [camel, snake]) {
+    if (typeof params[k] === "string" && params[k]) return params[k] as string;
+  }
+  return null;
 }
 
 const SPECIAL_GOAL_LABELS: Record<string, string> = {

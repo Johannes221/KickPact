@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { teams } from "@/lib/db/schema";
 import { findInvitationByToken } from "@/lib/db/queries/invitations";
 import { getKader } from "@/lib/crawler/fussballde";
+import { getTeamScorerNames } from "@/lib/db/queries/matches";
 import { requireUser } from "@/lib/auth/session";
 
 export async function GET(req: NextRequest) {
@@ -33,32 +34,41 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ players: [] });
   }
 
+  const teamId = invitation.teamId;
   const [team] = await db
     .select({
       fussballdeTeamId: teams.fussballdeTeamId,
       fussballdeSlug: teams.fussballdeSlug
     })
     .from(teams)
-    .where(eq(teams.id, invitation.teamId))
+    .where(eq(teams.id, teamId))
     .limit(1);
 
-  if (!team?.fussballdeTeamId || !team?.fussballdeSlug) {
-    return NextResponse.json({ players: [] });
+  // 1) Live-Kader von fussball.de versuchen (frischeste, vollständigste Liste).
+  //    `.trim()` filtert die Whitespace-only-Namen raus, die der Crawler bei
+  //    manchen Teams liefert (E2E-Finding 2026-06-01: ~50 leere Dropdown-Einträge).
+  let players: string[] = [];
+  if (team?.fussballdeTeamId && team?.fussballdeSlug) {
+    // Determine current season: e.g. today=May 2026 → saison "2526"
+    const now = new Date();
+    const saison =
+      now.getMonth() >= 6
+        ? `${String(now.getFullYear()).slice(2)}${String(now.getFullYear() + 1).slice(2)}`
+        : `${String(now.getFullYear() - 1).slice(2)}${String(now.getFullYear()).slice(2)}`;
+    try {
+      const kader = await getKader(team.fussballdeTeamId, team.fussballdeSlug, saison);
+      players = kader.map((p) => p.name?.trim() ?? "").filter((n) => n.length > 0);
+    } catch {
+      // Scraping failed — fall through to the match-events fallback below.
+      players = [];
+    }
   }
 
-  // Determine current season: e.g. today=May 2026 → saison "2526"
-  const now = new Date();
-  const saison =
-    now.getMonth() >= 6
-      ? `${String(now.getFullYear()).slice(2)}${String(now.getFullYear() + 1).slice(2)}`
-      : `${String(now.getFullYear() - 1).slice(2)}${String(now.getFullYear()).slice(2)}`;
-
-  try {
-    const kader = await getKader(team.fussballdeTeamId, team.fussballdeSlug, saison);
-    const players = kader.map((p) => p.name).filter(Boolean);
-    return NextResponse.json({ players });
-  } catch {
-    // Scraping failed — fall back to empty list (player picker shows text input)
-    return NextResponse.json({ players: [] });
+  // 2) Fallback: eigene Torschützen aus den gescrapten match_events. Greift, wenn
+  //    der Live-Kader leer/whitespace ist oder das Team keine fussball.de-IDs hat.
+  if (players.length === 0) {
+    players = await getTeamScorerNames(teamId);
   }
+
+  return NextResponse.json({ players });
 }

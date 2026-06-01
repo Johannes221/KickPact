@@ -274,6 +274,13 @@
       "when": 1782360700000,
       "tag": "0038_invoice_storno",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1782360800000,
+      "tag": "0039_normalize_trigger_params",
+      "breakpoints": true
     }
   ]
 }

@@ -481,3 +481,43 @@ export async function getMatchDetailForTeam(matchId: string, teamId: string) {
 
   return row ?? null;
 }
+
+/**
+ * Liefert die eindeutigen Namen der eigenen Torschützen einer Mannschaft aus den
+ * gescrapten `match_events`. Fallback-Quelle für den Spieler-Picker im Pact-
+ * Wizard, wenn der Live-fussball.de-Kader (getKader) keine brauchbaren Namen
+ * liefert (E2E-Finding 2026-06-01: Kader-Dropdown war leer, obwohl
+ * `match_events.player_name` echte Namen enthielt).
+ *
+ * Pro Spiel wird via `detectTeamSide` die eigene Seite bestimmt und nur Tore
+ * dieser Seite (mit nicht-leerem Spielernamen) gezählt — Gegner-Torschützen
+ * tauchen also nicht auf. Alphabetisch sortiert.
+ */
+export async function getTeamScorerNames(teamId: string): Promise<string[]> {
+  const [team] = await db
+    .select({ name: teams.name, clubName: clubs.name })
+    .from(teams)
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  if (!team) return [];
+
+  const rows = await db
+    .select({
+      heimName: matches.heimName,
+      side: matchEvents.side,
+      playerName: matchEvents.playerName
+    })
+    .from(matchEvents)
+    .innerJoin(matches, eq(matchEvents.matchId, matches.id))
+    .where(and(eq(matches.teamId, teamId), eq(matchEvents.type, "tor")));
+
+  const names = new Set<string>();
+  for (const r of rows) {
+    const name = r.playerName?.trim();
+    if (!name) continue;
+    const ownSide = detectTeamSide([team.name, team.clubName], r.heimName);
+    if (r.side === ownSide) names.add(name);
+  }
+  return [...names].sort((a, b) => a.localeCompare(b, "de"));
+}

@@ -116,12 +116,14 @@ function evaluateRule(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[
       return outcome(match, rule, isHattrick);
     case "goal_diff_min":
       return outcome(match, rule, (m) => {
-        const minDiff = Number(rule.triggerParams.minDiff ?? 0);
+        // Defensiv beide Schreibweisen lesen, falls eine Row noch nicht durch
+        // Migration 0039 auf camelCase normalisiert wurde.
+        const minDiff = Number(rule.triggerParams.minDiff ?? rule.triggerParams.min_diff ?? 0);
         return isWin(m) && ownScore(m) - opponentScore(m) >= minDiff;
       });
     case "goals_scored_min":
       return outcome(match, rule, (m) => {
-        const minGoals = Number(rule.triggerParams.minGoals ?? 0);
+        const minGoals = Number(rule.triggerParams.minGoals ?? rule.triggerParams.min_goals ?? 0);
         return ownScore(m) >= minGoals;
       });
     case "special_goal":
@@ -158,8 +160,13 @@ function goalTotal(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[] {
 }
 
 function goalByPlayer(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[] {
-  const targetId = rule.triggerParams.playerId as string | undefined;
-  const targetName = rule.triggerParams.playerName as string | undefined;
+  // Defensiv beide Schreibweisen lesen (camelCase canonical, snake_case Legacy).
+  const targetId = (rule.triggerParams.playerId ?? rule.triggerParams.player_id) as
+    | string
+    | undefined;
+  const targetName = (rule.triggerParams.playerName ?? rule.triggerParams.player_name) as
+    | string
+    | undefined;
 
   return ownGoals(match)
     .filter((e) => {

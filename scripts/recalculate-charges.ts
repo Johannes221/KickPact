@@ -80,7 +80,13 @@ async function recalculateForTeam(team: { id: string; name: string }) {
         triggerType: result.triggerType,
         amountCents: cappedAmount,
         status: "confirmed",
-        confirmedAt: new Date(),
+        // confirmedAt = Spieldatum (nicht new Date()): Monats-Cap-Fenster
+        // (getMonthlyChargedCents) UND Rechnungs-Periode (generate-invoices)
+        // selektieren beide über COALESCE(confirmedAt, createdAt). Beim Backfill
+        // alle Charges auf "heute" zu stempeln kollabiert sonst jeden Spiel-Monat
+        // in den aktuellen Monat → historische Monate ungecappt, aktueller Monat
+        // übersprungen (E2E-Finding 2026-06-01).
+        confirmedAt: matchDate,
       }).onConflictDoNothing().returning({ id: chargesTable.id });
 
       if (inserted) {

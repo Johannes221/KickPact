@@ -38,3 +38,36 @@ export const pledgeInputSchema = z.object({
 
 export type PledgeInput = z.infer<typeof pledgeInputSchema>;
 export type PledgeRuleInput = z.infer<typeof pledgeRuleInputSchema>;
+
+/**
+ * Kanonische camelCase-Keys für `trigger_params_json`.
+ *
+ * Der Pledge-Builder (UI) schrieb historisch snake_case (`min_goals`, `min_diff`,
+ * `player_name`, `min_pos`/`max_pos`), während die Trigger-Engine
+ * (`lib/crawler/triggers.ts`) camelCase liest (`minGoals`, `minDiff`,
+ * `playerName`, `maxPosition`). Dadurch wurden Schwellwerte als 0 gelesen →
+ * `goals_scored_min`/`goal_diff_min` feuerten immer, `goal_by_player` nie.
+ *
+ * Diese Map normalisiert beim Speichern auf die Engine-Keys. Unbekannte Keys
+ * bleiben unverändert. Die Engine liest zusätzlich defensiv beide Schreibweisen,
+ * damit bereits gespeicherte snake_case-Rows weiterhin korrekt auslösen.
+ */
+const TRIGGER_PARAM_KEY_MAP: Record<string, string> = {
+  min_goals: "minGoals",
+  min_diff: "minDiff",
+  player_name: "playerName",
+  player_id: "playerId",
+  min_pos: "minPosition",
+  max_pos: "maxPosition",
+  max_position: "maxPosition"
+};
+
+export function normalizeTriggerParams(
+  params: Record<string, unknown>
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(params)) {
+    out[TRIGGER_PARAM_KEY_MAP[key] ?? key] = value;
+  }
+  return out;
+}

@@ -175,8 +175,10 @@ export function isTriggerHit(
     case "season_champion":
       return result.finalPosition === 1;
     case "season_table_position": {
-      const minPos = numberParam(params.minPosition);
-      const maxPos = numberParam(params.maxPosition);
+      // Defensiv beide Schreibweisen lesen, falls eine Row noch nicht durch
+      // Migration 0039 auf camelCase normalisiert wurde.
+      const minPos = numberParam(params.minPosition ?? params.min_pos);
+      const maxPos = numberParam(params.maxPosition ?? params.max_pos);
       if (minPos == null || maxPos == null || result.finalPosition == null) return false;
       return result.finalPosition >= minPos && result.finalPosition <= maxPos;
     }

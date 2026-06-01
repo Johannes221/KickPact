@@ -4,7 +4,11 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { pledges, pledgeRules, sponsors, teams } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
-import { pledgeInputSchema, type PledgeInput } from "@/lib/validations/pledge";
+import {
+  pledgeInputSchema,
+  normalizeTriggerParams,
+  type PledgeInput
+} from "@/lib/validations/pledge";
 import { findInvitationByToken, markInvitationUsed } from "@/lib/db/queries/invitations";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import {
@@ -171,7 +175,7 @@ export async function createPledge(input: PledgeInput) {
       parsed.rules.map((r) => ({
         pledgeId: pledge.id,
         triggerType: r.triggerType,
-        triggerParamsJson: r.params,
+        triggerParamsJson: normalizeTriggerParams(r.params),
         amountCents: Math.round(r.amountEur * 100),
         perMatchCapCents: r.perMatchCapEur
           ? Math.round(r.perMatchCapEur * 100)
