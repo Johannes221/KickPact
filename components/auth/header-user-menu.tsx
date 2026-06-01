@@ -14,12 +14,13 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Plus, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderStatusDot } from "@/components/shared/status-bar";
+import { IdentityIcon } from "@/components/shared/identity-icon";
 import {
   activeIdentityFromPath,
-  flattenIdentities,
-  identityEmoji
+  flattenIdentities
 } from "@/lib/auth/identity-routing";
 import type { UserIdentities } from "@/lib/db/queries/user-identities";
 
@@ -170,7 +171,7 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
               className="cursor-pointer text-brand-night-navy bg-accent/5 focus:bg-accent/10 focus:text-accent-dark"
             >
               <Link href={currentEntry.href}>
-                <span className="mr-2 text-base">{identityEmoji(currentEntry.kind)}</span>
+                <IdentityIcon kind={currentEntry.kind} className="mr-2 h-7 w-7" />
                 <span className="flex-1 truncate">
                   <span className="block truncate font-semibold">{currentEntry.label}</span>
                   <span className="block truncate text-[0.7rem] text-brand-night-navy/60">
@@ -197,7 +198,7 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
                 className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
               >
                 <Link href={e.href}>
-                  <span className="mr-2 text-base">{identityEmoji(e.kind)}</span>
+                  <IdentityIcon kind={e.kind} className="mr-2 h-7 w-7" />
                   <span className="flex-1 truncate">
                     <span className="block truncate font-medium">{e.label}</span>
                     <span className="block truncate text-[0.7rem] text-brand-night-navy/60">
@@ -216,7 +217,8 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
           className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
         >
           <Link href="/signup">
-            <span className="mr-2 text-base">+</span>Neue Rolle hinzufügen
+            <Plus className="mr-2 h-4 w-4" aria-hidden />
+            Neue Rolle hinzufügen
           </Link>
         </DropdownMenuItem>
 
@@ -226,7 +228,8 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
           className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
         >
           <Link href="/konto">
-            <span className="mr-2 text-base">⚙️</span>Mein Konto
+            <Settings className="mr-2 h-4 w-4" aria-hidden />
+            Mein Konto
           </Link>
         </DropdownMenuItem>
 
@@ -244,7 +247,8 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
             }
           }}
         >
-          <span className="mr-2 text-base">↩</span>Abmelden
+          <LogOut className="mr-2 h-4 w-4" aria-hidden />
+          Abmelden
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

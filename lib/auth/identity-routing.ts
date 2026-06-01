@@ -164,8 +164,3 @@ export function flattenIdentities(ids: UserIdentities): IdentityEntry[] {
   return entries;
 }
 
-export function identityEmoji(kind: IdentityEntry["kind"]): string {
-  if (kind === "club") return "🏟️";
-  if (kind === "team") return "⚽";
-  return "💚";
-}

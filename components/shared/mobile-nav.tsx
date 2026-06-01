@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
+import { Menu, Plus, Settings, LogOut } from "lucide-react";
 import {
   Sheet,
   SheetClose,
@@ -19,10 +19,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSession, signOut } from "@/lib/auth/client";
 import {
   activeIdentityFromPath,
-  flattenIdentities,
-  identityEmoji
+  flattenIdentities
 } from "@/lib/auth/identity-routing";
 import type { UserIdentities } from "@/lib/db/queries/user-identities";
+import { IdentityIcon } from "@/components/shared/identity-icon";
 import { cn } from "@/lib/utils";
 
 const PUBLIC_NAV = [
@@ -167,9 +167,7 @@ export function MobileNav({ onHero = false }: { onHero?: boolean }) {
                       href={currentEntry.href}
                       className="flex min-h-12 items-center gap-3 rounded-xl border border-accent/40 bg-accent/5 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     >
-                      <span className="text-xl" aria-hidden>
-                        {identityEmoji(currentEntry.kind)}
-                      </span>
+                      <IdentityIcon kind={currentEntry.kind} className="h-9 w-9" />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-semibold text-brand-night-navy">
                           {currentEntry.label}
@@ -196,9 +194,7 @@ export function MobileNav({ onHero = false }: { onHero?: boolean }) {
                             href={e.href}
                             className="flex min-h-12 items-center gap-3 rounded-xl border border-brand-neutral/30 bg-white px-3 py-2 hover:border-accent/40 hover:bg-accent/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                           >
-                            <span className="text-xl" aria-hidden>
-                              {identityEmoji(e.kind)}
-                            </span>
+                            <IdentityIcon kind={e.kind} className="h-9 w-9" />
                             <span className="min-w-0 flex-1">
                               <span className="block truncate text-sm font-medium text-brand-night-navy">
                                 {e.label}
@@ -226,9 +222,7 @@ export function MobileNav({ onHero = false }: { onHero?: boolean }) {
                         href="/signup"
                         className="flex min-h-12 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-brand-night-navy hover:bg-brand-off-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                       >
-                        <span className="text-base" aria-hidden>
-                          +
-                        </span>
+                        <Plus className="h-4 w-4 text-brand-night-navy/50" aria-hidden />
                         Neue Rolle hinzufügen
                       </Link>
                     </SheetClose>
@@ -239,9 +233,7 @@ export function MobileNav({ onHero = false }: { onHero?: boolean }) {
                         href="/konto"
                         className="flex min-h-12 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-brand-night-navy hover:bg-brand-off-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                       >
-                        <span className="text-base" aria-hidden>
-                          ⚙️
-                        </span>
+                        <Settings className="h-4 w-4 text-brand-night-navy/50" aria-hidden />
                         Mein Konto
                       </Link>
                     </SheetClose>
@@ -261,7 +253,7 @@ export function MobileNav({ onHero = false }: { onHero?: boolean }) {
             <Button
               type="button"
               variant="outline"
-              className="min-h-12 w-full justify-center"
+              className="min-h-12 w-full justify-center gap-2"
               onClick={async () => {
                 // Harter Reload: signOut() löscht das Cookie serverseitig, aber
                 // der useSession-Nanostore behält den User im Cache → soft-
@@ -275,6 +267,7 @@ export function MobileNav({ onHero = false }: { onHero?: boolean }) {
                 }
               }}
             >
+              <LogOut className="h-4 w-4" aria-hidden />
               Abmelden
             </Button>
           ) : (
