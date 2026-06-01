@@ -19,7 +19,13 @@ import { getSpiele, type SpielListItem } from "../../../lib/crawler/fussballde";
 
 const TEAM_ID = "0123456789ABCDEFGHIJ"; // 20-char id shape
 const SLUG = "sv-musterhausen";
-const SAISON = "2526";
+// getSpiele filtert Spiele VOR dem Saisonstart (1. Juli des Codes) weg. Die
+// Fixtures nutzen bewusst lauf-datums-unabhängige Absolut-Daten (2020/2024 =
+// past, 2099 = future). Damit der Filter sie nicht als "Vorsaison" verwirft,
+// fragen wir eine Saison ab, deren Start (hier 2019-07-01) vor dem ältesten
+// Fixture-Datum (31.05.2020) liegt. vergangen/scheduled bleibt rein über das
+// echte `today` bzw. den Endpoint (prev/next) bestimmt.
+const SAISON = "1920";
 
 const PAST_IDS = [
   "02PAST001AA000000VS5489BUVSSD35NB",
