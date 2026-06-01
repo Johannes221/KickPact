@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TriangleAlert, RefreshCw, MailOpen, type LucideIcon } from "lucide-react";
 import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { subscriptions, clubs, processedStripeEvents } from "@/lib/db/schema";
@@ -51,9 +52,9 @@ export default async function StripePage() {
   return (
     <div className="space-y-8">
       <div className="grid gap-3 grid-cols-2 md:grid-cols-3">
-        <Tile label="Past Due" value={pastDue.length.toString()} emoji="⚠️" />
-        <Tile label="Incomplete" value={incomplete.length.toString()} emoji="🔄" />
-        <Tile label="Letzte 10 Webhooks" value={recentEvents.length.toString()} emoji="📬" />
+        <Tile label="Past Due" value={pastDue.length.toString()} icon={TriangleAlert} />
+        <Tile label="Incomplete" value={incomplete.length.toString()} icon={RefreshCw} />
+        <Tile label="Letzte 10 Webhooks" value={recentEvents.length.toString()} icon={MailOpen} />
       </div>
 
       <section>
@@ -207,10 +208,14 @@ export default async function StripePage() {
   );
 }
 
-function Tile({ label, value, emoji }: { label: string; value: string; emoji?: string }) {
+function Tile({ label, value, icon: Icon }: { label: string; value: string; icon?: LucideIcon }) {
   return (
     <div className="rounded-2xl border border-brand-neutral/40 bg-white p-4">
-      {emoji && <div className="text-xl mb-1">{emoji}</div>}
+      {Icon && (
+        <span className="mb-2 grid h-9 w-9 place-items-center rounded-full bg-accent/10 text-accent-dark">
+          <Icon className="h-[1.1rem] w-[1.1rem]" aria-hidden />
+        </span>
+      )}
       <div className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
         {label}
       </div>

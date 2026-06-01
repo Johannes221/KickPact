@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -106,7 +107,8 @@ export function VerificationsTable({ rows }: { rows: RowProps[] }) {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"
                 >
-                  📎 {r.docFilename}
+                  <Paperclip className="h-4 w-4 shrink-0" aria-hidden />
+                  {r.docFilename}
                 </a>
               </div>
             </div>

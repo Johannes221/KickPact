@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -89,7 +90,8 @@ export function ConflictsTable({ rows }: { rows: ConflictRow[] }) {
                     rel="noopener noreferrer"
                     className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"
                   >
-                    📎 {r.existingAdmin.docFilename}
+                    <Paperclip className="h-4 w-4 shrink-0" aria-hidden />
+                    {r.existingAdmin.docFilename}
                   </a>
                 </>
               ) : (
@@ -120,7 +122,8 @@ export function ConflictsTable({ rows }: { rows: ConflictRow[] }) {
                   rel="noopener noreferrer"
                   className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"
                 >
-                  📎 Konflikt-Bescheinigung
+                  <Paperclip className="mr-1 inline h-4 w-4 align-[-0.2em]" aria-hidden />
+                  Konflikt-Bescheinigung
                 </a>
               )}
             </div>

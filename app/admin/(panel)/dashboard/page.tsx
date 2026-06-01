@@ -1,5 +1,14 @@
 import Link from "next/link";
 import {
+  Building2,
+  Euro,
+  TrendingUp,
+  DoorOpen,
+  Target,
+  Zap,
+  type LucideIcon
+} from "lucide-react";
+import {
   getPlatformKpis,
   getTopClubsForMonth,
   currentMonthStr
@@ -66,13 +75,17 @@ interface TileProps {
   label: string;
   value: string;
   caption?: string;
-  emoji?: string;
+  icon?: LucideIcon;
 }
 
-function KpiTile({ label, value, caption, emoji }: TileProps) {
+function KpiTile({ label, value, caption, icon: Icon }: TileProps) {
   return (
     <div className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6">
-      {emoji && <div className="text-2xl mb-2">{emoji}</div>}
+      {Icon && (
+        <span className="mb-3 grid h-10 w-10 place-items-center rounded-full bg-accent/10 text-accent-dark">
+          <Icon className="h-5 w-5" aria-hidden />
+        </span>
+      )}
       <div className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
         {label}
       </div>
@@ -103,38 +116,38 @@ export default async function AdminDashboardPage({
     <div className="space-y-8">
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <KpiTile
-          emoji="🏟️"
+          icon={Building2}
           label="Aktive Vereine"
           value={kpis.activeClubs.toLocaleString("de-DE")}
           caption="Subscriptions in status=active"
         />
         <KpiTile
-          emoji="💶"
+          icon={Euro}
           label="MRR"
           value={eur(kpis.mrrCents)}
           caption="Monatlich wiederkehrend (geschätzt)"
         />
         <KpiTile
-          emoji="📈"
+          icon={TrendingUp}
           label="Trial → Paid (30d)"
           value={`${kpis.trialToPaidPercent} %`}
           caption="Conversion der letzten 30 Tage"
         />
         <KpiTile
-          emoji="🚪"
+          icon={DoorOpen}
           label="Churn (30d)"
           value={`${kpis.churnPercent} %`}
           caption="Cancel-Rate vs. Baseline 30d alt"
         />
         <KpiTile
-          emoji="🎯"
+          icon={Target}
           label="Ø Pact"
           value={eur(kpis.avgPledgeAmountCents)}
           caption="Mittelwert aller aktiven Pact-Regeln"
         />
         <Link href="/admin/sponsoring" className="block transition-transform hover:-translate-y-0.5">
           <KpiTile
-            emoji="⚡"
+            icon={Zap}
             label="Top-Trigger"
             value={
               kpis.topTrigger
