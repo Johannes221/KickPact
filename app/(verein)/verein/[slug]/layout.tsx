@@ -2,7 +2,10 @@ import Link from "next/link";
 import { eq, and, sql } from "drizzle-orm";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
-import { getActiveVerificationForClub } from "@/lib/db/queries/verifications";
+import {
+  getActiveVerificationForClub,
+  getActiveVerificationForTeam
+} from "@/lib/db/queries/verifications";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { db } from "@/lib/db/client";
 import { sponsors, clubMemberships, clubs, teams } from "@/lib/db/schema";
@@ -36,21 +39,8 @@ export default async function VereinLayout({
     .innerJoin(clubs, eq(clubMemberships.clubId, clubs.id))
     .where(eq(clubMemberships.userId, user.id));
 
-  // Verifikations-Status für Banner. assertClubAccess gibt verifiedAt nicht
-  // mit zurück, also einen kleinen Extra-Select hier — minimal-invasiv.
-  const [verifiedRow] = await db
-    .select({ verifiedAt: clubs.verifiedAt })
-    .from(clubs)
-    .where(eq(clubs.id, club.id))
-    .limit(1);
-  const verifiedAt = verifiedRow?.verifiedAt ?? null;
-  const verification = verifiedAt
-    ? null
-    : await getActiveVerificationForClub(club.id);
-
-  // Effective-Plan dieses Clubs auflösen — entscheidet, ob der Vereins-Header
-  // auf Mannschafts-Routen ausgeblendet wird (basic/pro: Mannschaft ist der
-  // primäre Scope, Vereins-Header wäre nur Lärm).
+  // Effective-Plan dieses Clubs auflösen — steuert Header-Sichtbarkeit UND ob
+  // die Verifizierung Mannschafts- oder Vereins-scoped läuft.
   let effectivePlan: "basic" | "pro" | "verein" | null = null;
   let firstTeamId: string | null = null;
   try {
@@ -69,6 +59,35 @@ export default async function VereinLayout({
     isSingleTeamPlan && firstTeamId
       ? `/verein/${slug}/mannschaft/${firstTeamId}/abo`
       : `/verein/${slug}/abo`;
+
+  // Verifikations-Status für Banner — SCOPED:
+  //   - Mannschaftsabo (basic/pro): Mannschaft ist der Verifizierungs-Scope
+  //     (eigene Doc-Typen). Status/Route/Label kommen vom Team.
+  //   - Vereinslizenz: Verein-Scope wie gehabt.
+  const verifyScope: "team" | "club" =
+    isSingleTeamPlan && firstTeamId ? "team" : "club";
+  const verifyEntityLabel = verifyScope === "team" ? "Mannschaft" : "Verein";
+  let verifiedAt: Date | null = null;
+  let verification: { status: string; rejectionReason: string | null } | null = null;
+  let verifyHref = `/verein/${slug}/verifikation`;
+  if (verifyScope === "team" && firstTeamId) {
+    const [teamRow] = await db
+      .select({ verifiedAt: teams.verifiedAt })
+      .from(teams)
+      .where(eq(teams.id, firstTeamId))
+      .limit(1);
+    verifiedAt = teamRow?.verifiedAt ?? null;
+    verification = verifiedAt ? null : await getActiveVerificationForTeam(firstTeamId);
+    verifyHref = `/verein/${slug}/mannschaft/${firstTeamId}/verifikation`;
+  } else {
+    const [verifiedRow] = await db
+      .select({ verifiedAt: clubs.verifiedAt })
+      .from(clubs)
+      .where(eq(clubs.id, club.id))
+      .limit(1);
+    verifiedAt = verifiedRow?.verifiedAt ?? null;
+    verification = verifiedAt ? null : await getActiveVerificationForClub(club.id);
+  }
 
   // Verlust-Aversion im Trial-Banner: wie viele aktive Pledges hängen an den
   // Mannschaften dieses Vereins. Nur relevant/abgefragt während des Trials.
@@ -92,11 +111,11 @@ export default async function VereinLayout({
         id: "verify",
         tone: "warn",
         iconKey: "shield-alert",
-        title: "Verein noch nicht verifiziert",
+        title: `${verifyEntityLabel} noch nicht verifiziert`,
         detail:
           "Lade einen Nachweis hoch — bis dahin werden Rechnungen zurückgehalten.",
         actionLabel: "Hochladen",
-        actionHref: `/verein/${slug}/verifikation`
+        actionHref: verifyHref
       });
     } else if (verification.status === "pending") {
       statusItems.push({
@@ -117,7 +136,7 @@ export default async function VereinLayout({
           verification.rejectionReason ??
           "Bitte lade einen neuen Nachweis hoch.",
         actionLabel: "Neu hochladen",
-        actionHref: `/verein/${slug}/verifikation`
+        actionHref: verifyHref
       });
     }
   }
