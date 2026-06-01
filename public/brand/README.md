@@ -1,17 +1,41 @@
 # KickPact Brand Assets
 
-## Logo-Varianten
+## Wichtig: Source of Truth
 
-| Datei | Beschreibung | Farbe |
+Das volle Logo („KICKPACT"-Schriftzug) existiert als **Pixel-Grafik** (`wordmark.png`, 2-farbig navy/grün). Die zugehörigen einfarbigen SVGs wurden via `potrace` aus dieser PNG **nachgezeichnet** — sie sind einfarbig und können leichte Abweichungen zur Original-Typo haben. Eine saubere, vektorisierte 2-Farben-Wortmarke existiert nicht (es gibt keine Font-/Designdatei dafür). Daher:
+
+- **Brand 2-farbig** (navy „KICK" + grün „PACT") → nur als **PNG** verfügbar.
+- **Einfarbig** (grün / navy / weiß) → als PNG **und** vektorisiertes SVG.
+
+## Marke (K-Icon)
+
+| Datei | Farbe |
+|---|---|
+| `mark.svg` | `currentColor` (für Component-Use) |
+| `mark-green.svg/.png` | `#01C457` Primary Green |
+| `mark-black.svg/.png` | `#1A1A2E` Night Navy |
+| `mark-white.svg/.png` | `#FFFFFF` weiß |
+| `mark-green-on-white.png` | grün auf **deckend weißem** Quadrat (Instagram-Profilbild) |
+
+## Volles Logo (Marke + KICKPACT)
+
+`logo-{farbe}-{layout}` — `layout` = `horizontal` (Marke links, Schrift rechts) oder `stacked` (Marke oben, Schrift drunter).
+
+| Farbe | Dateien | Verwendung |
 |---|---|---|
-| `mark.svg` | K-Mark allein, `currentColor` für Component-Use | dynamic |
-| `mark-green.svg` | K-Mark allein | `#01C457` Primary Green |
-| `mark-black.svg` | K-Mark allein | `#1A1A2E` Night Navy |
-| `mark-white.svg` | K-Mark allein | `#FFFFFF` weiß |
-| `wordmark.svg` | "KICKPACT" Schriftzug allein | `#000000` (anpassbar) |
-| `logo-green.svg` | K-Mark + KICKPACT | Grün |
-| `logo-black.svg` | K-Mark + KICKPACT | Navy/Schwarz |
-| `logo-white.svg` | K-Mark + KICKPACT | Weiß (für dunkle Hintergründe) |
+| `brand` | `logo-brand-horizontal.png`, `logo-brand-stacked.png` | **Hauptlogo**: grüne Marke + KICK navy + PACT grün. Helle Hintergründe. (nur PNG) |
+| `green` | `logo-green-{horizontal,stacked}.{png,svg}` | komplett grün |
+| `navy` | `logo-navy-{horizontal,stacked}.{png,svg}` | komplett `#1A1A2E`, helle Hintergründe / Druck |
+| `white` | `logo-white-{horizontal,stacked}.{png,svg}` | komplett weiß, dunkle Hintergründe / Fotos |
+
+## Wortmarke allein
+
+| Datei | Farbe |
+|---|---|
+| `wordmark.png` | **Brand 2-farbig** (navy/grün) |
+| `wordmark-green.{png,svg}` | grün |
+| `wordmark-navy.{png,svg}` | `#1A1A2E` |
+| `wordmark-white.{png,svg}` | weiß |
 
 ## Verwendung
 
@@ -20,31 +44,29 @@
 ```tsx
 import { Logo } from "@/components/shared/logo";
 
-<Logo variant="full" />              // K + "KICK PACT" Split-Color
+<Logo variant="full" />              // K + "KICKPACT" (Mark-SVG + wordmark.png)
 <Logo variant="tagline" />           // Plus "Mehr als ein Spiel"
 <Logo variant="mark" href={null} />  // Nur Icon, nicht klickbar
 ```
+
+Die Component setzt das volle Logo aus `MarkSvg` + `wordmark.png` zusammen (siehe `components/shared/logo.tsx`).
 
 ### Direkt als Asset
 
 ```tsx
 import Image from "next/image";
 
-<Image src="/brand/logo-green.svg" alt="KickPact" width={120} height={180} />
+// Hauptlogo, horizontal
+<Image src="/brand/logo-brand-horizontal.png" alt="KickPact" width={912} height={120} />
 ```
 
-### Off-Plattform (Social Media, Print, Email-Signaturen)
+### Off-Plattform (Social Media, Print, Email)
 
-Die SVGs sind verlustfrei skalierbar. Für Pixelgrafik exportieren:
+- **Heller Hintergrund:** `logo-brand-*` (2-farbig) oder `logo-navy-*`
+- **Dunkler Hintergrund:** `logo-white-*`
+- **Instagram-Profilbild:** `mark-green-on-white.png` (deckend weiß, sonst füllt IG die Transparenz schwarz)
 
-```bash
-# Mit ImageMagick
-magick convert -background none -resize 1024x public/brand/logo-green.svg logo-green-1024.png
-
-# Light/Dark Variante je nach Hintergrund verwenden
-# - Heller Hintergrund: logo-green oder logo-black
-# - Dunkler Hintergrund: logo-white oder logo-green
-```
+Einfarbige SVGs sind verlustfrei skalierbar. Brand-2-farbig nur als PNG (hochauflösend, transparent).
 
 ## Farbpalette
 
