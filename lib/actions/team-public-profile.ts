@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import {
@@ -14,7 +14,7 @@ import {
 import { assertClubWriteAccess } from "@/lib/auth/scope";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
-import { buildTeamPublicSlug, makeSlugSuffix } from "@/lib/utils/team-slug";
+import { generateUniqueTeamSlug } from "@/lib/db/queries/team-public-slug";
 
 const BASE_URL =
   process.env.BETTER_AUTH_URL ?? "https://kickpact.schartl.dev";
@@ -82,25 +82,6 @@ export async function saveTeamPublicProfile(input: {
   if (slug) revalidatePath(`/m/${slug}`);
 
   return { slug };
-}
-
-/** Erzeugt einen kollisionsfreien Slug (Retry mit neuem Suffix). */
-async function generateUniqueTeamSlug(
-  clubName: string,
-  teamName: string,
-  selfTeamId: string
-): Promise<string> {
-  for (let attempt = 0; attempt < 6; attempt++) {
-    const candidate = buildTeamPublicSlug(clubName, teamName, makeSlugSuffix());
-    const [clash] = await db
-      .select({ id: teams.id })
-      .from(teams)
-      .where(and(eq(teams.publicSlug, candidate), ne(teams.id, selfTeamId)))
-      .limit(1);
-    if (!clash) return candidate;
-  }
-  // Extrem unwahrscheinlich — fallback mit teamId-Fragment garantiert eindeutig.
-  return buildTeamPublicSlug(clubName, teamName, selfTeamId.slice(-6));
 }
 
 const leadSchema = z.object({

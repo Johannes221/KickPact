@@ -16,6 +16,7 @@ import { assertClubWriteAccess } from "@/lib/auth/scope";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { createInvitation } from "@/lib/db/queries/invitations";
+import { generateUniqueTeamSlug } from "@/lib/db/queries/team-public-slug";
 
 const inquirySchema = z.object({
   teamId: z.string().min(1),
@@ -234,7 +235,12 @@ export async function setTeamDiscoverable(input: {
   const user = await requireUser();
   void user; // assertClubAccess validates ownership
   const [teamRow] = await db
-    .select({ clubSlug: clubs.slug })
+    .select({
+      clubSlug: clubs.slug,
+      clubName: clubs.name,
+      teamName: teams.name,
+      publicSlug: teams.publicSlug
+    })
     .from(teams)
     .innerJoin(clubs, eq(teams.clubId, clubs.id))
     .where(eq(teams.id, input.teamId))
@@ -242,14 +248,27 @@ export async function setTeamDiscoverable(input: {
   if (!teamRow) throw new Error("Mannschaft nicht gefunden");
   await assertClubWriteAccess(teamRow.clubSlug, "admin");
 
+  // Beim Öffentlich-Schalten einen stabilen Slug erzeugen, damit die Mannschaft
+  // sofort eine teilbare /m/{slug}-URL hat (egal über welchen Toggle).
+  let publicSlug = teamRow.publicSlug;
+  if (input.discoverable && !publicSlug) {
+    publicSlug = await generateUniqueTeamSlug(
+      teamRow.clubName,
+      teamRow.teamName,
+      input.teamId
+    );
+  }
+
   await db
     .update(teams)
     .set({
       discoverable: input.discoverable,
-      publicTagline: input.publicTagline ?? null
+      publicTagline: input.publicTagline ?? null,
+      publicSlug
     })
     .where(eq(teams.id, input.teamId));
 
   revalidatePath(`/verein/${teamRow.clubSlug}`);
   revalidatePath("/sponsor/discover");
+  if (publicSlug) revalidatePath(`/m/${publicSlug}`);
 }
