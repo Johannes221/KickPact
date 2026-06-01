@@ -15,6 +15,7 @@ import {
   markCrawlStarted,
   markCrawlCompleted,
   markCrawlError,
+  updateTeamLeague,
   persistKader,
   type ActiveTeam
 } from "@/lib/db/queries/crawler";
@@ -138,6 +139,18 @@ export const crawlMatches = inngest.createFunction(
       const spiele = await step.run(`get-spiele-${team.id}`, () =>
         getSpiele(team.fussballdeTeamId, team.fussballdeSlug, team.saison)
       );
+
+      // Liga/Spielklasse aus den Listen-Items (carry-over aus der
+      // `row-competition`-Zeile). Ersten nicht-leeren Treffer persistieren —
+      // updateTeamLeague überschreibt eine bestehende Liga NIE mit leer.
+      const detectedLeague =
+        spiele.find((s) => s.league && s.league.trim().length > 0)?.league ??
+        null;
+      if (detectedLeague) {
+        await step.run(`league-${team.id}`, () =>
+          updateTeamLeague(team.id, detectedLeague)
+        );
+      }
 
       // ─── Geplante (kommende) Spiele ────────────────────────────────────────
       // next.games liefert Spiele in der Zukunft. Diese werden als scheduled-

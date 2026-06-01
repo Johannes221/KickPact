@@ -110,6 +110,24 @@ export async function markCrawlCompleted(teamId: string): Promise<void> {
 }
 
 /**
+ * Persistiert die beim Crawl erkannte Liga/Spielklasse auf dem Team. Wird vom
+ * crawl-matches-Job mit dem aus der `row-competition`-Zeile extrahierten Wert
+ * aufgerufen. Ein leerer/`null`-Wert wird ignoriert — eine bereits gesetzte
+ * Liga darf NIE durch einen leeren Crawl-Treffer überschrieben werden.
+ */
+export async function updateTeamLeague(
+  teamId: string,
+  league: string | null
+): Promise<void> {
+  const trimmed = league?.trim();
+  if (!trimmed) return;
+  await db
+    .update(teams)
+    .set({ league: trimmed })
+    .where(eq(teams.id, teamId));
+}
+
+/**
  * Hält einen fehlgeschlagenen Team-Crawl fest (für die Operator-Diagnose).
  * Wird vom crawl-matches-Job im per-Team-catch aufgerufen; markCrawlCompleted
  * räumt den Fehler beim nächsten erfolgreichen Lauf.

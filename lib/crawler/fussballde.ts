@@ -120,6 +120,17 @@ function nodeText(el: { text?: string } | null | undefined): string {
 }
 
 /**
+ * Extrahiert die Liga/Spielklasse aus dem Text einer `row-competition`-Zeile.
+ * fussball.de schreibt dort z.B. "Kreisliga A, Staffel 3, Herren" — uns
+ * interessiert nur der erste Teil vor dem Komma (die eigentliche Spielklasse).
+ * Gibt `null` zurück, wenn nichts Sinnvolles übrig bleibt.
+ */
+export function extractLeagueFromCompetitionText(raw: string): string | null {
+  const league = (raw ?? "").split(",")[0].trim();
+  return league.length > 0 ? league : null;
+}
+
+/**
  * Stable, content-addressed hash of the "interesting" parts of a scraped match.
  *
  * Used by the crawler to detect when a previously seen match has been edited on
@@ -205,6 +216,12 @@ export interface SpielListItem {
    */
   status: "finished" | "scheduled";
   url: string;
+  /**
+   * Liga/Spielklasse aus der `row-competition`-Zeile des Listen-HTML (z.B.
+   * "Kreisliga A"). Carry-over wie `datum`: gilt für alle Spiel-Zeilen unterhalb
+   * der Wettbewerbs-Zeile. `null`, wenn keine Wettbewerbs-Zeile vorausging.
+   */
+  league: string | null;
 }
 
 export interface SpielDetails {
@@ -473,6 +490,7 @@ function extractMatchesFromHtml(root: HTMLElement): SpielListItem[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   let currentDatum = "";
+  let currentLeague: string | null = null;
 
   for (const tr of root.querySelectorAll("tr")) {
     if (
@@ -484,6 +502,12 @@ function extractMatchesFromHtml(root: HTMLElement): SpielListItem[] {
       const dm2 = txt.match(/(\d{2}\.\d{2}\.\d{2})(?!\d)/);
       if (dm) currentDatum = dm[1];
       else if (dm2) currentDatum = dm2[1];
+      // Die Wettbewerbs-Zeile trägt die Liga/Spielklasse — als carry-over für die
+      // folgenden Spiel-Zeilen merken (überschreibt nur bei nicht-leerem Treffer).
+      if (tr.classList.contains("row-competition")) {
+        const league = extractLeagueFromCompetitionText(txt);
+        if (league) currentLeague = league;
+      }
       continue;
     }
 
@@ -541,7 +565,8 @@ function extractMatchesFromHtml(root: HTMLElement): SpielListItem[] {
       ergebnis: "",
       vergangen,
       status: vergangen ? "finished" : "scheduled",
-      url: fullHref
+      url: fullHref,
+      league: currentLeague
     });
   }
 
