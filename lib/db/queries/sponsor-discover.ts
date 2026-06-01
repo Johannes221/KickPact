@@ -1,6 +1,7 @@
 import { and, eq, ilike, or, sql, desc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { teams, clubs, sponsorInquiries } from "@/lib/db/schema";
+import { getDocumentSignedUrl } from "@/lib/storage/documents";
 
 export interface DiscoverableTeam {
   teamId: string;
@@ -75,6 +76,85 @@ export async function listDiscoverableTeams(opts: {
     hasOpenInquiry: Boolean(r.hasInquiry),
     clubVerifiedAt: r.clubVerifiedAt
   }));
+}
+
+export interface PublicTeamProfile {
+  teamId: string;
+  publicSlug: string;
+  /** Öffentlicher Anzeigename (publicName ?? team.name). */
+  displayName: string;
+  teamName: string;
+  saison: string;
+  tagline: string | null;
+  goals: string | null;
+  /** Aufgelöste, anzeigbare Logo-URL (signed/served) oder null. */
+  logoUrl: string | null;
+  clubName: string;
+  clubOrt: string | null;
+  clubVerifiedAt: Date | null;
+  teamVerifiedAt: Date | null;
+}
+
+/**
+ * Lädt das öffentliche Profil einer Mannschaft anhand ihres `publicSlug`.
+ * Gibt `null` zurück, wenn nicht gefunden, nicht `discoverable` oder nicht
+ * `isActive` — die Public-Seite rendert dann `notFound()`. Privat geschaltete
+ * Profile sind so nach außen unsichtbar (auch bei bekanntem Slug).
+ */
+export async function getPublicTeamProfileBySlug(
+  slug: string
+): Promise<PublicTeamProfile | null> {
+  const trimmed = slug.trim();
+  if (!trimmed) return null;
+
+  const [row] = await db
+    .select({
+      teamId: teams.id,
+      publicSlug: teams.publicSlug,
+      teamName: teams.name,
+      publicName: teams.publicName,
+      saison: teams.saison,
+      tagline: teams.publicTagline,
+      goals: teams.publicGoals,
+      logoUrl: teams.logoUrl,
+      discoverable: teams.discoverable,
+      isActive: teams.isActive,
+      teamVerifiedAt: teams.verifiedAt,
+      clubName: clubs.name,
+      clubOrt: clubs.ort,
+      clubVerifiedAt: clubs.verifiedAt
+    })
+    .from(teams)
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(eq(teams.publicSlug, trimmed))
+    .limit(1);
+
+  if (!row || !row.publicSlug) return null;
+  if (!row.discoverable || !row.isActive) return null;
+
+  let resolvedLogo: string | null = null;
+  if (row.logoUrl) {
+    try {
+      resolvedLogo = await getDocumentSignedUrl(row.logoUrl, 3600);
+    } catch {
+      resolvedLogo = null;
+    }
+  }
+
+  return {
+    teamId: row.teamId,
+    publicSlug: row.publicSlug,
+    displayName: row.publicName?.trim() || row.teamName,
+    teamName: row.teamName,
+    saison: row.saison,
+    tagline: row.tagline,
+    goals: row.goals,
+    logoUrl: resolvedLogo,
+    clubName: row.clubName,
+    clubOrt: row.clubOrt,
+    clubVerifiedAt: row.clubVerifiedAt,
+    teamVerifiedAt: row.teamVerifiedAt
+  };
 }
 
 /**

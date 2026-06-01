@@ -154,6 +154,22 @@ export const teams = pgTable(
      */
     publicTagline: text("public_tagline"),
     /**
+     * URL-Slug für die öffentliche Profilseite `/m/{publicSlug}`. Wird beim
+     * ersten Veröffentlichen generiert (slugify(Verein+Mannschaft) + Suffix),
+     * danach stabil. NULL = noch nie öffentlich gewesen.
+     */
+    publicSlug: text("public_slug"),
+    /**
+     * Optionaler öffentlicher Anzeigename (z.B. „FC Beispiel — Erste"). Fallback
+     * auf `name`, wenn leer.
+     */
+    publicName: text("public_name"),
+    /**
+     * „Ziele" der Mannschaft fürs öffentliche Profil — wofür gesammelt wird /
+     * Saisonziel (max ~600 chars). Frei formuliert.
+     */
+    publicGoals: text("public_goals"),
+    /**
      * Team-Logo. Optional, von Club-Admin in Team-Einstellungen hochgeladen.
      * Storage-URL im Format `r2://<bucket>/teams/<teamId>/logo-<cuid>.<ext>`
      * oder `local://...`, aufgelöst via `getDocumentSignedUrl`.
@@ -194,7 +210,10 @@ export const teams = pgTable(
     fussballdeIdx: uniqueIndex("teams_fussballde_idx")
       .on(t.fussballdeTeamId, t.saison)
       .where(sql`${t.fussballdeTeamId} IS NOT NULL`),
-    discoverableIdx: index("teams_discoverable_idx").on(t.discoverable).where(sql`${t.discoverable} = true`)
+    discoverableIdx: index("teams_discoverable_idx").on(t.discoverable).where(sql`${t.discoverable} = true`),
+    publicSlugIdx: uniqueIndex("teams_public_slug_idx")
+      .on(t.publicSlug)
+      .where(sql`${t.publicSlug} IS NOT NULL`)
   })
 );
 

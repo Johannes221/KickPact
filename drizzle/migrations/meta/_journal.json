@@ -288,6 +288,13 @@
       "when": 1782360900000,
       "tag": "0040_pledge_rule_caps_crud",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1782361000000,
+      "tag": "0041_public_team_profile",
+      "breakpoints": true
     }
   ]
 }
