@@ -5,6 +5,7 @@ import { teams } from "@/lib/db/schema";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { listMatchesForTeam, getMatchChargesSummaryForTeam } from "@/lib/db/queries/matches";
 import { detectTeamSide } from "@/lib/crawler/team-side";
+import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
 
 export const metadata = { title: "Spiele · KickPact" };
@@ -107,6 +108,10 @@ export default async function SpielePage({
   });
 
   const base = `/verein/${slug}/mannschaft/${teamId}/spiele`;
+  // Anzahl aktiver (nicht-„alle") Filter — fürs collapsible Summary.
+  const activeFilterCount = [zeit, ort, runde, result].filter(
+    (v) => v !== "alle"
+  ).length;
   // Href bauen und dabei die anderen Filter erhalten.
   const buildHref = (overrides: Record<string, string>) => {
     const next = { zeit, ort, runde, result, ...overrides };
@@ -142,8 +147,42 @@ export default async function SpielePage({
         </FilterRow>
       )}
 
-      {/* Filter */}
-      <div className="space-y-2">
+      {/* Filter — auf Mobile eingeklappt (spart Platz), per <details> ohne JS.
+          Standardmäßig offen, sobald mind. ein Filter aktiv ist. */}
+      <details className="group" open={activeFilterCount > 0}>
+        <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl border border-brand-neutral/40 bg-white px-4 py-2.5 text-sm font-semibold text-brand-night-navy/80 transition-colors hover:border-accent/40 [&::-webkit-details-marker]:hidden">
+          <svg
+            className="h-4 w-4 shrink-0 text-brand-night-navy/50"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+          </svg>
+          Filter
+          {activeFilterCount > 0 && (
+            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-bold text-white">
+              {activeFilterCount}
+            </span>
+          )}
+          <svg
+            className="ml-auto h-4 w-4 shrink-0 text-brand-night-navy/40 transition-transform group-open:rotate-180"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </summary>
+        <div className="mt-2 space-y-2">
         <FilterRow label="Zeit">
           {(["alle", "kommend", "gespielt"] as ZeitFilter[]).map((v) => (
             <FilterChip key={v} href={buildHref({ zeit: v })} active={zeit === v}>
@@ -172,7 +211,8 @@ export default async function SpielePage({
             </FilterChip>
           ))}
         </FilterRow>
-      </div>
+        </div>
+      </details>
 
       <div className="text-xs text-brand-night-navy/50">{filtered.length} Spiele</div>
 
@@ -200,16 +240,19 @@ export default async function SpielePage({
                   >
                     {badge.label}
                   </span>
-                  <span className="shrink-0 text-xs text-brand-night-navy/50 w-24">
+                  <span className="hidden sm:block shrink-0 text-xs text-brand-night-navy/50 w-24">
                     {fmtDate(m.datum)}
                   </span>
                   <span className="flex-1 min-w-0 text-sm truncate">
                     <span className={m.isHeim ? "font-semibold" : "text-brand-night-navy/70"}>
-                      {m.heimName}
+                      {/* Mobile: abgekürzt (passt in dichte Liste), Desktop: voll. */}
+                      <span className="sm:hidden">{abbreviateTeamName(m.heimName)}</span>
+                      <span className="hidden sm:inline">{m.heimName}</span>
                     </span>
                     <span className="mx-2 text-brand-night-navy/40">vs</span>
                     <span className={!m.isHeim ? "font-semibold" : "text-brand-night-navy/70"}>
-                      {m.gastName}
+                      <span className="sm:hidden">{abbreviateTeamName(m.gastName)}</span>
+                      <span className="hidden sm:inline">{m.gastName}</span>
                     </span>
                   </span>
                   {m.isScheduled ? (

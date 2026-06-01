@@ -17,6 +17,7 @@ import { teamLicenses } from "@/lib/db/schema/billing";
 import { inngest } from "@/lib/inngest/client";
 import { isTeamCrawling } from "@/lib/crawler/crawl-status";
 import { detectTeamSide } from "@/lib/crawler/team-side";
+import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { markCrawlStarted } from "@/lib/db/queries/crawler";
 import { TeamSetupChecklist } from "./_components/team-setup-checklist";
 import { CrawlAutoRefresh } from "./_components/crawl-auto-refresh";
@@ -335,7 +336,7 @@ export default async function TeamDetailPage({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs text-brand-night-navy/50 mb-1">
+                        <div className="hidden sm:block text-xs text-brand-night-navy/50 mb-1">
                           {m.datum.toLocaleDateString("de-DE", {
                             weekday: "short",
                             day: "2-digit",
@@ -344,11 +345,18 @@ export default async function TeamDetailPage({
                           })}
                         </div>
                         <div className="font-semibold text-sm text-brand-night-navy truncate">
-                          {m.heimName}
+                          {/* Mobile: abgekürzte Vereinsnamen, Desktop: volle. */}
+                          <span className="sm:hidden">
+                            {abbreviateTeamName(m.heimName)}
+                          </span>
+                          <span className="hidden sm:inline">{m.heimName}</span>
                           <span className="font-mono text-accent mx-2">
                             {m.ergebnisHeim ?? "—"}:{m.ergebnisGast ?? "—"}
                           </span>
-                          {m.gastName}
+                          <span className="sm:hidden">
+                            {abbreviateTeamName(m.gastName)}
+                          </span>
+                          <span className="hidden sm:inline">{m.gastName}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
