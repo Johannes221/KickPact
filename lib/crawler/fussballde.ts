@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { chromium, type Page } from "playwright";
+import { fetch as undiciFetch } from "undici";
 import { parse as parseHtml, type HTMLElement } from "node-html-parser";
 import { saisonStartDate } from "@/lib/utils/saison";
 
@@ -85,7 +86,12 @@ export async function withRetry<T>(
 async function fetchHtml(url: string): Promise<HTMLElement> {
   return withRetry(
     async () => {
-      const res = await fetch(url, {
+      // WICHTIG: undici-fetch direkt, NICHT das globale `fetch`. Next.js patcht
+      // globalThis.fetch (Caching/Instrumentierung); außerhalb eines Request-
+      // Scopes (Inngest-Function) lieferte der Patch leere Responses → Crawler
+      // bekam 0 Spiele, obwohl roher node-fetch im selben Container volle Daten
+      // holt (verifiziert 2026-06-01). undici umgeht den Patch.
+      const res = await undiciFetch(url, {
         headers: {
           "User-Agent": pickUserAgent(),
           Accept:
@@ -97,6 +103,9 @@ async function fetchHtml(url: string): Promise<HTMLElement> {
       if (res.status >= 500) throw new Error(`HTTP ${res.status}`); // transient
       if (!res.ok) throw new Error(`HTTP ${res.status} für ${url}`);
       const html = await res.text();
+      if (process.env.CRAWL_DEBUG === "1") {
+        console.log(`[fetchHtml] ${url.slice(0, 70)} → ${html.length}B`);
+      }
       // Harte Block-/Captcha-Seite: nur bei KLEINER Seite + Block-Marker werfen.
       // Echte Seiten (Liste ~28 KB, Detail ~190 KB) referenzieren teils "captcha"
       // in Hidden-Forms → Längen-Guard verhindert False-Positives.
@@ -700,6 +709,12 @@ export async function getSpiele(
     const tb = parseSpielDatum(b.datum) ?? 0;
     return tb - ta;
   });
+
+  // Observability: 1 Zeile pro Team in den Container-Logs — zeigt sofort, ob
+  // der fetch-Crawler auf Prod tatsächlich Spiele zieht (Diagnose Prod ≠ lokal).
+  console.log(
+    `[getSpiele] team=${teamId.slice(0, 8)} saison=${saison} → ${allResults.size} roh, ${raw.length} nach Saison-Filter`
+  );
 
   return raw;
 }
