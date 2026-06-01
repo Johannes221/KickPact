@@ -297,41 +297,40 @@ async function withPage<T>(fn: (page: Page) => Promise<T>): Promise<T> {
 }
 
 export async function searchVereine(suchbegriff: string): Promise<VereinHit[]> {
-  return withPage(async (page) => {
-    const url = `https://www.fussball.de/suche/-/text/${encodeURIComponent(suchbegriff)}/restriction/-1#!/`;
-    // Vorher: waitUntil="networkidle" — fußball.de hat Long-Polling-Tracker,
-    // dadurch triggered networkidle teils nie und wartet den vollen 30s-
-    // Timeout. domcontentloaded + waitForSelector auf das tatsächliche
-    // Ergebnis-Element ist deterministisch: sobald Verein-Links im DOM
-    // sind, geht's weiter. Typisch ~2-4s statt 20-30s.
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 15000 });
-    await assertNotCaptcha(page);
-    await page
-      .waitForSelector('a[href*="/verein/"]', { timeout: 8000 })
-      .catch(() => {
-        // Kein Treffer → returnen wir gleich leeres Array, nicht 8s warten
-        // und dann doch leer. evaluate unten liefert dann [] zurück.
-      });
+  // fetch statt Playwright: die /suche/-Seite ist server-gerendert (die
+  // Verein-Treffer stehen im HTML). Robust auf Prod (kein headless-Block).
+  const url = `https://www.fussball.de/suche/-/text/${encodeURIComponent(
+    suchbegriff
+  )}/restriction/-1`;
+  let root: HTMLElement;
+  try {
+    root = await fetchHtml(url);
+  } catch (err) {
+    if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
+    return [];
+  }
 
-    return await page.evaluate(`(function() {
-      var results = [];
-      var seen = new Set();
-      document.querySelectorAll('a[href*="/verein/"]').forEach(function(link) {
-        var href = link.href || link.getAttribute("href") || "";
-        var m = href.match(/\\/verein\\/([^/]+)\\/-\\/id\\/([A-Z0-9]+)/);
-        if (!m || seen.has(m[2])) return;
-        seen.add(m[2]);
-        var raw = (link.textContent || "").replace(/\\s+/g, " ").trim();
-        // Address-Pattern "<Name> <5-stellige PLZ> <Ort>" abspalten, falls vorhanden
-        var addr = raw.match(/^(.+?)\\s+\\d{5}\\s+(.+)$/);
-        var name, ort;
-        if (addr) { name = addr[1].trim(); ort = addr[2].trim(); }
-        else { name = raw || m[1]; ort = null; }
-        results.push({ name: name, ort: ort, slug: m[1], vereinId: m[2], url: href });
-      });
-      return results;
-    })()`) as VereinHit[];
-  });
+  const results: VereinHit[] = [];
+  const seen = new Set<string>();
+  for (const link of root.querySelectorAll('a[href*="/verein/"]')) {
+    const href = link.getAttribute("href") || "";
+    const m = href.match(/\/verein\/([^/]+)\/-\/id\/([A-Z0-9]+)/);
+    if (!m || seen.has(m[2])) continue;
+    seen.add(m[2]);
+    const raw = nodeText(link);
+    // Address-Pattern "<Name> <5-stellige PLZ> <Ort>" abspalten, falls vorhanden
+    const addr = raw.match(/^(.+?)\s+\d{5}\s+(.+)$/);
+    const name = addr ? addr[1].trim() : raw || m[1];
+    const ort = addr ? addr[2].trim() : null;
+    results.push({
+      name,
+      ort,
+      slug: m[1],
+      vereinId: m[2],
+      url: href.startsWith("http") ? href : `https://www.fussball.de${href}`
+    });
+  }
+  return results;
 }
 
 /**
@@ -375,107 +374,97 @@ export async function getMannschaften(
   slug: string,
   vereinName?: string
 ): Promise<MannschaftHit[]> {
-  return withPage(async (page) => {
-    // ─── Strategie A: Verein-Hauptseite, Sektion "Mannschaften des Vereins" ──
-    // fussball.de rendert auf der Vereinsseite einen <div class="club-teams">
-    // Block der ausschließlich die eigenen Mannschaften enthält (inkl. JSG/SpG-
-    // Teams die dem Verein zugeordnet sind). Alle Mannschaftslinks außerhalb
-    // dieses Blocks sind entweder Navigation oder Gegner-Links aus dem
-    // Spielplan-Widget — die werden hier bewusst ignoriert.
-    let strategyAResults: MannschaftHit[] = [];
-    try {
-      const vereinUrl = `https://www.fussball.de/verein/${slug}/-/id/${vereinId}#!/`;
-      await page.goto(vereinUrl, { waitUntil: "domcontentloaded", timeout: 20000 });
-      await assertNotCaptcha(page);
-      await page
-        .waitForSelector('div.club-teams a[href*="/mannschaft/"]', { timeout: 10000 })
-        .catch(() => {});
+  // ─── Strategie A: Verein-Hauptseite, Sektion "Mannschaften des Vereins" ──
+  // Die Vereinsseite ist server-gerendert (div.club-teams mit Mannschafts-
+  // Links). fetch statt Playwright → prod-robust.
+  let strategyAResults: MannschaftHit[] = [];
+  try {
+    const root = await fetchHtml(
+      `https://www.fussball.de/verein/${slug}/-/id/${vereinId}`
+    );
+    const seen = new Set<string>();
+    for (const link of root.querySelectorAll(
+      'div.club-teams a[href*="/mannschaft/"]'
+    )) {
+      const href = link.getAttribute("href") || "";
+      const m = href.match(
+        /\/mannschaft\/([^/]+)\/-\/saison\/(\d{4})\/team-id\/([A-Z0-9]{20,})/
+      );
+      if (!m || seen.has(m[3])) continue;
+      seen.add(m[3]);
+      strategyAResults.push({
+        name: nodeText(link) || m[1],
+        slug: m[1],
+        saison: m[2],
+        teamId: m[3],
+        url: href.startsWith("http") ? href : `https://www.fussball.de${href}`
+      });
+    }
+  } catch (err) {
+    if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
+    // Strategie A gescheitert — Fallback auf B
+  }
 
-      strategyAResults = (await page.evaluate(`(function() {
-        var results = [];
-        var seen = new Set();
-        // Nur Links innerhalb der "Mannschaften des Vereins"-Sektion
-        document.querySelectorAll('div.club-teams a[href*="/mannschaft/"]').forEach(function(link) {
-          var href = link.href || link.getAttribute("href") || "";
-          var m = href.match(/\\/mannschaft\\/([^/]+)\\/-\\/saison\\/(\\d{4})\\/team-id\\/([A-Z0-9]{20,})/);
-          if (!m) return;
-          var teamId = m[3];
-          if (seen.has(teamId)) return;
-          seen.add(teamId);
-          var name = (link.textContent || '').replace(/\\s+/g, ' ').trim() || m[1];
-          results.push({ name: name, slug: m[1], saison: m[2], teamId: teamId, url: href });
+  // ─── Strategie B: ajax.club.matchplan (Fallback) ──────────────────────────
+  // Nur wenn A 0 liefert. Liefert ALLE Teams aller Ligen des Vereins (inkl.
+  // Gegner) → vereinName-AND-Filter unten zwingend.
+  let strategyBResults: MannschaftHit[] = [];
+  if (strategyAResults.length === 0) {
+    try {
+      const root = await fetchHtml(
+        `https://www.fussball.de/ajax.club.matchplan/-/id/${vereinId}/mode/PAGE/show-filter/true`
+      );
+      const saison = currentSaisonCode();
+      const seen = new Set<string>();
+      for (const opt of root.querySelectorAll("select option[value]")) {
+        const teamId = opt.getAttribute("value") || "";
+        if (
+          teamId.length < 20 ||
+          !/^[A-Z0-9]+$/.test(teamId) ||
+          seen.has(teamId)
+        )
+          continue;
+        seen.add(teamId);
+        const name = nodeText(opt);
+        strategyBResults.push({
+          name,
+          slug: slugifyTeamName(name),
+          saison,
+          teamId,
+          url: `https://www.fussball.de/mannschaft/${slugifyTeamName(
+            name
+          )}/-/saison/${saison}/team-id/${teamId}`
         });
-        return results;
-      })()`)) as MannschaftHit[];
+      }
     } catch (err) {
       if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
-      // Strategie A gescheitert — Fallback auf B
     }
+  }
 
-    // ─── Strategie B: ajax.club.matchplan (Fallback) ──────────────────────────
-    // Nur ausgeführt wenn Strategie A 0 Ergebnisse liefert.
-    // ACHTUNG: Dieser Endpoint liefert ALLE Teams aller Ligen in denen der Verein
-    // spielt (inkl. Gegner), nicht nur eigene Mannschaften. Deshalb ist der
-    // vereinName-AND-Filter hier zwingend.
-    let strategyBResults: MannschaftHit[] = [];
-    if (strategyAResults.length === 0) {
-      try {
-        const matchplanUrl = `https://www.fussball.de/ajax.club.matchplan/-/id/${vereinId}/mode/PAGE/show-filter/true`;
-        await page.goto(matchplanUrl, { waitUntil: "domcontentloaded", timeout: 15000 });
-        await assertNotCaptcha(page);
-
-        const saison = currentSaisonCode();
-        strategyBResults = (await page.evaluate(`(function(saison) {
-          var results = [];
-          var seen = new Set();
-          document.querySelectorAll('select option[value]').forEach(function(opt) {
-            var teamId = opt.getAttribute('value');
-            if (!teamId || teamId.length < 20 || !/^[A-Z0-9]+$/.test(teamId)) return;
-            if (seen.has(teamId)) return;
-            seen.add(teamId);
-            var name = (opt.textContent || '').replace(/\\s+/g, ' ').trim();
-            results.push({ name: name, slug: '', saison: saison, teamId: teamId, url: '' });
-          });
-          return results;
-        })(${JSON.stringify(saison)})`)) as MannschaftHit[];
-
-        strategyBResults = strategyBResults.map((t) => ({
-          ...t,
-          slug: slugifyTeamName(t.name),
-          url: `https://www.fussball.de/mannschaft/${slugifyTeamName(t.name)}/-/saison/${t.saison}/team-id/${t.teamId}`,
-        }));
-      } catch (err) {
-        if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
-      }
+  // ─── Merge + Deduplication ────────────────────────────────────────────────
+  const seen = new Set<string>();
+  const merged: MannschaftHit[] = [];
+  for (const t of [...strategyAResults, ...strategyBResults]) {
+    if (!seen.has(t.teamId)) {
+      seen.add(t.teamId);
+      merged.push(t);
     }
+  }
 
-    // ─── Merge + Deduplication ────────────────────────────────────────────────
-    const seen = new Set<string>();
-    const merged: MannschaftHit[] = [];
-    for (const t of [...strategyAResults, ...strategyBResults]) {
-      if (!seen.has(t.teamId)) {
-        seen.add(t.teamId);
-        merged.push(t);
-      }
-    }
+  // Strategie A filtert bereits via div.club-teams — kein vereinName-Filter nötig.
+  if (strategyAResults.length > 0) return merged;
 
-    // Strategie A filtert bereits via div.club-teams — kein vereinName-Filter nötig.
-    if (strategyAResults.length > 0) return merged;
+  // ─── vereinName-Filter (nur für Strategie-B-Fallback) ────────────────────
+  if (!vereinName) return merged;
+  const tokens = vereinName
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((t) => t.length >= 3 && !/^\d+$/.test(t));
+  if (tokens.length === 0) return merged;
 
-    // ─── vereinName-Filter (nur für Strategie-B-Fallback) ────────────────────
-    // AND-Logik: alle signifikanten Tokens müssen im Teamnamen vorkommen,
-    // um False-Positives aus dem Matchplan-Widget zu vermeiden.
-    if (!vereinName) return merged;
-    const tokens = vereinName
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((t) => t.length >= 3 && !/^\d+$/.test(t));
-    if (tokens.length === 0) return merged;
-
-    return merged.filter((team) => {
-      const tLower = team.name.toLowerCase();
-      return tokens.every((tok) => tLower.includes(tok));
-    });
+  return merged.filter((team) => {
+    const tLower = team.name.toLowerCase();
+    return tokens.every((tok) => tLower.includes(tok));
   });
 }
 
