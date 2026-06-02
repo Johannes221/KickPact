@@ -21,6 +21,10 @@ const config: CapacitorConfig = {
   appId: "com.kickpact.app",
   appName: "KickPact",
   webDir: "capacitor-www",
+  // Markiert Requests aus der nativen App im User-Agent. Die Next-Middleware
+  // erkennt das und leitet den Root `/` auf den App-Einstieg (`/willkommen`)
+  // statt der Marketing-Landingpage — server-seitig, ohne Flash. (WS-8)
+  appendUserAgent: "KickPactApp",
   server: {
     url: SERVER_URL,
     cleartext: false
