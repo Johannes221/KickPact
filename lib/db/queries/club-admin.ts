@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { clubs, teams, subscriptions } from "@/lib/db/schema";
+import { generateUniqueTeamSlug } from "./team-public-slug";
 
 function nullIfEmpty(v: string | null | undefined): string | null {
   if (v == null) return null;
@@ -78,5 +79,30 @@ export async function updateTeam(input: {
   if (input.discoverable !== undefined) patch.discoverable = input.discoverable;
   if (input.isActive !== undefined) patch.isActive = input.isActive;
   if (Object.keys(patch).length === 0) return;
+
+  // Beim Öffentlich-Schalten einen stabilen publicSlug sicherstellen — sonst
+  // ist die Mannschaft zwar discoverable, ihr öffentliches Profil (/m/{slug})
+  // aber nicht erreichbar und "Profil ansehen" bleibt deaktiviert. Konsistent
+  // zu setTeamDiscoverable/saveTeamPublicProfile, die das ebenfalls tun.
+  if (input.discoverable === true) {
+    const [row] = await db
+      .select({
+        publicSlug: teams.publicSlug,
+        teamName: teams.name,
+        clubName: clubs.name
+      })
+      .from(teams)
+      .innerJoin(clubs, eq(clubs.id, teams.clubId))
+      .where(eq(teams.id, input.teamId))
+      .limit(1);
+    if (row && !row.publicSlug) {
+      patch.publicSlug = await generateUniqueTeamSlug(
+        row.clubName,
+        row.teamName,
+        input.teamId
+      );
+    }
+  }
+
   await db.update(teams).set(patch).where(eq(teams.id, input.teamId));
 }

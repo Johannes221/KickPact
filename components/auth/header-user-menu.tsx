@@ -39,7 +39,11 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
       setIsOperator(false);
       return;
     }
-    fetch("/api/user/roles")
+    // no-store + Re-Fetch bei Navigation: eine frisch angelegte Rolle (z.B. neues
+    // Sponsor-Profil) ändert NICHT die session.user.id → ohne pathname-Dep bliebe
+    // das Menü stale und die neue Rolle würde fehlen. pathname als Dep sorgt dafür,
+    // dass nach dem Wechsel ins neue Dashboard die Rollenliste neu geladen wird.
+    fetch("/api/user/roles", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         setIdentities(d);
@@ -54,7 +58,7 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
         setIsOperator(Boolean((d as { isPlatformAdmin?: boolean } | null)?.isPlatformAdmin));
       })
       .catch(() => {/* silent */});
-  }, [session?.user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [session?.user?.id, pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isPending) {
     return <div className="h-9 w-20 animate-pulse rounded-md bg-white/10" />;
