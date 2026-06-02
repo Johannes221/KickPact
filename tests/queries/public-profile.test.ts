@@ -13,7 +13,8 @@ describe("getPublicTeamProfileBySlug (erweitert)", () => {
     const [team] = await db.insert(teams).values({
       clubId: club.id, name: "2. Herren", saison: "2526", fussballdeTeamId: createId(),
       isActive: true, discoverable: true, publicSlug: "fc-test-2-herren-ab12",
-      coverUrl: "r2://b/teams/x/cover.jpg", league: "Kreisliga", showInsights: true
+      coverUrl: "r2://b/teams/x/cover.jpg", league: "Kreisliga", showInsights: true,
+      verifiedAt: new Date() // Gate: nur verifizierte Teams sind öffentlich sichtbar
     }).returning({ id: teams.id });
     await db.insert(teamImages).values({ teamId: team.id, storageKey: "r2://b/teams/x/gallery-1.jpg", sortOrder: 0 });
 
