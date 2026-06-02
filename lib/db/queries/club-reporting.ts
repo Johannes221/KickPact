@@ -534,3 +534,30 @@ export async function getSponsorOverviewForClub(
     }
   };
 }
+
+export interface ClubFilterOptions {
+  teamRows: Array<{ id: string; name: string }>;
+  sponsorRows: Array<{ id: string; displayName: string }>;
+}
+
+/**
+ * Filter-Dropdown-Optionen für die Verein-Charges-/Pacts-Tabellen: alle
+ * Mannschaften des Vereins + die Sponsoren, die hier schon Pledges haben.
+ */
+export async function getClubFilterOptions(
+  clubId: string
+): Promise<ClubFilterOptions> {
+  const teamRows = await db
+    .select({ id: teams.id, name: teams.name })
+    .from(teams)
+    .where(eq(teams.clubId, clubId))
+    .orderBy(asc(teams.name));
+  const sponsorRows = await db
+    .selectDistinct({ id: sponsors.id, displayName: sponsors.displayName })
+    .from(sponsors)
+    .innerJoin(pledges, eq(pledges.sponsorId, sponsors.id))
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .where(eq(teams.clubId, clubId))
+    .orderBy(asc(sponsors.displayName));
+  return { teamRows, sponsorRows };
+}

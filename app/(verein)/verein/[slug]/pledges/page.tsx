@@ -1,10 +1,8 @@
-import { eq, asc } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { teams, pledges, sponsors } from "@/lib/db/schema";
 import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { parsePaginationFromSearchParams } from "@/lib/db/queries/_helpers/paginate";
 import {
   listPledgesForClub,
+  getClubFilterOptions,
   CLUB_PLEDGE_SORT_KEYS,
   type ClubPledgeSortKey
 } from "@/lib/db/queries/club-reporting";
@@ -56,18 +54,7 @@ export default async function PledgesPage({
     status: sp.status
   };
 
-  const teamRows = await db
-    .select({ id: teams.id, name: teams.name })
-    .from(teams)
-    .where(eq(teams.clubId, club.id))
-    .orderBy(asc(teams.name));
-  const sponsorRows = await db
-    .selectDistinct({ id: sponsors.id, displayName: sponsors.displayName })
-    .from(sponsors)
-    .innerJoin(pledges, eq(pledges.sponsorId, sponsors.id))
-    .innerJoin(teams, eq(pledges.teamId, teams.id))
-    .where(eq(teams.clubId, club.id))
-    .orderBy(asc(sponsors.displayName));
+  const { teamRows, sponsorRows } = await getClubFilterOptions(club.id);
 
   const result = await listPledgesForClub(club.id, {
     pagination: { page, pageSize },
