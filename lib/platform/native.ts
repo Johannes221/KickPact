@@ -24,17 +24,31 @@ declare global {
   }
 }
 
+/**
+ * Capacitor hängt `KickPactApp` an den User-Agent (capacitor.config
+ * `appendUserAgent`). Auf **remote** geladenen Seiten (server.url) ist
+ * `window.Capacitor` nicht immer zuverlässig gesetzt — der UA aber schon
+ * (die Middleware nutzt ihn ja für den `/willkommen`-Redirect). Daher als
+ * robuster Fallback für die Native-Erkennung.
+ */
+function hasNativeUserAgent(): boolean {
+  return /KickPactApp/i.test(window.navigator?.userAgent ?? "");
+}
+
 /** True, wenn die App in der nativen Capacitor-Hülle (iOS/Android) läuft. */
 export function isNativeApp(): boolean {
   if (typeof window === "undefined") return false;
-  return window.Capacitor?.isNativePlatform?.() ?? false;
+  if (window.Capacitor?.isNativePlatform?.() === true) return true;
+  return hasNativeUserAgent();
 }
 
 /** Aktuelle Plattform — `"web"` auf Browser/SSR. */
 export function getPlatform(): "ios" | "android" | "web" {
   if (typeof window === "undefined") return "web";
   const platform = window.Capacitor?.getPlatform?.();
-  return platform === "ios" || platform === "android" ? platform : "web";
+  if (platform === "ios" || platform === "android") return platform;
+  // Fallback über UA: KickPactApp ist aktuell ausschließlich die iOS-App.
+  return hasNativeUserAgent() ? "ios" : "web";
 }
 
 /** True nur in der nativen iOS-App — der relevante Schalter für IAP/Anti-Steering. */
