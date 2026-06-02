@@ -5,6 +5,7 @@ import { charges, charges as chargesTable } from "@/lib/db/schema/charges";
 import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
 import { sponsors } from "@/lib/db/schema/sponsors";
 import { users } from "@/lib/db/schema/auth";
+import { sponsorLabelSql } from "./sponsor-label";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { detectTeamSide } from "@/lib/crawler/team-side";
 import { saisonStartDate } from "@/lib/utils/saison";
@@ -189,12 +190,13 @@ export async function listMatchCharges(matchId: string): Promise<MatchChargesDat
       amountCents: chargesTable.amountCents,
       status: chargesTable.status,
       matchEventId: chargesTable.matchEventId,
-      sponsorDisplayName: sponsors.displayName,
+      sponsorDisplayName: sponsorLabelSql,
       pledgeId: chargesTable.pledgeId
     })
     .from(chargesTable)
     .innerJoin(pledges, eq(chargesTable.pledgeId, pledges.id))
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .leftJoin(users, eq(sponsors.userId, users.id))
     .where(eq(chargesTable.matchId, matchId))
     .orderBy(chargesTable.triggerType);
 

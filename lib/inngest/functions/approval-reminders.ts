@@ -12,6 +12,7 @@ import {
   sponsors,
   users
 } from "@/lib/db/schema";
+import { sponsorLabelSql } from "@/lib/db/queries/sponsor-label";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { approvalReminderEmail } from "@/lib/mail/templates/approval-reminder";
 import { signApprovalToken } from "@/lib/auth/approval-token";
@@ -63,7 +64,7 @@ export const approvalReminders = inngest.createFunction(
           clubSlug: clubs.slug,
           amountCents: pledgeRules.amountCents,
           sponsorUserId: sponsors.userId,
-          sponsorName: sponsors.displayName,
+          sponsorName: sponsorLabelSql,
           userEmail: users.email
         })
         .from(eventApprovals)

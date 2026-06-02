@@ -11,6 +11,8 @@ import { db } from "@/lib/db/client";
 import { charges } from "@/lib/db/schema/charges";
 import { pledges } from "@/lib/db/schema/pledges";
 import { sponsors } from "@/lib/db/schema/sponsors";
+import { users } from "@/lib/db/schema/auth";
+import { sponsorLabelSql } from "./sponsor-label";
 import type { TriggerCategory } from "@/lib/billing/trigger-categories";
 import {
   TRIGGER_TYPES_BY_CATEGORY,
@@ -240,13 +242,14 @@ export async function getTopSponsorsForTeam(
   const rows = await db
     .select({
       sponsorId: sponsors.id,
-      displayName: sponsors.displayName,
+      displayName: sponsorLabelSql,
       totalCents: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int`,
       eventsCount: sql<number>`COUNT(*)::int`
     })
     .from(charges)
     .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .leftJoin(users, eq(sponsors.userId, users.id))
     .where(
       and(
         eq(pledges.teamId, teamId),
@@ -255,7 +258,7 @@ export async function getTopSponsorsForTeam(
         lte(charges.createdAt, period.to)
       )
     )
-    .groupBy(sponsors.id, sponsors.displayName)
+    .groupBy(sponsors.id, sponsors.displayName, users.name, users.email)
     .orderBy(sql`SUM(${charges.amountCents}) DESC NULLS LAST`)
     .limit(limit);
 

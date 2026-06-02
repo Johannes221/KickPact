@@ -37,6 +37,7 @@ import {
   paginate,
   type PaginatedResult
 } from "@/lib/db/queries/_helpers/paginate";
+import { sponsorLabelSql } from "./sponsor-label";
 
 type SortDir = "asc" | "desc";
 
@@ -135,7 +136,7 @@ const chargeSelect = {
   heimName: matches.heimName,
   gastName: matches.gastName,
   sponsorId: sponsors.id,
-  sponsorDisplayName: sponsors.displayName,
+  sponsorDisplayName: sponsorLabelSql,
   sponsorEmail: users.email,
   triggerType: charges.triggerType,
   amountCents: charges.amountCents,
@@ -294,7 +295,7 @@ const pledgeSelect = {
   pledgeId: pledges.id,
   ruleId: pledgeRules.id,
   sponsorId: sponsors.id,
-  sponsorDisplayName: sponsors.displayName,
+  sponsorDisplayName: sponsorLabelSql,
   sponsorEmail: users.email,
   teamId: teams.id,
   teamName: teams.name,
@@ -433,7 +434,7 @@ export async function getSponsorOverviewForClub(
   const [sp] = await db
     .select({
       id: sponsors.id,
-      displayName: sponsors.displayName,
+      displayName: sponsorLabelSql,
       type: sponsors.type,
       email: users.email,
       businessName: sponsors.businessName

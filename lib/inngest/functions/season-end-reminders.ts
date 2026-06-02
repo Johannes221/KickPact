@@ -9,6 +9,7 @@ import {
   users,
   sentNotifications
 } from "@/lib/db/schema";
+import { sponsorLabelSql } from "@/lib/db/queries/sponsor-label";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { seasonEndReminderEmail } from "@/lib/mail/templates/season-end-reminder";
 import { getReplyToForClub } from "@/lib/mail/reply-to";
@@ -40,7 +41,7 @@ export const seasonEndReminders = inngest.createFunction(
           endsAt: pledges.endsAt,
           sponsorId: pledges.sponsorId,
           teamId: pledges.teamId,
-          sponsorDisplayName: sponsors.displayName,
+          sponsorDisplayName: sponsorLabelSql,
           sponsorEmail: users.email,
           teamName: teams.name,
           clubName: clubs.name,

@@ -9,6 +9,7 @@ import {
   users,
   sentNotifications
 } from "@/lib/db/schema";
+import { sponsorLabelSql } from "./sponsor-label";
 
 /**
  * Plan 3 Teil 2 — Saison-Renewal Queries.
@@ -55,7 +56,7 @@ export async function findPledgesEligibleForRenewal(
       endsAt: pledges.endsAt,
       sponsorId: pledges.sponsorId,
       teamId: pledges.teamId,
-      sponsorDisplayName: sponsors.displayName,
+      sponsorDisplayName: sponsorLabelSql,
       sponsorEmail: users.email,
       teamName: teams.name,
       teamSaison: teams.saison,

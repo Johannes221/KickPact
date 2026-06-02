@@ -8,8 +8,10 @@ import {
   pledgeRules,
   charges,
   sponsors,
+  users,
   eventApprovals
 } from "@/lib/db/schema";
+import { sponsorLabelSql } from "./sponsor-label";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
 import { detectTeamSide } from "@/lib/crawler/team-side";
@@ -156,19 +158,20 @@ export async function getTopSponsorsForTeam(
   const rows = await db
     .select({
       sponsorId: sponsors.id,
-      displayName: sponsors.displayName,
+      displayName: sponsorLabelSql,
       totalCents: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int`
     })
     .from(charges)
     .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .leftJoin(users, eq(sponsors.userId, users.id))
     .where(
       and(
         eq(pledges.teamId, teamId),
         inArray(charges.status, ["confirmed", "invoiced"])
       )
     )
-    .groupBy(sponsors.id, sponsors.displayName)
+    .groupBy(sponsors.id, sponsors.displayName, users.name, users.email)
     .orderBy(sql`SUM(${charges.amountCents}) DESC NULLS LAST`)
     .limit(limit);
 
@@ -199,7 +202,7 @@ export async function listSponsorsForTeam(teamId: string): Promise<TeamSponsorRo
   const rows = await db
     .select({
       sponsorId: sponsors.id,
-      displayName: sponsors.displayName,
+      displayName: sponsorLabelSql,
       activePacts: sql<number>`count(*) FILTER (WHERE ${pledges.status} = 'active')::int`,
       totalPacts: sql<number>`count(*)::int`,
       chargedCents: sql<number>`COALESCE(SUM((
@@ -209,8 +212,9 @@ export async function listSponsorsForTeam(teamId: string): Promise<TeamSponsorRo
     })
     .from(pledges)
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .leftJoin(users, eq(sponsors.userId, users.id))
     .where(eq(pledges.teamId, teamId))
-    .groupBy(sponsors.id, sponsors.displayName)
+    .groupBy(sponsors.id, sponsors.displayName, users.name, users.email)
     .orderBy(
       sql`count(*) FILTER (WHERE ${pledges.status} = 'active') DESC, COALESCE(SUM((
         SELECT SUM(c.amount_cents) FROM ${charges} c
@@ -308,7 +312,7 @@ export async function listPactsForTeam(
       pledgeStatus: pledges.status,
       monthlyCapCents: pledges.monthlyCapCents,
       sponsorId: sponsors.id,
-      sponsorDisplayName: sponsors.displayName,
+      sponsorDisplayName: sponsorLabelSql,
       ruleId: pledgeRules.id,
       triggerType: pledgeRules.triggerType,
       amountCents: pledgeRules.amountCents,
@@ -324,6 +328,7 @@ export async function listPactsForTeam(
     .from(pledgeRules)
     .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .leftJoin(users, eq(sponsors.userId, users.id))
     .where(and(...conditions))
     .orderBy(desc(pledges.createdAt));
 

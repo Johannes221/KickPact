@@ -12,6 +12,7 @@ import {
   users
 } from "@/lib/db/schema";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
+import { sponsorLabelSql } from "./sponsor-label";
 import { isTriggerHit } from "@/lib/inngest/functions/evaluate-season";
 import type { SeasonTriggerType } from "@/lib/db/schema/pledges";
 
@@ -154,7 +155,7 @@ export async function listClubPledges(
       pledgeId: pledges.id,
       pledgeStatus: pledges.status,
       sponsorId: sponsors.id,
-      sponsorDisplayName: sponsors.displayName,
+      sponsorDisplayName: sponsorLabelSql,
       sponsorEmail: users.email,
       teamId: teams.id,
       teamName: teams.name,
@@ -305,7 +306,7 @@ export async function listClubSeasonPledges(
     .select({
       pledgeId: pledges.id,
       ruleId: pledgeRules.id,
-      sponsorDisplayName: sponsors.displayName,
+      sponsorDisplayName: sponsorLabelSql,
       teamId: teams.id,
       teamName: teams.name,
       teamSaison: teams.saison,
@@ -316,6 +317,7 @@ export async function listClubSeasonPledges(
     .from(pledgeRules)
     .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .leftJoin(users, eq(sponsors.userId, users.id))
     .innerJoin(teams, eq(pledges.teamId, teams.id))
     .where(and(inArray(pledges.teamId, teamIds), eq(pledges.status, "active")));
 
@@ -459,14 +461,15 @@ export async function getTopSponsorsForClub(
   const rows = await db
     .select({
       sponsorId: sponsors.id,
-      displayName: sponsors.displayName,
+      displayName: sponsorLabelSql,
       totalCents: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int`
     })
     .from(charges)
     .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .leftJoin(users, eq(sponsors.userId, users.id))
     .where(and(...conditions))
-    .groupBy(sponsors.id, sponsors.displayName)
+    .groupBy(sponsors.id, sponsors.displayName, users.name, users.email)
     .orderBy(sql`SUM(${charges.amountCents}) DESC NULLS LAST`)
     .limit(limit);
 
@@ -512,13 +515,14 @@ export async function listClubEreignisse(clubId: string): Promise<EreignisRow[]>
       ergebnisGast: matches.ergebnisGast,
       teamId: teams.id,
       teamName: teams.name,
-      sponsorDisplayName: sponsors.displayName,
+      sponsorDisplayName: sponsorLabelSql,
       playerName: matchEvents.playerName,
     })
     .from(charges)
     .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
     .innerJoin(pledgeRules, eq(charges.pledgeRuleId, pledgeRules.id))
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .leftJoin(users, eq(sponsors.userId, users.id))
     .innerJoin(teams, eq(pledges.teamId, teams.id))
     .leftJoin(matches, eq(charges.matchId, matches.id))
     .leftJoin(matchEvents, eq(charges.matchEventId, matchEvents.id))

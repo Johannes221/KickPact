@@ -11,6 +11,7 @@ import {
   clonePledgeForNextSeason,
   findNextSeasonTeam
 } from "@/lib/db/queries/season-renewal";
+import { sponsorLabelSql } from "@/lib/db/queries/sponsor-label";
 
 /**
  * Plan 3 Teil 2 — Public (token-based) Saison-Renewal-Actions.
@@ -50,7 +51,7 @@ export async function inspectSeasonRenewalToken(token: string): Promise<
       teamId: pledges.teamId,
       sponsorId: pledges.sponsorId,
       currentSaison: teams.saison,
-      sponsorName: sponsors.displayName,
+      sponsorName: sponsorLabelSql,
       teamName: teams.name,
       clubName: clubs.name,
       sponsorEmail: users.email

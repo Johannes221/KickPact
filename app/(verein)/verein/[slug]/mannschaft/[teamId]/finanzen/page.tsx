@@ -1,9 +1,10 @@
 import { eq, and, gte, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { teams, matches as matchesTable } from "@/lib/db/schema";
+import { teams, matches as matchesTable, users } from "@/lib/db/schema";
 import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
 import { charges } from "@/lib/db/schema/charges";
 import { sponsors } from "@/lib/db/schema/sponsors";
+import { sponsorLabelSql } from "@/lib/db/queries/sponsor-label";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import {
   getTriggerLabel,
@@ -40,7 +41,7 @@ export default async function FinanzenPage({
       triggerType: pledgeRules.triggerType,
       triggerParams: pledgeRules.triggerParamsJson,
       amountCents: charges.amountCents,
-      sponsorDisplayName: sponsors.displayName,
+      sponsorDisplayName: sponsorLabelSql,
       matchDate: matchesTable.datum,
       confirmedAt: charges.confirmedAt
     })
@@ -48,6 +49,7 @@ export default async function FinanzenPage({
     .innerJoin(pledgeRules, eq(charges.pledgeRuleId, pledgeRules.id))
     .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .leftJoin(users, eq(sponsors.userId, users.id))
     .leftJoin(matchesTable, eq(charges.matchId, matchesTable.id))
     .where(and(eq(pledges.teamId, team.id), eq(charges.status, "confirmed")));
 

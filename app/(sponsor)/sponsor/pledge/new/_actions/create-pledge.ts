@@ -27,6 +27,7 @@ import {
 import { getActiveSeason } from "@/lib/billing/wager-window-server";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
 import { SeasonWagerNotAllowedError } from "@/lib/billing/season-wager-errors";
+import { deriveSponsorDisplayName } from "@/lib/db/queries/sponsor-label";
 
 const MANUAL_TRIGGERS = new Set([
   "special_goal",
@@ -49,9 +50,16 @@ export async function createPledge(input: PledgeInput) {
     .limit(1);
   let sponsorId: string;
   if (!sponsor) {
+    // display_name NIE leer anlegen — sonst ist der Sponsor zu seinem Pact
+    // nicht identifizierbar. Default aus User-Name/E-Mail; im Sponsor-
+    // Onboarding/Profil kann er ihn später überschreiben.
     const [created] = await db
       .insert(sponsors)
-      .values({ userId: user.id, displayName: "", type: "familie" })
+      .values({
+        userId: user.id,
+        displayName: deriveSponsorDisplayName(user),
+        type: "familie"
+      })
       .returning({ id: sponsors.id });
     sponsorId = created.id;
   } else {

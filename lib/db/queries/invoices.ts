@@ -6,6 +6,7 @@ import {
   paginate,
   type PaginatedResult
 } from "@/lib/db/queries/_helpers/paginate";
+import { sponsorLabelSql } from "./sponsor-label";
 
 /**
  * Sortable column keys for sponsor invoice listings. Used both by
@@ -149,7 +150,7 @@ export async function listForClub(
     status: invoices.status,
     pdfUrl: invoices.pdfUrl,
     sponsorId: sponsors.id,
-    sponsorDisplayName: sponsors.displayName,
+    sponsorDisplayName: sponsorLabelSql,
     sponsorType: sponsors.type,
     sponsorEmail: users.email,
     sentAt: invoices.sentAt,
