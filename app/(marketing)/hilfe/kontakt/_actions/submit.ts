@@ -35,7 +35,7 @@ export async function submitSupportTicket(input: z.infer<typeof schema>) {
   // umgehbar (Angreifer rotiert die E-Mail pro Request) — die IP-Schranke
   // greift unabhängig vom Eingabefeld. 10 Anfragen / 10 Min / IP.
   const ip = await getClientIp();
-  if (!rateLimit(`support:${ip}`, { limit: 10, windowMs: 10 * 60_000 })) {
+  if (!(await rateLimit(`support:${ip}`, { limit: 10, windowMs: 10 * 60_000 }))) {
     return {
       ok: false as const,
       error: "Zu viele Anfragen. Bitte versuch es später erneut oder schreib uns direkt per Mail."

@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/auth/session";
 import { revalidatePath } from "next/cache";
 import { TRIGGER_TYPES, normalizeTriggerParams } from "@/lib/validations/pledge";
 import { getTeamLicensePlan, countPledgeRulesForSponsorOnTeam } from "@/lib/db/queries/pledges";
+import { getMonthlyChargedCents } from "@/lib/db/queries/evaluation";
 import { PLAN_CAPS } from "@/lib/stripe/pricing";
 import { assertWagerWindowOpen, WagerWindowClosedError } from "@/lib/billing/wager-window";
 import { getActiveSeason } from "@/lib/billing/wager-window-server";
@@ -155,6 +156,20 @@ export async function updatePledgeCap(
       return { error: "Cap muss ein positiver Betrag sein." };
     }
 
+    // SECURITY (H4c): Den Monats-Cap NICHT unter den bereits in diesem Monat
+    // aufgelaufenen Betrag senken können — sonst ließe sich nachträglich unter
+    // schon abgerechnete Ereignisse "deckeln". (Das schmale Pre-Scrape-Fenster —
+    // Cap senken nach Anpfiff, bevor der Scraper die Charges schreibt — bleibt
+    // offen; volle Absicherung bräuchte Cap-Versionierung wie bei den Regeln.)
+    if (monthlyCapCents !== null) {
+      const accrued = await getMonthlyChargedCents(pledgeId, new Date());
+      if (monthlyCapCents < accrued) {
+        return {
+          error: `Cap kann nicht unter den bereits abgerechneten Monatsbetrag (${(accrued / 100).toFixed(2)} €) gesenkt werden.`
+        };
+      }
+    }
+
     await db.update(pledges).set({ monthlyCapCents }).where(eq(pledges.id, pledgeId));
     revalidatePath(`/sponsor/pledge/${pledgeId}`);
     return {};
@@ -271,7 +286,15 @@ export async function deletePledgeRule(ruleId: string): Promise<{ error?: string
     if (!rule) return { error: "Wette nicht gefunden oder kein Zugriff." };
     if (rule.pledgeStatus === "ended") return { error: "Beendete Pacts können nicht geändert werden." };
     if (!rule.active) return {};
-    await db.update(pledgeRules).set({ active: false }).where(eq(pledgeRules.id, ruleId));
+    // SECURITY (H4b): `active=false` versteckt die Wette aus UI/Zählungen, und
+    // `effectiveUntil=jetzt` sorgt dafür, dass der Evaluator sie noch für bereits
+    // gespielte (aber noch nicht ausgewertete) Spiele in ihrem Fenster abrechnet —
+    // künftige Spiele feuern nicht mehr. Ohne effectiveUntil würde ein Löschen
+    // nach Anpfiff (vor dem Scrape) die legitime Charge unterdrücken.
+    await db
+      .update(pledgeRules)
+      .set({ active: false, effectiveUntil: new Date() })
+      .where(eq(pledgeRules.id, ruleId));
     revalidatePath(`/sponsor/pledge/${rule.pledgeId}`);
     return {};
   } catch (e) {

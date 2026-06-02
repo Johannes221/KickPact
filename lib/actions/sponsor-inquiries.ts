@@ -37,7 +37,7 @@ export async function createSponsorInquiry(input: { teamId: string; message?: st
   // SECURITY (M5): Rate-Limit pro Sponsor-User — verhindert Anfrage-Fanout
   // (eine pending pro Team, aber sonst unbegrenzt viele Teams → Mail-Flut an
   // viele Club-Admins). 20 Anfragen / Stunde / User.
-  if (!rateLimit(`inquiry:${user.id}`, { limit: 20, windowMs: 60 * 60_000 })) {
+  if (!(await rateLimit(`inquiry:${user.id}`, { limit: 20, windowMs: 60 * 60_000 }))) {
     throw new Error("Zu viele Anfragen in kurzer Zeit. Bitte später erneut versuchen.");
   }
 

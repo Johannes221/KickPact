@@ -92,8 +92,10 @@ vi.mock("@/lib/db/schema/pledges", () => ({
 vi.mock("@/lib/db/client", () => ({
   db: {
     select: () => ({
-      from: () => ({
-        where: () => ({ limit: () => dbSelectFn() })
+      from: (table: { __t?: string } = {}) => ({
+        where: () => ({
+          limit: () => (table && table.__t === "membership" ? [] : dbSelectFn())
+        })
       })
     }),
     insert: () => ({
@@ -110,7 +112,13 @@ vi.mock("@/lib/db/schema", () => ({
   pledges: {},
   pledgeRules: {},
   sponsors: { id: "id-col", userId: "user-col" },
-  teams: { id: "id-col", clubId: "club-col" }
+  teams: { id: "id-col", clubId: "club-col" },
+  users: { id: "id-col", email: "email-col" },
+  // __t-Marker: der db-Mock liefert für Membership-Lookups (L6 Self-Dealing-Check)
+  // bewusst [] zurück, damit die Tier-Gate-Tests nicht fälschlich am Self-Dealing
+  // hängenbleiben.
+  clubMemberships: { __t: "membership", userId: "user-col", clubId: "club-col" },
+  teamMemberships: { __t: "membership", userId: "user-col", teamId: "team-col" }
 }));
 
 import { createPledge } from "@/app/(sponsor)/sponsor/pledge/new/_actions/create-pledge";

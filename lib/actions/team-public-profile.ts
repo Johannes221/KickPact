@@ -109,7 +109,7 @@ export async function createPublicSponsorLead(input: {
   // SECURITY (M5): IP-Rate-Limit für die unauthentifizierte öffentliche Action
   // (sonst Lead-/Mail-Flut an Club-Admins). 8 Leads / 10 Min / IP.
   const ip = await getClientIp();
-  if (!rateLimit(`lead:${ip}`, { limit: 8, windowMs: 10 * 60_000 })) {
+  if (!(await rateLimit(`lead:${ip}`, { limit: 8, windowMs: 10 * 60_000 }))) {
     throw new Error("Zu viele Anfragen in kurzer Zeit. Bitte später erneut versuchen.");
   }
 

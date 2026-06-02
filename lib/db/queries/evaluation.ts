@@ -33,9 +33,20 @@ export async function loadActivePledgeRulesForTeam(
     .where(
       and(
         eq(pledges.teamId, teamId),
-        eq(pledges.status, "active"),
-        // Soft-Delete: vom Sponsor gelöschte Wetten feuern nicht mehr (Migration 0040).
-        eq(pledgeRules.active, true),
+        // SECURITY (H4c): Auch BEENDETE Pledges bedienen noch Spiele INNERHALB
+        // ihres Zeitfensters [startsAt, endsAt]. endsAt wird beim Beenden auf
+        // "jetzt" gesetzt → bereits gespielte, noch nicht ausgewertete Spiele
+        // werden weiter abgerechnet, künftige nicht. Vorher unterdrückte ein
+        // status='active'-Filter diese legitimen Charges, sobald der Sponsor
+        // nach Anpfiff (vor dem Scrape) die Wette beendete. "paused"
+        // (Sommerpause) bleibt korrekt ausgeschlossen.
+        inArray(pledges.status, ["active", "ended"]),
+        // SECURITY (H4b): Alt-Style-Soft-Deletes (active=false OHNE effectiveUntil,
+        // Migration 0040) feuern nicht. Neu gelöschte Regeln (active=false MIT
+        // effectiveUntil=Löschzeitpunkt, siehe deletePledgeRule) bleiben aber für
+        // bereits gespielte Spiele in ihrem Fenster gültig — sonst könnte ein
+        // Sponsor durch Löschen einer Wette nach Anpfiff die Charge unterdrücken.
+        sql`NOT (${pledgeRules.active} = false AND ${pledgeRules.effectiveUntil} IS NULL)`,
         lte(pledges.startsAt, asOf),
         gte(pledges.endsAt, asOf),
         // SECURITY (H4): Term-Versionierung. Eine Regel gilt nur für Spiele
