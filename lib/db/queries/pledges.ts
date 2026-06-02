@@ -1,4 +1,4 @@
-import { and, count, countDistinct, eq } from "drizzle-orm";
+import { and, count, countDistinct, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { pledges, pledgeRules, teamLicenses, teams } from "@/lib/db/schema";
 import type { PlanKey } from "@/lib/stripe/pricing";
@@ -32,7 +32,11 @@ export async function countPledgeRulesForSponsorOnTeam(
         eq(pledges.sponsorId, sponsorId),
         eq(pledges.status, "active"),
         // Soft-gelöschte Wetten zählen nicht gegen das Plan-Limit (Migration 0040).
-        eq(pledgeRules.active, true)
+        eq(pledgeRules.active, true),
+        // SECURITY (H4): Nur die aktuell gültige Regelversion zählt — eine durch
+        // eine Reduktion abgelöste Alt-Version (effectiveUntil gesetzt) bleibt
+        // zwar aktiv (für vergangene Spiele), zählt aber nicht gegen das Limit.
+        isNull(pledgeRules.effectiveUntil)
       )
     );
   return rows[0]?.value ?? 0;

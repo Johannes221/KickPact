@@ -37,7 +37,16 @@ export async function loadActivePledgeRulesForTeam(
         // Soft-Delete: vom Sponsor gelöschte Wetten feuern nicht mehr (Migration 0040).
         eq(pledgeRules.active, true),
         lte(pledges.startsAt, asOf),
-        gte(pledges.endsAt, asOf)
+        gte(pledges.endsAt, asOf),
+        // SECURITY (H4): Term-Versionierung. Eine Regel gilt nur für Spiele
+        // innerhalb ihres Gültigkeitsfensters. effectiveFrom defaultet auf die
+        // Epoche und effectiveUntil ist i.d.R. NULL → für unveränderte Regeln
+        // immer wahr (kein Verhaltenswechsel). Wird ein Betrag/Cap reduziert,
+        // bekommt die alte Regelversion ein effectiveUntil=Änderungszeitpunkt
+        // und bedient damit weiterhin bereits gespielte Spiele zu den alten
+        // Konditionen, während die neue (reduzierte) Version erst ab dann greift.
+        lte(pledgeRules.effectiveFrom, asOf),
+        sql`(${pledgeRules.effectiveUntil} IS NULL OR ${pledgeRules.effectiveUntil} > ${asOf.toISOString()})`
       )
     );
 

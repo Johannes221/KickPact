@@ -45,6 +45,13 @@ export const charges = pgTable(
      * invalidate previously-recorded charges before recomputing.
      */
     cancelledReason: text("cancelled_reason"),
+    /**
+     * SECURITY (H5): Audit für Charge-Stornos. `cancelledByUserId` hält den
+     * Akteur fest (NULL bei System-Stornos wie match_updated), `cancelledAt`
+     * den Zeitpunkt. Plain text (kein FK) analog zu `paidMarkedBy`.
+     */
+    cancelledByUserId: text("cancelled_by_user_id"),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
     invoiceId: text("invoice_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true })

@@ -2,7 +2,7 @@
 
 import slugify from "slugify";
 import { z } from "zod";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   clubs,
@@ -10,7 +10,8 @@ import {
   clubMemberships,
   teamMemberships,
   subscriptions,
-  teamLicenses
+  teamLicenses,
+  consumedTrials
 } from "@/lib/db/schema";
 import { requireUserOrThrow } from "@/lib/auth/session";
 import { assertNotPlatformAdminAction } from "@/lib/auth/admin";
@@ -134,6 +135,23 @@ export async function createDraftClub(input: CreateDraftInput): Promise<CreateDr
 
   const baseSlug = slugify(parsed.verein.name, { lower: true, strict: true, trim: true });
   const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+
+  // ── SECURITY (H1): Trial-Abuse-Check ─────────────────────────────────────
+  // Eligibility hängt an einer STABILEN Identität, nicht an der (löschbaren)
+  // subscriptions-Row. Key pro Team = `team:<fussballdeTeamId>`, zusätzlich bei
+  // Vereins-Onboarding `verein:<vereinId>`. Hat eine dieser Identitäten bereits
+  // einen Trial verbraucht, gibt es KEINEN neuen 30-Tage-Trial mehr (sonst ließe
+  // sich der Trial durch Verwerfen+Neu-Onboarden beliebig oft zurücksetzen).
+  const trialKeys = [
+    ...teamList.map((t) => `team:${t.teamId}`),
+    `verein:${parsed.verein.vereinId}`
+  ];
+  const consumed = await db
+    .select({ key: consumedTrials.key })
+    .from(consumedTrials)
+    .where(inArray(consumedTrials.key, trialKeys));
+  const trialEligible = consumed.length === 0;
+
   const trialEnd = new Date();
   trialEnd.setDate(trialEnd.getDate() + 30);
 
@@ -164,14 +182,25 @@ export async function createDraftClub(input: CreateDraftInput): Promise<CreateDr
       role: "admin"
     });
 
+    // H1: Nur bei Eligibility ein echter Trial — sonst `incomplete` (read-only
+    // via gateFromSubscription) → der Verein muss zum Aktivieren zahlen.
     await tx.insert(subscriptions).values({
       clubId: club.id,
       stripeCustomerId: null,
       stripeSubscriptionId: null,
-      status: "trialing",
+      status: trialEligible ? "trialing" : "incomplete",
       billingCycle: "monthly",
-      trialEndsAt: trialEnd
+      trialEndsAt: trialEligible ? trialEnd : null
     });
+
+    // H1: Trial-Identitäten als verbraucht markieren (idempotent). Auch wenn
+    // nicht eligible, schadet das Re-Insert nicht (onConflictDoNothing).
+    if (trialEligible) {
+      await tx
+        .insert(consumedTrials)
+        .values(trialKeys.map((key) => ({ key, clubId: club.id })))
+        .onConflictDoNothing();
+    }
 
     // Teams: `none` frisch inserten, `scraped-unmanaged` in den neuen Container
     // umhängen (re-home). crawlStartedAt sofort, damit das Team-Dashboard direkt
