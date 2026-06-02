@@ -20,9 +20,15 @@ export interface AppHeaderProps {
    * auf "/" wenn unauthenticated.
    */
   dashboardHref: string;
+  /** True in der nativen iOS-App (Capacitor-User-Agent, vom Server erkannt). */
+  isNativeApp?: boolean;
 }
 
-export function AppHeader({ authenticated, dashboardHref }: AppHeaderProps) {
+// Routen, auf denen die native App KEINE Marketing-Chrome zeigt — der App-Einstieg
+// (Onboarding/Login/Rollenwahl) ist full-screen. Im Browser bleibt der Header.
+const NATIVE_CHROMELESS_PREFIXES = ["/login", "/signup", "/select-role"];
+
+export function AppHeader({ authenticated, dashboardHref, isNativeApp = false }: AppHeaderProps) {
   const pathname = usePathname() ?? "/";
   const isLanding = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
@@ -44,6 +50,11 @@ export function AppHeader({ authenticated, dashboardHref }: AppHeaderProps) {
 
   // App-Intro (/willkommen, WS-8) ist full-screen ohne globale Chrome.
   if (pathname === "/willkommen") return null;
+  // In der nativen App: Auth-/Onboarding-Routen ohne Marketing-Header
+  // (kein „Loslegen", man ist ja bereits in der App).
+  if (isNativeApp && NATIVE_CHROMELESS_PREFIXES.some((p) => pathname.startsWith(p))) {
+    return null;
+  }
 
   const onHero = isLanding && !scrolled;
   // Eingeloggte User springen vom Logo direkt ins Dashboard (oder

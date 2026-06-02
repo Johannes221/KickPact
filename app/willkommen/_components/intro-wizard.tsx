@@ -1,36 +1,46 @@
 "use client";
 
 /**
- * App-Intro-Wizard (WS-8) — Einstieg der nativen iOS-App statt der
- * Marketing-Landingpage. Foto-getrieben (Full-Bleed-Hero + Bold-Type), on-brand.
- * 3 Slides Value-Prop, BEWUSST ohne Preise/Stripe (Apple-Anti-Steering), skippable.
+ * App-Intro-Wizard (WS-8) — premium iOS-Onboarding für die native App.
  *
- * Returnende ausgeloggte Nutzer überspringen die Slides automatisch
- * (localStorage `kp_intro_seen`) → direkt Login.
+ * Type-/Brand-getrieben (kein Foto-Full-Bleed): dunkles Navy, crisper grüner
+ * Marken-Mark als Motiv, große Display-Headlines, Eyebrow-Chip, segmentierte
+ * Progress-Bar, Accent-CTA. BEWUSST ohne Preise (Apple-Anti-Steering), skippable.
+ *
+ * Returnende ausgeloggte Nutzer überspringen automatisch (localStorage) → Login.
  */
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, Target, TrendingUp, ShieldCheck, type LucideIcon } from "lucide-react";
 
 const INTRO_SEEN_KEY = "kp_intro_seen";
 
-const SLIDES = [
+type Slide = {
+  icon: LucideIcon;
+  eyebrow: string;
+  title: string;
+  body: string;
+};
+
+const SLIDES: Slide[] = [
   {
-    image: "/brand/photos/team-hero.png",
-    title: "Performance-Sponsoring\nfür deinen Verein",
+    icon: Target,
+    eyebrow: "Performance-Sponsoring",
+    title: "Sponsoring,\ndas mitspielt.",
     body: "Lokale Sponsoren unterstützen deine Mannschaft — leistungsbasiert, fair und transparent."
   },
   {
-    image: "/brand/photos/team-celebration.png",
+    icon: TrendingUp,
+    eyebrow: "Vollautomatisch",
     title: "Pro Tor.\nPro Sieg.\nPro Aufstieg.",
-    body: "Sponsoren versprechen Beträge pro Ereignis. Spieldaten und Vereinsmeldungen werden automatisch erfasst."
+    body: "Sponsoren versprechen Beträge pro Ereignis. Spieldaten werden automatisch erfasst."
   },
   {
-    image: "/brand/photos/player-and-sponsor.png",
-    title: "100 % bleibt\nbei der Mannschaft",
+    icon: ShieldCheck,
+    eyebrow: "Fair & transparent",
+    title: "100 % bleibt\nim Verein.",
     body: "Kein Take, keine versteckten Kosten. In rund 90 Sekunden startklar."
   }
 ];
@@ -61,67 +71,69 @@ export function IntroWizard() {
 
   const slide = SLIDES[index];
   const isLast = index === SLIDES.length - 1;
+  const Icon = slide.icon;
 
   return (
-    <div className="relative min-h-[100dvh] w-full overflow-hidden bg-brand-night-navy">
+    <div className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-brand-night-navy pt-safe pb-safe text-white">
+      {/* Brand-Motiv: großer grüner Mark, crisp (hochauflösend), dezent */}
       <Image
-        src={slide.image}
+        src="/brand/mark-green.png"
         alt=""
-        fill
+        width={420}
+        height={420}
         priority
-        sizes="100vw"
-        className="object-cover"
+        className="pointer-events-none absolute -right-24 -top-20 w-[420px] max-w-none opacity-[0.07]"
       />
-      {/* Lesbarkeits-Gradient: unten satt Navy → oben transparent */}
-      <div className="absolute inset-0 bg-gradient-to-t from-brand-night-navy via-brand-night-navy/65 to-brand-night-navy/10" />
+      {/* Accent-Glow */}
+      <div className="pointer-events-none absolute -right-10 top-0 h-72 w-72 rounded-full bg-accent/25 blur-[120px]" />
 
-      <div className="relative flex min-h-[100dvh] flex-col pt-safe pb-safe text-white">
-        <div className="flex items-center justify-between px-5 pt-3">
-          <Image src="/brand/mark-white.png" alt="KickPact" width={34} height={34} priority />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={finish}
-            className="text-white/70 hover:bg-white/10 hover:text-white"
-          >
-            Überspringen
-          </Button>
+      {/* Header */}
+      <header className="relative flex items-center justify-between px-6 pt-4">
+        <Image src="/brand/mark-white.png" alt="KickPact" width={30} height={30} priority />
+        <button
+          type="button"
+          onClick={finish}
+          className="-mr-2 rounded-lg px-2 py-1 text-sm font-medium text-white/55 active:text-white/80"
+        >
+          Überspringen
+        </button>
+      </header>
+
+      {/* Inhalt — unten ausgerichtet, große Typo */}
+      <main className="relative flex flex-1 flex-col justify-end px-6 pb-2">
+        <div className="mb-6 inline-flex items-center gap-2 self-start rounded-full bg-white/10 px-3.5 py-1.5 backdrop-blur-sm">
+          <Icon className="h-4 w-4 text-accent" strokeWidth={2.5} aria-hidden />
+          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-white/80">
+            {slide.eyebrow}
+          </span>
         </div>
+        <h1 className="whitespace-pre-line font-display text-[2.75rem] font-black leading-[0.98] tracking-tight">
+          {slide.title}
+        </h1>
+        <p className="mt-5 max-w-sm text-[17px] leading-relaxed text-white/60">{slide.body}</p>
+      </main>
 
-        <div className="flex-1" />
-
-        <div className="px-6">
-          <h1 className="whitespace-pre-line font-display text-[2.6rem] font-black leading-[1.03] tracking-tight">
-            {slide.title}
-          </h1>
-          <p className="mt-4 max-w-sm text-base leading-relaxed text-white/75">
-            {slide.body}
-          </p>
-        </div>
-
-        <div className="flex gap-2 px-6 pb-6 pt-7" aria-hidden>
+      {/* Footer — segmentierte Progress + CTA */}
+      <footer className="relative space-y-7 px-6 pb-3 pt-8">
+        <div className="flex gap-1.5" aria-hidden>
           {SLIDES.map((_, i) => (
             <span
               key={i}
-              className={`h-2 rounded-full transition-all ${
-                i === index ? "w-7 bg-accent" : "w-2 bg-white/30"
+              className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                i <= index ? "bg-accent" : "bg-white/15"
               }`}
             />
           ))}
         </div>
-
-        <div className="px-6 pb-4">
-          <Button
-            variant="accent"
-            size="lg"
-            className="h-14 w-full rounded-2xl text-base font-bold shadow-lg shadow-black/20"
-            onClick={() => (isLast ? finish() : setIndex((i) => i + 1))}
-          >
-            {isLast ? "Los geht’s" : "Weiter"}
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
+        <button
+          type="button"
+          onClick={() => (isLast ? finish() : setIndex((i) => i + 1))}
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-accent text-base font-bold text-white shadow-[0_10px_34px_-6px_rgba(34,197,94,0.55)] transition-transform active:scale-[0.98]"
+        >
+          {isLast ? "Los geht’s" : "Weiter"}
+          <ArrowRight className="h-5 w-5" strokeWidth={2.5} aria-hidden />
+        </button>
+      </footer>
     </div>
   );
 }

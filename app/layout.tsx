@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Inter, Montserrat_Alternates } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shared/app-header";
@@ -110,6 +111,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
   const authenticated = !!session?.user;
 
+  // Native iOS-App? Capacitor hängt `KickPactApp` an den User-Agent (WS-8).
+  // Serverseitig erkannt → kein Flash beim Ausblenden der Marketing-Chrome.
+  const userAgent = (await headers()).get("user-agent") ?? "";
+  const isNativeApp = userAgent.includes("KickPactApp");
+
   return (
     <html lang="de" className={`${inter.variable} ${displayFont.variable}`}>
       <head>
@@ -143,12 +149,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           Zum Inhalt springen
         </a>
-        <AppHeader authenticated={authenticated} dashboardHref={dashboardHref} />
+        <AppHeader
+          authenticated={authenticated}
+          dashboardHref={dashboardHref}
+          isNativeApp={isNativeApp}
+        />
         <div id="main">{children}</div>
         {/* Native iOS-Push-Registrierung (web-inert; nur in der Capacitor-App aktiv). */}
         {authenticated && <PushRegistrar />}
         <Toaster />
-        <CookieBanner />
+        <CookieBanner isNativeApp={isNativeApp} />
       </body>
     </html>
   );

@@ -20,9 +20,11 @@ const STORAGE_KEY = "kickpact-consent-v1";
  * keine Tracking-Cookies setzen — ein „nur notwendig"-Schalter wäre
  * irreführend, weil es nichts zu deaktivieren gibt.
  */
-export function CookieBanner() {
+const NATIVE_CHROMELESS_PREFIXES = ["/login", "/signup", "/select-role"];
+
+export function CookieBanner({ isNativeApp = false }: { isNativeApp?: boolean }) {
   const [visible, setVisible] = useState(false);
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "/";
 
   useEffect(() => {
     try {
@@ -48,8 +50,11 @@ export function CookieBanner() {
     setVisible(false);
   }
 
-  // App-Intro (/willkommen, WS-8) ist full-screen ohne globale Chrome.
+  // App-Intro (/willkommen) + native Auth-/Onboarding-Routen: keine Chrome.
   if (pathname === "/willkommen" || !visible) return null;
+  if (isNativeApp && NATIVE_CHROMELESS_PREFIXES.some((p) => pathname.startsWith(p))) {
+    return null;
+  }
 
   return (
     <div
