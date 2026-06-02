@@ -1,32 +1,45 @@
-import { and, eq, ilike, or, sql, desc } from "drizzle-orm";
+import { and, eq, ilike, isNotNull, or, sql, desc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { teams, clubs, sponsorInquiries } from "@/lib/db/schema";
+import { teams, clubs, sponsorInquiries, seasonResults } from "@/lib/db/schema";
 import { listTeamImages } from "./team-images";
 
 export interface DiscoverableTeam {
   teamId: string;
   teamName: string;
   saison: string;
+  league: string | null;
   clubId: string;
   clubName: string;
   clubOrt: string | null;
+  publicSlug: string | null;
   publicTagline: string | null;
+  coverUrl: string | null;
+  logoUrl: string | null;
+  lastSeasonPosition: number | null;
+  lastSeasonPromoted: boolean;
   hasOpenInquiry: boolean;
   clubVerifiedAt: Date | null;
 }
 
 /**
  * Listet alle "discoverable" Mannschaften, optional gefiltert nach Suchbegriff
- * (Mannschafts- oder Vereinsname oder Ort). hasOpenInquiry markiert ob der
- * eingeloggte User schon eine Anfrage gestellt hat.
+ * (Mannschafts- oder Vereinsname oder Ort), Liga und Ort. Nur verifizierte
+ * Mannschaften (teams.verifiedAt IS NOT NULL) sind auffindbar.
+ * hasOpenInquiry markiert ob der eingeloggte User schon eine Anfrage gestellt hat.
  */
 export async function listDiscoverableTeams(opts: {
   search?: string;
+  league?: string;
+  ort?: string;
   sponsorUserId?: string;
   limit?: number;
 }): Promise<DiscoverableTeam[]> {
   const search = opts.search?.trim();
-  const conditions = [eq(teams.discoverable, true), eq(teams.isActive, true)];
+  const conditions = [
+    eq(teams.discoverable, true),
+    eq(teams.isActive, true),
+    isNotNull(teams.verifiedAt) // Gate: nur verifizierte sind auffindbar
+  ];
 
   if (search && search.length >= 2) {
     const like = `%${search}%`;
@@ -40,16 +53,36 @@ export async function listDiscoverableTeams(opts: {
     }
   }
 
+  if (opts.league?.trim()) {
+    conditions.push(eq(teams.league, opts.league.trim()));
+  }
+
+  if (opts.ort?.trim()) {
+    conditions.push(eq(clubs.ort, opts.ort.trim()));
+  }
+
   const rows = await db
     .select({
       teamId: teams.id,
       teamName: teams.name,
       saison: teams.saison,
+      league: teams.league,
       clubId: clubs.id,
       clubName: clubs.name,
       clubOrt: clubs.ort,
       clubVerifiedAt: clubs.verifiedAt,
+      publicSlug: teams.publicSlug,
       publicTagline: teams.publicTagline,
+      coverUrlRaw: teams.coverUrl,
+      logoUrlRaw: teams.logoUrl,
+      lastSeasonPosition: sql<number | null>`(
+        SELECT sr.final_position FROM ${seasonResults} sr
+        WHERE sr.team_id = ${teams.id} AND sr.saison <> ${teams.saison}
+        ORDER BY sr.saison DESC LIMIT 1)`,
+      lastSeasonPromoted: sql<boolean>`COALESCE((
+        SELECT sr.promoted FROM ${seasonResults} sr
+        WHERE sr.team_id = ${teams.id} AND sr.saison <> ${teams.saison}
+        ORDER BY sr.saison DESC LIMIT 1), false)`,
       hasInquiry: opts.sponsorUserId
         ? sql<boolean>`EXISTS (
             SELECT 1 FROM ${sponsorInquiries}
@@ -69,10 +102,16 @@ export async function listDiscoverableTeams(opts: {
     teamId: r.teamId,
     teamName: r.teamName,
     saison: r.saison,
+    league: r.league,
     clubId: r.clubId,
     clubName: r.clubName,
     clubOrt: r.clubOrt,
+    publicSlug: r.publicSlug,
     publicTagline: r.publicTagline,
+    coverUrl: r.coverUrlRaw ? `/api/teams/${r.teamId}/image?slot=cover` : null,
+    logoUrl: r.logoUrlRaw ? `/api/teams/${r.teamId}/image?slot=logo` : null,
+    lastSeasonPosition: r.lastSeasonPosition ?? null,
+    lastSeasonPromoted: Boolean(r.lastSeasonPromoted),
     hasOpenInquiry: Boolean(r.hasInquiry),
     clubVerifiedAt: r.clubVerifiedAt
   }));
@@ -142,6 +181,7 @@ export async function getPublicTeamProfileBySlug(
 
   if (!row || !row.publicSlug) return null;
   if (!row.discoverable || !row.isActive) return null;
+  if (!row.teamVerifiedAt) return null; // Gate: nur verifizierte Teams sind öffentlich sichtbar
 
   const logoUrl = row.logoUrl ? `/api/teams/${row.teamId}/image?slot=logo` : null;
   const coverUrl = row.coverUrl ? `/api/teams/${row.teamId}/image?slot=cover` : null;
