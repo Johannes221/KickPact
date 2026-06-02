@@ -77,6 +77,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^6.2.1",
     "@playwright/test": "^1.60.0",
     "@types/heic-convert": "^2.1.0",
