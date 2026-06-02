@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
-import { getTeamImageKey } from "@/lib/db/queries/team-images";
+import { getTeamImageKey, getTeamCoverLogoKeys } from "@/lib/db/queries/team-images";
 import { getDocumentSignedUrl, readLocalDocument } from "@/lib/storage/documents";
 
 export const runtime = "nodejs";
@@ -35,11 +32,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ teamId: 
 
   let key: string | null = null;
   if (slot === "cover" || slot === "logo") {
-    const [row] = await db
-      .select({ coverUrl: teams.coverUrl, logoUrl: teams.logoUrl })
-      .from(teams)
-      .where(eq(teams.id, teamId))
-      .limit(1);
+    const row = await getTeamCoverLogoKeys(teamId);
     key = slot === "cover" ? (row?.coverUrl ?? null) : (row?.logoUrl ?? null);
   } else if (slot === "gallery" && id) {
     key = await getTeamImageKey(teamId, id);

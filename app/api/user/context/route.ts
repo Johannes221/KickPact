@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { sponsors, clubMemberships, clubs } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/auth/session";
+import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
+import { listClubsForUser } from "@/lib/db/queries/club-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -17,21 +16,13 @@ export async function GET() {
     return NextResponse.json({ hasSponsor: false, clubs: [] });
   }
 
-  const [sponsorRow, clubRows] = await Promise.all([
-    db
-      .select({ id: sponsors.id })
-      .from(sponsors)
-      .where(eq(sponsors.userId, session.user.id))
-      .limit(1),
-    db
-      .select({ slug: clubs.slug, name: clubs.name })
-      .from(clubMemberships)
-      .innerJoin(clubs, eq(clubMemberships.clubId, clubs.id))
-      .where(eq(clubMemberships.userId, session.user.id))
+  const [sponsor, clubRows] = await Promise.all([
+    findSponsorForUser(session.user.id),
+    listClubsForUser(session.user.id)
   ]);
 
   return NextResponse.json({
-    hasSponsor: sponsorRow.length > 0,
+    hasSponsor: sponsor !== null,
     clubs: clubRows
   });
 }

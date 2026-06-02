@@ -266,3 +266,23 @@ export async function invoiceExistsForPeriod(opts: {
     .limit(1);
   return !!row;
 }
+
+/**
+ * Findet eine Rechnung anhand ihrer Storage-URL (`local://<key>`) und liefert
+ * die für den Auth-Check nötigen Felder mit — Owner-Sponsor + Club-Slug.
+ * Für den lokalen PDF-Serve-Endpoint (/api/invoices/pdf).
+ */
+export async function findInvoiceByPdfUrl(pdfUrl: string) {
+  const [row] = await db
+    .select({
+      invoice: invoices,
+      clubSlug: clubs.slug,
+      sponsorUserId: sponsors.userId
+    })
+    .from(invoices)
+    .innerJoin(clubs, eq(invoices.clubId, clubs.id))
+    .innerJoin(sponsors, eq(invoices.sponsorId, sponsors.id))
+    .where(eq(invoices.pdfUrl, pdfUrl))
+    .limit(1);
+  return row;
+}

@@ -7,10 +7,8 @@
  * Sponsor scoped (`pledges.sponsorId = me`) — kein Cross-Sponsor-Leak möglich.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { sponsors } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
+import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import { listChargesForSponsor } from "@/lib/db/queries/sponsor-reporting";
 import { triggerLabel } from "@/lib/triggers/labels";
 import { buildCsv, csvResponseHeaders } from "@/lib/exports/csv";
@@ -46,11 +44,7 @@ function isoDateOrEmpty(d: Date | null | undefined): string {
 
 export async function GET(req: NextRequest) {
   const user = await requireUser();
-  const [sponsor] = await db
-    .select({ id: sponsors.id, displayName: sponsors.displayName })
-    .from(sponsors)
-    .where(eq(sponsors.userId, user.id))
-    .limit(1);
+  const sponsor = await findSponsorForUser(user.id);
 
   if (!sponsor) {
     return NextResponse.json({ error: "no-sponsor" }, { status: 404 });
