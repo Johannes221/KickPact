@@ -1,13 +1,19 @@
-import { Suspense } from "react";
 import { requireUser } from "@/lib/auth/session";
-import { listDiscoverableTeams, listInquiriesForSponsor } from "@/lib/db/queries/sponsor-discover";
-import { DiscoverList } from "./_components/discover-list";
+import {
+  listDiscoverableTeams,
+  listDiscoveryFacets,
+  listInquiriesForSponsor
+} from "@/lib/db/queries/sponsor-discover";
+import { DiscoverFilters } from "./_components/discover-filters";
+import { TeamDiscoverCard } from "./_components/team-discover-card";
 import { InquiriesList } from "./_components/inquiries-list";
 
 export const metadata = { title: "Mannschaften entdecken · KickPact" };
 
 interface SearchParams {
   q?: string;
+  league?: string;
+  ort?: string;
 }
 
 export default async function DiscoverPage({
@@ -16,11 +22,18 @@ export default async function DiscoverPage({
   searchParams: Promise<SearchParams>;
 }) {
   const user = await requireUser();
-  const params = await searchParams;
-  const search = params.q ?? "";
+  const sp = await searchParams;
+  const current = { q: sp.q ?? "", league: sp.league ?? "", ort: sp.ort ?? "" };
 
-  const [teamsList, myInquiries] = await Promise.all([
-    listDiscoverableTeams({ search, sponsorUserId: user.id, limit: 50 }),
+  const [teamsList, facets, myInquiries] = await Promise.all([
+    listDiscoverableTeams({
+      search: current.q,
+      league: current.league,
+      ort: current.ort,
+      sponsorUserId: user.id,
+      limit: 60
+    }),
+    listDiscoveryFacets(),
     listInquiriesForSponsor(user.id)
   ]);
 
@@ -35,25 +48,24 @@ export default async function DiscoverPage({
         </p>
       </div>
 
-      {/* Such-Form */}
-      <form className="mb-6 md:mb-8" action="/sponsor/discover" method="GET">
-        <label className="block">
-          <span className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
-            Suche
-          </span>
-          <input
-            type="search"
-            name="q"
-            defaultValue={search}
-            placeholder="z.B. SG Reichenbach, München, U17 …"
-            className="mt-1.5 w-full rounded-lg border border-brand-neutral/40 bg-white px-4 py-3 text-base text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
-          />
-        </label>
-      </form>
+      <DiscoverFilters basePath="/sponsor/discover" facets={facets} current={current} />
 
-      <Suspense fallback={<div className="text-brand-night-navy/60">Lade…</div>}>
-        <DiscoverList teams={teamsList} />
-      </Suspense>
+      {teamsList.length === 0 ? (
+        <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-6 md:p-8 text-center">
+          <p className="font-display font-black text-base md:text-lg text-brand-night-navy">
+            Keine Mannschaften gefunden
+          </p>
+          <p className="mt-1.5 text-sm text-brand-night-navy/60">
+            Versuch eine andere Suche oder passe die Filter an.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {teamsList.map((t) => (
+            <TeamDiscoverCard key={t.teamId} team={t} mode="sponsor" />
+          ))}
+        </div>
+      )}
 
       {myInquiries.length > 0 && (
         <section className="mt-8 md:mt-12">
