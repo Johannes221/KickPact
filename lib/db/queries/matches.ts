@@ -299,3 +299,27 @@ export async function getTeamFussballdeRef(
     .limit(1);
   return team;
 }
+
+/** Mannschaft (id/name/saison/fussballdeTeamId) für die Spiele-Seite, club-scoped. */
+export async function getTeamForMatchesPage(teamId: string, clubId: string) {
+  const [team] = await db
+    .select({
+      id: teams.id,
+      name: teams.name,
+      saison: teams.saison,
+      fussballdeTeamId: teams.fussballdeTeamId
+    })
+    .from(teams)
+    .where(and(eq(teams.id, teamId), eq(teams.clubId, clubId)))
+    .limit(1);
+  return team;
+}
+
+/** Geschwister-Saisons (gleiche fussballdeTeamId), neueste zuerst — Saison-Umschalter. */
+export async function listTeamSiblingSeasons(fussballdeTeamId: string) {
+  return db
+    .select({ id: teams.id, saison: teams.saison })
+    .from(teams)
+    .where(eq(teams.fussballdeTeamId, fussballdeTeamId))
+    .orderBy(desc(teams.saison));
+}

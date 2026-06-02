@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { eq, and, desc } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
-import { listMatchesForTeam, getMatchChargesSummaryForTeam } from "@/lib/db/queries/matches";
+import {
+  listMatchesForTeam,
+  getMatchChargesSummaryForTeam,
+  getTeamForMatchesPage,
+  listTeamSiblingSeasons
+} from "@/lib/db/queries/matches";
 import { detectTeamSide } from "@/lib/crawler/team-side";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
@@ -60,11 +62,7 @@ export default async function SpielePage({
   const result = (sp.result as ResultFilter) ?? "alle";
 
   const { club } = await assertTeamPageAccess(slug, teamId, "viewer");
-  const [team] = await db
-    .select()
-    .from(teams)
-    .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
-    .limit(1);
+  const team = await getTeamForMatchesPage(teamId, club.id);
 
   if (!team) return <div className="text-sm text-brand-alert-red">Mannschaft nicht gefunden.</div>;
 
@@ -72,11 +70,7 @@ export default async function SpielePage({
   // Saison). Werden erst befüllt, wenn der Vorsaison-Crawl läuft (Phase 8/TODO);
   // bis dahin steht hier nur die aktuelle Saison.
   const siblingSeasons = team.fussballdeTeamId
-    ? await db
-        .select({ id: teams.id, saison: teams.saison })
-        .from(teams)
-        .where(eq(teams.fussballdeTeamId, team.fussballdeTeamId))
-        .orderBy(desc(teams.saison))
+    ? await listTeamSiblingSeasons(team.fussballdeTeamId)
     : [{ id: team.id, saison: team.saison }];
 
   const matches = await listMatchesForTeam(team.id, 300);

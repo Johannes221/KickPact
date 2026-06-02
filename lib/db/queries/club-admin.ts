@@ -132,3 +132,13 @@ export async function getClubById(clubId: string) {
   const [club] = await db.select().from(clubs).where(eq(clubs.id, clubId)).limit(1);
   return club;
 }
+
+/** Name + Ort eines Vereins (für Profil-Header). */
+export async function getClubNameOrt(clubId: string) {
+  const [row] = await db
+    .select({ name: clubs.name, ort: clubs.ort })
+    .from(clubs)
+    .where(eq(clubs.id, clubId))
+    .limit(1);
+  return row;
+}

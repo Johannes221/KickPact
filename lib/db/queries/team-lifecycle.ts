@@ -80,3 +80,27 @@ export async function getTeamNameById(teamId: string): Promise<string | null> {
     .limit(1);
   return team?.name ?? null;
 }
+
+/** Felder für den „Mein Profil"-Editor (Cover/Logo/Public-Profil), club-scoped. */
+export async function getTeamProfileForEditor(teamId: string, clubId: string) {
+  const [team] = await db
+    .select({
+      id: teams.id,
+      name: teams.name,
+      saison: teams.saison,
+      league: teams.league,
+      discoverable: teams.discoverable,
+      publicSlug: teams.publicSlug,
+      publicName: teams.publicName,
+      publicTagline: teams.publicTagline,
+      publicGoals: teams.publicGoals,
+      logoUrl: teams.logoUrl,
+      coverUrl: teams.coverUrl,
+      showInsights: teams.showInsights,
+      verifiedAt: teams.verifiedAt
+    })
+    .from(teams)
+    .where(and(eq(teams.id, teamId), eq(teams.clubId, clubId)))
+    .limit(1);
+  return team;
+}

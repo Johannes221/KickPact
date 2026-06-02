@@ -1,8 +1,7 @@
-import { eq, and } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { teams, clubs } from "@/lib/db/schema";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { listTeamImages } from "@/lib/db/queries/team-images";
+import { getTeamProfileForEditor } from "@/lib/db/queries/team-lifecycle";
+import { getClubNameOrt } from "@/lib/db/queries/club-admin";
 import { MeinProfilEditor } from "./_components/mein-profil-editor";
 
 export const metadata = { title: "Mein Profil · Mannschaft · KickPact" };
@@ -21,25 +20,7 @@ export default async function MeinProfilPage({
   const { slug, teamId } = await params;
   const { club } = await assertTeamPageAccess(slug, teamId, "admin");
 
-  const [team] = await db
-    .select({
-      id: teams.id,
-      name: teams.name,
-      saison: teams.saison,
-      league: teams.league,
-      discoverable: teams.discoverable,
-      publicSlug: teams.publicSlug,
-      publicName: teams.publicName,
-      publicTagline: teams.publicTagline,
-      publicGoals: teams.publicGoals,
-      logoUrl: teams.logoUrl,
-      coverUrl: teams.coverUrl,
-      showInsights: teams.showInsights,
-      verifiedAt: teams.verifiedAt
-    })
-    .from(teams)
-    .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
-    .limit(1);
+  const team = await getTeamProfileForEditor(teamId, club.id);
 
   if (!team) {
     return (
@@ -49,11 +30,7 @@ export default async function MeinProfilPage({
     );
   }
 
-  const [clubRow] = await db
-    .select({ name: clubs.name, ort: clubs.ort })
-    .from(clubs)
-    .where(eq(clubs.id, club.id))
-    .limit(1);
+  const clubRow = await getClubNameOrt(club.id);
 
   const gallery = (await listTeamImages(teamId)).map((g) => ({
     id: g.id,
