@@ -9,7 +9,10 @@ import {
   teams,
   clubs,
   eventApprovals,
-  matchEvents
+  matchEvents,
+  teamLicenses,
+  sponsorInvitations,
+  sponsorInquiries
 } from "@/lib/db/schema";
 
 export type ChargeStatus = "pending_approval" | "confirmed" | "invoiced" | "cancelled";
@@ -140,4 +143,81 @@ export async function listOpenApprovals(opts?: {
     .where(inArray(eventApprovals.status, statuses))
     .orderBy(desc(eventApprovals.createdAt))
     .limit(limit);
+}
+
+/**
+ * Gebündelte Daten für die Vereins-Sponsoren-Seite (/verein/[slug]/sponsoren):
+ * Teams (inkl. Verifikations-Gate + Plan), aktive Einladungen, aktive Sponsoren
+ * und offene Discover-Anfragen.
+ */
+export async function getClubSponsorenOverview(clubId: string) {
+  const teamRows = await db
+    .select({
+      id: teams.id,
+      name: teams.name,
+      discoverable: teams.discoverable,
+      publicTagline: teams.publicTagline,
+      containerVerifiedAt: clubs.verifiedAt,
+      teamVerifiedAt: teams.verifiedAt,
+      plan: teamLicenses.plan
+    })
+    .from(teams)
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .leftJoin(teamLicenses, eq(teamLicenses.teamId, teams.id))
+    .where(eq(teams.clubId, clubId));
+  const teamIds = teamRows.map((t) => t.id);
+
+  const invitations = teamIds.length
+    ? await db
+        .select({ inv: sponsorInvitations, team: teams })
+        .from(sponsorInvitations)
+        .innerJoin(teams, eq(sponsorInvitations.teamId, teams.id))
+        .where(eq(teams.clubId, clubId))
+        .orderBy(sponsorInvitations.createdAt)
+    : [];
+
+  const activeSponsors = teamIds.length
+    ? await db
+        .select({
+          sponsorId: sponsors.id,
+          displayName: sponsors.displayName,
+          type: sponsors.type,
+          userEmail: users.email,
+          teamId: pledges.teamId,
+          teamName: teams.name,
+          pledgeStatus: pledges.status
+        })
+        .from(pledges)
+        .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+        .innerJoin(users, eq(sponsors.userId, users.id))
+        .innerJoin(teams, eq(pledges.teamId, teams.id))
+        .where(eq(teams.clubId, clubId))
+    : [];
+
+  const inquiries =
+    teamIds.length > 0
+      ? await db
+          .select({
+            id: sponsorInquiries.id,
+            teamId: sponsorInquiries.teamId,
+            teamName: teams.name,
+            status: sponsorInquiries.status,
+            message: sponsorInquiries.message,
+            createdAt: sponsorInquiries.createdAt,
+            sponsorEmail: users.email,
+            sponsorName: users.name
+          })
+          .from(sponsorInquiries)
+          .innerJoin(teams, eq(sponsorInquiries.teamId, teams.id))
+          .innerJoin(users, eq(sponsorInquiries.sponsorUserId, users.id))
+          .where(
+            and(
+              inArray(sponsorInquiries.teamId, teamIds),
+              eq(sponsorInquiries.status, "pending")
+            )
+          )
+          .orderBy(desc(sponsorInquiries.createdAt))
+      : [];
+
+  return { teamRows, invitations, activeSponsors, inquiries };
 }

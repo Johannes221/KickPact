@@ -1,16 +1,5 @@
-import { and, eq, inArray, desc } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import {
-  teams,
-  clubs,
-  teamLicenses,
-  sponsorInvitations,
-  sponsors,
-  pledges,
-  users,
-  sponsorInquiries
-} from "@/lib/db/schema";
 import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
+import { getClubSponsorenOverview } from "@/lib/db/queries/sponsoring-admin";
 import { SponsorsManager } from "./_components/sponsors-manager";
 import { InquiriesInbox } from "./_components/inquiries-inbox";
 import { DiscoverabilityPanel } from "./_components/discoverability-panel";
@@ -25,82 +14,10 @@ export default async function SponsorenPage({
   const { slug } = await params;
   const { club } = await assertVereinAdminOrRedirect(slug, "viewer");
 
-  // Teams of this club — inkl. Container-Verifizierung (Sponsoren-Gate, Design
-  // 2026-05-29 §3.5/§6). Das Gate prüft den Container-Verein DER MANNSCHAFT
-  // (teams.clubId → clubs.verifiedAt), der vom Slug-Verein abweichen kann.
-  const teamRows = await db
-    .select({
-      id: teams.id,
-      name: teams.name,
-      discoverable: teams.discoverable,
-      publicTagline: teams.publicTagline,
-      containerVerifiedAt: clubs.verifiedAt,
-      teamVerifiedAt: teams.verifiedAt,
-      plan: teamLicenses.plan
-    })
-    .from(teams)
-    .innerJoin(clubs, eq(teams.clubId, clubs.id))
-    .leftJoin(teamLicenses, eq(teamLicenses.teamId, teams.id))
-    .where(eq(teams.clubId, club.id));
-  const teamIds = teamRows.map((t) => t.id);
-
-  // Active invitations for these teams
-  const invitations = teamIds.length
-    ? await db
-        .select({
-          inv: sponsorInvitations,
-          team: teams
-        })
-        .from(sponsorInvitations)
-        .innerJoin(teams, eq(sponsorInvitations.teamId, teams.id))
-        .where(eq(teams.clubId, club.id))
-        .orderBy(sponsorInvitations.createdAt)
-    : [];
-
-  // Active sponsors (über pledges -> teamId IN clubTeams)
-  const activeSponsors = teamIds.length
-    ? await db
-        .select({
-          sponsorId: sponsors.id,
-          displayName: sponsors.displayName,
-          type: sponsors.type,
-          userEmail: users.email,
-          teamId: pledges.teamId,
-          teamName: teams.name,
-          pledgeStatus: pledges.status
-        })
-        .from(pledges)
-        .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
-        .innerJoin(users, eq(sponsors.userId, users.id))
-        .innerJoin(teams, eq(pledges.teamId, teams.id))
-        .where(eq(teams.clubId, club.id))
-    : [];
-
-  // Pending Discover-Anfragen für die Teams dieses Vereins
-  const inquiries =
-    teamIds.length > 0
-      ? await db
-          .select({
-            id: sponsorInquiries.id,
-            teamId: sponsorInquiries.teamId,
-            teamName: teams.name,
-            status: sponsorInquiries.status,
-            message: sponsorInquiries.message,
-            createdAt: sponsorInquiries.createdAt,
-            sponsorEmail: users.email,
-            sponsorName: users.name
-          })
-          .from(sponsorInquiries)
-          .innerJoin(teams, eq(sponsorInquiries.teamId, teams.id))
-          .innerJoin(users, eq(sponsorInquiries.sponsorUserId, users.id))
-          .where(
-            and(
-              inArray(sponsorInquiries.teamId, teamIds),
-              eq(sponsorInquiries.status, "pending")
-            )
-          )
-          .orderBy(desc(sponsorInquiries.createdAt))
-      : [];
+  // Teams (inkl. Container-Verifizierung, Sponsoren-Gate Design 2026-05-29
+  // §3.5/§6), aktive Einladungen, aktive Sponsoren + offene Discover-Anfragen.
+  const { teamRows, invitations, activeSponsors, inquiries } =
+    await getClubSponsorenOverview(club.id);
 
   return (
     <div className="space-y-6 md:space-y-10">
