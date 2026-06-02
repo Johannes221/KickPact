@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
 import { assertTeamPageAccess, canManageTeamMembers } from "@/lib/auth/scope";
-import { db } from "@/lib/db/client";
-import { teamMemberships, teams, users } from "@/lib/db/schema";
+import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
 import {
   listPendingRequestsForTeam,
-  countTeamAdmins
+  countTeamAdmins,
+  listTeamMembers
 } from "@/lib/db/queries/membership-requests";
 import { listPendingTeamMemberInvitationsForTeam } from "@/lib/db/queries/invitations";
 import { MembersTable } from "@/app/(verein)/verein/[slug]/einstellungen/mitglieder/_components/members-table";
@@ -37,24 +36,12 @@ export default async function TeamMitgliederPage({
     redirect(`/verein/${slug}/mannschaft/${teamId}/einstellungen`);
   }
 
-  const [team] = await db
-    .select({ id: teams.id, name: teams.name })
-    .from(teams)
-    .where(eq(teams.id, teamId))
-    .limit(1);
+  const team = await getTeamInClub(teamId, club.id);
   if (!team) redirect(`/verein/${slug}/mannschaft/${teamId}/einstellungen`);
 
   const [members, pendingInvitations, pendingRequests, teamAdminCount] =
     await Promise.all([
-      db
-        .select({
-          userId: teamMemberships.userId,
-          email: users.email,
-          role: teamMemberships.role
-        })
-        .from(teamMemberships)
-        .innerJoin(users, eq(teamMemberships.userId, users.id))
-        .where(eq(teamMemberships.teamId, teamId)),
+      listTeamMembers(teamId),
       listPendingTeamMemberInvitationsForTeam(teamId),
       listPendingRequestsForTeam(teamId),
       countTeamAdmins(teamId)

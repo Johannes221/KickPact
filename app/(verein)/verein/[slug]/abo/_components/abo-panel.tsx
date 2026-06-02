@@ -1,6 +1,8 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { subscriptions, teamLicenses, teams } from "@/lib/db/schema";
+import {
+  getSubscriptionForClub,
+  listTeamLicensePlansForClub,
+  type SubscriptionRow
+} from "@/lib/db/queries/subscriptions";
 import { isStripeConfigured } from "@/lib/stripe/client";
 import {
   CYCLE_LABELS,
@@ -32,18 +34,10 @@ export async function AboPanel({
   clubId: string;
   clubSlug: string;
 }) {
-  const [sub] = await db
-    .select()
-    .from(subscriptions)
-    .where(eq(subscriptions.clubId, clubId))
-    .limit(1);
+  const sub = await getSubscriptionForClub(clubId);
 
   // Höchstes Tier aller Teams → bestimmt aktuell sichtbaren Plan-Badge
-  const licenseRows = await db
-    .select({ plan: teamLicenses.plan })
-    .from(teamLicenses)
-    .innerJoin(teams, eq(teamLicenses.teamId, teams.id))
-    .where(eq(teams.clubId, clubId));
+  const licenseRows = await listTeamLicensePlansForClub(clubId);
   const currentPlan: PlanKey =
     licenseRows.length > 0
       ? highestPlanFrom(licenseRows.map((r) => r.plan as PlanKey))
@@ -148,7 +142,7 @@ function CurrentSubscriptionCard({
   currentPlan,
   currentCycle
 }: {
-  sub: typeof subscriptions.$inferSelect;
+  sub: SubscriptionRow;
   currentPlan: PlanKey;
   currentCycle: BillingCycle;
 }) {

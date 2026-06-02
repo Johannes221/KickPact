@@ -576,3 +576,16 @@ export async function listConflictClaimsForAdmin(): Promise<ConflictClaimRow[]> 
     })
   );
 }
+
+/** Aktive Mitglieder einer Mannschaft (userId/email/role). */
+export async function listTeamMembers(teamId: string) {
+  return db
+    .select({
+      userId: teamMemberships.userId,
+      email: users.email,
+      role: teamMemberships.role
+    })
+    .from(teamMemberships)
+    .innerJoin(users, eq(teamMemberships.userId, users.id))
+    .where(eq(teamMemberships.teamId, teamId));
+}

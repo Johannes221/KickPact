@@ -11,6 +11,8 @@ import {
 import type { SubscriptionStatus } from "./subscription-status";
 import type { PlanKey, BillingCycle } from "@/lib/stripe/pricing";
 
+export type SubscriptionRow = typeof subscriptions.$inferSelect;
+
 /**
  * Query-Layer für Subscription-/Lizenz-Writes aus dem Stripe-Webhook.
  * Bündelt alle DB-Zugriffe, die vorher inline im Route-Handler standen
@@ -169,6 +171,25 @@ export async function listIncompleteSubscriptions() {
     .innerJoin(clubs, eq(clubs.id, subscriptions.clubId))
     .where(eq(subscriptions.status, "incomplete"))
     .orderBy(desc(subscriptions.updatedAt));
+}
+
+/** Vollständige Subscription-Row eines Clubs (oder undefined) — Abo-Panel. */
+export async function getSubscriptionForClub(clubId: string) {
+  const [sub] = await db
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.clubId, clubId))
+    .limit(1);
+  return sub;
+}
+
+/** Plan aller Team-Lizenzen eines Clubs (für die „höchstes Tier"-Ableitung). */
+export async function listTeamLicensePlansForClub(clubId: string) {
+  return db
+    .select({ plan: teamLicenses.plan })
+    .from(teamLicenses)
+    .innerJoin(teams, eq(teamLicenses.teamId, teams.id))
+    .where(eq(teams.clubId, clubId));
 }
 
 /** Letzte N verarbeitete Stripe-Webhook-Events (Admin-Audit-Liste). */
