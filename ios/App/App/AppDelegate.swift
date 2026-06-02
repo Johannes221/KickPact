@@ -46,4 +46,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 
+    // APNs-Token-Weiterleitung an das @capacitor/push-notifications-Plugin.
+    // Pflicht laut Capacitor-Doku — ohne diese Forwards erreicht das vom System
+    // gelieferte Device-Token das Plugin nie, der "registration"-Listener im
+    // PushRegistrar feuert nicht und /api/native/push-token wird nie aufgerufen.
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: deviceToken)
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
+    }
+
 }

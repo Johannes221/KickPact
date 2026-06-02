@@ -2,9 +2,16 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
 import { getAccountOverview, getSponsorType } from "@/lib/db/queries/account";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
+import { flattenIdentities } from "@/lib/auth/identity-routing";
+import {
+  getStoredPrimaryRole,
+  primaryDestinationFor
+} from "@/lib/auth/primary-role";
 import { countUnreadNotifications } from "@/lib/db/queries/notifications";
 import { DeletionBanner } from "./_components/deletion-banner";
 import { DataPrivacyActions } from "./_components/data-privacy-actions";
+import { AvatarUpload } from "./_components/avatar-upload";
+import { PrimaryRoleSelector } from "./_components/primary-role-selector";
 
 export const metadata = { title: "Mein Konto · KickPact" };
 
@@ -19,6 +26,30 @@ export default async function KontoPage() {
   // Sponsor-Type wird nicht in UserIdentities zurückgegeben — separater Lookup
   // damit das Label „Familie/Business" auf der Karte stimmt.
   const sponsorType = identities.sponsor ? await getSponsorType(user.id) : null;
+
+  // Hauptrollen-Auswahl: serialisierbare Options (flattenIdentities-Einträge
+  // ohne die nicht-serialisierbare `matches`-Funktion) + aktuell aufgelöste
+  // Hauptrolle. Nur bei 2+ Rollen relevant.
+  const roleEntries = flattenIdentities(identities);
+  const storedPrimaryRole = await getStoredPrimaryRole(user.id);
+  const currentPrimaryId = primaryDestinationFor(
+    identities,
+    storedPrimaryRole
+  ).resolvedId;
+  const primaryRoleOptions = roleEntries.map((e) => ({
+    id: e.id,
+    label: e.label,
+    subline: e.subline,
+    kind: e.kind
+  }));
+
+  const avatarInitials =
+    (userRow?.name ?? user.email)
+      .split(/\s+/)
+      .map((w) => w[0] ?? "")
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || user.email[0]!.toUpperCase();
 
   const deletionScheduledFor = userRow?.deletionRequestedAt
     ? new Date(userRow.deletionRequestedAt.getTime() + 14 * 24 * 60 * 60 * 1000)
@@ -91,6 +122,8 @@ export default async function KontoPage() {
           </p>
         </div>
 
+        <AvatarUpload initials={avatarInitials} />
+
         <dl className="grid gap-3 sm:grid-cols-2 text-sm">
           <div>
             <dt className="text-[0.7rem] uppercase tracking-widest font-semibold text-brand-night-navy/50">
@@ -162,6 +195,13 @@ export default async function KontoPage() {
             Menü oben rechts wechselst du zwischen den Rollen.
           </p>
         </div>
+
+        {primaryRoleOptions.length >= 2 && (
+          <PrimaryRoleSelector
+            options={primaryRoleOptions}
+            currentId={currentPrimaryId}
+          />
+        )}
 
         <ul className="space-y-2">
           {identities.clubs.map((c) => (
