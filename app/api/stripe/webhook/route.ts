@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq, inArray } from "drizzle-orm";
 import type Stripe from "stripe";
 import { getStripe, getStripeWebhookSecret, isStripeConfigured } from "@/lib/stripe/client";
-import { db } from "@/lib/db/client";
-import { subscriptions, teamLicenses, teams, processedStripeEvents } from "@/lib/db/schema";
 import { trackServer } from "@/lib/analytics/track-server";
 import { priceIdToPlanCycle } from "@/lib/stripe/pricing";
+import {
+  markStripeEventProcessed,
+  getSubscriptionCustomerId,
+  syncSubscriptionForClub,
+  setTeamLicensesPlanForSubscription,
+  cancelSubscriptionForClub,
+  setTeamLicensesStatusForClubTeams,
+  setSubscriptionStatusByCustomer,
+  getClubIdByCustomer
+} from "@/lib/db/queries/subscriptions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,12 +53,8 @@ export async function POST(req: NextRequest) {
   // Events kann ein älteres `subscription.updated` ein neueres überschreiben.
   // INSERT … ON CONFLICT DO NOTHING + RETURNING ist atomar: nur der erste
   // Webhook für event.id bekommt die Row zurück und verarbeitet.
-  const insertGate = await db
-    .insert(processedStripeEvents)
-    .values({ eventId: event.id, eventType: event.type })
-    .onConflictDoNothing()
-    .returning({ eventId: processedStripeEvents.eventId });
-  if (insertGate.length === 0) {
+  const isNewEvent = await markStripeEventProcessed(event.id, event.type);
+  if (!isNewEvent) {
     console.info("[stripe-webhook] duplicate event, skipping", { eventId: event.id });
     return NextResponse.json({ received: true, deduplicated: true });
   }
@@ -111,28 +114,21 @@ export async function POST(req: NextRequest) {
             ? new Date(sub.pause_collection.resumes_at * 1000)
             : null;
 
-        await db
-          .update(subscriptions)
-          .set({
-            stripeSubscriptionId: sub.id,
-            status: resolvedStatus,
-            ...(planCycle ? { billingCycle: planCycle.cycle } : {}),
-            trialEndsAt: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
-            currentPeriodEnd: extractCurrentPeriodEnd(sub),
-            pausedUntil: pauseResumesAt,
-            updatedAt: new Date()
-          })
-          .where(eq(subscriptions.clubId, clubId));
+        await syncSubscriptionForClub(clubId, {
+          stripeSubscriptionId: sub.id,
+          status: resolvedStatus,
+          ...(planCycle ? { billingCycle: planCycle.cycle } : {}),
+          trialEndsAt: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
+          currentPeriodEnd: extractCurrentPeriodEnd(sub),
+          pausedUntil: pauseResumesAt
+        });
 
         // Plan-Spiegelung auf team_licenses: bei Verein-Plan kann eine
         // einzige Subscription mehrere Teams decken; wir setzen den Plan auf
         // ALLE License-Rows dieser Subscription. Bei team-units (basic/pro)
         // ist's i.d.R. ohnehin nur eine Row.
         if (planCycle) {
-          await db
-            .update(teamLicenses)
-            .set({ plan: planCycle.plan })
-            .where(eq(teamLicenses.subscriptionClubId, clubId));
+          await setTeamLicensesPlanForSubscription(clubId, planCycle.plan);
         }
 
         // Conversion-Event: nur bei Erst-Erzeugung, nicht bei jedem Update
@@ -166,23 +162,9 @@ export async function POST(req: NextRequest) {
           });
           break;
         }
-        await db
-          .update(subscriptions)
-          .set({ status: "cancelled", updatedAt: new Date() })
-          .where(eq(subscriptions.clubId, clubId));
+        await cancelSubscriptionForClub(clubId);
         // teamLicenses auf cancelled spiegeln.
-        await db
-          .update(teamLicenses)
-          .set({ status: "cancelled" })
-          .where(
-            inArray(
-              teamLicenses.teamId,
-              db
-                .select({ id: teams.id })
-                .from(teams)
-                .where(eq(teams.clubId, clubId))
-            )
-          );
+        await setTeamLicensesStatusForClubTeams(clubId, "cancelled");
         break;
       }
       case "invoice.payment_failed": {
@@ -190,10 +172,7 @@ export async function POST(req: NextRequest) {
         const customerId =
           typeof inv.customer === "string" ? inv.customer : inv.customer?.id;
         if (!customerId) break;
-        await db
-          .update(subscriptions)
-          .set({ status: "past_due", updatedAt: new Date() })
-          .where(eq(subscriptions.stripeCustomerId, customerId));
+        await setSubscriptionStatusByCustomer(customerId, "past_due");
         break;
       }
       case "customer.subscription.trial_will_end": {
@@ -210,30 +189,12 @@ export async function POST(req: NextRequest) {
         const customerId =
           typeof inv.customer === "string" ? inv.customer : inv.customer?.id;
         if (!customerId) break;
-        await db
-          .update(subscriptions)
-          .set({ status: "active", updatedAt: new Date() })
-          .where(eq(subscriptions.stripeCustomerId, customerId));
+        await setSubscriptionStatusByCustomer(customerId, "active");
         // Auch teamLicenses auf active setzen — vorher blieb status dauerhaft
         // auf 'trialing' auch nach erfolgreichem Checkout.
-        const [sub] = await db
-          .select({ clubId: subscriptions.clubId })
-          .from(subscriptions)
-          .where(eq(subscriptions.stripeCustomerId, customerId))
-          .limit(1);
-        if (sub?.clubId) {
-          await db
-            .update(teamLicenses)
-            .set({ status: "active" })
-            .where(
-              inArray(
-                teamLicenses.teamId,
-                db
-                  .select({ id: teams.id })
-                  .from(teams)
-                  .where(eq(teams.clubId, sub.clubId))
-              )
-            );
+        const paidClubId = await getClubIdByCustomer(customerId);
+        if (paidClubId) {
+          await setTeamLicensesStatusForClubTeams(paidClubId, "active");
         }
         break;
       }
@@ -266,11 +227,7 @@ async function clubMatchesCustomer(
   clubId: string,
   eventCustomerId: string | null
 ): Promise<boolean> {
-  const [row] = await db
-    .select({ customerId: subscriptions.stripeCustomerId })
-    .from(subscriptions)
-    .where(eq(subscriptions.clubId, clubId))
-    .limit(1);
+  const row = await getSubscriptionCustomerId(clubId);
   if (!row) return false; // unbekannter Club → nicht schreiben
   if (row.customerId && eventCustomerId && row.customerId !== eventCustomerId) {
     return false; // Widerspruch
