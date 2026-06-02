@@ -216,3 +216,50 @@ describe("manual approval triggers", () => {
     expect(props.length).toBe(0);
   });
 });
+
+/**
+ * SECURITY (C1): goal_total / goal_by_player dürfen ein MANUELL gemeldetes Tor
+ * NICHT automatisch abrechnen — es braucht Sponsor-Freigabe. Gescrapte Tore
+ * (fussball.de = Wahrheit) bleiben auto-confirmed.
+ */
+describe("C1: manual goals require approval", () => {
+  function goalEvent(source: "scraped" | "manual"): MatchInput["events"][number] {
+    return {
+      id: `e_${source}`,
+      minute: 12,
+      type: "tor",
+      subtype: null,
+      side: "heim",
+      playerId: "P1",
+      playerName: "Spieler 1",
+      source,
+    };
+  }
+
+  it("goal_total: scraped goal is auto-confirmed, manual goal needs approval", () => {
+    const scraped = evaluateTriggers(syntheticMatch([goalEvent("scraped")]), [
+      rule({ triggerType: "goal_total", amountCents: 500 }),
+    ]);
+    expect(scraped).toHaveLength(1);
+    expect(scraped[0].requiresApproval).toBe(false);
+
+    const manual = evaluateTriggers(syntheticMatch([goalEvent("manual")]), [
+      rule({ triggerType: "goal_total", amountCents: 500 }),
+    ]);
+    expect(manual).toHaveLength(1);
+    expect(manual[0].requiresApproval).toBe(true);
+  });
+
+  it("goal_by_player: manual goal needs approval, scraped does not", () => {
+    const r = rule({
+      triggerType: "goal_by_player",
+      amountCents: 500,
+      triggerParams: { playerId: "P1" },
+    });
+    const scraped = evaluateTriggers(syntheticMatch([goalEvent("scraped")]), [r]);
+    expect(scraped[0]?.requiresApproval).toBe(false);
+
+    const manual = evaluateTriggers(syntheticMatch([goalEvent("manual")]), [r]);
+    expect(manual[0]?.requiresApproval).toBe(true);
+  });
+});
