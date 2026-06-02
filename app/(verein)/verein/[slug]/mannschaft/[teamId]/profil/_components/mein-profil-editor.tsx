@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Eye, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -258,9 +259,10 @@ export function MeinProfilEditor({
             <Link
               href={`/m/${publicSlug}`}
               target="_blank"
-              className="inline-flex items-center rounded-lg border border-accent/40 px-2.5 py-1 text-xs font-semibold text-accent-dark transition-colors hover:bg-accent/10"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-accent-dark"
             >
-              Vorschau ↗
+              <Eye className="h-4 w-4" aria-hidden />
+              Live-Vorschau
             </Link>
           )}
         </div>
@@ -291,14 +293,15 @@ export function MeinProfilEditor({
           Saison {saison}
         </span>
 
-        {/* Cover ändern */}
+        {/* Cover ändern — deutlich sichtbarer Button (weiß, mit Icon). */}
         <button
           type="button"
           disabled={pending}
           onClick={() => coverInputRef.current?.click()}
-          className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/50 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur transition-colors hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-60"
+          className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-2 text-xs font-bold text-brand-night-navy shadow-md ring-1 ring-black/5 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
         >
-          📷 Cover ändern
+          <Camera className="h-4 w-4" aria-hidden />
+          {coverUrl ? "Cover-Bild ändern" : "Cover-Bild hinzufügen"}
         </button>
         <input
           ref={coverInputRef}
@@ -332,9 +335,11 @@ export function MeinProfilEditor({
               type="button"
               disabled={pending}
               onClick={() => logoInputRef.current?.click()}
-              className="absolute -bottom-1 -right-1 rounded-full bg-white px-1.5 py-0.5 text-[10px] font-semibold text-brand-night-navy shadow ring-1 ring-brand-neutral/30 transition-colors hover:bg-brand-off-white disabled:cursor-not-allowed disabled:opacity-60"
+              aria-label="Logo ändern"
+              title="Logo ändern"
+              className="absolute -bottom-1.5 -right-1.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent text-white shadow-md ring-2 ring-white transition-colors hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-60"
             >
-              ändern
+              <Camera className="h-3.5 w-3.5" aria-hidden />
             </button>
             <input
               ref={logoInputRef}
