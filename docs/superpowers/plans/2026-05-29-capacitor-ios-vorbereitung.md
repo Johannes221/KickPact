@@ -30,6 +30,25 @@ Diese Änderungen haben im Desktop-Browser **null sichtbaren Effekt**, aktiviere
 3. **App-Bundle-ID** festlegen, z.B. `com.kickpact.app`. Muss zur `APPLE_BUNDLE_ID`-ENV passen (Apple-Sign-in ist in [lib/auth/server.ts:26](../../../lib/auth/server.ts) schon darauf vorbereitet).
 4. **Apple Sign-in ist Pflicht**, sobald Google-Login angeboten wird (Guideline 4.8). Ist bereits konfiguriert — nur Keys/Provider live schalten.
 
+## ✅ SPIKE ERFOLGREICH (2026-06-02) — App läuft im iOS-Simulator
+
+Nach Reparatur der defekten Simulator-Runtime (siehe unten) läuft KickPact als Capacitor-App im iOS-Simulator (iPhone 17, iOS 26.3). **Per Screenshot verifiziert:**
+- **WebView lädt Staging (`kickpact.schartl.dev`) und rendert die App nativ + korrekt** — Landing-Page komplett, Safe-Area/Notch sauber.
+- **Login-UI rendert vollständig im WKWebView** — „Mit Google fortfahren", „Mit Apple fortfahren", Magic-Link-Mailfeld, „Account anlegen". Alle drei Auth-Wege da.
+- Damit ist die größte Unbekannte (lädt + rendert die remote Next.js-App im iOS-WebView?) **bewiesen**.
+
+**Runtime-Fix, der den Simulator wiederbelebt hat (für die Doku):** Der iOS-26.2-Simulator-Runtime war korrupt (simctl + ibtool hingen endlos; Reboot/Device-Reset half nicht). Lösung: `open -a Simulator` (revived den CoreSimulator-Service, sodass simctl wieder antwortete) → dann **iOS-Runtime per `xcodebuild -downloadPlatform iOS` neu geladen** (frische iOS 26.3.1) → neues Device darauf angelegt → bootet stabil, ibtool/actool laufen sauber, App-Build vollständig (inkl. Info.plist/Bundle-ID).
+
+**Auth-Kette zusätzlich verifiziert (curl gegen Staging, 2026-06-02):**
+- Auth-Gate: `/dashboard` → **307 Redirect auf `/login`** (dieselbe Kette läuft im WebView).
+- Auth-Backend: Test-Stub liefert **HTTP 200 + gültige signierte Session** (`__Secure-better-auth.session_token`, Secure/HttpOnly/SameSite=lax) → Cookie-Signierung & Session-Erstellung gegen die Staging-Instanz funktionieren. (Test-User danach wieder gelöscht — shared DB clean.)
+
+**✅ Cookie-Persistenz im WebView bewiesen (2026-06-02):** Über den echten better-auth-Magic-Link-Flow (Token aus DB gelesen, WKWebView auf Verify-URL navigiert) eine Session gesetzt → nach **komplettem App-Neustart auf root** zeigt der **In-App-WKWebView den eingeloggten Zustand** (Account-Avatar statt „Loslegen"), fullscreen ohne Safari-Chrome. Die `__Secure-better-auth.session_token`-Cookie überlebt App-Neustarts im persistenten `WKWebsiteDataStore`. Cookie-Auth (WS-2 Variante A) trägt also im Standalone-WebView — **Bearer-Token-Fallback (WS-3) nicht nötig.**
+
+**⚠️ Beobachtung Magic-Link-Handoff (bestätigt WS-3-Risiko):** Beim Laden der Verify-URL gab es einen Safari-Seitensprung. Im echten Flow (Mail-Link → öffnet Safari → Cookie landet in Safari, nicht im App-WebView) ist das der bekannte Knackpunkt. **Lösung bleibt:** native **Apple-/Google-Sign-in** als primärer App-Login (kein Mail-Redirect, schließt in-app ab) und/oder Universal Links für den Magic-Link. Cookie-Persistenz selbst ist davon unberührt (s.o.).
+
+**Noch offen (nur interaktiv möglich):** der echte Login-**Roundtrip** — Magic-Link-Mail anklicken bzw. Apple/Google-OAuth durchlaufen + Cookie-Session-Persistenz über App-Neustart. Braucht echtes Mailpostfach / Apple-ID → vom Nutzer im (jetzt laufenden) Simulator durchzuklicken oder beim TestFlight-Build. Spike bleibt bootbar: Device-UDID `2FA9B7B7-C679-4199-9B9D-A614E67D46FB`, App `dev.schartl.kickpactspike`, Bundle in `~/capacitor-ios-spike`.
+
 ## Spike-Ergebnisse (2026-06-01) — Build-Kette verifiziert, Auth-Test offen
 
 Isolierter Spike in `~/capacitor-ios-spike` (außerhalb des Repos, `server.url` → `https://kickpact.schartl.dev`). **KickPact-Repo unberührt.**
@@ -54,7 +73,7 @@ Konnte nicht durchgeführt werden, weil der Simulator nicht bootet (Punkt 3). N�
 | WS | Was | Hängt ab von | Risiko |
 |---|---|---|---|
 | **0** Groundwork (viewport/safe-area) | ✓ erledigt 2026-05-29 | — | — |
-| **1** Capacitor-Scaffold | `@capacitor/core`+`/cli`+`/ios`, `capacitor.config.ts`, `npx cap add ios` | 0 | niedrig |
+| **1** Capacitor-Scaffold | ✅ **erledigt 2026-06-02 im Repo** (s.u.) | 0 | — |
 | **2** Server-URL-Strategie (WebView lädt remote) | Config auf Prod-URL zeigen, Cookie/CORS klären | 1 | **mittel** |
 | **3** Auth im WebView (Bearer-Token) | better-auth Bearer-Plugin + Secure-Storage | 2 | **mittel-hoch** |
 | **4** Native Mindestausstattung (4.2-Mitigation) | Push, Splash, Icon, Statusbar | 1 | mittel (Review) |
@@ -62,14 +81,18 @@ Konnte nicht durchgeführt werden, weil der Simulator nicht bootet (Punkt 3). N�
 | **6** Feature-Plugins (PDF/CSV/Clipboard/Upload) | je 1 Capacitor-Plugin, siehe Funktions-Audit | 1 | niedrig |
 | **7** Abo Dual-Provider (Stripe Web **+** Apple IAP) | IAP-Plugin + Entitlement-Reconciliation, siehe eigener Abschnitt | 2 | **hoch** |
 
-### WS-1 — Capacitor-Scaffold
-```
-npm i @capacitor/core @capacitor/ios
-npm i -D @capacitor/cli
-npx cap init KickPact com.kickpact.app
-npx cap add ios
-```
-`capacitor.config.ts` → `server.url` auf die Prod-Domain (siehe WS-2). **Nicht** `webDir` mit statischem Export — die App braucht den laufenden Next-Server (Server Components/Actions). Der WebView lädt die echte Seite remote; Capacitor ist nur die native Hülle + Bridge zu nativen Plugins.
+### WS-1 — Capacitor-Scaffold ✅ ERLEDIGT (2026-06-02, im Repo)
+
+Umgesetzt auf Branch `feat/ios-push-notifications` (baute auf bestehendem WIP auf, das `@capacitor/core@^6` + `@capacitor/push-notifications@^6` bereits in package.json hatte):
+- **Deps:** Capacitor **6** (Node-20-kompatibel, kein Repo-Node-Bump nötig) — `@capacitor/core`, `/cli` (dev), `/ios`, `/push-notifications`.
+- **[capacitor.config.ts](../../../capacitor.config.ts):** `appId: "com.kickpact.app"`, `appName: "KickPact"`, `webDir: "capacitor-www"`, `server.url` env-gesteuert (`CAP_SERVER_URL`, Default Staging `kickpact.schartl.dev`; Prod-Build: `CAP_SERVER_URL=https://kickpact.de`).
+- **[capacitor-www/index.html](../../../capacitor-www/index.html):** minimaler Lade-Fallback (nur sichtbar wenn Remote-URL nicht erreichbar).
+- **`ios/`** Xcode-Projekt generiert (`npx cap add ios`), `pod install` ok (LANG=en_US.UTF-8 nötig), Push-Plugin integriert. Capacitor legte `ios/.gitignore` an (Pods/build/DerivedData/public ignoriert).
+- **Verifiziert:** Repo-`ios/`-Projekt baut gegen iphonesimulator-SDK (`BUILD SUCCEEDED`), App.app läuft im Simulator, lädt Staging, rendert fullscreen In-App-WebView. ✅
+
+**Offene WS-1-Entscheidung:** Bundle-ID `com.kickpact.app` ist Default — muss final festgelegt werden (bindet App-Store-Connect-Record + Apple-Sign-in Service-ID; später schwer änderbar).
+
+**Hinweis:** `webDir` ist **nicht** statischer Export — die App braucht den laufenden Next-Server. WebView lädt remote via `server.url`; Capacitor = native Hülle + Plugin-Bridge.
 
 ### WS-2 — Server-URL & Cross-Origin (der Knackpunkt)
 Der WebView läuft unter `capacitor://localhost` (iOS), die App-Inhalte kommen von `https://kickpact.com`. Optionen:
