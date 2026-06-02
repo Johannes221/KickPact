@@ -33,6 +33,8 @@ reference/
 
 # claude code agent worktrees (lokal, isoliert)
 .claude/worktrees/
+# claude code runtime-state (lokal, regeneriert sich — nie commiten)
+.claude/scheduled_tasks.lock
 
 # typescript incremental build cache
 *.tsbuildinfo
