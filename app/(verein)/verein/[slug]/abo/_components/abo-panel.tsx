@@ -10,6 +10,8 @@ import {
   type BillingCycle
 } from "@/lib/stripe/pricing";
 import { highestPlanFrom } from "@/lib/mail/reply-to-pure";
+import { getDowngradeImpact } from "@/lib/db/queries/downgrade-impact";
+import type { DowngradeImpact } from "@/lib/billing/downgrade-impact";
 import { CheckoutButtons } from "./checkout-buttons";
 import { AboCycleToggle } from "./abo-cycle-toggle";
 
@@ -50,6 +52,13 @@ export async function AboPanel({
 
   const stripeReady = isStripeConfigured();
 
+  // Loss-Framing: nur im Trial sinnvoll, und nur wenn aktuell ein Pro/Verein-Tier
+  // läuft (auf Basic gäbe es nichts zu "verlieren"). Eine Lese-Query, kein Write.
+  const showLossFraming = sub?.status === "trialing" && currentPlan !== "basic";
+  const impact: DowngradeImpact | null = showLossFraming
+    ? await getDowngradeImpact(clubId)
+    : null;
+
   return (
     <div className="mx-auto max-w-3xl space-y-5 md:space-y-8">
       <div>
@@ -76,6 +85,16 @@ export async function AboPanel({
             sind gratis, keine Zahlungsdaten beim Test nötig.
           </p>
         </div>
+      )}
+
+      {sub && impact && (
+        <TrialEndLossFraming
+          impact={impact}
+          clubSlug={clubSlug}
+          stripeReady={stripeReady}
+          currentStatus={sub.status}
+          currentCycle={currentCycle}
+        />
       )}
 
       {!stripeReady && (
@@ -188,6 +207,103 @@ function CurrentSubscriptionCard({
             am 1.8. weiter.
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Trial-End-Sog: zeigt im Pro-Trial datengetrieben, was ein Wechsel auf Basic
+ * kosten würde ("X Sponsoren pausiert, Y Pact-Regeln weg, Saison-Wetten weg …"),
+ * bzw. — wenn noch keine Daten da sind — eine ermutigende Empty-State-Variante.
+ */
+function TrialEndLossFraming({
+  impact,
+  clubSlug,
+  stripeReady,
+  currentStatus,
+  currentCycle
+}: {
+  impact: DowngradeImpact;
+  clubSlug: string;
+  stripeReady: boolean;
+  currentStatus: string;
+  currentCycle: BillingCycle;
+}) {
+  // Empty-State: kein Verlust-Hebel sinnvoll → ermutigen statt drohen.
+  if (!impact.hasData) {
+    return (
+      <div className="rounded-2xl border border-accent/30 bg-accent/5 p-4 md:p-5 space-y-2">
+        <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+          Hol das Meiste aus deinem Pro-Trial
+        </h3>
+        <p className="text-sm leading-relaxed text-brand-night-navy/75">
+          Du testest gerade <strong>Pro</strong> — voll freigeschaltet: ∞ Sponsoren,
+          Saison-Wetten, eigene Trigger-Texte und dein Vereins-Logo auf der
+          Rechnung. Es ist nur noch kein Sponsor angelegt.
+        </p>
+        <p className="text-sm leading-relaxed text-brand-night-navy/75">
+          Lade deinen ersten Sponsor ein — Familie, Freunde, der Wirt um die Ecke —
+          und beim nächsten Tor fiebert ihr gemeinsam mit. <strong>Genau dafür ist
+          KickPact da.</strong>
+        </p>
+      </div>
+    );
+  }
+
+  // Loss-Framing: echte Zahlen aus den Verein-Daten. Formuliert auf die Basic-Cap-
+  // Realität (5 Sponsoren / 3 Regeln) — NICHT auf die noch ungebaute Auto-Pause.
+  const losses: string[] = [];
+  if (impact.sponsorsOverCap > 0) {
+    losses.push(
+      `${impact.sponsorsOverCap} ${impact.sponsorsOverCap === 1 ? "Sponsor passt" : "Sponsoren passen"} nicht mehr in Basic (Limit: 5 pro Mannschaft)`
+    );
+  }
+  if (impact.rulesOverCap > 0) {
+    losses.push(
+      `${impact.rulesOverCap} ${impact.rulesOverCap === 1 ? "Pact-Regel liegt" : "Pact-Regeln liegen"} über dem Basic-Limit (3 pro Sponsor)`
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 md:p-5 space-y-3">
+      <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+        Wenn dein Trial endet
+      </h3>
+      <p className="text-sm leading-relaxed text-brand-night-navy/80">
+        Mit <strong>Pro bleibt alles</strong> wie es ist. Würdest du stattdessen auf{" "}
+        <strong>Basic</strong> wechseln, verlierst du:
+      </p>
+      <ul className="space-y-1.5 text-sm text-brand-night-navy/80">
+        {losses.map((l) => (
+          <li key={l} className="flex gap-2">
+            <span aria-hidden className="text-amber-600">
+              ✕
+            </span>
+            <span>{l}</span>
+          </li>
+        ))}
+        <li className="flex gap-2">
+          <span aria-hidden className="text-amber-600">
+            ✕
+          </span>
+          <span>
+            kein Zugriff mehr auf: {impact.lostFeatures.join(", ")}
+          </span>
+        </li>
+      </ul>
+      <p className="text-xs leading-relaxed text-brand-night-navy/60">
+        Mit Pro behältst du alle Sponsoren &amp; Pact-Regeln ohne Limit — nichts
+        geht verloren.
+      </p>
+      <div className="pt-1">
+        <CheckoutButtons
+          clubSlug={clubSlug}
+          plan="pro"
+          stripeReady={stripeReady}
+          currentStatus={currentStatus}
+          cycle={currentCycle}
+        />
       </div>
     </div>
   );
