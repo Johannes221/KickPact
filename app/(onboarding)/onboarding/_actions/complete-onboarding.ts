@@ -1,12 +1,10 @@
 "use server";
 
 import { z } from "zod";
-import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db/client";
-import { clubs, clubMemberships } from "@/lib/db/schema";
 import { requireUserOrThrow } from "@/lib/auth/session";
 import { assertNotPlatformAdminAction } from "@/lib/auth/admin";
+import { completeOnboardingDraft } from "@/lib/db/queries/onboarding-draft";
 
 const completeSchema = z.object({
   clubId: z.string().min(1)
@@ -39,45 +37,19 @@ export async function completeOnboarding(
   await assertNotPlatformAdminAction(user.email);
   const parsed = completeSchema.parse(input);
 
-  const [row] = await db
-    .select({
-      clubSlug: clubs.slug,
-      onboardingStatus: clubs.onboardingStatus,
-      memberRole: clubMemberships.role
-    })
-    .from(clubs)
-    .leftJoin(
-      clubMemberships,
-      and(eq(clubMemberships.clubId, clubs.id), eq(clubMemberships.userId, user.id))
-    )
-    .where(eq(clubs.id, parsed.clubId))
-    .limit(1);
-
-  if (!row) throw new Error("Verein nicht gefunden.");
-  if (row.memberRole !== "admin") {
-    throw new Error("Du bist nicht berechtigt, diesen Draft abzuschließen.");
+  const result = await completeOnboardingDraft({ userId: user.id, clubId: parsed.clubId });
+  switch (result.status) {
+    case "not_found":
+      throw new Error("Verein nicht gefunden.");
+    case "forbidden":
+      throw new Error("Du bist nicht berechtigt, diesen Draft abzuschließen.");
+    case "stammdaten_missing":
+      throw new Error(
+        "Stammdaten müssen vor Abschluss eingetragen sein. Bitte zuerst Schritt 2 abschließen."
+      );
+    case "ok":
+      revalidatePath("/dashboard");
+      revalidatePath("/select-role");
+      return { clubSlug: result.clubSlug };
   }
-
-  // Idempotent: schon completed → einfach zurückgeben.
-  if (row.onboardingStatus === "completed") {
-    return { clubSlug: row.clubSlug };
-  }
-  if (row.onboardingStatus !== "stammdaten_complete") {
-    throw new Error(
-      "Stammdaten müssen vor Abschluss eingetragen sein. Bitte zuerst Schritt 2 abschließen."
-    );
-  }
-
-  await db
-    .update(clubs)
-    .set({
-      onboardingStatus: "completed",
-      onboardingCompletedAt: new Date(),
-      updatedAt: new Date()
-    })
-    .where(eq(clubs.id, parsed.clubId));
-
-  revalidatePath("/dashboard");
-  revalidatePath("/select-role");
-  return { clubSlug: row.clubSlug };
 }

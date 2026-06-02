@@ -1,16 +1,5 @@
 "use server";
 
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { and } from "drizzle-orm";
-import {
-  pledges,
-  pledgeRules,
-  sponsors,
-  teams,
-  clubMemberships,
-  teamMemberships
-} from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import {
   pledgeInputSchema,
@@ -25,8 +14,18 @@ import {
 } from "@/lib/billing/plan-features";
 import {
   countPledgeRulesForSponsorOnTeam,
-  getTeamLicensePlan
+  getTeamLicensePlan,
+  getClubIdForTeam,
+  createPledgeWithRules
 } from "@/lib/db/queries/pledges";
+import {
+  findSponsorForUser,
+  createSponsorProfile
+} from "@/lib/db/queries/sponsor-dashboard";
+import {
+  isClubMember,
+  getTeamMembershipRole
+} from "@/lib/db/queries/membership-requests";
 import { PLAN_CAPS } from "@/lib/stripe/pricing";
 import {
   assertWagerWindowOpen,
@@ -51,24 +50,17 @@ export async function createPledge(input: PledgeInput) {
   const parsed = pledgeInputSchema.parse(input);
 
   // Sponsor-Profil holen
-  const [sponsor] = await db
-    .select({ id: sponsors.id })
-    .from(sponsors)
-    .where(eq(sponsors.userId, user.id))
-    .limit(1);
+  const sponsor = await findSponsorForUser(user.id);
   let sponsorId: string;
   if (!sponsor) {
     // display_name NIE leer anlegen — sonst ist der Sponsor zu seinem Pact
     // nicht identifizierbar. Default aus User-Name/E-Mail; im Sponsor-
     // Onboarding/Profil kann er ihn später überschreiben.
-    const [created] = await db
-      .insert(sponsors)
-      .values({
-        userId: user.id,
-        displayName: deriveSponsorDisplayName(user),
-        type: "familie"
-      })
-      .returning({ id: sponsors.id });
+    const created = await createSponsorProfile({
+      userId: user.id,
+      displayName: deriveSponsorDisplayName(user),
+      type: "familie"
+    });
     sponsorId = created.id;
   } else {
     sponsorId = sponsor.id;
@@ -93,12 +85,8 @@ export async function createPledge(input: PledgeInput) {
 
   // Read-Only-Gate: Mannschaft → Club → Subscription. Wir lassen Sponsoren keinen
   // neuen Pledge anlegen, wenn der Verein im Read-Only-Modus ist.
-  const [teamRow] = await db
-    .select({ clubId: teams.clubId })
-    .from(teams)
-    .where(eq(teams.id, invitationTeamId))
-    .limit(1);
-  if (!teamRow) {
+  const clubId = await getClubIdForTeam(invitationTeamId);
+  if (!clubId) {
     throw new Error("Mannschaft zur Einladung nicht gefunden.");
   }
 
@@ -108,33 +96,15 @@ export async function createPledge(input: PledgeInput) {
   // an sich selbst fabrizieren. KickPact ist non-custodial, der direkte
   // Plattformschaden ist begrenzt, aber es untergräbt die Vertrauenswürdigkeit
   // der Rechnungen → wir blocken es.
-  const [selfClub] = await db
-    .select({ userId: clubMemberships.userId })
-    .from(clubMemberships)
-    .where(
-      and(
-        eq(clubMemberships.clubId, teamRow.clubId),
-        eq(clubMemberships.userId, user.id)
-      )
-    )
-    .limit(1);
-  const [selfTeam] = await db
-    .select({ userId: teamMemberships.userId })
-    .from(teamMemberships)
-    .where(
-      and(
-        eq(teamMemberships.teamId, invitationTeamId),
-        eq(teamMemberships.userId, user.id)
-      )
-    )
-    .limit(1);
+  const selfClub = await isClubMember(user.id, clubId);
+  const selfTeam = (await getTeamMembershipRole(invitationTeamId, user.id)) !== null;
   if (selfClub || selfTeam) {
     throw new Error(
       "Du bist Mitglied dieser Mannschaft bzw. dieses Vereins und kannst sie daher nicht selbst sponsern."
     );
   }
 
-  const gate = await getSubscriptionGate(teamRow.clubId);
+  const gate = await getSubscriptionGate(clubId);
   if (gate.isReadOnly) {
     throw new Error(
       "Diese Mannschaft ist aktuell pausiert. Sponsoring ist wieder möglich, sobald das Abo reaktiviert wurde."
@@ -203,37 +173,28 @@ export async function createPledge(input: PledgeInput) {
     return new Date(`${year}-06-30T23:59:59Z`);
   })();
 
-  const result = await db.transaction(async (tx) => {
-    const [pledge] = await tx
-      .insert(pledges)
-      .values({
-        sponsorId: sponsorId,
-        teamId: invitationTeamId,
-        status: "active",
-        startsAt: now,
-        endsAt: parsed.endsAtSaisonEnd
-          ? seasonEnd
-          : new Date(seasonEnd.getTime() + 365 * 24 * 60 * 60 * 1000),
-        monthlyCapCents: parsed.monthlyCapEur
-          ? Math.round(parsed.monthlyCapEur * 100)
-          : null
-      })
-      .returning();
-
-    await tx.insert(pledgeRules).values(
-      parsed.rules.map((r) => ({
-        pledgeId: pledge.id,
-        triggerType: r.triggerType,
-        triggerParamsJson: normalizeTriggerParams(r.params),
-        amountCents: Math.round(r.amountEur * 100),
-        capCents: r.capEur ? Math.round(r.capEur * 100) : null,
-        capPeriod: r.capEur ? (r.capPeriod ?? null) : null,
-        perMatchCapCents: null,
-        requiresApproval: MANUAL_TRIGGERS.has(r.triggerType)
-      }))
-    );
-
-    return { pledgeId: pledge.id };
+  const result = await createPledgeWithRules({
+    pledge: {
+      sponsorId: sponsorId,
+      teamId: invitationTeamId,
+      status: "active",
+      startsAt: now,
+      endsAt: parsed.endsAtSaisonEnd
+        ? seasonEnd
+        : new Date(seasonEnd.getTime() + 365 * 24 * 60 * 60 * 1000),
+      monthlyCapCents: parsed.monthlyCapEur
+        ? Math.round(parsed.monthlyCapEur * 100)
+        : null
+    },
+    rules: parsed.rules.map((r) => ({
+      triggerType: r.triggerType,
+      triggerParamsJson: normalizeTriggerParams(r.params),
+      amountCents: Math.round(r.amountEur * 100),
+      capCents: r.capEur ? Math.round(r.capEur * 100) : null,
+      capPeriod: r.capEur ? (r.capPeriod ?? null) : null,
+      perMatchCapCents: null,
+      requiresApproval: MANUAL_TRIGGERS.has(r.triggerType)
+    }))
   });
 
   await markInvitationUsed(parsed.invitationToken, user.id);

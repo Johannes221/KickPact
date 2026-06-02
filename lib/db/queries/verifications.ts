@@ -536,3 +536,73 @@ export async function getSponsorMailInfoForInvoices(
   }
   return [...byEmail.values()];
 }
+
+/**
+ * Widerruft alle (nicht bereits widerrufenen) Verifikationen eines Clubs und
+ * setzt clubs.verifiedAt zurück — in EINER Transaktion (Operator-Aktion).
+ */
+export async function revokeClubVerification(clubId: string): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx
+      .update(clubVerifications)
+      .set({ status: "revoked" })
+      .where(
+        and(
+          eq(clubVerifications.clubId, clubId),
+          ne(clubVerifications.status, "revoked")
+        )
+      );
+    await tx.update(clubs).set({ verifiedAt: null }).where(eq(clubs.id, clubId));
+  });
+}
+
+/**
+ * Review-Infos einer Club-Verifikation (club_verifications → clubs + users):
+ * alles für Mail + Dashboard-Link. Null wenn nicht gefunden.
+ */
+export async function getVerificationReviewInfo(verificationId: string): Promise<{
+  clubId: string;
+  clubSlug: string;
+  clubName: string;
+  submitterEmail: string;
+} | null> {
+  const [row] = await db
+    .select({
+      clubId: clubs.id,
+      clubSlug: clubs.slug,
+      clubName: clubs.name,
+      submitterEmail: users.email
+    })
+    .from(clubVerifications)
+    .innerJoin(clubs, eq(clubVerifications.clubId, clubs.id))
+    .innerJoin(users, eq(clubVerifications.submittedByUserId, users.id))
+    .where(eq(clubVerifications.id, verificationId))
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * Review-Infos einer Team-Verifikation (team_verifications → teams → clubs +
+ * users). Null wenn nicht gefunden.
+ */
+export async function getTeamVerificationReviewInfo(verificationId: string): Promise<{
+  teamId: string;
+  teamName: string;
+  clubSlug: string;
+  submitterEmail: string;
+} | null> {
+  const [row] = await db
+    .select({
+      teamId: teams.id,
+      teamName: teams.name,
+      clubSlug: clubs.slug,
+      submitterEmail: users.email
+    })
+    .from(teamVerifications)
+    .innerJoin(teams, eq(teamVerifications.teamId, teams.id))
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .innerJoin(users, eq(teamVerifications.submittedByUserId, users.id))
+    .where(eq(teamVerifications.id, verificationId))
+    .limit(1);
+  return row ?? null;
+}

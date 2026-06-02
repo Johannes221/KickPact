@@ -59,6 +59,55 @@ export async function createInvitation(args: {
 }
 
 /**
+ * Erneuert eine ausstehende Sponsor-Einladung (Tenant-gescoped via team.clubId):
+ * revokiert das alte Token und legt eine frische Einladung mit 7-Tage-TTL an.
+ * Gibt `false` zurück, wenn die Einladung nicht existiert oder nicht zum Club
+ * gehört.
+ */
+export async function resendSponsorInvitation(args: {
+  invitationId: string;
+  clubId: string;
+}): Promise<boolean> {
+  const [existing] = await db
+    .select({
+      id: sponsorInvitations.id,
+      teamId: sponsorInvitations.teamId,
+      createdByUserId: sponsorInvitations.createdByUserId,
+      recipientName: sponsorInvitations.recipientName,
+      teamClubId: teams.clubId
+    })
+    .from(sponsorInvitations)
+    .innerJoin(teams, eq(sponsorInvitations.teamId, teams.id))
+    .where(
+      and(
+        eq(sponsorInvitations.id, args.invitationId),
+        eq(sponsorInvitations.kind, "sponsor"),
+        eq(sponsorInvitations.status, "pending")
+      )
+    )
+    .limit(1);
+
+  if (!existing || existing.teamClubId !== args.clubId) return false;
+
+  await db
+    .update(sponsorInvitations)
+    .set({ status: "revoked" })
+    .where(eq(sponsorInvitations.id, existing.id));
+
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  await db.insert(sponsorInvitations).values({
+    kind: "sponsor",
+    teamId: existing.teamId,
+    createdByUserId: existing.createdByUserId,
+    recipientName: existing.recipientName,
+    token: generateToken(),
+    expiresAt
+  });
+
+  return true;
+}
+
+/**
  * Erzeugt einen `team-member`-Invite (Trainer oder Viewer). Genau eins von
  * teamId / clubId muss gesetzt sein:
  *  - `teamId` → Team-Membership wird angelegt

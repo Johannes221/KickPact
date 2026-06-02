@@ -1,17 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { assertPlatformAdmin } from "@/lib/auth/admin";
-import { db } from "@/lib/db/client";
-import {
-  clubs,
-  clubVerifications,
-  teams,
-  teamVerifications,
-  users
-} from "@/lib/db/schema";
 import {
   approveVerification,
   rejectVerification,
@@ -19,7 +10,9 @@ import {
   rejectTeamVerification,
   releaseWithheldInvoicesForClub,
   releaseWithheldInvoicesForTeam,
-  getSponsorMailInfoForInvoices
+  getSponsorMailInfoForInvoices,
+  getVerificationReviewInfo,
+  getTeamVerificationReviewInfo
 } from "@/lib/db/queries/verifications";
 import { recordOperatorAction } from "@/lib/db/queries/operator-audit";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
@@ -38,7 +31,7 @@ export async function approveAction(input: { verificationId: string }) {
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
   const { user: admin } = await assertPlatformAdmin();
 
-  const baseInfo = await loadVerificationInfo(parsed.data.verificationId);
+  const baseInfo = await getVerificationReviewInfo(parsed.data.verificationId);
   if (!baseInfo) {
     return { ok: false as const, error: "Verification nicht gefunden" };
   }
@@ -114,7 +107,7 @@ export async function rejectAction(input: { verificationId: string; reason: stri
   if (!parsed.success) return { ok: false as const, error: "Begründung mind. 3 Zeichen" };
   const { user: admin } = await assertPlatformAdmin();
 
-  const baseInfo = await loadVerificationInfo(parsed.data.verificationId);
+  const baseInfo = await getVerificationReviewInfo(parsed.data.verificationId);
   if (!baseInfo) {
     return { ok: false as const, error: "Verification nicht gefunden" };
   }
@@ -157,31 +150,6 @@ export async function rejectAction(input: { verificationId: string; reason: stri
   return { ok: true as const };
 }
 
-/**
- * Lookup helper: joins club_verifications → users → clubs to get all the
- * info needed for mail + dashboard link.
- */
-async function loadVerificationInfo(verificationId: string): Promise<{
-  clubId: string;
-  clubSlug: string;
-  clubName: string;
-  submitterEmail: string;
-} | null> {
-  const [row] = await db
-    .select({
-      clubId: clubs.id,
-      clubSlug: clubs.slug,
-      clubName: clubs.name,
-      submitterEmail: users.email
-    })
-    .from(clubVerifications)
-    .innerJoin(clubs, eq(clubVerifications.clubId, clubs.id))
-    .innerJoin(users, eq(clubVerifications.submittedByUserId, users.id))
-    .where(eq(clubVerifications.id, verificationId))
-    .limit(1);
-  return row ?? null;
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Team-Verifications (Spec 2026-05-26 §1.7)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -191,7 +159,7 @@ export async function approveTeamAction(input: { verificationId: string }) {
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
   const { user: admin } = await assertPlatformAdmin();
 
-  const baseInfo = await loadTeamVerificationInfo(parsed.data.verificationId);
+  const baseInfo = await getTeamVerificationReviewInfo(parsed.data.verificationId);
   if (!baseInfo) {
     return { ok: false as const, error: "Verification nicht gefunden" };
   }
@@ -268,7 +236,7 @@ export async function rejectTeamAction(input: {
   if (!parsed.success) return { ok: false as const, error: "Begründung mind. 3 Zeichen" };
   const { user: admin } = await assertPlatformAdmin();
 
-  const baseInfo = await loadTeamVerificationInfo(parsed.data.verificationId);
+  const baseInfo = await getTeamVerificationReviewInfo(parsed.data.verificationId);
   if (!baseInfo) {
     return { ok: false as const, error: "Verification nicht gefunden" };
   }
@@ -309,25 +277,4 @@ export async function rejectTeamAction(input: {
   return { ok: true as const };
 }
 
-async function loadTeamVerificationInfo(verificationId: string): Promise<{
-  teamId: string;
-  teamName: string;
-  clubSlug: string;
-  submitterEmail: string;
-} | null> {
-  const [row] = await db
-    .select({
-      teamId: teams.id,
-      teamName: teams.name,
-      clubSlug: clubs.slug,
-      submitterEmail: users.email
-    })
-    .from(teamVerifications)
-    .innerJoin(teams, eq(teamVerifications.teamId, teams.id))
-    .innerJoin(clubs, eq(teams.clubId, clubs.id))
-    .innerJoin(users, eq(teamVerifications.submittedByUserId, users.id))
-    .where(eq(teamVerifications.id, verificationId))
-    .limit(1);
-  return row ?? null;
-}
 

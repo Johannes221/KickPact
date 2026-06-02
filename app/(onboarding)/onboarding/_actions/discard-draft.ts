@@ -1,9 +1,7 @@
 "use server";
 
-import { and, eq, ne } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { clubs, clubMemberships } from "@/lib/db/schema";
 import { requireUserOrThrow } from "@/lib/auth/session";
+import { discardDraftClubIfOwner } from "@/lib/db/queries/onboarding-draft";
 
 /**
  * Verwirft einen Onboarding-Draft-Club des aktuellen Users — z.B. wenn er im
@@ -23,25 +21,6 @@ import { requireUserOrThrow } from "@/lib/auth/session";
  */
 export async function discardDraftClub(clubId: string): Promise<{ ok: true }> {
   const user = await requireUserOrThrow();
-
-  // Owner-Check: admin-Membership des aktuellen Users auf diesen Club.
-  const [membership] = await db
-    .select({ role: clubMemberships.role })
-    .from(clubMemberships)
-    .where(
-      and(eq(clubMemberships.userId, user.id), eq(clubMemberships.clubId, clubId))
-    )
-    .limit(1);
-
-  if (!membership || membership.role !== "admin") {
-    // Nicht der Owner → still nichts tun (kein Leak, ob der Club existiert).
-    return { ok: true };
-  }
-
-  // Nur Drafts löschen, niemals einen completed-Verein.
-  await db
-    .delete(clubs)
-    .where(and(eq(clubs.id, clubId), ne(clubs.onboardingStatus, "completed")));
-
+  await discardDraftClubIfOwner({ userId: user.id, clubId });
   return { ok: true };
 }

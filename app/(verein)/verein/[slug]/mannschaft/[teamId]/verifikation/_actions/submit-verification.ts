@@ -3,11 +3,9 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { createId } from "@paralleldrive/cuid2";
-import { eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
-import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
 import { createTeamVerificationSubmission } from "@/lib/db/queries/verifications";
+import { getTeamBasicById } from "@/lib/db/queries/team-lifecycle";
 import { storeDocument, buildTeamVerificationKey } from "@/lib/storage/documents";
 import { assertTeamAccess } from "@/lib/auth/scope";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
@@ -78,11 +76,7 @@ export async function submitTeamVerificationAction(
   // auch einreichen können.
   await assertTeamAccess(parsed.data.teamId, "admin");
 
-  const [team] = await db
-    .select({ id: teams.id, name: teams.name, clubId: teams.clubId })
-    .from(teams)
-    .where(eq(teams.id, parsed.data.teamId))
-    .limit(1);
+  const team = await getTeamBasicById(parsed.data.teamId);
   if (!team) return { ok: false, error: "Mannschaft nicht gefunden." };
 
   const verificationId = createId();

@@ -107,6 +107,16 @@ export async function getTeamNameById(teamId: string): Promise<string | null> {
   return team?.name ?? null;
 }
 
+/** Basis-Felder (id/name/clubId) einer Mannschaft per ID, ungescoped. */
+export async function getTeamBasicById(teamId: string) {
+  const [team] = await db
+    .select({ id: teams.id, name: teams.name, clubId: teams.clubId })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  return team;
+}
+
 /** Felder für den „Mein Profil"-Editor (Cover/Logo/Public-Profil), club-scoped. */
 export async function getTeamProfileForEditor(teamId: string, clubId: string) {
   const [team] = await db

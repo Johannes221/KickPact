@@ -4,9 +4,7 @@ import { z } from "zod";
 import { searchVereine, getMannschaften } from "@/lib/crawler/fussballde";
 import { getServerSession } from "@/lib/auth/session";
 import { checkTeamCollision } from "@/lib/db/queries/onboarding-collision";
-import { db } from "@/lib/db/client";
-import { clubMemberships } from "@/lib/db/schema";
-import { and, eq } from "drizzle-orm";
+import { isClubMember } from "@/lib/db/queries/membership-requests";
 
 const searchSchema = z.object({
   query: z.string().min(2).max(80)
@@ -73,7 +71,7 @@ export async function getMannschaftenAction(input: {
         const collision = await checkTeamCollision(m.teamId, m.saison);
         if (collision.kind === "actively-managed") {
           const ownedByMe = currentUserId
-            ? await isClubMemberOf(collision.clubId, currentUserId)
+            ? await isClubMember(currentUserId, collision.clubId)
             : false;
           return {
             ...m,
@@ -103,13 +101,4 @@ export async function getMannschaftenAction(input: {
       error: e instanceof Error ? e.message : "Mannschaften laden fehlgeschlagen"
     };
   }
-}
-
-async function isClubMemberOf(clubId: string, userId: string): Promise<boolean> {
-  const [m] = await db
-    .select({ userId: clubMemberships.userId })
-    .from(clubMemberships)
-    .where(and(eq(clubMemberships.clubId, clubId), eq(clubMemberships.userId, userId)))
-    .limit(1);
-  return Boolean(m);
 }

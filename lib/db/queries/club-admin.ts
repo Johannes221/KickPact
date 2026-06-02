@@ -121,6 +121,55 @@ export async function listClubsForUser(
     .where(eq(clubMemberships.userId, userId));
 }
 
+/**
+ * Club + (linke) Subscription per Slug — für die Stripe-Admin-Ops (Trial
+ * verlängern / Refund). Liefert null, wenn der Verein nicht existiert.
+ */
+export async function getClubWithSubscriptionBySlug(slug: string) {
+  const [row] = await db
+    .select({
+      clubId: clubs.id,
+      clubName: clubs.name,
+      clubSlug: clubs.slug,
+      stripeSubscriptionId: subscriptions.stripeSubscriptionId
+    })
+    .from(clubs)
+    .leftJoin(subscriptions, eq(subscriptions.clubId, clubs.id))
+    .where(eq(clubs.slug, slug))
+    .limit(1);
+  return row ?? null;
+}
+
+/** Spiegelt eine via Stripe verlängerte Trial lokal (Webhook bestätigt später). */
+export async function setSubscriptionTrialEnd(clubId: string, trialEnd: Date): Promise<void> {
+  await db
+    .update(subscriptions)
+    .set({ trialEndsAt: trialEnd, status: "trialing", updatedAt: new Date() })
+    .where(eq(subscriptions.clubId, clubId));
+}
+
+/** Setzt den Abo-Status eines Clubs (Operator-Aktionen: pausieren / sperren). */
+export async function setSubscriptionStatus(
+  clubId: string,
+  status: NonNullable<typeof subscriptions.$inferSelect["status"]>
+): Promise<void> {
+  await db
+    .update(subscriptions)
+    .set({ status, updatedAt: new Date() })
+    .where(eq(subscriptions.clubId, clubId));
+}
+
+/** Team-Eckdaten inkl. Club-Slug (für die Admin-Team-Aktionen), oder null. */
+export async function getTeamWithClubSlug(teamId: string) {
+  const [row] = await db
+    .select({ id: teams.id, name: teams.name, clubId: teams.clubId, clubSlug: clubs.slug })
+    .from(teams)
+    .innerJoin(clubs, eq(clubs.id, teams.clubId))
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  return row ?? null;
+}
+
 /** Vollständige Club-Row per Slug (oder undefined). */
 export async function getClubBySlug(slug: string) {
   const [club] = await db.select().from(clubs).where(eq(clubs.slug, slug)).limit(1);

@@ -246,17 +246,6 @@ export async function listDiscoveryFacets(): Promise<{ leagues: string[]; orte: 
 }
 
 /**
- * Alle Anfragen für eine bestimmte Mannschaft (Admin-Sicht).
- */
-export async function listInquiriesForTeam(teamId: string) {
-  return db
-    .select()
-    .from(sponsorInquiries)
-    .where(eq(sponsorInquiries.teamId, teamId))
-    .orderBy(desc(sponsorInquiries.createdAt));
-}
-
-/**
  * Alle Anfragen eines Sponsors über alle Mannschaften (Sponsor-Sicht).
  */
 export async function listInquiriesForSponsor(sponsorUserId: string) {

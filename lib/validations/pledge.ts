@@ -1,5 +1,12 @@
 import { z } from "zod";
+import type { TriggerType as CanonicalTriggerType } from "@/lib/triggers/labels";
 
+/**
+ * Die im Pact-Wizard BEWETTBAREN Trigger — eine bewusste Teilmenge des
+ * kanonischen Trigger-Enums (lib/triggers/labels.ts ↔ DB-Enum
+ * lib/db/schema/pledges.ts). Nicht bewettbar (nur als Anzeige/Charge möglich):
+ * loss, draw, yellow_card, red_card, assist, man_of_match, custom.
+ */
 export const TRIGGER_TYPES = [
   // pro Spiel
   "goal_total",
@@ -21,6 +28,14 @@ export const TRIGGER_TYPES = [
 ] as const;
 
 export type TriggerType = (typeof TRIGGER_TYPES)[number];
+
+/**
+ * Compile-Time-Guard gegen Drift: jeder bewettbare Trigger MUSS ein gültiger
+ * kanonischer Trigger-Typ sein. Tippfehler oder ein Trigger, der im DB-Enum
+ * fehlt, bricht hier den Build. (Type-only — keine Runtime-/Bundle-Kosten.)
+ */
+const _triggerSubsetCheck: readonly CanonicalTriggerType[] = TRIGGER_TYPES;
+void _triggerSubsetCheck;
 
 /**
  * Saison-Trigger feuern 1× am Saison-Ende (gebunden an EIN Ergebnis) — daher

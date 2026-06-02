@@ -23,6 +23,16 @@ export interface AccountOverview {
   linkedAccounts: Array<{ providerId: string }>;
 }
 
+/** E-Mail-Adresse eines Users per ID (für Benachrichtigungen), oder null. */
+export async function getUserEmailById(userId: string): Promise<string | null> {
+  const [row] = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return row?.email ?? null;
+}
+
 export async function getAccountOverview(userId: string): Promise<AccountOverview> {
   const [userRow] = await db
     .select({
