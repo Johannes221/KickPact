@@ -609,3 +609,69 @@ export async function getClubTeamStats(
   ]);
   return { activePledgeCounts, recentChargeCents, recentMatchCounts };
 }
+
+/** Anzahl aktiver Pledges über alle Mannschaften eines Clubs (Trial-Banner). */
+export async function countActivePledgesForClub(clubId: string): Promise<number> {
+  const [row] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(pledges)
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .where(and(eq(teams.clubId, clubId), eq(pledges.status, "active")));
+  return Number(row?.n ?? 0);
+}
+
+export interface VereinDashboardKpis {
+  teamRows: Array<{ id: string; name: string }>;
+  activePledgeCount: number;
+  weeklyChargeCents: number;
+  monthlyChargeCents: number;
+  recentMatchCount: number;
+}
+
+/**
+ * KPI-Kacheln des Vereins-Dashboards (/verein/[slug]): aktive Mannschaften,
+ * aktive Pledges, Charge-Summen (Woche/Monat), Spiele der letzten 7 Tage.
+ */
+export async function getVereinDashboardKpis(
+  clubId: string,
+  now: Date
+): Promise<VereinDashboardKpis> {
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const [teamRows, activePledgeCount, weeklyChargeCents, monthlyChargeCents, recentMatchCount] =
+    await Promise.all([
+      db
+        .select({ id: teams.id, name: teams.name })
+        .from(teams)
+        .where(and(eq(teams.clubId, clubId), eq(teams.isActive, true))),
+      db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(pledges)
+        .innerJoin(teams, eq(pledges.teamId, teams.id))
+        .where(and(eq(teams.clubId, clubId), eq(pledges.status, "active")))
+        .then((r) => Number(r[0]?.n ?? 0)),
+      db
+        .select({ s: sql<number>`coalesce(sum(${charges.amountCents}), 0)::int` })
+        .from(charges)
+        .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+        .innerJoin(teams, eq(pledges.teamId, teams.id))
+        .where(and(eq(teams.clubId, clubId), gte(charges.createdAt, weekStart)))
+        .then((r) => Number(r[0]?.s ?? 0)),
+      db
+        .select({ s: sql<number>`coalesce(sum(${charges.amountCents}), 0)::int` })
+        .from(charges)
+        .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+        .innerJoin(teams, eq(pledges.teamId, teams.id))
+        .where(and(eq(teams.clubId, clubId), gte(charges.createdAt, monthStart)))
+        .then((r) => Number(r[0]?.s ?? 0)),
+      db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(matches)
+        .innerJoin(teams, eq(matches.teamId, teams.id))
+        .where(and(eq(teams.clubId, clubId), gte(matches.datum, weekStart)))
+        .then((r) => Number(r[0]?.n ?? 0))
+    ]);
+
+  return { teamRows, activePledgeCount, weeklyChargeCents, monthlyChargeCents, recentMatchCount };
+}

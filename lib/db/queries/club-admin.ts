@@ -113,9 +113,9 @@ export async function updateTeam(input: {
  */
 export async function listClubsForUser(
   userId: string
-): Promise<Array<{ slug: string; name: string }>> {
+): Promise<Array<{ id: string; slug: string; name: string }>> {
   return db
-    .select({ slug: clubs.slug, name: clubs.name })
+    .select({ id: clubs.id, slug: clubs.slug, name: clubs.name })
     .from(clubMemberships)
     .innerJoin(clubs, eq(clubMemberships.clubId, clubs.id))
     .where(eq(clubMemberships.userId, userId));

@@ -1,20 +1,18 @@
 import Link from "next/link";
 import { Trophy, Medal, ArrowUp, ArrowDown, StickyNote } from "lucide-react";
 import { TriggerIcon } from "@/components/shared/trigger-icon";
-import { eq, and, sql, inArray } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { teams, seasonResults } from "@/lib/db/schema";
-import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
-import { charges as chargesTable } from "@/lib/db/schema/charges";
-import { sponsors } from "@/lib/db/schema/sponsors";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { listMatchesForTeam, getMatchChargesSummaryForTeam } from "@/lib/db/queries/matches";
 import { listClubSeasonPledges } from "@/lib/db/queries/club-dashboard";
 import { computeTeamSeasonStats } from "@/lib/db/queries/team-dashboard";
+import {
+  getFullTeamInClub,
+  getSeasonResultForTeam
+} from "@/lib/db/queries/team-lifecycle";
+import { getClubById } from "@/lib/db/queries/club-admin";
+import { countPledgesForTeam } from "@/lib/db/queries/pledges";
+import { getTeamLicensePlanDirect } from "@/lib/db/queries/subscriptions";
 import { TRIGGER_META } from "@/lib/triggers/labels";
-import { isSeasonTrigger } from "@/lib/db/schema/pledges";
-import { clubs } from "@/lib/db/schema";
-import { teamLicenses } from "@/lib/db/schema/billing";
 import { inngest } from "@/lib/inngest/client";
 import { isTeamCrawling } from "@/lib/crawler/crawl-status";
 import { detectTeamSide } from "@/lib/crawler/team-side";
@@ -37,11 +35,7 @@ export default async function TeamDetailPage({
   const { slug, teamId } = await params;
   const { club } = await assertTeamPageAccess(slug, teamId, "viewer");
 
-  const [team] = await db
-    .select()
-    .from(teams)
-    .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
-    .limit(1);
+  const team = await getFullTeamInClub(teamId, club.id);
 
   if (!team) {
     return (
@@ -54,12 +48,7 @@ export default async function TeamDetailPage({
   const [matchRows, chargesSummary, seasonResult, seasonPledges] = await Promise.all([
     listMatchesForTeam(team.id, 30),
     getMatchChargesSummaryForTeam(team.id),
-    db
-      .select()
-      .from(seasonResults)
-      .where(and(eq(seasonResults.teamId, team.id), eq(seasonResults.saison, team.saison)))
-      .limit(1)
-      .then((r) => r[0] ?? null),
+    getSeasonResultForTeam(team.id, team.saison).then((r) => r ?? null),
     listClubSeasonPledges(club.id).then((rows) => rows.filter((r) => r.teamId === team.id))
   ]);
 
@@ -70,24 +59,13 @@ export default async function TeamDetailPage({
   const totalCharges = [...chargesSummary.values()].reduce((s, v) => s + v, 0);
 
   // Setup-Checkliste: Daten für "Anstehende Aufgaben".
-  const [[clubBilling], [pledgeCountRow], [licenseRow]] = await Promise.all([
-    db
-      .select({ iban: clubs.iban, verifiedAt: clubs.verifiedAt })
-      .from(clubs)
-      .where(eq(clubs.id, club.id))
-      .limit(1),
-    db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(pledges)
-      .where(eq(pledges.teamId, team.id)),
-    db
-      .select({ plan: teamLicenses.plan })
-      .from(teamLicenses)
-      .where(eq(teamLicenses.teamId, team.id))
-      .limit(1)
+  const [clubBilling, pledgeCount, licenseRow] = await Promise.all([
+    getClubById(club.id),
+    countPledgesForTeam(team.id),
+    getTeamLicensePlanDirect(team.id)
   ]);
   const hasIban = !!clubBilling?.iban;
-  const hasSponsor = Number(pledgeCountRow?.n ?? 0) > 0;
+  const hasSponsor = pledgeCount > 0;
   const teamBase = `/verein/${slug}/mannschaft/${team.id}`;
 
   // Verifikations-Scope: Einzel-Mannschaft (basic/pro) verifiziert die

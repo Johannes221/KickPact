@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { eq, and, sql } from "drizzle-orm";
 import { assertVereinSectionAccess } from "@/lib/auth/scope";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import {
@@ -7,9 +6,10 @@ import {
   getActiveVerificationForTeam
 } from "@/lib/db/queries/verifications";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
-import { db } from "@/lib/db/client";
-import { sponsors, clubMemberships, clubs, teams } from "@/lib/db/schema";
-import { pledges } from "@/lib/db/schema/pledges";
+import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
+import { listClubsForUser, getClubById } from "@/lib/db/queries/club-admin";
+import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
+import { countActivePledgesForClub } from "@/lib/db/queries/club-reporting";
 import { VereinHeaderShell } from "./_components/verein-header-shell";
 import { VereinFAB } from "./_components/verein-fab";
 import { StatusBar, type StatusItem } from "@/components/shared/status-bar";
@@ -30,18 +30,10 @@ export default async function VereinLayout({
   const gate = await getSubscriptionGate(club.id);
 
   // Hat dieser User auch ein Sponsor-Profil?
-  const [sponsorRow] = await db
-    .select({ id: sponsors.id })
-    .from(sponsors)
-    .where(eq(sponsors.userId, user.id))
-    .limit(1);
+  const sponsorRow = await findSponsorForUser(user.id);
 
   // Alle Vereine des Users (für Kontext-Switcher)
-  const myClubs = await db
-    .select({ id: clubs.id, name: clubs.name, slug: clubs.slug })
-    .from(clubMemberships)
-    .innerJoin(clubs, eq(clubMemberships.clubId, clubs.id))
-    .where(eq(clubMemberships.userId, user.id));
+  const myClubs = await listClubsForUser(user.id);
 
   // Effective-Plan dieses Clubs auflösen — steuert Header-Sichtbarkeit UND ob
   // die Verifizierung Mannschafts- oder Vereins-scoped läuft.
@@ -80,20 +72,12 @@ export default async function VereinLayout({
   let verification: { status: string; rejectionReason: string | null } | null = null;
   let verifyHref = `/verein/${slug}/verifikation`;
   if (verifyScope === "team" && firstTeamId) {
-    const [teamRow] = await db
-      .select({ verifiedAt: teams.verifiedAt })
-      .from(teams)
-      .where(eq(teams.id, firstTeamId))
-      .limit(1);
+    const teamRow = await getTeamInClub(firstTeamId, club.id);
     verifiedAt = teamRow?.verifiedAt ?? null;
     verification = verifiedAt ? null : await getActiveVerificationForTeam(firstTeamId);
     verifyHref = `/verein/${slug}/mannschaft/${firstTeamId}/verifikation`;
   } else {
-    const [verifiedRow] = await db
-      .select({ verifiedAt: clubs.verifiedAt })
-      .from(clubs)
-      .where(eq(clubs.id, club.id))
-      .limit(1);
+    const verifiedRow = await getClubById(club.id);
     verifiedAt = verifiedRow?.verifiedAt ?? null;
     verification = verifiedAt ? null : await getActiveVerificationForClub(club.id);
   }
@@ -102,12 +86,7 @@ export default async function VereinLayout({
   // Mannschaften dieses Vereins. Nur relevant/abgefragt während des Trials.
   let activePledgeCount = 0;
   if (gate.status === "trialing") {
-    const [row] = await db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(pledges)
-      .innerJoin(teams, eq(pledges.teamId, teams.id))
-      .where(and(eq(teams.clubId, club.id), eq(pledges.status, "active")));
-    activePledgeCount = Number(row?.n ?? 0);
+    activePledgeCount = await countActivePledgesForClub(club.id);
   }
 
   // Alle Status-Hinweise (Verifizierung / Trial / Zahlung) in EIN kompaktes,

@@ -188,6 +188,15 @@ export async function listRecentChargesForPledge(pledgeId: string, limit = 10) {
     .limit(limit);
 }
 
+/** Gesamtzahl Pledges (jeden Status) einer Mannschaft — Setup-Checkliste. */
+export async function countPledgesForTeam(teamId: string): Promise<number> {
+  const rows = await db
+    .select({ value: count() })
+    .from(pledges)
+    .where(eq(pledges.teamId, teamId));
+  return rows[0]?.value ?? 0;
+}
+
 /** clubId einer Mannschaft (für das Read-Only-Gate im Pledge-Wizard). */
 export async function getClubIdForTeam(teamId: string): Promise<string | null> {
   const [row] = await db

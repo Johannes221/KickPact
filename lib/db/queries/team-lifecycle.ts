@@ -87,6 +87,16 @@ export async function getSeasonResultForTeam(teamId: string, saison: string) {
   return row;
 }
 
+/** Vollständige Team-Row, club-scoped (Team-Detail-Dashboard). undefined wenn fremd. */
+export async function getFullTeamInClub(teamId: string, clubId: string) {
+  const [team] = await db
+    .select()
+    .from(teams)
+    .where(and(eq(teams.id, teamId), eq(teams.clubId, clubId)))
+    .limit(1);
+  return team;
+}
+
 /** Nur der Anzeigename einer Mannschaft (Team-Layout-Header), ungescoped. */
 export async function getTeamNameById(teamId: string): Promise<string | null> {
   const [team] = await db
