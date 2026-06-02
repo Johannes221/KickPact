@@ -211,6 +211,41 @@ export async function getPublicTeamProfileBySlug(
 }
 
 /**
+ * Liefert distinkte, sortierte Ligen und Orte nur aus verifizierten,
+ * aktiven und discoverable Mannschaften. Dient als Datengrundlage für
+ * Filter-Dropdowns auf der Discovery-Seite.
+ */
+export async function listDiscoveryFacets(): Promise<{ leagues: string[]; orte: string[] }> {
+  const base = and(
+    eq(teams.discoverable, true),
+    eq(teams.isActive, true),
+    isNotNull(teams.verifiedAt)
+  );
+
+  const leagueRows = await db
+    .selectDistinct({ v: teams.league })
+    .from(teams)
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(and(base, isNotNull(teams.league)));
+
+  const orteRows = await db
+    .selectDistinct({ v: clubs.ort })
+    .from(teams)
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(and(base, isNotNull(clubs.ort)));
+
+  const clean = (arr: (string | null)[]) =>
+    Array.from(new Set(arr.filter((x): x is string => !!x && x.trim().length > 0))).sort((a, b) =>
+      a.localeCompare(b, "de")
+    );
+
+  return {
+    leagues: clean(leagueRows.map((r) => r.v)),
+    orte: clean(orteRows.map((r) => r.v))
+  };
+}
+
+/**
  * Alle Anfragen für eine bestimmte Mannschaft (Admin-Sicht).
  */
 export async function listInquiriesForTeam(teamId: string) {
