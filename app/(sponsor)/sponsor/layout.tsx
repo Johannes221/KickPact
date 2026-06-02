@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
 import { SponsorSubNav } from "./_components/sponsor-sub-nav";
 import { countPendingForSponsor } from "@/lib/db/queries/approvals";
+import { AppNavBarSpacer } from "@/components/shared/app-nav-bar";
 
 export default async function SponsorLayout({
   children
@@ -15,9 +16,14 @@ export default async function SponsorLayout({
   // läuft über den globalen Rollen-Switcher im Header — kein doppelter
   // Inline-Switcher mehr.
   return (
-    <main className="mx-auto max-w-5xl px-5 md:px-6 pt-8 md:pt-12 pb-28 md:pb-12">
+    <main className="native-shell mx-auto max-w-5xl px-5 md:px-6 pt-0 md:pt-12 pb-28 md:pb-12">
+      {/* Platz für die fixe mobile AppNavBar. */}
+      <AppNavBarSpacer />
+
       <div className="mb-6 md:mb-10">
-        <div className="mb-4">
+        {/* Großes Dashboard-Heading nur Desktop — auf Mobile trägt die AppNavBar
+            den Titel (kein doppeltes, Display-schweres Heading). */}
+        <div className="mb-4 hidden md:block">
           <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
             Mein Bereich
           </p>
@@ -31,7 +37,8 @@ export default async function SponsorLayout({
 
       {children}
 
-      <footer className="mt-12 md:mt-16 pt-6 border-t border-brand-neutral/40 text-xs text-brand-night-navy/50 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+      {/* Footer nur Desktop — Rechtliches liegt auf Mobile im Zahnrad-Sheet. */}
+      <footer className="mt-12 md:mt-16 pt-6 border-t border-brand-neutral/40 text-xs text-brand-night-navy/50 hidden md:flex md:flex-row md:items-center md:justify-between gap-2">
         <nav className="flex flex-wrap gap-3 md:gap-4">
           <Link href="/impressum" className="hover:text-accent">Impressum</Link>
           <Link href="/datenschutz" className="hover:text-accent">Datenschutz</Link>

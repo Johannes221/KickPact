@@ -1,55 +1,69 @@
 "use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   House,
-  TrendingUp,
-  ChartColumnIncreasing,
+  Compass,
   Target,
   Inbox,
+  User,
+  TrendingUp,
+  ChartColumnIncreasing,
   FileText,
-  Compass,
-  User
+  type LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BottomTabBar } from "@/components/shared/bottom-tab-bar";
+import { AppNavBar } from "@/components/shared/app-nav-bar";
+import { SettingsSheet, type SettingsNavItem } from "@/components/shared/settings-sheet";
 
-const TABS = [
+type Tab = { label: string; href: string; icon: LucideIcon };
+
+// Mobile-Primärset (5 Bottom-Tabs). Inbox vorne wegen Pending-Badge.
+const PRIMARY_TABS: readonly Tab[] = [
   { label: "Übersicht", href: "/sponsor", icon: House },
-  { label: "Bilanz", href: "/sponsor/bilanz", icon: TrendingUp },
-  { label: "Charges", href: "/sponsor/charges", icon: ChartColumnIncreasing },
+  { label: "Entdecken", href: "/sponsor/discover", icon: Compass },
   { label: "Wetten", href: "/sponsor/pledge", icon: Target },
   { label: "Inbox", href: "/sponsor/inbox", icon: Inbox },
-  { label: "Rechnungen", href: "/sponsor/rechnungen", icon: FileText },
-  { label: "Discover", href: "/sponsor/discover", icon: Compass },
   { label: "Profil", href: "/sponsor/profil", icon: User }
-];
+] as const;
 
-// Mobile-Reihenfolge: die 4 wichtigsten zuerst (werden zu Bottom-Tabs),
-// Rest landet hinter "Mehr". Inbox vorne, damit das Pending-Badge sichtbar ist.
-const MOBILE_ORDER = [
-  "/sponsor",
-  "/sponsor/pledge",
-  "/sponsor/inbox",
-  "/sponsor/rechnungen",
-  "/sponsor/bilanz",
-  "/sponsor/charges",
-  "/sponsor/discover",
-  "/sponsor/profil"
-];
+// Sekundär → Zahnrad-Sheet.
+const OVERFLOW_TABS: readonly Tab[] = [
+  { label: "Bilanz", href: "/sponsor/bilanz", icon: TrendingUp },
+  { label: "Charges", href: "/sponsor/charges", icon: ChartColumnIncreasing },
+  { label: "Rechnungen", href: "/sponsor/rechnungen", icon: FileText }
+] as const;
+
+const ALL_TABS: readonly Tab[] = [...PRIMARY_TABS, ...OVERFLOW_TABS];
 
 export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const matches = (href: string) =>
+    pathname === href || pathname.startsWith(href + "/");
+  const activeTab = ALL_TABS.reduce<Tab | null>((best, t) => {
+    if (!matches(t.href)) return best;
+    if (!best || t.href.length > best.href.length) return t;
+    return best;
+  }, null);
+
+  const overflowItems: SettingsNavItem[] = OVERFLOW_TABS.map((t) => ({
+    label: t.label,
+    href: t.href,
+    icon: t.icon
+  }));
+  const overflowActive = OVERFLOW_TABS.some((t) => matches(t.href));
 
   return (
     <>
-      {/* Desktop: horizontaler Tab-Streifen */}
+      {/* Desktop: horizontaler Tab-Streifen (alle Tabs) */}
       <nav className="hidden md:flex gap-0.5 overflow-x-auto rounded-xl bg-brand-night-navy/5 p-1 no-scrollbar">
-        {TABS.map(({ label, href }) => {
-          const isActive = href === "/sponsor"
-            ? pathname === "/sponsor" || pathname === "/sponsor/"
-            : pathname === href || pathname.startsWith(href + "/");
-
+        {ALL_TABS.map(({ label, href }) => {
+          const isActive = activeTab?.href === href;
           return (
             <Link
               key={href}
@@ -72,19 +86,30 @@ export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
         })}
       </nav>
 
-      {/* Mobile: Bottom-Tab-Bar */}
-      <BottomTabBar
-        contextLabel="Sponsor"
-        items={MOBILE_ORDER.map((href) => {
-          const tab = TABS.find((t) => t.href === href)!;
-          return {
-            label: tab.label,
-            icon: tab.icon,
-            href: tab.href,
-            badge: tab.href === "/sponsor/inbox" ? pendingCount : undefined
-          };
-        })}
-      />
+      {/* Mobile: native Nav-Bar + Bottom-Tab-Bar + Zahnrad-Sheet */}
+      <div className="md:hidden">
+        <AppNavBar
+          title={activeTab?.label ?? "Übersicht"}
+          onSettings={() => setSettingsOpen(true)}
+          settingsBadge={overflowActive}
+        />
+        <BottomTabBar
+          contextLabel="Sponsor"
+          items={PRIMARY_TABS.map(({ label, href, icon }) => ({
+            label,
+            icon,
+            href,
+            badge: href === "/sponsor/inbox" ? pendingCount : undefined
+          }))}
+        />
+        <SettingsSheet
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          contextLabel="Sponsor"
+          overflowItems={overflowItems}
+          activeHref={activeTab?.href}
+        />
+      </div>
     </>
   );
 }

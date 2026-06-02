@@ -13,6 +13,7 @@ import { countActivePledgesForClub } from "@/lib/db/queries/club-reporting";
 import { VereinHeaderShell } from "./_components/verein-header-shell";
 import { VereinFAB } from "./_components/verein-fab";
 import { StatusBar, type StatusItem } from "@/components/shared/status-bar";
+import { AppNavBarSpacer } from "@/components/shared/app-nav-bar";
 
 export default async function VereinLayout({
   params,
@@ -179,7 +180,11 @@ export default async function VereinLayout({
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 md:px-6 pt-4 md:pt-8 pb-28 md:pb-12">
+    <main className="native-shell mx-auto max-w-5xl px-4 md:px-6 pt-0 md:pt-8 pb-28 md:pb-12">
+      {/* Platz für die fixe mobile AppNavBar (oben). Genau EINMAL pro Scroll-
+          Container, damit verschachtelte Sub-Navs nicht doppelt spacern. */}
+      <AppNavBarSpacer />
+
       {/* Header-Bereich: Vereinsname + Sub-Nav.
           Auf /verein/<slug>/mannschaft/<teamId>... bei basic/pro-Lizenzen
           ausgeblendet — der TeamSubNav übernimmt dort die Navigation. */}
@@ -223,7 +228,9 @@ export default async function VereinLayout({
       {/* Mobile FAB — only visible on small screens */}
       <VereinFAB slug={slug} clubRole={clubRole} />
 
-      <footer className="mt-12 md:mt-16 pt-6 border-t border-brand-neutral/40 text-xs text-brand-night-navy/50 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+      {/* Footer nur Desktop — auf Mobile liegen Impressum/Datenschutz/AGB im
+          Zahnrad-Sheet (Rechtliches), damit die App-Ansicht kein Web-Chrome trägt. */}
+      <footer className="mt-12 md:mt-16 pt-6 border-t border-brand-neutral/40 text-xs text-brand-night-navy/50 hidden md:flex md:flex-row md:items-center md:justify-between gap-2">
         <nav className="flex flex-wrap gap-3 md:gap-4">
           <Link href="/impressum" className="hover:text-accent">Impressum</Link>
           <Link href="/datenschutz" className="hover:text-accent">Datenschutz</Link>
