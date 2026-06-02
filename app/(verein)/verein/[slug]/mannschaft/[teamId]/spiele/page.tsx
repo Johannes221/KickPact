@@ -9,6 +9,9 @@ import {
 import { detectTeamSide } from "@/lib/crawler/team-side";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
+import { getTeamCrawlState } from "@/lib/db/queries/crawler";
+import { isTeamCrawling } from "@/lib/crawler/crawl-status";
+import { SpieleRefresh } from "./_components/spiele-refresh";
 
 export const metadata = { title: "Spiele · KickPact" };
 
@@ -74,6 +77,12 @@ export default async function SpielePage({
     : [{ id: team.id, saison: team.saison }];
 
   const matches = await listMatchesForTeam(team.id, 300);
+
+  // Crawl-Status für „Aktualisieren"-Button + „lädt"-Anzeige.
+  const crawlState = await getTeamCrawlState(team.id);
+  const isCrawling = crawlState
+    ? isTeamCrawling(crawlState.crawlStartedAt, crawlState.crawlCompletedAt)
+    : false;
   const chargesByMatch = await getMatchChargesSummaryForTeam(team.id);
 
   const teamNames = [team.name, club.name];
@@ -125,6 +134,13 @@ export default async function SpielePage({
           Ort und Saison-Hälfte.
         </p>
       </div>
+
+      <SpieleRefresh
+        slug={slug}
+        teamId={team.id}
+        isCrawling={isCrawling}
+        matchCount={matches.length}
+      />
 
       {/* Saison-Umschalter (nur wenn mehrere Saisons vorhanden) */}
       {siblingSeasons.length > 1 && (
