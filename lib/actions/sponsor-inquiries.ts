@@ -9,11 +9,12 @@ import {
   teams,
   clubs,
   clubMemberships,
+  teamMemberships,
   users
 } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { inngest } from "@/lib/inngest/client";
-import { assertClubWriteAccess } from "@/lib/auth/scope";
+import { assertClubWriteAccess, resolveTeamAccess } from "@/lib/auth/scope";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { createInvitation } from "@/lib/db/queries/invitations";
@@ -82,17 +83,32 @@ export async function createSponsorInquiry(input: { teamId: string; message?: st
     message: parsed.message ?? null
   });
 
-  // Mail an alle Admins
-  const adminEmails = await db
-    .select({ email: users.email })
-    .from(clubMemberships)
-    .innerJoin(users, eq(clubMemberships.userId, users.id))
-    .where(
-      and(eq(clubMemberships.clubId, teamRow.club.id), eq(clubMemberships.role, "admin"))
-    );
+  // Mail an alle, die diese Mannschaft verwalten: Club-Admins (vereinsgeführt)
+  // UND direkte Team-Admins (team-only geführte Mannschaften — z.B. eine fremd
+  // verwaltete Mannschaft in einem anderen Container-Verein). Sonst landet die
+  // Anfrage bei einem Team-Admin, der kein Club-Admin ist, im Nichts.
+  const [clubAdminEmails, teamAdminEmails] = await Promise.all([
+    db
+      .select({ email: users.email })
+      .from(clubMemberships)
+      .innerJoin(users, eq(clubMemberships.userId, users.id))
+      .where(
+        and(eq(clubMemberships.clubId, teamRow.club.id), eq(clubMemberships.role, "admin"))
+      ),
+    db
+      .select({ email: users.email })
+      .from(teamMemberships)
+      .innerJoin(users, eq(teamMemberships.userId, users.id))
+      .where(
+        and(eq(teamMemberships.teamId, parsed.teamId), eq(teamMemberships.role, "admin"))
+      )
+  ]);
+  const adminEmails = [
+    ...new Set([...clubAdminEmails, ...teamAdminEmails].map((a) => a.email))
+  ].map((email) => ({ email }));
 
   if (adminEmails.length > 0) {
-    const dashboardUrl = `${process.env.BETTER_AUTH_URL ?? "https://kickpact.schartl.dev"}/verein/${teamRow.club.slug}/sponsoren`;
+    const dashboardUrl = `${process.env.BETTER_AUTH_URL ?? "https://kickpact.schartl.dev"}/verein/${teamRow.club.slug}/mannschaft/${parsed.teamId}/sponsoren`;
     try {
       await resend.emails.send({
         from: MAIL_FROM,
@@ -134,6 +150,7 @@ ${parsed.message ? `<blockquote style="border-left:3px solid #01C457;padding:8px
 
   revalidatePath("/sponsor/discover");
   revalidatePath(`/verein/${teamRow.club.slug}/sponsoren`);
+  revalidatePath(`/verein/${teamRow.club.slug}/mannschaft/${parsed.teamId}/sponsoren`);
 }
 
 const respondSchema = z.object({
@@ -169,10 +186,29 @@ export async function respondToInquiry(input: {
     .where(eq(sponsorInquiries.id, parsed.inquiryId))
     .limit(1);
   if (!row) throw new Error("Anfrage nicht gefunden");
-  await assertClubWriteAccess(row.club.slug, "admin");
+
+  // Team-aware Autorisierung: Club-Admin (vereinsgeführt) ODER direkter
+  // Team-Admin (team-only geführte Mannschaft) darf antworten. assertClub-
+  // WriteAccess hätte einen reinen Team-Admin (kein Club-Mitglied im Container-
+  // Verein der Mannschaft) fälschlich abgewiesen.
+  const access = await resolveTeamAccess(user.id, row.team.id, "admin");
+  if (!access.granted) {
+    throw new Error("Du bist nicht berechtigt, diese Anfrage zu beantworten.");
+  }
 
   if (row.inquiry.status !== "pending") {
     throw new Error("Diese Anfrage wurde bereits beantwortet");
+  }
+
+  // Annehmen erzeugt eine Einladung (= neues Sponsoring) → im Read-Only-Modus
+  // blockieren. Ablehnen ist immer erlaubt (räumt nur die Inbox auf).
+  if (parsed.accept) {
+    const gate = await getSubscriptionGate(row.club.id);
+    if (gate.isReadOnly) {
+      throw new Error(
+        "Diese Mannschaft ist im Read-Only-Modus. Bitte Abo reaktivieren."
+      );
+    }
   }
 
   await db
@@ -245,6 +281,7 @@ ${parsed.responseMessage ? `<blockquote style="border-left:3px solid #ccc;paddin
   }
 
   revalidatePath(`/verein/${row.club.slug}/sponsoren`);
+  revalidatePath(`/verein/${row.club.slug}/mannschaft/${row.team.id}/sponsoren`);
   revalidatePath("/sponsor/discover");
 }
 
