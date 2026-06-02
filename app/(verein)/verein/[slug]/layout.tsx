@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { eq, and, sql } from "drizzle-orm";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertVereinSectionAccess } from "@/lib/auth/scope";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import {
   getActiveVerificationForClub,
@@ -22,7 +22,11 @@ export default async function VereinLayout({
   children: React.ReactNode;
 }) {
   const { slug } = await params;
-  const { club, user, role: clubRole } = await assertClubAccess(slug, "viewer");
+  // Lässt auch reine Team-Mitglieder (ohne Club-Mitgliedschaft) durch — sonst
+  // Redirect-Loop für via Zugriffs-Anfrage genehmigte Fremd-Mannschaften.
+  const access = await assertVereinSectionAccess(slug);
+  const { club, user, role: clubRole } = access;
+  const isTeamOnly = access.isTeamOnly;
   const gate = await getSubscriptionGate(club.id);
 
   // Hat dieser User auch ein Sponsor-Profil?
@@ -47,7 +51,12 @@ export default async function VereinLayout({
     const ids = await getUserIdentities(user.id);
     const thisClub = ids.clubs.find((c) => c.clubId === club.id);
     effectivePlan = thisClub?.effectivePlan ?? null;
-    firstTeamId = thisClub?.firstTeamId ?? null;
+    // Team-only-Mitglieder sind nicht in ids.clubs → firstTeamId aus dem
+    // Guard (die Mannschaft, über die der Zugriff läuft).
+    firstTeamId =
+      thisClub?.firstTeamId ??
+      ("teamId" in access ? access.teamId : null) ??
+      null;
   } catch {
     // Layout darf nicht wegen Identity-Lookup kippen.
   }
@@ -225,7 +234,9 @@ export default async function VereinLayout({
       {/* Gebündelte Status-Hinweise (Verifizierung / Trial / Zahlung) —
           kompakt, kollabierbar, wegklickbar. Ersetzt die früheren
           großflächigen Einzel-Banner. */}
-      <StatusBar items={statusItems} />
+      {/* Club-scoped Status-Banner (Trial/Verifizierung/Zahlung) sind für reine
+          Team-Mitglieder nicht relevant + nicht actionable → ausblenden. */}
+      <StatusBar items={isTeamOnly ? [] : statusItems} />
 
       {children}
 

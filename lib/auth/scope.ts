@@ -38,6 +38,64 @@ export async function assertClubAccess(clubSlug: string, minRole: Role = "viewer
   return { user, club, role: membership.role };
 }
 
+/**
+ * Guard für das Vereins-LAYOUT (`/verein/[slug]/*`). Lässt — anders als
+ * `assertClubAccess` — auch reine TEAM-Mitglieder durch, die KEINE Club-
+ * Mitgliedschaft haben (z.B. via genehmigter Zugriffs-Anfrage auf eine einzelne
+ * fremde Mannschaft). Ohne das landeten solche User in einem Redirect-Loop:
+ * Layout → /dashboard → /select-role → Rolle klicken → Layout → …
+ *
+ * Die FEINE Zugriffskontrolle bleibt bei den Pages: Team-Seiten nutzen
+ * `assertTeamPageAccess` (team-aware), Club-Seiten ihren eigenen
+ * `assertClubAccess`/`assertVereinAdminOrRedirect`-Guard. Dieser Layout-Guard
+ * stellt nur sicher, dass der User ÜBERHAUPT etwas in diesem Verein darf.
+ *
+ * `role` ist die Club-Rolle bei Club-Mitgliedern, sonst `"viewer"` (Team-only).
+ */
+export async function assertVereinSectionAccess(clubSlug: string) {
+  const user = await requireUser();
+  const [club] = await db
+    .select({ id: clubs.id, slug: clubs.slug, name: clubs.name })
+    .from(clubs)
+    .where(eq(clubs.slug, clubSlug))
+    .limit(1);
+  if (!club) redirect("/dashboard");
+
+  // 1. Club-Mitgliedschaft? → volle Club-Rolle.
+  const [clubMem] = await db
+    .select({ role: clubMemberships.role })
+    .from(clubMemberships)
+    .where(
+      and(eq(clubMemberships.userId, user.id), eq(clubMemberships.clubId, club.id))
+    )
+    .limit(1);
+  if (clubMem) {
+    return { user, club, role: clubMem.role, isTeamOnly: false as const };
+  }
+
+  // 2. Sonst: Team-Mitgliedschaft in IRGENDEINER Mannschaft dieses Vereins?
+  const [teamMem] = await db
+    .select({ teamId: teamMemberships.teamId })
+    .from(teamMemberships)
+    .innerJoin(teams, eq(teamMemberships.teamId, teams.id))
+    .where(
+      and(eq(teamMemberships.userId, user.id), eq(teams.clubId, club.id))
+    )
+    .limit(1);
+  if (teamMem) {
+    return {
+      user,
+      club,
+      role: "viewer" as Role,
+      isTeamOnly: true as const,
+      teamId: teamMem.teamId
+    };
+  }
+
+  // 3. Weder Club- noch Team-Mitglied → kein Zugriff.
+  redirect("/dashboard");
+}
+
 export type ClubWriteAccess = Awaited<ReturnType<typeof assertClubAccess>> & {
   gate: SubscriptionGate;
 };
