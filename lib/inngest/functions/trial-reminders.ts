@@ -5,6 +5,7 @@ import { subscriptions, clubs, clubMemberships, users } from "@/lib/db/schema";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { trialReminderEmail } from "@/lib/mail/templates/trial-reminder";
 import { getReplyToForClub } from "@/lib/mail/reply-to";
+import { notifyUsers } from "@/lib/notifications/deliver";
 
 /**
  * Daily Cron — sucht Subscriptions mit Status=trialing deren trialEndsAt
@@ -98,6 +99,34 @@ export const trialReminders = inngest.createFunction(
           });
         } catch (err) {
           logger.error("trial-reminder step error", { clubId: sub.clubId, error: String(err) });
+        }
+
+        // Push/In-App an Club-Admins (additiv zur E-Mail, best-effort, eigener
+        // memoisierter Step → idempotent über Function-Retries).
+        try {
+          await step.run(`trial-push-${sub.clubId}-${daysLeft}-${today}`, async () => {
+            const admins = await db
+              .select({ userId: clubMemberships.userId })
+              .from(clubMemberships)
+              .where(
+                and(eq(clubMemberships.clubId, sub.clubId), eq(clubMemberships.role, "admin"))
+              );
+            await notifyUsers(
+              admins.map((a) => a.userId),
+              {
+                type: "trial_ending",
+                title: "Testphase läuft aus",
+                body:
+                  daysLeft === 1
+                    ? `Die Testphase von ${sub.clubName} endet morgen.`
+                    : `Die Testphase von ${sub.clubName} endet in ${daysLeft} Tagen.`,
+                link: `/verein/${sub.clubSlug}/abo`,
+                data: { clubId: sub.clubId, daysLeft }
+              }
+            );
+          });
+        } catch (err) {
+          logger.error("trial-push step error", { clubId: sub.clubId, error: String(err) });
         }
       }
     }

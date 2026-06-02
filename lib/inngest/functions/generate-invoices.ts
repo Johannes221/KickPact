@@ -1,4 +1,4 @@
-import { eq, sql, inArray } from "drizzle-orm";
+import { eq, sql, inArray, and } from "drizzle-orm";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
@@ -29,6 +29,7 @@ import {
   groupChargesBySponsorClub
 } from "@/lib/db/queries/charges";
 import { maskEmail } from "@/lib/utils/log-pii";
+import { notifyUsers } from "@/lib/notifications/deliver";
 
 /**
  * Lesbare Labels für Trigger-Typen — landen auf der PDF + in der DB-Description.
@@ -379,6 +380,42 @@ export const generateInvoices = inngest.createFunction(
             }
           });
           mailsSent += result.adminEmails.length;
+        }
+
+        // Step D: Push/In-App an Club-Admins (additiv zur E-Mail, best-effort,
+        // eigener memoisierter Step → idempotent über Retries).
+        try {
+          await step.run(`invoice-push-${result.invoiceId}`, async () => {
+            const admins = await db
+              .select({ userId: clubMemberships.userId })
+              .from(clubMemberships)
+              .where(
+                and(
+                  eq(clubMemberships.clubId, result.clubId),
+                  eq(clubMemberships.role, "admin")
+                )
+              );
+            const [clubRow] = await db
+              .select({ slug: clubs.slug })
+              .from(clubs)
+              .where(eq(clubs.id, result.clubId))
+              .limit(1);
+            await notifyUsers(
+              admins.map((a) => a.userId),
+              {
+                type: "invoice_created",
+                title: "Neue Rechnung erstellt",
+                body: `Rechnung ${result.invoiceNumber} über ${result.totalEur} für ${result.clubName}.`,
+                link: clubRow ? `/verein/${clubRow.slug}/abrechnungen` : null,
+                data: { invoiceId: result.invoiceId, clubId: result.clubId }
+              }
+            );
+          });
+        } catch (err) {
+          logger.error("invoice-push step error", {
+            invoiceId: result.invoiceId,
+            error: String(err)
+          });
         }
       } catch (err) {
         logger.error("invoice-group failed", {

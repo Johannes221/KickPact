@@ -5,6 +5,7 @@ import { db } from "@/lib/db/client";
 import { users, sessions, accounts } from "@/lib/db/schema/auth";
 import { sponsors } from "@/lib/db/schema/sponsors";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
+import { countUnreadNotifications } from "@/lib/db/queries/notifications";
 import { DeletionBanner } from "./_components/deletion-banner";
 import { DataPrivacyActions } from "./_components/data-privacy-actions";
 
@@ -38,6 +39,7 @@ export default async function KontoPage() {
     .where(eq(accounts.userId, user.id));
 
   const identities = await getUserIdentities(user.id);
+  const unreadNotifications = await countUnreadNotifications(user.id);
 
   // Sponsor-Type wird nicht in UserIdentities zurückgegeben — separater Lookup
   // damit das Label „Familie/Business" auf der Karte stimmt.
@@ -74,6 +76,36 @@ export default async function KontoPage() {
           scheduledFor={deletionScheduledFor}
         />
       )}
+
+      {/* === Benachrichtigungen === */}
+      <Link
+        href="/konto/benachrichtigungen"
+        className="flex items-center justify-between gap-3 rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 transition-colors hover:border-accent/50"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <span aria-hidden className="text-xl">
+            🔔
+          </span>
+          <div className="min-w-0">
+            <h2 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+              Benachrichtigungen
+            </h2>
+            <p className="mt-0.5 text-xs text-brand-night-navy/60">
+              Push-Mitteilungen in der App steuern und den Verlauf einsehen.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {unreadNotifications > 0 && (
+            <span className="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-accent px-2 py-0.5 text-xs font-bold text-white">
+              {unreadNotifications}
+            </span>
+          )}
+          <span aria-hidden className="text-accent font-semibold">
+            →
+          </span>
+        </div>
+      </Link>
 
       {/* === Profil === */}
       <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-4">

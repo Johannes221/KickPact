@@ -12,6 +12,7 @@ import {
   users
 } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
+import { inngest } from "@/lib/inngest/client";
 import { assertClubWriteAccess } from "@/lib/auth/scope";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
@@ -114,6 +115,21 @@ ${parsed.message ? `<blockquote style="border-left:3px solid #01C457;padding:8px
     } catch (err) {
       console.error("[inquiry] mail to admins failed", err);
     }
+  }
+
+  // Push/In-App-Benachrichtigung an Club-Admins (additiv, best-effort).
+  try {
+    await inngest.send({
+      name: "notification/sponsor-inquiry",
+      data: {
+        teamId: parsed.teamId,
+        clubId: teamRow.club.id,
+        clubSlug: teamRow.club.slug,
+        teamName: teamRow.team.name
+      }
+    });
+  } catch (err) {
+    console.error("[inquiry] inngest.send failed", err);
   }
 
   revalidatePath("/sponsor/discover");

@@ -16,6 +16,10 @@ import { cleanupSessions } from "./cleanup-sessions";
 import { anonymizeAccounts } from "./anonymize-accounts";
 import { seasonRenewalPrompts } from "./season-renewal-prompts";
 import { autoPauseUnverified } from "./auto-pause-unverified";
+import { notifyMatchResult } from "./notify-match-result";
+import { notifyAccessRequest } from "./notify-access-request";
+import { notifySponsorInquiry } from "./notify-sponsor-inquiry";
+import { notifySponsorLead } from "./notify-sponsor-lead";
 
 export const functions = [
   crawlMatches,
@@ -36,5 +40,9 @@ export const functions = [
   cleanupSessions,
   anonymizeAccounts,
   seasonRenewalPrompts,
-  autoPauseUnverified
+  autoPauseUnverified,
+  notifyMatchResult,
+  notifyAccessRequest,
+  notifySponsorInquiry,
+  notifySponsorLead
 ];
