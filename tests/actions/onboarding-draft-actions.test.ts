@@ -178,6 +178,42 @@ describe("createDraftClub", () => {
     expect(aClub[0].fussballdeVereinId).toBe("V400");
     expect(bClub[0].fussballdeVereinId).toBe("V400");
   });
+
+  it("hängt eine ZWEITE Mannschaft desselben Vereins in den EIGENEN Container (kein zweiter Container)", async () => {
+    // Derselbe User onboardet zwei verschiedene Mannschaften desselben Vereins.
+    // Erwartung (Verein-Dedup 2026-06-02): die zweite landet im selben Container,
+    // es entsteht KEIN zweiter Container für denselben realen Verein.
+    await makeUser();
+    const a = await createDraftClub({
+      role: "mannschaft",
+      verein: { vereinId: "V800", name: "FC Dedup" },
+      team: { teamId: "T800", teamSlug: "h1", teamName: "1. Herren", saison: "2526" }
+    });
+    const b = await createDraftClub({
+      role: "mannschaft",
+      verein: { vereinId: "V800", name: "FC Dedup" },
+      team: { teamId: "T801", teamSlug: "h2", teamName: "2. Herren", saison: "2526" }
+    });
+
+    expect(b.clubId).toBe(a.clubId);
+
+    const teamRows = await db.select().from(teams).where(eq(teams.clubId, a.clubId));
+    expect(teamRows).toHaveLength(2);
+
+    // Nur EIN Container für diesen Verein.
+    const clubRows = await db
+      .select()
+      .from(clubs)
+      .where(eq(clubs.fussballdeVereinId, "V800"));
+    expect(clubRows).toHaveLength(1);
+
+    // Beide Teams haben ihre Lizenz unter dem einen Container.
+    const licenses = await db
+      .select()
+      .from(teamLicenses)
+      .where(eq(teamLicenses.subscriptionClubId, a.clubId));
+    expect(licenses).toHaveLength(2);
+  });
 });
 
 describe("updateDraftStammdaten", () => {

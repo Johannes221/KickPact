@@ -134,6 +134,30 @@ export async function createDraftClub(input: CreateDraftInput): Promise<CreateDr
     return await loadExistingDraft(c.clubId, club?.slug ?? c.clubSlug, user.id);
   }
 
+  // ── Verein-Dedup (2026-06-02) ────────────────────────────────────────────
+  // Ein User darf pro realem Verein nur EINEN Container haben. Hat er bereits
+  // einen (draft ODER completed) für genau diese fussballde_verein_id, werden
+  // die neuen Mannschaften DORT eingehängt statt einen zweiten Container zu
+  // öffnen — sonst entsteht beim Onboarden mehrerer Mannschaften desselben
+  // Vereins die Container-Sprawl, die wir gerade konsolidieren mussten.
+  //
+  // WICHTIG: nur der EIGENE Container (admin-Mitgliedschaft). Fremde User
+  // bekommen weiterhin getrennte Container (Sicherheits-Design — ein Fremder
+  // soll nicht ungefragt in deinem Verein landen; siehe onboarding-collision.ts).
+  const [ownClub] = await db
+    .select({ id: clubs.id, slug: clubs.slug })
+    .from(clubs)
+    .innerJoin(
+      clubMemberships,
+      and(
+        eq(clubMemberships.clubId, clubs.id),
+        eq(clubMemberships.userId, user.id),
+        eq(clubMemberships.role, "admin")
+      )
+    )
+    .where(eq(clubs.fussballdeVereinId, parsed.verein.vereinId))
+    .limit(1);
+
   const baseSlug = slugify(parsed.verein.name, { lower: true, strict: true, trim: true });
   const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -165,34 +189,41 @@ export async function createDraftClub(input: CreateDraftInput): Promise<CreateDr
       );
     }
 
-    const [club] = await tx
-      .insert(clubs)
-      .values({
-        slug,
-        name: parsed.verein.name,
-        fussballdeVereinId: parsed.verein.vereinId,
-        onboardingStatus: "draft",
-        onboardingRole: parsed.role,
-        onboardingStartedAt: new Date()
-      })
-      .returning({ id: clubs.id, slug: clubs.slug });
+    // Bestehenden eigenen Verein-Container wiederverwenden ODER neu anlegen.
+    let club: { id: string; slug: string };
+    if (ownClub) {
+      club = ownClub;
+    } else {
+      const [created] = await tx
+        .insert(clubs)
+        .values({
+          slug,
+          name: parsed.verein.name,
+          fussballdeVereinId: parsed.verein.vereinId,
+          onboardingStatus: "draft",
+          onboardingRole: parsed.role,
+          onboardingStartedAt: new Date()
+        })
+        .returning({ id: clubs.id, slug: clubs.slug });
+      club = created;
 
-    await tx.insert(clubMemberships).values({
-      userId: user.id,
-      clubId: club.id,
-      role: "admin"
-    });
+      await tx.insert(clubMemberships).values({
+        userId: user.id,
+        clubId: club.id,
+        role: "admin"
+      });
 
-    // H1: Nur bei Eligibility ein echter Trial — sonst `incomplete` (read-only
-    // via gateFromSubscription) → der Verein muss zum Aktivieren zahlen.
-    await tx.insert(subscriptions).values({
-      clubId: club.id,
-      stripeCustomerId: null,
-      stripeSubscriptionId: null,
-      status: trialEligible ? "trialing" : "incomplete",
-      billingCycle: "monthly",
-      trialEndsAt: trialEligible ? trialEnd : null
-    });
+      // H1: Nur bei Eligibility ein echter Trial — sonst `incomplete` (read-only
+      // via gateFromSubscription) → der Verein muss zum Aktivieren zahlen.
+      await tx.insert(subscriptions).values({
+        clubId: club.id,
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        status: trialEligible ? "trialing" : "incomplete",
+        billingCycle: "monthly",
+        trialEndsAt: trialEligible ? trialEnd : null
+      });
+    }
 
     // H1: Trial-Identitäten als verbraucht markieren (idempotent). Auch wenn
     // nicht eligible, schadet das Re-Insert nicht (onConflictDoNothing).
