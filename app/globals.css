@@ -19,6 +19,38 @@ body { @apply bg-white text-neutral-900 antialiased; }
 .pr-safe { padding-right: env(safe-area-inset-right); }
 .min-h-safe-top { min-height: env(safe-area-inset-top); }
 
+/* ───────────────────────────────────────────────────────────────────────────
+   Native-Shell — der authentifizierte App-Bereich (Verein/Mannschaft/Sponsor)
+   soll sich wie eine native iOS-App anfühlen, nicht wie eine Website. Tailwinds
+   `font-display`/`font-sans` lösen über die CSS-Variablen --font-display /
+   --font-sans auf. Indem wir diese Variablen im App-Teilbaum auf den Apple-
+   System-Font-Stack (SF Pro) umbiegen, rendert die GESAMTE App-UI nativ —
+   ohne jede einzelne Überschrift anfassen zu müssen. Marketing/Landing bleiben
+   bei der Display-Font (Montserrat Alternates) + Inter.
+
+   Hinweis Portale: Radix-Sheets/Dialogs portalen nach <body> (außerhalb dieses
+   Teilbaums). Solche Inhalte bekommen die System-Schrift zusätzlich über die
+   Utility-Klasse `.native-font` direkt aufs portalte Element.
+   ─────────────────────────────────────────────────────────────────────────── */
+.native-shell,
+.native-font {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.native-font { font-family: var(--font-sans); }
+
+/* Saubere, native Titel: niemals Silbentrennung mitten im Wort ("Wieb-lingen"),
+   lange Tokens brechen nur wenn nötig, Zeilen werden balanciert. */
+.title-wrap {
+  hyphens: none;
+  -webkit-hyphens: none;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-wrap: balance;
+}
+
 /* Ken-Burns Slow-Zoom für Hero-Background */
 @keyframes ken-burns {
   0%   { transform: scale(1.04) translate3d(0, 0, 0); }

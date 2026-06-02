@@ -20,6 +20,7 @@ import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { markCrawlStarted } from "@/lib/db/queries/crawler";
 import { TeamSetupChecklist } from "./_components/team-setup-checklist";
 import { CrawlAutoRefresh } from "./_components/crawl-auto-refresh";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata = { title: "Mannschaft · KickPact" };
 
@@ -67,6 +68,12 @@ export default async function TeamDetailPage({
   const hasIban = !!clubBilling?.iban;
   const hasSponsor = pledgeCount > 0;
   const teamBase = `/verein/${slug}/mannschaft/${team.id}`;
+
+  // Saison "2526" → lesbar "25/26".
+  const saisonLabel =
+    team.saison.length === 4
+      ? `${team.saison.slice(0, 2)}/${team.saison.slice(2)}`
+      : team.saison;
 
   // Verifikations-Scope: Einzel-Mannschaft (basic/pro) verifiziert die
   // MANNSCHAFT selbst (team.verifiedAt). Nur bei Vereinslizenz (plan='verein')
@@ -132,27 +139,25 @@ export default async function TeamDetailPage({
 
   return (
     <div className="space-y-5 md:space-y-6">
-      {/* Mannschafts-Titel — einzeilig (truncate), Saison als kompakter Chip
-          rechts. Kein "Vereins-Dashboard"-Breadcrumb: bei Mannschafts-Lizenz ist
-          die Mannschaft der oberste Kontext; Vereins-Admins navigieren über die
-          VereinSubNav im Header darüber zurück. */}
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="min-w-0 truncate font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
-          {team.name}
-        </h2>
-        <span className="shrink-0 rounded-full border border-brand-neutral/40 bg-white px-2.5 py-1 text-xs font-semibold text-brand-night-navy/60">
-          {team.saison}
-        </span>
-      </div>
+      {/* Mannschafts-Titel: EIN vollständiger, sauber umbrechender Titel
+          (kein Truncate, keine Display-Font-Silbentrennung), Kontext + Saison
+          als eine dezente Subtitle-Zeile. */}
+      <PageHeader
+        title={team.name}
+        subtitle={`${club.name} · Saison ${saisonLabel}`}
+      />
 
-      <TeamSetupChecklist items={checklistItems} />
+      <TeamSetupChecklist
+        items={checklistItems}
+        storageKey={`team-checklist-${team.id}`}
+      />
 
       {/* Saison-Stats */}
       {games > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { label: "Spiele", value: games },
-            { label: "S/U/N", value: `${wins}/${draws}/${losses}` },
+            { label: "Bilanz", value: `${wins}/${draws}/${losses}` },
             { label: "Tore", value: `${goalsFor}:${goalsAgainst}` },
             {
               label: "Sponsor-€",

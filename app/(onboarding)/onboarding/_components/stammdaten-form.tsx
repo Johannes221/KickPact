@@ -109,7 +109,10 @@ export function StammdatenForm({ clubId, role, defaultValues }: Props) {
                     Straße + Hausnummer
                   </FormLabel>
                   <FormControl>
-                    <Input {...field} autoComplete="street-address" />
+                    {/* address-line1 = nur Straße+Nr. (street-address würde die
+                        KOMPLETTE Adresse hier reinfüllen → iOS splittet sonst nicht
+                        in PLZ/Stadt). */}
+                    <Input {...field} autoComplete="address-line1" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

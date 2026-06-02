@@ -1,46 +1,74 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Goal,
+  Users,
   HandCoins,
   Handshake,
-  ChartColumnIncreasing,
   FileText,
+  Goal,
+  ChartColumnIncreasing,
   Gem,
-  Settings
+  Settings,
+  type LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BottomTabBar } from "@/components/shared/bottom-tab-bar";
+import { AppNavBar } from "@/components/shared/app-nav-bar";
+import { SettingsSheet, type SettingsNavItem } from "@/components/shared/settings-sheet";
 
-const TABS = [
-  { label: "Dashboard", href: "", icon: LayoutDashboard },
-  { label: "Ereignisse", href: "/ereignisse", icon: Goal },
+type Tab = { label: string; href: string; icon: LucideIcon };
+
+// Mobile-Primärset (5 Bottom-Tabs) — Club-Admin denkt in Mannschaften, Geld, Pacts.
+const PRIMARY_TABS: readonly Tab[] = [
+  { label: "Übersicht", href: "", icon: LayoutDashboard },
+  { label: "Mannschaften", href: "/mannschaften", icon: Users },
   { label: "Sponsoren", href: "/sponsoren", icon: HandCoins },
   { label: "Pacts", href: "/pledges", icon: Handshake },
+  { label: "Abrechnungen", href: "/abrechnungen", icon: FileText }
+] as const;
+
+// Sekundär → Zahnrad-Sheet (Desktop: hinten im Tab-Streifen).
+const OVERFLOW_TABS: readonly Tab[] = [
+  { label: "Ereignisse", href: "/ereignisse", icon: Goal },
   { label: "Charges", href: "/charges", icon: ChartColumnIncreasing },
-  { label: "Abrechnungen", href: "/abrechnungen", icon: FileText },
   { label: "Abo", href: "/abo", icon: Gem },
   { label: "Einstellungen", href: "/einstellungen", icon: Settings }
-];
+] as const;
+
+const ALL_TABS: readonly Tab[] = [...PRIMARY_TABS, ...OVERFLOW_TABS];
 
 export function VereinSubNav({ slug, clubName }: { slug: string; clubName: string }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const base = `/verein/${slug}`;
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const activeTab = TABS.find(({ href }) => {
-    const fullHref = `${base}${href}`;
+  const matches = (href: string) => {
+    const full = `${base}${href}`;
     if (href === "") return pathname === base;
-    return pathname === fullHref || pathname.startsWith(fullHref + "/");
-  });
+    return pathname === full || pathname.startsWith(full + "/");
+  };
+  const activeTab = ALL_TABS.reduce<Tab | null>((best, t) => {
+    if (!matches(t.href)) return best;
+    if (!best || t.href.length > best.href.length) return t;
+    return best;
+  }, null);
+
+  const overflowItems: SettingsNavItem[] = OVERFLOW_TABS.map((t) => ({
+    label: t.label,
+    href: `${base}${t.href}`,
+    icon: t.icon
+  }));
+  const overflowActive = OVERFLOW_TABS.some((t) => matches(t.href));
 
   return (
     <>
-      {/* Desktop: horizontal tabs */}
-      <nav className="hidden md:flex gap-1 rounded-2xl border border-brand-neutral/30 bg-brand-off-white p-1.5">
-        {TABS.map(({ label, href }) => {
+      {/* Desktop: horizontale Tab-Leiste (alle Tabs) */}
+      <nav className="hidden md:flex gap-1 rounded-2xl border border-brand-neutral/30 bg-brand-off-white p-1.5 overflow-x-auto">
+        {ALL_TABS.map(({ label, href }) => {
           const fullHref = `${base}${href}`;
           const isActive = activeTab?.href === href;
           return (
@@ -60,18 +88,27 @@ export function VereinSubNav({ slug, clubName }: { slug: string; clubName: strin
         })}
       </nav>
 
-      {/* Mobile: Bottom-Tab-Bar */}
+      {/* Mobile: native Nav-Bar + Bottom-Tab-Bar + Zahnrad-Sheet */}
       <div className="md:hidden">
-        <div className="mb-1 text-[0.65rem] uppercase tracking-widest font-semibold text-brand-night-navy/50 truncate">
-          {clubName}
-        </div>
+        <AppNavBar
+          title={activeTab?.label ?? "Übersicht"}
+          onSettings={() => setSettingsOpen(true)}
+          settingsBadge={overflowActive}
+        />
         <BottomTabBar
           contextLabel="Verein"
-          items={TABS.map(({ label, href, icon }) => ({
+          items={PRIMARY_TABS.map(({ label, href, icon }) => ({
             label,
             icon,
             href: `${base}${href}`
           }))}
+        />
+        <SettingsSheet
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          contextLabel={clubName}
+          overflowItems={overflowItems}
+          activeHref={activeTab ? `${base}${activeTab.href}` : undefined}
         />
       </div>
     </>

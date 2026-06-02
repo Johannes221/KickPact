@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -83,6 +83,8 @@ export function VereinSearchStep({ role }: Props) {
   const [teamsLoading, setTeamsLoading] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<Set<string>>(new Set());
   const [pending, startTransition] = useTransition();
+  // Nach Mannschaft-Auswahl automatisch zum „Weiter"/„anlegen"-CTA scrollen (iOS-UX).
+  const ctaRef = useRef<HTMLDivElement>(null);
 
   function handleSearch() {
     if (query.length < 2) {
@@ -139,6 +141,13 @@ export function VereinSearchStep({ role }: Props) {
   function toggleTeam(teamId: string) {
     // Belegte (fremd betreute) Mannschaften sind nicht wählbar.
     if (teams.find((t) => t.teamId === teamId)?.isLocked) return;
+    const selecting = role === "mannschaft" || !selectedTeamIds.has(teamId);
+    if (selecting) {
+      // Warten bis der CTA gerendert/aktiviert ist, dann sanft dorthin scrollen.
+      requestAnimationFrame(() =>
+        ctaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+      );
+    }
     setSelectedTeamIds((prev) => {
       const next = new Set(prev);
       if (role === "mannschaft") {
@@ -376,7 +385,7 @@ export function VereinSearchStep({ role }: Props) {
             )}
           </div>
 
-          <div className="flex justify-end pt-2">
+          <div ref={ctaRef} className="flex justify-end pt-2">
             <Button
               variant="accent"
               size="lg"

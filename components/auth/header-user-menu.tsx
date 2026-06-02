@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "@/lib/auth/client";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -149,6 +149,9 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
         >
           <span className="relative inline-flex">
             <Avatar className="h-8 w-8">
+              {session.user.image && (
+                <AvatarImage src="/api/user/avatar" alt="" />
+              )}
               <AvatarFallback className="bg-accent text-white text-xs font-bold">
                 {initials}
               </AvatarFallback>

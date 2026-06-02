@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -15,25 +16,23 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BottomTabBar } from "@/components/shared/bottom-tab-bar";
+import { AppNavBar } from "@/components/shared/app-nav-bar";
+import { SettingsSheet, type SettingsNavItem } from "@/components/shared/settings-sheet";
 import type { EffectivePlan } from "@/lib/db/queries/user-identities";
 
 /**
- * Team-Scope Sub-Navigation für Mannschafts-Admins (basic/pro Plan).
+ * Team-Scope-Navigation (native iOS-Shell).
  *
- * Spiegelt das Layout der `VereinSubNav`, aber:
- *  - Base-URL: `/verein/<slug>/mannschaft/<teamId>`
- *  - Tabs: Team-zentrisch (Übersicht, Pacts, Spiele, Finanzen, Abo, Einstellungen)
- *  - Header zeigt Team-Name (nicht Club-Name) → klare "Du bist hier auf
- *    Mannschafts-Ebene"-Botschaft
+ * Mobile: feste Bottom-Tab-Bar mit GENAU 5 primären Tabs
+ * (Übersicht · Spiele · Pacts · Sponsoren · Profil) + oben eine AppNavBar mit
+ * Zahnrad, das alles Sekundäre (Finanzen/Abo/Einstellungen) + Konto + Rechtliches
+ * im SettingsSheet bündelt. Kein "Mehr"-Tab mehr.
  *
- * Naming-Entscheidung (2026-05-25): "Pacts" für Pledges, "Spiele" für Matches,
- * "Finanzen" für die Geld-Übersicht. "Events" bleibt internal für die einzelnen
- * Spielereignisse (Tor, Karte, Auswechslung).
+ * Desktop: horizontaler Tab-Streifen mit allen Tabs.
  *
- * Plan-aware Tab-Filter (2026-05-25): Auf einer Vereinslizenz (`verein`) leben
- * Abo + Einstellungen auf Club-Ebene und werden vom VereinSubNav bereitgestellt;
- * im Team-Menü würden sie nur doppelt erscheinen. Bei `basic` / `pro` ist die
- * Mannschaft der Abrechnungs- und Einstellungs-Anker → Tabs bleiben sichtbar.
+ * Naming (2026-05-25): "Pacts" für Pledges, "Spiele" für Matches.
+ * Plan-aware (2026-05-25): Auf Vereinslizenz (`verein`) leben Abo + Einstellungen
+ * auf Club-Ebene → hier raus.
  */
 
 export type TeamSubNavTab = {
@@ -42,37 +41,45 @@ export type TeamSubNavTab = {
   icon: LucideIcon;
 };
 
-// Reihenfolge ist bewusst: die ersten 4 sind das Mobile-Primärset
-// (BottomTabBar zeigt slice(0,4) + "Mehr" bei >5 Items). Der Rest landet
-// im "Mehr"-Sheet. Desktop zeigt alle horizontal in dieser Reihenfolge.
-const ALL_TABS: readonly TeamSubNavTab[] = [
+// Mobile-Primärset: diese 5 sind die Bottom-Tabs (vom Nutzer freigegebene IA).
+const PRIMARY_TABS: readonly TeamSubNavTab[] = [
   { label: "Übersicht", href: "", icon: LayoutDashboard },
-  { label: "Pacts", href: "/pacts", icon: Handshake },
   { label: "Spiele", href: "/spiele", icon: Goal },
-  { label: "Profil", href: "/profil", icon: UserRound },
+  { label: "Pacts", href: "/pacts", icon: Handshake },
   { label: "Sponsoren", href: "/sponsoren", icon: Heart },
+  { label: "Profil", href: "/profil", icon: UserRound }
+] as const;
+
+// Sekundär: landet im Zahnrad-Sheet (Desktop: hinten im Tab-Streifen).
+const OVERFLOW_TABS: readonly TeamSubNavTab[] = [
   { label: "Finanzen", href: "/finanzen", icon: Wallet },
   { label: "Abo", href: "/abo", icon: Gem },
   { label: "Einstellungen", href: "/einstellungen", icon: Settings }
 ] as const;
 
 /**
- * Liefert die im Team-SubNav sichtbaren Tabs für den gegebenen Effective-Plan.
- *
- * - `verein` → entfernt `Abo` und `Einstellungen` (Club-Ebene-Tabs)
- * - `basic` / `pro` / `null` → volles Tab-Set (Mannschaft ist der Anker)
- *
- * Wird exportiert, damit die Filter-Semantik isoliert testbar ist.
+ * Sekundäre Tabs für den Effective-Plan: `verein` entfernt Abo + Einstellungen
+ * (die leben auf Club-Ebene). Exportiert für isolierte Tests.
+ */
+export function getTeamOverflowTabs(
+  effectivePlan: EffectivePlan | null
+): TeamSubNavTab[] {
+  if (effectivePlan === "verein") {
+    return OVERFLOW_TABS.filter(
+      (t) => t.href !== "/abo" && t.href !== "/einstellungen"
+    );
+  }
+  return [...OVERFLOW_TABS];
+}
+
+/**
+ * Vollständiges, sichtbares Tab-Set (Primär + sichtbares Overflow) in
+ * Anzeige-Reihenfolge — für die Desktop-Leiste und Tests.
  */
 export function getTeamSubNavTabs(
   effectivePlan: EffectivePlan | null
 ): TeamSubNavTab[] {
-  if (effectivePlan === "verein") {
-    return ALL_TABS.filter(
-      (t) => t.href !== "/abo" && t.href !== "/einstellungen"
-    );
-  }
-  return [...ALL_TABS];
+  return [...PRIMARY_TABS, ...getTeamOverflowTabs(effectivePlan)];
 }
 
 interface Props {
@@ -87,25 +94,39 @@ export function TeamSubNav({
   slug,
   teamId,
   teamName,
-  clubName,
   effectivePlan
 }: Props) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const base = `/verein/${slug}/mannschaft/${teamId}`;
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const tabs = getTeamSubNavTabs(effectivePlan);
+  const allTabs = getTeamSubNavTabs(effectivePlan);
+  const overflowTabs = getTeamOverflowTabs(effectivePlan);
 
-  const activeTab = tabs.find(({ href }) => {
-    const fullHref = `${base}${href}`;
+  // Aktiven Tab über längstes passendes Pfad-Präfix bestimmen.
+  const matches = (href: string) => {
+    const full = `${base}${href}`;
     if (href === "") return pathname === base;
-    return pathname === fullHref || pathname.startsWith(fullHref + "/");
-  });
+    return pathname === full || pathname.startsWith(full + "/");
+  };
+  const activeTab = allTabs.reduce<TeamSubNavTab | null>((best, t) => {
+    if (!matches(t.href)) return best;
+    if (!best || t.href.length > best.href.length) return t;
+    return best;
+  }, null);
+
+  const overflowItems: SettingsNavItem[] = overflowTabs.map((t) => ({
+    label: t.label,
+    href: `${base}${t.href}`,
+    icon: t.icon
+  }));
+  const overflowActive = overflowTabs.some((t) => matches(t.href));
 
   return (
     <>
-      {/* Desktop: horizontal tabs */}
+      {/* Desktop: horizontale Tab-Leiste (alle Tabs) */}
       <nav className="hidden md:flex gap-1 rounded-2xl border border-brand-neutral/30 bg-brand-off-white p-1.5 overflow-x-auto">
-        {tabs.map(({ label, href }) => {
+        {allTabs.map(({ label, href }) => {
           const fullHref = `${base}${href}`;
           const isActive = activeTab?.href === href;
           return (
@@ -125,18 +146,27 @@ export function TeamSubNav({
         })}
       </nav>
 
-      {/* Mobile: Bottom-Tab-Bar */}
+      {/* Mobile: native Nav-Bar (oben) + Bottom-Tab-Bar (unten) + Zahnrad-Sheet */}
       <div className="md:hidden">
-        <div className="mb-1 text-[0.65rem] uppercase tracking-widest font-semibold text-brand-night-navy/50 truncate">
-          {teamName} · {clubName}
-        </div>
+        <AppNavBar
+          title={activeTab?.label ?? "Übersicht"}
+          onSettings={() => setSettingsOpen(true)}
+          settingsBadge={overflowActive}
+        />
         <BottomTabBar
           contextLabel="Mannschaft"
-          items={tabs.map(({ label, href, icon }) => ({
+          items={PRIMARY_TABS.map(({ label, href, icon }) => ({
             label,
             icon,
             href: `${base}${href}`
           }))}
+        />
+        <SettingsSheet
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          contextLabel={teamName}
+          overflowItems={overflowItems}
+          activeHref={activeTab ? `${base}${activeTab.href}` : undefined}
         />
       </div>
     </>
