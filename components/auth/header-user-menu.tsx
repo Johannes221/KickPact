@@ -188,8 +188,8 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
             >
               <Link href={currentEntry.href}>
                 <IdentityIcon kind={currentEntry.kind} className="mr-2 h-7 w-7" />
-                <span className="flex-1 truncate">
-                  <span className="block truncate font-semibold">{currentEntry.label}</span>
+                <span className="flex-1 min-w-0">
+                  <span className="block break-words font-semibold">{currentEntry.label}</span>
                   <span className="block truncate text-[0.7rem] text-brand-night-navy/60">
                     {currentEntry.subline}
                   </span>
@@ -215,8 +215,8 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
               >
                 <Link href={e.href}>
                   <IdentityIcon kind={e.kind} className="mr-2 h-7 w-7" />
-                  <span className="flex-1 truncate">
-                    <span className="block truncate font-medium">{e.label}</span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block break-words font-medium">{e.label}</span>
                     <span className="block truncate text-[0.7rem] text-brand-night-navy/60">
                       {e.subline}
                     </span>
@@ -241,8 +241,8 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
                 className="flex items-center gap-2 px-3 py-2 opacity-70"
               >
                 <Hourglass className="mr-1 h-5 w-5 shrink-0 text-amber-500" aria-hidden />
-                <span className="flex-1 truncate">
-                  <span className="block truncate text-sm font-medium text-brand-night-navy">
+                <span className="flex-1 min-w-0">
+                  <span className="block break-words text-sm font-medium text-brand-night-navy">
                     {r.requestedTeamName ?? r.clubName}
                   </span>
                   <span className="block truncate text-[0.7rem] text-amber-700">

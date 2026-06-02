@@ -65,8 +65,8 @@ export default async function SelectRolePage() {
               >
                 <div className="text-3xl shrink-0">⚽</div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy truncate">
+                  <div className="flex items-start justify-between gap-2">
+                    <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy break-words">
                       {c.firstTeamName ?? c.name}
                     </h2>
                     <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-widest text-accent-dark">
@@ -91,8 +91,8 @@ export default async function SelectRolePage() {
             >
               <div className="text-3xl shrink-0">🏟️</div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-baseline justify-between gap-2">
-                  <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy truncate">
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy break-words">
                     {c.name}
                   </h2>
                   <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-widest text-accent-dark">
@@ -118,8 +118,8 @@ export default async function SelectRolePage() {
           >
             <div className="text-3xl shrink-0">⚽</div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-baseline justify-between gap-2">
-                <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy truncate">
+              <div className="flex items-start justify-between gap-2">
+                <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy break-words">
                   {t.teamName}
                 </h2>
                 <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-widest text-accent-dark">
@@ -143,7 +143,7 @@ export default async function SelectRolePage() {
           >
             <div className="text-3xl shrink-0">💚</div>
             <div className="flex-1 min-w-0">
-              <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy truncate">
+              <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy break-words">
                 {identities.sponsor.displayName}
               </h2>
               <p className="mt-1 text-xs text-brand-night-navy/60">
@@ -166,8 +166,8 @@ export default async function SelectRolePage() {
           >
             <Hourglass className="mt-0.5 h-7 w-7 shrink-0 text-amber-500" aria-hidden />
             <div className="flex-1 min-w-0">
-              <div className="flex items-baseline justify-between gap-2">
-                <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy truncate">
+              <div className="flex items-start justify-between gap-2">
+                <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy break-words">
                   {r.requestedTeamName ?? r.clubName}
                 </h2>
                 <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-amber-800">
