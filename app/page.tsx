@@ -18,7 +18,6 @@ import {
   Flag,
   type LucideIcon
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Accordion,
@@ -28,6 +27,8 @@ import {
 } from "@/components/ui/accordion";
 import { RolesTabs } from "./_components/roles-tabs";
 import { RotatingTrigger } from "@/components/landing/rotating-trigger";
+import { MagneticCard } from "@/components/landing/magnetic-card";
+import { MagneticCTA } from "@/components/landing/magnetic-cta";
 
 export const metadata = {
   title: "Amateurfußball-Sponsoring, das mitfiebert",
@@ -130,12 +131,19 @@ export default function LandingPage() {
             </div>
 
             <div className="animate-fade-up delay-3 mt-5 md:mt-6 flex flex-col sm:flex-row gap-3">
-              <Button variant="accent" size="lg" asChild className="w-full sm:w-auto">
-                <Link href="/signup?role=mannschaft">Mannschaft anlegen · 30 Tage gratis</Link>
-              </Button>
-              <Button variant="outline" size="lg" asChild className="w-full sm:w-auto bg-white/80">
-                <Link href="/mannschaften">Mannschaften finden</Link>
-              </Button>
+              <MagneticCTA
+                href="/signup?role=mannschaft"
+                className="w-full sm:w-auto justify-between sm:justify-start"
+              >
+                Mannschaft anlegen · 30 Tage gratis
+              </MagneticCTA>
+              <MagneticCTA
+                href="/mannschaften"
+                variant="outline"
+                className="w-full sm:w-auto justify-between sm:justify-start bg-white/80"
+              >
+                Mannschaften finden
+              </MagneticCTA>
             </div>
             <p className="animate-fade-up delay-4 mt-3 text-[0.7rem] md:text-sm text-brand-night-navy/60">
               In 90 Sekunden online. Kein Vertrag. Kein Risiko für deine Mannschaft.
@@ -525,12 +533,19 @@ export default function LandingPage() {
             30 Tage gratis. Kein Vertrag. Kein Risiko für deine Mannschaft.
           </p>
           <div className="mt-6 md:mt-7 flex flex-col sm:flex-row gap-3 justify-center">
-            <Button variant="accent" size="lg" asChild className="w-full sm:w-auto">
-              <Link href="/signup?role=mannschaft">Mannschaft anlegen</Link>
-            </Button>
-            <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
-              <Link href="/mannschaften">Mannschaften finden</Link>
-            </Button>
+            <MagneticCTA
+              href="/signup?role=mannschaft"
+              className="w-full sm:w-auto justify-between sm:justify-start"
+            >
+              Mannschaft anlegen
+            </MagneticCTA>
+            <MagneticCTA
+              href="/mannschaften"
+              variant="outline"
+              className="w-full sm:w-auto justify-between sm:justify-start"
+            >
+              Mannschaften finden
+            </MagneticCTA>
           </div>
         </div>
       </section>
@@ -582,9 +597,7 @@ function InlineCTA({
         {caption}
       </p>
       <div className="flex flex-col sm:flex-row gap-2">
-        <Button variant="accent" size="lg" asChild className="w-full sm:w-auto">
-          <Link href="/signup">Jetzt loslegen · 30 Tage gratis</Link>
-        </Button>
+        <MagneticCTA href="/signup">Jetzt loslegen · 30 Tage gratis</MagneticCTA>
       </div>
     </div>
   );
@@ -702,13 +715,19 @@ function TriggerCard({
   auto?: boolean;
   highlight?: boolean;
 }) {
+  // Magnetic-Pull-Card: folgt leicht dem Cursor (nur Maus, max ~8px), bezel-Schale.
   return (
-    <div
+    <MagneticCard
+      bezel
+      strength={0.85}
       className={
-        "rounded-lg border p-3 md:p-4 transition-colors " +
+        "h-full bg-white/5 " + (highlight ? "ring-accent/40" : "ring-white/10")
+      }
+      innerClassName={
+        "p-3 md:p-4 transition-colors " +
         (highlight
-          ? "border-accent bg-accent/10"
-          : "border-white/15 bg-white/5 hover:border-accent/40")
+          ? "bg-accent/15 ring-1 ring-accent/40"
+          : "bg-white/[0.06] ring-1 ring-white/10 hover:ring-accent/40")
       }
     >
       <div className="flex items-start justify-between">
@@ -726,7 +745,7 @@ function TriggerCard({
         {name}
       </div>
       <div className="mt-1 text-[0.65rem] md:text-xs text-white/70 leading-snug">{examples.join(" · ")}</div>
-    </div>
+    </MagneticCard>
   );
 }
 
@@ -745,8 +764,9 @@ function SeasonBetCard({
   highlight?: boolean;
   wide?: boolean;
 }) {
+  // Magnetic-Pull-Card; folgt leicht dem Cursor (nur Maus, max ~8px).
   return (
-    <div
+    <MagneticCard
       className={
         "shrink-0 w-[68vw] max-w-[16rem] snap-start rounded-xl border p-3 md:w-auto md:max-w-none md:p-4 transition-colors " +
         (wide ? "md:col-span-2 " : "") +
@@ -765,7 +785,7 @@ function SeasonBetCard({
         {name}
       </div>
       <div className="mt-1 text-[0.65rem] md:text-xs text-brand-night-navy/60 leading-snug">{detail}</div>
-    </div>
+    </MagneticCard>
   );
 }
 
@@ -784,11 +804,19 @@ function PriceCard({
   features: string[];
   highlight?: boolean;
 }) {
+  // Double-Bezel „Hardware"-Card mit Magnetic-Pull; CTA ist ein Button-in-Button
+  // mit magnetischem Trailing-Icon.
   return (
-    <div
+    <MagneticCard
+      bezel
+      strength={0.6}
       className={
-        "rounded-2xl border p-6 md:p-8 " +
-        (highlight ? "border-accent bg-accent/5" : "border-brand-neutral/40 bg-white")
+        "h-full " +
+        (highlight ? "bg-accent/10 ring-accent/30" : "bg-brand-night-navy/[0.03] ring-black/5")
+      }
+      innerClassName={
+        "p-6 md:p-8 ring-1 " +
+        (highlight ? "bg-accent/5 ring-accent/30" : "bg-white ring-brand-neutral/40")
       }
     >
       <div className="flex items-baseline justify-between">
@@ -831,16 +859,15 @@ function PriceCard({
         ))}
       </ul>
       <div className="mt-6 md:mt-8">
-        <Button
+        <MagneticCTA
+          href={signupHrefForPlan(plan)}
           variant={highlight ? "accent" : "outline"}
-          className="w-full"
-          asChild
-          size="lg"
+          className="w-full justify-between"
         >
-          <Link href={signupHrefForPlan(plan)}>Mit {plan} starten</Link>
-        </Button>
+          Mit {plan} starten
+        </MagneticCTA>
       </div>
-    </div>
+    </MagneticCard>
   );
 }
 

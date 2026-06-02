@@ -67,6 +67,25 @@ body { @apply bg-white text-neutral-900 antialiased; }
   .animate-trigger-fly, .animate-trigger-pop { animation: none; }
 }
 
+/* ── Tactile-Variante: Magnetic / Cursor-Effekte ──────────────────────────
+   Magnetic-Pull-Cards bewegen sich NUR auf Geräten mit echtem Hover + feiner
+   Pointer (Maus/Trackpad). Auf Touch (kein Hover) frieren wir die translate-
+   Beiträge des Springs hart auf 0 ein — so kann auf Mobile nie ein „hängendes"
+   Offset entstehen. Der JS-Pfad setzt dort ohnehin keine Werte; das ist der
+   robuste CSS-Backstop. */
+@media not all and (hover: hover) and (pointer: fine) {
+  .magnetic-card {
+    transform: none !important;
+  }
+}
+
+/* reduced-motion: keinerlei Magnetic-/Cursor-Drift, nur statische Position. */
+@media (prefers-reduced-motion: reduce) {
+  .magnetic-card {
+    transform: none !important;
+  }
+}
+
 /* Help-Center Artikel-Typografie. Bewusst minimal — kein @tailwindcss/typography
    Plugin, um die Build-Surface klein zu halten. */
 .article-prose h2 {
