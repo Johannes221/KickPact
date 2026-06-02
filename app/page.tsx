@@ -134,7 +134,7 @@ export default function LandingPage() {
                 <Link href="/signup?role=mannschaft">Mannschaft anlegen · 30 Tage gratis</Link>
               </Button>
               <Button variant="outline" size="lg" asChild className="w-full sm:w-auto bg-white/80">
-                <Link href="/dashboard">Zum Dashboard</Link>
+                <Link href="/mannschaften">Mannschaften finden</Link>
               </Button>
             </div>
             <p className="animate-fade-up delay-4 mt-3 text-[0.7rem] md:text-sm text-brand-night-navy/60">
@@ -221,7 +221,7 @@ export default function LandingPage() {
             </h2>
             <p className="mt-2 text-sm md:text-base text-brand-night-navy/70">
               Damit Sponsoring richtig Spaß macht, muss es für beide Seiten passen.
-              Hier was Mannschaften und Sponsoren an KickPact lieben, auf einen Blick.
+              Was Mannschaften und Sponsoren an KickPact lieben, auf einen Blick.
             </p>
           </div>
 
@@ -245,7 +245,7 @@ export default function LandingPage() {
                   Für Sponsoren
                 </div>
                 <h3 className="mt-1.5 font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
-                  Du zahlst nur was passiert.
+                  Du belohnst nur Erfolge.
                 </h3>
                 <ul className="mt-3 space-y-2 text-xs md:text-sm text-brand-night-navy/80">
                   <BenefitLi>Beträge frei wählbar: 50 Cent bis 500 € pro Event</BenefitLi>
@@ -272,7 +272,7 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-          <InlineCTA caption="Holt euch das Sponsor-Netzwerk." />
+          <InlineCTA caption="Bereit, eure Mannschaftskasse zu füllen?" />
         </div>
       </section>
 
@@ -346,7 +346,7 @@ export default function LandingPage() {
             Custom-Ziele werden von der Mannschaft gemeldet und vom Sponsor bestätigt, gleicher
             Trust-Mechanismus wie bei Spezial-Events.
           </p>
-          <InlineCTA caption="Wettet eure Saison-Story." />
+          <InlineCTA caption="Bringt Spannung in eure Saison." />
         </div>
       </section>
 
@@ -483,7 +483,7 @@ export default function LandingPage() {
             />
             <FaqItem
               q="Was passiert wenn meine Mannschaft schlecht spielt?"
-              a="Sponsoren zahlen weniger. Das ist genau die Idee von Performance-Sponsoring. Im Worst Case (kein Tor, keine Siege) bekommt die Mannschaftskasse gar nichts, aber dann gibt&apos;s auch nichts zu feiern."
+              a="Sponsoren zahlen weniger. Das ist genau die Idee von Performance-Sponsoring. Im Worst Case (kein Tor, keine Siege) bekommt die Mannschaftskasse gar nichts, aber dann gibt's auch nichts zu feiern."
             />
             <FaqItem
               q="Wie verhindere ich, dass ein Sponsor von einer hohen Rechnung überrascht wird?"
@@ -529,7 +529,7 @@ export default function LandingPage() {
               <Link href="/signup?role=mannschaft">Mannschaft anlegen</Link>
             </Button>
             <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
-              <Link href="/login">Login</Link>
+              <Link href="/mannschaften">Mannschaften finden</Link>
             </Button>
           </div>
         </div>

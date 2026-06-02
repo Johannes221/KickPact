@@ -33,13 +33,13 @@ export function RolesTabs() {
         <div className="grid gap-6 md:gap-10 md:grid-cols-5">
           <div className="md:col-span-3 space-y-4 md:space-y-5">
             <h3 className="font-display font-black text-xl md:text-3xl lg:text-4xl tracking-tight">
-              Aus jedem Spiel <span className="text-accent">eure Mannschaftskasse</span>.
+              Jedes Spiel füllt <span className="text-accent">eure Mannschaftskasse</span>.
             </h3>
             <p className="text-white/80 leading-relaxed text-sm md:text-base">
               Klassisches Trikot-Sponsoring ist mühsam: einmal verkaufen, dann Stille. Mit
-              KickPact wird jeder Spieltag zur Sponsoren-Touchpoint, und eure Mannschaft
-              bekommt nicht 1× im Jahr ein Trikot bezahlt, sondern jede Saison über eure
-              Performance Geld direkt in die eigene Kasse.
+              KickPact zählt jeder Spieltag: eure Mannschaft bekommt nicht 1× im Jahr ein
+              Trikot bezahlt, sondern über die ganze Saison Geld direkt in die eigene Kasse,
+              je nach eurer Performance.
             </p>
             <ul className="space-y-2.5 md:space-y-3 text-white/80 text-sm md:text-base">
               <Bullet>
@@ -85,7 +85,7 @@ export function RolesTabs() {
         <div className="grid gap-6 md:gap-10 md:grid-cols-5">
           <div className="md:col-span-3 space-y-4 md:space-y-5">
             <h3 className="font-display font-black text-xl md:text-3xl lg:text-4xl tracking-tight">
-              Jedes Tor wird zum <span className="text-accent">geilen Moment</span>.
+              Mitfiebern, das <span className="text-accent">wirklich zählt</span>.
             </h3>
             <p className="text-white/80 leading-relaxed text-sm md:text-base">
               Du willst die Mannschaft deines Sohnes, deiner Tochter oder das Team aus
@@ -111,7 +111,15 @@ export function RolesTabs() {
             </ul>
             <div className="flex flex-wrap gap-3 pt-2">
               <Button variant="accent" size="lg" asChild>
-                <Link href="/signup?role=sponsor">Als Sponsor registrieren →</Link>
+                <Link href="/mannschaften">Mannschaften zum Sponsern finden</Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                asChild
+                className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+              >
+                <Link href="/signup?role=sponsor">Als Sponsor registrieren</Link>
               </Button>
               <p className="text-xs text-white/50 pt-3 w-full">
                 Schon einen Einladungslink? Einfach öffnen, wir leiten dich automatisch ans
