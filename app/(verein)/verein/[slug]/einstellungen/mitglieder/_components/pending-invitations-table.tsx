@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Copy, RefreshCw, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { copyText } from "@/lib/platform/clipboard";
 import { Button } from "@/components/ui/button";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
@@ -64,8 +65,7 @@ export function PendingInvitationsTable({
   }
 
   function copyUrl(url: string) {
-    navigator.clipboard
-      .writeText(url)
+    copyText(url)
       .then(() => toast.success("Link kopiert."))
       .catch(() => toast.error("Kopieren fehlgeschlagen — bitte manuell auswählen."));
   }

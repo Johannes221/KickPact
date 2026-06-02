@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Copy, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { copyText } from "@/lib/platform/clipboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -99,8 +100,7 @@ export function InviteForm({
 
   function copyLink() {
     if (!lastInvite) return;
-    navigator.clipboard
-      .writeText(lastInvite)
+    copyText(lastInvite)
       .then(() => toast.success("Link in Zwischenablage kopiert."))
       .catch(() => toast.error("Konnte nicht kopieren — bitte manuell auswählen."));
   }

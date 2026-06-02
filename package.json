@@ -25,9 +25,13 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1050.0",
     "@aws-sdk/s3-request-presigner": "^3.1050.0",
+    "@capacitor/browser": "^6.0.6",
+    "@capacitor/clipboard": "^6.0.3",
     "@capacitor/core": "^6.2.1",
+    "@capacitor/filesystem": "^6.0.4",
     "@capacitor/ios": "^6.2.1",
     "@capacitor/push-notifications": "^6.0.5",
+    "@capacitor/share": "^6.0.4",
     "@hookform/resolvers": "^3.10.0",
     "@neondatabase/serverless": "0.10.4",
     "@paralleldrive/cuid2": "^3.3.0",

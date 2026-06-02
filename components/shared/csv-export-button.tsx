@@ -18,6 +18,7 @@ import { useSearchParams } from "next/navigation";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { triggerDownload } from "@/lib/platform/files";
 
 export interface CsvExportButtonProps {
   /** Export-Endpoint, z.B. `/api/exports/charges`. */
@@ -61,16 +62,10 @@ export function CsvExportButton({
 
   function handleClick() {
     const url = buildUrl();
-    // Programmatischer Click auf ein hidden Anchor → triggert Download ohne
-    // Popup-Blocker zu wecken.
-    const a = document.createElement("a");
-    a.href = url;
-    a.rel = "noopener";
-    // Browser nutzt Content-Disposition-Header der Response für den Filename.
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // Web: programmatischer Anchor-Click (Content-Disposition liefert den Filename).
+    // Native iOS-App: fetch (mit Session-Cookie) → Filesystem → Share-Sheet.
+    const filename = `${endpoint.split("/").pop() ?? "export"}.csv`;
+    void triggerDownload(url, filename);
   }
 
   return (

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { openInNewTab } from "@/lib/platform/files";
 import { DataTable, type DataTableColumn, type SortDirection } from "@/components/ui/data-table";
 import { markInvoicePaid, invoiceDownloadUrl } from "@/lib/actions/invoices";
 
@@ -66,7 +67,7 @@ export function InvoicesTable({
   async function handleDownload(id: string) {
     try {
       const url = await invoiceDownloadUrl(id);
-      window.open(url, "_blank");
+      await openInNewTab(url, `rechnung-${id}.pdf`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Download fehlgeschlagen");
     }
