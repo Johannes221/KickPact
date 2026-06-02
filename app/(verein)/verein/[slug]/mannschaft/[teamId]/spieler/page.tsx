@@ -1,9 +1,6 @@
 import Link from "next/link";
-import { eq, and } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
-import { listRosterForTeam } from "@/lib/db/queries/team-lifecycle";
+import { listRosterForTeam, getTeamInClub } from "@/lib/db/queries/team-lifecycle";
 import { RosterList } from "./_components/roster-list";
 
 export const metadata = { title: "Spieler · Mannschaft · KickPact" };
@@ -25,14 +22,7 @@ export default async function SpielerPage({
   // Server-Action.
   const { club, role } = await assertTeamPageAccess(slug, teamId, "viewer");
 
-  const [team] = await db
-    .select({
-      id: teams.id,
-      name: teams.name
-    })
-    .from(teams)
-    .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
-    .limit(1);
+  const team = await getTeamInClub(teamId, club.id);
 
   if (!team) {
     return (

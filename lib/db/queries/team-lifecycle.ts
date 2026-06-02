@@ -1,6 +1,6 @@
-import { eq, sql, inArray } from "drizzle-orm";
+import { and, eq, sql, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { players } from "@/lib/db/schema";
+import { players, teams } from "@/lib/db/schema";
 import { matchEvents } from "@/lib/db/schema/matches";
 
 export type RosterPlayer = {
@@ -56,4 +56,27 @@ export async function listRosterForTeam(teamId: string): Promise<RosterPlayer[]>
     blocked: r.blocked,
     matchEventCount: counts.get(r.id) ?? 0
   }));
+}
+
+/**
+ * Mannschaft (id/name/verifiedAt) scoped auf einen Club — der Standard-Lookup
+ * für Team-Scope-Seiten. `undefined`, wenn das Team nicht zu diesem Club gehört.
+ */
+export async function getTeamInClub(teamId: string, clubId: string) {
+  const [team] = await db
+    .select({ id: teams.id, name: teams.name, verifiedAt: teams.verifiedAt })
+    .from(teams)
+    .where(and(eq(teams.id, teamId), eq(teams.clubId, clubId)))
+    .limit(1);
+  return team;
+}
+
+/** Nur der Anzeigename einer Mannschaft (Team-Layout-Header), ungescoped. */
+export async function getTeamNameById(teamId: string): Promise<string | null> {
+  const [team] = await db
+    .select({ name: teams.name })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  return team?.name ?? null;
 }

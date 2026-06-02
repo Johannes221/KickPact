@@ -1,8 +1,6 @@
-import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
-import { db } from "@/lib/db/client";
-import { clubs } from "@/lib/db/schema";
+import { getClubById } from "@/lib/db/queries/club-admin";
 import { EinstellungenForm } from "./_components/einstellungen-form";
 
 export const metadata = { title: "Einstellungen · KickPact" };
@@ -15,11 +13,7 @@ export default async function EinstellungenPage({
   const { slug } = await params;
   const { club } = await assertVereinAdminOrRedirect(slug, "admin");
 
-  const [clubData] = await db
-    .select()
-    .from(clubs)
-    .where(eq(clubs.id, club.id))
-    .limit(1);
+  const clubData = await getClubById(club.id);
 
   if (!clubData) return null;
 

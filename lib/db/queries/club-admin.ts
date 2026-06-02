@@ -120,3 +120,15 @@ export async function listClubsForUser(
     .innerJoin(clubs, eq(clubMemberships.clubId, clubs.id))
     .where(eq(clubMemberships.userId, userId));
 }
+
+/** Vollständige Club-Row per Slug (oder undefined). */
+export async function getClubBySlug(slug: string) {
+  const [club] = await db.select().from(clubs).where(eq(clubs.slug, slug)).limit(1);
+  return club;
+}
+
+/** Vollständige Club-Row per ID (oder undefined). */
+export async function getClubById(clubId: string) {
+  const [club] = await db.select().from(clubs).where(eq(clubs.id, clubId)).limit(1);
+  return club;
+}

@@ -1,8 +1,6 @@
-import { eq, and } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { getActiveVerificationForTeam } from "@/lib/db/queries/verifications";
+import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
 import { TeamVerificationForm } from "./_components/team-verification-form";
 
 export const metadata = { title: "Mannschaft verifizieren · KickPact" };
@@ -26,15 +24,7 @@ export default async function TeamVerifikationPage({
   const { slug, teamId } = await params;
   const { club } = await assertTeamPageAccess(slug, teamId, "admin");
 
-  const [team] = await db
-    .select({
-      id: teams.id,
-      name: teams.name,
-      verifiedAt: teams.verifiedAt
-    })
-    .from(teams)
-    .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
-    .limit(1);
+  const team = await getTeamInClub(teamId, club.id);
 
   if (!team) {
     return (

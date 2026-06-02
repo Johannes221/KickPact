@@ -1,8 +1,6 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
+import { getTeamNameById } from "@/lib/db/queries/team-lifecycle";
 import { TeamSubNav } from "./_components/team-sub-nav";
 
 /**
@@ -28,15 +26,9 @@ export default async function TeamScopeLayout({
   const { slug, teamId } = await params;
   const { club, user } = await assertTeamPageAccess(slug, teamId, "viewer");
 
-  const [team] = await db
-    .select({ name: teams.name })
-    .from(teams)
-    .where(eq(teams.id, teamId))
-    .limit(1);
-
   // Fall-through wenn Team nicht zum Club gehört oder nicht existiert —
   // die Page selbst rendert dann den "nicht gefunden"-Block.
-  const teamName = team?.name ?? "Mannschaft";
+  const teamName = (await getTeamNameById(teamId)) ?? "Mannschaft";
 
   // Hinweis: Das Verifikations-Gate (Container-Verein nicht verifiziert) wird
   // jetzt zentral im Vereins-Layout über die gebündelte StatusBar angezeigt —

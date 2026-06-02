@@ -1,7 +1,5 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { clubs } from "@/lib/db/schema";
 import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
+import { getClubBySlug } from "@/lib/db/queries/club-admin";
 import {
   listForClub,
   CLUB_INVOICE_SORT_KEYS,
@@ -28,7 +26,7 @@ export default async function AbrechnungenPage({
 }) {
   const { slug } = await params;
   await assertVereinAdminOrRedirect(slug, "viewer");
-  const [club] = await db.select().from(clubs).where(eq(clubs.slug, slug)).limit(1);
+  const club = await getClubBySlug(slug);
   if (!club) return null;
 
   const sp = await searchParams;
