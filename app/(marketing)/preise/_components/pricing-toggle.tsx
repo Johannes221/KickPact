@@ -407,7 +407,7 @@ function ComparisonMatrix({ cycle }: { cycle: BillingCycle }) {
           Was ist <span className="text-accent">in welchem Tarif?</span>
         </h2>
         <p className="mt-3 text-sm md:text-base text-brand-night-navy/65">
-          Komplette Featurematrix. Pro-Spalte hervorgehoben — hier landen die
+          Komplette Featurematrix. Pro-Spalte hervorgehoben: hier landen die
           meisten Vereine.
         </p>
       </div>

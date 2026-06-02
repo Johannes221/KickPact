@@ -59,15 +59,15 @@ const PER_PLAYER_ROWS: ReadonlyArray<{
 const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   {
     q: "Was passiert in der Sommerpause (Juni/Juli)?",
-    a: "Beim Saison-Pass wird die Subscription automatisch von 1. Juni bis 31. Juli pausiert — kein €, keine Abrechnung, deine Daten bleiben sichtbar. Zum 1. August läuft alles automatisch wieder an."
+    a: "Beim Saison-Pass wird die Subscription automatisch von 1. Juni bis 31. Juli pausiert: kein €, keine Abrechnung, deine Daten bleiben sichtbar. Zum 1. August läuft alles automatisch wieder an."
   },
   {
     q: "Was wenn ich mitten in der Saison einsteige?",
-    a: "Bis zum 5. Spieltag der laufenden Saison kannst du den Saison-Pass zum vollen Preis buchen. Danach gibt es nur noch Monatsabo — der nächste Saison-Pass startet zum 1. Juli für die kommende Saison. Kein Pro-Rated: simpel, fair, kein Last-Minute-Gaming."
+    a: "Bis zum 5. Spieltag der laufenden Saison kannst du den Saison-Pass zum vollen Preis buchen. Danach gibt es nur noch Monatsabo, der nächste Saison-Pass startet zum 1. Juli für die kommende Saison. Kein Pro-Rated: simpel, fair, kein Last-Minute-Gaming."
   },
   {
     q: "Kann ich Saison-Wetten später noch anlegen?",
-    a: "Saison-Wetten (Aufstieg, Klassenerhalt, Tabellenplatz …) sind nur bis zum 5. Spieltag buchbar — danach ist es Insider-Spiel, kein Sponsoring. Bestehende Wetten bleiben aktiv, neue erst wieder zur nächsten Saison ab Juli."
+    a: "Saison-Wetten (Aufstieg, Klassenerhalt, Tabellenplatz …) sind nur bis zum 5. Spieltag buchbar, danach ist es Insider-Spiel, kein Sponsoring. Bestehende Wetten bleiben aktiv, neue erst wieder zur nächsten Saison ab Juli."
   },
   {
     q: "Kann ich monatlich kündigen?",
@@ -75,11 +75,11 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Wann lohnt sich die Vereinslizenz?",
-    a: "Ab 3 Mannschaften: mathematisch günstiger als 3× Pro (49 € vs. 57 €). Plus Master-Cockpit, Sammelrechnung, Cross-Team-Sponsor-View. Bei 50 Spielern bist du unter 1 € pro Spieler — bei 200 Spielern bei 0,25 €."
+    a: "Ab 3 Mannschaften: mathematisch günstiger als 3× Pro (49 € vs. 57 €). Plus Master-Cockpit, Sammelrechnung, Cross-Team-Sponsor-View. Bei 50 Spielern bist du unter 1 € pro Spieler, bei 200 Spielern bei 0,25 €."
   },
   {
     q: "Wirklich 0 % Provision auf Pacts?",
-    a: "Ja, in allen Tarifen. KickPact stellt die Plattform und wickelt Tracking, PDF-Rechnungen und Sponsor-Inbox ab — finanziert wird das über die Lizenzgebühr. Was Sponsoren per Pact versprechen, kommt 1:1 bei eurer Mannschaft an."
+    a: "Ja, in allen Tarifen. KickPact stellt die Plattform und wickelt Tracking, PDF-Rechnungen und Sponsor-Inbox ab, finanziert wird das über die Lizenzgebühr. Was Sponsoren per Pact versprechen, kommt 1:1 bei eurer Mannschaft an."
   },
   {
     q: "Was ist mit der Umsatzsteuer?",
@@ -91,7 +91,7 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Was passiert bei einem Disput?",
-    a: "Sponsoren bestätigen oder bestreiten jedes Event innerhalb von 7 Tagen. Bei Streit erscheinen Event-Beweise (Spielnachweis, ggf. Trainer-Foto), und der Verein kann den Pact stornieren. Monats-Rechnung wird erst danach final erstellt — kein Geld fließt für strittige Events."
+    a: "Sponsoren bestätigen oder bestreiten jedes Event innerhalb von 7 Tagen. Bei Streit erscheinen Event-Beweise (Spielnachweis, ggf. Trainer-Foto), und der Verein kann den Pact stornieren. Monats-Rechnung wird erst danach final erstellt: kein Geld fließt für strittige Events."
   }
 ];
 
@@ -124,7 +124,7 @@ export default function PreisePage() {
               <span className="text-accent">gehen an euch.</span>
             </h1>
             <p className="mt-3 text-sm md:text-base text-brand-night-navy/70 max-w-xl mx-auto">
-              30 Tage kostenlos testen — ohne Kreditkarte.
+              30 Tage kostenlos testen, ohne Kreditkarte.
             </p>
           </div>
 
@@ -139,15 +139,12 @@ export default function PreisePage() {
       <section className="bg-brand-off-white border-y border-brand-neutral/40">
         <div className="mx-auto max-w-6xl px-5 md:px-6 py-14 md:py-20">
           <div className="text-center max-w-2xl mx-auto">
-            <span className="inline-flex items-center rounded-full bg-white px-3 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-brand-night-navy/70 ring-1 ring-brand-neutral/40">
-              Vereinslizenz-Mathematik
-            </span>
-            <h2 className="mt-4 font-display font-black text-3xl md:text-4xl tracking-tight text-brand-night-navy">
+            <h2 className="font-display font-black text-3xl md:text-4xl tracking-tight text-brand-night-navy">
               Wann lohnt sich die{" "}
               <span className="text-accent">Vereinslizenz?</span>
             </h2>
             <p className="mt-3 text-sm md:text-base text-brand-night-navy/65">
-              Ab 3 Mannschaften ist die Vereinslizenz günstiger als Pro × n —
+              Ab 3 Mannschaften ist die Vereinslizenz günstiger als Pro × n,
               plus Master-Cockpit und Sammelrechnung.
             </p>
           </div>
@@ -287,7 +284,7 @@ export default function PreisePage() {
             Häufige <span className="text-accent">Fragen</span>
           </h2>
           <p className="mt-3 text-sm md:text-base text-brand-night-navy/65">
-            Noch was offen? <Link href="mailto:hallo@kickpact.de" className="text-accent-dark font-semibold underline-offset-4 hover:underline">Mail an hallo@kickpact.de</Link> — wir antworten innerhalb von 24 h.
+            Noch was offen? <Link href="mailto:hallo@kickpact.de" className="text-accent-dark font-semibold underline-offset-4 hover:underline">Mail an hallo@kickpact.de</Link>. Wir antworten innerhalb von 24 h.
           </p>
         </div>
 
@@ -327,10 +324,7 @@ export default function PreisePage() {
         />
 
         <div className="relative mx-auto max-w-3xl px-5 md:px-6 py-14 md:py-20 text-center">
-          <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/20">
-            30 Tage gratis · Keine Kreditkarte
-          </span>
-          <h2 className="mt-4 font-display font-black text-3xl sm:text-4xl md:text-5xl leading-[1.05] tracking-tight text-brand-night-navy">
+          <h2 className="font-display font-black text-3xl sm:text-4xl md:text-5xl leading-[1.05] tracking-tight text-brand-night-navy">
             Bereit für euer
             <br />
             <span className="text-accent">erstes Sponsoring?</span>
