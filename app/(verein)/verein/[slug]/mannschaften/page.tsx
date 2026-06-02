@@ -1,11 +1,7 @@
 import Link from "next/link";
-import { eq, and, sql, gte, inArray } from "drizzle-orm";
 import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
-import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
-import { matches } from "@/lib/db/schema/matches";
-import { pledges } from "@/lib/db/schema/pledges";
-import { charges } from "@/lib/db/schema/charges";
+import { listClubTeamsWithStatus } from "@/lib/db/queries/club-admin";
+import { getClubTeamStats } from "@/lib/db/queries/club-reporting";
 
 export const metadata = { title: "Mannschaften · KickPact" };
 
@@ -22,16 +18,7 @@ export default async function MannschaftenPage({
   const { club } = await assertVereinAdminOrRedirect(slug, "viewer");
 
   // Load all active teams
-  const teamRows = await db
-    .select({
-      id: teams.id,
-      name: teams.name,
-      saison: teams.saison,
-      isActive: teams.isActive
-    })
-    .from(teams)
-    .where(eq(teams.clubId, club.id))
-    .orderBy(teams.name);
+  const teamRows = await listClubTeamsWithStatus(club.id);
 
   if (teamRows.length === 0) {
     return (
@@ -47,36 +34,8 @@ export default async function MannschaftenPage({
   const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
   // Per-team aggregates
-  const [activePledgeCounts, recentChargeCents, recentMatchCounts] = await Promise.all([
-    db
-      .select({
-        teamId: pledges.teamId,
-        n: sql<number>`count(*)::int`
-      })
-      .from(pledges)
-      .where(and(inArray(pledges.teamId, teamIds), eq(pledges.status, "active")))
-      .groupBy(pledges.teamId)
-      .then((rows) => new Map(rows.map((r) => [r.teamId, Number(r.n)]))),
-    db
-      .select({
-        teamId: pledges.teamId,
-        s: sql<number>`coalesce(sum(${charges.amountCents}), 0)::int`
-      })
-      .from(charges)
-      .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-      .where(and(inArray(pledges.teamId, teamIds), gte(charges.createdAt, monthAgo)))
-      .groupBy(pledges.teamId)
-      .then((rows) => new Map(rows.map((r) => [r.teamId, Number(r.s)]))),
-    db
-      .select({
-        teamId: matches.teamId,
-        n: sql<number>`count(*)::int`
-      })
-      .from(matches)
-      .where(and(inArray(matches.teamId, teamIds), gte(matches.datum, monthAgo)))
-      .groupBy(matches.teamId)
-      .then((rows) => new Map(rows.map((r) => [r.teamId, Number(r.n)])))
-  ]);
+  const { activePledgeCounts, recentChargeCents, recentMatchCounts } =
+    await getClubTeamStats(teamIds, monthAgo);
 
   const activeCount = teamRows.filter((t) => t.isActive).length;
   const inactiveCount = teamRows.length - activeCount;

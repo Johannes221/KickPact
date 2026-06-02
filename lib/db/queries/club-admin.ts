@@ -142,3 +142,25 @@ export async function getClubNameOrt(clubId: string) {
     .limit(1);
   return row;
 }
+
+/** Teams eines Clubs (id + fussballdeTeamId) — für den „Mannschaft hinzufügen"-Wizard. */
+export async function getClubTeamsBasic(clubId: string) {
+  return db
+    .select({ id: teams.id, fussballdeTeamId: teams.fussballdeTeamId })
+    .from(teams)
+    .where(eq(teams.clubId, clubId));
+}
+
+/** Teams eines Clubs mit Status (id/name/saison/isActive), nach Name sortiert. */
+export async function listClubTeamsWithStatus(clubId: string) {
+  return db
+    .select({
+      id: teams.id,
+      name: teams.name,
+      saison: teams.saison,
+      isActive: teams.isActive
+    })
+    .from(teams)
+    .where(eq(teams.clubId, clubId))
+    .orderBy(teams.name);
+}

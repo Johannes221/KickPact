@@ -561,3 +561,51 @@ export async function getClubFilterOptions(
     .orderBy(asc(sponsors.displayName));
   return { teamRows, sponsorRows };
 }
+
+export interface ClubTeamStats {
+  activePledgeCounts: Map<string, number>;
+  recentChargeCents: Map<string, number>;
+  recentMatchCounts: Map<string, number>;
+}
+
+/**
+ * Per-Team-Aggregate für die Mannschaften-Übersicht: aktive Pledges,
+ * Charge-Summe + Spiel-Anzahl seit `since`. Als Maps (teamId → Zahl).
+ */
+export async function getClubTeamStats(
+  teamIds: string[],
+  since: Date
+): Promise<ClubTeamStats> {
+  if (teamIds.length === 0) {
+    return {
+      activePledgeCounts: new Map(),
+      recentChargeCents: new Map(),
+      recentMatchCounts: new Map()
+    };
+  }
+  const [activePledgeCounts, recentChargeCents, recentMatchCounts] = await Promise.all([
+    db
+      .select({ teamId: pledges.teamId, n: sql<number>`count(*)::int` })
+      .from(pledges)
+      .where(and(inArray(pledges.teamId, teamIds), eq(pledges.status, "active")))
+      .groupBy(pledges.teamId)
+      .then((rows) => new Map(rows.map((r) => [r.teamId, Number(r.n)]))),
+    db
+      .select({
+        teamId: pledges.teamId,
+        s: sql<number>`coalesce(sum(${charges.amountCents}), 0)::int`
+      })
+      .from(charges)
+      .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+      .where(and(inArray(pledges.teamId, teamIds), gte(charges.createdAt, since)))
+      .groupBy(pledges.teamId)
+      .then((rows) => new Map(rows.map((r) => [r.teamId, Number(r.s)]))),
+    db
+      .select({ teamId: matches.teamId, n: sql<number>`count(*)::int` })
+      .from(matches)
+      .where(and(inArray(matches.teamId, teamIds), gte(matches.datum, since)))
+      .groupBy(matches.teamId)
+      .then((rows) => new Map(rows.map((r) => [r.teamId, Number(r.n)])))
+  ]);
+  return { activePledgeCounts, recentChargeCents, recentMatchCounts };
+}
