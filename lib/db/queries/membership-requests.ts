@@ -5,6 +5,7 @@ import {
   clubMemberships,
   teamMemberships,
   teams,
+  clubs,
   users
 } from "@/lib/db/schema";
 
@@ -60,6 +61,49 @@ export async function createRequest(args: CreateRequestArgs): Promise<Membership
     })
     .returning();
   return row as MembershipRequest;
+}
+
+export interface MyPendingRequest {
+  id: string;
+  clubId: string;
+  clubName: string;
+  clubSlug: string;
+  requestedTeamId: string | null;
+  requestedTeamName: string | null;
+  requestedRole: RequestedRole;
+  createdAt: Date;
+}
+
+/**
+ * Listet die EIGENEN noch offenen (pending) Zugriffs-Anfragen eines Users —
+ * für die Rollen-Liste/Dropdown ("Angefragt") und das De-Dupe im Discover-Flow
+ * ("Zugriff bereits angefragt"). Mannschaftsname + Club-Slug zum Anzeigen.
+ */
+export async function listMyPendingRequests(
+  userId: string
+): Promise<MyPendingRequest[]> {
+  const rows = await db
+    .select({
+      id: clubMembershipRequests.id,
+      clubId: clubMembershipRequests.clubId,
+      clubName: clubs.name,
+      clubSlug: clubs.slug,
+      requestedTeamId: clubMembershipRequests.requestedTeamId,
+      requestedTeamName: teams.name,
+      requestedRole: clubMembershipRequests.requestedRole,
+      createdAt: clubMembershipRequests.createdAt
+    })
+    .from(clubMembershipRequests)
+    .innerJoin(clubs, eq(clubMembershipRequests.clubId, clubs.id))
+    .leftJoin(teams, eq(clubMembershipRequests.requestedTeamId, teams.id))
+    .where(
+      and(
+        eq(clubMembershipRequests.userId, userId),
+        eq(clubMembershipRequests.status, "pending")
+      )
+    )
+    .orderBy(desc(clubMembershipRequests.createdAt));
+  return rows as MyPendingRequest[];
 }
 
 export interface PendingRequestRow extends MembershipRequest {

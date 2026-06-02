@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Plus, Settings, LogOut, ShieldCheck } from "lucide-react";
+import { Plus, Settings, LogOut, ShieldCheck, Hourglass } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderStatusDot } from "@/components/shared/status-bar";
 import { IdentityIcon } from "@/components/shared/identity-icon";
@@ -23,16 +23,19 @@ import {
   flattenIdentities
 } from "@/lib/auth/identity-routing";
 import type { UserIdentities } from "@/lib/db/queries/user-identities";
+import type { MyPendingRequest } from "@/lib/db/queries/membership-requests";
 
 export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
   const { data: session, isPending } = useSession();
   const pathname = usePathname() ?? "/";
   const [identities, setIdentities] = useState<UserIdentities | null>(null);
+  const [pendingRequests, setPendingRequests] = useState<MyPendingRequest[]>([]);
   const [isOperator, setIsOperator] = useState(false);
 
   useEffect(() => {
     if (!session?.user) {
       setIdentities(null);
+      setPendingRequests([]);
       setIsOperator(false);
       return;
     }
@@ -40,6 +43,14 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         setIdentities(d);
+        setPendingRequests(
+          Array.isArray(
+            (d as { pendingRequests?: MyPendingRequest[] } | null)
+              ?.pendingRequests
+          )
+            ? (d as { pendingRequests: MyPendingRequest[] }).pendingRequests
+            : []
+        );
         setIsOperator(Boolean((d as { isPlatformAdmin?: boolean } | null)?.isPlatformAdmin));
       })
       .catch(() => {/* silent */});
@@ -212,6 +223,33 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
                   </span>
                 </Link>
               </DropdownMenuItem>
+            ))}
+          </>
+        )}
+
+        {pendingRequests.length > 0 && (
+          <>
+            <DropdownMenuSeparator className="bg-brand-neutral/40" />
+            <DropdownMenuLabel className="px-3 pt-2 pb-1">
+              <div className="text-[0.65rem] font-semibold uppercase tracking-wider text-neutral-500">
+                Angefragt
+              </div>
+            </DropdownMenuLabel>
+            {pendingRequests.map((r) => (
+              <div
+                key={r.id}
+                className="flex items-center gap-2 px-3 py-2 opacity-70"
+              >
+                <Hourglass className="mr-1 h-5 w-5 shrink-0 text-amber-500" aria-hidden />
+                <span className="flex-1 truncate">
+                  <span className="block truncate text-sm font-medium text-brand-night-navy">
+                    {r.requestedTeamName ?? r.clubName}
+                  </span>
+                  <span className="block truncate text-[0.7rem] text-amber-700">
+                    Zugriff angefragt · wartet auf Freigabe
+                  </span>
+                </span>
+              </div>
             ))}
           </>
         )}

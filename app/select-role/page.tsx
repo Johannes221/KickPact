@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Hourglass } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { isPlatformAdminEmail } from "@/lib/auth/admin";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
+import { listMyPendingRequests } from "@/lib/db/queries/membership-requests";
 import { pickDashboardDestination } from "@/lib/auth/identity-routing";
 
 export const metadata = { title: "Rolle wählen · KickPact" };
@@ -20,13 +22,18 @@ function eur(cents: number): string {
 export default async function SelectRolePage() {
   const user = await requireUser();
   if (await isPlatformAdminEmail(user.email)) redirect("/admin");
-  const identities = await getUserIdentities(user.id);
+  const [identities, pendingRequests] = await Promise.all([
+    getUserIdentities(user.id),
+    listMyPendingRequests(user.id)
+  ]);
 
   // If the user landed here with 0 or 1 identity (bookmark, refresh after
   // role-revocation, etc.), bounce them to where they actually belong.
+  // Offene Zugriffs-Anfragen zählen mit — ein User mit 1 Rolle + 1 Anfrage soll
+  // die Liste sehen (inkl. "Angefragt"-Karte), statt weggeleitet zu werden.
   const total =
     identities.clubs.length + identities.teamOnly.length + (identities.sponsor ? 1 : 0);
-  if (total < 2) {
+  if (total + pendingRequests.length < 2) {
     redirect(pickDashboardDestination(identities));
   }
 
@@ -151,6 +158,28 @@ export default async function SelectRolePage() {
             </div>
           </Link>
         )}
+
+        {pendingRequests.map((r) => (
+          <div
+            key={r.id}
+            className="flex items-start gap-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-5"
+          >
+            <Hourglass className="mt-0.5 h-7 w-7 shrink-0 text-amber-500" aria-hidden />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline justify-between gap-2">
+                <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy truncate">
+                  {r.requestedTeamName ?? r.clubName}
+                </h2>
+                <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-amber-800">
+                  Angefragt
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-brand-night-navy/60 truncate">
+                Zugriff angefragt — wartet auf Freigabe durch einen Admin.
+              </p>
+            </div>
+          </div>
+        ))}
 
         <Link
           href="/signup?add=1"
