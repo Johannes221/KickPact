@@ -80,6 +80,24 @@ Konnte nicht durchgeführt werden, weil der Simulator nicht bootet (Punkt 3). N�
 | **5** Build + TestFlight-Pipeline | Signing, Archive, Upload | 1–4 | niedrig |
 | **6** Feature-Plugins (PDF/CSV/Clipboard/Upload) | je 1 Capacitor-Plugin, siehe Funktions-Audit | 1 | niedrig |
 | **7** Abo Dual-Provider (Stripe Web **+** Apple IAP) | IAP-Plugin + Entitlement-Reconciliation, siehe eigener Abschnitt | 2 | **hoch** |
+| **8** App-Entry & Onboarding (kein Marketing-Landing im App-Kontext) | Native-Context-Gate → Intro-Wizard → Login → Rollen-Onboarding; siehe eigener Abschnitt | 1, 3 | **mittel** |
+
+## WS-8 — App-Entry & Onboarding (Konzept, 2026-06-02)
+
+**Problem (Nutzer-Punkt):** Die App lädt aktuell die **Marketing-Landingpage** (Hero „Loslegen", Pricing). Im App Store falsch — eine App braucht einen eigenen Einstieg, **ohne** Landing/Pricing (deckt sich mit Apple 4.2 „kein bloßer Wrapper" + Anti-Steering: keine Preise/Stripe-CTAs im iOS-Kontext).
+
+**Architektur-Hebel:** Kein zweiter Client — der **bestehende Web-Code verzweigt** per `isIOSApp()` ([lib/platform/native.ts](../../../lib/platform/native.ts)). Web behält die Landingpage; die native App bekommt einen App-Einstieg.
+
+**Geplanter Flow (native, logged-out, Kaltstart):**
+1. **Intro-Wizard** (3–4 Slides Value-Prop: „Performance-Sponsoring für deinen Verein", „Sponsoren zahlen pro Tor/Sieg/Aufstieg", „100 % bleibt beim Verein") — **ohne Preise** (Anti-Steering), mit „Überspringen". NEU.
+2. **Login** — `/login` existiert bereits (Apple / Google / Magic-Link-UI verifiziert). Native **Apple-Sign-in primär** (WS-3, schließt in-app ab; Magic-Link macht sonst Safari-Sprung).
+3. **Rollen-Auswahl** — `/select-role` („Bei KickPact starten — Als Mannschaft/Verein/Sponsor") **existiert bereits**.
+4. **Rollen-Onboarding** — bestehender Wizard (Verein-Suche, Mannschaften einbinden) **existiert bereits**.
+5. **Eingeloggt + Rolle** → direkt App (Bottom-Nav/Dashboard).
+
+**NEU zu bauen:** nur (a) das Native-Context-Entry-Gate (root: wenn `isIOSApp()` && logged-out → Intro statt Landing) und (b) der Intro-Wizard. (2)–(4) sind **Wiederverwendung** des bestehenden Web-Flows.
+
+**Offene Konzept-Entscheidungen:** Intro app-only oder auch mobiles Web? Cold-Start-Routing (eingeloggt → direkt Dashboard, kein Intro)? Wie viele Intro-Slides / Brand-Look (mit `ui-ux-pro-max`)? Verhältnis zum bestehenden `/onboarding`.
 
 ### WS-1 — Capacitor-Scaffold ✅ ERLEDIGT (2026-06-02, im Repo)
 
