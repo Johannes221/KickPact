@@ -69,6 +69,7 @@ export async function resetTestDb(): Promise<void> {
       seasons,
       team_licenses,
       subscriptions,
+      consumed_trials,
       processed_stripe_events,
       sent_notifications,
       club_verifications,

@@ -6,12 +6,12 @@ import { charges } from "@/lib/db/schema/charges";
 import { sponsors } from "@/lib/db/schema/sponsors";
 import { sponsorLabelSql } from "@/lib/db/queries/sponsor-label";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
+import { getTriggerLabel } from "@/lib/billing/trigger-labels";
 import {
-  getTriggerLabel,
-  categorizeTrigger,
-  getCategoryLabel,
+  categorize,
+  getCategoryLabelLong,
   type TriggerCategory
-} from "@/lib/billing/trigger-labels";
+} from "@/lib/billing/trigger-categories";
 import { FinanzenTrendChart } from "./_components/finanzen-trend-chart";
 
 export const metadata = { title: "Finanzen · KickPact" };
@@ -63,7 +63,7 @@ export default async function FinanzenPage({
     season: new Map()
   };
   for (const r of ruleSums) {
-    const cat = categorizeTrigger(r.triggerType);
+    const cat = categorize(r.triggerType);
     const bucket = byCategory[cat];
     const existing = bucket.get(r.triggerType) ?? { sum: 0, count: 0, sample: r.triggerParams };
     existing.sum += r.amountCents;
@@ -139,7 +139,7 @@ export default async function FinanzenPage({
             >
               <div className="flex items-baseline justify-between mb-3">
                 <h2 className="font-semibold text-sm uppercase tracking-wider text-brand-night-navy/70">
-                  {getCategoryLabel(cat)}
+                  {getCategoryLabelLong(cat)}
                 </h2>
                 <span className="font-display font-bold tabular-nums">{eur(catSum)}</span>
               </div>

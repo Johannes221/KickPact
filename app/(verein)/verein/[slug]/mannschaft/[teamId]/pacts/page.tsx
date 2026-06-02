@@ -6,7 +6,8 @@ import { sponsors } from "@/lib/db/schema/sponsors";
 import { charges } from "@/lib/db/schema/charges";
 import { sponsorLabelSql } from "@/lib/db/queries/sponsor-label";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
-import { getTriggerLabel, categorizeTrigger } from "@/lib/billing/trigger-labels";
+import { getTriggerLabel } from "@/lib/billing/trigger-labels";
+import { categorize } from "@/lib/billing/trigger-categories";
 import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
 import { AvailableTriggers } from "./_components/available-triggers";
 
@@ -72,7 +73,7 @@ export default async function PactsPage({
   // Server-side filter
   const filtered = rows.filter((r) => {
     if (status !== "all" && r.pledgeStatus !== status) return false;
-    if (kind !== "all" && categorizeTrigger(r.triggerType) !== kind) return false;
+    if (kind !== "all" && categorize(r.triggerType) !== kind) return false;
     return true;
   });
 
