@@ -8,6 +8,8 @@
 
 **Capacitor-WebView-Wrapper**, kein React-Native/Expo-Rewrite, kein natives Swift.
 
+**Definition „high-end clean iOS feel" (festgelegt 2026-05-29):** poliert, schnell, kein Browser-Gefühl — native Navigations-Chrome, Transitions, Haptik, Push, **genuin native In-App-Käufe (StoreKit-Sheets)**. Bewusst **nicht** pixel-natives SwiftUI je Screen — die Screens bleiben die (polierte) mobile Web-UI. Der Nutzer hat diese Definition akzeptiert; „keine halben Sachen" bezieht sich auf Politur + echte native Käufe/Push, nicht auf einen Native-UI-Rewrite.
+
 **Warum:** KickPact ist eine server-zentrierte Next.js-15-App — ~76 Pages (überwiegend Server Components), 35 `"use server"`-Dateien, 22 Server-Action-Ordner, 98 Client-Komponenten auf shadcn/Radix + recharts + react-pdf. Die Geschäftslogik lebt auf dem Server; es gibt keinen abkoppelbaren Client. Ein RN/Expo-Rewrite müsste jede Server-Action erst zu einer REST-API machen und die komplette UI in RN-Primitiven neu bauen (Monate). Capacitor lädt stattdessen die deployte Web-App in einem nativen WebView — die bestehende Codebasis bleibt 1:1 nutzbar.
 
 **Trade-off:** Apple-Review-Guideline **4.2 („minimum functionality")** kann reine WebView-Wrapper ablehnen. Mitigation = native Features (Push-Notifications, natives Splash/Icon, Statusbar-Integration) — siehe WS-4.
@@ -24,9 +26,28 @@ Diese Änderungen haben im Desktop-Browser **null sichtbaren Effekt**, aktiviere
 ## Voraussetzungen (extern, vom Nutzer zu besorgen)
 
 1. **Apple Developer Program** — 99 $/Jahr. ✓ **vorhanden** (Nutzer hat Konto, 2026-05-29).
-2. **Mac mit Xcode** — zum Bauen/Signieren des iOS-Targets (lokal oder CI wie Codemagic/EAS-Build-equivalent). Capacitor erzeugt ein natives Xcode-Projekt.
+2. **Mac mit Xcode** — ✓ **vorhanden** (Xcode 26.2, Apple Silicon, verifiziert 2026-05-29). Builds laufen also lokal auf dieser Maschine; kein Cloud-Mac nötig.
 3. **App-Bundle-ID** festlegen, z.B. `com.kickpact.app`. Muss zur `APPLE_BUNDLE_ID`-ENV passen (Apple-Sign-in ist in [lib/auth/server.ts:26](../../../lib/auth/server.ts) schon darauf vorbereitet).
 4. **Apple Sign-in ist Pflicht**, sobald Google-Login angeboten wird (Guideline 4.8). Ist bereits konfiguriert — nur Keys/Provider live schalten.
+
+## Spike-Ergebnisse (2026-06-01) — Build-Kette verifiziert, Auth-Test offen
+
+Isolierter Spike in `~/capacitor-ios-spike` (außerhalb des Repos, `server.url` → `https://kickpact.schartl.dev`). **KickPact-Repo unberührt.**
+
+**✅ Verifiziert — die komplette Build-Kette funktioniert:**
+- Capacitor-Projekt + `npx cap add ios` → Xcode-Projekt generiert
+- `pod install` erfolgreich (2 Pods: Capacitor, CapacitorCordova)
+- `xcodebuild -sdk iphonesimulator26.2 … build` → **`App.app` erfolgreich kompiliert**
+
+**Konkrete Gotchas (für die echte Integration in WS-1 einplanen):**
+1. **Node 22 nötig:** Capacitor-8-CLI bricht auf Node 20 hart ab (`requires NodeJS >=22`). Projekt fährt aktuell Node 20.19.5 → vor WS-1 `.nvmrc` + CI auf Node 22 heben. (Spike lief deshalb auf Capacitor **6**.)
+2. **CocoaPods-Locale:** `pod install` scheitert ohne `LANG=en_US.UTF-8`/`LC_ALL` (Ruby `Encoding::CompatibilityError`). In Build-Doku/CI exportieren.
+3. **CoreSimulator wedged:** `xcrun simctl` hängt auf dieser Maschine reproduzierbar (Service-Kill half nicht) → **Reboot nötig**, um einen Simulator zu booten. Build (Compile) braucht kein simctl, Booten/Installieren/Launchen schon.
+
+**⏳ Noch offen — der eigentliche Risiko-Test (Auth im Standalone-WebView):**
+Konnte nicht durchgeführt werden, weil der Simulator nicht bootet (Punkt 3). Nächster Schritt nach Reboot **oder** mit angeschlossenem iPhone: App.app installieren, launchen, Staging laden, Magic-Link + Apple-Sign-in durchspielen, Cookie-Session-Persistenz über App-Neustart prüfen. Build-Artefakt liegt bereit (`~/capacitor-ios-spike/ios/App/build/.../App.app`), kein Rebuild nötig.
+
+**Permanentes Artefakt im Repo:** [lib/platform/native.ts](../../../lib/platform/native.ts) — web-sicherer Platform-Detector (`isIOSApp()` etc.), Basis fürs spätere IAP-/Anti-Steering-Branching.
 
 ## Workstreams (wenn die App „fertig" ist)
 
@@ -133,7 +154,24 @@ Eine Club-Subscription kann künftig aus **Stripe ODER Apple** stammen. Das Enti
 - **Push-Infra:** APNs direkt via Capacitor oder über einen Dienst? Bindet an die bestehende Inngest-Job-Landschaft an.
 - **Android später?** Capacitor kann dasselbe Projekt für Android (`npx cap add android`) — Strategie hält, nur separater Store-Prozess.
 
-## Was NICHT zu tun ist
+## Parallelisierung — was VOR App-Fertigstellung sinnvoll ist (2026-05-29)
+
+Grundsatz: **Risiko + Infrastruktur jetzt, Politur + Einreichung zuletzt.** Inerte Abstraktionen ohne Konsumenten/Verifizierbarkeit bringen nichts — nur bauen, was decoupled UND testbar ist.
+
+**Lohnt sich jetzt (decoupled von Web-Feature-Stand):**
+- **Capacitor-Scaffold + Auth-Smoke-Test (höchster Wert):** Da Mac+Xcode vorhanden sind, ist die #1-Unbekannte — funktioniert Login im Standalone-WebView? — *heute schon verifizierbar*. Scaffold gegen Staging-Domain, Simulator starten, Magic-Link + Apple-Sign-in durchspielen. Isoliert in eigenem Worktree/Branch, **kein Commit/Deploy**, damit der laufende Refactor nicht verschränkt wird.
+- **Platform-Detection-Helper:** kleine, web-sichere Utility (`window.Capacitor`-Feature-Detect, ohne Hard-Dependency) als stabile Basis für späteres iOS-UI-Branching.
+- **RevenueCat-Backend (WS-7):** **nur wenn Pricing/Plan-Modell final ist** — StoreKit-Produkte hängen an festen Preis-Tiers, späteres Ändern ist mühsam. Subscriptions-Tabelle wird vom laufenden Refactor aktuell nicht angefasst → kollisionsarm.
+- **Accounts/Infra:** App-Store-Connect-App-Eintrag, Bundle-ID, RevenueCat-Account, APNs-Key (reine Einrichtung).
+
+**Wartet bis App fertig:** Per-Screen-Politur, Plugin-Verdrahtung an noch nicht finalen Stellen, Einreichung/Review.
+
+## App-Store-Connect-API-Key & Automatisierung
+
+- Ein **App Store Connect API Key** (Issuer-ID + Key-ID + `.p8`) automatisiert via **fastlane**: App-Record anlegen, TestFlight-Builds verwalten, Upload, Metadaten — spart manuelles Klicken in App Store Connect.
+- **Entfernt NICHT** den Build/Sign/Archive-Schritt — der braucht Xcode (ist hier lokal vorhanden).
+- **Zeitpunkt:** erst in der TestFlight/Submission-Phase relevant; alle Jetzt-Aufgaben oben brauchen den Key nicht. Daher **nicht vorab übergeben**.
+- **Sicherheit:** `.p8` ist ein mächtiges Secret. Nicht in den Chat pasten, nicht committen. In Vaultwarden ablegen, Rolle minimal scopen (App Manager statt Admin). Erst zum Upload-Schritt einbinden.
 - Kein `output: "export"` / statischer Export — bricht Server Components/Actions.
 - Keinen RN/Expo-Rewrite starten — verwirft die gesamte Web-Codebasis.
 - **Nicht** „einen Teil in React Native" schreiben für die Abos — native IAP läuft bei Capacitor über ein Plugin, nicht über RN. RN und Capacitor mischt man nicht.
