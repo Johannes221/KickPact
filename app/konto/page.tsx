@@ -258,6 +258,33 @@ export default async function KontoPage() {
         </p>
       </section>
 
+      {/* === Hilfe & Support === */}
+      <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-3">
+        <div>
+          <h2 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+            Hilfe &amp; Support
+          </h2>
+          <p className="mt-0.5 text-xs text-brand-night-navy/60">
+            Ein Problem, ein Fehler oder eine Frage? Meld dich — du siehst hier
+            Status und Verlauf all deiner Anfragen.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/konto/support"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent/90"
+          >
+            Meine Anfragen
+          </Link>
+          <Link
+            href="/hilfe"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-brand-neutral/40 px-4 py-2 text-sm font-semibold text-brand-night-navy hover:bg-brand-off-white"
+          >
+            Hilfe-Center
+          </Link>
+        </div>
+      </section>
+
       {/* === Daten & Privatsphäre === */}
       <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-4">
         <div>

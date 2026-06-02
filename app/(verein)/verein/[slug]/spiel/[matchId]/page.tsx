@@ -9,6 +9,7 @@ import { MatchEventsList } from "./_components/match-events-list";
 import { ManualEventEditor } from "./_components/manual-event-editor";
 import { ResultOverrideEditor } from "./_components/result-override-editor";
 import { AdminNoteDisplay } from "./_components/admin-note-display";
+import { ReportProblemButton } from "@/components/support/report-problem-button";
 
 export const metadata = { title: "Spiel · KickPact" };
 
@@ -259,6 +260,35 @@ export default async function MatchDetailPage({
           />
         </section>
       )}
+
+      {/* „Stimmt etwas nicht?" — für ALLE Rollen (auch Viewer/Team-Mitglieder
+          ohne Edit-Rechte). Erzeugt ein Support-Ticket mit verlinktem Spiel. */}
+      <section className="border-t border-brand-neutral/30 pt-6 text-center">
+        <p className="mb-2 text-sm text-brand-night-navy/60">
+          Falsches Ergebnis, fehlendes Tor oder ein anderer Fehler bei diesem Spiel?
+        </p>
+        <div className="flex justify-center">
+          <ReportProblemButton
+            label="Stimmt etwas nicht?"
+            title="Problem mit diesem Spiel melden"
+            description="Beschreib kurz, was nicht stimmt (z.B. falsches Ergebnis oder fehlendes Tor). Wir prüfen es und melden uns."
+            defaultCategory="spieldaten"
+            variant="outline"
+            context={{
+              contextType: "match",
+              contextId: match.id,
+              clubId: data.club.id,
+              teamId: team.id,
+              contextMeta: {
+                label: `${match.heimName} ${match.ergebnisHeim ?? "–"}:${match.ergebnisGast ?? "–"} ${match.gastName} (${datumStr})`,
+                matchId: match.id,
+                team: team.name,
+                saison: team.saison
+              }
+            }}
+          />
+        </div>
+      </section>
     </div>
   );
 }

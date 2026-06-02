@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Plus, Settings, LogOut, ShieldCheck, Hourglass } from "lucide-react";
+import { Plus, Settings, LogOut, ShieldCheck, Hourglass, LifeBuoy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderStatusDot } from "@/components/shared/status-bar";
 import { IdentityIcon } from "@/components/shared/identity-icon";
@@ -289,6 +289,18 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
             Mein Konto
           </Link>
         </DropdownMenuItem>
+
+        {!isOperator && (
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
+          >
+            <Link href="/konto/support">
+              <LifeBuoy className="mr-2 h-4 w-4" aria-hidden />
+              Hilfe &amp; Support
+            </Link>
+          </DropdownMenuItem>
+        )}
 
         <DropdownMenuItem
           className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"

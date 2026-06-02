@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { assertPlatformAdmin } from "@/lib/auth/admin";
+import { countOpenTickets } from "@/lib/db/queries/support";
 import { OperatorLogoutButton } from "@/components/admin/operator-logout-button";
 
 export const metadata = { title: "Admin · KickPact" };
@@ -25,6 +26,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const { user } = await assertPlatformAdmin();
+  const openTickets = await countOpenTickets();
 
   return (
     <main className="mx-auto max-w-7xl px-5 md:px-6 py-8 md:py-12">
@@ -43,15 +45,23 @@ export default async function AdminLayout({
         </div>
       </div>
       <nav className="mb-8 -mx-1 flex flex-wrap gap-1 rounded-2xl border border-brand-neutral/30 bg-brand-off-white p-1.5">
-        {NAV_ITEMS.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="rounded-xl px-4 py-2 text-sm font-semibold text-brand-night-navy/70 hover:text-brand-night-navy hover:bg-white/70 transition-colors"
-          >
-            {item.label}
-          </Link>
-        ))}
+        {NAV_ITEMS.map((item) => {
+          const badge = item.href === "/admin/support" && openTickets > 0 ? openTickets : 0;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="relative inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-brand-night-navy/70 hover:text-brand-night-navy hover:bg-white/70 transition-colors"
+            >
+              {item.label}
+              {badge > 0 && (
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-alert-red px-1.5 text-[0.65rem] font-bold text-white">
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
+            </Link>
+          );
+        })}
       </nav>
       {children}
     </main>
