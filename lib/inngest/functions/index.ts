@@ -15,6 +15,7 @@ import { expireTrials } from "./expire-trials";
 import { cleanupSessions } from "./cleanup-sessions";
 import { anonymizeAccounts } from "./anonymize-accounts";
 import { seasonRenewalPrompts } from "./season-renewal-prompts";
+import { supportSlaReminders } from "./support-sla-reminders";
 
 export const functions = [
   crawlMatches,
@@ -34,5 +35,6 @@ export const functions = [
   expireTrials,
   cleanupSessions,
   anonymizeAccounts,
-  seasonRenewalPrompts
+  seasonRenewalPrompts,
+  supportSlaReminders
 ];

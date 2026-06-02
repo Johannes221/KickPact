@@ -2,6 +2,10 @@ import { magicLinkEmail } from "@/lib/mail/templates/magic-link";
 import { adminPasswordResetEmail } from "@/lib/mail/templates/admin-password-reset";
 import { supportReplyEmail } from "@/lib/mail/templates/support-reply";
 import { supportNewTicketEmail } from "@/lib/mail/templates/support-new-ticket";
+import { supportTicketReceivedEmail } from "@/lib/mail/templates/support-ticket-received";
+import { supportCustomerRepliedEmail } from "@/lib/mail/templates/support-customer-replied";
+import { supportAssignedEmail } from "@/lib/mail/templates/support-assigned";
+import { supportOverdueDigestEmail } from "@/lib/mail/templates/support-overdue-digest";
 import { invoiceReminderEmail } from "@/lib/mail/templates/invoice-reminder";
 import { verificationApprovedEmail } from "@/lib/mail/templates/verification-approved";
 import { verificationRejectedEmail } from "@/lib/mail/templates/verification-rejected";
@@ -34,7 +38,30 @@ export function renderTemplatePreviews(): RenderedTemplate[] {
     {
       key: "support-new-ticket",
       label: "Neues Ticket (an Operator)",
-      mail: supportNewTicketEmail({ category: "frage", subject: "Wie funktioniert das?", fromName: "Max Muster", fromEmail: "max@beispiel.de", adminUrl: SAMPLE_URL })
+      mail: supportNewTicketEmail({ category: "spieldaten", subject: "Ergebnis stimmt nicht", fromName: "Max Muster", fromEmail: "max@beispiel.de", adminUrl: SAMPLE_URL, priority: "high", context: "Spiel: SV A – FC B (2:1)" })
+    },
+    {
+      key: "support-ticket-received",
+      label: "Eingangsbestätigung (an Kunde)",
+      mail: supportTicketReceivedEmail({ recipientName: "Max Muster", subject: "Ergebnis stimmt nicht", reference: "KP-7F8A2C", ticketUrl: SAMPLE_URL })
+    },
+    {
+      key: "support-customer-replied",
+      label: "Kundenantwort (an Operator)",
+      mail: supportCustomerRepliedEmail({ reference: "KP-7F8A2C", subject: "Ergebnis stimmt nicht", fromName: "Max Muster", excerpt: "Danke, aber das Tor in Minute 87 fehlt immer noch …", adminUrl: SAMPLE_URL })
+    },
+    {
+      key: "support-assigned",
+      label: "Ticket zugewiesen (an Operator)",
+      mail: supportAssignedEmail({ reference: "KP-7F8A2C", subject: "Ergebnis stimmt nicht", priority: "Hoch", assignedBy: "operator@kickpact.de", adminUrl: SAMPLE_URL })
+    },
+    {
+      key: "support-overdue-digest",
+      label: "Überfällige Tickets (Digest)",
+      mail: supportOverdueDigestEmail({ thresholdHours: 24, inboxUrl: SAMPLE_URL, items: [
+        { reference: "KP-7F8A2C", subject: "Ergebnis stimmt nicht", priority: "urgent", ageHours: 36, url: SAMPLE_URL },
+        { reference: "KP-1B2C3D", subject: "Rechnung unklar", priority: "normal", ageHours: 28, url: SAMPLE_URL }
+      ] })
     },
     {
       key: "invoice-reminder",

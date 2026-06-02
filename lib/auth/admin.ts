@@ -22,6 +22,21 @@ export async function listPlatformAdminEmails(): Promise<string[]> {
   return rows.map((r) => r.email);
 }
 
+export interface PlatformAdmin {
+  id: string;
+  email: string;
+  name: string | null;
+}
+
+/** Alle Plattform-Operatoren (für das Assignee-Dropdown im Support-Workflow). */
+export async function listPlatformAdmins(): Promise<PlatformAdmin[]> {
+  return db
+    .select({ id: users.id, email: users.email, name: users.name })
+    .from(users)
+    .where(eq(users.isPlatformAdmin, true))
+    .orderBy(users.email);
+}
+
 /**
  * Guard für Rollen-Erstellungs-Actions: Plattform-Operatoren dürfen KEINE
  * Vereins-/Mannschafts-/Sponsor-Rolle anlegen (keine Doppelrolle). Wirft in

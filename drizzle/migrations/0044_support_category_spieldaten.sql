@@ -1,0 +1,12 @@
+-- Report-a-Problem / Support-Workflow — Teil 1/2: neue Kategorie 'spieldaten'.
+-- Migration 0044 · 2026-06-02
+--
+-- HINWEIS Migrationsnummer: 0043 ist auf dem parallelen Branch durch
+-- '0043_notifications' belegt (iOS-Push). Dieser Support-Workflow startet
+-- daher bei 0044, um eine Dateinamens-Kollision beim Merge zu vermeiden.
+--
+-- ISOLIERT, weil ADD VALUE auf einen BESTEHENDEN Enum innerhalb derselben
+-- Transaktion nicht sofort verwendet werden darf (From-Scratch-Test-Migrator
+-- läuft in EINER Tx). Diese Migration referenziert den neuen Wert nirgends in
+-- DML — sie fügt ihn nur hinzu. Verwendung erst zur Laufzeit (App-Inserts).
+ALTER TYPE "support_ticket_category" ADD VALUE IF NOT EXISTS 'spieldaten';
