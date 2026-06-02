@@ -52,39 +52,27 @@ export function CookieBanner() {
     <div
       role="region"
       aria-label="Cookie- und Datenschutz-Hinweis"
-      className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 md:px-5 md:pb-5"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-brand-neutral/40 bg-white/95 backdrop-blur pb-safe shadow-[0_-4px_20px_-12px_rgba(26,26,46,0.25)]"
     >
-      <div className="mx-auto max-w-3xl rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5 shadow-2xl shadow-brand-night-navy/15">
-        <div className="flex flex-col gap-3 md:flex-row md:items-start">
-          <div className="flex-1 text-sm text-brand-night-navy/80">
-            <p className="font-semibold text-brand-night-navy">
-              Kurz zur Transparenz.
-            </p>
-            <p className="mt-1 leading-relaxed">
-              KickPact setzt nur das technisch notwendige Login-Cookie. Für
-              anonyme Reichweiten-Messung nutzen wir Plausible Analytics — ohne
-              Cookies, ohne Tracking, ohne personenbezogene Daten. Details
-              findest du in der{" "}
-              <Link
-                href="/datenschutz"
-                className="underline font-semibold hover:text-accent"
-              >
-                Datenschutz­erklärung
-              </Link>
-              .
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center md:items-start">
-            <Button
-              variant="accent"
-              size="sm"
-              onClick={acknowledge}
-              className="min-w-32"
-            >
-              Verstanden
-            </Button>
-          </div>
-        </div>
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 md:px-6">
+        <p className="min-w-0 flex-1 text-xs leading-snug text-brand-night-navy/75 md:text-sm">
+          Wir nutzen ein technisch notwendiges Login-Cookie und anonyme
+          Reichweitenmessung (Plausible).{" "}
+          <Link
+            href="/datenschutz"
+            className="font-semibold text-accent-dark underline underline-offset-2 hover:text-accent"
+          >
+            Mehr
+          </Link>
+        </p>
+        <Button
+          variant="accent"
+          size="sm"
+          onClick={acknowledge}
+          className="shrink-0"
+        >
+          Verstanden
+        </Button>
       </div>
     </div>
   );
