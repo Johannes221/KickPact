@@ -315,8 +315,9 @@ async function main(): Promise<void> {
       }
     }
 
+    const { TRIAL_DAYS } = await import("../../lib/stripe/pricing");
     const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + 30);
+    trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
 
     await db.transaction(async (tx) => {
       const [club] = await tx

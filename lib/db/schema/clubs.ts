@@ -192,12 +192,14 @@ export const teams = pgTable(
     league: text("league"),
     /**
      * Mannschafts-Verifikations-Status (Spec §1.7). NULL = nicht verifiziert,
-     * gesetzt = approved durch Plattform-Admin. Withhold-Gate: bei NULL werden
-     * Sponsoren-Rechnungen erzeugt aber nicht versendet (analog clubs.verifiedAt).
+     * gesetzt = approved durch Plattform-Admin.
      *
-     * Mannschaften unter Vereinslizenz erben die Club-Verifikation und brauchen
-     * keine eigene team_verification — der Anwendungs-Code prüft per
-     * `teams.licensedUnderClubId IS NOT NULL` zusätzlich auf Club-Verifikation.
+     * HINWEIS: Dieses team-level Gate ist aktuell DEAKTIVIERT. Das einzige
+     * aktive Withhold-Gate beim Rechnungsversand ist `clubs.verifiedAt` des
+     * Container-Vereins (siehe lib/inngest/functions/generate-invoices.ts).
+     * Die Verknüpfung läuft über `teams.clubId` → `clubs.verifiedAt`; eine
+     * Spalte `licensedUnderClubId` existiert nicht. Das Feld bleibt im Schema,
+     * falls das team-level Gate später reaktiviert wird.
      */
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
     /**

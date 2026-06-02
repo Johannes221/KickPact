@@ -17,15 +17,3 @@ export function saisonStartDate(saison: string): Date | null {
   const startYear = 2000 + parseInt(m[1], 10);
   return new Date(startYear, 6, 1); // Monat 6 = Juli (0-indexiert)
 }
-
-/**
- * Ende-Datum (exklusiv: 1. Juli des Folgejahres) einer Saison. "2526" →
- * 2026-07-01. Dient als obere Grenze, wenn man eine Saison hart eingrenzen
- * will (z.B. abgeschlossene Vorsaisons). `null` bei ungültigem Code.
- */
-export function saisonEndDateExclusive(saison: string): Date | null {
-  const m = saison.match(/^(\d{2})(\d{2})$/);
-  if (!m) return null;
-  const endYear = 2000 + parseInt(m[2], 10);
-  return new Date(endYear, 6, 1); // 1. Juli des End-Jahres (exklusiv)
-}

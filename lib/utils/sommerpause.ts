@@ -11,22 +11,8 @@
  * werden — nützlich für Integrations-Tests und manuelle Re-Runs.
  */
 
-/** Month index (0-based): June = 5, August = 7. */
+/** Month index (0-based): June = 5. */
 const SOMMERPAUSE_START_MONTH = 5; // June
-const SOMMERPAUSE_END_MONTH = 7;   // August (exclusive — resumes 1.8.)
-
-/**
- * Returns true when the given date (default: now) falls within the Sommerpause
- * window [June 1, August 1).
- *
- * Can be overridden by setting SOMMERPAUSE_OVERRIDE_DISABLED=true in the env,
- * which always returns false (useful for CI / manual crawler runs in summer).
- */
-export function isSommerpause(date: Date = new Date()): boolean {
-  if (process.env.SOMMERPAUSE_OVERRIDE_DISABLED === "true") return false;
-  const month = date.getUTCMonth(); // 0-indexed
-  return month >= SOMMERPAUSE_START_MONTH && month < SOMMERPAUSE_END_MONTH;
-}
 
 /** Tag im Juni (UTC), ab dem der Crawler in die Sommerpause geht. */
 const CRAWLER_PAUSE_START_DAY = 16;
@@ -36,7 +22,7 @@ const CRAWLER_RESUME_DAY = 15;
 /**
  * Crawler-spezifisches Pause-Fenster — enger als die Billing-Sommerpause.
  *
- * Während `isSommerpause` (Juni–Juli) für Pledge-/Billing-Pausen gilt, läuft der
+ * Während die Billing-Sommerpause (Juni–Juli) Pledges/Abos pausiert, läuft der
  * Crawler länger:
  *  - ANFANG Juni (bis 15.) noch aktiv: Im Amateurfußball laufen Saison-Finale,
  *    Nachhol- und Relegations-/Aufstiegsspiele bis in den Juni. Deren Ergebnisse

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { saisonStartDate, saisonEndDateExclusive } from "@/lib/utils/saison";
+import { saisonStartDate } from "@/lib/utils/saison";
 
 describe("saisonStartDate", () => {
   it("2526 → 2025-07-01", () => {
@@ -13,12 +13,5 @@ describe("saisonStartDate", () => {
   it("ungültig → null", () => {
     expect(saisonStartDate("foo")).toBeNull();
     expect(saisonStartDate("")).toBeNull();
-  });
-});
-
-describe("saisonEndDateExclusive", () => {
-  it("2526 → 2026-07-01 (exklusiv)", () => {
-    expect(saisonEndDateExclusive("2526")?.getFullYear()).toBe(2026);
-    expect(saisonEndDateExclusive("2526")?.getMonth()).toBe(6);
   });
 });

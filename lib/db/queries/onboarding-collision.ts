@@ -126,23 +126,3 @@ export async function checkTeamCollision(
   }
   return { kind: "scraped-unmanaged", teamId: team.id, clubId: team.clubId };
 }
-
-export interface OnboardingTarget {
-  license: LicensedVereinMatch | null;
-  collision: TeamCollision;
-}
-
-/**
- * Kombinierter Einstieg für die Onboarding-UI: beide Checks parallel.
- */
-export async function evaluateOnboardingTarget(input: {
-  fussballdeVereinId: string;
-  fussballdeTeamId: string;
-  saison: string;
-}): Promise<OnboardingTarget> {
-  const [license, collision] = await Promise.all([
-    findLicensedVereinByFussballdeId(input.fussballdeVereinId),
-    checkTeamCollision(input.fussballdeTeamId, input.saison)
-  ]);
-  return { license, collision };
-}

@@ -379,12 +379,12 @@ export default function LandingPage() {
         <div className="mt-6 md:mt-8 grid gap-4 md:gap-6 md:grid-cols-3">
           <PriceCard
             plan="Basic"
-            price="9 €"
+            price="5 €"
             unit="/ Mannschaft / Monat"
-            perPlayer="0,36 – 0,50 € pro Spieler/Monat"
+            perPlayer="0,23 – 0,50 € pro Spieler/Monat"
             features={[
               "Eine Mannschaft, eigenständig verwaltet",
-              "Bis zu 20 Sponsoren",
+              "Bis zu 5 Sponsoren",
               "Alle 10 Auto-Trigger (Tor, Sieg, Comeback, …)",
               "Alle 6 manuelle Trigger",
               "Monatliche PDF-Rechnung",

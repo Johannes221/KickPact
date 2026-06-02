@@ -121,11 +121,6 @@ export async function getArticle(slug: string): Promise<Article | null> {
   return map.get(slug) ?? null;
 }
 
-export async function getArticlesByCategory(category: string): Promise<Article[]> {
-  const all = await getAllArticles();
-  return all.filter((a) => a.frontmatter.category === category);
-}
-
 export interface CategoryInfo {
   slug: string;
   label: string;

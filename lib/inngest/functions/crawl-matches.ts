@@ -46,7 +46,7 @@ export const crawlMatches = inngest.createFunction(
     // (Mitte Juni bis Mitte Juli) übersprungen. Anfang Juni läuft der Crawler
     // noch (Saison-Finale/Relegation), ab Mitte Juli wieder,
     // um die neuen Saison-Spielpläne (scheduled-Stubs) vor Saisonauftakt zu
-    // erfassen — engeres Fenster als die Billing-Sommerpause (isSommerpause).
+    // erfassen — engeres Fenster als die Billing-Sommerpause.
     // Manuelle Triggers (crawler/manual, crawler/team.crawl) laufen immer durch.
     const isCronRun = event?.name !== "crawler/manual" && event?.name !== "crawler/team.crawl";
     if (isCronRun && isCrawlerSommerpause()) {

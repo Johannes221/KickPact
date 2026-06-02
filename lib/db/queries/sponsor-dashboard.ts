@@ -59,49 +59,6 @@ export async function getSponsorDashboardStats(
   };
 }
 
-export interface MonthlySparklinePoint {
-  /** "YYYY-MM" */
-  month: string;
-  cents: number;
-}
-
-/**
- * Monatliche Summe (confirmed+invoiced) der letzten N Monate für einen Sponsor.
- * Liefert immer N Punkte inklusive Lücken (Monate ohne Charges → 0).
- */
-export async function getSponsorMonthlyCharges(
-  sponsorId: string,
-  monthsBack = 6
-): Promise<MonthlySparklinePoint[]> {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth() - (monthsBack - 1), 1);
-
-  const rows = await db
-    .select({
-      month: sql<string>`to_char(${charges.createdAt}, 'YYYY-MM')`,
-      cents: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int`
-    })
-    .from(charges)
-    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-    .where(
-      and(
-        eq(pledges.sponsorId, sponsorId),
-        inArray(charges.status, ["confirmed", "invoiced"]),
-        gte(charges.createdAt, start)
-      )
-    )
-    .groupBy(sql`to_char(${charges.createdAt}, 'YYYY-MM')`);
-
-  const map = new Map(rows.map((r) => [r.month, Number(r.cents)]));
-  const out: MonthlySparklinePoint[] = [];
-  for (let i = 0; i < monthsBack; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - (monthsBack - 1 - i), 1);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    out.push({ month: key, cents: map.get(key) ?? 0 });
-  }
-  return out;
-}
-
 /**
  * Sponsor-Record für einen User finden (oder null).
  */

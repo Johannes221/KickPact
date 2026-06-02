@@ -25,7 +25,7 @@ export interface CyclePrice {
   display: string;
   /** Sub-Anzeige: kleinerer Kontext (z.B. effektiv pro Monat). */
   caption: string;
-  /** Optionaler Spar-Badge ("~22 % sparen"). */
+  /** Optionaler Spar-Badge ("35 % sparen"). */
   saveBadge?: string;
 }
 
@@ -220,7 +220,9 @@ export function getMonthlyEquivalent(
 /**
  * Ersparnis-Vergleich gegen "monthly × Vergleichsbasis".
  *
- * - season_end: 10 × monthly als Vergleichsbasis (Aug–Mai aktive Monate)
+ * - season_end: 12 × monthly als Vergleichsbasis — was ein Monatsabo über ein
+ *   volles Jahr kostet (das Monatsabo pausiert im Sommer nicht). Ergibt die in
+ *   docs/pricing.md ausgewiesenen 35 % (Basic/Pro) bzw. 34 % (Verein).
  * - monthly: keine Ersparnis (0/0)
  */
 export function getSavings(
@@ -230,7 +232,7 @@ export function getSavings(
   if (cycle === "monthly") return { absoluteCents: 0, percent: 0 };
   const monthly = PLANS[plan].cycles.monthly.amountCents;
   const total = PLANS[plan].cycles[cycle].amountCents;
-  const baseline = monthly * 10;
+  const baseline = monthly * 12;
   const absoluteCents = baseline - total;
   const percent = baseline > 0 ? Math.round((absoluteCents / baseline) * 100) : 0;
   return { absoluteCents, percent };

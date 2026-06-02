@@ -39,12 +39,3 @@ export async function getSeasonByCode(code: string): Promise<SeasonRow | null> {
     .limit(1);
   return rows[0] ?? null;
 }
-
-export async function getMatchdayFiveCutoff(seasonId: string): Promise<Date | null> {
-  const rows = await db
-    .select({ matchdayFiveAt: seasons.matchdayFiveAt })
-    .from(seasons)
-    .where(eq(seasons.id, seasonId))
-    .limit(1);
-  return rows[0]?.matchdayFiveAt ?? null;
-}

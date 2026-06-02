@@ -26,7 +26,7 @@ const ROLE_META: Record<
     bullets: [
       "Onboarding in 90 Sek. — wir finden eure Mannschaft automatisch",
       "Einladungslink → Sponsoren legen Pacts selbst fest",
-      "30 Tage gratis, danach 9 € / Mon."
+      "30 Tage gratis, danach 5 € / Mon."
     ]
   },
   verein: {

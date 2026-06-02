@@ -33,6 +33,11 @@ import {
   paginate,
   type PaginatedResult
 } from "@/lib/db/queries/_helpers/paginate";
+import {
+  CYCLE_ORDER,
+  PLAN_ORDER,
+  getMonthlyEquivalent
+} from "@/lib/stripe/pricing";
 
 /**
  * Platform-Admin Statistics.
@@ -54,15 +59,20 @@ import {
  */
 
 /**
- * Plan + Cycle → monthly-equivalent in cents. Mirrors lib/stripe/pricing.ts
- * but kept local to avoid a runtime dependency on the pricing module from
- * an admin-only query path. Update both when prices move.
+ * Plan + Cycle → monthly-equivalent in cents. Derived directly from the
+ * pricing source of truth (lib/stripe/pricing.ts) so MRR-Zahlen nie von der
+ * Preis-Tabelle abweichen können. Lookup by string with `?? 0`-Fallback fängt
+ * Alt-Bestände (z.B. inerter Enum-Wert 'annual') ab.
  */
-const PLAN_CYCLE_MONTHLY_CENTS: Record<string, Record<string, number>> = {
-  basic: { monthly: 500, season_end: 390 },
-  pro: { monthly: 1900, season_end: 1490 },
-  verein: { monthly: 4900, season_end: 3890 }
-};
+const PLAN_CYCLE_MONTHLY_CENTS: Record<string, Record<string, number>> =
+  Object.fromEntries(
+    PLAN_ORDER.map((plan) => [
+      plan,
+      Object.fromEntries(
+        CYCLE_ORDER.map((cycle) => [cycle, getMonthlyEquivalent(plan, cycle)])
+      )
+    ])
+  );
 
 export interface PlatformKpis {
   activeClubs: number;

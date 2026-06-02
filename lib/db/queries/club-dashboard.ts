@@ -362,66 +362,6 @@ export async function listClubSeasonPledges(
   });
 }
 
-export interface ClubMonthlyChargesPoint {
-  /** "YYYY-MM" */
-  month: string;
-  cents: number;
-}
-
-/**
- * Monatliche Charges-Summe (confirmed+invoiced) der letzten N Monate eines Vereins,
- * aggregiert über alle Mannschaften. Liefert immer N Punkte (fehlende Monate → 0).
- */
-export async function getMonthlyChargesForClub(
-  clubId: string,
-  monthsBack = 12
-): Promise<ClubMonthlyChargesPoint[]> {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth() - (monthsBack - 1), 1);
-
-  const teamRows = await db.select({ id: teams.id }).from(teams).where(eq(teams.clubId, clubId));
-  const teamIds = teamRows.map((t) => t.id);
-  if (teamIds.length === 0) {
-    return buildEmptyMonthlySeries(monthsBack);
-  }
-
-  const rows = await db
-    .select({
-      month: sql<string>`to_char(${charges.createdAt}, 'YYYY-MM')`,
-      cents: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int`
-    })
-    .from(charges)
-    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-    .where(
-      and(
-        inArray(pledges.teamId, teamIds),
-        inArray(charges.status, ["confirmed", "invoiced"]),
-        gte(charges.createdAt, start)
-      )
-    )
-    .groupBy(sql`to_char(${charges.createdAt}, 'YYYY-MM')`);
-
-  const map = new Map(rows.map((r) => [r.month, Number(r.cents)]));
-  const out: ClubMonthlyChargesPoint[] = [];
-  for (let i = 0; i < monthsBack; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - (monthsBack - 1 - i), 1);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    out.push({ month: key, cents: map.get(key) ?? 0 });
-  }
-  return out;
-}
-
-function buildEmptyMonthlySeries(monthsBack: number): ClubMonthlyChargesPoint[] {
-  const now = new Date();
-  const out: ClubMonthlyChargesPoint[] = [];
-  for (let i = 0; i < monthsBack; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - (monthsBack - 1 - i), 1);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    out.push({ month: key, cents: 0 });
-  }
-  return out;
-}
-
 export interface TopSponsorRow {
   sponsorId: string;
   displayName: string;

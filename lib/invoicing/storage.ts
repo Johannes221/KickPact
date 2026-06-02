@@ -6,9 +6,11 @@ import path from "node:path";
 /**
  * PDF-Storage mit 3-Tier-Fallback:
  *
- * 1. **S3-kompatibel (R2/Hetzner Object Storage)** — wenn alle R2_*-Env-Vars
- *    gesetzt sind. Endpoint via R2_ENDPOINT konfigurierbar damit Hetzner-S3
- *    auch funktioniert (Default: Cloudflare R2).
+ * 1. **S3-kompatibel (R2/Hetzner Object Storage)** — wenn alle R2-Env-Vars
+ *    gesetzt sind. Es werden beide Schreibweisen gelesen (CLOUDFLARE_R2_*
+ *    bevorzugt, R2_* als Fallback), damit R2 auch in Coolify-Umgebungen aktiv
+ *    wird. Endpoint via *_R2_ENDPOINT konfigurierbar damit Hetzner-S3 auch
+ *    funktioniert (Default: Cloudflare R2).
  * 2. **Persistent Volume** unter `PDF_STORAGE_PATH` (Default `/data/kickpact-pdfs`)
  *    — wird in Coolify als Persistent Volume gemountet. Funktioniert ohne
  *    externes Object-Storage.
@@ -19,16 +21,23 @@ import path from "node:path";
  * Browser-URLs (signiert für R2, App-interne Stream-Route für local).
  */
 
-const hasR2 =
-  !!process.env.R2_ACCESS_KEY_ID &&
-  !!process.env.R2_SECRET_ACCESS_KEY &&
-  !!process.env.R2_BUCKET;
+// Coolify-Staging/Prod nutzt CLOUDFLARE_R2_* — wir lesen beide Schreibweisen
+// (CLOUDFLARE_R2_* bevorzugt, R2_* als Fallback), konsistent mit
+// lib/storage/documents.ts. Vorher nur R2_* → in Coolify war R2 nie aktiv und
+// Invoice-PDFs fielen aufs lokale Volume zurück.
+const R2_ACCESS_KEY_ID =
+  process.env.CLOUDFLARE_R2_ACCESS_KEY_ID ?? process.env.R2_ACCESS_KEY_ID;
+const R2_SECRET_ACCESS_KEY =
+  process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY ?? process.env.R2_SECRET_ACCESS_KEY;
+const R2_BUCKET = process.env.CLOUDFLARE_R2_BUCKET ?? process.env.R2_BUCKET;
+const R2_ENDPOINT = process.env.CLOUDFLARE_R2_ENDPOINT ?? process.env.R2_ENDPOINT;
+const R2_ACCOUNT_ID = process.env.CLOUDFLARE_R2_ACCOUNT_ID ?? process.env.R2_ACCOUNT_ID;
+
+const hasR2 = !!R2_ACCESS_KEY_ID && !!R2_SECRET_ACCESS_KEY && !!R2_BUCKET;
 
 const r2Endpoint =
-  process.env.R2_ENDPOINT ??
-  (process.env.R2_ACCOUNT_ID
-    ? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
-    : null);
+  R2_ENDPOINT ??
+  (R2_ACCOUNT_ID ? `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com` : null);
 
 const s3 =
   hasR2 && r2Endpoint
@@ -36,8 +45,8 @@ const s3 =
         region: "auto",
         endpoint: r2Endpoint,
         credentials: {
-          accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!
+          accessKeyId: R2_ACCESS_KEY_ID!,
+          secretAccessKey: R2_SECRET_ACCESS_KEY!
         }
       })
     : null;
@@ -69,16 +78,16 @@ async function ensureWritable(dir: string): Promise<string> {
  * `getDownloadUrl()` zu einer Browser-tauglichen URL auflösen kann.
  */
 export async function storePdf(key: string, body: Buffer): Promise<string> {
-  if (s3 && process.env.R2_BUCKET) {
+  if (s3 && R2_BUCKET) {
     await s3.send(
       new PutObjectCommand({
-        Bucket: process.env.R2_BUCKET,
+        Bucket: R2_BUCKET,
         Key: key,
         Body: body,
         ContentType: "application/pdf"
       })
     );
-    return `r2://${process.env.R2_BUCKET}/${key}`;
+    return `r2://${R2_BUCKET}/${key}`;
   }
   const baseDir = await ensureWritable(LOCAL_DIR);
   const relPath = key.replace(/\//g, "_");

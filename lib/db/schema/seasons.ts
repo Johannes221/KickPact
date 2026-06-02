@@ -5,8 +5,8 @@ import { createId } from "@paralleldrive/cuid2";
  * Saisons-Stammdaten (DFB / regional).
  *
  * `matchdayFiveAt` ist das Cutoff-Datum für:
- *   - Saison-Pass-Buchung (`canBookSeasonPass`)
- *   - Saison-Wetten-Pledges (`canCreateSeasonWager`)
+ *   - Saison-Pass-Buchung (`canBookSeasonPassPure`)
+ *   - Saison-Wetten-Pledges (`canCreateSeasonWagerPure`)
  *
  * Bewusst per Saison pflegbar (Liga-abhängig) statt automatisch
  * berechnet. Default-Seed: ~6 Wochen nach `startsAt`.

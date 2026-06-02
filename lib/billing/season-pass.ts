@@ -7,7 +7,7 @@ import { subscriptions, teamLicenses } from "@/lib/db/schema";
 /**
  * Saison-Pass-Lifecycle.
  *
- * Pause: 1.6. — alle `billing_cycle = 'season'` Subscriptions mit Status
+ * Pause: 1.6. — alle `billing_cycle = 'season_end'` Subscriptions mit Status
  * `active` werden auf `paused` gesetzt + Stripe `pause_collection={behavior:'void'}`.
  *
  * Resume: 1.8. — Pausen werden aufgehoben.

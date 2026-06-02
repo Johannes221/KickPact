@@ -306,9 +306,8 @@ export default function PreisePage() {
         </Accordion>
 
         <p className="mt-10 text-center text-xs md:text-sm text-brand-night-navy/55 leading-relaxed">
-          Alle Preise zzgl. USt. (19 %). Monatlich kündbar. Saison-Pass mit
-          ~22 % Rabatt vs. Monatsabo (~2 Monate geschenkt). Sommerpause Juni/Juli
-          kostenlos.
+          Alle Preise zzgl. USt. (19 %). Monatlich kündbar. Saison-Pass mit bis
+          zu 35 % Rabatt vs. Monatsabo. Sommerpause Juni/Juli kostenlos.
         </p>
       </section>
 

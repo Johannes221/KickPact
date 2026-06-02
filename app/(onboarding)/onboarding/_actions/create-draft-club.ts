@@ -18,6 +18,7 @@ import { assertNotPlatformAdminAction } from "@/lib/auth/admin";
 import { createInvitation, listInvitationsForTeam } from "@/lib/db/queries/invitations";
 import { checkTeamCollision } from "@/lib/db/queries/onboarding-collision";
 import { inngest } from "@/lib/inngest/client";
+import { TRIAL_DAYS } from "@/lib/stripe/pricing";
 
 /** True, wenn der User Mitglied (beliebige Rolle) des Clubs ist. */
 async function isClubMemberOf(clubId: string, userId: string): Promise<boolean> {
@@ -153,7 +154,7 @@ export async function createDraftClub(input: CreateDraftInput): Promise<CreateDr
   const trialEligible = consumed.length === 0;
 
   const trialEnd = new Date();
-  trialEnd.setDate(trialEnd.getDate() + 30);
+  trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
 
   const result = await db.transaction(async (tx) => {
     // Advisory-Lock pro Team serialisiert konkurrierende Registrierungen

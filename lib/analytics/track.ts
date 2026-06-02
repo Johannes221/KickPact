@@ -46,7 +46,7 @@ declare global {
  *
  * @example
  * track("signup_started");
- * track("pricing_tier_clicked", { tier: "pro", cycle: "season" });
+ * track("pricing_tier_clicked", { tier: "pro", cycle: "season_end" });
  */
 export function track(event: EventName, props?: EventProps): void {
   // SSR-Guard

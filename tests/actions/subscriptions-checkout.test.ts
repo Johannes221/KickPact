@@ -119,11 +119,11 @@ describe("createCheckoutSession", () => {
       { clubId: "club1", stripeCustomerId: "cus_x", status: "trialing", billingCycle: "monthly" }
     ]);
 
-    await createCheckoutSession({ clubSlug: "fc-test", plan: "pro", cycle: "season" });
+    await createCheckoutSession({ clubSlug: "fc-test", plan: "pro", cycle: "season_end" });
 
     expect(stripeCheckoutSessionsCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        line_items: [{ price: "price_pro_season_test", quantity: 1 }]
+        line_items: [{ price: "price_pro_season_end_test", quantity: 1 }]
       })
     );
   });
