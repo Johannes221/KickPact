@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { and, eq, desc } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { teams, clubs, users, sponsorInquiries } from "@/lib/db/schema";
-import { teamLicenses } from "@/lib/db/schema/billing";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
+import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
+import { getClubById } from "@/lib/db/queries/club-admin";
+import {
+  getTeamLicensePlanDirect
+} from "@/lib/db/queries/subscriptions";
+import { listPendingInquiriesForTeam } from "@/lib/db/queries/sponsoring-admin";
 import { listInvitationsForTeam } from "@/lib/db/queries/invitations";
 import { listSponsorsForTeam } from "@/lib/db/queries/team-dashboard";
 import { SponsorInviteCard } from "./_components/sponsor-invite-card";
@@ -23,11 +25,7 @@ export default async function TeamSponsorenPage({
   const { slug, teamId } = await params;
   const { club, role } = await assertTeamPageAccess(slug, teamId, "viewer");
 
-  const [team] = await db
-    .select({ id: teams.id, name: teams.name, verifiedAt: teams.verifiedAt })
-    .from(teams)
-    .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
-    .limit(1);
+  const team = await getTeamInClub(teamId, club.id);
 
   if (!team) {
     return (
@@ -37,36 +35,16 @@ export default async function TeamSponsorenPage({
     );
   }
 
-  const [[clubRow], [licenseRow], invitations, sponsorRows, inquiries] = await Promise.all([
-    db.select({ verifiedAt: clubs.verifiedAt }).from(clubs).where(eq(clubs.id, club.id)).limit(1),
-    db.select({ plan: teamLicenses.plan }).from(teamLicenses).where(eq(teamLicenses.teamId, team.id)).limit(1),
+  // Offene Sponsor-Anfragen (Discover) FÜR DIESE MANNSCHAFT. Bewusst auf
+  // Team-Ebene: ein Team-Admin (z.B. einer fremd verwalteten Mannschaft in
+  // einem anderen Container-Verein) ist evtl. kein Club-Admin und sieht die
+  // Club-weite Inbox nicht — hier sieht er die Anfragen für seine Mannschaft.
+  const [clubRow, licenseRow, invitations, sponsorRows, inquiries] = await Promise.all([
+    getClubById(club.id),
+    getTeamLicensePlanDirect(team.id),
     listInvitationsForTeam(team.id),
     listSponsorsForTeam(team.id),
-    // Offene Sponsor-Anfragen (Discover) FÜR DIESE MANNSCHAFT. Bewusst auf
-    // Team-Ebene: ein Team-Admin (z.B. einer fremd verwalteten Mannschaft in
-    // einem anderen Container-Verein) ist evtl. kein Club-Admin und sieht die
-    // Club-weite Inbox nicht — hier sieht er die Anfragen für seine Mannschaft.
-    db
-      .select({
-        id: sponsorInquiries.id,
-        teamId: sponsorInquiries.teamId,
-        teamName: teams.name,
-        status: sponsorInquiries.status,
-        message: sponsorInquiries.message,
-        createdAt: sponsorInquiries.createdAt,
-        sponsorEmail: users.email,
-        sponsorName: users.name
-      })
-      .from(sponsorInquiries)
-      .innerJoin(teams, eq(sponsorInquiries.teamId, teams.id))
-      .innerJoin(users, eq(sponsorInquiries.sponsorUserId, users.id))
-      .where(
-        and(
-          eq(sponsorInquiries.teamId, team.id),
-          eq(sponsorInquiries.status, "pending")
-        )
-      )
-      .orderBy(desc(sponsorInquiries.createdAt))
+    listPendingInquiriesForTeam(team.id)
   ]);
 
   // Verifikations-Scope analog zur Setup-Checkliste: Vereinslizenz verifiziert

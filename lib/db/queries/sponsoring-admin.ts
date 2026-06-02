@@ -221,3 +221,28 @@ export async function getClubSponsorenOverview(clubId: string) {
 
   return { teamRows, invitations, activeSponsors, inquiries };
 }
+
+/** Offene Discover-Anfragen FÜR EINE Mannschaft (Team-Scope-Sponsoren-Seite). */
+export async function listPendingInquiriesForTeam(teamId: string) {
+  return db
+    .select({
+      id: sponsorInquiries.id,
+      teamId: sponsorInquiries.teamId,
+      teamName: teams.name,
+      status: sponsorInquiries.status,
+      message: sponsorInquiries.message,
+      createdAt: sponsorInquiries.createdAt,
+      sponsorEmail: users.email,
+      sponsorName: users.name
+    })
+    .from(sponsorInquiries)
+    .innerJoin(teams, eq(sponsorInquiries.teamId, teams.id))
+    .innerJoin(users, eq(sponsorInquiries.sponsorUserId, users.id))
+    .where(
+      and(
+        eq(sponsorInquiries.teamId, teamId),
+        eq(sponsorInquiries.status, "pending")
+      )
+    )
+    .orderBy(desc(sponsorInquiries.createdAt));
+}

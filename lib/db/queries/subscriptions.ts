@@ -183,6 +183,16 @@ export async function getSubscriptionForClub(clubId: string) {
   return sub;
 }
 
+/** Direkte Lizenz-Plan-Row einer einzelnen Mannschaft (oder undefined). */
+export async function getTeamLicensePlanDirect(teamId: string) {
+  const [row] = await db
+    .select({ plan: teamLicenses.plan })
+    .from(teamLicenses)
+    .where(eq(teamLicenses.teamId, teamId))
+    .limit(1);
+  return row;
+}
+
 /** Plan aller Team-Lizenzen eines Clubs (für die „höchstes Tier"-Ableitung). */
 export async function listTeamLicensePlansForClub(clubId: string) {
   return db
