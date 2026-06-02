@@ -30,9 +30,9 @@ import { RolesTabs } from "./_components/roles-tabs";
 import { RotatingTrigger } from "@/components/landing/rotating-trigger";
 
 export const metadata = {
-  title: "Amateurfußball Sponsoring – einfach, automatisch, fair",
+  title: "Amateurfußball-Sponsoring, das mitfiebert",
   description:
-    "Verbinde deinen Amateurverein mit lokalen Sponsoren. Sponsoren zahlen pro Tor, Sieg oder Einsatz – vollautomatisch abgerechnet. Kein Papierkram, weniger als 1 € pro Spieler im Monat.",
+    "Familie, Freunde und lokale Sponsoren setzen einen Betrag pro Tor, Sieg oder Aufstieg und füllen so die Mannschaftskasse. 100 % bleibt bei der Mannschaft.",
   keywords: [
     "Amateurfußball Sponsoring",
     "Vereinssponsoring Fußball",
@@ -41,9 +41,9 @@ export const metadata = {
     "Fußballverein Sponsor",
   ],
   openGraph: {
-    title: "Amateurfußball Sponsoring – einfach, automatisch, fair",
+    title: "Amateurfußball-Sponsoring, das mitfiebert",
     description:
-      "Sponsoren zahlen pro Tor, Sieg oder Einsatz. Vollautomatisch abgerechnet. Weniger als 1 € pro Spieler im Monat.",
+      "Jedes Tor füllt die Mannschaftskasse. Familie, Freunde und lokale Sponsoren fiebern mit. 100 % bleibt bei der Mannschaft.",
   },
 };
 
@@ -84,13 +84,14 @@ export default function LandingPage() {
             className="object-cover animate-ken-burns"
             style={{ objectPosition: "center 28%" }}
           />
-          {/* Mobile: dezenter Top-Wash für Header-Lesbarkeit + langer
-              weicher Bottom-Fade zu Weiß (kein harter Cut mehr). */}
+          {/* Mobile: dezenter Top-Wash für Header-Lesbarkeit + früher und
+              dichter einsetzender Weiß-Wash in der Textzone, damit der dunkle
+              Body-Text Kontrast ≥4.5:1 erreicht (kein harter Cut). */}
           <div
             className="absolute inset-0 md:hidden"
             style={{
               background:
-                "linear-gradient(to bottom, rgba(26,26,46,0.35) 0%, rgba(26,26,46,0.05) 15%, rgba(255,255,255,0) 55%, rgba(255,255,255,0.85) 88%, rgba(255,255,255,1) 100%)"
+                "linear-gradient(to bottom, rgba(26,26,46,0.35) 0%, rgba(26,26,46,0.05) 12%, rgba(255,255,255,0) 38%, rgba(255,255,255,0.55) 60%, rgba(255,255,255,0.92) 78%, rgba(255,255,255,1) 92%)"
             }}
           />
           {/* Desktop: stark links deckend weiß bis ~50%, dann fade out nach rechts */}
@@ -108,16 +109,16 @@ export default function LandingPage() {
             <span className="animate-fade-up inline-flex w-fit items-center rounded-full bg-accent/15 px-3 py-1 text-[0.6rem] md:text-xs font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30 backdrop-blur-sm">
               Performance-Sponsoring · Amateurfußball
             </span>
-            <h1 className="animate-fade-up delay-1 mt-3 md:mt-4 font-display font-black text-[2rem] leading-[1.1] sm:text-4xl md:text-5xl lg:text-6xl tracking-tight text-brand-night-navy">
+            <h1 className="animate-fade-up delay-1 mt-3 md:mt-4 font-display font-black text-[length:clamp(2rem,6vw+0.5rem,3.75rem)] leading-[1.1] tracking-tight text-brand-night-navy">
               <span className="block">
                 <RotatingTrigger />
               </span>
               füllt die <span className="text-accent">Mannschaftskasse.</span>
             </h1>
             <p className="animate-fade-up delay-2 mt-3 md:mt-5 text-sm md:text-lg text-brand-night-navy/85 leading-relaxed">
-              Familie, Opa, der Bäcker um die Ecke — oder ein lokaler Sponsor. Jeder wählt
-              seinen eigenen Betrag pro Spielereignis. KickPact zählt Tore, Siege, Aufstiege
-              und rechnet automatisch ab. <strong>100 % geht direkt an eure Mannschaft.</strong>
+              Familie, Freunde, der Bäcker um die Ecke: jeder setzt seinen eigenen Betrag
+              pro Tor, Sieg oder Aufstieg. Ihr fiebert gemeinsam mit, die Kasse wächst von
+              allein. <strong>100 % bleibt bei der Mannschaft.</strong>
             </p>
 
             {/* Beispiel-Chips: sofort verständlich wie ein Pact aussieht */}
@@ -145,6 +146,59 @@ export default function LandingPage() {
         <div className="hidden md:block md:h-svh md:min-h-[640px] md:max-h-[920px]" aria-hidden />
       </section>
 
+      {/* ECHTE GESCHICHTEN — Image-driven Testimonial-Style. Direkt nach dem Hero:
+          die Geschichten sind das emotionale Herz, sie führen die Seite an. */}
+      <section className="bg-brand-off-white">
+        <div className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-16">
+          <div className="max-w-2xl">
+            <h2 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
+              Sponsoring, das <span className="text-accent">eine Geschichte erzählt.</span>
+            </h2>
+            <p className="mt-2 text-sm md:text-base text-brand-night-navy/70">
+              Keine Plakate, keine Trikot-Werbung. Sondern Menschen, die mitfiebern: von der
+              Bambini-Tante bis zum Bäcker um die Ecke. Jeder mit seinem eigenen Betrag, frei
+              gewählt. Vier Beispiele aus dem echten Leben:
+            </p>
+          </div>
+
+          <div className="mt-6 md:mt-8 grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <StoryCard
+              image={PHOTOS.teamYouth}
+              imageAlt="Jugend-Mannschaft in weißen KickPact-Trikots jubelt nach Tor"
+              kicker="Familie Weber · Jugend · Eltern verwalten"
+              headline="2 € pro Tor in der C-Jugend."
+              body={'Linus spielt U15. Mama hat den Sponsor-Account für die ganze Familie übernommen, Oma, Onkel, Patentante zahlen alle ein, sie behält den Überblick. So funktioniert Familien-Sponsoring auch für Junioren ohne eigene Mail.'}
+            />
+            <StoryCard
+              image={PHOTOS.teamWhiteMixed}
+              imageAlt="Mannschaft in weißen KickPact-Trikots jubelt nach Tor"
+              kicker="Tante Erna · Familie · Ihre Wahl"
+              headline="3 € wenn Schmidt ein Tor schießt."
+              body={'Sie ist Patentante. Schmidt ist 13, spielt B-Jugend. Sie hat sich für 3 €/Tor entschieden, könnten auch 1 € oder 20 € sein. Letzte Saison waren’s 87 €. Schmidt hat’s gewusst und 4 Mal nach dem Tor zu ihr gewinkt.'}
+            />
+            <StoryCard
+              image={PHOTOS.teamCelebration}
+              imageAlt="SG-Reichenbach-Mannschaft umarmt sich nach Tor"
+              kicker="Bäckerei Müller · Business · Sein Setup"
+              headline="50 € pro Comeback-Sieg."
+              body="Stefan vom Bäcker hat sich bewusst für 50 €/Comeback entschieden, selten genug, dass es nicht ausartet. Steuerlich absetzbar als Werbeleistung, und jedes Comeback-Erlebnis ist ein Aufhänger für ein Kunden-Gespräch."
+            />
+            <StoryCard
+              image={PHOTOS.teamGreen}
+              imageAlt="TSV-Abtswind-Mannschaft jubelt in grünen Trikots"
+              kicker="Opa Heinz · Saison-Wette · Seine Wahl"
+              headline="200 € wenn der Aufstieg klappt."
+              body="Heinz fiebert seit 40 Jahren mit. Er hat 200 € auf den Aufstieg gesetzt und 5 € pro Kopfballtor seines Enkels. Saisonende → Rechnung, Geld geht in die Mannschaftskasse."
+            />
+          </div>
+          <p className="mt-6 md:mt-8 text-xs md:text-sm text-brand-night-navy/60 text-center max-w-2xl mx-auto">
+            <strong>Du legst deinen Betrag selbst fest.</strong> Pro Trigger einzeln, mit optionalem
+            Monats-Cap, jederzeit anpassbar. Es gibt keine Mindest-Pact-Höhe.
+          </p>
+          <InlineCTA caption="Bereit für eure eigene Story?" />
+        </div>
+      </section>
+
       {/* ROLES TABS */}
       <section className="border-y border-brand-neutral/40 bg-brand-night-navy text-white">
         <div className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-14">
@@ -162,15 +216,12 @@ export default function LandingPage() {
       <section className="bg-white">
         <div className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-16">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.6rem] md:text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent-dark">
-              Beide Seiten gewinnen
-            </span>
-            <h2 className="mt-3 font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
+            <h2 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
               Mannschaft trifft <span className="text-accent">Sponsor.</span>
             </h2>
             <p className="mt-2 text-sm md:text-base text-brand-night-navy/70">
               Damit Sponsoring richtig Spaß macht, muss es für beide Seiten passen.
-              Hier was Mannschaften und Sponsoren an KickPact lieben — auf einen Blick.
+              Hier was Mannschaften und Sponsoren an KickPact lieben, auf einen Blick.
             </p>
           </div>
 
@@ -197,8 +248,8 @@ export default function LandingPage() {
                   Du zahlst nur was passiert.
                 </h3>
                 <ul className="mt-3 space-y-2 text-xs md:text-sm text-brand-night-navy/80">
-                  <BenefitLi>Beträge frei wählbar — 50 Cent bis 500 € pro Event</BenefitLi>
-                  <BenefitLi><strong>100 % gehen direkt an die Mannschaft</strong> — KickPact zwackt nichts ab</BenefitLi>
+                  <BenefitLi>Beträge frei wählbar: 50 Cent bis 500 € pro Event</BenefitLi>
+                  <BenefitLi><strong>100 % gehen direkt an die Mannschaft.</strong> KickPact zwackt nichts ab</BenefitLi>
                   <BenefitLi>Optionaler Monats-Cap, nie Überraschungen</BenefitLi>
                   <BenefitLi>Steuerlich absetzbar als Werbeleistung</BenefitLi>
                   <BenefitLi>Live mitfiebern, jedes Tor zählt</BenefitLi>
@@ -213,70 +264,15 @@ export default function LandingPage() {
                 </h3>
                 <ul className="mt-3 space-y-2 text-xs md:text-sm text-brand-night-navy/80">
                   <BenefitLi>Onboarding in 90 Sekunden, ein Einladungslink für alle Sponsoren</BenefitLi>
-                  <BenefitLi>Familie, Stammtisch + lokale Firmen — alle in einem System</BenefitLi>
+                  <BenefitLi>Familie, Stammtisch + lokale Firmen, alle in einem System</BenefitLi>
                   <BenefitLi>Mannschaftskasse wächst automatisch, Rechnung zum Monatsersten</BenefitLi>
                   <BenefitLi>Performance-Ansporn: jedes Tor zählt direkt</BenefitLi>
-                  <BenefitLi>Eigenständig — keine Vorstands-Politik</BenefitLi>
+                  <BenefitLi>Eigenständig, keine Vorstands-Politik</BenefitLi>
                 </ul>
               </div>
             </div>
           </div>
           <InlineCTA caption="Holt euch das Sponsor-Netzwerk." />
-        </div>
-      </section>
-
-      {/* ECHTE GESCHICHTEN — Image-driven Testimonial-Style */}
-      <section className="bg-brand-off-white">
-        <div className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-16">
-          <div className="max-w-2xl">
-            <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.6rem] md:text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent-dark">
-              Echte Geschichten · Beträge frei gewählt
-            </span>
-            <h2 className="mt-3 font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
-              Sponsoring, das <span className="text-accent">eine Geschichte erzählt.</span>
-            </h2>
-            <p className="mt-2 text-sm md:text-base text-brand-night-navy/70">
-              Keine Plakate, keine Trikot-Werbung. Sondern Menschen, die mitfiebern — von der
-              Bambini-Tante bis zum Bäcker um die Ecke. Jeder mit seinem eigenen Betrag, frei
-              gewählt. Vier Beispiele aus dem echten Leben:
-            </p>
-          </div>
-
-          <div className="mt-6 md:mt-8 grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <StoryCard
-              image={PHOTOS.teamYouth}
-              imageAlt="Jugend-Mannschaft in weißen KickPact-Trikots jubelt nach Tor"
-              kicker="Familie Weber · Jugend · Eltern verwalten"
-              headline="2 € pro Tor in der C-Jugend."
-              body={'Linus spielt U15. Mama hat den Sponsor-Account für die ganze Familie übernommen — Oma, Onkel, Patentante zahlen alle ein, sie behält den Überblick. So funktioniert Familien-Sponsoring auch für Junioren ohne eigene Mail.'}
-            />
-            <StoryCard
-              image={PHOTOS.teamWhiteMixed}
-              imageAlt="Mannschaft in weißen KickPact-Trikots jubelt nach Tor"
-              kicker="Tante Erna · Familie · Ihre Wahl"
-              headline="3 € wenn Schmidt ein Tor schießt."
-              body={'Sie ist Patentante. Schmidt ist 13, spielt B-Jugend. Sie hat sich für 3 €/Tor entschieden — könnten auch 1 € oder 20 € sein. Letzte Saison waren’s 87 €. Schmidt hat’s gewusst — und 4 Mal nach dem Tor zu ihr gewinkt.'}
-            />
-            <StoryCard
-              image={PHOTOS.teamCelebration}
-              imageAlt="SG-Reichenbach-Mannschaft umarmt sich nach Tor"
-              kicker="Bäckerei Müller · Business · Sein Setup"
-              headline="50 € pro Comeback-Sieg."
-              body="Stefan vom Bäcker hat sich bewusst für 50 €/Comeback entschieden — selten genug, dass es nicht ausartet. Steuerlich absetzbar als Werbeleistung, und jedes Comeback-Erlebnis ist ein Aufhänger für ein Kunden-Gespräch."
-            />
-            <StoryCard
-              image={PHOTOS.teamGreen}
-              imageAlt="TSV-Abtswind-Mannschaft jubelt in grünen Trikots"
-              kicker="Opa Heinz · Saison-Wette · Seine Wahl"
-              headline="200 € wenn der Aufstieg klappt."
-              body="Heinz fiebert seit 40 Jahren mit. Er hat 200 € auf den Aufstieg gesetzt und 5 € pro Kopfballtor seines Enkels. Saisonende → Rechnung, Geld geht in die Mannschaftskasse."
-            />
-          </div>
-          <p className="mt-6 md:mt-8 text-xs md:text-sm text-brand-night-navy/60 text-center max-w-2xl mx-auto">
-            <strong>Du legst deinen Betrag selbst fest.</strong> Pro Trigger einzeln, mit optionalem
-            Monats-Cap, jederzeit anpassbar. Es gibt keine Mindest-Pact-Höhe.
-          </p>
-          <InlineCTA caption="Bereit für eure eigene Story?" />
         </div>
       </section>
 
@@ -297,7 +293,7 @@ export default function LandingPage() {
           <Step
             num="02"
             title="Sponsoren einladen"
-            body="Du teilst einen Einladungslink — per WhatsApp, Mail, am Stammtisch. Jeder Sponsor legt seine Pacts selbst fest."
+            body="Du teilst einen Einladungslink: per WhatsApp, Mail, am Stammtisch. Jeder Sponsor legt seine Pacts selbst fest."
           />
           <Step
             num="03"
@@ -307,88 +303,8 @@ export default function LandingPage() {
           <Step
             num="04"
             title="Monats-Rechnung"
-            body="Am Monatsersten wandert eine PDF-Rechnung an jeden Sponsor. Mannschaft/Verein zieht das Geld selbst ein — KickPact bleibt Tool."
+            body="Am Monatsersten wandert eine PDF-Rechnung an jeden Sponsor. Mannschaft/Verein zieht das Geld selbst ein, KickPact bleibt Tool."
           />
-        </div>
-      </section>
-
-      {/* TRIGGER-BEISPIELE — kompakter Bild-Streifen oberhalb */}
-      <section className="bg-brand-night-navy text-white">
-        <div className="relative h-24 md:h-40 overflow-hidden">
-          <Image
-            src={PHOTOS.teamBrandedLine}
-            alt="Mannschaft in KickPact-Trikots jubelt in der Reihe"
-            fill
-            sizes="100vw"
-            className="object-cover object-center opacity-70"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-night-navy/30 via-brand-night-navy/20 to-brand-night-navy" />
-        </div>
-        <div className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-14 -mt-8 md:-mt-12 relative">
-          <h2 className="font-display font-black text-2xl md:text-4xl tracking-tight">
-            Was kann ein <span className="text-accent">Pact</span> sein?
-          </h2>
-          <p className="mt-2 text-white/80 max-w-2xl text-xs md:text-sm">
-            Vom simplen Tor bis zum Saison-Aufstieg.{" "}
-            <strong className="text-white">Beträge unten sind nur Beispiele — du wählst pro Trigger frei zwischen 0,50 € und 500 €.</strong>
-          </p>
-          <div className="mt-6 md:mt-8 grid gap-2.5 md:gap-3 grid-cols-2 lg:grid-cols-4">
-            <TriggerCard
-              icon={Goal}
-              name="Pro Tor"
-              examples={["z.B. 5 € · 10 € · 25 €"]}
-              auto
-            />
-            <TriggerCard
-              icon={UserRound}
-              name="Pro Spieler-Tor"
-              examples={["z.B. 3 € wenn Schmidt trifft"]}
-              auto
-              highlight
-            />
-            <TriggerCard
-              icon={Trophy}
-              name="Pro Sieg"
-              examples={["z.B. 10 € · 25 € · 50 €"]}
-              auto
-            />
-            <TriggerCard
-              icon={Shield}
-              name="Pro Zu-Null"
-              examples={["z.B. 5 € · 15 € · 30 €"]}
-              auto
-            />
-            <TriggerCard
-              icon={Flame}
-              name="Pro Comeback"
-              examples={["z.B. 20 € · 50 € · 100 €"]}
-              auto
-            />
-            <TriggerCard
-              icon={Target}
-              name="Pro Hattrick"
-              examples={["z.B. 25 € · 50 € · 100 €"]}
-              auto
-            />
-            <TriggerCard
-              icon={Sparkles}
-              name="Pro Spezial-Tor"
-              examples={["Kopfball, Volley, Elfmeter"]}
-            />
-            <TriggerCard
-              icon={Gem}
-              name="Custom-Event"
-              examples={["Bizeps-Tor · Trainer-Trinkrunde"]}
-            />
-          </div>
-          <p className="mt-5 md:mt-6 text-[0.7rem] md:text-xs text-white/50 flex flex-wrap gap-x-3 gap-y-1">
-            <span className="inline-flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Auto
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-white/60" /> Mannschaft meldet + Sponsor bestätigt
-            </span>
-          </p>
         </div>
       </section>
 
@@ -396,31 +312,38 @@ export default function LandingPage() {
       <section className="relative overflow-hidden bg-gradient-to-br from-accent/10 via-white to-accent/5">
         <div className="mx-auto max-w-6xl px-5 md:px-6 py-10 md:py-16">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center rounded-full bg-accent/15 px-3 py-1 text-[0.6rem] md:text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent-dark ring-1 ring-accent/30">
-              Neu · Saison-Wetten
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1 text-[0.65rem] md:text-xs font-bold text-accent-dark ring-1 ring-accent/30">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+              Neu
             </span>
             <h2 className="mt-3 font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
               Nicht nur pro Spiel. <span className="text-accent">Pro Saison.</span>
             </h2>
             <p className="mt-2 text-sm md:text-base text-brand-night-navy/70">
-              Eure Saison-Story braucht Spannung? Sponsoren setzen auf das große Ziel —
+              Eure Saison-Story braucht Spannung? Sponsoren setzen auf das große Ziel:
               Aufstieg, Klassenerhalt, Tabellenplatz. Klappt&apos;s? Mannschaftskasse füllt sich.
-              Klappt&apos;s nicht? Auch okay — kein Risiko für Sponsoren.
+              Klappt&apos;s nicht? Auch okay, kein Risiko für Sponsoren.
             </p>
           </div>
-          <div className="mt-6 md:mt-8 grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
-            <SeasonBetCard icon={ArrowUp} name="Aufstieg" example="z.B. 200 €" detail="Wenn am Saison-Ende Platz 1 oder 2" />
-            <SeasonBetCard icon={LifeBuoy} name="Klassenerhalt" example="z.B. 100 €" detail="Wenn nicht abgestiegen" highlight />
-            <SeasonBetCard icon={Medal} name="Top 5" example="z.B. 75 €" detail="Wenn End-Tabellenplatz 1–5" />
-            <SeasonBetCard icon={Target} name="Platz 5–9" example="z.B. 50 €" detail="Solides Mittelfeld" />
-            <SeasonBetCard icon={Crown} name="Meister" example="z.B. 500 €" detail="Nur wenn Tabellenführer am Saisons-Ende" />
-            <SeasonBetCard icon={Trophy} name="Pokal-Halbfinale" example="z.B. 150 €" detail="Wenn HF im Verbands-/Kreispokal erreicht" />
-            <SeasonBetCard icon={ShieldCheck} name="Kein Abstieg" example="z.B. 80 €" detail="Sicherheits-Polster Variante" />
-            <SeasonBetCard icon={Flag} name="Custom-Ziel" example="frei wählbar" detail={'z.B. "20 Tore mehr als letzte Saison"'} />
+          {/* Bewusst ANDERES Layout als die übrigen 4-Spalten-Raster (Steps,
+              Trigger, Stories): auf Mobile ein horizontales Snap-Rail zum Wischen,
+              auf Desktop ein dichtes asymmetrisches Bento mit zwei breiten
+              Hero-Wetten oben. */}
+          <div className="mt-6 md:mt-8 -mx-5 md:mx-0">
+            <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 no-scrollbar md:grid md:grid-cols-4 md:gap-4 md:px-0 md:pb-0 md:overflow-visible">
+              <SeasonBetCard icon={ArrowUp} name="Aufstieg" example="z.B. 200 €" detail="Wenn am Saison-Ende Platz 1 oder 2" highlight wide />
+              <SeasonBetCard icon={LifeBuoy} name="Klassenerhalt" example="z.B. 100 €" detail="Wenn nicht abgestiegen" wide />
+              <SeasonBetCard icon={Medal} name="Top 5" example="z.B. 75 €" detail="Wenn End-Tabellenplatz 1–5" />
+              <SeasonBetCard icon={Target} name="Platz 5–9" example="z.B. 50 €" detail="Solides Mittelfeld" />
+              <SeasonBetCard icon={Crown} name="Meister" example="z.B. 500 €" detail="Nur wenn Tabellenführer am Saisons-Ende" />
+              <SeasonBetCard icon={Trophy} name="Pokal-Halbfinale" example="z.B. 150 €" detail="Wenn HF im Verbands-/Kreispokal erreicht" />
+              <SeasonBetCard icon={ShieldCheck} name="Kein Abstieg" example="z.B. 80 €" detail="Sicherheits-Polster Variante" />
+              <SeasonBetCard icon={Flag} name="Custom-Ziel" example="frei wählbar" detail={'z.B. "20 Tore mehr als letzte Saison"'} />
+            </div>
           </div>
           <p className="mt-5 md:mt-6 text-xs md:text-sm text-brand-night-navy/70 max-w-2xl">
             Tabellen-Stände werden automatisch nach Saisonende gewertet.
-            Custom-Ziele werden von der Mannschaft gemeldet und vom Sponsor bestätigt — gleicher
+            Custom-Ziele werden von der Mannschaft gemeldet und vom Sponsor bestätigt, gleicher
             Trust-Mechanismus wie bei Spezial-Events.
           </p>
           <InlineCTA caption="Wettet eure Saison-Story." />
@@ -435,7 +358,7 @@ export default function LandingPage() {
               Faire <span className="text-accent">Preise.</span>
             </h2>
             <p className="mt-2 text-brand-night-navy/60 text-xs md:text-sm max-w-xl">
-              Pro Mannschaft eigenständig — oder Vereinslizenz für alle Teams.
+              Pro Mannschaft eigenständig, oder Vereinslizenz für alle Teams.
               <strong className="text-brand-night-navy"> Erste 30 Tage gratis.</strong>{" "}
               Monatlich kündbar. KickPact zwackt nie was vom Sponsoren-Geld ab.
             </p>
@@ -491,8 +414,8 @@ export default function LandingPage() {
           />
         </div>
         <p className="mt-6 md:mt-8 text-xs md:text-sm text-brand-night-navy/60">
-          Typischer Amateur-Kader hat 18–25 Spieler. Sponsoren-Geld geht zu 100 % an die Mannschaft;
-          KickPact verdient ausschließlich am Abo.
+          Die Sponsorengelder gehen zu 100 % an die Mannschaft. KickPact kostet nur eine
+          kleine Lizenz, meist weniger, als ein einziger guter Spieltag einbringt.
         </p>
       </section>
 
@@ -503,25 +426,56 @@ export default function LandingPage() {
             Häufige <span className="text-accent">Fragen</span>
           </h2>
           <Accordion type="single" collapsible className="mt-5 md:mt-6">
+            <AccordionItem value="was-kann-ein-pact-sein" className="border-brand-neutral/40">
+              <AccordionTrigger className="text-left text-brand-night-navy hover:no-underline hover:text-accent">
+                Was kann ein Pact alles sein?
+              </AccordionTrigger>
+              <AccordionContent className="text-brand-night-navy/70 leading-relaxed">
+                <p className="mb-4">
+                  Vom simplen Tor bis zum Saison-Aufstieg. Die Beträge sind nur Beispiele,
+                  du wählst pro Trigger frei zwischen 0,50 € und 500 €.
+                </p>
+                <div className="rounded-xl bg-brand-night-navy p-4 md:p-5">
+                  <div className="grid gap-2.5 md:gap-3 grid-cols-2 lg:grid-cols-4">
+                    <TriggerCard icon={Goal} name="Pro Tor" examples={["z.B. 5 € · 10 € · 25 €"]} auto />
+                    <TriggerCard icon={UserRound} name="Pro Spieler-Tor" examples={["z.B. 3 € wenn Schmidt trifft"]} auto highlight />
+                    <TriggerCard icon={Trophy} name="Pro Sieg" examples={["z.B. 10 € · 25 € · 50 €"]} auto />
+                    <TriggerCard icon={Shield} name="Pro Zu-Null" examples={["z.B. 5 € · 15 € · 30 €"]} auto />
+                    <TriggerCard icon={Flame} name="Pro Comeback" examples={["z.B. 20 € · 50 € · 100 €"]} auto />
+                    <TriggerCard icon={Target} name="Pro Hattrick" examples={["z.B. 25 € · 50 € · 100 €"]} auto />
+                    <TriggerCard icon={Sparkles} name="Pro Spezial-Tor" examples={["Kopfball, Volley, Elfmeter"]} />
+                    <TriggerCard icon={Gem} name="Custom-Event" examples={["Bizeps-Tor · Trainer-Trinkrunde"]} />
+                  </div>
+                  <p className="mt-4 text-[0.7rem] md:text-xs text-white/50 flex flex-wrap gap-x-3 gap-y-1">
+                    <span className="inline-flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Auto
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-white/60" /> Mannschaft meldet + Sponsor bestätigt
+                    </span>
+                  </p>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
             <FaqItem
-              q="Mannschaft oder Verein — was ist der Unterschied?"
-              a={'Jede Mannschaft ist bei KickPact eigenständig. Trainer/Betreuer melden sich für ihre Mannschaft an, verwalten Sponsoren und Pacts selbst — keine Vorstands-Politik. Hat dein Verein mehrere Teams (Herren, Jugend, Damen, Senioren) und einen Master-Admin der alles zentral steuern soll, gibt es die Vereinslizenz: 49 €/Monat all-in für alle Mannschaften des Vereins, mit konsolidierter Rechnung und übergreifender Sponsor-Übersicht.'}
+              q="Mannschaft oder Verein: was ist der Unterschied?"
+              a={'Jede Mannschaft ist bei KickPact eigenständig. Trainer/Betreuer melden sich für ihre Mannschaft an, verwalten Sponsoren und Pacts selbst, keine Vorstands-Politik. Hat dein Verein mehrere Teams (Herren, Jugend, Damen, Senioren) und einen Master-Admin der alles zentral steuern soll, gibt es die Vereinslizenz: 49 €/Monat all-in für alle Mannschaften des Vereins, mit konsolidierter Rechnung und übergreifender Sponsor-Übersicht.'}
             />
             <FaqItem
               q="Sind die Beträge irgendwie vorgegeben?"
-              a="Nein. Beträge sind komplett frei wählbar — von 0,50 € bis 500 € pro Event. Familie nimmt oft 1–5 €/Tor, Unternehmen 25–100 €/Sieg. Im Pact-Setup siehst du eine Worst-Case-Hochrechnung, damit du nicht überraschend mehr zahlst als gedacht. Plus optionaler Monats-Cap."
+              a="Nein. Beträge sind komplett frei wählbar, von 0,50 € bis 500 € pro Event. Familie nimmt oft 1–5 €/Tor, Unternehmen 25–100 €/Sieg. Im Pact-Setup siehst du eine Worst-Case-Hochrechnung, damit du nicht überraschend mehr zahlst als gedacht. Plus optionaler Monats-Cap."
             />
             <FaqItem
               q="Wie funktionieren die Saison-Wetten?"
-              a={'Saison-Wetten sind Pacts, die nicht pro Spiel sondern erst am Saisons-Ende abrechnen — z.B. 200 € für Aufstieg, 100 € für Klassenerhalt, 50 € für Platz 1–5. KickPact liest die End-Tabelle automatisch; wenn das Ziel erreicht wurde, geht der volle Betrag an den Verein. Wenn nicht, zahlt der Sponsor nichts.'}
+              a={'Saison-Wetten sind Pacts, die nicht pro Spiel sondern erst am Saisons-Ende abrechnen: z.B. 200 € für Aufstieg, 100 € für Klassenerhalt, 50 € für Platz 1–5. KickPact liest die End-Tabelle automatisch; wenn das Ziel erreicht wurde, geht der volle Betrag an den Verein. Wenn nicht, zahlt der Sponsor nichts.'}
             />
             <FaqItem
               q="Funktioniert das auch für Junioren-Mannschaften?"
-              a={'Ja. Solange eure Mannschaft öffentlich gelistet ist, holen wir die Spielergebnisse automatisch. Bei Junioren kannst du einen Elternteil als Sponsor-Manager hinterlegen — er sammelt Pacts von Oma, Onkel, Freunden und behält den Überblick, ohne dass jeder eine eigene Mail-Adresse braucht. Familien-Sponsoring auch ohne Smartphone für Linus aus der C-Jugend.'}
+              a={'Ja. Solange eure Mannschaft öffentlich gelistet ist, holen wir die Spielergebnisse automatisch. Bei Junioren kannst du einen Elternteil als Sponsor-Manager hinterlegen: er sammelt Pacts von Oma, Onkel, Freunden und behält den Überblick, ohne dass jeder eine eigene Mail-Adresse braucht. Familien-Sponsoring auch ohne Smartphone für Linus aus der C-Jugend.'}
             />
             <FaqItem
               q="Sind die Beträge für den Sponsor steuerlich absetzbar?"
-              a="Bei Unternehmens-Sponsoren: ja, als Werbeleistung. KickPact erzeugt eine ordentliche Vereins-Rechnung mit USt-ID (oder §19-Kleinunternehmer-Hinweis). Bei Privatpersonen (Familie, Freunde) gilt der allgemeine Status — keine Steuervorteile, aber auch keine Pflichten."
+              a="Bei Unternehmens-Sponsoren: ja, als Werbeleistung. KickPact erzeugt eine ordentliche Vereins-Rechnung mit USt-ID (oder §19-Kleinunternehmer-Hinweis). Bei Privatpersonen (Familie, Freunde) gilt der allgemeine Status, keine Steuervorteile, aber auch keine Pflichten."
             />
             <FaqItem
               q="Kann ich einen Pact auf einen bestimmten Spieler binden?"
@@ -529,7 +483,7 @@ export default function LandingPage() {
             />
             <FaqItem
               q="Was passiert wenn meine Mannschaft schlecht spielt?"
-              a="Sponsoren zahlen weniger. Das ist genau die Idee von Performance-Sponsoring. Im Worst Case (kein Tor, keine Siege) bekommt die Mannschaftskasse gar nichts — aber dann gibt&apos;s auch nichts zu feiern."
+              a="Sponsoren zahlen weniger. Das ist genau die Idee von Performance-Sponsoring. Im Worst Case (kein Tor, keine Siege) bekommt die Mannschaftskasse gar nichts, aber dann gibt&apos;s auch nichts zu feiern."
             />
             <FaqItem
               q="Wie verhindere ich, dass ein Sponsor von einer hohen Rechnung überrascht wird?"
@@ -781,18 +735,21 @@ function SeasonBetCard({
   name,
   example,
   detail,
-  highlight = false
+  highlight = false,
+  wide = false
 }: {
   icon: LucideIcon;
   name: string;
   example: string;
   detail: string;
   highlight?: boolean;
+  wide?: boolean;
 }) {
   return (
     <div
       className={
-        "rounded-xl border p-3 md:p-4 transition-colors " +
+        "shrink-0 w-[68vw] max-w-[16rem] snap-start rounded-xl border p-3 md:w-auto md:max-w-none md:p-4 transition-colors " +
+        (wide ? "md:col-span-2 " : "") +
         (highlight
           ? "border-accent bg-accent/10"
           : "border-brand-neutral/40 bg-white hover:border-accent/50")
