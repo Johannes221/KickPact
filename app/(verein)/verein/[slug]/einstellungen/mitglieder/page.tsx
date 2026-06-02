@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { and, asc, eq } from "drizzle-orm";
 import { assertClubAccess } from "@/lib/auth/scope";
-import { db } from "@/lib/db/client";
-import { clubMemberships, teamMemberships, users, teams } from "@/lib/db/schema";
 import {
   countClubAdmins,
-  listPendingRequestsForClub
+  listPendingRequestsForClub,
+  listClubMembers,
+  listClubTeamMembers,
+  listActiveClubTeamsBasic
 } from "@/lib/db/queries/membership-requests";
 import { RequestsTable } from "./_components/requests-table";
 import { MembersTable } from "./_components/members-table";
@@ -33,35 +33,10 @@ export default async function MitgliederPage({
   const [pendingRequests, pendingInvitations, clubMems, teamMems, clubAdminCount, clubTeams] = await Promise.all([
     listPendingRequestsForClub(club.id),
     listPendingTeamMemberInvitationsForClub(club.id),
-    db
-      .select({
-        userId: clubMemberships.userId,
-        email: users.email,
-        role: clubMemberships.role,
-        createdAt: clubMemberships.createdAt
-      })
-      .from(clubMemberships)
-      .innerJoin(users, eq(clubMemberships.userId, users.id))
-      .where(eq(clubMemberships.clubId, club.id)),
-    db
-      .select({
-        userId: teamMemberships.userId,
-        email: users.email,
-        role: teamMemberships.role,
-        teamName: teams.name,
-        teamId: teams.id,
-        createdAt: teamMemberships.createdAt
-      })
-      .from(teamMemberships)
-      .innerJoin(teams, eq(teamMemberships.teamId, teams.id))
-      .innerJoin(users, eq(teamMemberships.userId, users.id))
-      .where(eq(teams.clubId, club.id)),
+    listClubMembers(club.id),
+    listClubTeamMembers(club.id),
     countClubAdmins(club.id),
-    db
-      .select({ id: teams.id, name: teams.name })
-      .from(teams)
-      .where(and(eq(teams.clubId, club.id), eq(teams.isActive, true)))
-      .orderBy(asc(teams.name))
+    listActiveClubTeamsBasic(club.id)
   ]);
 
   return (

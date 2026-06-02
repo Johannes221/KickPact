@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   clubMembershipRequests,
@@ -588,4 +588,44 @@ export async function listTeamMembers(teamId: string) {
     .from(teamMemberships)
     .innerJoin(users, eq(teamMemberships.userId, users.id))
     .where(eq(teamMemberships.teamId, teamId));
+}
+
+/** Direkte Club-Mitglieder (userId/email/role/createdAt). */
+export async function listClubMembers(clubId: string) {
+  return db
+    .select({
+      userId: clubMemberships.userId,
+      email: users.email,
+      role: clubMemberships.role,
+      createdAt: clubMemberships.createdAt
+    })
+    .from(clubMemberships)
+    .innerJoin(users, eq(clubMemberships.userId, users.id))
+    .where(eq(clubMemberships.clubId, clubId));
+}
+
+/** Team-Mitglieder aller Mannschaften eines Clubs (mit Team-Name). */
+export async function listClubTeamMembers(clubId: string) {
+  return db
+    .select({
+      userId: teamMemberships.userId,
+      email: users.email,
+      role: teamMemberships.role,
+      teamName: teams.name,
+      teamId: teams.id,
+      createdAt: teamMemberships.createdAt
+    })
+    .from(teamMemberships)
+    .innerJoin(teams, eq(teamMemberships.teamId, teams.id))
+    .innerJoin(users, eq(teamMemberships.userId, users.id))
+    .where(eq(teams.clubId, clubId));
+}
+
+/** Aktive Mannschaften eines Clubs (id/name) — fürs Invite-Form-Dropdown. */
+export async function listActiveClubTeamsBasic(clubId: string) {
+  return db
+    .select({ id: teams.id, name: teams.name })
+    .from(teams)
+    .where(and(eq(teams.clubId, clubId), eq(teams.isActive, true)))
+    .orderBy(asc(teams.name));
 }
