@@ -15,6 +15,7 @@ import { assertClubWriteAccess } from "@/lib/auth/scope";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { generateUniqueTeamSlug } from "@/lib/db/queries/team-public-slug";
+import { rateLimit, getClientIp } from "@/lib/utils/rate-limit";
 
 const BASE_URL =
   process.env.BETTER_AUTH_URL ?? "https://kickpact.schartl.dev";
@@ -103,6 +104,13 @@ export async function createPublicSponsorLead(input: {
   message?: string;
 }): Promise<{ ok: true }> {
   const parsed = leadSchema.parse(input);
+
+  // SECURITY (M5): IP-Rate-Limit für die unauthentifizierte öffentliche Action
+  // (sonst Lead-/Mail-Flut an Club-Admins). 8 Leads / 10 Min / IP.
+  const ip = await getClientIp();
+  if (!rateLimit(`lead:${ip}`, { limit: 8, windowMs: 10 * 60_000 })) {
+    throw new Error("Zu viele Anfragen in kurzer Zeit. Bitte später erneut versuchen.");
+  }
 
   const [row] = await db
     .select({

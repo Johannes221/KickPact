@@ -6,6 +6,7 @@ import { listPlatformAdminEmails } from "@/lib/auth/admin";
 import { createSupportTicket, countRecentTicketsByEmail } from "@/lib/db/queries/support";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { supportNewTicketEmail } from "@/lib/mail/templates/support-new-ticket";
+import { rateLimit, getClientIp } from "@/lib/utils/rate-limit";
 
 const schema = z.object({
   name: z.string().min(2).max(120),
@@ -28,6 +29,17 @@ export async function submitSupportTicket(input: z.infer<typeof schema>) {
   // Bot-Falle: Honeypot ausgefüllt → still als "ok" abtun, nichts speichern.
   if (parsed.data.website && parsed.data.website.trim().length > 0) {
     return { ok: true as const };
+  }
+
+  // SECURITY (M5): IP-basiertes Rate-Limit. Der E-Mail-Zähler unten ist
+  // umgehbar (Angreifer rotiert die E-Mail pro Request) — die IP-Schranke
+  // greift unabhängig vom Eingabefeld. 10 Anfragen / 10 Min / IP.
+  const ip = await getClientIp();
+  if (!rateLimit(`support:${ip}`, { limit: 10, windowMs: 10 * 60_000 })) {
+    return {
+      ok: false as const,
+      error: "Zu viele Anfragen. Bitte versuch es später erneut oder schreib uns direkt per Mail."
+    };
   }
 
   // Rate-Limit pro E-Mail (Anti-Spam).

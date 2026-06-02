@@ -106,6 +106,28 @@ export async function disputeApproval(input: { approvalId: string; reason?: stri
 // Token-basierte Actions (kein requireUser — für E-Mail-Links)
 // ---------------------------------------------------------------------------
 
+/**
+ * SECURITY (L1): Einstiegspunkt für die /approve-Seite. Verifiziert den Token,
+ * leitet die Aktion ab und MUTIERT nur bei explizitem Aufruf (POST/Form-Submit),
+ * nie beim reinen Seiten-Render. Verhindert, dass Mail-Prefetcher/Link-Scanner
+ * durch ein GET versehentlich eine Charge bestätigen/bestreiten.
+ */
+export async function respondApprovalByToken(
+  token: string
+): Promise<{ ok: true; action: "confirm" | "dispute" } | { ok: false; error: string }> {
+  let action: "confirm" | "dispute";
+  try {
+    action = verifyApprovalToken(token).action;
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Ungültiger Link." };
+  }
+  const result =
+    action === "confirm"
+      ? await confirmApprovalByToken(token)
+      : await disputeApprovalByToken(token);
+  return result.ok ? { ok: true, action } : result;
+}
+
 export async function confirmApprovalByToken(
   token: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {

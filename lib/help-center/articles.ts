@@ -13,6 +13,28 @@ import { marked } from "marked";
 
 const ARTICLES_DIR = path.join(process.cwd(), "docs", "help-center", "articles");
 
+/**
+ * SECURITY (L4): `marked` sanitisiert per Default NICHT — rohes HTML im Markdown
+ * (inkl. <script>, on*-Handler, javascript:-URLs) wird durchgereicht und landet
+ * via dangerouslySetInnerHTML im DOM. Die Artikel-Quelle sind aktuell nur
+ * repo-interne .md-Files (kein User-Input), daher latentes Risiko — diese
+ * dependency-freie Sanitisierung ist Defense-in-depth gegen einen künftigen
+ * Wechsel der Artikel-Quelle. Für nutzergenerierten Markdown bitte auf
+ * DOMPurify/sanitize-html umstellen.
+ */
+function sanitizeArticleHtml(html: string): string {
+  return html
+    // gefährliche Element-Blöcke komplett entfernen
+    .replace(/<\s*(script|style|iframe|object|embed|noscript)\b[\s\S]*?<\/\s*\1\s*>/gi, "")
+    .replace(/<\s*(script|style|iframe|object|embed|noscript)\b[^>]*\/?\s*>/gi, "")
+    // Inline-Event-Handler (onclick=, onerror=, …) strippen
+    .replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, "")
+    .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, "")
+    .replace(/\son[a-z]+\s*=\s*[^\s>]+/gi, "")
+    // javascript:/data:-URLs in href/src neutralisieren
+    .replace(/(href|src)\s*=\s*("|')\s*(javascript|data):[^"']*\2/gi, '$1=$2#$2');
+}
+
 export type ArticleAudience =
   | "verein-admin"
   | "trainer"
@@ -63,7 +85,9 @@ async function loadAll(): Promise<Map<string, Article>> {
     }
     if (fm.status === "draft") continue; // nicht veröffentlichen
 
-    const html = marked.parse(parsed.content, { async: false }) as string;
+    const html = sanitizeArticleHtml(
+      marked.parse(parsed.content, { async: false }) as string
+    );
     map.set(fm.slug, {
       frontmatter: {
         title: fm.title,

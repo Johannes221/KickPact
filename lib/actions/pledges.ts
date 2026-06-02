@@ -26,6 +26,14 @@ const MANUAL_TRIGGERS = new Set<string>([
 
 type CapPeriod = "month" | "season";
 
+/**
+ * SECURITY (L5): Obergrenze pro Wett-Betrag (Cent) = 500 €, identisch zur
+ * Zod-Decke im Pledge-Builder (lib/validations/pledge.ts: amountEur.max(500)).
+ * Die Direkt-Object-Actions (updatePledgeRule/addPledgeRule) umgingen diese
+ * Decke bislang — nur die Untergrenze (50 ct) war geprüft.
+ */
+const MAX_AMOUNT_CENTS = 50_000;
+
 /** Helper: load pledge + tenant-check. Returns null when not found or wrong user. */
 async function loadOwnedPledge(pledgeId: string) {
   const user = await requireUser();
@@ -175,6 +183,9 @@ export async function updatePledgeRule(
       if (!Number.isInteger(input.amountCents) || input.amountCents < 50) {
         return { error: "Betrag muss mindestens 0,50 € sein." };
       }
+      if (input.amountCents > MAX_AMOUNT_CENTS) {
+        return { error: "Betrag darf höchstens 500 € pro Ereignis sein." };
+      }
       patch.amountCents = input.amountCents;
     }
 
@@ -241,6 +252,9 @@ export async function addPledgeRule(
     }
     if (!Number.isInteger(input.amountCents) || input.amountCents < 50) {
       return { error: "Betrag muss mindestens 0,50 € sein." };
+    }
+    if (input.amountCents > MAX_AMOUNT_CENTS) {
+      return { error: "Betrag darf höchstens 500 € pro Ereignis sein." };
     }
 
     const isSeason = isSeasonTrigger(input.triggerType);
