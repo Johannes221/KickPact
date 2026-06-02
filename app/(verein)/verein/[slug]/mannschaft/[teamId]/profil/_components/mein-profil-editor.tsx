@@ -239,27 +239,35 @@ export function MeinProfilEditor({
 
   return (
     <div className="mx-auto max-w-screen-sm pb-12">
-      {/* 1. Sticky Edit-Toolbar */}
-      <div className="sticky top-0 z-20 -mx-4 flex items-center justify-between gap-3 border-b border-brand-neutral/30 bg-white/90 px-4 py-2.5 backdrop-blur md:mx-0 md:rounded-t-xl">
-        <h2 className="font-display text-lg font-black tracking-tight text-brand-night-navy">
+      {/* 1. Sticky Edit-Toolbar — eine ruhige, nie quetschende Reihe; auf
+          schmalen Screens bricht der Titel über die Controls. */}
+      <div className="sticky top-0 z-20 -mx-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-brand-neutral/30 bg-white/90 px-4 py-2.5 backdrop-blur md:mx-0 md:rounded-t-2xl">
+        <h2 className="title-wrap text-[17px] font-semibold text-brand-night-navy">
           Mein Profil
         </h2>
-        <div className="flex items-center gap-3">
-          <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-brand-night-navy">
-            <input
-              type="checkbox"
-              checked={isPublic}
-              disabled={pending}
-              onChange={(e) => onTogglePublic(e.target.checked)}
-              className="h-4 w-4 rounded border-brand-neutral/40 accent-accent disabled:cursor-not-allowed"
-            />
-            Öffentlich
+        <div className="flex items-center gap-2.5">
+          {/* Beschriftetes Switch statt nackter Checkbox */}
+          <label className="inline-flex cursor-pointer select-none items-center gap-2 rounded-full border border-brand-neutral/40 bg-brand-off-white/60 px-2.5 py-1.5">
+            <span className="relative inline-flex h-5 w-9 shrink-0 items-center">
+              <input
+                type="checkbox"
+                checked={isPublic}
+                disabled={pending}
+                onChange={(e) => onTogglePublic(e.target.checked)}
+                className="peer sr-only"
+              />
+              <span className="absolute inset-0 rounded-full bg-brand-neutral/50 transition-colors peer-checked:bg-accent peer-disabled:opacity-50" />
+              <span className="absolute left-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+            </span>
+            <span className="text-xs font-semibold text-brand-night-navy">
+              Öffentlich
+            </span>
           </label>
           {publicSlug && (
             <Link
               href={`/m/${publicSlug}`}
               target="_blank"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-accent-dark"
+              className="inline-flex items-center gap-1.5 rounded-full border border-brand-neutral/40 bg-white px-3 py-1.5 text-xs font-semibold text-brand-night-navy shadow-sm transition-colors hover:bg-brand-off-white"
             >
               <Eye className="h-4 w-4" aria-hidden />
               Live-Vorschau
@@ -286,23 +294,24 @@ export function MeinProfilEditor({
             }}
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-night-navy via-brand-night-navy/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-night-navy via-brand-night-navy/45 to-brand-night-navy/10" />
 
-        {/* Saison-Chip */}
-        <span className="absolute right-3 top-3 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur">
-          Saison {saison}
-        </span>
-
-        {/* Cover ändern — deutlich sichtbarer Button (weiß, mit Icon). */}
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => coverInputRef.current?.click()}
-          className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-2 text-xs font-bold text-brand-night-navy shadow-md ring-1 ring-black/5 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <Camera className="h-4 w-4" aria-hidden />
-          {coverUrl ? "Cover-Bild ändern" : "Cover-Bild hinzufügen"}
-        </button>
+        {/* Obere Reihe: Saison-Chip links, Cover-Upload rechts — getrennt vom
+            Avatar (unten) und untereinander nie überlappend. */}
+        <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
+          <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur">
+            Saison {saison}
+          </span>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => coverInputRef.current?.click()}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-2 text-xs font-semibold text-brand-night-navy shadow-md ring-1 ring-black/5 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Camera className="h-4 w-4" aria-hidden />
+            {coverUrl ? "Cover ändern" : "Cover hinzufügen"}
+          </button>
+        </div>
         <input
           ref={coverInputRef}
           type="file"
@@ -319,7 +328,7 @@ export function MeinProfilEditor({
         <div className="absolute inset-x-4 bottom-4">
           {/* Logo-Badge + ändern */}
           <div className="relative inline-block">
-            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-accent text-xl font-black text-brand-night-navy shadow-lg">
+            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-accent text-xl font-bold text-brand-night-navy shadow-lg">
               {logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -386,19 +395,23 @@ export function MeinProfilEditor({
             <button
               type="button"
               onClick={() => setEditingName(true)}
-              className="group mt-2 flex items-center gap-2 text-left"
+              className="group mt-3 flex w-full items-start gap-2 text-left"
             >
-              <h1 className="font-display text-3xl font-black tracking-tight text-white">
+              <h1 className="title-wrap text-[24px] font-bold leading-[1.2] text-white [text-shadow:0_1px_8px_rgba(0,0,0,0.45)] md:text-[28px]">
                 {name}
               </h1>
-              <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="mt-1.5 shrink-0 rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
                 ✎ umbenennen
               </span>
             </button>
           )}
 
           {/* Meta-Zeile (read-only) */}
-          {meta && <p className="mt-1 text-xs text-brand-neutral">{meta}</p>}
+          {meta && (
+            <p className="title-wrap mt-1 text-xs text-white/75 [text-shadow:0_1px_6px_rgba(0,0,0,0.4)]">
+              {meta}
+            </p>
+          )}
         </div>
       </header>
 
@@ -449,7 +462,7 @@ export function MeinProfilEditor({
               className="mt-0.5 h-5 w-5 shrink-0 rounded border-brand-neutral/40 accent-accent disabled:cursor-not-allowed"
             />
             <span>
-              <span className="block font-display text-base font-black tracking-tight text-brand-night-navy">
+              <span className="block text-[15px] font-semibold text-brand-night-navy">
                 Saison-Insights anzeigen
               </span>
               <span className="mt-0.5 block text-sm text-brand-night-navy/60">
@@ -462,7 +475,7 @@ export function MeinProfilEditor({
         {/* 5. Galerie */}
         <div className="rounded-2xl border border-brand-neutral/40 bg-white p-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-display text-base font-black tracking-tight text-brand-night-navy">
+            <h3 className="text-[15px] font-semibold text-brand-night-navy">
               Galerie
             </h3>
             <span className="text-xs font-semibold text-brand-night-navy/50">
@@ -516,7 +529,7 @@ export function MeinProfilEditor({
 
         {/* 6. Über uns */}
         <div className="space-y-5 rounded-2xl border border-brand-neutral/40 bg-white p-4">
-          <h3 className="font-display text-base font-black tracking-tight text-brand-night-navy">
+          <h3 className="text-[15px] font-semibold text-brand-night-navy">
             Über uns
           </h3>
 

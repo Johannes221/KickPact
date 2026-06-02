@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
 import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import { SponsorProfileForm } from "./_components/sponsor-profile-form";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata = { title: "Profil · KickPact" };
 
@@ -18,8 +19,17 @@ export default async function SponsorProfilPage() {
 
   return (
     <div className="max-w-xl space-y-8">
-      <div>
-        <h2 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+      <PageHeader
+        className="md:hidden"
+        title="Mein Profil"
+        subtitle={
+          sponsor.type === "business"
+            ? "Firmendaten erscheinen auf Rechnungen."
+            : "Dein Anzeigename für Vereine."
+        }
+      />
+      <div className="hidden md:block">
+        <h2 className="text-2xl md:text-3xl font-bold text-brand-night-navy">
           Mein Profil
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">

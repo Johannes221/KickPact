@@ -7,6 +7,7 @@ import {
 } from "@/lib/db/queries/invoices";
 import { parsePaginationFromSearchParams } from "@/lib/db/queries/_helpers/paginate";
 import { SponsorInvoicesList } from "./_components/sponsor-invoices-list";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata = { title: "Rechnungen · KickPact" };
 
@@ -29,7 +30,8 @@ export default async function RechnungenPage({
     return (
       <div className="mx-auto max-w-3xl">
         <div className="mb-6 md:mb-10">
-          <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
+          <PageHeader className="md:hidden" title="Rechnungen" />
+          <h1 className="hidden md:block text-2xl md:text-4xl lg:text-5xl font-bold text-brand-night-navy">
             Rechnungen
           </h1>
         </div>
@@ -67,20 +69,31 @@ export default async function RechnungenPage({
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-6 md:mb-10">
-        <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
-          Deine Rechnungen
-        </h1>
-        <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
-          {result.total === 0
-            ? "Noch keine Rechnungen — kommt zum 1. des Monats."
-            : `${result.total} Rechnung${result.total === 1 ? "" : "en"} · Diese Seite ${eur(totalCents)}`}
-        </p>
+        <PageHeader
+          className="md:hidden"
+          title="Deine Rechnungen"
+          subtitle={
+            result.total === 0
+              ? "Noch keine Rechnungen — kommt zum 1. des Monats."
+              : `${result.total} Rechnung${result.total === 1 ? "" : "en"} · Diese Seite ${eur(totalCents)}`
+          }
+        />
+        <div className="hidden md:block">
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-brand-night-navy">
+            Deine Rechnungen
+          </h1>
+          <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
+            {result.total === 0
+              ? "Noch keine Rechnungen — kommt zum 1. des Monats."
+              : `${result.total} Rechnung${result.total === 1 ? "" : "en"} · Diese Seite ${eur(totalCents)}`}
+          </p>
+        </div>
       </div>
 
       {result.total === 0 ? (
         <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-6 md:p-8">
           <div className="text-3xl md:text-4xl mb-2 md:mb-3">📄</div>
-          <p className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+          <p className="text-base md:text-lg font-bold text-brand-night-navy">
             Noch keine Rechnung
           </p>
           <p className="mt-1.5 md:mt-2 text-sm text-brand-night-navy/60 max-w-md">

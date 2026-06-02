@@ -2,6 +2,7 @@ import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { getVereinDashboardKpis } from "@/lib/db/queries/club-reporting";
 import { TrendingUp, Users, HandCoins, Receipt, Share2 } from "lucide-react";
 import { DashboardTile } from "@/components/shared/dashboard-tile";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata = { title: "Dashboard · KickPact" };
 
@@ -33,6 +34,13 @@ export default async function VereinDashboard({
 
   return (
     <div className="space-y-4">
+      {/* Mobile-Titel: auf Desktop liefert das Header-Shell bereits den großen
+          Vereinsnamen, daher hier nur md:hidden (kein Doppel-Titel). */}
+      <PageHeader
+        className="md:hidden"
+        title={club.name}
+        subtitle="Vereins-Dashboard"
+      />
       {showSubscribedBanner && (
         <div
           role="alert"

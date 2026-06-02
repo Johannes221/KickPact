@@ -5,6 +5,7 @@ import { getTriggerLabel } from "@/lib/billing/trigger-labels";
 import { categorize } from "@/lib/billing/trigger-categories";
 import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
 import { AvailableTriggers } from "./_components/available-triggers";
+import { PactsFilterBar } from "./_components/pacts-filter-bar";
 
 export const metadata = { title: "Pacts · KickPact" };
 
@@ -61,8 +62,11 @@ export default async function PactsPage({
         </p>
       </div>
 
-      {/* Filter — beschriftete, scrollbare Chip-Reihen (mobile-first) */}
-      <div className="space-y-2">
+      {/* Filter mobil: kompakter SegmentedControl + Art-Sheet (iOS-Feeling) */}
+      <PactsFilterBar status={status} kind={kind} />
+
+      {/* Filter Desktop: beschriftete Chip-Reihen */}
+      <div className="hidden md:block space-y-2">
         <FilterRow label="Status">
           {(["active", "paused", "ended", "all"] as FilterStatus[]).map((s) => (
             <FilterChip

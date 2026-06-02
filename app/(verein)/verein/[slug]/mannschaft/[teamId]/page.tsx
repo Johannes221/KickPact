@@ -300,7 +300,7 @@ export default async function TeamDetailPage({
               return (
                 <li key={m.id}>
                   <Link
-                    href={`/verein/${slug}/spiel/${m.id}`}
+                    href={`/verein/${slug}/mannschaft/${team.id}/spiel/${m.id}`}
                     className={`block rounded-lg border bg-white p-3 md:p-4 hover:bg-brand-off-white/60 transition-colors ${resultColor}`}
                   >
                     <div className="flex items-center justify-between gap-3">

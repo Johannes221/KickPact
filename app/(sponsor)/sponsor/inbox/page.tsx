@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/auth/session";
 import { listPendingForSponsor } from "@/lib/db/queries/approvals";
 import { ApprovalRow } from "./_components/approval-row";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata = { title: "Inbox · KickPact" };
 
@@ -11,14 +12,25 @@ export default async function SponsorInboxPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-6 md:mb-10">
-        <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
-          Inbox
-        </h1>
-        <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
-          {pending.length === 0
-            ? "Keine ausstehenden Events."
-            : `${pending.length} ${pending.length === 1 ? "Event" : "Events"} zur Bestätigung.`}
-        </p>
+        <PageHeader
+          className="md:hidden"
+          title="Inbox"
+          subtitle={
+            pending.length === 0
+              ? "Keine ausstehenden Events."
+              : `${pending.length} ${pending.length === 1 ? "Event" : "Events"} zur Bestätigung.`
+          }
+        />
+        <div className="hidden md:block">
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-brand-night-navy">
+            Inbox
+          </h1>
+          <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
+            {pending.length === 0
+              ? "Keine ausstehenden Events."
+              : `${pending.length} ${pending.length === 1 ? "Event" : "Events"} zur Bestätigung.`}
+          </p>
+        </div>
       </div>
 
       {pending.length === 0 ? (

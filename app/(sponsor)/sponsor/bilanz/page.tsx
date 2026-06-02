@@ -14,6 +14,7 @@ import {
   type RangePreset
 } from "./_components/bilanz-range-selector";
 import { BilanzMonthlyChart } from "./_components/bilanz-monthly-chart";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata = { title: "Bilanz · KickPact" };
 
@@ -96,7 +97,8 @@ export default async function BilanzPage({
     return (
       <div className="mx-auto max-w-3xl">
         <div className="mb-6 md:mb-10">
-          <h1 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
+          <PageHeader className="md:hidden" title="Bilanz" />
+          <h1 className="hidden md:block text-2xl md:text-4xl font-bold text-brand-night-navy">
             Bilanz
           </h1>
         </div>
@@ -122,8 +124,13 @@ export default async function BilanzPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
+      <PageHeader
+        className="md:hidden"
+        title="Bilanz"
+        subtitle="Übersicht deiner Charges nach Zeitraum, Verein, Mannschaft und Trigger."
+      />
+      <div className="hidden md:block">
+        <h1 className="text-2xl md:text-4xl font-bold text-brand-night-navy">
           Bilanz
         </h1>
         <p className="mt-1.5 text-sm md:text-base text-brand-night-navy/60">
@@ -257,7 +264,7 @@ function KpiTile({
       <div className="text-[0.65rem] font-semibold uppercase tracking-widest text-brand-night-navy/50">
         {label}
       </div>
-      <div className="mt-1 font-display font-black text-xl md:text-2xl tabular-nums tracking-tight text-brand-night-navy break-words">
+      <div className="mt-1 text-xl md:text-2xl font-bold tabular-nums text-brand-night-navy break-words">
         {primary}
       </div>
       <div className="mt-1 text-xs text-brand-night-navy/60 truncate">

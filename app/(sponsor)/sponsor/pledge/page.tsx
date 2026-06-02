@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth/session";
 import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import { listPledgesForSponsor } from "@/lib/db/queries/pledges";
 import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata = { title: "Meine Wetten · KickPact" };
 
@@ -18,12 +19,19 @@ export default async function PledgeListPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
-        Meine <span className="text-accent">Wetten</span>
-      </h1>
-      <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60 max-w-2xl">
-        Hier siehst du alle deine aktiven und vergangenen Sponsoring-Versprechen.
-      </p>
+      <PageHeader
+        className="md:hidden"
+        title="Meine Wetten"
+        subtitle="Hier siehst du alle deine aktiven und vergangenen Sponsoring-Versprechen."
+      />
+      <div className="hidden md:block">
+        <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-brand-night-navy">
+          Meine <span className="text-accent">Wetten</span>
+        </h1>
+        <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60 max-w-2xl">
+          Hier siehst du alle deine aktiven und vergangenen Sponsoring-Versprechen.
+        </p>
+      </div>
 
       <div className="mt-6 md:mt-10 space-y-3">
         {myPledges.length === 0 ? (

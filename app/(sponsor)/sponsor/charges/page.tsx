@@ -12,6 +12,7 @@ import {
 import { FilterBar, type FilterDefinition } from "@/components/shared/filter-bar";
 import { CsvExportButton } from "@/components/shared/csv-export-button";
 import { SponsorChargesTable } from "./_components/sponsor-charges-table";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata = { title: "Charges · KickPact" };
 
@@ -53,7 +54,8 @@ export default async function ChargesPage({
     return (
       <div className="mx-auto max-w-3xl">
         <div className="mb-6 md:mb-10">
-          <h1 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
+          <PageHeader className="md:hidden" title="Charges" />
+          <h1 className="hidden md:block text-2xl md:text-4xl font-bold text-brand-night-navy">
             Charges
           </h1>
         </div>
@@ -150,8 +152,13 @@ export default async function ChargesPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
+      <PageHeader
+        className="md:hidden"
+        title="Charges"
+        subtitle="Jeder einzelne Trigger, der für dich ausgelöst wurde — über alle Vereine und Mannschaften hinweg."
+      />
+      <div className="hidden md:block">
+        <h1 className="text-2xl md:text-4xl font-bold text-brand-night-navy">
           Charges
         </h1>
         <p className="mt-1.5 text-sm md:text-base text-brand-night-navy/60">

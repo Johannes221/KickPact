@@ -7,6 +7,7 @@ import {
 import { DiscoverFilters } from "./_components/discover-filters";
 import { TeamDiscoverCard } from "./_components/team-discover-card";
 import { InquiriesList } from "./_components/inquiries-list";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata = { title: "Mannschaften entdecken · KickPact" };
 
@@ -40,19 +41,26 @@ export default async function DiscoverPage({
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-6 md:mb-10">
-        <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
-          Mannschaften entdecken
-        </h1>
-        <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
-          Such nach Mannschaft, Verein oder Ort — und frag direkt an, ob du sie sponsoren darfst.
-        </p>
+        <PageHeader
+          className="md:hidden"
+          title="Mannschaften entdecken"
+          subtitle="Such nach Mannschaft, Verein oder Ort — und frag direkt an, ob du sie sponsoren darfst."
+        />
+        <div className="hidden md:block">
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-brand-night-navy">
+            Mannschaften entdecken
+          </h1>
+          <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
+            Such nach Mannschaft, Verein oder Ort — und frag direkt an, ob du sie sponsoren darfst.
+          </p>
+        </div>
       </div>
 
       <DiscoverFilters basePath="/sponsor/discover" facets={facets} current={current} />
 
       {teamsList.length === 0 ? (
         <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-6 md:p-8 text-center">
-          <p className="font-display font-black text-base md:text-lg text-brand-night-navy">
+          <p className="text-base md:text-lg font-bold text-brand-night-navy">
             Keine Mannschaften gefunden
           </p>
           <p className="mt-1.5 text-sm text-brand-night-navy/60">
@@ -69,7 +77,7 @@ export default async function DiscoverPage({
 
       {myInquiries.length > 0 && (
         <section className="mt-8 md:mt-12">
-          <h2 className="font-display font-black text-lg md:text-2xl tracking-tight text-brand-night-navy mb-3 md:mb-4">
+          <h2 className="text-lg md:text-2xl font-bold text-brand-night-navy mb-3 md:mb-4">
             Deine Anfragen
           </h2>
           <InquiriesList inquiries={myInquiries} />

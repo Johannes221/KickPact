@@ -9,6 +9,7 @@ import {
 import { detectTeamSide } from "@/lib/crawler/team-side";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
+import { PageHeader } from "@/components/shared/page-header";
 import { getTeamCrawlState } from "@/lib/db/queries/crawler";
 import { isTeamCrawling } from "@/lib/crawler/crawl-status";
 import { SpieleRefresh } from "./_components/spiele-refresh";
@@ -126,14 +127,15 @@ export default async function SpielePage({
   };
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display font-black text-2xl md:text-3xl tracking-tight">Spiele</h1>
-        <p className="text-sm text-brand-night-navy/60 mt-1">
-          Vergangene und kommende Spiele dieser Mannschaft, gefiltert nach Zeit,
-          Ort und Saison-Hälfte.
-        </p>
-      </div>
+    <div className="space-y-5 pb-24 md:pb-0">
+      <PageHeader
+        title="Spiele"
+        subtitle={`${team.name} · ${team.saison}`}
+      />
+      <p className="-mt-3 text-sm leading-snug text-brand-night-navy/60">
+        Vergangene und kommende Spiele dieser Mannschaft, gefiltert nach Zeit,
+        Ort und Saison-Hälfte.
+      </p>
 
       <SpieleRefresh
         slug={slug}
@@ -291,7 +293,7 @@ export default async function SpielePage({
                     <div className="flex items-center gap-3 md:gap-4 px-4 py-3">{inner}</div>
                   ) : (
                     <Link
-                      href={`/verein/${slug}/spiel/${m.id}`}
+                      href={`/verein/${slug}/mannschaft/${team.id}/spiel/${m.id}`}
                       className="flex items-center gap-3 md:gap-4 px-4 py-3 hover:bg-brand-off-white/50 transition-colors"
                     >
                       {inner}

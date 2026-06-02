@@ -17,6 +17,7 @@ import {
 } from "@/lib/db/queries/sponsor-dashboard";
 import { ReferralShareCard } from "@/components/sponsor/referral-share-card";
 import { buildReferralShareUrl } from "@/lib/referral/link";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata = { title: "Sponsor · KickPact" };
 
@@ -36,7 +37,7 @@ export default async function SponsorDashboard() {
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-accent/10 text-accent-dark">
           <HandCoins className="h-8 w-8" aria-hidden />
         </div>
-        <h1 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+        <h1 className="text-2xl md:text-3xl font-bold text-brand-night-navy">
           Bereit, Mannschaften zu sponsern?
         </h1>
         <p className="text-sm text-brand-night-navy/60">
@@ -72,11 +73,18 @@ export default async function SponsorDashboard() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <div>
+      {/* Mobile: eigener Content-Titel (AppNavBar zeigt nur den kurzen
+          Sektions-Titel). Desktop liefert den großen Namen unten. */}
+      <PageHeader
+        className="md:hidden"
+        title="Übersicht"
+        subtitle={sponsorRow.displayName}
+      />
+      <div className="hidden md:block">
         <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
           Sponsor
         </p>
-        <h1 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy break-words">
+        <h1 className="text-2xl md:text-3xl font-bold text-brand-night-navy break-words">
           {sponsorRow.displayName}
         </h1>
       </div>
