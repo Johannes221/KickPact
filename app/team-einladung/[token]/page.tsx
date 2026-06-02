@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { sponsorInvitations, teams, clubs } from "@/lib/db/schema";
+import {
+  getTeamInvitationByToken,
+  getClubNameSlugByTeam
+} from "@/lib/db/queries/invitations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getServerSession } from "@/lib/auth/session";
@@ -26,40 +27,13 @@ export default async function TeamInvitationPage({
 }) {
   const { token } = await params;
 
-  const [invitation] = await db
-    .select({
-      id: sponsorInvitations.id,
-      status: sponsorInvitations.status,
-      kind: sponsorInvitations.kind,
-      role: sponsorInvitations.role,
-      teamId: sponsorInvitations.teamId,
-      clubId: sponsorInvitations.clubId,
-      expiresAt: sponsorInvitations.expiresAt,
-      recipientEmail: sponsorInvitations.recipientEmail,
-      teamName: teams.name,
-      clubName: clubs.name,
-      clubSlug: clubs.slug
-    })
-    .from(sponsorInvitations)
-    .leftJoin(teams, eq(sponsorInvitations.teamId, teams.id))
-    .leftJoin(
-      clubs,
-      // Join über teams.clubId ODER direkt sponsorInvitations.clubId
-      eq(clubs.id, sponsorInvitations.clubId)
-    )
-    .where(eq(sponsorInvitations.token, token))
-    .limit(1);
+  const invitation = await getTeamInvitationByToken(token);
 
   // Wenn Club nicht direkt geladen wurde, weil Invite via teams läuft → nachladen
   let clubName: string | null = invitation?.clubName ?? null;
   let clubSlug: string | null = invitation?.clubSlug ?? null;
   if (invitation && !clubName && invitation.teamId) {
-    const [row] = await db
-      .select({ name: clubs.name, slug: clubs.slug })
-      .from(teams)
-      .innerJoin(clubs, eq(teams.clubId, clubs.id))
-      .where(eq(teams.id, invitation.teamId))
-      .limit(1);
+    const row = await getClubNameSlugByTeam(invitation.teamId);
     clubName = row?.name ?? null;
     clubSlug = row?.slug ?? null;
   }

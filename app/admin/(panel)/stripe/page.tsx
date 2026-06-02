@@ -1,53 +1,18 @@
 import Link from "next/link";
 import { TriangleAlert, RefreshCw, MailOpen, type LucideIcon } from "lucide-react";
-import { desc, eq, sql } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { subscriptions, clubs, processedStripeEvents } from "@/lib/db/schema";
+import {
+  listPastDueSubscriptions,
+  listIncompleteSubscriptions,
+  listRecentStripeEvents
+} from "@/lib/db/queries/subscriptions";
 
 export const metadata = { title: "Stripe · Admin · KickPact" };
 export const dynamic = "force-dynamic";
 
 export default async function StripePage() {
-  // Past-Due subscriptions — joined to clubs for direct drill-down.
-  const pastDue = await db
-    .select({
-      clubId: clubs.id,
-      clubSlug: clubs.slug,
-      clubName: clubs.name,
-      stripeCustomerId: subscriptions.stripeCustomerId,
-      stripeSubscriptionId: subscriptions.stripeSubscriptionId,
-      currentPeriodEnd: subscriptions.currentPeriodEnd,
-      billingCycle: subscriptions.billingCycle,
-      updatedAt: subscriptions.updatedAt
-    })
-    .from(subscriptions)
-    .innerJoin(clubs, eq(clubs.id, subscriptions.clubId))
-    .where(eq(subscriptions.status, "past_due"))
-    .orderBy(desc(subscriptions.updatedAt));
-
-  // Incomplete subscriptions (Stripe-Checkout angefangen, nicht abgeschlossen).
-  const incomplete = await db
-    .select({
-      clubId: clubs.id,
-      clubSlug: clubs.slug,
-      clubName: clubs.name,
-      stripeCustomerId: subscriptions.stripeCustomerId,
-      updatedAt: subscriptions.updatedAt
-    })
-    .from(subscriptions)
-    .innerJoin(clubs, eq(clubs.id, subscriptions.clubId))
-    .where(eq(subscriptions.status, "incomplete"))
-    .orderBy(desc(subscriptions.updatedAt));
-
-  // Letzte 10 Webhook-Events. "Latency" zu Stripe können wir nicht messen
-  // (wir speichern den Event-Timestamp aus Stripe-Payload nicht separat),
-  // also zeigen wir processed_at + event_type als simple Audit-Liste.
-  // → siehe Plan 4 Report-Sektion zur pragmatischen Vereinfachung.
-  const recentEvents = await db
-    .select()
-    .from(processedStripeEvents)
-    .orderBy(desc(processedStripeEvents.processedAt))
-    .limit(10);
+  const pastDue = await listPastDueSubscriptions();
+  const incomplete = await listIncompleteSubscriptions();
+  const recentEvents = await listRecentStripeEvents(10);
 
   return (
     <div className="space-y-8">

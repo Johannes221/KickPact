@@ -1,16 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { and, eq, isNull } from "drizzle-orm";
 import { Hourglass, CheckCircle2 } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
-import { db } from "@/lib/db/client";
-import {
-  clubs,
-  teams,
-  clubMembershipRequests,
-  clubMemberships,
-  teamMemberships
-} from "@/lib/db/schema";
+import { getAccessRequestPageData } from "@/lib/db/queries/membership-requests";
 import { RequestForm } from "./_components/request-form";
 
 export const metadata = { title: "Zugriff anfragen · KickPact" };
@@ -25,72 +17,9 @@ export default async function ZugriffAnfragenPage({
 
   const user = await requireUser();
 
-  const [club] = await db
-    .select({ id: clubs.id, name: clubs.name, slug: clubs.slug })
-    .from(clubs)
-    .where(eq(clubs.slug, clubSlug))
-    .limit(1);
-  if (!club) redirect("/onboarding");
-
-  const teamRows = await db
-    .select({ id: teams.id, name: teams.name, saison: teams.saison })
-    .from(teams)
-    .where(eq(teams.clubId, club.id));
-
-  // Mannschafts-Modus: Anfrage zielt auf GENAU diese Mannschaft (kommt aus dem
-  // Onboarding-Flow via ?teamId). Sonst Fallback auf Vereins-Anfrage.
-  const fixedTeam = teamId
-    ? (
-        await db
-          .select({ id: teams.id, name: teams.name, saison: teams.saison })
-          .from(teams)
-          .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
-          .limit(1)
-      )[0] ?? null
-    : null;
-
-  // ── De-Dupe: schon angefragt oder schon Mitglied? ──────────────────────────
-  const [pendingReq] = await db
-    .select({ id: clubMembershipRequests.id })
-    .from(clubMembershipRequests)
-    .where(
-      and(
-        eq(clubMembershipRequests.userId, user.id),
-        eq(clubMembershipRequests.clubId, club.id),
-        eq(clubMembershipRequests.status, "pending"),
-        fixedTeam
-          ? eq(clubMembershipRequests.requestedTeamId, fixedTeam.id)
-          : isNull(clubMembershipRequests.requestedTeamId)
-      )
-    )
-    .limit(1);
-
-  let alreadyMember = false;
-  if (fixedTeam) {
-    const [tm] = await db
-      .select({ userId: teamMemberships.userId })
-      .from(teamMemberships)
-      .where(
-        and(
-          eq(teamMemberships.userId, user.id),
-          eq(teamMemberships.teamId, fixedTeam.id)
-        )
-      )
-      .limit(1);
-    alreadyMember = !!tm;
-  } else {
-    const [cm] = await db
-      .select({ userId: clubMemberships.userId })
-      .from(clubMemberships)
-      .where(
-        and(
-          eq(clubMemberships.userId, user.id),
-          eq(clubMemberships.clubId, club.id)
-        )
-      )
-      .limit(1);
-    alreadyMember = !!cm;
-  }
+  const data = await getAccessRequestPageData(user.id, clubSlug, teamId);
+  if (!data) redirect("/onboarding");
+  const { club, teamRows, fixedTeam, pendingReq, alreadyMember } = data;
 
   const targetLabel = fixedTeam ? fixedTeam.name : club.name;
 

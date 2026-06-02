@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
-import { getActiveDraftForUser } from "@/lib/db/queries/onboarding-draft";
-import { db } from "@/lib/db/client";
-import { clubs } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import {
+  getActiveDraftForUser,
+  getClubStammdaten
+} from "@/lib/db/queries/onboarding-draft";
 import { WizardShell } from "../../_components/wizard-shell";
 import { StammdatenForm } from "../../_components/stammdaten-form";
 
@@ -15,16 +15,7 @@ export default async function MannschaftFlowStep2() {
   if (!draft) redirect("/onboarding");
   if (draft.onboardingRole !== "mannschaft") redirect("/onboarding");
 
-  const [club] = await db
-    .select({
-      addressJson: clubs.addressJson,
-      isSmallBusiness: clubs.isSmallBusiness,
-      taxId: clubs.taxId,
-      iban: clubs.iban
-    })
-    .from(clubs)
-    .where(eq(clubs.id, draft.clubId))
-    .limit(1);
+  const club = await getClubStammdaten(draft.clubId);
 
   return (
     <WizardShell step={2} role="mannschaft" backHref="/onboarding/mannschaft/verein?change=1">

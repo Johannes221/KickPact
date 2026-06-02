@@ -1,10 +1,11 @@
 import "server-only";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, desc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   subscriptions,
   teamLicenses,
   teams,
+  clubs,
   processedStripeEvents
 } from "@/lib/db/schema";
 import type { SubscriptionStatus } from "./subscription-status";
@@ -133,4 +134,48 @@ export async function getClubIdByCustomer(
     .where(eq(subscriptions.stripeCustomerId, customerId))
     .limit(1);
   return sub?.clubId ?? null;
+}
+
+/** Past-Due-Subscriptions fürs Admin-Stripe-Panel, mit Club-Drill-Down. */
+export async function listPastDueSubscriptions() {
+  return db
+    .select({
+      clubId: clubs.id,
+      clubSlug: clubs.slug,
+      clubName: clubs.name,
+      stripeCustomerId: subscriptions.stripeCustomerId,
+      stripeSubscriptionId: subscriptions.stripeSubscriptionId,
+      currentPeriodEnd: subscriptions.currentPeriodEnd,
+      billingCycle: subscriptions.billingCycle,
+      updatedAt: subscriptions.updatedAt
+    })
+    .from(subscriptions)
+    .innerJoin(clubs, eq(clubs.id, subscriptions.clubId))
+    .where(eq(subscriptions.status, "past_due"))
+    .orderBy(desc(subscriptions.updatedAt));
+}
+
+/** Incomplete-Subscriptions (Checkout angefangen, nicht abgeschlossen). */
+export async function listIncompleteSubscriptions() {
+  return db
+    .select({
+      clubId: clubs.id,
+      clubSlug: clubs.slug,
+      clubName: clubs.name,
+      stripeCustomerId: subscriptions.stripeCustomerId,
+      updatedAt: subscriptions.updatedAt
+    })
+    .from(subscriptions)
+    .innerJoin(clubs, eq(clubs.id, subscriptions.clubId))
+    .where(eq(subscriptions.status, "incomplete"))
+    .orderBy(desc(subscriptions.updatedAt));
+}
+
+/** Letzte N verarbeitete Stripe-Webhook-Events (Admin-Audit-Liste). */
+export async function listRecentStripeEvents(limit = 10) {
+  return db
+    .select()
+    .from(processedStripeEvents)
+    .orderBy(desc(processedStripeEvents.processedAt))
+    .limit(limit);
 }

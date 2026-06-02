@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   clubMembershipRequests,
@@ -6,7 +6,8 @@ import {
   teamMemberships,
   teams,
   clubs,
-  users
+  users,
+  clubVerifications
 } from "@/lib/db/schema";
 
 export type MembershipRequestStatus = "pending" | "approved" | "rejected";
@@ -430,4 +431,148 @@ export async function revokeTeamMembership(
     )
     .returning({ userId: teamMemberships.userId });
   return deleted.length > 0;
+}
+
+/**
+ * Daten für die Zugriff-anfragen-Seite (/onboarding/zugriff-anfragen):
+ * Verein, Teams, optional fixiertes Team, plus De-Dupe-Flags (schon angefragt /
+ * schon Mitglied). `null`, wenn der Verein-Slug nicht existiert.
+ */
+export async function getAccessRequestPageData(
+  userId: string,
+  clubSlug: string,
+  teamId?: string
+) {
+  const [club] = await db
+    .select({ id: clubs.id, name: clubs.name, slug: clubs.slug })
+    .from(clubs)
+    .where(eq(clubs.slug, clubSlug))
+    .limit(1);
+  if (!club) return null;
+
+  const teamRows = await db
+    .select({ id: teams.id, name: teams.name, saison: teams.saison })
+    .from(teams)
+    .where(eq(teams.clubId, club.id));
+
+  const fixedTeam = teamId
+    ? (
+        await db
+          .select({ id: teams.id, name: teams.name, saison: teams.saison })
+          .from(teams)
+          .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
+          .limit(1)
+      )[0] ?? null
+    : null;
+
+  const [pendingReq] = await db
+    .select({ id: clubMembershipRequests.id })
+    .from(clubMembershipRequests)
+    .where(
+      and(
+        eq(clubMembershipRequests.userId, userId),
+        eq(clubMembershipRequests.clubId, club.id),
+        eq(clubMembershipRequests.status, "pending"),
+        fixedTeam
+          ? eq(clubMembershipRequests.requestedTeamId, fixedTeam.id)
+          : isNull(clubMembershipRequests.requestedTeamId)
+      )
+    )
+    .limit(1);
+
+  let alreadyMember = false;
+  if (fixedTeam) {
+    const [tm] = await db
+      .select({ userId: teamMemberships.userId })
+      .from(teamMemberships)
+      .where(
+        and(
+          eq(teamMemberships.userId, userId),
+          eq(teamMemberships.teamId, fixedTeam.id)
+        )
+      )
+      .limit(1);
+    alreadyMember = !!tm;
+  } else {
+    const [cm] = await db
+      .select({ userId: clubMemberships.userId })
+      .from(clubMemberships)
+      .where(
+        and(eq(clubMemberships.userId, userId), eq(clubMemberships.clubId, club.id))
+      )
+      .limit(1);
+    alreadyMember = !!cm;
+  }
+
+  return { club, teamRows, fixedTeam, pendingReq: pendingReq ?? null, alreadyMember };
+}
+
+export interface ConflictClaimRow {
+  id: string;
+  clubId: string;
+  clubName: string;
+  clubSlug: string;
+  claimantEmail: string;
+  requestedRole: RequestedRole;
+  message: string | null;
+  conflictDocStorageKey: string | null;
+  createdAt: Date;
+  existingAdmin: {
+    submitterEmail: string;
+    submitterFullName: string;
+    docStorageKey: string;
+    docFilename: string;
+  } | null;
+}
+
+/**
+ * Offene Konflikt-Claims fürs Admin-Panel (/admin/conflicts), angereichert um
+ * die approved Verifikation des bestehenden Admins (Vergleich beider Seiten).
+ */
+export async function listConflictClaimsForAdmin(): Promise<ConflictClaimRow[]> {
+  const rows = await db
+    .select({
+      id: clubMembershipRequests.id,
+      clubId: clubs.id,
+      clubName: clubs.name,
+      clubSlug: clubs.slug,
+      claimantEmail: users.email,
+      requestedRole: clubMembershipRequests.requestedRole,
+      message: clubMembershipRequests.message,
+      conflictDocStorageKey: clubMembershipRequests.conflictDocStorageKey,
+      createdAt: clubMembershipRequests.createdAt
+    })
+    .from(clubMembershipRequests)
+    .innerJoin(clubs, eq(clubMembershipRequests.clubId, clubs.id))
+    .innerJoin(users, eq(clubMembershipRequests.userId, users.id))
+    .where(
+      and(
+        eq(clubMembershipRequests.isConflictClaim, true),
+        eq(clubMembershipRequests.status, "pending")
+      )
+    )
+    .orderBy(desc(clubMembershipRequests.createdAt));
+
+  return Promise.all(
+    rows.map(async (r) => {
+      const [existing] = await db
+        .select({
+          submitterEmail: users.email,
+          submitterFullName: clubVerifications.submitterFullName,
+          docStorageKey: clubVerifications.docStorageKey,
+          docFilename: clubVerifications.docFilename
+        })
+        .from(clubVerifications)
+        .innerJoin(users, eq(clubVerifications.submittedByUserId, users.id))
+        .where(
+          and(
+            eq(clubVerifications.clubId, r.clubId),
+            eq(clubVerifications.status, "approved")
+          )
+        )
+        .orderBy(desc(clubVerifications.reviewedAt))
+        .limit(1);
+      return { ...r, existingAdmin: existing ?? null };
+    })
+  );
 }

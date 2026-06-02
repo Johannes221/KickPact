@@ -86,3 +86,18 @@ export function nextOnboardingStep(draft: OnboardingDraft): string {
   // Die Einladung lebt jetzt als Dashboard-Aufgabe (Sponsoren-Tab).
   return `/onboarding/${draft.onboardingRole}/stammdaten`;
 }
+
+/** Stammdaten-Felder eines Clubs für das Pre-Fill im Onboarding-Wizard. */
+export async function getClubStammdaten(clubId: string) {
+  const [club] = await db
+    .select({
+      addressJson: clubs.addressJson,
+      isSmallBusiness: clubs.isSmallBusiness,
+      taxId: clubs.taxId,
+      iban: clubs.iban
+    })
+    .from(clubs)
+    .where(eq(clubs.id, clubId))
+    .limit(1);
+  return club;
+}

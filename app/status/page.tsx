@@ -1,40 +1,13 @@
-import { sql } from "drizzle-orm";
-import { db } from "@/lib/db/client";
 import {
   evaluateTriggers,
   type MatchInput,
   type PledgeRuleInput,
   type ChargeProposal
 } from "@/lib/crawler/triggers";
+import { getStatusTableCounts } from "@/lib/db/queries/system-status";
 
 export const revalidate = 30;
 export const dynamic = "force-dynamic";
-
-type Stats = Record<string, number>;
-
-async function getDbStats(): Promise<{ ok: true; stats: Stats } | { ok: false; error: string }> {
-  try {
-    const result = await db.execute(sql`
-      SELECT
-        (SELECT COUNT(*) FROM users)::int               AS users,
-        (SELECT COUNT(*) FROM clubs)::int               AS clubs,
-        (SELECT COUNT(*) FROM teams)::int               AS teams,
-        (SELECT COUNT(*) FROM players)::int             AS players,
-        (SELECT COUNT(*) FROM sponsors)::int            AS sponsors,
-        (SELECT COUNT(*) FROM pledges)::int             AS pledges,
-        (SELECT COUNT(*) FROM pledge_rules)::int        AS pledge_rules,
-        (SELECT COUNT(*) FROM matches)::int             AS matches,
-        (SELECT COUNT(*) FROM match_events)::int        AS match_events,
-        (SELECT COUNT(*) FROM charges)::int             AS charges,
-        (SELECT COUNT(*) FROM invoices)::int            AS invoices,
-        (SELECT COUNT(*) FROM subscriptions)::int       AS subscriptions
-    `);
-    const row = result[0] as unknown as Stats;
-    return { ok: true, stats: row };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
-  }
-}
 
 function runDemo() {
   // Synthetic match: heim verliert zur HZ 0:1, gewinnt 3:1 (Comeback!)
@@ -165,7 +138,7 @@ function chargeLabel(c: ChargeProposal, match: MatchInput): string {
 }
 
 export default async function HomePage() {
-  const dbResult = await getDbStats();
+  const dbResult = await getStatusTableCounts();
   const demo = runDemo();
 
   return (

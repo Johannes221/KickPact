@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { sponsorInvitations, teams, clubs } from "@/lib/db/schema";
+import { getSponsorInvitationByToken } from "@/lib/db/queries/invitations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getServerSession } from "@/lib/auth/session";
@@ -15,20 +13,7 @@ export default async function InvitationPage({
 }) {
   const { token } = await params;
 
-  const [invitation] = await db
-    .select({
-      id: sponsorInvitations.id,
-      status: sponsorInvitations.status,
-      recipientName: sponsorInvitations.recipientName,
-      teamName: teams.name,
-      clubName: clubs.name,
-      clubSlug: clubs.slug
-    })
-    .from(sponsorInvitations)
-    .innerJoin(teams, eq(sponsorInvitations.teamId, teams.id))
-    .innerJoin(clubs, eq(teams.clubId, clubs.id))
-    .where(eq(sponsorInvitations.token, token))
-    .limit(1);
+  const invitation = await getSponsorInvitationByToken(token);
 
   if (!invitation) {
     return (

@@ -1,9 +1,6 @@
 import Link from "next/link";
-import { eq, count } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
-import { db } from "@/lib/db/client";
-import { users, sessions, accounts } from "@/lib/db/schema/auth";
-import { sponsors } from "@/lib/db/schema/sponsors";
+import { getAccountOverview, getSponsorType } from "@/lib/db/queries/account";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { countUnreadNotifications } from "@/lib/db/queries/notifications";
 import { DeletionBanner } from "./_components/deletion-banner";
@@ -14,43 +11,14 @@ export const metadata = { title: "Mein Konto · KickPact" };
 export default async function KontoPage() {
   const user = await requireUser();
 
-  const [userRow] = await db
-    .select({
-      id: users.id,
-      email: users.email,
-      name: users.name,
-      emailVerified: users.emailVerified,
-      image: users.image,
-      deletionRequestedAt: users.deletionRequestedAt,
-      createdAt: users.createdAt
-    })
-    .from(users)
-    .where(eq(users.id, user.id))
-    .limit(1);
-
-  const [{ n: sessionCount } = { n: 0 }] = await db
-    .select({ n: count() })
-    .from(sessions)
-    .where(eq(sessions.userId, user.id));
-
-  const linkedAccounts = await db
-    .select({ providerId: accounts.providerId })
-    .from(accounts)
-    .where(eq(accounts.userId, user.id));
+  const { userRow, sessionCount, linkedAccounts } = await getAccountOverview(user.id);
 
   const identities = await getUserIdentities(user.id);
   const unreadNotifications = await countUnreadNotifications(user.id);
 
   // Sponsor-Type wird nicht in UserIdentities zurückgegeben — separater Lookup
   // damit das Label „Familie/Business" auf der Karte stimmt.
-  const [sponsorRow] = identities.sponsor
-    ? await db
-        .select({ type: sponsors.type })
-        .from(sponsors)
-        .where(eq(sponsors.userId, user.id))
-        .limit(1)
-    : [];
-  const sponsorType = sponsorRow?.type ?? null;
+  const sponsorType = identities.sponsor ? await getSponsorType(user.id) : null;
 
   const deletionScheduledFor = userRow?.deletionRequestedAt
     ? new Date(userRow.deletionRequestedAt.getTime() + 14 * 24 * 60 * 60 * 1000)

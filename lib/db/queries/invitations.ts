@@ -532,3 +532,63 @@ export async function refreshTeamMemberInvitation(
 
   return { token: newToken };
 }
+
+/**
+ * Sponsor-Einladung für die öffentliche Annahme-Seite (/einladung/[token]).
+ * Liefert die Anzeige-Felder (Team + Verein) oder undefined.
+ */
+export async function getSponsorInvitationByToken(token: string) {
+  const [invitation] = await db
+    .select({
+      id: sponsorInvitations.id,
+      status: sponsorInvitations.status,
+      recipientName: sponsorInvitations.recipientName,
+      teamName: teams.name,
+      clubName: clubs.name,
+      clubSlug: clubs.slug
+    })
+    .from(sponsorInvitations)
+    .innerJoin(teams, eq(sponsorInvitations.teamId, teams.id))
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(eq(sponsorInvitations.token, token))
+    .limit(1);
+  return invitation;
+}
+
+/**
+ * Team-Member-Einladung für die Annahme-Seite (/team-einladung/[token]).
+ * leftJoin, weil ein Invite entweder team- oder club-scoped sein kann.
+ */
+export async function getTeamInvitationByToken(token: string) {
+  const [invitation] = await db
+    .select({
+      id: sponsorInvitations.id,
+      status: sponsorInvitations.status,
+      kind: sponsorInvitations.kind,
+      role: sponsorInvitations.role,
+      teamId: sponsorInvitations.teamId,
+      clubId: sponsorInvitations.clubId,
+      expiresAt: sponsorInvitations.expiresAt,
+      recipientEmail: sponsorInvitations.recipientEmail,
+      teamName: teams.name,
+      clubName: clubs.name,
+      clubSlug: clubs.slug
+    })
+    .from(sponsorInvitations)
+    .leftJoin(teams, eq(sponsorInvitations.teamId, teams.id))
+    .leftJoin(clubs, eq(clubs.id, sponsorInvitations.clubId))
+    .where(eq(sponsorInvitations.token, token))
+    .limit(1);
+  return invitation;
+}
+
+/** Verein (Name + Slug) einer Mannschaft — Fallback für Team-Invites via teamId. */
+export async function getClubNameSlugByTeam(teamId: string) {
+  const [row] = await db
+    .select({ name: clubs.name, slug: clubs.slug })
+    .from(teams)
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  return row;
+}
