@@ -26,6 +26,14 @@ const MANUAL_TRIGGERS = new Set<string>([
 
 type CapPeriod = "month" | "season";
 
+/**
+ * SECURITY (L5): Obergrenze pro Wett-Betrag (Cent) = 500 €, identisch zur
+ * Zod-Decke im Pledge-Builder (lib/validations/pledge.ts: amountEur.max(500)).
+ * Die Direkt-Object-Actions (updatePledgeRule/addPledgeRule) umgingen diese
+ * Decke bislang — nur die Untergrenze (50 ct) war geprüft.
+ */
+const MAX_AMOUNT_CENTS = 50_000;
+
 /** Helper: load pledge + tenant-check. Returns null when not found or wrong user. */
 async function loadOwnedPledge(pledgeId: string) {
   const user = await requireUser();
@@ -55,6 +63,12 @@ async function loadOwnedRule(ruleId: string) {
       pledgeStatus: pledges.status,
       active: pledgeRules.active,
       triggerType: pledgeRules.triggerType,
+      amountCents: pledgeRules.amountCents,
+      capCents: pledgeRules.capCents,
+      capPeriod: pledgeRules.capPeriod,
+      perMatchCapCents: pledgeRules.perMatchCapCents,
+      triggerParamsJson: pledgeRules.triggerParamsJson,
+      requiresApproval: pledgeRules.requiresApproval,
       sponsorUserId: sponsors.userId
     })
     .from(pledgeRules)
@@ -175,14 +189,19 @@ export async function updatePledgeRule(
       if (!Number.isInteger(input.amountCents) || input.amountCents < 50) {
         return { error: "Betrag muss mindestens 0,50 € sein." };
       }
+      if (input.amountCents > MAX_AMOUNT_CENTS) {
+        return { error: "Betrag darf höchstens 500 € pro Ereignis sein." };
+      }
       patch.amountCents = input.amountCents;
     }
 
+    let capProvided = false;
     if (input.capCents !== undefined || input.capPeriod !== undefined) {
       const cap = parseCap(isSeasonTrigger(rule.triggerType), input.capCents, input.capPeriod);
       if (!cap.ok) return { error: cap.error };
       patch.capCents = cap.capCents;
       patch.capPeriod = cap.capPeriod;
+      capProvided = true;
     }
 
     if (input.params !== undefined) {
@@ -190,7 +209,50 @@ export async function updatePledgeRule(
     }
 
     if (Object.keys(patch).length === 0) return {};
-    await db.update(pledgeRules).set(patch).where(eq(pledgeRules.id, ruleId));
+
+    // SECURITY (H4): Ist die Änderung eine REDUKTION (Betrag gesenkt, oder Cap
+    // verschärft/neu hinzugefügt)? Dann nicht in-place mutieren — sonst würde
+    // die Reduktion auch für bereits gespielte, aber noch nicht ausgewertete
+    // Spiele greifen (Sponsor senkt nach Anpfiff, vor dem Scrape). Stattdessen
+    // versionieren: alte Regel läuft bis JETZT (bedient vergangene Spiele zu
+    // alten Konditionen), neue Regel gilt ab JETZT mit reduzierten Konditionen.
+    const amountReduced =
+      patch.amountCents !== undefined && patch.amountCents < rule.amountCents;
+    const newCap = capProvided ? (patch.capCents ?? null) : rule.capCents;
+    const capTightened =
+      capProvided &&
+      ((rule.capCents === null && newCap !== null) ||
+        (rule.capCents !== null && newCap !== null && newCap < rule.capCents));
+    const isReduction = amountReduced || capTightened;
+
+    if (isReduction) {
+      const now = new Date();
+      await db.transaction(async (tx) => {
+        // Alt-Version schließen (bleibt active für vergangene Spiele).
+        await tx
+          .update(pledgeRules)
+          .set({ effectiveUntil: now })
+          .where(eq(pledgeRules.id, ruleId));
+        // Neue Version mit den finalen (reduzierten) Werten.
+        await tx.insert(pledgeRules).values({
+          pledgeId: rule.pledgeId,
+          triggerType: rule.triggerType,
+          triggerParamsJson:
+            patch.triggerParamsJson ?? (rule.triggerParamsJson ?? {}),
+          amountCents: patch.amountCents ?? rule.amountCents,
+          perMatchCapCents: rule.perMatchCapCents,
+          capCents: capProvided ? (patch.capCents ?? null) : rule.capCents,
+          capPeriod: capProvided ? (patch.capPeriod ?? null) : rule.capPeriod,
+          requiresApproval: rule.requiresApproval,
+          active: true,
+          effectiveFrom: now,
+          effectiveUntil: null
+        });
+      });
+    } else {
+      await db.update(pledgeRules).set(patch).where(eq(pledgeRules.id, ruleId));
+    }
+
     revalidatePath(`/sponsor/pledge/${rule.pledgeId}`);
     return {};
   } catch (e) {
@@ -241,6 +303,9 @@ export async function addPledgeRule(
     }
     if (!Number.isInteger(input.amountCents) || input.amountCents < 50) {
       return { error: "Betrag muss mindestens 0,50 € sein." };
+    }
+    if (input.amountCents > MAX_AMOUNT_CENTS) {
+      return { error: "Betrag darf höchstens 500 € pro Ereignis sein." };
     }
 
     const isSeason = isSeasonTrigger(input.triggerType);

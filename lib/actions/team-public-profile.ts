@@ -15,6 +15,8 @@ import { assertClubWriteAccess } from "@/lib/auth/scope";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { generateUniqueTeamSlug } from "@/lib/db/queries/team-public-slug";
+import { rateLimit, getClientIp } from "@/lib/utils/rate-limit";
+import { inngest } from "@/lib/inngest/client";
 
 const BASE_URL =
   process.env.BETTER_AUTH_URL ?? "https://kickpact.schartl.dev";
@@ -104,6 +106,13 @@ export async function createPublicSponsorLead(input: {
 }): Promise<{ ok: true }> {
   const parsed = leadSchema.parse(input);
 
+  // SECURITY (M5): IP-Rate-Limit für die unauthentifizierte öffentliche Action
+  // (sonst Lead-/Mail-Flut an Club-Admins). 8 Leads / 10 Min / IP.
+  const ip = await getClientIp();
+  if (!rateLimit(`lead:${ip}`, { limit: 8, windowMs: 10 * 60_000 })) {
+    throw new Error("Zu viele Anfragen in kurzer Zeit. Bitte später erneut versuchen.");
+  }
+
   const [row] = await db
     .select({
       teamId: teams.id,
@@ -130,12 +139,31 @@ export async function createPublicSponsorLead(input: {
     );
   }
 
-  await db.insert(sponsorLeads).values({
-    teamId: row.teamId,
-    name: parsed.name,
-    email: parsed.email,
-    message: parsed.message || null
-  });
+  const [lead] = await db
+    .insert(sponsorLeads)
+    .values({
+      teamId: row.teamId,
+      name: parsed.name,
+      email: parsed.email,
+      message: parsed.message || null
+    })
+    .returning({ id: sponsorLeads.id });
+
+  // Push/In-App-Benachrichtigung an Club-Admins (additiv, best-effort).
+  try {
+    await inngest.send({
+      name: "notification/sponsor-lead",
+      data: {
+        teamId: row.teamId,
+        leadId: lead.id,
+        clubId: row.clubId,
+        clubSlug: row.clubSlug,
+        teamLabel: row.publicName?.trim() || row.teamName
+      }
+    });
+  } catch (err) {
+    console.error("[public-lead] inngest.send failed", err);
+  }
 
   // Mail an alle Club-Admins (best-effort — Lead ist bereits gespeichert).
   const admins = await db

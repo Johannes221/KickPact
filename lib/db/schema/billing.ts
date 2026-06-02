@@ -37,6 +37,19 @@ export const licenseStatusEnum = pgEnum("license_status", [
   "paused"
 ]);
 
+/**
+ * SECURITY (H1): Trial-Abuse-Ledger. Hält fest, welche stabile Identität schon
+ * einen kostenlosen Trial verbraucht hat — Key-Format `team:<fussballdeTeamId>`
+ * oder `verein:<fussballdeVereinId>`. createDraftClub prüft das VOR der
+ * Trial-Vergabe; ohne diesen Ledger ließ sich der 30-Tage-Trial durch
+ * Verwerfen+Neu-Onboarden derselben Mannschaft beliebig oft neu starten.
+ */
+export const consumedTrials = pgTable("consumed_trials", {
+  key: text("key").primaryKey(),
+  clubId: text("club_id"),
+  consumedAt: timestamp("consumed_at", { withTimezone: true }).notNull().defaultNow()
+});
+
 export const subscriptions = pgTable("subscriptions", {
   clubId: text("club_id")
     .primaryKey()

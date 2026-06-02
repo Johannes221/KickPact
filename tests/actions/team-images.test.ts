@@ -44,7 +44,7 @@ describe("team-images actions", () => {
 
   it("uploadTeamCover setzt cover_url", async () => {
     const { teamId } = await makeClubWithAdmin("club-cover");
-    const res = await uploadTeamCover({ teamId, filename: "c.png", contentType: "image/png", bytes: Buffer.from([0x89, 0x50]) });
+    const res = await uploadTeamCover({ teamId, filename: "c.png", contentType: "image/png", bytes: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]) });
     expect(res.coverUrl).toMatch(/^local:\/\//);
     const [t] = await db.select().from(teams).where(eq(teams.id, teamId));
     expect(t.coverUrl).toBe(res.coverUrl);
@@ -52,12 +52,13 @@ describe("team-images actions", () => {
 
   it("addTeamGalleryImage fügt hinzu, lehnt >8 ab", async () => {
     const { teamId } = await makeClubWithAdmin("club-gal");
+    const pngBytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
     for (let i = 0; i < 8; i++) {
-      await addTeamGalleryImage({ teamId, filename: `g${i}.png`, contentType: "image/png", bytes: Buffer.from([0x89]) });
+      await addTeamGalleryImage({ teamId, filename: `g${i}.png`, contentType: "image/png", bytes: pngBytes });
     }
     expect((await listTeamImages(teamId)).length).toBe(8);
     await expect(
-      addTeamGalleryImage({ teamId, filename: "g9.png", contentType: "image/png", bytes: Buffer.from([0x89]) })
+      addTeamGalleryImage({ teamId, filename: "g9.png", contentType: "image/png", bytes: pngBytes })
     ).rejects.toThrow(/max|8/i);
   });
 });

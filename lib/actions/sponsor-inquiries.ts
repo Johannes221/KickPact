@@ -12,11 +12,13 @@ import {
   users
 } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
+import { inngest } from "@/lib/inngest/client";
 import { assertClubWriteAccess } from "@/lib/auth/scope";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { createInvitation } from "@/lib/db/queries/invitations";
 import { generateUniqueTeamSlug } from "@/lib/db/queries/team-public-slug";
+import { rateLimit } from "@/lib/utils/rate-limit";
 
 const inquirySchema = z.object({
   teamId: z.string().min(1),
@@ -30,6 +32,13 @@ const inquirySchema = z.object({
 export async function createSponsorInquiry(input: { teamId: string; message?: string }) {
   const user = await requireUser();
   const parsed = inquirySchema.parse(input);
+
+  // SECURITY (M5): Rate-Limit pro Sponsor-User — verhindert Anfrage-Fanout
+  // (eine pending pro Team, aber sonst unbegrenzt viele Teams → Mail-Flut an
+  // viele Club-Admins). 20 Anfragen / Stunde / User.
+  if (!rateLimit(`inquiry:${user.id}`, { limit: 20, windowMs: 60 * 60_000 })) {
+    throw new Error("Zu viele Anfragen in kurzer Zeit. Bitte später erneut versuchen.");
+  }
 
   // Verify team is actually discoverable
   const [teamRow] = await db
@@ -106,6 +115,21 @@ ${parsed.message ? `<blockquote style="border-left:3px solid #01C457;padding:8px
     } catch (err) {
       console.error("[inquiry] mail to admins failed", err);
     }
+  }
+
+  // Push/In-App-Benachrichtigung an Club-Admins (additiv, best-effort).
+  try {
+    await inngest.send({
+      name: "notification/sponsor-inquiry",
+      data: {
+        teamId: parsed.teamId,
+        clubId: teamRow.club.id,
+        clubSlug: teamRow.club.slug,
+        teamName: teamRow.team.name
+      }
+    });
+  } catch (err) {
+    console.error("[inquiry] inngest.send failed", err);
   }
 
   revalidatePath("/sponsor/discover");

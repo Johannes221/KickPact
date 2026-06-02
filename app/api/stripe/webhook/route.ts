@@ -67,6 +67,19 @@ export async function POST(req: NextRequest) {
           break;
         }
 
+        // SECURITY (M4): metadata.clubId ist im Stripe-Dashboard editierbar.
+        // Bevor wir Entitlements auf den Club schreiben, validieren wir, dass
+        // der Club tatsächlich zu diesem Stripe-Customer gehört. Mismatch →
+        // nicht schreiben (verhindert, dass ein verstellter Metadaten-Wert ein
+        // fremdes Abo auf einen anderen Club ummünzt).
+        if (!(await clubMatchesCustomer(clubId, getCustomerId(sub.customer)))) {
+          console.warn("[stripe-webhook] clubId/customer mismatch — ignoring", {
+            subId: sub.id,
+            clubId
+          });
+          break;
+        }
+
         // Pricing-v2-Audit #3 (2026-05-24): plan + billing_cycle aus dem
         // gebuchten Stripe-Price reverse-mappen und in die DB spiegeln.
         // Vorher blieb subscriptions.billing_cycle auf 'monthly' (DB-Default)
@@ -145,6 +158,14 @@ export async function POST(req: NextRequest) {
         const sub = event.data.object as Stripe.Subscription;
         const clubId = (sub.metadata?.clubId as string) ?? null;
         if (!clubId) break;
+        // SECURITY (M4): siehe created/updated — clubId gegen Customer prüfen.
+        if (!(await clubMatchesCustomer(clubId, getCustomerId(sub.customer)))) {
+          console.warn("[stripe-webhook] clubId/customer mismatch on delete — ignoring", {
+            subId: sub.id,
+            clubId
+          });
+          break;
+        }
         await db
           .update(subscriptions)
           .set({ status: "cancelled", updatedAt: new Date() })
@@ -225,6 +246,36 @@ export async function POST(req: NextRequest) {
     console.error("[stripe-webhook] handler error", err);
     return NextResponse.json({ error: "handler-failure" }, { status: 500 });
   }
+}
+
+function getCustomerId(
+  customer: Stripe.Subscription["customer"]
+): string | null {
+  if (typeof customer === "string") return customer;
+  return customer?.id ?? null;
+}
+
+/**
+ * SECURITY (M4): Prüft, dass der via metadata.clubId adressierte Club zu dem
+ * Stripe-Customer des Events gehört. Wenn die DB-Row keinen Customer kennt
+ * (z.B. ganz frühes `created` vor Customer-Persistenz), lassen wir es zu —
+ * der Metadaten-Wert stammt dann noch aus unserem eigenen Checkout. Nur ein
+ * AKTIVER Widerspruch (Row-Customer ≠ Event-Customer) blockt.
+ */
+async function clubMatchesCustomer(
+  clubId: string,
+  eventCustomerId: string | null
+): Promise<boolean> {
+  const [row] = await db
+    .select({ customerId: subscriptions.stripeCustomerId })
+    .from(subscriptions)
+    .where(eq(subscriptions.clubId, clubId))
+    .limit(1);
+  if (!row) return false; // unbekannter Club → nicht schreiben
+  if (row.customerId && eventCustomerId && row.customerId !== eventCustomerId) {
+    return false; // Widerspruch
+  }
+  return true;
 }
 
 function mapStripeStatus(

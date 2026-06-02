@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, inArray } from "drizzle-orm";
+import { eq, and, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
@@ -68,6 +68,40 @@ export async function addManualEvent(input: AddManualEventInput) {
   // Falls Trainer ein Event auf der "anderen Seite" einträgt (also nicht teamSide):
   // wir erlauben es trotzdem in DB, evaluieren aber NUR wenn side === teamSide
   // (sonst keine Charges für dieses Event, weil pledges nur für eigene Mannschaft zählen).
+
+  // SECURITY (H3): Scoreline-Reconciliation. Bei einem bereits gescrapten
+  // (finished) Spiel ist der offizielle Spielstand die Wahrheit. Ein manuelles
+  // "tor" auf der eigenen Seite darf die Anzahl der eigenen Tor-Events NICHT
+  // über das offizielle Eigen-Ergebnis treiben — sonst könnte ein Verein
+  // Phantom-Tore über den Endstand hinaus eintragen. Spieler-Zuordnung bis zur
+  // offiziellen Toranzahl bleibt erlaubt (Scraper verpasst manchmal Torschützen).
+  if (
+    target.match.status === "finished" &&
+    parsed.type === "tor" &&
+    parsed.side === teamSide
+  ) {
+    const ownScore =
+      (teamSide === "heim"
+        ? target.match.ergebnisHeim
+        : target.match.ergebnisGast) ?? 0;
+    const [{ count } = { count: 0 }] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(matchEvents)
+      .where(
+        and(
+          eq(matchEvents.matchId, parsed.matchId),
+          eq(matchEvents.type, "tor"),
+          eq(matchEvents.side, parsed.side)
+        )
+      );
+    if (count >= ownScore) {
+      throw new Error(
+        `Manuelles Tor abgelehnt: Es sind bereits ${count} Tore für die eigene ` +
+          `Mannschaft erfasst, der offizielle Spielstand weist ${ownScore} aus. ` +
+          `Bitte zuerst das Ergebnis korrigieren lassen.`
+      );
+    }
+  }
 
   const result = await db.transaction(async (tx) => {
     // Insert match_event
@@ -153,9 +187,15 @@ export async function addManualEvent(input: AddManualEventInput) {
       if (p.matchEventId !== created.id) continue;
 
       // Monthly-cap check unter Lock — siehe pessimistic Select oben.
+      // SECURITY (C3): Cap-Fenster über den ABRECHNUNGS-Monat (jetzt), nicht über
+      // den Spieltag. Manuelle Charges sind approval-pflichtig (confirmedAt=null,
+      // gezählt via createdAt=jetzt) und landen über confirmedAt im aktuellen
+      // Rechnungslauf — der Cap muss daher gegen denselben Monat geprüft werden.
+      // Vorher: Cap gegen matchDate-Monat → rückdatiertes Event prüfte einen
+      // alten Monat mit Cap-Headroom, wurde aber im aktuellen Monat abgerechnet.
       const info = pledgeInfoMap.get(p.pledgeId);
       if (info?.cap !== null && info?.cap !== undefined) {
-        const alreadyCharged = await getMonthlyChargedCents(p.pledgeId, matchDate);
+        const alreadyCharged = await getMonthlyChargedCents(p.pledgeId, new Date());
         if (alreadyCharged + p.amountCents > info.cap) continue;
       }
 

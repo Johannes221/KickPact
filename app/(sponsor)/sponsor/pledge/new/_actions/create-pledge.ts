@@ -2,7 +2,15 @@
 
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { pledges, pledgeRules, sponsors, teams } from "@/lib/db/schema";
+import { and } from "drizzle-orm";
+import {
+  pledges,
+  pledgeRules,
+  sponsors,
+  teams,
+  clubMemberships,
+  teamMemberships
+} from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import {
   pledgeInputSchema,
@@ -93,6 +101,39 @@ export async function createPledge(input: PledgeInput) {
   if (!teamRow) {
     throw new Error("Mannschaft zur Einladung nicht gefunden.");
   }
+
+  // SECURITY (L6): Self-Dealing verhindern. Ein Nutzer, der zugleich Mitglied
+  // des Vereins (oder der Mannschaft) ist, darf nicht seine eigene Mannschaft
+  // sponsern — sonst ließen sich (kombiniert mit manuellen Events) Rechnungen
+  // an sich selbst fabrizieren. KickPact ist non-custodial, der direkte
+  // Plattformschaden ist begrenzt, aber es untergräbt die Vertrauenswürdigkeit
+  // der Rechnungen → wir blocken es.
+  const [selfClub] = await db
+    .select({ userId: clubMemberships.userId })
+    .from(clubMemberships)
+    .where(
+      and(
+        eq(clubMemberships.clubId, teamRow.clubId),
+        eq(clubMemberships.userId, user.id)
+      )
+    )
+    .limit(1);
+  const [selfTeam] = await db
+    .select({ userId: teamMemberships.userId })
+    .from(teamMemberships)
+    .where(
+      and(
+        eq(teamMemberships.teamId, invitationTeamId),
+        eq(teamMemberships.userId, user.id)
+      )
+    )
+    .limit(1);
+  if (selfClub || selfTeam) {
+    throw new Error(
+      "Du bist Mitglied dieser Mannschaft bzw. dieses Vereins und kannst sie daher nicht selbst sponsern."
+    );
+  }
+
   const gate = await getSubscriptionGate(teamRow.clubId);
   if (gate.isReadOnly) {
     throw new Error(

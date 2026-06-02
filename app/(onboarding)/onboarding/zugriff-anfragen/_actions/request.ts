@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { createId } from "@paralleldrive/cuid2";
 import { requireUser } from "@/lib/auth/session";
+import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
 import { clubs, clubMemberships, teams, users } from "@/lib/db/schema";
 import { createRequest } from "@/lib/db/queries/membership-requests";
@@ -110,6 +111,23 @@ export async function requestClubAccessAction(formData: FormData) {
     requestedTeamId: parsed.data.requestedTeamId,
     message: parsed.data.message
   });
+
+  // Push/In-App-Benachrichtigung an Admins (additiv, best-effort).
+  try {
+    await inngest.send({
+      name: "notification/access-request",
+      data: {
+        clubId: club.id,
+        clubSlug: club.slug,
+        clubName: club.name,
+        requestedTeamId: parsed.data.requestedTeamId,
+        requesterEmail: user.email,
+        requestedRole: parsed.data.requestedRole
+      }
+    });
+  } catch (err) {
+    console.error("[access-request] inngest.send failed", err);
+  }
 
   revalidatePath("/onboarding/zugriff-anfragen");
   return {

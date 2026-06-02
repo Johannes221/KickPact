@@ -159,7 +159,10 @@ function goalTotal(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[] {
     matchEventId: event.id,
     triggerType: rule.triggerType,
     amountCents: rule.amountCents,
-    requiresApproval: false
+    // SECURITY (C1): scraped goals are billed automatically (fussball.de is the
+    // source of truth), but a *manually* reported goal must be confirmed by the
+    // sponsor — otherwise a club could inject fake goals to inflate charges.
+    requiresApproval: event.source === "manual"
   }));
 }
 
@@ -185,7 +188,8 @@ function goalByPlayer(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[
       matchEventId: event.id,
       triggerType: rule.triggerType,
       amountCents: rule.amountCents,
-      requiresApproval: false
+      // SECURITY (C1): manual goals require sponsor approval (see goalTotal).
+      requiresApproval: event.source === "manual"
     }));
 }
 

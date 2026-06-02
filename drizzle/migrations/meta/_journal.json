@@ -316,6 +316,20 @@
       "when": 1782361200000,
       "tag": "0045_support_workflow",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1782361300000,
+      "tag": "0046_heavy_mentor",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1782361400000,
+      "tag": "0047_notifications",
+      "breakpoints": true
     }
   ]
 }

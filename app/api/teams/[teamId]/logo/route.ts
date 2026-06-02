@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/session";
 import { getDocumentSignedUrl } from "@/lib/storage/documents";
 import { uploadTeamLogo } from "@/lib/actions/team-lifecycle";
+import { rejectOversizedUpload } from "@/lib/storage/upload-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,6 +39,9 @@ export async function POST(
       { status: 401 }
     );
   }
+
+  const oversized = rejectOversizedUpload(req);
+  if (oversized) return oversized;
 
   let formData: FormData;
   try {

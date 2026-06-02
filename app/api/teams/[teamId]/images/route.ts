@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/session";
 import { addTeamGalleryImage } from "@/lib/actions/team-images";
+import { rejectOversizedUpload } from "@/lib/storage/upload-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +20,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ teamId:
   if (!session?.user) {
     return NextResponse.json({ error: "unauthorized", message: "Bitte zuerst anmelden." }, { status: 401 });
   }
+
+  const oversized = rejectOversizedUpload(req);
+  if (oversized) return oversized;
 
   let formData: FormData;
   try { formData = await req.formData(); }

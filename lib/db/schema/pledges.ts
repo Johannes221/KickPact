@@ -1,6 +1,7 @@
 import {
   pgTable, text, timestamp, integer, boolean, jsonb, pgEnum, index
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { sponsors } from "./sponsors";
 import { teams } from "./clubs";
@@ -96,6 +97,21 @@ export const pledgeRules = pgTable(
     /** Soft-Delete: false = vom Sponsor gelöscht. Vergangene Charges bleiben erhalten. */
     active: boolean("active").notNull().default(true),
     requiresApproval: boolean("requires_approval").notNull().default(false),
+    /**
+     * SECURITY (H4): Term-Versionierung. Eine Wette gilt für Spiele mit
+     * `effectiveFrom <= matchDate < effectiveUntil` (effectiveUntil=NULL = offen).
+     * Default ist die Unix-Epoche → bestehende/neu angelegte Regeln sind „schon
+     * immer" gültig (kein Verhaltenswechsel). Wird ein Betrag/Cap REDUZIERT,
+     * klont updatePledgeRule die Regel: die alte bekommt effectiveUntil=jetzt
+     * (gilt weiter für bereits gespielte Spiele zu den alten Konditionen), die
+     * neue startet mit effectiveFrom=jetzt zu den reduzierten Konditionen.
+     * Verhindert, dass ein Sponsor nach Anpfiff (aber vor dem Scrape) den Betrag
+     * senkt und so bereits gespielte Spiele rückwirkend billiger macht.
+     */
+    effectiveFrom: timestamp("effective_from", { withTimezone: true })
+      .notNull()
+      .default(sql`'1970-01-01T00:00:00Z'`),
+    effectiveUntil: timestamp("effective_until", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({

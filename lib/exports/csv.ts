@@ -37,6 +37,17 @@ export function csvEscape(value: CsvCell, separator: string = ";"): string {
   else if (typeof value === "boolean") s = value ? "true" : "false";
   else s = String(value);
 
+  // SECURITY (M1): CSV-/Formula-Injection. Excel/LibreOffice interpretieren
+  // Zellen, die mit = + - @ (oder Tab/CR) beginnen, als Formel und können so
+  // (`=cmd|'/c calc'!A1`) Code ausführen, sobald ein Admin den Export öffnet.
+  // Werte aus User-Feldern (Sponsor-Name, E-Mail, Team-Name) fließen ungefiltert
+  // in den Export → wir neutralisieren führende Formelzeichen mit einem
+  // vorangestellten Apostroph (OWASP-Standardmitigation). Das Quoting unten
+  // sorgt dafür, dass der Apostroph maschinell wieder entfernbar bleibt.
+  if (/^[=+\-@\t\r]/.test(s)) {
+    s = `'${s}`;
+  }
+
   const needsQuoting =
     s.includes(separator) ||
     s.includes('"') ||

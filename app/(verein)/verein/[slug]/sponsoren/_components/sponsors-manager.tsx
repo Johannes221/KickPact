@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { createInvitationAction, revokeInvitationAction } from "../_actions/invitations";
 import { resendInvitationAction } from "../_actions/resend-invitation";
 import { toast } from "sonner";
+import { copyText } from "@/lib/platform/clipboard";
 
 interface Team {
   id: string;
@@ -123,7 +124,7 @@ export function SponsorsManager({
 
   function copyLink(token: string) {
     const url = `${window.location.origin}/einladung/${token}`;
-    navigator.clipboard.writeText(url);
+    void copyText(url);
     toast.success("Link kopiert");
   }
 

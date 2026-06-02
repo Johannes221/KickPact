@@ -1,6 +1,31 @@
 import { and, eq, gte, inArray, lte, ne, notInArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { charges, pledges, matches, teams, eventApprovals } from "@/lib/db/schema";
+import { charges, pledges, matches, teams, eventApprovals, sponsors, users } from "@/lib/db/schema";
+
+/**
+ * SECURITY (H5): Sponsor-Kontakt + Eckdaten zu einer Charge (club-gescoped),
+ * für die Storno-Benachrichtigung. Liefert null, wenn die Charge nicht zum
+ * Club gehört.
+ */
+export async function getChargeSponsorContactForClub(
+  chargeId: string,
+  clubId: string
+): Promise<{ sponsorEmail: string | null; amountCents: number; triggerType: string } | null> {
+  const [row] = await db
+    .select({
+      sponsorEmail: users.email,
+      amountCents: charges.amountCents,
+      triggerType: charges.triggerType
+    })
+    .from(charges)
+    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .leftJoin(users, eq(sponsors.userId, users.id))
+    .where(and(eq(charges.id, chargeId), eq(teams.clubId, clubId)))
+    .limit(1);
+  return row ?? null;
+}
 
 export interface ChargeForBilling {
   chargeId: string;
@@ -97,7 +122,7 @@ export async function invalidateChargesForMatch(
 
     await tx
       .update(charges)
-      .set({ status: "cancelled", cancelledReason: reason })
+      .set({ status: "cancelled", cancelledReason: reason, cancelledAt: new Date() })
       .where(and(eq(charges.matchId, matchId), ne(charges.status, "invoiced")));
 
     const eventIds = affectedCharges
@@ -132,11 +157,18 @@ export async function invalidateChargesForMatch(
 export async function cancelChargeForClub(
   chargeId: string,
   clubId: string,
-  reason: string
+  reason: string,
+  cancelledByUserId?: string | null
 ): Promise<boolean> {
   const result = await db
     .update(charges)
-    .set({ status: "cancelled", cancelledReason: reason })
+    .set({
+      status: "cancelled",
+      cancelledReason: reason,
+      // SECURITY (H5): Actor + Zeitpunkt für den Audit-Trail festhalten.
+      cancelledByUserId: cancelledByUserId ?? null,
+      cancelledAt: new Date()
+    })
     .where(
       and(
         eq(charges.id, chargeId),

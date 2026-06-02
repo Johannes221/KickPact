@@ -4,6 +4,7 @@ import { Inter, Montserrat_Alternates } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shared/app-header";
 import { CookieBanner } from "@/components/shared/cookie-banner";
+import { PushRegistrar } from "@/components/native/push-registrar";
 import { PlausibleScript } from "@/components/analytics/plausible-script";
 import { getServerSession } from "@/lib/auth/session";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
@@ -144,6 +145,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </a>
         <AppHeader authenticated={authenticated} dashboardHref={dashboardHref} />
         <div id="main">{children}</div>
+        {/* Native iOS-Push-Registrierung (web-inert; nur in der Capacitor-App aktiv). */}
+        {authenticated && <PushRegistrar />}
         <Toaster />
         <CookieBanner />
       </body>

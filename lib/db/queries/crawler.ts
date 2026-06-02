@@ -231,10 +231,18 @@ export async function insertMatchWithEvents(args: {
 /**
  * Re-imports a previously-scraped match after fussball.de data changed.
  *
- * Deletes the old `match_events` rows (cascade will not touch `charges`
- * because we want the existing-but-cancelled charge audit trail to survive),
- * updates the parent `matches` row with the new score / halftime / contentHash,
- * then re-inserts events from the fresh scrape.
+ * Deletes only the previously **scraped** `match_events` rows (cascade will not
+ * touch `charges` because we want the existing-but-cancelled charge audit trail
+ * to survive), updates the parent `matches` row with the new score / halftime /
+ * contentHash, then re-inserts events from the fresh scrape.
+ *
+ * SECURITY (C2): the delete is scoped to `source = "scraped"`. Manually
+ * reported events (`source = "manual"`) MUST survive a re-scrape — otherwise a
+ * re-crawl would permanently destroy approved/charged manual events, silently
+ * drop their (still pending) charges, and orphan already-invoiced charges
+ * (charges.matchEventId is ON DELETE SET NULL), breaking the dispute trail.
+ * `evaluate-match` re-loads ALL events (scraped + surviving manual) and
+ * re-evaluates them, so manual charges are restored after the re-crawl.
  *
  * Callers MUST first invoke `invalidateChargesForMatch` so downstream
  * evaluators don't see double-counted events.
@@ -248,8 +256,11 @@ export async function updateMatchWithEvents(args: {
 }): Promise<{ matchId: string; newEventCount: number }> {
   const { matchId, teamId, listItem, details, contentHash } = args;
 
-  // Remove old events; new ones get re-inserted below.
-  await db.delete(matchEvents).where(eq(matchEvents.matchId, matchId));
+  // Remove only the old *scraped* events; fresh scraped ones get re-inserted
+  // below. Manual events are preserved (see C2 note above).
+  await db
+    .delete(matchEvents)
+    .where(and(eq(matchEvents.matchId, matchId), eq(matchEvents.source, "scraped")));
 
   await db
     .update(matches)
