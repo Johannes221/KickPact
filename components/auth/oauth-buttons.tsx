@@ -6,6 +6,7 @@ import { signIn } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics/track";
+import { isNativeApp } from "@/lib/platform/native";
 
 interface OAuthButtonsProps {
   /** Login → /dashboard (Smart-Dispatcher), Signup → wizard für `role`. */
@@ -59,6 +60,24 @@ export function OAuthButtons({ mode, enabled, role }: OAuthButtonsProps) {
       });
     }
     try {
+      // Native iOS-App: Apple-Login über das native Sheet (ASAuthorization)
+      // statt Web-OAuth (das im WKWebView nach Safari springen würde, WS-3).
+      // Das native identityToken geht direkt an better-auth (Audience-Check
+      // gegen APPLE_BUNDLE_ID=com.kickpact.app serverseitig).
+      if (provider === "apple" && isNativeApp()) {
+        const { SignInWithApple } = await import("@capacitor-community/apple-sign-in");
+        const result = await SignInWithApple.authorize({
+          clientId: "com.kickpact.app",
+          redirectURI: `${window.location.origin}/api/auth/callback/apple`,
+          scopes: "name email"
+        });
+        const token = result.response.identityToken;
+        if (!token) throw new Error("Kein Apple-Identity-Token erhalten");
+        const { error } = await signIn.social({ provider: "apple", idToken: { token } });
+        if (error) throw new Error(error.message ?? "Apple-Login fehlgeschlagen");
+        window.location.assign(callbackURL);
+        return;
+      }
       await signIn.social({ provider, callbackURL });
       // signIn.social löst Browser-Redirect zu Provider aus,
       // die nächste Zeile wird nur erreicht wenn etwas schiefgeht.
