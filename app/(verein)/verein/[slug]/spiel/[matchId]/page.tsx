@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { requireUser } from "@/lib/auth/session";
+import { resolveTeamAccess } from "@/lib/auth/scope";
 import { getMatchById, listMatchEvents, listMatchCharges } from "@/lib/db/queries/matches";
 import { detectTeamSide } from "@/lib/crawler/team-side";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,13 +22,23 @@ export default async function MatchDetailPage({
   params: Promise<{ slug: string; matchId: string }>;
 }) {
   const { slug, matchId } = await params;
-  const access = await assertClubAccess(slug, "viewer");
-  // Plan 3 Teil 2: nur Trainer/Admin sehen Edit/Delete + Result-Override.
-  // (assertClubAccess returnt access.role das wir hier abfragen.)
-  const canEdit = access.role === "admin" || access.role === "trainer";
+  const user = await requireUser();
 
+  // Match laden (scoped per clubSlug), DANN team-aware autorisieren — sonst
+  // flogen reine Team-Mitglieder (ohne Club-Mitgliedschaft, z.B. via Zugriffs-
+  // Anfrage) hier raus → Redirect-Loop. Zugriff kommt aus der Mannschaft.
   const data = await getMatchById(matchId, slug);
   if (!data) redirect(`/verein/${slug}`);
+
+  const teamAccess = await resolveTeamAccess(user.id, data.team.id, "viewer");
+  if (!teamAccess.granted) redirect("/dashboard");
+
+  // Nur Trainer/Admin sehen Edit/Delete + Result-Override: Team-Admin ODER
+  // Club-Admin/Trainer (vereinsgeführte Teams).
+  const canEdit =
+    (teamAccess.scope === "team" && teamAccess.role === "admin") ||
+    (teamAccess.scope === "club" &&
+      (teamAccess.role === "admin" || teamAccess.role === "trainer"));
 
   const [events, chargesData] = await Promise.all([
     listMatchEvents(matchId),
@@ -43,7 +54,7 @@ export default async function MatchDetailPage({
 
   // Welche Seite ist unser Team? Vereinsname als zusätzliche Token-Quelle,
   // weil der Mannschafts-Name (z.B. "1. Herren") oft keinen Vereins-Token hat.
-  const isHeim = detectTeamSide([team.name, access.club.name], match.heimName) === "heim";
+  const isHeim = detectTeamSide([team.name, data.club.name], match.heimName) === "heim";
   const unsereSeite = isHeim ? "heim" : "gast";
   const unsereGoals = isHeim ? (match.ergebnisHeim ?? 0) : (match.ergebnisGast ?? 0);
   const gegnerGoals = isHeim ? (match.ergebnisGast ?? 0) : (match.ergebnisHeim ?? 0);

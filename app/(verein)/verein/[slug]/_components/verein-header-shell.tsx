@@ -11,6 +11,13 @@ interface Props {
   clubName: string;
   hasSponsorProfile: boolean;
   effectivePlan: EffectivePlan | null;
+  /**
+   * True wenn der User nur Team-Mitglied (nicht Club-Mitglied) dieses Vereins
+   * ist — z.B. via genehmigter Zugriffs-Anfrage auf eine fremde Mannschaft.
+   * Dann gibt es für ihn KEIN Vereins-Dashboard; die Vereins-Leiste wird wie
+   * bei einer Einzel-Mannschaft komplett ausgeblendet.
+   */
+  isTeamOnly?: boolean;
 }
 
 /**
@@ -30,7 +37,8 @@ export function VereinHeaderShell({
   slug,
   clubName,
   hasSponsorProfile,
-  effectivePlan
+  effectivePlan,
+  isTeamOnly = false
 }: Props) {
   const pathname = usePathname();
 
@@ -40,6 +48,12 @@ export function VereinHeaderShell({
   const isSingleTeamPlan =
     effectivePlan === "basic" || effectivePlan === "pro";
 
+  // Team-only-Mitglieder haben KEIN Vereins-Dashboard → Vereins-Leiste
+  // grundsätzlich weg (egal auf welcher Route dieses Vereins). Einzel-
+  // Mannschaften (basic/pro) blenden sie nur auf Mannschafts-Routen aus.
+  if (isTeamOnly) {
+    return null;
+  }
   if (isOnMannschaftRoute && isSingleTeamPlan) {
     return null;
   }

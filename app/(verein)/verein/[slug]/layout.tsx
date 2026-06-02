@@ -209,6 +209,7 @@ export default async function VereinLayout({
         clubName={club.name}
         hasSponsorProfile={!!sponsorRow}
         effectivePlan={effectivePlan}
+        isTeamOnly={isTeamOnly}
       />
 
       {/* Weitere Vereins-Tabs wenn User mehrere Vereine hat */}
