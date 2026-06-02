@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +22,7 @@ const STORAGE_KEY = "kickpact-consent-v1";
  */
 export function CookieBanner() {
   const [visible, setVisible] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     try {
@@ -46,7 +48,8 @@ export function CookieBanner() {
     setVisible(false);
   }
 
-  if (!visible) return null;
+  // App-Intro (/willkommen, WS-8) ist full-screen ohne globale Chrome.
+  if (pathname === "/willkommen" || !visible) return null;
 
   return (
     <div

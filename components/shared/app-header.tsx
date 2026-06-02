@@ -42,6 +42,9 @@ export function AppHeader({ authenticated, dashboardHref }: AppHeaderProps) {
     return () => window.removeEventListener("scroll", onScroll);
   }, [isLanding]);
 
+  // App-Intro (/willkommen, WS-8) ist full-screen ohne globale Chrome.
+  if (pathname === "/willkommen") return null;
+
   const onHero = isLanding && !scrolled;
   // Eingeloggte User springen vom Logo direkt ins Dashboard (oder
   // /select-role bei mehreren Identities) — niemals auf die Marketing-
