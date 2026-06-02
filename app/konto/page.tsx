@@ -5,6 +5,7 @@ import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { countUnreadNotifications } from "@/lib/db/queries/notifications";
 import { DeletionBanner } from "./_components/deletion-banner";
 import { DataPrivacyActions } from "./_components/data-privacy-actions";
+import { AvatarUpload } from "./_components/avatar-upload";
 
 export const metadata = { title: "Mein Konto · KickPact" };
 
@@ -19,6 +20,14 @@ export default async function KontoPage() {
   // Sponsor-Type wird nicht in UserIdentities zurückgegeben — separater Lookup
   // damit das Label „Familie/Business" auf der Karte stimmt.
   const sponsorType = identities.sponsor ? await getSponsorType(user.id) : null;
+
+  const avatarInitials =
+    (userRow?.name ?? user.email)
+      .split(/\s+/)
+      .map((w) => w[0] ?? "")
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || user.email[0]!.toUpperCase();
 
   const deletionScheduledFor = userRow?.deletionRequestedAt
     ? new Date(userRow.deletionRequestedAt.getTime() + 14 * 24 * 60 * 60 * 1000)
@@ -90,6 +99,8 @@ export default async function KontoPage() {
             .
           </p>
         </div>
+
+        <AvatarUpload initials={avatarInitials} />
 
         <dl className="grid gap-3 sm:grid-cols-2 text-sm">
           <div>
