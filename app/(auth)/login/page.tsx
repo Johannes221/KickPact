@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { MagicLinkForm } from "@/components/auth/magic-link-form";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
@@ -33,8 +34,12 @@ export default async function LoginPage({
     redirect("/dashboard");
   }
 
+  // Google blockt OAuth in eingebetteten WebViews ("disallowed_useragent") →
+  // in der nativen App ausblenden, bis ein nativer Google-Flow existiert.
+  // Apple läuft nativ (WS-3), Magic-Link bleibt als Mail-Weg.
+  const isNativeApp = ((await headers()).get("user-agent") ?? "").includes("KickPactApp");
   const oauthEnabled = {
-    google: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+    google: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) && !isNativeApp,
     apple: isAppleConfigured()
   };
   const anyOauth = oauthEnabled.google || oauthEnabled.apple;

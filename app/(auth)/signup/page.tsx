@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Goal, Building2, HandCoins, type LucideIcon } from "lucide-react";
 import { MagicLinkForm, type SignupRole } from "@/components/auth/magic-link-form";
@@ -121,8 +122,11 @@ export default async function SignupPage({
     return <AuthenticatedRoleChooser addMode={wantsAddRole && total > 0} />;
   }
 
+  // Google blockt OAuth in eingebetteten WebViews → in der nativen App ausblenden
+  // (bis nativer Google-Flow existiert). Apple nativ, Magic-Link als Mail-Weg.
+  const isNativeApp = ((await headers()).get("user-agent") ?? "").includes("KickPactApp");
   const oauthEnabled = {
-    google: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+    google: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) && !isNativeApp,
     apple: isAppleConfigured()
   };
   const anyOauth = oauthEnabled.google || oauthEnabled.apple;
