@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { DashboardTile } from "@/components/shared/dashboard-tile";
 import { getCapUsageForActivePledges } from "@/lib/db/queries/sponsor-reporting";
+import { ReferralShareCard } from "@/components/sponsor/referral-share-card";
+import { buildReferralShareUrl } from "@/lib/referral/link";
 
 export const metadata = { title: "Sponsor · KickPact" };
 
@@ -124,6 +126,11 @@ export default async function SponsorDashboard() {
   // Pledge mit höchster Cap-Auslastung (nur capped) — kann undefined sein
   const topCapPledge = capUsageRows.find((p) => p.percentage !== null);
 
+  const referralUrl = buildReferralShareUrl(
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://kickpact.schartl.dev",
+    sponsorRow.id
+  );
+
   return (
     <div className="space-y-4 md:space-y-6">
       <div>
@@ -195,6 +202,8 @@ export default async function SponsorDashboard() {
           className="md:col-span-2"
         />
       </div>
+
+      <ReferralShareCard shareUrl={referralUrl} />
     </div>
   );
 }

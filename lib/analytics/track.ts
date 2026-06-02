@@ -28,7 +28,8 @@ export type EventName =
   | "stripe_subscription_created"
   | "pricing_tier_clicked"
   | "pricing_cycle_switched"
-  | "abo_cycle_switched";
+  | "abo_cycle_switched"
+  | "referral_share_click";
 
 export type EventProps = Record<string, string | number | boolean>;
 
