@@ -1,14 +1,15 @@
 /**
- * Trigger-Type → deutsche UI-Labels + Kategorie-Mapping.
+ * Trigger-Type → deutsche UI-Bezeichnung (per-Trigger-Label).
  *
  * Single source of truth für die Trigger-Bezeichnungen, die ein Sponsor
  * im Pact-Wizard wählt und ein Trainer im Team-Dashboard sieht. Keine
  * DB-Abhängigkeit — pure Lookup-Tabellen.
+ *
+ * Die Kategorie-Klassifikation (auto/manual/season) + Kategorie-Labels leben
+ * in `lib/billing/trigger-categories.ts` (eine Quelle für die ganze App).
  */
 
 import { CUP_ROUND_LABELS, type CupRound } from "@/lib/triggers/cup-rounds";
-
-export type TriggerCategory = "auto" | "manual" | "season";
 
 /**
  * Liefert eine kurze, deutsche Bezeichnung für einen Trigger-Typ.
@@ -119,32 +120,3 @@ const SPECIAL_GOAL_LABELS: Record<string, string> = {
   freistoss: "Freistoßtor"
 };
 
-/**
- * Klassifiziert einen Trigger-Type in eine UI-Kategorie. Treibt die
- * Gruppierung im Finanzen-Dashboard und die Filter-Auswahl im Pacts-Tab.
- */
-export function categorizeTrigger(triggerType: string): TriggerCategory {
-  if (triggerType.startsWith("season_")) return "season";
-  if (MANUAL_TRIGGERS.has(triggerType)) return "manual";
-  return "auto";
-}
-
-const MANUAL_TRIGGERS = new Set([
-  "special_goal",
-  "yellow_card",
-  "red_card",
-  "assist",
-  "man_of_match",
-  "custom"
-]);
-
-export function getCategoryLabel(category: TriggerCategory): string {
-  switch (category) {
-    case "auto":
-      return "Automatisch erfasst";
-    case "manual":
-      return "Manuell (Bestätigung nötig)";
-    case "season":
-      return "Saison-Wetten";
-  }
-}

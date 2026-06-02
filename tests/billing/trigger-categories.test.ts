@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   categorize,
-  getCategoryLabel,
+  getCategoryLabelShort,
+  getCategoryLabelLong,
   TRIGGER_TYPES_BY_CATEGORY
 } from "@/lib/billing/trigger-categories";
 
@@ -42,11 +43,19 @@ describe("categorize", () => {
   });
 });
 
-describe("getCategoryLabel", () => {
-  it("liefert lesbare deutsche Labels", () => {
-    expect(getCategoryLabel("auto")).toBe("Auto-Trigger");
-    expect(getCategoryLabel("manual")).toBe("Manuelle Trigger");
-    expect(getCategoryLabel("season")).toBe("Saison-Wetten");
+describe("getCategoryLabelShort", () => {
+  it("liefert kurze Labels fürs KPI-Grid", () => {
+    expect(getCategoryLabelShort("auto")).toBe("Auto-Trigger");
+    expect(getCategoryLabelShort("manual")).toBe("Manuelle Trigger");
+    expect(getCategoryLabelShort("season")).toBe("Saison-Wetten");
+  });
+});
+
+describe("getCategoryLabelLong", () => {
+  it("liefert ausführliche Labels für Erklär-/Filter-Kontexte", () => {
+    expect(getCategoryLabelLong("auto")).toBe("Automatisch erfasst");
+    expect(getCategoryLabelLong("manual")).toBe("Manuell (Bestätigung nötig)");
+    expect(getCategoryLabelLong("season")).toBe("Saison-Wetten");
   });
 });
 

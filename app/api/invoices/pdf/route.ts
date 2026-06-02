@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { invoices, clubs, sponsors } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { isPlatformAdminEmail } from "@/lib/auth/admin";
 import { readLocalPdf } from "@/lib/invoicing/storage";
+import { findInvoiceByPdfUrl } from "@/lib/db/queries/invoices";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,18 +27,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Finde die Invoice anhand der Storage-URL
-  const expectedSuffix = `local://${key}`;
-  const [row] = await db
-    .select({
-      invoice: invoices,
-      clubSlug: clubs.slug,
-      sponsorUserId: sponsors.userId
-    })
-    .from(invoices)
-    .innerJoin(clubs, eq(invoices.clubId, clubs.id))
-    .innerJoin(sponsors, eq(invoices.sponsorId, sponsors.id))
-    .where(eq(invoices.pdfUrl, expectedSuffix))
-    .limit(1);
+  const row = await findInvoiceByPdfUrl(`local://${key}`);
 
   if (!row) {
     return NextResponse.json({ error: "not-found" }, { status: 404 });

@@ -1,4 +1,4 @@
-import { eq, and, inArray, isNotNull, desc } from "drizzle-orm";
+import { eq, and, inArray, isNotNull, desc, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   teams,
@@ -152,6 +152,28 @@ export async function getTeamCrawlState(
     .where(eq(teams.id, teamId))
     .limit(1);
   return row ?? null;
+}
+
+/**
+ * Anzahl Spiele einer Mannschaft, gedeckelt auf `cap` (für das „Spiele werden
+ * geladen"-Polling: sobald Page und API beide den Cap erreichen, sind sie
+ * gleich → kein Dauer-Refresh bei mehr als `cap` Spielen).
+ */
+export async function countTeamMatchesCapped(
+  teamId: string,
+  cap: number
+): Promise<number> {
+  const [countRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(
+      db
+        .select({ id: matches.id })
+        .from(matches)
+        .where(eq(matches.teamId, teamId))
+        .limit(cap)
+        .as("capped")
+    );
+  return Number(countRow?.n ?? 0);
 }
 
 export async function getActiveTeamById(teamId: string): Promise<ActiveTeam | null> {

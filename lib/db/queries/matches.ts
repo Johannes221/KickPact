@@ -281,3 +281,21 @@ export async function getTeamPlayerNames(teamId: string): Promise<string[]> {
   }
   return [...names].sort((a, b) => a.localeCompare(b, "de"));
 }
+
+/**
+ * fussball.de-Referenz (Team-ID + Slug) einer Mannschaft — für den Live-Kader-
+ * Abruf im Crawler. `undefined`, wenn das Team nicht existiert.
+ */
+export async function getTeamFussballdeRef(
+  teamId: string
+): Promise<{ fussballdeTeamId: string | null; fussballdeSlug: string | null } | undefined> {
+  const [team] = await db
+    .select({
+      fussballdeTeamId: teams.fussballdeTeamId,
+      fussballdeSlug: teams.fussballdeSlug
+    })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  return team;
+}

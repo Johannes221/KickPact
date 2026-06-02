@@ -15,6 +15,7 @@ import { sponsorLabelSql } from "./sponsor-label";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
 import { detectTeamSide } from "@/lib/crawler/team-side";
+import { categorize, type TriggerCategory } from "@/lib/billing/trigger-categories";
 
 /**
  * Live-Statistik für die Team-Übersicht (Hero-KPI-Cards).
@@ -259,8 +260,6 @@ export async function computeTeamSeasonStats(
 
 // ---------------- Pacts (Tab 2) ----------------
 
-export type PactKind = "auto" | "manual" | "season";
-
 export interface TeamPactRow {
   pledgeId: string;
   ruleId: string;
@@ -271,7 +270,7 @@ export interface TeamPactRow {
   triggerEmoji: string;
   triggerScope: "match" | "season";
   /** Auto = vom Crawler erkannt, manual = manuell zu melden. Season = season-scoped. */
-  triggerKind: PactKind;
+  triggerKind: TriggerCategory;
   amountCents: number;
   perMatchCapCents: number | null;
   monthlyCapCents: number | null;
@@ -281,20 +280,7 @@ export interface TeamPactRow {
 
 export interface ListPactsForTeamArgs {
   status?: "all" | "active" | "paused" | "ended";
-  kind?: "all" | PactKind;
-}
-
-/**
- * Klassifiziert ein Trigger-Type in eine Pact-Kategorie für den Filter:
- *   - season: alle SEASON_TRIGGERS (1× pro Saison)
- *   - auto: pro-Spiel, vom Crawler erkannt
- *   - manual: pro-Spiel, manuell zu melden
- */
-export function pactKindFor(triggerType: string): PactKind {
-  if (isSeasonTrigger(triggerType)) return "season";
-  const meta = (TRIGGER_META as Record<string, { auto: boolean } | undefined>)[triggerType];
-  if (meta && meta.auto === false) return "manual";
-  return "auto";
+  kind?: "all" | TriggerCategory;
 }
 
 export async function listPactsForTeam(
@@ -336,7 +322,7 @@ export async function listPactsForTeam(
     const meta = (TRIGGER_META as Record<string, { label: string; emoji: string; scope: "match" | "season" } | undefined>)[
       r.triggerType
     ];
-    const kind = pactKindFor(r.triggerType);
+    const kind = categorize(r.triggerType);
     return {
       pledgeId: r.pledgeId,
       ruleId: r.ruleId,

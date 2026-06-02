@@ -1,6 +1,6 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { teamImages } from "@/lib/db/schema";
+import { teamImages, teams } from "@/lib/db/schema";
 
 export interface TeamImageRow {
   id: string;
@@ -52,4 +52,16 @@ export async function getTeamImageKey(teamId: string, imageId: string): Promise<
     .where(and(eq(teamImages.id, imageId), eq(teamImages.teamId, teamId)))
     .limit(1);
   return row?.storageKey ?? null;
+}
+
+/** Storage-Keys von Cover + Logo einer Mannschaft (für den Serve-Endpoint). */
+export async function getTeamCoverLogoKeys(
+  teamId: string
+): Promise<{ coverUrl: string | null; logoUrl: string | null } | null> {
+  const [row] = await db
+    .select({ coverUrl: teams.coverUrl, logoUrl: teams.logoUrl })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  return row ?? null;
 }

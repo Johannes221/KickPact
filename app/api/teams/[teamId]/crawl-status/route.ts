@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
-import { eq, sql } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { matches } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/auth/session";
 import { resolveTeamAccess } from "@/lib/auth/scope";
-import { getTeamCrawlState } from "@/lib/db/queries/crawler";
+import { getTeamCrawlState, countTeamMatchesCapped } from "@/lib/db/queries/crawler";
 import { isTeamCrawling } from "@/lib/crawler/crawl-status";
 
 // Polling-Endpoint für das „Spiele werden geladen"-Banner (siehe
@@ -36,21 +33,12 @@ export async function GET(
 
   // count(*) auf das Page-Limit deckeln: sobald Page und API beide den Cap
   // erreichen, sind sie gleich → kein Dauer-Refresh bei >30 Spielen.
-  const [countRow] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(
-      db
-        .select({ id: matches.id })
-        .from(matches)
-        .where(eq(matches.teamId, teamId))
-        .limit(MATCH_COUNT_CAP)
-        .as("capped")
-    );
+  const matchCount = await countTeamMatchesCapped(teamId, MATCH_COUNT_CAP);
 
   return NextResponse.json(
     {
       isCrawling: isTeamCrawling(crawlState.crawlStartedAt, crawlState.crawlCompletedAt),
-      matchCount: Number(countRow?.n ?? 0)
+      matchCount
     },
     { headers: { "Cache-Control": "no-store" } }
   );

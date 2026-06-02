@@ -5,12 +5,12 @@ import { NextRequest } from "next/server";
 const {
   requireUserMock,
   findInvitationByTokenMock,
-  dbLimitFn,
+  getTeamFussballdeRefMock,
   getTeamPlayerNamesMock
 } = vi.hoisted(() => ({
   requireUserMock: vi.fn(),
   findInvitationByTokenMock: vi.fn(),
-  dbLimitFn: vi.fn(),
+  getTeamFussballdeRefMock: vi.fn(),
   getTeamPlayerNamesMock: vi.fn()
 }));
 
@@ -23,21 +23,12 @@ vi.mock("@/lib/db/queries/invitations", () => ({
 }));
 
 vi.mock("@/lib/db/queries/matches", () => ({
-  getTeamPlayerNames: getTeamPlayerNamesMock
+  getTeamPlayerNames: getTeamPlayerNamesMock,
+  getTeamFussballdeRef: getTeamFussballdeRefMock
 }));
 
 vi.mock("@/lib/crawler/fussballde", () => ({
   getKader: vi.fn().mockResolvedValue([{ name: "Max Mustermann" }, { name: "Erika Beispiel" }])
-}));
-
-vi.mock("@/lib/db/client", () => ({
-  db: {
-    select: () => ({
-      from: () => ({
-        where: () => ({ limit: () => dbLimitFn() })
-      })
-    })
-  }
 }));
 
 import { GET } from "@/app/api/squad/route";
@@ -52,7 +43,7 @@ function makeReq(token?: string): NextRequest {
 beforeEach(() => {
   requireUserMock.mockReset();
   findInvitationByTokenMock.mockReset();
-  dbLimitFn.mockReset();
+  getTeamFussballdeRefMock.mockReset();
   getTeamPlayerNamesMock.mockReset();
   getTeamPlayerNamesMock.mockResolvedValue([]);
 });
@@ -87,9 +78,10 @@ describe("GET /api/squad", () => {
       teamId: "team1",
       status: "pending"
     });
-    dbLimitFn.mockResolvedValue([
-      { fussballdeTeamId: "ft1", fussballdeSlug: "fc-test" }
-    ]);
+    getTeamFussballdeRefMock.mockResolvedValue({
+      fussballdeTeamId: "ft1",
+      fussballdeSlug: "fc-test"
+    });
     // Aufgelaufene Spieler aus match_events — Union mit dem Kader, dedupliziert + sortiert.
     getTeamPlayerNamesMock.mockResolvedValue(["Anton Aufgelaufen", "Max Mustermann"]);
 

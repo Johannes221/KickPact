@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
 import { findInvitationByToken } from "@/lib/db/queries/invitations";
 import { getKader } from "@/lib/crawler/fussballde";
-import { getTeamPlayerNames } from "@/lib/db/queries/matches";
+import { getTeamPlayerNames, getTeamFussballdeRef } from "@/lib/db/queries/matches";
 import { requireUser } from "@/lib/auth/session";
 
 export async function GET(req: NextRequest) {
@@ -35,14 +32,7 @@ export async function GET(req: NextRequest) {
   }
 
   const teamId = invitation.teamId;
-  const [team] = await db
-    .select({
-      fussballdeTeamId: teams.fussballdeTeamId,
-      fussballdeSlug: teams.fussballdeSlug
-    })
-    .from(teams)
-    .where(eq(teams.id, teamId))
-    .limit(1);
+  const team = await getTeamFussballdeRef(teamId);
 
   // Union aus zwei Quellen, damit ALLE wählbar sind, die je aufgelaufen sind
   // ODER aktuell im Kader stehen:

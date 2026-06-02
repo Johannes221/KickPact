@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { clubs, teams, subscriptions } from "@/lib/db/schema";
+import { clubs, teams, subscriptions, clubMemberships } from "@/lib/db/schema";
 import { generateUniqueTeamSlug } from "./team-public-slug";
 
 function nullIfEmpty(v: string | null | undefined): string | null {
@@ -105,4 +105,18 @@ export async function updateTeam(input: {
   }
 
   await db.update(teams).set(patch).where(eq(teams.id, input.teamId));
+}
+
+/**
+ * Alle Vereine (slug + name), in denen der User Mitglied ist — für die
+ * kontextabhängige Navigation (HeaderUserMenu).
+ */
+export async function listClubsForUser(
+  userId: string
+): Promise<Array<{ slug: string; name: string }>> {
+  return db
+    .select({ slug: clubs.slug, name: clubs.name })
+    .from(clubMemberships)
+    .innerJoin(clubs, eq(clubMemberships.clubId, clubs.id))
+    .where(eq(clubMemberships.userId, userId));
 }

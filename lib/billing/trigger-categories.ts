@@ -50,12 +50,30 @@ export function categorize(triggerType: string): TriggerCategory {
   return "auto";
 }
 
-export function getCategoryLabel(category: TriggerCategory): string {
+/**
+ * Kurzes Kategorie-Label fürs KPI-Grid (Finanzen-Tab Kachel-Header).
+ */
+export function getCategoryLabelShort(category: TriggerCategory): string {
   switch (category) {
     case "auto":
       return "Auto-Trigger";
     case "manual":
       return "Manuelle Trigger";
+    case "season":
+      return "Saison-Wetten";
+  }
+}
+
+/**
+ * Ausführliches Kategorie-Label für Erklär-/Filter-Kontexte (beschreibt, was
+ * die Kategorie bedeutet, statt sie nur zu benennen).
+ */
+export function getCategoryLabelLong(category: TriggerCategory): string {
+  switch (category) {
+    case "auto":
+      return "Automatisch erfasst";
+    case "manual":
+      return "Manuell (Bestätigung nötig)";
     case "season":
       return "Saison-Wetten";
   }
