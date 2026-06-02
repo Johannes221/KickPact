@@ -7,6 +7,14 @@ export const users = pgTable("users", {
   name: text("name"),
   image: text("image"),
   /**
+   * Hauptrolle — bestimmt das Dashboard direkt nach dem Login (statt
+   * /select-role bei mehreren Rollen). Format: `team:<teamId>` / `club:<slug>` /
+   * `sponsor`. Beim ersten Onboarding gesetzt (= zuerst registrierte Rolle),
+   * in „Mein Konto" änderbar. NULL → Default wird lazy aus den vorhandenen
+   * Identitäten abgeleitet (lib/auth/primary-role.ts).
+   */
+  primaryRole: text("primary_role"),
+  /**
    * Audit 2026-05-24 Phase 4 / Task 4.2: Account-Löschung (Art. 17 DSGVO).
    * Gesetzt durch requestAccountDeletion() Server-Action. Anonymisierungs-
    * Cron (anonymize-accounts.ts) löscht/anonymisiert 14d nach diesem

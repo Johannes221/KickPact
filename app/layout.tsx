@@ -9,7 +9,10 @@ import { PushRegistrar } from "@/components/native/push-registrar";
 import { PlausibleScript } from "@/components/analytics/plausible-script";
 import { getServerSession } from "@/lib/auth/session";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
-import { pickDashboardDestination } from "@/lib/auth/identity-routing";
+import {
+  getStoredPrimaryRole,
+  primaryDestinationFor
+} from "@/lib/auth/primary-role";
 
 // Body / UI: Inter (broad latin coverage, weight 400-900)
 const inter = Inter({
@@ -95,14 +98,18 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Session + Identity-basiertes Logo-Routing: eingeloggte User springen vom
-  // Logo direkt ins Dashboard (oder /select-role bei Multi-Identity), nicht
-  // mehr auf die Marketing-Landing. Bei Auth-Fehler oder unauth.: Default "/".
+  // Logo direkt in ihre Hauptrolle (nie /select-role, nie Marketing-Landing).
+  // Read-only — der lazy Default-Persist passiert nur im /dashboard-Dispatcher.
+  // Bei Auth-Fehler oder unauth.: Default "/".
   const session = await getServerSession().catch(() => null);
   let dashboardHref = "/";
   if (session?.user?.id) {
     try {
-      const ids = await getUserIdentities(session.user.id);
-      dashboardHref = pickDashboardDestination(ids);
+      const [ids, stored] = await Promise.all([
+        getUserIdentities(session.user.id),
+        getStoredPrimaryRole(session.user.id)
+      ]);
+      dashboardHref = primaryDestinationFor(ids, stored).href;
     } catch {
       // Identity-Lookup darf das Layout NIE kippen — fallback auf "/" ist
       // semantisch sinnvoll (User landet im schlimmsten Fall einmal auf der
