@@ -1,22 +1,23 @@
 "use server";
 
-import { eq, and, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { assertPlatformAdmin } from "@/lib/auth/admin";
-import { db } from "@/lib/db/client";
-import { clubs, clubVerifications, subscriptions, teams } from "@/lib/db/schema";
 import { recordOperatorAction } from "@/lib/db/queries/operator-audit";
 import {
   updateClubMasterData,
   manualVerifyClub,
   manualVerifyTeam,
   resumeSubscription,
-  updateTeam
+  updateTeam,
+  getClubBySlug,
+  setSubscriptionStatus,
+  getTeamWithClubSlug
 } from "@/lib/db/queries/club-admin";
 import {
   releaseWithheldInvoicesForClub,
-  releaseWithheldInvoicesForTeam
+  releaseWithheldInvoicesForTeam,
+  revokeClubVerification
 } from "@/lib/db/queries/verifications";
 
 /**
@@ -34,22 +35,14 @@ import {
 
 const slugInput = z.object({ clubSlug: z.string().min(1) });
 
-async function loadClubBySlug(slug: string) {
-  const [club] = await db.select().from(clubs).where(eq(clubs.slug, slug)).limit(1);
-  return club ?? null;
-}
-
 export async function pauseClubSubscriptionAction(input: { clubSlug: string }) {
   const parsed = slugInput.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
   const { user: admin } = await assertPlatformAdmin();
-  const club = await loadClubBySlug(parsed.data.clubSlug);
+  const club = await getClubBySlug(parsed.data.clubSlug);
   if (!club) return { ok: false as const, error: "Verein nicht gefunden" };
 
-  await db
-    .update(subscriptions)
-    .set({ status: "paused", updatedAt: new Date() })
-    .where(eq(subscriptions.clubId, club.id));
+  await setSubscriptionStatus(club.id, "paused");
 
   await recordOperatorAction({
     operatorUserId: admin.id,
@@ -68,13 +61,10 @@ export async function blockClubAction(input: { clubSlug: string }) {
   const parsed = slugInput.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
   const { user: admin } = await assertPlatformAdmin();
-  const club = await loadClubBySlug(parsed.data.clubSlug);
+  const club = await getClubBySlug(parsed.data.clubSlug);
   if (!club) return { ok: false as const, error: "Verein nicht gefunden" };
 
-  await db
-    .update(subscriptions)
-    .set({ status: "cancelled", updatedAt: new Date() })
-    .where(eq(subscriptions.clubId, club.id));
+  await setSubscriptionStatus(club.id, "cancelled");
 
   await recordOperatorAction({
     operatorUserId: admin.id,
@@ -93,21 +83,10 @@ export async function revokeClubVerificationAction(input: { clubSlug: string }) 
   const parsed = slugInput.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
   const { user: admin } = await assertPlatformAdmin();
-  const club = await loadClubBySlug(parsed.data.clubSlug);
+  const club = await getClubBySlug(parsed.data.clubSlug);
   if (!club) return { ok: false as const, error: "Verein nicht gefunden" };
 
-  await db.transaction(async (tx) => {
-    await tx
-      .update(clubVerifications)
-      .set({ status: "revoked" })
-      .where(
-        and(
-          eq(clubVerifications.clubId, club.id),
-          ne(clubVerifications.status, "revoked")
-        )
-      );
-    await tx.update(clubs).set({ verifiedAt: null }).where(eq(clubs.id, club.id));
-  });
+  await revokeClubVerification(club.id);
 
   await recordOperatorAction({
     operatorUserId: admin.id,
@@ -145,7 +124,7 @@ export async function updateClubAction(input: {
   const parsed = updateClubSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
   const { user: admin } = await assertPlatformAdmin();
-  const club = await loadClubBySlug(parsed.data.clubSlug);
+  const club = await getClubBySlug(parsed.data.clubSlug);
   if (!club) return { ok: false as const, error: "Verein nicht gefunden" };
 
   await updateClubMasterData({
@@ -174,7 +153,7 @@ export async function manualVerifyClubAction(input: { clubSlug: string }) {
   const parsed = slugInput.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
   const { user: admin } = await assertPlatformAdmin();
-  const club = await loadClubBySlug(parsed.data.clubSlug);
+  const club = await getClubBySlug(parsed.data.clubSlug);
   if (!club) return { ok: false as const, error: "Verein nicht gefunden" };
 
   const { newlyVerified } = await manualVerifyClub(club.id);
@@ -203,7 +182,7 @@ export async function resumeSubscriptionAction(input: { clubSlug: string }) {
   const parsed = slugInput.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
   const { user: admin } = await assertPlatformAdmin();
-  const club = await loadClubBySlug(parsed.data.clubSlug);
+  const club = await getClubBySlug(parsed.data.clubSlug);
   if (!club) return { ok: false as const, error: "Verein nicht gefunden" };
 
   await resumeSubscription(club.id);
@@ -219,16 +198,6 @@ export async function resumeSubscriptionAction(input: { clubSlug: string }) {
   revalidatePath(`/admin/vereine/${club.slug}`);
   revalidatePath("/admin/vereine");
   return { ok: true as const };
-}
-
-async function loadTeamForClub(teamId: string) {
-  const [row] = await db
-    .select({ id: teams.id, name: teams.name, clubId: teams.clubId, clubSlug: clubs.slug })
-    .from(teams)
-    .innerJoin(clubs, eq(clubs.id, teams.clubId))
-    .where(eq(teams.id, teamId))
-    .limit(1);
-  return row ?? null;
 }
 
 const updateTeamSchema = z.object({
@@ -247,7 +216,7 @@ export async function updateTeamAction(input: {
   const parsed = updateTeamSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
   const { user: admin } = await assertPlatformAdmin();
-  const team = await loadTeamForClub(parsed.data.teamId);
+  const team = await getTeamWithClubSlug(parsed.data.teamId);
   if (!team) return { ok: false as const, error: "Team nicht gefunden" };
 
   await updateTeam(parsed.data);
@@ -273,7 +242,7 @@ export async function manualVerifyTeamAction(input: { teamId: string }) {
   const parsed = z.object({ teamId: z.string().min(1) }).safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
   const { user: admin } = await assertPlatformAdmin();
-  const team = await loadTeamForClub(parsed.data.teamId);
+  const team = await getTeamWithClubSlug(parsed.data.teamId);
   if (!team) return { ok: false as const, error: "Team nicht gefunden" };
 
   const { newlyVerified } = await manualVerifyTeam(team.id);

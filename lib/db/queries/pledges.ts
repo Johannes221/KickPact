@@ -206,3 +206,20 @@ export async function getClubIdForTeam(teamId: string): Promise<string | null> {
     .limit(1);
   return row?.clubId ?? null;
 }
+
+/**
+ * Legt einen Pledge + seine Regeln in EINER Transaktion an. Die Rule-Rows werden
+ * fertig gemappt übergeben (ohne pledgeId — die wird hier gesetzt).
+ */
+export async function createPledgeWithRules(args: {
+  pledge: Omit<typeof pledges.$inferInsert, "id">;
+  rules: Array<Omit<typeof pledgeRules.$inferInsert, "pledgeId">>;
+}): Promise<{ pledgeId: string }> {
+  return db.transaction(async (tx) => {
+    const [pledge] = await tx.insert(pledges).values(args.pledge).returning();
+    await tx
+      .insert(pledgeRules)
+      .values(args.rules.map((r) => ({ ...r, pledgeId: pledge.id })));
+    return { pledgeId: pledge.id };
+  });
+}

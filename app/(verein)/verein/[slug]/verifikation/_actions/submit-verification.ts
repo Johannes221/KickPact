@@ -3,11 +3,9 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { createId } from "@paralleldrive/cuid2";
-import { eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
-import { db } from "@/lib/db/client";
-import { clubs } from "@/lib/db/schema";
 import { createVerificationSubmission } from "@/lib/db/queries/verifications";
+import { getClubBySlug } from "@/lib/db/queries/club-admin";
 import { storeDocument, buildVerificationKey } from "@/lib/storage/documents";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { verificationSubmittedEmail } from "@/lib/mail/templates/verification-submitted";
@@ -76,11 +74,7 @@ export async function submitVerificationAction(
 
   // Resolve clubId from slug (assertClubAccess overkill here — onboarding
   // user just created the club, they own it by virtue of clubMemberships).
-  const [club] = await db
-    .select({ id: clubs.id, name: clubs.name })
-    .from(clubs)
-    .where(eq(clubs.slug, parsed.data.clubSlug))
-    .limit(1);
+  const club = await getClubBySlug(parsed.data.clubSlug);
   if (!club) {
     return { ok: false, error: "Verein nicht gefunden." };
   }

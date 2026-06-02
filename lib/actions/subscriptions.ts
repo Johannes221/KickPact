@@ -158,18 +158,3 @@ export async function createCustomerPortalSession(clubSlug: string): Promise<{ u
   });
   return { url: session.url };
 }
-
-/**
- * Convenience: redirect direkt zu Checkout — für Form-Action-Buttons.
- */
-export async function startCheckoutAndRedirect(formData: FormData) {
-  const clubSlug = String(formData.get("clubSlug"));
-  const plan = String(formData.get("plan")) as PlanKey;
-  const cycleRaw = formData.get("cycle");
-  const cycle =
-    cycleRaw === "monthly" || cycleRaw === "season_end"
-      ? (cycleRaw as BillingCycle)
-      : undefined;
-  const { url } = await createCheckoutSession({ clubSlug, plan, cycle });
-  redirect(url);
-}

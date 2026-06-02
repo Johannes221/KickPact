@@ -187,30 +187,3 @@ export async function cancelChargeForClub(
     .returning({ id: charges.id });
   return result.length > 0;
 }
-
-/**
- * Helper: bezahlt Übersicht-Zähler für ein Dashboard.
- */
-export async function countConfirmedChargesForSponsorClub(opts: {
-  sponsorId: string;
-  clubId: string;
-  periodStart: Date;
-  periodEnd: Date;
-}) {
-  const [row] = await db
-    .select({ count: sql<number>`COUNT(*)::int`, sum: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int` })
-    .from(charges)
-    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-    .innerJoin(matches, eq(charges.matchId, matches.id))
-    .innerJoin(teams, eq(matches.teamId, teams.id))
-    .where(
-      and(
-        eq(charges.status, "confirmed"),
-        eq(pledges.sponsorId, opts.sponsorId),
-        eq(teams.clubId, opts.clubId),
-        gte(charges.confirmedAt, opts.periodStart),
-        lte(charges.confirmedAt, opts.periodEnd)
-      )
-    );
-  return { count: row?.count ?? 0, sumCents: row?.sum ?? 0 };
-}

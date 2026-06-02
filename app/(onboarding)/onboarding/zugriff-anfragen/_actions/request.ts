@@ -1,14 +1,14 @@
 "use server";
 
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { createId } from "@paralleldrive/cuid2";
 import { requireUser } from "@/lib/auth/session";
 import { inngest } from "@/lib/inngest/client";
-import { db } from "@/lib/db/client";
-import { clubs, clubMemberships, teams, users } from "@/lib/db/schema";
-import { createRequest } from "@/lib/db/queries/membership-requests";
+import { createRequest, isClubMember } from "@/lib/db/queries/membership-requests";
+import { getClubBySlug } from "@/lib/db/queries/club-admin";
+import { getTeamNameById } from "@/lib/db/queries/team-lifecycle";
+import { listClubAdminEmails } from "@/lib/db/queries/notification-recipients";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { accessRequestEmail } from "@/lib/mail/templates/access-request";
 import { storeDocument, buildVerificationKey } from "@/lib/storage/documents";
@@ -38,19 +38,10 @@ export async function requestClubAccessAction(formData: FormData) {
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
 
   const user = await requireUser();
-  const [club] = await db
-    .select({ id: clubs.id, name: clubs.name, slug: clubs.slug })
-    .from(clubs)
-    .where(eq(clubs.slug, parsed.data.clubSlug))
-    .limit(1);
+  const club = await getClubBySlug(parsed.data.clubSlug);
   if (!club) return { ok: false as const, error: "Verein nicht gefunden" };
 
-  const [existing] = await db
-    .select({ role: clubMemberships.role })
-    .from(clubMemberships)
-    .where(and(eq(clubMemberships.userId, user.id), eq(clubMemberships.clubId, club.id)))
-    .limit(1);
-  if (existing) {
+  if (await isClubMember(user.id, club.id)) {
     return { ok: true as const, alreadyMember: true, clubSlug: club.slug };
   }
 
@@ -148,20 +139,11 @@ async function notifyAdmins(args: {
   message: string | null;
 }): Promise<void> {
   // Fetch admin emails via clubMemberships → users join
-  const adminRows = await db
-    .select({ email: users.email })
-    .from(clubMemberships)
-    .innerJoin(users, eq(clubMemberships.userId, users.id))
-    .where(and(eq(clubMemberships.clubId, args.clubId), eq(clubMemberships.role, "admin")));
+  const adminEmails = await listClubAdminEmails(args.clubId);
 
   let teamName: string | null = null;
   if (args.requestedTeamId) {
-    const [team] = await db
-      .select({ name: teams.name })
-      .from(teams)
-      .where(eq(teams.id, args.requestedTeamId))
-      .limit(1);
-    teamName = team?.name ?? null;
+    teamName = await getTeamNameById(args.requestedTeamId);
   }
 
   const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
@@ -177,10 +159,10 @@ async function notifyAdmins(args: {
   });
 
   await Promise.all(
-    adminRows.map((a) =>
+    adminEmails.map((email) =>
       resend.emails.send({
         from: MAIL_FROM,
-        to: a.email,
+        to: email,
         subject: mail.subject,
         html: mail.html,
         text: mail.text

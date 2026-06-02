@@ -2,33 +2,19 @@
 
 import slugify from "slugify";
 import { z } from "zod";
-import { and, eq, inArray, sql } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import {
-  clubs,
-  teams,
-  clubMemberships,
-  teamMemberships,
-  subscriptions,
-  teamLicenses,
-  consumedTrials
-} from "@/lib/db/schema";
 import { requireUserOrThrow } from "@/lib/auth/session";
 import { assertNotPlatformAdminAction } from "@/lib/auth/admin";
 import { createInvitation, listInvitationsForTeam } from "@/lib/db/queries/invitations";
 import { checkTeamCollision } from "@/lib/db/queries/onboarding-collision";
+import { isClubMember } from "@/lib/db/queries/membership-requests";
+import { getClubById, getClubTeamsBasic } from "@/lib/db/queries/club-admin";
+import {
+  getOwnDraftClubByVereinId,
+  findConsumedTrialKeys,
+  persistDraftClubAndTeams
+} from "@/lib/db/queries/onboarding-create";
 import { inngest } from "@/lib/inngest/client";
 import { TRIAL_DAYS } from "@/lib/stripe/pricing";
-
-/** True, wenn der User Mitglied (beliebige Rolle) des Clubs ist. */
-async function isClubMemberOf(clubId: string, userId: string): Promise<boolean> {
-  const [m] = await db
-    .select({ userId: clubMemberships.userId })
-    .from(clubMemberships)
-    .where(and(eq(clubMemberships.clubId, clubId), eq(clubMemberships.userId, userId)))
-    .limit(1);
-  return Boolean(m);
-}
 
 // SECURITY (M2): Die fussball.de-Identifier werden serverseitig in Fetch-URL-
 // Pfade des Crawlers interpoliert (lib/crawler/fussballde.ts). Ohne Charset-
@@ -114,18 +100,14 @@ export async function createDraftClub(input: CreateDraftInput): Promise<CreateDr
 
   for (const c of collisions) {
     if (c.kind !== "actively-managed") continue;
-    const ownedByMe = await isClubMemberOf(c.clubId, user.id);
+    const ownedByMe = await isClubMember(user.id, c.clubId);
     if (!ownedByMe) {
       throw new Error(
         "Diese Mannschaft ist bereits bei KickPact registriert. Frag beim zuständigen Admin Zugriff an."
       );
     }
     // Eigener Container → idempotent den ganzen Draft zurückgeben.
-    const [club] = await db
-      .select({ slug: clubs.slug, onboardingStatus: clubs.onboardingStatus })
-      .from(clubs)
-      .where(eq(clubs.id, c.clubId))
-      .limit(1);
+    const club = await getClubById(c.clubId);
     if (club?.onboardingStatus === "completed") {
       throw new Error(
         "Diese Mannschaft ist bereits vollständig onboarded. Du gelangst über das Dashboard hin."
@@ -144,19 +126,7 @@ export async function createDraftClub(input: CreateDraftInput): Promise<CreateDr
   // WICHTIG: nur der EIGENE Container (admin-Mitgliedschaft). Fremde User
   // bekommen weiterhin getrennte Container (Sicherheits-Design — ein Fremder
   // soll nicht ungefragt in deinem Verein landen; siehe onboarding-collision.ts).
-  const [ownClub] = await db
-    .select({ id: clubs.id, slug: clubs.slug })
-    .from(clubs)
-    .innerJoin(
-      clubMemberships,
-      and(
-        eq(clubMemberships.clubId, clubs.id),
-        eq(clubMemberships.userId, user.id),
-        eq(clubMemberships.role, "admin")
-      )
-    )
-    .where(eq(clubs.fussballdeVereinId, parsed.verein.vereinId))
-    .limit(1);
+  const ownClub = await getOwnDraftClubByVereinId(user.id, parsed.verein.vereinId);
 
   const baseSlug = slugify(parsed.verein.name, { lower: true, strict: true, trim: true });
   const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
@@ -171,134 +141,24 @@ export async function createDraftClub(input: CreateDraftInput): Promise<CreateDr
     ...teamList.map((t) => `team:${t.teamId}`),
     `verein:${parsed.verein.vereinId}`
   ];
-  const consumed = await db
-    .select({ key: consumedTrials.key })
-    .from(consumedTrials)
-    .where(inArray(consumedTrials.key, trialKeys));
+  const consumed = await findConsumedTrialKeys(trialKeys);
   const trialEligible = consumed.length === 0;
 
   const trialEnd = new Date();
   trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
 
-  const result = await db.transaction(async (tx) => {
-    // Advisory-Lock pro Team serialisiert konkurrierende Registrierungen
-    // derselben Mannschaft; der Unique-Index (team_id, saison) ist der Backstop.
-    for (const t of teamList) {
-      await tx.execute(
-        sql`SELECT pg_advisory_xact_lock(hashtextextended(${t.teamId}, 0))`
-      );
-    }
-
-    // Bestehenden eigenen Verein-Container wiederverwenden ODER neu anlegen.
-    let club: { id: string; slug: string };
-    if (ownClub) {
-      club = ownClub;
-    } else {
-      const [created] = await tx
-        .insert(clubs)
-        .values({
-          slug,
-          name: parsed.verein.name,
-          fussballdeVereinId: parsed.verein.vereinId,
-          onboardingStatus: "draft",
-          onboardingRole: parsed.role,
-          onboardingStartedAt: new Date()
-        })
-        .returning({ id: clubs.id, slug: clubs.slug });
-      club = created;
-
-      await tx.insert(clubMemberships).values({
-        userId: user.id,
-        clubId: club.id,
-        role: "admin"
-      });
-
-      // H1: Nur bei Eligibility ein echter Trial — sonst `incomplete` (read-only
-      // via gateFromSubscription) → der Verein muss zum Aktivieren zahlen.
-      await tx.insert(subscriptions).values({
-        clubId: club.id,
-        stripeCustomerId: null,
-        stripeSubscriptionId: null,
-        status: trialEligible ? "trialing" : "incomplete",
-        billingCycle: "monthly",
-        trialEndsAt: trialEligible ? trialEnd : null
-      });
-    }
-
-    // H1: Trial-Identitäten als verbraucht markieren (idempotent). Auch wenn
-    // nicht eligible, schadet das Re-Insert nicht (onConflictDoNothing).
-    if (trialEligible) {
-      await tx
-        .insert(consumedTrials)
-        .values(trialKeys.map((key) => ({ key, clubId: club.id })))
-        .onConflictDoNothing();
-    }
-
-    // Teams: `none` frisch inserten, `scraped-unmanaged` in den neuen Container
-    // umhängen (re-home). crawlStartedAt sofort, damit das Team-Dashboard direkt
-    // das „Spiele werden geladen"-Banner zeigt.
-    const insertedTeamIds: string[] = [];
-    for (let i = 0; i < teamList.length; i++) {
-      const t = teamList[i];
-      const c = collisions[i];
-      if (c.kind === "scraped-unmanaged") {
-        await tx
-          .update(teams)
-          .set({ clubId: club.id, isActive: true, crawlStartedAt: new Date() })
-          .where(eq(teams.id, c.teamId));
-        // Etwaige alte Lizenz lösen — die frische kommt unten unter den neuen Container.
-        await tx.delete(teamLicenses).where(eq(teamLicenses.teamId, c.teamId));
-        insertedTeamIds.push(c.teamId);
-      } else {
-        const [row] = await tx
-          .insert(teams)
-          .values({
-            clubId: club.id,
-            name: t.teamName,
-            saison: t.saison,
-            fussballdeTeamId: t.teamId,
-            fussballdeSlug: t.teamSlug,
-            isActive: true,
-            crawlStartedAt: new Date()
-          })
-          .returning({ id: teams.id });
-        insertedTeamIds.push(row.id);
-      }
-    }
-
-    await tx.insert(teamLicenses).values(
-      insertedTeamIds.map((teamId) => ({
-        subscriptionClubId: club.id,
-        teamId,
-        plan: planForLicenses as "pro" | "verein",
-        stripeSubscriptionItemId: null,
-        status: "trialing" as const
-      }))
-    );
-
-    // Ersteller direkt als Mannschaftsadmin jeder Mannschaft eintragen. Bei
-    // autarken Teams (pro-Plan) kommt der Zugriff NUR aus team_memberships —
-    // der Club-Admin-Durchgriff greift dort nicht (Lizenz-Gating). Ohne diesen
-    // Eintrag würde sich der Owner aus seiner eigenen Mannschaft aussperren.
-    // onConflictDoNothing: adoptierte Teams könnten theoretisch schon eine
-    // Membership des Users tragen.
-    await tx
-      .insert(teamMemberships)
-      .values(
-        insertedTeamIds.map((teamId) => ({
-          userId: user.id,
-          teamId,
-          role: "admin" as const,
-          invitedByUserId: user.id
-        }))
-      )
-      .onConflictDoNothing();
-
-    return {
-      clubId: club.id,
-      clubSlug: club.slug,
-      insertedTeamIds
-    };
+  const result = await persistDraftClubAndTeams({
+    userId: user.id,
+    role: parsed.role,
+    verein: parsed.verein,
+    teamList,
+    collisions,
+    ownClub,
+    slug,
+    trialEligible,
+    trialEnd,
+    trialKeys,
+    planForLicenses
   });
 
   // Frische Invitations pro Team (außerhalb der TX — schadet nicht, weil
@@ -338,10 +198,7 @@ async function loadExistingDraft(
   clubSlug: string,
   userId: string
 ): Promise<CreateDraftResult> {
-  const teamRows = await db
-    .select({ id: teams.id })
-    .from(teams)
-    .where(eq(teams.clubId, clubId));
+  const teamRows = await getClubTeamsBasic(clubId);
 
   const teamsWithInvitations = await Promise.all(
     teamRows.map(async (t) => {

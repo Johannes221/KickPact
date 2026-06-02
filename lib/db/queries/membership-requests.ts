@@ -191,6 +191,77 @@ export async function getRequestById(requestId: string): Promise<MembershipReque
   return (row as MembershipRequest | undefined) ?? null;
 }
 
+/** Lehnt einen Konflikt-Claim ab (setzt die Request auf 'rejected'). */
+export async function rejectConflictClaim(args: {
+  requestId: string;
+  respondedByUserId: string;
+  reason?: string | null;
+}): Promise<void> {
+  await db
+    .update(clubMembershipRequests)
+    .set({
+      status: "rejected",
+      respondedAt: new Date(),
+      respondedByUserId: args.respondedByUserId,
+      responseMessage: args.reason ?? null
+    })
+    .where(eq(clubMembershipRequests.id, args.requestId));
+}
+
+/**
+ * Account-Takeover bei gewonnenem Konflikt-Claim (in EINER Transaktion):
+ * alte Club-Admins entfernen, Claimant als Admin setzen, bestehende
+ * Verifikationen revoken, clubs.verifiedAt zurücksetzen, Request approven.
+ * Withheld-Invoices bleiben bewusst unangetastet (Ops entscheidet pro Fall).
+ */
+export async function applyConflictTakeover(args: {
+  requestId: string;
+  clubId: string;
+  claimantUserId: string;
+  respondedByUserId: string;
+  reason?: string | null;
+}): Promise<void> {
+  await db.transaction(async (tx) => {
+    // 1. Remove existing admin clubMemberships for this club
+    await tx.delete(clubMemberships).where(eq(clubMemberships.clubId, args.clubId));
+
+    // 2. Insert claimant as the new admin
+    await tx
+      .insert(clubMemberships)
+      .values({ userId: args.claimantUserId, clubId: args.clubId, role: "admin" })
+      .onConflictDoNothing();
+
+    // 3. Mark all prior approved verifications for this club as revoked
+    await tx
+      .update(clubVerifications)
+      .set({ status: "revoked" })
+      .where(
+        and(
+          eq(clubVerifications.clubId, args.clubId),
+          eq(clubVerifications.status, "approved")
+        )
+      );
+
+    // 4. Reset clubs.verifiedAt — the claimant must re-verify too (their
+    //    conflict-doc is held as evidence but doesn't auto-promote).
+    await tx.update(clubs).set({ verifiedAt: null }).where(eq(clubs.id, args.clubId));
+
+    // 5. Note: withheld invoices are intentionally NOT auto-mutated here.
+    //    Ops can manually clean up if needed.
+
+    // 6. Update the conflict request itself
+    await tx
+      .update(clubMembershipRequests)
+      .set({
+        status: "approved",
+        respondedAt: new Date(),
+        respondedByUserId: args.respondedByUserId,
+        responseMessage: args.reason ?? null
+      })
+      .where(eq(clubMembershipRequests.id, args.requestId));
+  });
+}
+
 export interface ApproveArgs {
   requestId: string;
   respondedByUserId: string;
@@ -286,6 +357,16 @@ export async function rejectRequest(args: RejectArgs): Promise<MembershipRequest
  * to prevent the last admin from demoting or revoking themselves and locking
  * the club out.
  */
+/** True, wenn der User eine (beliebige) Club-Membership auf diesem Verein hat. */
+export async function isClubMember(userId: string, clubId: string): Promise<boolean> {
+  const [m] = await db
+    .select({ userId: clubMemberships.userId })
+    .from(clubMemberships)
+    .where(and(eq(clubMemberships.clubId, clubId), eq(clubMemberships.userId, userId)))
+    .limit(1);
+  return Boolean(m);
+}
+
 export async function countClubAdmins(clubId: string): Promise<number> {
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })

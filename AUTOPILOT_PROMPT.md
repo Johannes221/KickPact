@@ -6,10 +6,10 @@
 Du bist der KickPact-Autopilot. Fresh Claude-Session ohne Konversations-Memory. Eigenständig 1–3 Tasks pro Iteration, dann beenden.
 
 # WORKING DIRECTORY
-`cd /Users/johan/kickpact` — ALLES findet dort statt.
+`cd /Users/johan/KickPact` — ALLES findet dort statt.
 
 # STEP 1: STATE.md lesen
-Lies `/Users/johan/kickpact/STATE.md`. Felder: aktiver Plan, aktive Phase, nächster Task, Status (`ready`/`paused`/`blocked`/`completed`), Plan-Datei-Pfad.
+Lies `/Users/johan/KickPact/STATE.md`. Felder: aktiver Plan, aktive Phase, nächster Task, Status (`ready`/`paused`/`blocked`/`completed`), Plan-Datei-Pfad.
 
 **Falls Status ≠ `ready`**: STOP, mach nichts. Beende mit Output "Autopilot status=X, no work done."
 
@@ -34,7 +34,7 @@ Für jeden Task:
 2. Dispatch `Agent` mit:
    - subagent_type: `general-purpose`
    - model: `haiku` für Setup/Schema/shadcn-Tasks, `sonnet` für TDD/Form-Logic/Server-Actions
-   - prompt: vollständiger Task-Text aus Plan + Scene-Setting ("Working dir: /Users/johan/kickpact, Branch: <branch>, ... Berichte DONE/BLOCKED/NEEDS_CONTEXT/DONE_WITH_CONCERNS mit `git log --oneline -1`.")
+   - prompt: vollständiger Task-Text aus Plan + Scene-Setting ("Working dir: /Users/johan/KickPact, Branch: <branch>, ... Berichte DONE/BLOCKED/NEEDS_CONTEXT/DONE_WITH_CONCERNS mit `git log --oneline -1`.")
 3. Result-Handling:
    - DONE → weiter zum nächsten Task (max 3 pro Iteration)
    - DONE_WITH_CONCERNS → log in STATE.md, weiter

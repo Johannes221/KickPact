@@ -1,17 +1,16 @@
 "use server";
 
 import { z } from "zod";
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
 import { assertClubAccess } from "@/lib/auth/scope";
-import { db } from "@/lib/db/client";
-import { clubs, users } from "@/lib/db/schema";
 import {
   approveRequest,
   rejectRequest,
   getRequestById
 } from "@/lib/db/queries/membership-requests";
+import { getUserEmailById } from "@/lib/db/queries/account";
+import { getClubById } from "@/lib/db/queries/club-admin";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { accessRequestApprovedEmail } from "@/lib/mail/templates/access-request-approved";
 import { accessRequestRejectedEmail } from "@/lib/mail/templates/access-request-rejected";
@@ -37,12 +36,8 @@ export async function approveRequestAction(input: { requestId: string; clubSlug:
   await approveRequest({ requestId: req.id, respondedByUserId: admin.id });
 
   // Notify requester
-  const [requester] = await db
-    .select({ email: users.email })
-    .from(users)
-    .where(eq(users.id, req.userId))
-    .limit(1);
-  if (requester) {
+  const requesterEmail = await getUserEmailById(req.userId);
+  if (requesterEmail) {
     const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
     const homeUrl = req.requestedTeamId
       ? `${base}/verein/${club.slug}/mannschaft/${req.requestedTeamId}`
@@ -56,7 +51,7 @@ export async function approveRequestAction(input: { requestId: string; clubSlug:
     });
     await resend.emails.send({
       from: MAIL_FROM,
-      to: requester.email,
+      to: requesterEmail,
       subject: mail.subject,
       html: mail.html,
       text: mail.text
@@ -85,24 +80,16 @@ export async function rejectRequestAction(input: { requestId: string; clubSlug: 
   });
 
   // Notify requester
-  const [requester] = await db
-    .select({ email: users.email })
-    .from(users)
-    .where(eq(users.id, req.userId))
-    .limit(1);
-  if (requester) {
-    const [clubRow] = await db
-      .select({ name: clubs.name })
-      .from(clubs)
-      .where(eq(clubs.id, req.clubId))
-      .limit(1);
+  const requesterEmail = await getUserEmailById(req.userId);
+  if (requesterEmail) {
+    const clubRow = await getClubById(req.clubId);
     const mail = accessRequestRejectedEmail({
       clubName: clubRow?.name ?? club.name,
       reason: parsed.data.reason ?? null
     });
     await resend.emails.send({
       from: MAIL_FROM,
-      to: requester.email,
+      to: requesterEmail,
       subject: mail.subject,
       html: mail.html,
       text: mail.text

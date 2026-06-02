@@ -5,7 +5,8 @@ import {
   clubMemberships,
   teamMemberships,
   sponsors,
-  pledges
+  pledges,
+  users
 } from "@/lib/db/schema";
 
 function uniq(ids: string[]): string[] {
@@ -19,6 +20,16 @@ export async function getClubAdminUserIds(clubId: string): Promise<string[]> {
     .from(clubMemberships)
     .where(and(eq(clubMemberships.clubId, clubId), eq(clubMemberships.role, "admin")));
   return uniq(rows.map((r) => r.userId));
+}
+
+/** E-Mail-Adressen der Club-Admins (role = 'admin') — für Admin-Benachrichtigungen. */
+export async function listClubAdminEmails(clubId: string): Promise<string[]> {
+  const rows = await db
+    .select({ email: users.email })
+    .from(clubMemberships)
+    .innerJoin(users, eq(clubMemberships.userId, users.id))
+    .where(and(eq(clubMemberships.clubId, clubId), eq(clubMemberships.role, "admin")));
+  return rows.map((r) => r.email);
 }
 
 /** Admins einer Mannschaft (team_memberships role = 'admin'). */

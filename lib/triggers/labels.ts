@@ -65,6 +65,12 @@ export const TRIGGER_META: Record<TriggerType, TriggerMeta> = {
   season_custom: { label: "Saison-Custom-Ziel", emoji: "🎺", scope: "season", auto: false }
 };
 
+/**
+ * Statisches Pledge-Kontext-Label ("Pro Sieg", "Pro Tor") ohne Parameter.
+ * Für PARAMETER-bewusste Ereignis-Labels ("Sieg von Max", "Tordifferenz ≥ 3")
+ * siehe `getTriggerLabel` in `lib/billing/trigger-labels.ts` — bewusst eigenes
+ * Vokabular, kein Duplikat.
+ */
 export function triggerLabel(t: string): string {
   return (TRIGGER_META as Record<string, TriggerMeta | undefined>)[t]?.label ?? t;
 }

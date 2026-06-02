@@ -1,10 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { and, eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { clubs, clubMemberships } from "@/lib/db/schema";
 import { requireUserOrThrow } from "@/lib/auth/session";
+import { saveDraftStammdaten } from "@/lib/db/queries/onboarding-draft";
 
 const updateStammdatenSchema = z.object({
   clubId: z.string().min(1),
@@ -31,46 +29,17 @@ export async function updateDraftStammdaten(input: UpdateStammdatenInput): Promi
   const user = await requireUserOrThrow();
   const parsed = updateStammdatenSchema.parse(input);
 
-  const [membership] = await db
-    .select({ role: clubMemberships.role })
-    .from(clubMemberships)
-    .where(
-      and(eq(clubMemberships.clubId, parsed.clubId), eq(clubMemberships.userId, user.id))
-    )
-    .limit(1);
-  if (!membership || membership.role !== "admin") {
-    throw new Error("Du bist nicht berechtigt, diesen Draft zu bearbeiten.");
+  const result = await saveDraftStammdaten({ userId: user.id, ...parsed });
+  switch (result) {
+    case "forbidden":
+      throw new Error("Du bist nicht berechtigt, diesen Draft zu bearbeiten.");
+    case "not_found":
+      throw new Error("Verein nicht gefunden.");
+    case "already_completed":
+      throw new Error(
+        "Verein ist bereits vollständig onboarded — Stammdaten-Edit läuft hier nicht mehr über den Wizard."
+      );
+    case "ok":
+      return { ok: true };
   }
-
-  const [club] = await db
-    .select({ onboardingStatus: clubs.onboardingStatus })
-    .from(clubs)
-    .where(eq(clubs.id, parsed.clubId))
-    .limit(1);
-  if (!club) throw new Error("Verein nicht gefunden.");
-  if (club.onboardingStatus === "completed") {
-    throw new Error(
-      "Verein ist bereits vollständig onboarded — Stammdaten-Edit läuft hier nicht mehr über den Wizard."
-    );
-  }
-
-  await db
-    .update(clubs)
-    .set({
-      ort: parsed.city,
-      isSmallBusiness: parsed.isSmallBusiness,
-      taxId: parsed.taxId || null,
-      iban: parsed.iban || null,
-      addressJson: {
-        street: parsed.street,
-        zip: parsed.zip,
-        city: parsed.city,
-        country: "DE"
-      },
-      onboardingStatus: "stammdaten_complete",
-      updatedAt: new Date()
-    })
-    .where(eq(clubs.id, parsed.clubId));
-
-  return { ok: true };
 }

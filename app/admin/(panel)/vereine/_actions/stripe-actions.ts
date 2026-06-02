@@ -1,29 +1,15 @@
 "use server";
 
 import { z } from "zod";
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { assertPlatformAdmin } from "@/lib/auth/admin";
-import { db } from "@/lib/db/client";
-import { clubs, subscriptions } from "@/lib/db/schema";
 import { isStripeConfigured } from "@/lib/stripe/client";
 import { extendTrial, refundLatestPaidInvoice } from "@/lib/stripe/admin-ops";
 import { recordOperatorAction } from "@/lib/db/queries/operator-audit";
-
-async function loadClubWithSub(slug: string) {
-  const [row] = await db
-    .select({
-      clubId: clubs.id,
-      clubName: clubs.name,
-      clubSlug: clubs.slug,
-      stripeSubscriptionId: subscriptions.stripeSubscriptionId
-    })
-    .from(clubs)
-    .leftJoin(subscriptions, eq(subscriptions.clubId, clubs.id))
-    .where(eq(clubs.slug, slug))
-    .limit(1);
-  return row ?? null;
-}
+import {
+  getClubWithSubscriptionBySlug,
+  setSubscriptionTrialEnd
+} from "@/lib/db/queries/club-admin";
 
 function eur(cents: number): string {
   return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
@@ -40,7 +26,7 @@ export async function extendTrialAction(input: { clubSlug: string; days: number 
   if (!isStripeConfigured()) return { ok: false as const, error: "Stripe ist nicht konfiguriert." };
   const { user: admin } = await assertPlatformAdmin();
 
-  const club = await loadClubWithSub(parsed.data.clubSlug);
+  const club = await getClubWithSubscriptionBySlug(parsed.data.clubSlug);
   if (!club) return { ok: false as const, error: "Verein nicht gefunden" };
   if (!club.stripeSubscriptionId) {
     return { ok: false as const, error: "Kein Stripe-Abo für diesen Verein." };
@@ -55,10 +41,7 @@ export async function extendTrialAction(input: { clubSlug: string; days: number 
   }
 
   // Optimistisch lokal spiegeln; der Webhook (subscription.updated) bestätigt.
-  await db
-    .update(subscriptions)
-    .set({ trialEndsAt: trialEnd, status: "trialing", updatedAt: new Date() })
-    .where(eq(subscriptions.clubId, club.clubId));
+  await setSubscriptionTrialEnd(club.clubId, trialEnd);
 
   await recordOperatorAction({
     operatorUserId: admin.id,
@@ -79,7 +62,7 @@ export async function refundLatestAction(input: { clubSlug: string }) {
   if (!isStripeConfigured()) return { ok: false as const, error: "Stripe ist nicht konfiguriert." };
   const { user: admin } = await assertPlatformAdmin();
 
-  const club = await loadClubWithSub(parsed.data.clubSlug);
+  const club = await getClubWithSubscriptionBySlug(parsed.data.clubSlug);
   if (!club) return { ok: false as const, error: "Verein nicht gefunden" };
   if (!club.stripeSubscriptionId) {
     return { ok: false as const, error: "Kein Stripe-Abo für diesen Verein." };

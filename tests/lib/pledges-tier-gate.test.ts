@@ -17,9 +17,12 @@ const {
   assertCanAddSponsorMock,
   getActiveSeasonMock,
   assertWagerWindowOpenMock,
-  dbSelectFn,
-  dbInsertFn,
-  dbTransactionFn
+  findSponsorMock,
+  createSponsorProfileMock,
+  getClubIdForTeamMock,
+  createPledgeWithRulesMock,
+  isClubMemberMock,
+  getTeamMembershipRoleMock
 } = vi.hoisted(() => ({
   requireUserMock: vi.fn(),
   findInvitationMock: vi.fn(),
@@ -30,9 +33,12 @@ const {
   assertCanAddSponsorMock: vi.fn(),
   getActiveSeasonMock: vi.fn(),
   assertWagerWindowOpenMock: vi.fn(),
-  dbSelectFn: vi.fn(),
-  dbInsertFn: vi.fn(),
-  dbTransactionFn: vi.fn()
+  findSponsorMock: vi.fn(),
+  createSponsorProfileMock: vi.fn(),
+  getClubIdForTeamMock: vi.fn(),
+  createPledgeWithRulesMock: vi.fn(),
+  isClubMemberMock: vi.fn(),
+  getTeamMembershipRoleMock: vi.fn()
 }));
 
 vi.mock("@/lib/auth/session", () => ({
@@ -40,7 +46,8 @@ vi.mock("@/lib/auth/session", () => ({
 }));
 
 vi.mock("@/lib/validations/pledge", () => ({
-  pledgeInputSchema: { parse: (v: unknown) => v }
+  pledgeInputSchema: { parse: (v: unknown) => v },
+  normalizeTriggerParams: (p: unknown) => p ?? {}
 }));
 
 vi.mock("@/lib/db/queries/invitations", () => ({
@@ -71,7 +78,19 @@ vi.mock("@/lib/billing/plan-features", () => ({
 
 vi.mock("@/lib/db/queries/pledges", () => ({
   getTeamLicensePlan: getTeamLicensePlanMock,
-  countPledgeRulesForSponsorOnTeam: countPledgeRulesMock
+  countPledgeRulesForSponsorOnTeam: countPledgeRulesMock,
+  getClubIdForTeam: getClubIdForTeamMock,
+  createPledgeWithRules: createPledgeWithRulesMock
+}));
+
+vi.mock("@/lib/db/queries/sponsor-dashboard", () => ({
+  findSponsorForUser: findSponsorMock,
+  createSponsorProfile: createSponsorProfileMock
+}));
+
+vi.mock("@/lib/db/queries/membership-requests", () => ({
+  isClubMember: isClubMemberMock,
+  getTeamMembershipRole: getTeamMembershipRoleMock
 }));
 
 vi.mock("@/lib/billing/wager-window", () => ({
@@ -89,36 +108,15 @@ vi.mock("@/lib/db/schema/pledges", () => ({
   isSeasonTrigger: (t: string) => t.startsWith("season_")
 }));
 
-vi.mock("@/lib/db/client", () => ({
-  db: {
-    select: () => ({
-      from: (table: { __t?: string } = {}) => ({
-        where: () => ({
-          limit: () => (table && table.__t === "membership" ? [] : dbSelectFn())
-        })
-      })
-    }),
-    insert: () => ({
-      values: () => ({
-        returning: () => dbInsertFn(),
-        onConflictDoNothing: () => dbInsertFn()
-      })
-    }),
-    transaction: (fn: (tx: unknown) => unknown) => dbTransactionFn(fn)
-  }
-}));
+// createPledge greift seit dem Query-Layer-Refactor (Batch 5c) NICHT mehr direkt
+// auf den db-Client zu — alle Zugriffe laufen über die gemockten Query-Funktionen.
+// Der Stub verhindert nur, dass transitive Imports eine echte DB-Verbindung öffnen.
+vi.mock("@/lib/db/client", () => ({ db: {} }));
 
-vi.mock("@/lib/db/schema", () => ({
-  pledges: {},
-  pledgeRules: {},
-  sponsors: { id: "id-col", userId: "user-col" },
-  teams: { id: "id-col", clubId: "club-col" },
-  users: { id: "id-col", email: "email-col" },
-  // __t-Marker: der db-Mock liefert für Membership-Lookups (L6 Self-Dealing-Check)
-  // bewusst [] zurück, damit die Tier-Gate-Tests nicht fälschlich am Self-Dealing
-  // hängenbleiben.
-  clubMemberships: { __t: "membership", userId: "user-col", clubId: "club-col" },
-  teamMemberships: { __t: "membership", userId: "user-col", teamId: "team-col" }
+// sponsor-label transitiv mocken, damit nicht das reale DB-Schema geladen wird
+// (deriveSponsorDisplayName wird beim Lazy-Sponsor-Create gebraucht).
+vi.mock("@/lib/db/queries/sponsor-label", () => ({
+  deriveSponsorDisplayName: () => "Test-Sponsor"
 }));
 
 import { createPledge } from "@/app/(sponsor)/sponsor/pledge/new/_actions/create-pledge";
@@ -154,14 +152,14 @@ beforeEach(() => {
     endsAt: new Date("2026-05-31T23:59:59Z")
   });
   assertWagerWindowOpenMock.mockReturnValue(undefined);
-  // First select call: sponsor lookup → not found, lazy create.
-  // Second select call: team lookup → return clubId.
-  // We use a sequence:
-  dbSelectFn
-    .mockResolvedValueOnce([{ id: "sp-1" }]) // sponsor lookup
-    .mockResolvedValueOnce([{ clubId: "club-1" }]); // team lookup
-  dbInsertFn.mockResolvedValue([{ id: "pledge-1" }]);
-  dbTransactionFn.mockImplementation(async () => ({ pledgeId: "pledge-1" }));
+  // Sponsor existiert → kein Lazy-Create. Team-Lookup liefert clubId.
+  findSponsorMock.mockResolvedValue({ id: "sp-1" });
+  createSponsorProfileMock.mockResolvedValue({ id: "sp-1" });
+  getClubIdForTeamMock.mockResolvedValue("club-1");
+  // Self-Dealing-Check (L6): User ist weder Club- noch Team-Mitglied.
+  isClubMemberMock.mockResolvedValue(false);
+  getTeamMembershipRoleMock.mockResolvedValue(null);
+  createPledgeWithRulesMock.mockResolvedValue({ pledgeId: "pledge-1" });
   markInvitationUsedMock.mockResolvedValue(undefined);
 });
 

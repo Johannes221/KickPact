@@ -6,6 +6,16 @@ export const DELETED_EMAIL_DOMAIN = "kickpact.invalid";
 export const DELETED_NAME = "Gelöschter Nutzer";
 export const DELETED_SPONSOR_DISPLAY = "Gelöschter Sponsor";
 
+/** Eckdaten eines Users für die Admin-User-Actions (oder null). */
+export async function getUserForAdmin(userId: string) {
+  const [row] = await db
+    .select({ id: users.id, email: users.email, isPlatformAdmin: users.isPlatformAdmin })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return row ?? null;
+}
+
 /**
  * DSGVO Art. 17 — Account anonymisieren. Geteilt zwischen dem
  * anonymize-accounts-Cron (14-Tage-Cooldown) und der sofortigen

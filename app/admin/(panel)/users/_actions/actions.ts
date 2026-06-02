@@ -1,14 +1,12 @@
 "use server";
 
 import { z } from "zod";
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { assertPlatformAdmin } from "@/lib/auth/admin";
 import { auth } from "@/lib/auth/server";
-import { db } from "@/lib/db/client";
-import { users } from "@/lib/db/schema";
 import {
+  getUserForAdmin,
   updateUserProfile,
   setUserDeletionRequested,
   anonymizeUserAccount,
@@ -16,15 +14,6 @@ import {
   removeClubMembership
 } from "@/lib/db/queries/user-admin";
 import { recordOperatorAction } from "@/lib/db/queries/operator-audit";
-
-async function loadUser(userId: string) {
-  const [row] = await db
-    .select({ id: users.id, email: users.email, isPlatformAdmin: users.isPlatformAdmin })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
-  return row ?? null;
-}
 
 const profileSchema = z.object({
   userId: z.string().min(1),
@@ -41,7 +30,7 @@ export async function updateUserProfileAction(input: {
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
   const { user: admin } = await assertPlatformAdmin();
 
-  const before = await loadUser(parsed.data.userId);
+  const before = await getUserForAdmin(parsed.data.userId);
   if (!before) return { ok: false as const, error: "User nicht gefunden" };
 
   const res = await updateUserProfile(parsed.data);
@@ -69,7 +58,7 @@ export async function resendMagicLinkAction(input: { userId: string }) {
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
   const { user: admin } = await assertPlatformAdmin();
 
-  const target = await loadUser(parsed.data.userId);
+  const target = await getUserForAdmin(parsed.data.userId);
   if (!target) return { ok: false as const, error: "User nicht gefunden" };
   if (target.isPlatformAdmin) {
     return { ok: false as const, error: "Operator-Accounts nutzen Passwort-Login, keinen Magic-Link." };
@@ -100,7 +89,7 @@ export async function setUserDeletionAction(input: { userId: string; requested: 
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
   const { user: admin } = await assertPlatformAdmin();
 
-  const target = await loadUser(parsed.data.userId);
+  const target = await getUserForAdmin(parsed.data.userId);
   if (!target) return { ok: false as const, error: "User nicht gefunden" };
 
   await setUserDeletionRequested({ userId: parsed.data.userId, requested: parsed.data.requested });
@@ -124,7 +113,7 @@ export async function anonymizeUserNowAction(input: { userId: string }) {
   if (!parsed.success) return { ok: false as const, error: "Ungültige Eingabe" };
   const { user: admin } = await assertPlatformAdmin();
 
-  const target = await loadUser(parsed.data.userId);
+  const target = await getUserForAdmin(parsed.data.userId);
   if (!target) return { ok: false as const, error: "User nicht gefunden" };
   if (target.id === admin.id) {
     return { ok: false as const, error: "Du kannst deinen eigenen Operator-Account nicht anonymisieren." };

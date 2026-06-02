@@ -1,12 +1,9 @@
 "use server";
 
 import { z } from "zod";
-import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
 import { assertClubAccess } from "@/lib/auth/scope";
-import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
 import {
   changeClubMembershipRole,
   changeTeamMembershipRole,
@@ -14,6 +11,7 @@ import {
   revokeClubMembership,
   revokeTeamMembership
 } from "@/lib/db/queries/membership-requests";
+import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
 
 const LAST_ADMIN_ERROR =
   "Du bist der letzte Admin — demoten nicht möglich. Befördere zuerst eine andere Person.";
@@ -60,12 +58,7 @@ export type RevokeInput = z.infer<typeof revokeSchema>;
  * of club A from touching memberships of club B by passing a foreign teamId.
  */
 async function assertTeamBelongsToClub(teamId: string, clubId: string): Promise<boolean> {
-  const [team] = await db
-    .select({ id: teams.id })
-    .from(teams)
-    .where(and(eq(teams.id, teamId), eq(teams.clubId, clubId)))
-    .limit(1);
-  return Boolean(team);
+  return Boolean(await getTeamInClub(teamId, clubId));
 }
 
 export async function changeRoleAction(input: ChangeRoleInput) {

@@ -1,17 +1,15 @@
 "use server";
 
 import { z } from "zod";
-import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
 import { assertClubAccess } from "@/lib/auth/scope";
-import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
 import {
   createTeamMemberInvitation,
   revokeTeamMemberInvitation,
   refreshTeamMemberInvitation
 } from "@/lib/db/queries/invitations";
+import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
 
 const inviteSchema = z.object({
   clubSlug: z.string().min(1),
@@ -47,11 +45,7 @@ export async function inviteTeamMemberAction(
 
   let teamIdForInvite: string | undefined;
   if (parsed.data.teamId) {
-    const [team] = await db
-      .select({ id: teams.id })
-      .from(teams)
-      .where(and(eq(teams.id, parsed.data.teamId), eq(teams.clubId, club.id)))
-      .limit(1);
+    const team = await getTeamInClub(parsed.data.teamId, club.id);
     if (!team) {
       return { ok: false, error: "Mannschaft nicht gefunden oder nicht zu diesem Verein gehörend." };
     }
