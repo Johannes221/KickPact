@@ -1,11 +1,6 @@
-import { eq, and, desc, sum, sql } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { teams, users } from "@/lib/db/schema";
-import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
-import { sponsors } from "@/lib/db/schema/sponsors";
-import { charges } from "@/lib/db/schema/charges";
-import { sponsorLabelSql } from "@/lib/db/queries/sponsor-label";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
+import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
+import { listTeamPactRuleRows } from "@/lib/db/queries/team-finances";
 import { getTriggerLabel } from "@/lib/billing/trigger-labels";
 import { categorize } from "@/lib/billing/trigger-categories";
 import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
@@ -39,36 +34,14 @@ export default async function PactsPage({
   const kind: FilterKind = (sp.kind as FilterKind) ?? "all";
 
   const { club } = await assertTeamPageAccess(slug, teamId, "viewer");
-  const [team] = await db
-    .select({ id: teams.id })
-    .from(teams)
-    .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
-    .limit(1);
+  const team = await getTeamInClub(teamId, club.id);
 
   if (!team) {
     return <div className="text-sm text-brand-alert-red">Mannschaft nicht gefunden.</div>;
   }
 
   // Rules + Pledge-Status + Sponsor + Σ confirmed Charges pro Rule
-  const rows = await db
-    .select({
-      pledgeId: pledges.id,
-      ruleId: pledgeRules.id,
-      pledgeStatus: pledges.status,
-      triggerType: pledgeRules.triggerType,
-      triggerParams: pledgeRules.triggerParamsJson,
-      amountCents: pledgeRules.amountCents,
-      perMatchCapCents: pledgeRules.perMatchCapCents,
-      monthlyCapCents: pledges.monthlyCapCents,
-      sponsorDisplayName: sponsorLabelSql,
-      chargedSum: sql<number>`COALESCE((SELECT SUM(amount_cents) FROM ${charges} c WHERE c.pledge_rule_id = ${pledgeRules.id} AND c.status = 'confirmed'), 0)`
-    })
-    .from(pledgeRules)
-    .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
-    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
-    .leftJoin(users, eq(sponsors.userId, users.id))
-    .where(eq(pledges.teamId, team.id))
-    .orderBy(desc(pledgeRules.amountCents));
+  const rows = await listTeamPactRuleRows(team.id);
 
   // Server-side filter
   const filtered = rows.filter((r) => {

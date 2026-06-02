@@ -1,11 +1,6 @@
-import { eq, and, gte, inArray } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { teams, matches as matchesTable, users } from "@/lib/db/schema";
-import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
-import { charges } from "@/lib/db/schema/charges";
-import { sponsors } from "@/lib/db/schema/sponsors";
-import { sponsorLabelSql } from "@/lib/db/queries/sponsor-label";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
+import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
+import { getTeamConfirmedChargeRuleSums } from "@/lib/db/queries/team-finances";
 import { getTriggerLabel } from "@/lib/billing/trigger-labels";
 import {
   categorize,
@@ -27,31 +22,12 @@ export default async function FinanzenPage({
 }) {
   const { slug, teamId } = await params;
   const { club } = await assertTeamPageAccess(slug, teamId, "viewer");
-  const [team] = await db
-    .select({ id: teams.id })
-    .from(teams)
-    .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
-    .limit(1);
+  const team = await getTeamInClub(teamId, club.id);
 
   if (!team) return <div className="text-sm text-brand-alert-red">Mannschaft nicht gefunden.</div>;
 
   // Alle confirmed Charges für dieses Team, mit Match-Datum für Trend
-  const ruleSums = await db
-    .select({
-      triggerType: pledgeRules.triggerType,
-      triggerParams: pledgeRules.triggerParamsJson,
-      amountCents: charges.amountCents,
-      sponsorDisplayName: sponsorLabelSql,
-      matchDate: matchesTable.datum,
-      confirmedAt: charges.confirmedAt
-    })
-    .from(charges)
-    .innerJoin(pledgeRules, eq(charges.pledgeRuleId, pledgeRules.id))
-    .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
-    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
-    .leftJoin(users, eq(sponsors.userId, users.id))
-    .leftJoin(matchesTable, eq(charges.matchId, matchesTable.id))
-    .where(and(eq(pledges.teamId, team.id), eq(charges.status, "confirmed")));
+  const ruleSums = await getTeamConfirmedChargeRuleSums(team.id);
 
   const totalCents = ruleSums.reduce((acc, r) => acc + r.amountCents, 0);
   const totalCount = ruleSums.length;
