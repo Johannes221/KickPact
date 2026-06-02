@@ -234,7 +234,7 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
             asChild
             className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
           >
-            <Link href="/signup">
+            <Link href="/signup?add=1">
               <Plus className="mr-2 h-4 w-4" aria-hidden />
               Neue Rolle hinzufügen
             </Link>

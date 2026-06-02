@@ -70,10 +70,15 @@ const ADD_ROLE_HREF: Record<SignupRole, string> = {
 export default async function SignupPage({
   searchParams
 }: {
-  searchParams: Promise<{ role?: string; from?: string }>;
+  searchParams: Promise<{ role?: string; from?: string; add?: string }>;
 }) {
-  const { role: roleParam, from: fromParam } = await searchParams;
+  const { role: roleParam, from: fromParam, add: addParam } = await searchParams;
   const role = isSignupRole(roleParam) ? roleParam : null;
+  // `add=1` kommt vom „Neue Rolle hinzufügen"-Menüpunkt: der User WILL bewusst
+  // eine weitere Rolle/Mannschaft anlegen. Ohne dieses Flag würde ein User mit
+  // bestehender Identity sofort aufs Dashboard zurück-redirected (→ „nichts
+  // passiert"). Mit dem Flag zeigen wir immer den Rollen-Chooser.
+  const wantsAddRole = addParam === "1";
   // `from=chooser` markiert: User kam vom 3-Wege-Chooser auf dieser Seite. Nur
   // dann zeigen wir den „← Andere Rolle wählen"-Back-Link. Bei direktem Deep-
   // Link (z.B. "Mannschaft anlegen"-CTA von Landing) hat der User die Rolle
@@ -97,15 +102,23 @@ export default async function SignupPage({
     if (draft) redirect("/onboarding");
 
     const identities = await getUserIdentities(session.user.id);
-    const destination = pickAuthenticatedSignupDestination(identities, role);
-    if (destination !== "/signup") {
-      redirect(destination);
+    // „Neue Rolle hinzufügen" (add=1) → IMMER den Chooser zeigen, auch mit
+    // bestehenden Identities. Sonst greift der Smart-Dispatch und wirft den
+    // User zurück aufs Dashboard.
+    if (!wantsAddRole) {
+      const destination = pickAuthenticatedSignupDestination(identities, role);
+      if (destination !== "/signup") {
+        redirect(destination);
+      }
     }
-    // `/signup` als Destination: User hat 0 Identities (Account erstellt
-    // aber Onboarding nie abgeschlossen) UND keine Rolle explizit angefragt.
-    // Wir zeigen den 3-Wege-Chooser, aber die Tiles springen direkt in den
-    // Wizard (kein erneutes Magic-Link/OAuth-Theater).
-    return <AuthenticatedRoleChooser />;
+    // Chooser: entweder 0-Identity-Erstwahl ODER bewusstes „Rolle hinzufügen".
+    // Die Tiles springen direkt in den jeweiligen Onboarding-Wizard (eine
+    // weitere Mannschaft = eigener Container, siehe Identity-Logik).
+    const total =
+      identities.clubs.length +
+      identities.teamOnly.length +
+      (identities.sponsor ? 1 : 0);
+    return <AuthenticatedRoleChooser addMode={wantsAddRole && total > 0} />;
   }
 
   const oauthEnabled = {
@@ -235,19 +248,20 @@ export default async function SignupPage({
  * 3 Rollen-Tiles, aber die Links springen direkt in den jeweiligen
  * Onboarding-Wizard — kein erneutes Magic-Link/OAuth-Theater.
  */
-function AuthenticatedRoleChooser() {
+function AuthenticatedRoleChooser({ addMode = false }: { addMode?: boolean }) {
   return (
     <main className="mx-auto max-w-4xl px-5 md:px-6 py-12 md:py-16">
       <div className="mb-8 md:mb-10 text-center">
         <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.65rem] md:text-xs font-bold uppercase tracking-[0.15em] text-accent-dark">
-          Account vorhanden
+          {addMode ? "Weitere Rolle" : "Account vorhanden"}
         </span>
         <h1 className="mt-3 font-display font-black text-3xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
-          Wie willst du starten?
+          {addMode ? "Was willst du hinzufügen?" : "Wie willst du starten?"}
         </h1>
         <p className="mt-2 md:mt-3 text-sm md:text-base text-brand-night-navy/60 max-w-xl mx-auto">
-          Du bist eingeloggt, hast aber noch keine Rolle gewählt. Wähle eine — du
-          kannst später jederzeit eine weitere hinzufügen.
+          {addMode
+            ? "Lege eine weitere Mannschaft, einen Verein oder eine Sponsor-Rolle an. Du wechselst danach jederzeit über das Rollen-Menü."
+            : "Du bist eingeloggt, hast aber noch keine Rolle gewählt. Wähle eine — du kannst später jederzeit eine weitere hinzufügen."}
         </p>
       </div>
 

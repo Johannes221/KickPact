@@ -219,7 +219,7 @@ export function MobileNav({ onHero = false }: { onHero?: boolean }) {
                   <li>
                     <SheetClose asChild>
                       <Link
-                        href="/signup"
+                        href="/signup?add=1"
                         className="flex min-h-12 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-brand-night-navy hover:bg-brand-off-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                       >
                         <Plus className="h-4 w-4 text-brand-night-navy/50" aria-hidden />

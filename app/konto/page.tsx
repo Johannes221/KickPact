@@ -234,7 +234,7 @@ export default async function KontoPage() {
         </ul>
 
         <Link
-          href="/signup"
+          href="/signup?add=1"
           className="inline-flex items-center gap-1 text-sm font-semibold text-accent underline"
         >
           + Neue Rolle hinzufügen

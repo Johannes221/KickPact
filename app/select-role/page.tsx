@@ -153,7 +153,7 @@ export default async function SelectRolePage() {
         )}
 
         <Link
-          href="/signup"
+          href="/signup?add=1"
           className="group flex items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-brand-neutral/60 bg-transparent p-5 text-sm font-semibold text-brand-night-navy/60 transition-all hover:border-accent hover:text-accent hover:bg-accent/5"
         >
           <span className="text-2xl">+</span>
