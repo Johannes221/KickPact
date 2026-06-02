@@ -15,7 +15,7 @@
  * nicht gelöscht.
  */
 
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import {
@@ -23,15 +23,13 @@ import {
   sponsors,
   pledges,
   pledgeRules,
-  charges,
   invoices,
-  invoiceItems,
   clubMemberships,
   teamMemberships,
-  eventApprovals,
-  sponsorInvitations,
   sponsorInquiries,
-  sessions
+  supportTickets,
+  clubVerifications,
+  teamVerifications
 } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
@@ -47,11 +45,15 @@ export async function requestDataExport(): Promise<{ ok: boolean; error?: string
     const sponsorRows = await db.select().from(sponsors).where(eq(sponsors.userId, user.id));
     const sponsorIds = sponsorRows.map((s) => s.id);
 
+    // SECURITY/DSGVO (M6): ALLE Sponsor-Profile berücksichtigen (vorher nur
+    // sponsorIds[0] → unvollständiger Export bei Mehrfach-Profilen, Verstoß
+    // gegen Art. 15/20 Vollständigkeit).
     const pledgeRows = sponsorIds.length
-      ? await db
-          .select()
-          .from(pledges)
-          .where(eq(pledges.sponsorId, sponsorIds[0])) // simplifizierung: erstes Sponsor-Profil
+      ? await db.select().from(pledges).where(inArray(pledges.sponsorId, sponsorIds))
+      : [];
+    const pledgeIds = pledgeRows.map((p) => p.id);
+    const pledgeRuleRows = pledgeIds.length
+      ? await db.select().from(pledgeRules).where(inArray(pledgeRules.pledgeId, pledgeIds))
       : [];
 
     const clubMembershipRows = await db
@@ -64,8 +66,26 @@ export async function requestDataExport(): Promise<{ ok: boolean; error?: string
       .where(eq(teamMemberships.userId, user.id));
 
     const invoiceRows = sponsorIds.length
-      ? await db.select().from(invoices).where(eq(invoices.sponsorId, sponsorIds[0]))
+      ? await db.select().from(invoices).where(inArray(invoices.sponsorId, sponsorIds))
       : [];
+
+    // M6: bisher fehlende PII-tragende Tabellen ergänzen.
+    const supportTicketRows = await db
+      .select()
+      .from(supportTickets)
+      .where(eq(supportTickets.userId, user.id));
+    const sponsorInquiryRows = await db
+      .select()
+      .from(sponsorInquiries)
+      .where(eq(sponsorInquiries.sponsorUserId, user.id));
+    const clubVerificationRows = await db
+      .select()
+      .from(clubVerifications)
+      .where(eq(clubVerifications.submittedByUserId, user.id));
+    const teamVerificationRows = await db
+      .select()
+      .from(teamVerifications)
+      .where(eq(teamVerifications.submittedByUserId, user.id));
 
     const exportData = {
       generatedAt: new Date().toISOString(),
@@ -73,9 +93,14 @@ export async function requestDataExport(): Promise<{ ok: boolean; error?: string
       user: userRow,
       sponsorProfiles: sponsorRows,
       pledges: pledgeRows,
+      pledgeRules: pledgeRuleRows,
       clubMemberships: clubMembershipRows,
       teamMemberships: teamMembershipRows,
       invoices: invoiceRows,
+      supportTickets: supportTicketRows,
+      sponsorInquiries: sponsorInquiryRows,
+      clubVerifications: clubVerificationRows,
+      teamVerifications: teamVerificationRows,
       info:
         "Diese Datei enthält alle personenbezogenen Daten, die KickPact zu deinem Account speichert. " +
         "Format: JSON. Für DSGVO Art. 20 Datenübertragbarkeit. Bei Fragen: hello@kickpact.com."

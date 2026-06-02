@@ -28,11 +28,21 @@ async function isClubMemberOf(clubId: string, userId: string): Promise<boolean> 
   return Boolean(m);
 }
 
+// SECURITY (M2): Die fussball.de-Identifier werden serverseitig in Fetch-URL-
+// Pfade des Crawlers interpoliert (lib/crawler/fussballde.ts). Ohne Charset-
+// Constraint könnte ein präpariertes teamId/teamSlug/saison (z.B. mit `../`,
+// `?`, `#`, `@`) den gefetchten Pfad manipulieren / beliebige fussball.de-
+// Endpunkte vom Server aus abfragen (constrained SSRF). Host ist fix, daher
+// begrenzt — wir constrainen trotzdem auf das bekannte Format. Defense-in-depth
+// folgt via encodeURIComponent in den URL-Buildern.
 const teamSchema = z.object({
-  teamId: z.string(),
-  teamSlug: z.string(),
-  teamName: z.string(),
-  saison: z.string()
+  teamId: z.string().regex(/^[A-Za-z0-9]+$/, "Ungültige Team-ID").max(64),
+  teamSlug: z
+    .string()
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._~-]*$/, "Ungültiger Team-Slug")
+    .max(200),
+  teamName: z.string().min(1).max(200),
+  saison: z.string().regex(/^[0-9]{2,4}([/-][0-9]{2,4})?$/, "Ungültige Saison")
 });
 
 const createDraftSchema = z.discriminatedUnion("role", [

@@ -17,8 +17,21 @@ vi.mock("heic-convert", () => ({ default: convertMock }));
 
 import {
   normalizeImageUpload,
+  sniffImageFormat,
   MAX_IMAGE_BYTES
 } from "@/lib/storage/images";
+
+// Gültige Datei-Signaturen (Magic-Bytes) + Padding, damit der L3-Content-Sniff
+// greift. Die Tests prüfen die Verzweigungslogik, nicht echte Bilddekodierung.
+const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const JPEG_MAGIC = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
+const HEIC_MAGIC = Buffer.concat([
+  Buffer.from([0x00, 0x00, 0x00, 0x18]),
+  Buffer.from("ftypheic", "ascii")
+]);
+const fakePng = (suffix = "padding") => Buffer.concat([PNG_MAGIC, Buffer.from(suffix)]);
+const fakeJpeg = (suffix = "padding") => Buffer.concat([JPEG_MAGIC, Buffer.from(suffix)]);
+const fakeHeic = (suffix = "padding") => Buffer.concat([HEIC_MAGIC, Buffer.from(suffix)]);
 
 describe("normalizeImageUpload", () => {
   beforeEach(() => {
@@ -26,7 +39,7 @@ describe("normalizeImageUpload", () => {
   });
 
   it("lässt PNG unverändert durch", async () => {
-    const bytes = Buffer.from("fake-png");
+    const bytes = fakePng();
     const out = await normalizeImageUpload({
       bytes,
       contentType: "image/png",
@@ -39,7 +52,7 @@ describe("normalizeImageUpload", () => {
   });
 
   it("normalisiert image/jpg auf image/jpeg (.jpg) ohne Konvertierung", async () => {
-    const bytes = Buffer.from("fake-jpeg");
+    const bytes = fakeJpeg();
     const out = await normalizeImageUpload({
       bytes,
       contentType: "image/jpg",
@@ -54,7 +67,7 @@ describe("normalizeImageUpload", () => {
     const jpegOut = new Uint8Array([1, 2, 3, 4]).buffer;
     convertMock.mockResolvedValue(jpegOut);
     const out = await normalizeImageUpload({
-      bytes: Buffer.from("fake-heic"),
+      bytes: fakeHeic(),
       contentType: "image/heic",
       filename: "IMG_0001.HEIC"
     });
@@ -70,7 +83,7 @@ describe("normalizeImageUpload", () => {
     const jpegOut = new Uint8Array([9, 9]).buffer;
     convertMock.mockResolvedValue(jpegOut);
     const out = await normalizeImageUpload({
-      bytes: Buffer.from("fake-heic"),
+      bytes: fakeHeic(),
       contentType: "",
       filename: "IMG_0002.heif"
     });
@@ -89,6 +102,17 @@ describe("normalizeImageUpload", () => {
     expect(convertMock).not.toHaveBeenCalled();
   });
 
+  it("lehnt Bytes ab, die trotz .png-Endung kein gültiges Bild sind (L3)", async () => {
+    await expect(
+      normalizeImageUpload({
+        bytes: Buffer.from("<svg onload=alert(1)>"),
+        contentType: "image/png",
+        filename: "xss.png"
+      })
+    ).rejects.toThrow(/kein gültiges Bild/i);
+    expect(convertMock).not.toHaveBeenCalled();
+  });
+
   it("lehnt zu große Dateien ab, bevor konvertiert wird", async () => {
     const tooBig = Buffer.alloc(MAX_IMAGE_BYTES + 1);
     await expect(
@@ -99,5 +123,27 @@ describe("normalizeImageUpload", () => {
       })
     ).rejects.toThrow(/groß|MB/i);
     expect(convertMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("sniffImageFormat (L3)", () => {
+  it("erkennt PNG/JPEG/WebP/HEIC an der Signatur", () => {
+    expect(sniffImageFormat(fakePng())).toBe("png");
+    expect(sniffImageFormat(fakeJpeg())).toBe("jpeg");
+    expect(
+      sniffImageFormat(
+        Buffer.concat([
+          Buffer.from("RIFF"),
+          Buffer.from([0, 0, 0, 0]),
+          Buffer.from("WEBP")
+        ])
+      )
+    ).toBe("webp");
+    expect(sniffImageFormat(fakeHeic())).toBe("heic");
+  });
+
+  it("gibt null für Nicht-Bilder und zu kurze Buffer zurück", () => {
+    expect(sniffImageFormat(Buffer.from("%PDF-1.7 not an image"))).toBeNull();
+    expect(sniffImageFormat(Buffer.from("ab"))).toBeNull();
   });
 });

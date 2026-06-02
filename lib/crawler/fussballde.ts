@@ -599,8 +599,10 @@ async function paginateTeamGames(
   saison?: string
 ): Promise<void> {
   for (let idx = 0; idx < MAX_PAGES; idx++) {
-    const base = `https://www.fussball.de/ajax.team.${kind}.games/-/mode/PAGE/team-id/${teamId}`;
-    const saisonSeg = saison ? `/saison/${saison}` : "";
+    // SECURITY (M2): URL-Segmente encodieren — Defense-in-depth gegen
+    // path-manipulierende Werte (Validierung im Onboarding ist die erste Linie).
+    const base = `https://www.fussball.de/ajax.team.${kind}.games/-/mode/PAGE/team-id/${encodeURIComponent(teamId)}`;
+    const saisonSeg = saison ? `/saison/${encodeURIComponent(saison)}` : "";
     const indexSeg = idx === 0 ? "" : `/index/${idx}`;
     const ajaxUrl = `${base}${saisonSeg}${indexSeg}`;
     try {
@@ -869,7 +871,8 @@ export async function getKader(
   saison: string
 ): Promise<KaderPlayer[]> {
   return withPage(async (page) => {
-    const url = `https://www.fussball.de/mannschaft/${slug}/-/saison/${saison}/team-id/${teamId}#!/`;
+    // SECURITY (M2): URL-Segmente encodieren (Defense-in-depth, s. paginateTeamGames).
+    const url = `https://www.fussball.de/mannschaft/${encodeURIComponent(slug)}/-/saison/${encodeURIComponent(saison)}/team-id/${encodeURIComponent(teamId)}#!/`;
     await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
     await assertNotCaptcha(page);
     await page.waitForTimeout(2000);

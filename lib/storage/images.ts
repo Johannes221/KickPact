@@ -74,6 +74,45 @@ function resolveInputMime(contentType: string, filename: string): string | null 
 }
 
 /**
+ * SECURITY (L3): Content-Sniffing über Magic-Bytes. Der gemeldete MIME-Type /
+ * die Dateiendung sind angreifer-kontrolliert — ein Angreifer könnte beliebige
+ * Bytes als `foo.png` deklarieren. Wir prüfen die echte Datei-Signatur und
+ * akzeptieren nur die unterstützten Bildformate. Verhindert das Ablegen von
+ * Müll-/Polyglot-Dateien (Stored-XSS ist bereits durch den erzwungenen
+ * Content-Type beim Ausliefern gemildert, dies ist Defense-in-depth).
+ */
+export function sniffImageFormat(
+  bytes: Buffer
+): "png" | "jpeg" | "webp" | "heic" | null {
+  if (bytes.length < 12) return null;
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (
+    bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e &&
+    bytes[3] === 0x47 && bytes[4] === 0x0d && bytes[5] === 0x0a &&
+    bytes[6] === 0x1a && bytes[7] === 0x0a
+  ) {
+    return "png";
+  }
+  // JPEG: FF D8 FF
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "jpeg";
+  // WebP: "RIFF"...."WEBP"
+  if (
+    bytes.toString("ascii", 0, 4) === "RIFF" &&
+    bytes.toString("ascii", 8, 12) === "WEBP"
+  ) {
+    return "webp";
+  }
+  // HEIC/HEIF: ISO-BMFF "ftyp" box at offset 4, brand at offset 8.
+  if (bytes.toString("ascii", 4, 8) === "ftyp") {
+    const brand = bytes.toString("ascii", 8, 12).toLowerCase();
+    if (["heic", "heix", "heif", "mif1", "msf1", "hevc", "hevx"].includes(brand)) {
+      return "heic";
+    }
+  }
+  return null;
+}
+
+/**
  * Validiert + normalisiert einen Bild-Upload. Wirft mit nutzerlesbarer Meldung
  * bei nicht unterstütztem Format oder Überschreitung der Größengrenze.
  */
@@ -89,11 +128,21 @@ export async function normalizeImageUpload(input: {
     );
   }
 
-  // Größe IMMER auf dem Eingangs-Buffer prüfen (vor der teuren Konvertierung).
+  // Größe IMMER auf dem Eingangs-Buffer prüfen (vor der teuren Konvertierung
+  // und vor dem Signatur-Check, damit ein Multi-MB-Müllblob direkt rausfliegt).
   if (input.bytes.byteLength > MAX_IMAGE_BYTES) {
     const mb = (input.bytes.byteLength / 1_000_000).toFixed(1);
     const maxMb = (MAX_IMAGE_BYTES / 1_000_000).toFixed(0);
     throw new Error(`Bild zu groß (${mb} MB) — max. ${maxMb} MB erlaubt.`);
+  }
+
+  // SECURITY (L3): Echte Datei-Signatur prüfen — nicht dem gemeldeten Type
+  // vertrauen. Eine Datei, deren Bytes kein bekanntes Bildformat sind, wird
+  // abgelehnt (auch wenn Endung/MIME „.png" behaupten).
+  if (sniffImageFormat(input.bytes) === null) {
+    throw new Error(
+      "Die Datei ist kein gültiges Bild (PNG, JPEG, WebP oder HEIC/HEIF)."
+    );
   }
 
   if (mime === "image/heic" || mime === "image/heif") {
