@@ -1,6 +1,6 @@
 import { and, eq, sql, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { players, teams } from "@/lib/db/schema";
+import { players, teams, seasonResults } from "@/lib/db/schema";
 import { matchEvents } from "@/lib/db/schema/matches";
 
 export type RosterPlayer = {
@@ -64,11 +64,27 @@ export async function listRosterForTeam(teamId: string): Promise<RosterPlayer[]>
  */
 export async function getTeamInClub(teamId: string, clubId: string) {
   const [team] = await db
-    .select({ id: teams.id, name: teams.name, verifiedAt: teams.verifiedAt })
+    .select({
+      id: teams.id,
+      name: teams.name,
+      verifiedAt: teams.verifiedAt,
+      isActive: teams.isActive,
+      saison: teams.saison
+    })
     .from(teams)
     .where(and(eq(teams.id, teamId), eq(teams.clubId, clubId)))
     .limit(1);
   return team;
+}
+
+/** Manuell gesetztes Saison-Ergebnis einer Mannschaft (oder undefined). */
+export async function getSeasonResultForTeam(teamId: string, saison: string) {
+  const [row] = await db
+    .select()
+    .from(seasonResults)
+    .where(and(eq(seasonResults.teamId, teamId), eq(seasonResults.saison, saison)))
+    .limit(1);
+  return row;
 }
 
 /** Nur der Anzeigename einer Mannschaft (Team-Layout-Header), ungescoped. */

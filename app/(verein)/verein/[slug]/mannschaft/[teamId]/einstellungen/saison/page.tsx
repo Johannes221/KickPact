@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { eq, and } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { teams, seasonResults } from "@/lib/db/schema";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
+import {
+  getTeamInClub,
+  getSeasonResultForTeam
+} from "@/lib/db/queries/team-lifecycle";
 import { SeasonResultForm } from "../../_components/season-result-form";
 
 export const metadata = { title: "Saison-Ergebnis · Einstellungen · KickPact" };
@@ -21,11 +22,7 @@ export default async function TeamEinstellungenSaisonPage({
   const { slug, teamId } = await params;
   const { club } = await assertTeamPageAccess(slug, teamId, "admin");
 
-  const [team] = await db
-    .select({ id: teams.id, name: teams.name, saison: teams.saison })
-    .from(teams)
-    .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
-    .limit(1);
+  const team = await getTeamInClub(teamId, club.id);
 
   if (!team) {
     return (
@@ -35,11 +32,7 @@ export default async function TeamEinstellungenSaisonPage({
     );
   }
 
-  const [seasonResult] = await db
-    .select()
-    .from(seasonResults)
-    .where(and(eq(seasonResults.teamId, team.id), eq(seasonResults.saison, team.saison)))
-    .limit(1);
+  const seasonResult = await getSeasonResultForTeam(team.id, team.saison);
 
   const base = `/verein/${slug}/mannschaft/${teamId}`;
 

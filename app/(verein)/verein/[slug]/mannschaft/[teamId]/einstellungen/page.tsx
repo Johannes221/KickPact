@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { eq, and } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { teams, clubs } from "@/lib/db/schema";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
+import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
+import { getClubById } from "@/lib/db/queries/club-admin";
 import { TeamLifecyclePanel } from "./_components/team-lifecycle-panel";
 import { EinstellungenForm } from "../../../einstellungen/_components/einstellungen-form";
 
@@ -27,16 +26,7 @@ export default async function TeamEinstellungenPage({
   const { slug, teamId } = await params;
   const { club } = await assertTeamPageAccess(slug, teamId, "admin");
 
-  const [team] = await db
-    .select({
-      id: teams.id,
-      name: teams.name,
-      isActive: teams.isActive,
-      saison: teams.saison
-    })
-    .from(teams)
-    .where(and(eq(teams.id, teamId), eq(teams.clubId, club.id)))
-    .limit(1);
+  const team = await getTeamInClub(teamId, club.id);
 
   if (!team) {
     return (
@@ -49,18 +39,7 @@ export default async function TeamEinstellungenPage({
   // Rechnungs-/Zahlungsdaten leben auf der club-Row (eine Billing-Entität pro
   // Club). Bei Mannschafts-Lizenz ist die Mannschaft diese Entität — daher
   // hier im Mannschafts-Kontext editierbar, statt im Vereins-Dashboard.
-  const [clubData] = await db
-    .select({
-      name: clubs.name,
-      ort: clubs.ort,
-      addressJson: clubs.addressJson,
-      isSmallBusiness: clubs.isSmallBusiness,
-      taxId: clubs.taxId,
-      iban: clubs.iban
-    })
-    .from(clubs)
-    .where(eq(clubs.id, club.id))
-    .limit(1);
+  const clubData = await getClubById(club.id);
   const billingAddr = clubData?.addressJson as
     | { street?: string; zip?: string; city?: string }
     | null
