@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { requestTeamCrawlAction } from "@/lib/actions/request-crawl";
+import { PullToRefresh } from "@/components/native/pull-to-refresh";
 
 interface Props {
   slug: string;
@@ -58,7 +59,7 @@ export function SpieleRefresh({ slug, teamId, isCrawling, matchCount }: Props) {
     };
   }, [crawling, teamId, router]);
 
-  async function handleRefresh() {
+  const handleRefresh = useCallback(async () => {
     setCrawling(true);
     const res = await requestTeamCrawlAction({ slug, teamId });
     if (!res.ok) {
@@ -67,10 +68,13 @@ export function SpieleRefresh({ slug, teamId, isCrawling, matchCount }: Props) {
       return;
     }
     toast.success("Aktualisierung gestartet.");
-  }
+  }, [slug, teamId]);
 
   return (
     <div className="space-y-2">
+      {/* Native iOS-Geste: Runterziehen am oberen Rand löst denselben Crawl aus
+          wie der Button. Im Browser rendert die Komponente nichts. */}
+      <PullToRefresh onRefresh={handleRefresh} disabled={crawling} />
       <div className="flex justify-end">
         <Button
           type="button"
