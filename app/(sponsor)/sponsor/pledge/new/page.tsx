@@ -1,10 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
-import { db } from "@/lib/db/client";
-import { teams } from "@/lib/db/schema";
 import { findInvitationByToken } from "@/lib/db/queries/invitations";
+import { getClubIdForTeam } from "@/lib/db/queries/pledges";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { PledgeBuilder } from "./_components/pledge-builder";
 
@@ -25,13 +23,9 @@ export default async function NewPledgePage({
   if (invitationToken) {
     const invitation = await findInvitationByToken(invitationToken);
     if (invitation && invitation.teamId) {
-      const [teamRow] = await db
-        .select({ clubId: teams.clubId })
-        .from(teams)
-        .where(eq(teams.id, invitation.teamId))
-        .limit(1);
-      if (teamRow) {
-        const gate = await getSubscriptionGate(teamRow.clubId);
+      const clubId = await getClubIdForTeam(invitation.teamId);
+      if (clubId) {
+        const gate = await getSubscriptionGate(clubId);
         if (gate.isReadOnly) {
           gateBanner = (
             <div className="rounded-2xl border border-rose-300 bg-rose-50 p-5 md:p-6">

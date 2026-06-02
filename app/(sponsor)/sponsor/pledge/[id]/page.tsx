@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
-import { and, eq, desc } from "drizzle-orm";
 import Link from "next/link";
-import { db } from "@/lib/db/client";
-import { pledges, pledgeRules, sponsors, teams, clubs, charges } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { getTeamPlayerNames } from "@/lib/db/queries/matches";
+import {
+  getPledgeDetailForSponsorView,
+  listActivePledgeRules,
+  listRecentChargesForPledge
+} from "@/lib/db/queries/pledges";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PledgeStatusToggle } from "./_components/pledge-status-toggle";
 import { PledgeCapEditor } from "./_components/pledge-cap-editor";
@@ -24,41 +26,13 @@ export default async function PledgeDetailPage({
   const { id } = await params;
   const user = await requireUser();
 
-  const [pledge] = await db
-    .select({
-      id: pledges.id,
-      status: pledges.status,
-      startsAt: pledges.startsAt,
-      endsAt: pledges.endsAt,
-      monthlyCapCents: pledges.monthlyCapCents,
-      teamId: teams.id,
-      teamName: teams.name,
-      clubName: clubs.name,
-      clubSlug: clubs.slug,
-      sponsorUserId: sponsors.userId
-    })
-    .from(pledges)
-    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
-    .innerJoin(teams, eq(pledges.teamId, teams.id))
-    .innerJoin(clubs, eq(teams.clubId, clubs.id))
-    .where(eq(pledges.id, id))
-    .limit(1);
+  const pledge = await getPledgeDetailForSponsorView(id);
 
   if (!pledge || pledge.sponsorUserId !== user.id) {
     redirect("/sponsor");
   }
 
-  const ruleRows = await db
-    .select({
-      id: pledgeRules.id,
-      triggerType: pledgeRules.triggerType,
-      amountCents: pledgeRules.amountCents,
-      capCents: pledgeRules.capCents,
-      capPeriod: pledgeRules.capPeriod,
-      params: pledgeRules.triggerParamsJson
-    })
-    .from(pledgeRules)
-    .where(and(eq(pledgeRules.pledgeId, id), eq(pledgeRules.active, true)));
+  const ruleRows = await listActivePledgeRules(id);
 
   const editableRules: EditableRule[] = ruleRows.map((r) => ({
     id: r.id,
@@ -72,18 +46,7 @@ export default async function PledgeDetailPage({
   // Spieler-Namen für den „Tore von Spieler X"-Picker (DB-Quelle, kein Invite-Token nötig).
   const playerNames = await getTeamPlayerNames(pledge.teamId);
 
-  const recentCharges = await db
-    .select({
-      id: charges.id,
-      amountCents: charges.amountCents,
-      status: charges.status,
-      createdAt: charges.createdAt,
-      matchId: charges.matchId
-    })
-    .from(charges)
-    .where(eq(charges.pledgeId, id))
-    .orderBy(desc(charges.createdAt))
-    .limit(10);
+  const recentCharges = await listRecentChargesForPledge(id, 10);
 
   const totalConfirmedCents = recentCharges
     .filter((c) => c.status === "confirmed" || c.status === "invoiced")

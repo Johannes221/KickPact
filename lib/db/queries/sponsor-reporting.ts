@@ -391,6 +391,48 @@ export async function listChargesForSponsor(
   return paginate<SponsorChargeRow>(dataQuery, countQuery, opts.pagination);
 }
 
+export interface SponsorChargeFilterOptions {
+  clubOpts: Array<{ id: string; name: string }>;
+  teamOpts: Array<{ id: string; name: string; clubName: string }>;
+  triggerOpts: Array<{ triggerType: string }>;
+}
+
+/**
+ * Distinkte Filter-Optionen (Vereine/Mannschaften/Trigger) für die Charge-
+ * History eines Sponsors — nur Werte, in denen er bereits Charges hatte
+ * (sonst leere Dropdowns).
+ */
+export async function getSponsorChargeFilterOptions(
+  sponsorId: string
+): Promise<SponsorChargeFilterOptions> {
+  const [clubOpts, teamOpts, triggerOpts] = await Promise.all([
+    db
+      .selectDistinct({ id: clubs.id, name: clubs.name })
+      .from(charges)
+      .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+      .innerJoin(teams, eq(pledges.teamId, teams.id))
+      .innerJoin(clubs, eq(teams.clubId, clubs.id))
+      .where(eq(pledges.sponsorId, sponsorId))
+      .orderBy(clubs.name),
+    db
+      .selectDistinct({ id: teams.id, name: teams.name, clubName: clubs.name })
+      .from(charges)
+      .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+      .innerJoin(teams, eq(pledges.teamId, teams.id))
+      .innerJoin(clubs, eq(teams.clubId, clubs.id))
+      .where(eq(pledges.sponsorId, sponsorId))
+      .orderBy(teams.name),
+    db
+      .select({ triggerType: charges.triggerType })
+      .from(charges)
+      .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+      .where(eq(pledges.sponsorId, sponsorId))
+      .groupBy(charges.triggerType)
+      .orderBy(sql`MIN(${charges.triggerType})`)
+  ]);
+  return { clubOpts, teamOpts, triggerOpts };
+}
+
 // ----------------------------------------------------------------------------
 // getCapUsageForActivePledges — pro aktivem Pledge: monthly cap + already
 // charged this month + percentage. Quelle für Dashboard-Tile + Pledge-Liste.

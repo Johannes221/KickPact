@@ -1,7 +1,5 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { sponsors } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
+import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import {
   listForSponsor,
   SPONSOR_INVOICE_SORT_KEYS,
@@ -25,11 +23,7 @@ export default async function RechnungenPage({
   searchParams: Promise<SP>;
 }) {
   const user = await requireUser();
-  const [sponsor] = await db
-    .select()
-    .from(sponsors)
-    .where(eq(sponsors.userId, user.id))
-    .limit(1);
+  const sponsor = await findSponsorForUser(user.id);
 
   if (!sponsor) {
     return (

@@ -1,6 +1,14 @@
-import { and, count, countDistinct, eq, isNull } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { pledges, pledgeRules, teamLicenses, teams } from "@/lib/db/schema";
+import {
+  pledges,
+  pledgeRules,
+  teamLicenses,
+  teams,
+  clubs,
+  sponsors,
+  charges
+} from "@/lib/db/schema";
 import type { PlanKey } from "@/lib/stripe/pricing";
 
 /**
@@ -101,4 +109,91 @@ export async function getTeamLicensePlan(teamId: string): Promise<PlanKey> {
 
   // 4) Default
   return (direct?.plan as PlanKey | undefined) ?? "basic";
+}
+
+/** Pacts eines Sponsors (Liste auf /sponsor/pledge), neueste zuerst. */
+export async function listPledgesForSponsor(sponsorId: string) {
+  return db
+    .select({
+      id: pledges.id,
+      status: pledges.status,
+      startsAt: pledges.startsAt,
+      endsAt: pledges.endsAt,
+      monthlyCapCents: pledges.monthlyCapCents,
+      teamName: teams.name,
+      clubName: clubs.name
+    })
+    .from(pledges)
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(eq(pledges.sponsorId, sponsorId))
+    .orderBy(desc(pledges.startsAt));
+}
+
+/**
+ * Pact-Detail inkl. `sponsorUserId` für den Owner-Check (/sponsor/pledge/[id]).
+ * `undefined`, wenn der Pact nicht existiert.
+ */
+export async function getPledgeDetailForSponsorView(pledgeId: string) {
+  const [pledge] = await db
+    .select({
+      id: pledges.id,
+      status: pledges.status,
+      startsAt: pledges.startsAt,
+      endsAt: pledges.endsAt,
+      monthlyCapCents: pledges.monthlyCapCents,
+      teamId: teams.id,
+      teamName: teams.name,
+      clubName: clubs.name,
+      clubSlug: clubs.slug,
+      sponsorUserId: sponsors.userId
+    })
+    .from(pledges)
+    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(eq(pledges.id, pledgeId))
+    .limit(1);
+  return pledge;
+}
+
+/** Aktive Regeln eines Pacts (für den Rules-Editor). */
+export async function listActivePledgeRules(pledgeId: string) {
+  return db
+    .select({
+      id: pledgeRules.id,
+      triggerType: pledgeRules.triggerType,
+      amountCents: pledgeRules.amountCents,
+      capCents: pledgeRules.capCents,
+      capPeriod: pledgeRules.capPeriod,
+      params: pledgeRules.triggerParamsJson
+    })
+    .from(pledgeRules)
+    .where(and(eq(pledgeRules.pledgeId, pledgeId), eq(pledgeRules.active, true)));
+}
+
+/** Letzte N Charges eines Pacts, neueste zuerst. */
+export async function listRecentChargesForPledge(pledgeId: string, limit = 10) {
+  return db
+    .select({
+      id: charges.id,
+      amountCents: charges.amountCents,
+      status: charges.status,
+      createdAt: charges.createdAt,
+      matchId: charges.matchId
+    })
+    .from(charges)
+    .where(eq(charges.pledgeId, pledgeId))
+    .orderBy(desc(charges.createdAt))
+    .limit(limit);
+}
+
+/** clubId einer Mannschaft (für das Read-Only-Gate im Pledge-Wizard). */
+export async function getClubIdForTeam(teamId: string): Promise<string | null> {
+  const [row] = await db
+    .select({ clubId: teams.clubId })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  return row?.clubId ?? null;
 }

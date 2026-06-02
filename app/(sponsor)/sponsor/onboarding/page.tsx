@@ -1,9 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
-import { db } from "@/lib/db/client";
-import { sponsors } from "@/lib/db/schema";
+import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import { SponsorTypeForm } from "./_components/sponsor-type-form";
 import { SignupCompletedTracker } from "@/components/analytics/signup-completed-tracker";
 
@@ -20,11 +18,7 @@ export default async function SponsorOnboardingPage({
   // ── Skip-If-Profile-Exists ────────────────────────────────────────────────
   // Sponsor mit fertigem Profil soll niemals erneut die "Familie oder
   // Unternehmen?"-Frage sehen — sonst Duplicate-Insert beim Submit.
-  const [existing] = await db
-    .select({ id: sponsors.id })
-    .from(sponsors)
-    .where(eq(sponsors.userId, user.id))
-    .limit(1);
+  const existing = await findSponsorForUser(user.id);
   if (existing) {
     redirect(
       invitation

@@ -1,8 +1,7 @@
-import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
-import { db } from "@/lib/db/client";
-import { pledges, sponsors, teams, clubs } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
+import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
+import { listPledgesForSponsor } from "@/lib/db/queries/pledges";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata = { title: "Meine Wetten · KickPact" };
@@ -14,29 +13,8 @@ function eur(cents: number) {
 export default async function PledgeListPage() {
   const user = await requireUser();
 
-  const [sponsor] = await db
-    .select({ id: sponsors.id })
-    .from(sponsors)
-    .where(eq(sponsors.userId, user.id))
-    .limit(1);
-
-  const myPledges = sponsor
-    ? await db
-        .select({
-          id: pledges.id,
-          status: pledges.status,
-          startsAt: pledges.startsAt,
-          endsAt: pledges.endsAt,
-          monthlyCapCents: pledges.monthlyCapCents,
-          teamName: teams.name,
-          clubName: clubs.name,
-        })
-        .from(pledges)
-        .innerJoin(teams, eq(pledges.teamId, teams.id))
-        .innerJoin(clubs, eq(teams.clubId, clubs.id))
-        .where(eq(pledges.sponsorId, sponsor.id))
-        .orderBy(desc(pledges.startsAt))
-    : [];
+  const sponsor = await findSponsorForUser(user.id);
+  const myPledges = sponsor ? await listPledgesForSponsor(sponsor.id) : [];
 
   return (
     <div className="mx-auto max-w-3xl">

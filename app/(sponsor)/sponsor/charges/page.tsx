@@ -1,12 +1,11 @@
-import { eq, sql } from "drizzle-orm";
-import { db } from "@/lib/db/client";
-import { sponsors, pledges, teams, clubs, charges } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
+import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import { triggerLabel } from "@/lib/triggers/labels";
 import { parsePaginationFromSearchParams } from "@/lib/db/queries/_helpers/paginate";
 import { parseSortFromSearchParams } from "@/components/ui/data-table-utils";
 import {
   listChargesForSponsor,
+  getSponsorChargeFilterOptions,
   SPONSOR_CHARGE_SORT_KEYS,
   type SponsorChargeSortKey
 } from "@/lib/db/queries/sponsor-reporting";
@@ -48,11 +47,7 @@ export default async function ChargesPage({
   searchParams: Promise<SP>;
 }) {
   const user = await requireUser();
-  const [sponsor] = await db
-    .select()
-    .from(sponsors)
-    .where(eq(sponsors.userId, user.id))
-    .limit(1);
+  const sponsor = await findSponsorForUser(user.id);
 
   if (!sponsor) {
     return (
@@ -95,38 +90,8 @@ export default async function ChargesPage({
 
   // Distinkte Clubs, Teams, Trigger für die Filter-Optionen (nur jene, in
   // denen dieser Sponsor schon Charges hatte — sonst leerer Dropdown).
-  const [clubOpts, teamOpts, triggerOpts] = await Promise.all([
-    db
-      .selectDistinct({
-        id: clubs.id,
-        name: clubs.name
-      })
-      .from(charges)
-      .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-      .innerJoin(teams, eq(pledges.teamId, teams.id))
-      .innerJoin(clubs, eq(teams.clubId, clubs.id))
-      .where(eq(pledges.sponsorId, sponsor.id))
-      .orderBy(clubs.name),
-    db
-      .selectDistinct({
-        id: teams.id,
-        name: teams.name,
-        clubName: clubs.name
-      })
-      .from(charges)
-      .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-      .innerJoin(teams, eq(pledges.teamId, teams.id))
-      .innerJoin(clubs, eq(teams.clubId, clubs.id))
-      .where(eq(pledges.sponsorId, sponsor.id))
-      .orderBy(teams.name),
-    db
-      .select({ triggerType: charges.triggerType })
-      .from(charges)
-      .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-      .where(eq(pledges.sponsorId, sponsor.id))
-      .groupBy(charges.triggerType)
-      .orderBy(sql`MIN(${charges.triggerType})`)
-  ]);
+  const { clubOpts, teamOpts, triggerOpts } =
+    await getSponsorChargeFilterOptions(sponsor.id);
 
   const filterDefs: FilterDefinition[] = [
     {

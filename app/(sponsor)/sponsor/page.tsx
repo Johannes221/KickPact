@@ -1,10 +1,5 @@
 import Link from "next/link";
-import { eq, sql, and, gte, lt, desc, inArray } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
-import { db } from "@/lib/db/client";
-import { sponsors } from "@/lib/db/schema";
-import { pledges } from "@/lib/db/schema/pledges";
-import { charges } from "@/lib/db/schema/charges";
 import {
   Banknote,
   Handshake,
@@ -16,6 +11,10 @@ import {
 } from "lucide-react";
 import { DashboardTile } from "@/components/shared/dashboard-tile";
 import { getCapUsageForActivePledges } from "@/lib/db/queries/sponsor-reporting";
+import {
+  findSponsorForUser,
+  getSponsorDashboardKpis
+} from "@/lib/db/queries/sponsor-dashboard";
 import { ReferralShareCard } from "@/components/sponsor/referral-share-card";
 import { buildReferralShareUrl } from "@/lib/referral/link";
 
@@ -28,11 +27,7 @@ function eur(cents: number): string {
 export default async function SponsorDashboard() {
   const user = await requireUser();
 
-  const [sponsorRow] = await db
-    .select({ id: sponsors.id, displayName: sponsors.displayName, type: sponsors.type })
-    .from(sponsors)
-    .where(eq(sponsors.userId, user.id))
-    .limit(1);
+  const sponsorRow = await findSponsorForUser(user.id);
 
   // Empty state: no sponsor profile yet
   if (!sponsorRow) {
@@ -59,69 +54,13 @@ export default async function SponsorDashboard() {
   }
 
   const now = new Date();
-  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const yearStart = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
-  const lastYearStart = new Date(Date.UTC(now.getUTCFullYear() - 1, 0, 1));
-  const lastYearEnd = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
-
-  const [
-    activePledgeCount,
-    monthlyCents,
-    biggestRecent,
-    yearStats,
-    capUsageRows
-  ] = await Promise.all([
-    db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(pledges)
-      .where(and(eq(pledges.sponsorId, sponsorRow.id), eq(pledges.status, "active")))
-      .then((r) => Number(r[0]?.n ?? 0)),
-    db
-      .select({ s: sql<number>`coalesce(sum(${charges.amountCents}), 0)::int` })
-      .from(charges)
-      .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-      .where(and(eq(pledges.sponsorId, sponsorRow.id), gte(charges.createdAt, monthStart)))
-      .then((r) => Number(r[0]?.s ?? 0)),
-    db
-      .select({
-        amountCents: charges.amountCents,
-        triggerType: charges.triggerType,
-        createdAt: charges.createdAt
-      })
-      .from(charges)
-      .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-      .where(eq(pledges.sponsorId, sponsorRow.id))
-      .orderBy(desc(charges.amountCents))
-      .limit(1)
-      .then((r) => r[0] ?? null),
-    // Jahres-Total (laufendes Jahr) + Vorjahr-Vergleich
-    db
-      .select({
-        ytd: sql<number>`COALESCE(SUM(${charges.amountCents}) FILTER (
-          WHERE ${charges.createdAt} >= ${yearStart.toISOString()}
-        ), 0)::int`,
-        lastYear: sql<number>`COALESCE(SUM(${charges.amountCents}) FILTER (
-          WHERE ${charges.createdAt} >= ${lastYearStart.toISOString()}
-            AND ${charges.createdAt} <  ${lastYearEnd.toISOString()}
-        ), 0)::int`
-      })
-      .from(charges)
-      .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-      .where(
-        and(
-          eq(pledges.sponsorId, sponsorRow.id),
-          inArray(charges.status, ["confirmed", "invoiced"]),
-          gte(charges.createdAt, lastYearStart),
-          lt(charges.createdAt, new Date(Date.UTC(now.getUTCFullYear() + 1, 0, 1)))
-        )
-      )
-      .then((r) => ({
-        ytdCents: Number(r[0]?.ytd ?? 0),
-        lastYearCents: Number(r[0]?.lastYear ?? 0)
-      })),
+  const [kpis, capUsageRows] = await Promise.all([
+    getSponsorDashboardKpis(sponsorRow.id, now),
     // Cap-Auslastung: pro aktivem Pledge im aktuellen Monat
     getCapUsageForActivePledges(sponsorRow.id, now)
   ]);
+  const { activePledgeCount, monthlyCents, biggestRecent, ytdCents, lastYearCents } =
+    kpis;
 
   // Pledge mit höchster Cap-Auslastung (nur capped) — kann undefined sein
   const topCapPledge = capUsageRows.find((p) => p.percentage !== null);
@@ -168,8 +107,8 @@ export default async function SponsorDashboard() {
         />
 
         <YearTotalTile
-          ytdCents={yearStats.ytdCents}
-          lastYearCents={yearStats.lastYearCents}
+          ytdCents={ytdCents}
+          lastYearCents={lastYearCents}
         />
 
         {topCapPledge && (

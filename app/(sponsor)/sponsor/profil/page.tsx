@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
-import { db } from "@/lib/db/client";
-import { sponsors } from "@/lib/db/schema";
+import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import { SponsorProfileForm } from "./_components/sponsor-profile-form";
 
 export const metadata = { title: "Profil · KickPact" };
@@ -10,11 +8,7 @@ export const metadata = { title: "Profil · KickPact" };
 export default async function SponsorProfilPage() {
   const user = await requireUser();
 
-  const [sponsor] = await db
-    .select()
-    .from(sponsors)
-    .where(eq(sponsors.userId, user.id))
-    .limit(1);
+  const sponsor = await findSponsorForUser(user.id);
 
   if (!sponsor) redirect("/sponsor/onboarding");
 
