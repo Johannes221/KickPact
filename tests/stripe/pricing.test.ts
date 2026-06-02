@@ -15,7 +15,7 @@ import {
 } from "@/lib/stripe/pricing";
 
 describe("PRICING table", () => {
-  it("contains all 9 plan/cycle combinations with positive amountCents", () => {
+  it("contains all 6 plan/cycle combinations with positive amountCents", () => {
     for (const plan of PLAN_ORDER) {
       for (const cycle of CYCLE_ORDER) {
         const def = PLANS[plan].cycles[cycle];
@@ -28,13 +28,10 @@ describe("PRICING table", () => {
   it("uses canonical Concept-D prices from docs/pricing.md", () => {
     expect(PLANS.basic.cycles.monthly.amountCents).toBe(500);
     expect(PLANS.basic.cycles.season_end.amountCents).toBe(3900);
-    expect(PLANS.basic.cycles.annual.amountCents).toBe(4900);
     expect(PLANS.pro.cycles.monthly.amountCents).toBe(1900);
     expect(PLANS.pro.cycles.season_end.amountCents).toBe(14900);
-    expect(PLANS.pro.cycles.annual.amountCents).toBe(18900);
     expect(PLANS.verein.cycles.monthly.amountCents).toBe(4900);
     expect(PLANS.verein.cycles.season_end.amountCents).toBe(38900);
-    expect(PLANS.verein.cycles.annual.amountCents).toBe(48900);
   });
 });
 
@@ -48,11 +45,6 @@ describe("getMonthlyEquivalent", () => {
     expect(getMonthlyEquivalent("basic", "season_end")).toBe(390);
     expect(getMonthlyEquivalent("pro", "season_end")).toBe(1490);
     expect(getMonthlyEquivalent("verein", "season_end")).toBe(3890);
-  });
-
-  it("annual cycle divides by 12", () => {
-    expect(getMonthlyEquivalent("basic", "annual")).toBe(Math.round(4900 / 12));
-    expect(getMonthlyEquivalent("pro", "annual")).toBe(Math.round(18900 / 12));
   });
 });
 
@@ -70,14 +62,6 @@ describe("getSavings", () => {
     expect(absoluteCents).toBe(4100);
     expect(percent).toBeGreaterThanOrEqual(21);
     expect(percent).toBeLessThanOrEqual(23);
-  });
-
-  it("annual ≈ 17 % cheaper than 12× monthly for pro", () => {
-    // 12 × 19€ = 228€; Annual = 189€ → 39€ Ersparnis ≈ 17,1 %
-    const { absoluteCents, percent } = getSavings("pro", "annual");
-    expect(absoluteCents).toBe(3900);
-    expect(percent).toBeGreaterThanOrEqual(16);
-    expect(percent).toBeLessThanOrEqual(18);
   });
 });
 
@@ -127,7 +111,7 @@ describe("getStripePriceId", () => {
   });
 
   it("returns null when env-var is not set", () => {
-    expect(getStripePriceId("basic", "annual")).toBeNull();
+    expect(getStripePriceId("basic", "season_end")).toBeNull();
   });
 });
 
@@ -147,11 +131,11 @@ describe("priceIdToPlanCycle", () => {
   });
 
   it("reverse-looks-up a Stripe price ID to plan+cycle", () => {
-    process.env.STRIPE_VEREIN_ANNUAL_PRICE_ID = "price_abc";
+    process.env.STRIPE_VEREIN_SEASON_END_PRICE_ID = "price_abc";
     const result = priceIdToPlanCycle("price_abc");
     expect(result).toEqual<{ plan: PlanKey; cycle: BillingCycle }>({
       plan: "verein",
-      cycle: "annual"
+      cycle: "season_end"
     });
   });
 

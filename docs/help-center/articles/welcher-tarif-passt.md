@@ -6,7 +6,7 @@ category_label: "Tarife & Pricing"
 prio: "MUSS"
 audience: ["verein-admin", "vereinslizenz-admin"]
 related_articles:
-  - "saison-pass-vs-annual"
+  - "saison-pass-vs-monatlich"
   - "vereinslizenz-break-even"
   - "5-spieltag-cutoff"
   - "trial-30-tage"
@@ -69,6 +69,6 @@ Herren I, Herren II, A-Jugend, B-Jugend, Damen. Jede Mannschaft soll mitmachen.
 Default-Regel: **Im Zweifel Pro für 30 Tage Trial testen**. Wenn du nach 30 Tagen merkst, dass nur 4 Familien-Sponsoren mitmachen und Saison-Wetten irrelevant sind, downgrade auf Basic. Andersrum funktioniert auch — Basic starten, im Trial-Fenster auf Pro wechseln, sobald der erste Local-Business-Sponsor anfragt.
 
 Weiter lesen:
-- [Saison-Pass vs Annual — was lohnt wann?](saison-pass-vs-annual.md)
+- [Saison-Pass vs Monatlich — was lohnt wann?](saison-pass-vs-monatlich.md)
 - [Vereinslizenz Break-Even — ab wann lohnt sie sich?](vereinslizenz-break-even.md)
 - [Der 5-Spieltag-Cutoff — was bedeutet er?](5-spieltag-cutoff.md)

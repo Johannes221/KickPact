@@ -37,6 +37,8 @@ vi.mock("@/lib/stripe/client", () => ({
 vi.mock("@/lib/stripe/pricing", () => ({
   getStripePriceId: (plan: string, cycle: string = "monthly") =>
     `price_${plan}_${cycle}_test`,
+  normalizeBillingCycle: (raw: string | null | undefined) =>
+    raw === "monthly" || raw === "season_end" ? raw : "monthly",
   TRIAL_DAYS: 30
 }));
 
@@ -128,14 +130,14 @@ describe("createCheckoutSession", () => {
 
   it("falls back to subscription.billingCycle when opts.cycle is missing (Audit #2)", async () => {
     dbSelectFn.mockResolvedValue([
-      { clubId: "club1", stripeCustomerId: "cus_y", status: "trialing", billingCycle: "annual" }
+      { clubId: "club1", stripeCustomerId: "cus_y", status: "trialing", billingCycle: "season_end" }
     ]);
 
     await createCheckoutSession({ clubSlug: "fc-test", plan: "verein" });
 
     expect(stripeCheckoutSessionsCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        line_items: [{ price: "price_verein_annual_test", quantity: 1 }]
+        line_items: [{ price: "price_verein_season_end_test", quantity: 1 }]
       })
     );
   });

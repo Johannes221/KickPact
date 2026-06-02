@@ -52,7 +52,7 @@ async function seedSubscription(
   clubId: string,
   opts: {
     status?: "trialing" | "active" | "past_due" | "cancelled" | "incomplete" | "paused";
-    billingCycle?: "monthly" | "season" | "annual";
+    billingCycle?: "monthly" | "season_end";
     trialEndsAt?: Date | null;
     updatedAt?: Date;
     createdAt?: Date;
@@ -185,6 +185,25 @@ describe("platform-stats", () => {
     expect(k.activeClubs).toBe(2);
     // 1900 + 500 = 2400
     expect(k.mrrCents).toBe(2400);
+  });
+
+  it("getPlatformKpis counts season_end (Saison-Pass) subs into MRR", async () => {
+    // Regression: PLAN_CYCLE_MONTHLY_CENTS keyed the cycle as `season` while the
+    // DB billing_cycle enum yields `season_end` → Saison-Pass abos zählten mit 0 €.
+    const clubMonthly = await seedClub("mrr-mon");
+    const teamMonthly = await seedTeam(clubMonthly);
+    await seedSubscription(clubMonthly, { status: "active", billingCycle: "monthly" });
+    await seedTeamLicense(clubMonthly, teamMonthly, "pro"); // 1900 monthly
+
+    const clubSeason = await seedClub("mrr-sea");
+    const teamSeason = await seedTeam(clubSeason);
+    await seedSubscription(clubSeason, { status: "active", billingCycle: "season_end" });
+    await seedTeamLicense(clubSeason, teamSeason, "pro"); // 1490 monthly-equiv
+
+    const k = await getPlatformKpis();
+    // 1900 (monthly) + 1490 (season_end) — season MUST NOT be 0.
+    expect(k.mrrCents).toBe(3390);
+    expect(k.mrrSeries.at(-1)?.mrrCents).toBe(3390);
   });
 
   it("getPlatformKpis computes avg pledge amount across active pledges", async () => {
@@ -365,7 +384,7 @@ describe("platform-stats", () => {
       clubId: clubA,
       role: "admin"
     });
-    await seedSubscription(clubA, { status: "active", billingCycle: "annual" });
+    await seedSubscription(clubA, { status: "active", billingCycle: "season_end" });
     await seedTeamLicense(clubA, teamA, "pro");
 
     const [club] = await db

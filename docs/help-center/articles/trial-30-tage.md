@@ -7,7 +7,7 @@ prio: "MUSS"
 audience: ["verein-admin", "vereinslizenz-admin"]
 related_articles:
   - "welcher-tarif-passt"
-  - "saison-pass-vs-annual"
+  - "saison-pass-vs-monatlich"
   - "kuendigung-und-pause"
 last_updated: "2026-05-25"
 status: "published"
@@ -102,5 +102,5 @@ Beispiel: Du startest am 20. Mai, Saison endet am 30. Mai, Trial läuft bis 19. 
 
 Weiter lesen:
 - [Welcher Tarif passt zu deinem Verein?](welcher-tarif-passt.md)
-- [Saison-Pass vs Annual](saison-pass-vs-annual.md)
+- [Saison-Pass vs Monatlich](saison-pass-vs-monatlich.md)
 - [Kündigung und Pause](kuendigung-und-pause.md)

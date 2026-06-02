@@ -53,7 +53,7 @@
 - [ ] **Live-Account aktivieren**: Geschäftsdaten, Inhaber-Identität, Auszahlungs-Bankkonto in Stripe hinterlegen + verifizieren lassen.
 - [ ] **Zahlungsmethoden im Live-Mode aktivieren** (Settings → Payment methods):
       Karte ✅, **SEPA-Lastschrift** (Terms akzeptieren), **PayPal** (Business verknüpfen), Link, Apple/Google Pay.
-- [ ] **9 Price-IDs im Live-Mode neu anlegen** (Basic/Pro/Verein × Monthly/Saison/Annual) — Test- und Live-Objekte sind getrennt.
+- [ ] **6 Price-IDs im Live-Mode neu anlegen** (Basic/Pro/Verein × Monthly/Saison) — Test- und Live-Objekte sind getrennt. (Annual-Cycle 2026-06-02 entfernt.)
 - [ ] **Live-Webhook-Endpoint** anlegen → neuen `whsec_…` ziehen.
 - [ ] **Env auf Live umstellen**: `STRIPE_SECRET_KEY=sk_live_…`, `STRIPE_WEBHOOK_SECRET=whsec_…`, alle `STRIPE_*_PRICE_ID` (in `.env.local` + Coolify-Staging/Prod-Secrets).
 - [ ] **Kein Code-Change nötig** — Checkout nutzt Dynamic Payment Methods, zeigt automatisch alles aktivierte + abo-fähige. `payment_method_types` NICHT hart setzen.

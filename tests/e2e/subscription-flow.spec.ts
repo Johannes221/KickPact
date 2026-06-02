@@ -73,7 +73,7 @@ test.describe("Pricing-Seite /preise", () => {
     await expect(trialText).toBeVisible();
   });
 
-  test("Zeigt Preis-Toggle (Monatlich / Saison / Annual)", async ({ page }) => {
+  test("Zeigt Preis-Toggle (Monatlich / Saison)", async ({ page }) => {
     await page.goto(`${BASE}/preise`);
     // Die Seite hat einen Billing-Cycle-Toggle
     const monthly = page.getByText(/Monatlich/i).first();

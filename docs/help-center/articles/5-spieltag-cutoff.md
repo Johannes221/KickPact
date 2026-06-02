@@ -6,7 +6,7 @@ category_label: "Tarife & Pricing"
 prio: "MUSS"
 audience: ["verein-admin", "sponsor", "vereinslizenz-admin"]
 related_articles:
-  - "saison-pass-vs-annual"
+  - "saison-pass-vs-monatlich"
   - "mid-season-einstieg"
   - "welcher-tarif-passt"
   - "saison-wetten-einfuehrung"
@@ -79,6 +79,6 @@ Mit dem **Saison-Wechsel-Event**, der nach Saison-Ende und vor dem ersten Spiel 
 Wir kriegen ab und an Anfragen "wir sind erst am 6. Spieltag, könnt ihr nicht eine Ausnahme machen?" — kurze Antwort: **nein**. Die Regel gilt für alle gleich, sonst ist sie keine Regel. Wenn der 6. Spieltag in eine ungewöhnliche Saison fällt (Pokal-Auftakt, Verbandspause): zähle Punktspiele, das ist die Definition.
 
 Weiter lesen:
-- [Saison-Pass vs Annual](saison-pass-vs-annual.md)
+- [Saison-Pass vs Monatlich](saison-pass-vs-monatlich.md)
 - [Mid-Season-Einstieg](mid-season-einstieg.md)
 - [Saison-Wetten-Einführung](saison-wetten-einfuehrung.md)

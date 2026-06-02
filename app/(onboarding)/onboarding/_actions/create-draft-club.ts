@@ -74,7 +74,7 @@ export interface CreateDraftResult {
  *   - role=verein     → teamLicenses.plan = 'verein' (Vereinslizenz-Trial)
  *
  * `subscriptions.billingCycle = 'monthly'` ist Placeholder bis zum ersten echten
- * Stripe-Checkout (der setzt monthly/season/annual basierend auf User-Wahl im
+ * Stripe-Checkout (der setzt monthly/season_end basierend auf User-Wahl im
  * Abo-Flow nach Trial-Ende).
  *
  * Nicht-Owner-Verein wird mit Fehler abgelehnt — wenn der Verein schon einem

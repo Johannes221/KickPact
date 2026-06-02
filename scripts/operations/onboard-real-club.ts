@@ -18,7 +18,7 @@
  *   --trainer-email <email>         (required)
  *   --trainer-name "<Name>"         (optional, Default = E-Mail-Prefix)
  *   --plan basic|pro|verein         (optional, Default = basic)
- *   --cycle monthly|season|annual   (optional, Default = monthly)
+ *   --cycle monthly|season_end      (optional, Default = monthly)
  *   --dry-run                       (optional: simuliert alles, kein DB-Write, kein Mail)
  *   --with-test-sponsor             (optional: legt zusätzlich 1 Test-Sponsor mit 1 Beispiel-Pledge an)
  *   --skip-crawler                  (optional: überspringt Fußball.de-Crawler, legt nur
@@ -48,7 +48,7 @@ interface Args {
   trainerEmail: string;
   trainerName: string | null;
   plan: "basic" | "pro" | "verein";
-  cycle: "monthly" | "season" | "annual";
+  cycle: "monthly" | "season_end";
   dryRun: boolean;
   withTestSponsor: boolean;
   skipCrawler: boolean;
@@ -86,8 +86,7 @@ function parseArgs(): Args {
     planRaw === "pro" || planRaw === "verein" ? planRaw : "basic";
 
   const cycleRaw = flags.get("cycle");
-  const cycle: Args["cycle"] =
-    cycleRaw === "season" || cycleRaw === "annual" ? cycleRaw : "monthly";
+  const cycle: Args["cycle"] = cycleRaw === "season_end" ? "season_end" : "monthly";
 
   const trainerNameRaw = flags.get("trainer-name");
   const trainerName =

@@ -59,9 +59,9 @@ import {
  * an admin-only query path. Update both when prices move.
  */
 const PLAN_CYCLE_MONTHLY_CENTS: Record<string, Record<string, number>> = {
-  basic: { monthly: 500, season: 390, annual: 408 },
-  pro: { monthly: 1900, season: 1490, annual: 1575 },
-  verein: { monthly: 4900, season: 3890, annual: 4075 }
+  basic: { monthly: 500, season_end: 390 },
+  pro: { monthly: 1900, season_end: 1490 },
+  verein: { monthly: 4900, season_end: 3890 }
 };
 
 export interface PlatformKpis {

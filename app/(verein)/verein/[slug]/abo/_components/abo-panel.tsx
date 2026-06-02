@@ -4,6 +4,7 @@ import { subscriptions, teamLicenses, teams } from "@/lib/db/schema";
 import { isStripeConfigured } from "@/lib/stripe/client";
 import {
   CYCLE_LABELS,
+  normalizeBillingCycle,
   TRIAL_DAYS,
   type PlanKey,
   type BillingCycle
@@ -45,7 +46,7 @@ export async function AboPanel({
     licenseRows.length > 0
       ? highestPlanFrom(licenseRows.map((r) => r.plan as PlanKey))
       : "basic";
-  const currentCycle: BillingCycle = (sub?.billingCycle as BillingCycle) ?? "monthly";
+  const currentCycle: BillingCycle = normalizeBillingCycle(sub?.billingCycle);
 
   const stripeReady = isStripeConfigured();
 

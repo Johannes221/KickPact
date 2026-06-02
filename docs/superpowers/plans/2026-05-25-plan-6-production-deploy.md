@@ -126,14 +126,11 @@ Alle Werte unter Coolify *Application → Environment Variables*, als **Build-ti
 | `STRIPE_SECRET_KEY` | `sk_test_…` (**Test-Mode bleibt für Launch** — User-Entscheidung 2026-05-25; Live-Aktivierung erst nach Pilot-Validierung als separater Schritt) | Echte Charges noch nicht möglich, aber kompletter Stripe-Flow testbar mit Test-Cards. |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` aus separatem Production-Test-Webhook (Sektion 5.4) | Separater Endpoint im Stripe-Test-Dashboard. |
 | `STRIPE_BASIC_MONTHLY_PRICE_ID` | `price_…` aus Test-Mode-Prices (Sektion 5.3) | Test-IDs können von Staging übernommen werden. |
-| `STRIPE_BASIC_SEASON_PRICE_ID` | dito | |
-| `STRIPE_BASIC_ANNUAL_PRICE_ID` | dito | |
+| `STRIPE_BASIC_SEASON_END_PRICE_ID` | dito | |
 | `STRIPE_PRO_MONTHLY_PRICE_ID` | dito | |
-| `STRIPE_PRO_SEASON_PRICE_ID` | dito | |
-| `STRIPE_PRO_ANNUAL_PRICE_ID` | dito | |
+| `STRIPE_PRO_SEASON_END_PRICE_ID` | dito | |
 | `STRIPE_VEREIN_MONTHLY_PRICE_ID` | dito | |
-| `STRIPE_VEREIN_SEASON_PRICE_ID` | dito | |
-| `STRIPE_VEREIN_ANNUAL_PRICE_ID` | dito | |
+| `STRIPE_VEREIN_SEASON_END_PRICE_ID` | dito | |
 | `R2_ACCOUNT_ID` | Unverändert übernehmen | Account bleibt gleich. |
 | `R2_BUCKET` | **`kickpact-prod`** (User-Entscheidung 2026-05-25 — **separat von Staging-Bucket**) | Neuer Bucket anlegen via Cloudflare-Dashboard → R2 → Create bucket. CORS analog konfigurieren falls Browser direkt Signed-URLs lädt. Sauberer Cut zwischen Test-Uploads und echten Verifications-PDFs. |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Neue API-Token mit Scope nur auf `kickpact-prod` erstellen | Cloudflare-Dashboard → R2 → Manage R2 API Tokens. Bestehende Staging-Token bleiben unangetastet. |
@@ -226,14 +223,11 @@ Alle Werte unter Coolify *Application → Environment Variables*, als **Build-ti
   | Produkt | Price-Variante | EUR | Recurring | Env-Var |
   |---|---|---|---|---|
   | KickPact Basic | Monthly | 5,00 | `month` × 1 | `STRIPE_BASIC_MONTHLY_PRICE_ID` |
-  | KickPact Basic | Season-Pass | 39,00 | `month` × 10 | `STRIPE_BASIC_SEASON_PRICE_ID` |
-  | KickPact Basic | Annual | 49,00 | `year` × 1 | `STRIPE_BASIC_ANNUAL_PRICE_ID` |
+  | KickPact Basic | Season-Pass | 39,00 | `month` × 10 | `STRIPE_BASIC_SEASON_END_PRICE_ID` |
   | KickPact Pro | Monthly | 19,00 | `month` × 1 | `STRIPE_PRO_MONTHLY_PRICE_ID` |
-  | KickPact Pro | Season-Pass | 149,00 | `month` × 10 | `STRIPE_PRO_SEASON_PRICE_ID` |
-  | KickPact Pro | Annual | 189,00 | `year` × 1 | `STRIPE_PRO_ANNUAL_PRICE_ID` |
+  | KickPact Pro | Season-Pass | 149,00 | `month` × 10 | `STRIPE_PRO_SEASON_END_PRICE_ID` |
   | KickPact Vereinslizenz | Monthly | 49,00 | `month` × 1 | `STRIPE_VEREIN_MONTHLY_PRICE_ID` |
-  | KickPact Vereinslizenz | Season-Pass | 389,00 | `month` × 10 | `STRIPE_VEREIN_SEASON_PRICE_ID` |
-  | KickPact Vereinslizenz | Annual | 489,00 | `year` × 1 | `STRIPE_VEREIN_ANNUAL_PRICE_ID` |
+  | KickPact Vereinslizenz | Season-Pass | 389,00 | `month` × 10 | `STRIPE_VEREIN_SEASON_END_PRICE_ID` |
 
   Beim Anlegen jeder Price-ID: sofort kopieren in Coolify-ENV (Sektion 3.1).
 

@@ -1,6 +1,7 @@
 # KickPact Pricing
 
-**Stand:** 2026-05-22 · Konzept D nach Sparring-Iteration 3 · Source of Truth für `lib/stripe/pricing.ts`, Onboarding-Wizard, `/preise`-Page, Spec §6.8 + §8.4
+**Stand:** 2026-06-02 · Konzept D nach Sparring-Iteration 3 · Source of Truth für `lib/stripe/pricing.ts`, Onboarding-Wizard, `/preise`-Page, Spec §6.8 + §8.4
+> **Update 2026-06-02:** Der „Annual"-Cycle (12-Monats-Lizenz) wurde komplett entfernt — nur noch **Monatlich + Saison-Pass**. Saison-Pass IST die Jahres-Bindung für den Fußball-Rhythmus.
 
 > Rationale, Recherche und verworfene Konzepte: siehe [docs/strategy/2026-05-22-pricing-strategy.md](strategy/2026-05-22-pricing-strategy.md).
 
@@ -13,14 +14,13 @@
 | **Zielgruppe** | 1 Mannschaft, 1–5 Sponsoren aus dem direkten Umfeld | 1 Mannschaft, ernsthaftes Sponsoring, ∞ Sponsoren | Verein mit ≥ 2 Mannschaften, zentrale Verwaltung |
 | **Monatspreis** | **5 €**/Mannschaft/Monat | **19 €**/Mannschaft/Monat | **49 €**/Verein/Monat |
 | **Saison-Pass** *(Aug–Mai, 2 Monate geschenkt)* | **39 €**/Saison · ≈ 3,90 €/Mon | **149 €**/Saison · ≈ 14,90 €/Mon | **389 €**/Saison · ≈ 38,90 €/Mon |
-| **Annual** *(12 Mon ganzjährig, bis zu 42 % sparen)* | 35 €/Jahr | 135 €/Jahr | 349 €/Jahr |
 | **Provision auf Pledges** | **0 %** | **0 %** | **0 %** |
 | **Trial** | 30 Tage | 30 Tage | 30 Tage |
-| **Pro Spieler/Monat** *(typischer Kader)* | ~0,23 €/Spieler (22 Mann) | **< 1 €/Spieler** (22 Mann) · 0,51 € im Annual | **< 1 €/Spieler** (50 Mann) · 0,58 € im Annual · 0,25 € bei 200 Spielern |
+| **Pro Spieler/Monat** *(typischer Kader)* | ~0,23 €/Spieler (22 Mann) | **< 1 €/Spieler** (22 Mann) | **< 1 €/Spieler** (50 Mann) · 0,25 € bei 200 Spielern |
 
 **Headline-Versprechen:** *100 % der Einnahmen gehen an euch. KickPact stellt die Plattform — Tracking, PDFs, Sponsor-Inbox — und finanziert sich rein über Lizenzgebühren.*
 
-**Default-Empfehlung im Wizard:** Saison-Pass (Aug–Mai). Annual-Plan für ganzjährige Vereine (Hallenfußball/Veteranen). Monatsabo nach 5. Spieltag der laufenden Saison.
+**Default-Empfehlung im Wizard:** Saison-Pass (Aug–Mai). Monatsabo nach 5. Spieltag der laufenden Saison.
 
 ---
 
@@ -31,7 +31,6 @@
 ### Pricing
 - **Monatlich:** 5 €/Mannschaft
 - **Saison-Pass (Aug–Mai):** 39 €/Saison · ~2 Monate geschenkt · Juni/Juli automatisch kostenlos pausiert
-- **Annual (12 Monate):** 35 €/Jahr · **42 % sparen** vs. Monatsabo · für ganzjährig spielende Mannschaften (~2,90 €/Mon)
 - **0 % Provision** auf bestätigte Pledges
 
 ### Was ist drin
@@ -77,7 +76,6 @@
 ### Pricing
 - **Monatlich:** 19 €/Mannschaft · bei 22-Mann-Kader **0,86 € pro Spieler/Monat**
 - **Saison-Pass (Aug–Mai):** **149 €**/Saison · effektiv 14,90 €/Mon · 35 % sparen · Juni/Juli kostenlos pausiert · **0,68 € pro Spieler/Monat**
-- **Annual (12 Monate):** **135 €**/Jahr · **40 % sparen** vs. Monatsabo · ~11,25 €/Mon · **0,51 € pro Spieler/Monat** bei 22-Mann-Kader
 - **0 % Provision** auf bestätigte Pledges
 
 ### Was ist drin
@@ -113,7 +111,6 @@
 ### Pricing
 - **Monatlich:** 49 €/Verein · bei 50 Spielern **0,98 € pro Spieler/Monat**
 - **Saison-Pass (Aug–Mai):** **389 €**/Saison · effektiv 38,90 €/Mon · 34 % sparen · Juni/Juli kostenlos pausiert · **0,78 € pro Spieler/Monat** (50 Spieler)
-- **Annual (12 Monate):** **349 €**/Jahr · **41 % sparen** vs. Monatsabo · ~29 €/Mon · **0,58 € pro Spieler/Monat** (50 Spieler) · **0,15 €/Spieler bei 200 Spielern**
 - **0 % Provision**
 
 ### Was ist drin
@@ -170,7 +167,6 @@
 | **Pricing** | | | |
 | Monatspreis | 5 € | 19 € | 49 € |
 | Saison-Pass | **39 €** | **149 €** | **389 €** |
-| Annual | **35 €** | **135 €** | **349 €** |
 | Provision | 0 % | 0 % | 0 % |
 | Trial | 30 Tage | 30 Tage | 30 Tage |
 | **Trigger** | | | |
@@ -247,27 +243,7 @@
 
 ---
 
-## 7. Annual-Plan — wie es funktioniert
-
-Für Vereine mit **ganzjährigem Spielbetrieb** (Hallenfußball, Veteranen-Ligen, Sommer-Turniere, Test-Setups). 12 Monate Laufzeit, **40 % sparen** vs. 12× Monatsabo — die günstigste Variante pro aktivem Monat.
-
-| Tier | Monat × 12 | Annual | Ersparnis |
-|---|---|---|---|
-| Basic | 60 € | **35 €** | -25 € (**42 % sparen**) |
-| Pro | 228 € | **135 €** | -93 € (**40 % sparen**) |
-| Vereinslizenz | 588 € | **349 €** | -239 € (**41 % sparen**) |
-
-**Unterschied zum Saison-Pass:**
-- Annual läuft 12 Monate, kein Sommerpause-Stop, Crawler bleibt auch Jun/Jul an
-- Saison-Pass läuft 10 Monate aktiv + 2 Monate kostenlos pausiert
-- **Annual ist pro aktivem Monat günstiger** (Pro: 11,25 € vs Saison-Pass 14,90 €) und auch absolut günstiger (135 € vs 149 €) — Annual ist die Power-Wahl für ganzjährig spielende Vereine
-- Wahl ist klar: ganzjährig spielende Mannschaft → Annual; nur Punktspielsaison → Saison-Pass
-
-**Default-Empfehlung im Wizard:** Saison-Pass. Annual als zweite Option, Monatsabo als dritte.
-
----
-
-## 8. Saison-Wetten — Pre-Season-Window
+## 7. Saison-Wetten — Pre-Season-Window
 
 Saison-Wetten (6 Typen: Aufstieg, Klassenerhalt, Tabellenplatz-Range, Meister, Pokalrunde, Custom-Saison-Ziel) sind **nur in Pro & Vereinslizenz** verfügbar und **nur bis zum 5. Spieltag der laufenden Saison buchbar** — gleicher Cutoff wie der Saison-Pass-Kauf.
 
@@ -290,7 +266,7 @@ Saison-Wetten (6 Typen: Aufstieg, Klassenerhalt, Tabellenplatz-Range, Meister, P
 
 ---
 
-## 9. Trial-Logik
+## 8. Trial-Logik
 
 - **30 Tage Trial** für die **erste aktivierte Mannschaft** eines Vereins (alle Tarife)
 - Trial startet bei Onboarding-Abschluss (nach Sponsor-Einladungslink-Erstellung)
@@ -301,7 +277,7 @@ Saison-Wetten (6 Typen: Aufstieg, Klassenerhalt, Tabellenplatz-Range, Meister, P
 
 ---
 
-## 10. Headline-Marketing-Hooks
+## 9. Headline-Marketing-Hooks
 
 Wiederverwendbare Sätze für Landing, Pricing-Page, Onboarding, Sales-Pitches:
 
@@ -326,16 +302,16 @@ Wiederverwendbare Sätze für Landing, Pricing-Page, Onboarding, Sales-Pitches:
 
 ---
 
-## 11. Implementations-Konsequenzen
+## 10. Implementations-Konsequenzen
 
 Was im Code/Spec geändert werden muss, sobald dieses Pricing abgesegnet ist:
 
 | Asset | Änderung |
 |---|---|
 | `docs/superpowers/specs/2026-05-19-kickpact-v1-design.md` | §6.8 + §8.4 ersetzen mit diesem Pricing |
-| `lib/stripe/pricing.ts` | 3 Tiers × 3 Billing-Cycles = **9 Price-IDs** (Monthly + Saison-Pass + Annual je Tier) |
-| `docs/stripe-setup.md` | 9 Stripe-Produkte + Anleitung für Saison-Pass-Subscription-Setup |
-| `lib/db/schema.ts` | `team_licenses.plan` enum: `basic` \| `pro` \| `verein` · `subscriptions.billing_cycle` enum: `monthly` \| `season` \| `annual` · `subscriptions.paused_until` für Sommerpause-Logik · `seasons`-Tabelle mit `starts_at` / `ends_at` / `matchday_5_at` (für Saison-Pass + Wetten-Cutoff) |
+| `lib/stripe/pricing.ts` | 3 Tiers × 2 Billing-Cycles = **6 Price-IDs** (Monthly + Saison-Pass je Tier) |
+| `docs/stripe-setup.md` | 6 Stripe-Produkte + Anleitung für Saison-Pass-Subscription-Setup |
+| `lib/db/schema.ts` | `team_licenses.plan` enum: `basic` \| `pro` \| `verein` · `subscriptions.billing_cycle` enum: `monthly` \| `season_end` (Enum-Wert `annual` bleibt inert, siehe billing.ts) · `subscriptions.paused_until` für Sommerpause-Logik · `seasons`-Tabelle mit `starts_at` / `ends_at` / `matchday_5_at` (für Saison-Pass + Wetten-Cutoff) |
 | `lib/billing/season-pass.ts` *(neu)* | Saison-Pass-Subscription-Lifecycle (Pause 1.6.–31.7., Renewal 1.8., Kauf-Cutoff 5. Spieltag) |
 | `lib/billing/wager-window.ts` *(neu)* | Pre-Season-Window-Validation für Saison-Wetten-Pledges (5. Spieltag) |
 | `lib/db/queries/pledges.ts` | Cap-Checks: max 5 Sponsoren bei Basic, max 3 Pledge-Rules pro Sponsor bei Basic |
@@ -347,7 +323,7 @@ Was im Code/Spec geändert werden muss, sobald dieses Pricing abgesegnet ist:
 
 ---
 
-## 12. Entscheidungs-Log
+## 11. Entscheidungs-Log
 
 | # | Frage | Entscheidung | Status |
 |---|---|---|---|
@@ -355,7 +331,7 @@ Was im Code/Spec geändert werden muss, sobald dieses Pricing abgesegnet ist:
 | 2 | Basic Sponsor-Cap | **5** | ✅ entschieden |
 | 3 | Basic Pledge-Rules-Cap pro Sponsor | **3** | ✅ entschieden |
 | 4 | Vereinslizenz-Monatspreis | **49 €** | ✅ entschieden |
-| 5 | Annual-Plan anbieten | **Ja** (35 / 135 / 349 €, 40-42 % sparen) | ✅ entschieden |
+| 5 | Annual-Plan anbieten | **Nein** — 2026-06-02 komplett entfernt; Saison-Pass IST die Jahres-Bindung | ✅ entschieden |
 | 6 | Saison-Pass-Preise | **39 / 149 / 389 €** (~ 8× Monat, 2 Mon geschenkt) | ✅ entschieden |
 | 7 | Saison-Pass + Saison-Wetten Cutoff | **5. Spieltag der laufenden Saison** (gleicher Cutoff für beides) | ✅ entschieden |
 | 8 | Provision auf allen Tiers | **0 %** | ✅ entschieden |

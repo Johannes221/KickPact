@@ -2,7 +2,7 @@
 
 Schritt-für-Schritt-Anleitung für den Stripe-Account, der KickPact-Subscriptions
 abrechnet. Ziel: nach diesem Dokument ist deine Stripe-Integration komplett
-konfiguriert — 9 Price-IDs in der `.env.local`, Webhook angebunden, Test-Checkout
+konfiguriert — 6 Price-IDs in der `.env.local`, Webhook angebunden, Test-Checkout
 durchgespielt.
 
 > **Wichtig:** KickPact läuft auch ohne Stripe (Login, Pledges, PDF-Rechnungen
@@ -38,7 +38,7 @@ Oben rechts im Stripe-Dashboard ist ein Toggle **"Testmodus"**:
 
 ## 3. 9 Produkte + 9 Preise anlegen
 
-KickPact hat **3 Tiers** × **3 Billing-Cycles** = **9 Stripe-Price-IDs**.
+KickPact hat **3 Tiers** × **2 Billing-Cycles** = **6 Stripe-Price-IDs**.
 Source of Truth: [`lib/stripe/pricing.ts`](../../lib/stripe/pricing.ts) `PLANS`-Konstante.
 
 Lege im Stripe-Dashboard unter **Products → + Add product** die folgenden
@@ -54,8 +54,7 @@ beim Anlegen, oder nachträglich über das Produkt-Detail-Sheet).
 | Preis-Name (intern) | Betrag | Currency | Billing | Recurring config | Env-Variable |
 |---|---|---|---|---|---|
 | Basic — Monthly | `5,00` | EUR | Recurring | `interval=month`, `interval_count=1` | `STRIPE_BASIC_MONTHLY_PRICE_ID` |
-| Basic — Season-Pass | `39,00` | EUR | Recurring | `interval=month`, `interval_count=10` | `STRIPE_BASIC_SEASON_PRICE_ID` |
-| Basic — Annual | `49,00` | EUR | Recurring | `interval=year`, `interval_count=1` | `STRIPE_BASIC_ANNUAL_PRICE_ID` |
+| Basic — Season-Pass | `39,00` | EUR | Recurring | `interval=month`, `interval_count=10` | `STRIPE_BASIC_SEASON_END_PRICE_ID` |
 
 ### Produkt 2: KickPact Pro
 
@@ -65,8 +64,7 @@ beim Anlegen, oder nachträglich über das Produkt-Detail-Sheet).
 | Preis-Name (intern) | Betrag | Currency | Billing | Recurring config | Env-Variable |
 |---|---|---|---|---|---|
 | Pro — Monthly | `19,00` | EUR | Recurring | `interval=month`, `interval_count=1` | `STRIPE_PRO_MONTHLY_PRICE_ID` |
-| Pro — Season-Pass | `149,00` | EUR | Recurring | `interval=month`, `interval_count=10` | `STRIPE_PRO_SEASON_PRICE_ID` |
-| Pro — Annual | `189,00` | EUR | Recurring | `interval=year`, `interval_count=1` | `STRIPE_PRO_ANNUAL_PRICE_ID` |
+| Pro — Season-Pass | `149,00` | EUR | Recurring | `interval=month`, `interval_count=10` | `STRIPE_PRO_SEASON_END_PRICE_ID` |
 
 ### Produkt 3: KickPact Vereinslizenz
 
@@ -76,8 +74,7 @@ beim Anlegen, oder nachträglich über das Produkt-Detail-Sheet).
 | Preis-Name (intern) | Betrag | Currency | Billing | Recurring config | Env-Variable |
 |---|---|---|---|---|---|
 | Vereinslizenz — Monthly | `49,00` | EUR | Recurring | `interval=month`, `interval_count=1` | `STRIPE_VEREIN_MONTHLY_PRICE_ID` |
-| Vereinslizenz — Season-Pass | `389,00` | EUR | Recurring | `interval=month`, `interval_count=10` | `STRIPE_VEREIN_SEASON_PRICE_ID` |
-| Vereinslizenz — Annual | `489,00` | EUR | Recurring | `interval=year`, `interval_count=1` | `STRIPE_VEREIN_ANNUAL_PRICE_ID` |
+| Vereinslizenz — Season-Pass | `389,00` | EUR | Recurring | `interval=month`, `interval_count=10` | `STRIPE_VEREIN_SEASON_END_PRICE_ID` |
 
 ### Hinweise zu den Recurring-Einstellungen
 
@@ -86,8 +83,6 @@ beim Anlegen, oder nachträglich über das Produkt-Detail-Sheet).
   Aug–Mai ab. Juni/Juli pausiert die App lokal (siehe `SEASON_PAUSE_MONTHS` in `pricing.ts`),
   Stripe weiß davon nichts — wir buchen einfach für 10 Monate vor, der nächste
   Charge kommt automatisch im August.
-- **Annual**: "Jährlich" — `interval=year, interval_count=1`. Stripe-UI schreibt
-  oft "Yearly", das ist dasselbe.
 - **Trial-Periode** wird *nicht* im Preis-Setup definiert. KickPact setzt
   `trial_period_days: 30` dynamisch bei `createCheckoutSession()`.
 
@@ -99,7 +94,7 @@ Klick auf die einzelne Zeile erreichbar.
 
 ## 4. Price-IDs in `.env.local` setzen
 
-Trag alle 9 Werte in `.env.local` ein (für Production: Coolify-ENV):
+Trag alle 6 Werte in `.env.local` ein (für Production: Coolify-ENV):
 
 ```bash
 # Stripe-Auth (Schritt 5)
@@ -108,18 +103,15 @@ STRIPE_WEBHOOK_SECRET="whsec_..."
 
 # Basic
 STRIPE_BASIC_MONTHLY_PRICE_ID="price_..."
-STRIPE_BASIC_SEASON_PRICE_ID="price_..."
-STRIPE_BASIC_ANNUAL_PRICE_ID="price_..."
+STRIPE_BASIC_SEASON_END_PRICE_ID="price_..."
 
 # Pro
 STRIPE_PRO_MONTHLY_PRICE_ID="price_..."
-STRIPE_PRO_SEASON_PRICE_ID="price_..."
-STRIPE_PRO_ANNUAL_PRICE_ID="price_..."
+STRIPE_PRO_SEASON_END_PRICE_ID="price_..."
 
 # Vereinslizenz
 STRIPE_VEREIN_MONTHLY_PRICE_ID="price_..."
-STRIPE_VEREIN_SEASON_PRICE_ID="price_..."
-STRIPE_VEREIN_ANNUAL_PRICE_ID="price_..."
+STRIPE_VEREIN_SEASON_END_PRICE_ID="price_..."
 ```
 
 Naming-Convention `STRIPE_<PLAN>_<CYCLE>_PRICE_ID` ist exakt das was

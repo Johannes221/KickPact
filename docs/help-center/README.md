@@ -66,7 +66,7 @@
 ### 4. Tarife & Pricing (8 Artikel)
 
 - [x] **welcher-tarif-passt** — [Prio: MUSS] — Entscheidungshilfe: wie viele Sponsoren? wie viele Teams? → Tarif-Empfehlung.
-- [x] **saison-pass-vs-annual** — [Prio: MUSS] — Wann lohnt was, mit konkreten Zahlen.
+- [x] **saison-pass-vs-monatlich** — [Prio: MUSS] — Wann lohnt was, mit konkreten Zahlen.
 - [ ] **5-spieltag-cutoff** — [Prio: MUSS] — Was passiert ab dem 6. Spieltag (Saison-Pass + Saison-Wetten gesperrt bis nächste Saison).
 - [ ] **trial-30-tage** — [Prio: MUSS] — Trial-Start, Reminder, was nach Ablauf passiert, Grace-Period.
 - [ ] **upgrade-basic-auf-pro** — [Prio: SOLL] — Wann sinnvoll, was passiert mit bestehenden Pledges, Stripe-Pro-Rated.
@@ -157,7 +157,7 @@
 
 - [`/articles/welcher-tarif-passt.md`](articles/welcher-tarif-passt.md) — Decision-Tree für Tarifwahl.
 - [`/articles/erste-schritte-verein.md`](articles/erste-schritte-verein.md) — End-to-End-Verein-Onboarding.
-- [`/articles/saison-pass-vs-annual.md`](articles/saison-pass-vs-annual.md) — Billing-Cycle-Vergleich.
+- [`/articles/saison-pass-vs-monatlich.md`](articles/saison-pass-vs-monatlich.md) — Billing-Cycle-Vergleich.
 
 ---
 
@@ -181,7 +181,7 @@ category_label: "Tarife & Pricing"
 prio: "MUSS"
 audience: ["verein-admin", "sponsor"]   # einer von: verein-admin, trainer, sponsor, vereinslizenz-admin
 related_articles:
-  - "saison-pass-vs-annual"
+  - "saison-pass-vs-monatlich"
   - "vereinslizenz-break-even"
   - "trial-30-tage"
 last_updated: "2026-05-24"

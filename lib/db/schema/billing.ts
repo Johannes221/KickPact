@@ -5,8 +5,12 @@ import { clubs, teams } from "./clubs";
 // Pricing v2: 3 Tiers (basic / pro / verein) – siehe docs/pricing.md §1.
 export const planEnum = pgEnum("plan", ["basic", "pro", "verein"]);
 
-// Pricing v2: 3 Billing-Cycles. Default monatlich.
+// Pricing v2: Billing-Cycles. Default monatlich.
 // 2026-05-28: 'season' → 'season_end' (spec-konform, Migration 0028).
+// 2026-06-02: 'annual' aus dem App-Code entfernt (Saison-Pass = Jahres-Bindung).
+//   Der Enum-WERT bleibt hier inert bestehen — Postgres kann Enum-Werte nicht
+//   gefahrlos droppen, und kein App-Code erzeugt mehr 'annual'. Reads werden via
+//   normalizeBillingCycle() (lib/stripe/pricing.ts) abgefangen.
 export const billingCycleEnum = pgEnum("billing_cycle", [
   "monthly",
   "season_end",
@@ -43,7 +47,7 @@ export const subscriptions = pgTable("subscriptions", {
   stripeCustomerId: text("stripe_customer_id").unique(),
   stripeSubscriptionId: text("stripe_subscription_id").unique(),
   status: subscriptionStatusEnum("status").notNull().default("trialing"),
-  // Pricing v2: Billing-Cycle pro Subscription (monthly|season_end|annual).
+  // Pricing v2: Billing-Cycle pro Subscription (monthly|season_end; 'annual' inert, s.o.).
   billingCycle: billingCycleEnum("billing_cycle").notNull().default("monthly"),
   trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
   currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),

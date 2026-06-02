@@ -9,6 +9,7 @@ import { requireUser } from "@/lib/auth/session";
 import { getStripe, isStripeConfigured } from "@/lib/stripe/client";
 import {
   getStripePriceId,
+  normalizeBillingCycle,
   TRIAL_DAYS,
   type PlanKey,
   type BillingCycle
@@ -28,7 +29,7 @@ export async function createCheckoutSession(opts: {
   clubSlug: string;
   plan: PlanKey;
   /**
-   * Billing-Cycle (monthly/season/annual). Falls leer: aus subscriptions.billingCycle,
+   * Billing-Cycle (monthly/season_end). Falls leer: aus subscriptions.billingCycle,
    * Fallback monthly. Pricing-v2-Audit #2 (2026-05-24): vorher wurde cycle ignoriert,
    * Saison-Pass-Checkout zeigte fälschlich Monthly-Preis.
    */
@@ -54,8 +55,9 @@ export async function createCheckoutSession(opts: {
     .limit(1);
 
   // Cycle-Resolution: explizit > subscriptions.billingCycle > monthly.
+  // normalizeBillingCycle fängt inerte Alt-Werte (z.B. legacy 'annual') ab.
   const cycle: BillingCycle =
-    opts.cycle ?? ((existing?.billingCycle as BillingCycle | undefined) ?? "monthly");
+    opts.cycle ?? normalizeBillingCycle(existing?.billingCycle);
 
   const priceId = getStripePriceId(opts.plan, cycle);
   if (!priceId) {
@@ -165,7 +167,7 @@ export async function startCheckoutAndRedirect(formData: FormData) {
   const plan = String(formData.get("plan")) as PlanKey;
   const cycleRaw = formData.get("cycle");
   const cycle =
-    cycleRaw === "monthly" || cycleRaw === "season_end" || cycleRaw === "annual"
+    cycleRaw === "monthly" || cycleRaw === "season_end"
       ? (cycleRaw as BillingCycle)
       : undefined;
   const { url } = await createCheckoutSession({ clubSlug, plan, cycle });
