@@ -7,6 +7,7 @@ import {
   players
 } from "@/lib/db/schema";
 import type { SpielDetails, SpielListItem, KaderPlayer } from "@/lib/crawler/fussballde";
+import { isReadableName } from "@/lib/players/readable-name";
 
 export interface ActiveTeam {
   id: string;
@@ -450,9 +451,13 @@ async function writeMatchEvents(
  *
  * Dedup-Strategie (der Unique-Index `players_team_fussballde_idx` greift nur,
  * wenn `fussballde_player_id` NOT NULL ist):
- *  - Spieler MIT spielerId → Batch-INSERT onConflictDoNothing.
+ *  - Spieler MIT spielerId + LESBAREM Namen → Upsert, der einen vorhandenen
+ *    Tofu-Namen durch den lesbaren ersetzt (DSGVO-`blocked`-Zeilen bleiben
+ *    unangetastet, gleiche Namen werden nicht unnötig geschrieben).
+ *  - Spieler MIT spielerId, aber noch UNLESBAREM Namen → nur Insert
+ *    (onConflictDoNothing), damit ein bereits aufgelöster Name nicht durch
+ *    frischen Tofu überschrieben wird.
  *  - Spieler OHNE spielerId → per Name gegen bestehende Zeilen deduplizieren.
- * Bestehende Zeilen werden NICHT überschrieben (respektiert DSGVO-`blocked`).
  */
 export async function persistKader(
   teamId: string,
@@ -461,18 +466,48 @@ export async function persistKader(
   let inserted = 0;
 
   const withId = kader.filter((p) => p.spielerId && p.name.trim().length > 0);
-  if (withId.length > 0) {
+  // In-Batch nach spielerId deduplizieren — onConflictDoUpdate darf dieselbe
+  // Zielzeile nicht zweimal treffen (Postgres-Fehler).
+  const byId = new Map<string, KaderPlayer>();
+  for (const p of withId) byId.set(p.spielerId!, p);
+  const uniqueWithId = [...byId.values()];
+
+  const readable = uniqueWithId.filter((p) => isReadableName(p.name));
+  const unreadable = uniqueWithId.filter((p) => !isReadableName(p.name));
+
+  if (readable.length > 0) {
     await db
       .insert(players)
       .values(
-        withId.map((p) => ({
+        readable.map((p) => ({
+          teamId,
+          fussballdePlayerId: p.spielerId!,
+          name: p.name
+        }))
+      )
+      .onConflictDoUpdate({
+        target: [players.teamId, players.fussballdePlayerId],
+        targetWhere: sql`${players.fussballdePlayerId} IS NOT NULL`,
+        set: { name: sql`excluded.name` },
+        // Nie über blockierte (anonymisierte) Spieler schreiben, und nur wenn
+        // sich der Name tatsächlich ändert.
+        setWhere: sql`${players.blocked} = false AND ${players.name} <> excluded.name`
+      });
+    inserted += readable.length;
+  }
+
+  if (unreadable.length > 0) {
+    await db
+      .insert(players)
+      .values(
+        unreadable.map((p) => ({
           teamId,
           fussballdePlayerId: p.spielerId!,
           name: p.name
         }))
       )
       .onConflictDoNothing();
-    inserted += withId.length;
+    inserted += unreadable.length;
   }
 
   const withoutId = kader.filter((p) => !p.spielerId && p.name.trim().length > 0);

@@ -53,6 +53,8 @@ const SPEZIAL_SUBTYPES = [
   { value: "fernschuss", label: "Fernschuss" },
   { value: "elfmeter", label: "Elfmeter" },
   { value: "freistoss", label: "Freistoß" },
+  { value: "eckentor", label: "Eckentor (direkt)" },
+  { value: "tor_mittellinie", label: "Tor hinter Mittellinie" },
   { value: "assist", label: "Vorlage (Assist)" },
   { value: "man_of_match", label: "Spieler des Spiels" },
   { value: "sonstiges", label: "Sonstiges Spezialtor (Kommentar)" }

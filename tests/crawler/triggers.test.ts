@@ -148,27 +148,83 @@ describe("evaluateTriggers — match-level outcomes", () => {
 });
 
 describe("evaluateTriggers — comeback_win", () => {
-  it("erzeugt Charge wenn zur HZ hinten + am Ende vorne", () => {
-    const match = loadFixture("comeback-win"); // HZ 0:2, FT 3:2
+  it("erzeugt Charge wenn irgendwann hinten + am Ende Sieg", () => {
+    const match = loadFixture("comeback-win"); // 0:2 → 3:2
     const r = rule({ triggerType: "comeback_win", amountCents: 1500 });
     const charges = evaluateTriggers(match, [r]);
     expect(charges).toHaveLength(1);
   });
 
-  it("erzeugt 0 bei normalem Sieg ohne Halbzeitrückstand", () => {
-    const match = loadFixture("win-with-goals"); // HZ 2:0
+  it("erzeugt 0 bei nie-hinten-Sieg", () => {
+    const match = loadFixture("win-with-goals"); // 3:1, nie hinten
     const r = rule({ triggerType: "comeback_win", amountCents: 1500 });
     expect(evaluateTriggers(match, [r])).toHaveLength(0);
   });
 
-  it("erzeugt 0 wenn Halbzeit-Daten fehlen", () => {
+  it("erkennt Comeback aus der Tor-Chronologie auch ohne Halbzeit-Daten", () => {
+    // Neu vs. alt: früher brauchte comeback_win den Halbzeitstand. Jetzt reicht
+    // die Tor-Chronologie (gast führt 0:2, heim dreht auf 3:2).
     const match: MatchInput = {
       ...loadFixture("comeback-win"),
       halbzeitHeim: null,
       halbzeitGast: null
     };
     const r = rule({ triggerType: "comeback_win", amountCents: 1500 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(1);
+  });
+
+  it("erkennt Rückstand erst in der zweiten Hälfte (HZ ausgeglichen)", () => {
+    // 1:1 zur HZ, dann 1:2 (heim hinten), dann 3:2 (heim dreht) → Comeback.
+    const match: MatchInput = {
+      id: "syn_cb_2nd_half",
+      teamSide: "heim",
+      ergebnisHeim: 3,
+      ergebnisGast: 2,
+      halbzeitHeim: 1,
+      halbzeitGast: 1,
+      events: [
+        { id: "e1", type: "tor", minute: 10, side: "heim", playerName: "A", playerId: "p_a", source: "scraped" },
+        { id: "e2", type: "tor", minute: 40, side: "gast", playerName: "X", playerId: "p_x", source: "scraped" },
+        { id: "e3", type: "tor", minute: 55, side: "gast", playerName: "Y", playerId: "p_y", source: "scraped" },
+        { id: "e4", type: "tor", minute: 70, side: "heim", playerName: "B", playerId: "p_b", source: "scraped" },
+        { id: "e5", type: "tor", minute: 88, side: "heim", playerName: "C", playerId: "p_c", source: "scraped" }
+      ]
+    };
+    const r = rule({ triggerType: "comeback_win", amountCents: 1500 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(1);
+  });
+
+  it("kein Comeback wenn zwar zwischenzeitlich hinten, aber am Ende nur Remis", () => {
+    const match: MatchInput = {
+      id: "syn_cb_draw",
+      teamSide: "heim",
+      ergebnisHeim: 2,
+      ergebnisGast: 2,
+      halbzeitHeim: 0,
+      halbzeitGast: 1,
+      events: [
+        { id: "e1", type: "tor", minute: 15, side: "gast", playerName: "X", playerId: "p_x", source: "scraped" },
+        { id: "e2", type: "tor", minute: 50, side: "heim", playerName: "A", playerId: "p_a", source: "scraped" },
+        { id: "e3", type: "tor", minute: 70, side: "gast", playerName: "Y", playerId: "p_y", source: "scraped" },
+        { id: "e4", type: "tor", minute: 85, side: "heim", playerName: "B", playerId: "p_b", source: "scraped" }
+      ]
+    };
+    const r = rule({ triggerType: "comeback_win", amountCents: 1500 });
     expect(evaluateTriggers(match, [r])).toHaveLength(0);
+  });
+
+  it("Halbzeit-Rückstand zählt als Sicherheitsnetz, wenn keine Tor-Minuten vorliegen", () => {
+    const match: MatchInput = {
+      id: "syn_cb_ht_only",
+      teamSide: "heim",
+      ergebnisHeim: 2,
+      ergebnisGast: 1,
+      halbzeitHeim: 0,
+      halbzeitGast: 1,
+      events: [] // keine verwertbare Chronologie
+    };
+    const r = rule({ triggerType: "comeback_win", amountCents: 1500 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(1);
   });
 });
 

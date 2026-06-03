@@ -246,12 +246,47 @@ function opponentHalftime(m: MatchInput): number | null {
   return m.teamSide === "heim" ? m.halbzeitGast : m.halbzeitHeim;
 }
 
+/**
+ * Comeback = die Mannschaft lag *irgendwann im Spielverlauf* hinten und gewinnt
+ * am Ende. Bewusst NICHT halbzeit-basiert: ein Team kann auch erst in der
+ * zweiten Hälfte in Rückstand geraten und drehen.
+ *
+ * Primärsignal ist die Tor-Chronologie (Minute für Minute): Wir führen den
+ * laufenden Spielstand mit und prüfen, ob `ownScore < opponentScore` jemals
+ * eintrat. Als kostenloses Sicherheitsnetz (gleiche Richtung) zählt zusätzlich
+ * ein Halbzeit-Rückstand als „war hinten" — falls für ein Spiel ausnahmsweise
+ * keine verwertbaren Tor-Minuten vorliegen.
+ */
 function isComebackWin(m: MatchInput): boolean {
   if (!isWin(m)) return false;
+  return wasEverBehind(m);
+}
+
+function wasEverBehind(m: MatchInput): boolean {
+  // Tor-Events chronologisch — stabil sortiert, Tore ohne Minute hinten.
+  const goals = m.events
+    .filter((e) => e.type === "tor")
+    .map((e, i) => ({ e, i }))
+    .sort((a, b) => {
+      const ma = a.e.minute ?? Number.POSITIVE_INFINITY;
+      const mb = b.e.minute ?? Number.POSITIVE_INFINITY;
+      return ma === mb ? a.i - b.i : ma - mb;
+    });
+
+  let own = 0;
+  let opp = 0;
+  for (const { e } of goals) {
+    if (e.side === m.teamSide) own++;
+    else opp++;
+    if (own < opp) return true;
+  }
+
+  // Sicherheitsnetz: Halbzeit-Rückstand zählt ebenfalls als „war hinten".
   const ownHT = ownHalftime(m);
   const oppHT = opponentHalftime(m);
-  if (ownHT === null || oppHT === null) return false;
-  return ownHT < oppHT;
+  if (ownHT !== null && oppHT !== null && ownHT < oppHT) return true;
+
+  return false;
 }
 
 function isHattrick(m: MatchInput): boolean {

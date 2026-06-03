@@ -3,6 +3,7 @@ import { chromium, type Page } from "playwright";
 import { fetch as undiciFetch } from "undici";
 import { parse as parseHtml, type HTMLElement } from "node-html-parser";
 import { saisonStartDate } from "@/lib/utils/saison";
+import { isReadableName } from "@/lib/players/readable-name";
 
 /**
  * Audit 2026-05-24 Phase 5 / Task 5.2: User-Agent-Rotation gegen fussball.de-Bann.
@@ -990,7 +991,7 @@ export async function getKader(
   slug: string,
   saison: string
 ): Promise<KaderPlayer[]> {
-  return withPage(async (page) => {
+  const raw = await withPage(async (page) => {
     // SECURITY (M2): URL-Segmente encodieren (Defense-in-depth, s. paginateTeamGames).
     const url = `https://www.fussball.de/mannschaft/${encodeURIComponent(slug)}/-/saison/${encodeURIComponent(saison)}/team-id/${encodeURIComponent(teamId)}#!/`;
     await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
@@ -1010,7 +1011,7 @@ export async function getKader(
         var name = (link.textContent || "").replace(/\\s+/g, " ").trim();
         if (name.length < 2) return;
         if (id) seen.add(id);
-        players.push({ name: name, spielerId: id || undefined });
+        players.push({ name: name, spielerId: id || undefined, href: href || undefined });
       });
 
       // Strategy 2: .column-name cells in kader tables (fallback if links have no text)
@@ -1025,6 +1026,31 @@ export async function getKader(
       }
 
       return players;
-    })()`) as KaderPlayer[];
+    })()`) as Array<KaderPlayer & { href?: string }>;
   });
+
+  // fussball.de obfuskiert die Namen auf der Kader-Seite mit einem Custom-Font
+  // (Private Use Area) → der Linktext ist oft Tofu. Wir lösen solche Namen über
+  // die Spieler-Profilseite auf (gleicher Mechanismus + Cache wie Torschützen in
+  // getSpielDetails), sequenziell mit kleinem Delay gegen Rate-Limiting. So
+  // landet der VOLLE, lesbare Kader in der DB — auch Spieler ohne Tor.
+  const out: KaderPlayer[] = [];
+  for (const p of raw) {
+    let name = p.name;
+    const url = p.href
+      ? p.href.startsWith("http")
+        ? p.href
+        : `https://www.fussball.de${p.href}`
+      : null;
+    if (url && !isReadableName(name)) {
+      const id = extractPlayerIdFromUrl(url);
+      if (id && !playerNameCache.has(id)) {
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      const resolved = await resolvePlayerName(url);
+      if (isReadableName(resolved)) name = resolved;
+    }
+    out.push({ name, spielerId: p.spielerId });
+  }
+  return out;
 }

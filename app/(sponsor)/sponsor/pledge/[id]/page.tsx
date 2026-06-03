@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
-import { getTeamPlayerNames } from "@/lib/db/queries/matches";
+import { getTeamPlayerPool } from "@/lib/db/queries/matches";
 import {
   getPledgeDetailForSponsorView,
   listActivePledgeRules,
@@ -46,8 +46,9 @@ export default async function PledgeDetailPage({
     params: (r.params ?? {}) as Record<string, unknown>
   }));
 
-  // Spieler-Namen für den „Tore von Spieler X"-Picker (DB-Quelle, kein Invite-Token nötig).
-  const playerNames = await getTeamPlayerNames(pledge.teamId);
+  // Spieler-Namen für den „Tore von Spieler X"-Picker — vollständiger Pool
+  // (Kader ∪ alle Auftritte), serverseitig vorgeladen.
+  const playerNames = await getTeamPlayerPool(pledge.teamId);
 
   const recentCharges = await listRecentChargesForPledge(id, 10);
 

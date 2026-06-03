@@ -5,13 +5,11 @@ import { NextRequest } from "next/server";
 const {
   requireUserMock,
   findInvitationByTokenMock,
-  getTeamFussballdeRefMock,
-  getTeamPlayerNamesMock
+  getTeamPlayerPoolMock
 } = vi.hoisted(() => ({
   requireUserMock: vi.fn(),
   findInvitationByTokenMock: vi.fn(),
-  getTeamFussballdeRefMock: vi.fn(),
-  getTeamPlayerNamesMock: vi.fn()
+  getTeamPlayerPoolMock: vi.fn()
 }));
 
 vi.mock("@/lib/auth/session", () => ({
@@ -23,12 +21,7 @@ vi.mock("@/lib/db/queries/invitations", () => ({
 }));
 
 vi.mock("@/lib/db/queries/matches", () => ({
-  getTeamPlayerNames: getTeamPlayerNamesMock,
-  getTeamFussballdeRef: getTeamFussballdeRefMock
-}));
-
-vi.mock("@/lib/crawler/fussballde", () => ({
-  getKader: vi.fn().mockResolvedValue([{ name: "Max Mustermann" }, { name: "Erika Beispiel" }])
+  getTeamPlayerPool: getTeamPlayerPoolMock
 }));
 
 import { GET } from "@/app/api/squad/route";
@@ -43,9 +36,8 @@ function makeReq(token?: string): NextRequest {
 beforeEach(() => {
   requireUserMock.mockReset();
   findInvitationByTokenMock.mockReset();
-  getTeamFussballdeRefMock.mockReset();
-  getTeamPlayerNamesMock.mockReset();
-  getTeamPlayerNamesMock.mockResolvedValue([]);
+  getTeamPlayerPoolMock.mockReset();
+  getTeamPlayerPoolMock.mockResolvedValue([]);
 });
 
 describe("GET /api/squad", () => {
@@ -78,17 +70,18 @@ describe("GET /api/squad", () => {
       teamId: "team1",
       status: "pending"
     });
-    getTeamFussballdeRefMock.mockResolvedValue({
-      fussballdeTeamId: "ft1",
-      fussballdeSlug: "fc-test"
-    });
-    // Aufgelaufene Spieler aus match_events — Union mit dem Kader, dedupliziert + sortiert.
-    getTeamPlayerNamesMock.mockResolvedValue(["Anton Aufgelaufen", "Max Mustermann"]);
+    // /api/squad zieht die Liste jetzt rein aus der DB (Kader ∪ Auftritte) via
+    // getTeamPlayerPool — kein Live-Scrape mehr. Dedup/Sort passiert dort.
+    getTeamPlayerPoolMock.mockResolvedValue([
+      "Anton Aufgelaufen",
+      "Erika Beispiel",
+      "Max Mustermann"
+    ]);
 
     const res = await GET(makeReq("valid-token"));
     expect(res.status).toBe(200);
     const body = await res.json();
-    // Kader {Max, Erika} ∪ match_events {Anton, Max} → dedupliziert, alphabetisch (de).
+    expect(getTeamPlayerPoolMock).toHaveBeenCalledWith("team1");
     expect(body.players).toEqual(["Anton Aufgelaufen", "Erika Beispiel", "Max Mustermann"]);
   });
 });
