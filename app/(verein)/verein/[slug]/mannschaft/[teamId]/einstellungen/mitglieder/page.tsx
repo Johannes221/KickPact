@@ -19,6 +19,7 @@ import {
 } from "./_actions/invite";
 import { changeRoleAction, revokeAction } from "./_actions/manage";
 import { approveRequestAction, rejectRequestAction } from "./_actions/approve-reject";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata = { title: "Mitglieder · Mannschaft · KickPact" };
 
@@ -125,9 +126,7 @@ export default async function TeamMitgliederPage({
         <h3 className="font-display font-bold text-xl tracking-tight text-brand-night-navy mb-3">
           Offene Anfragen
           {pendingRequests.length > 0 && (
-            <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
-              {pendingRequests.length}
-            </span>
+            <Badge tone="warning" className="ml-2">{pendingRequests.length}</Badge>
           )}
         </h3>
         <RequestsTable
