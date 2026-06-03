@@ -114,23 +114,25 @@ export function OAuthButtons({ mode, enabled, role }: OAuthButtonsProps) {
         <Button
           type="button"
           variant="outline"
-          className="w-full"
+          size="lg"
+          className="press w-full"
           disabled={pending !== null}
           onClick={() => handleSocial("google")}
         >
-          <GoogleIcon className="mr-2 h-4 w-4" />
+          <GoogleIcon className="h-[18px] w-[18px]" />
           {pending === "google" ? "Verbinde mit Google..." : "Mit Google fortfahren"}
         </Button>
       )}
       {enabled.apple && (
         <Button
           type="button"
-          variant="outline"
-          className="w-full bg-black text-white hover:bg-black/90 hover:text-white border-black"
+          variant="dark"
+          size="lg"
+          className="press w-full"
           disabled={pending !== null}
           onClick={() => handleSocial("apple")}
         >
-          <AppleIcon className="mr-2 h-4 w-4" />
+          <AppleIcon className="h-[18px] w-[18px]" />
           {pending === "apple" ? "Verbinde mit Apple..." : "Mit Apple fortfahren"}
         </Button>
       )}

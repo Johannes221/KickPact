@@ -50,7 +50,7 @@ export default async function MannschaftenPage({
           >
             ← Dashboard
           </Link>
-          <h2 className="mt-1.5 font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+          <h2 className="mt-1.5 font-display font-bold text-2xl md:text-3xl tracking-tight text-brand-night-navy">
             Mannschaften
           </h2>
           <p className="text-sm text-brand-night-navy/60">
@@ -84,7 +84,7 @@ export default async function MannschaftenPage({
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-display font-black text-lg tracking-tight text-brand-night-navy truncate">
+                      <h3 className="font-display font-bold text-lg tracking-tight text-brand-night-navy truncate">
                         {t.name}
                       </h3>
                       {!t.isActive && (
@@ -100,7 +100,7 @@ export default async function MannschaftenPage({
 
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-lg bg-brand-off-white px-2 py-2">
-                    <div className="font-display font-black text-base text-brand-night-navy">
+                    <div className="font-display font-bold text-base text-brand-night-navy">
                       {pledgeCount}
                     </div>
                     <div className="text-[0.6rem] uppercase tracking-widest font-semibold text-brand-night-navy/50">
@@ -108,7 +108,7 @@ export default async function MannschaftenPage({
                     </div>
                   </div>
                   <div className="rounded-lg bg-brand-off-white px-2 py-2">
-                    <div className="font-display font-black text-base text-accent">
+                    <div className="font-display font-bold text-base text-accent">
                       {eur(cents30d)}
                     </div>
                     <div className="text-[0.6rem] uppercase tracking-widest font-semibold text-brand-night-navy/50">
@@ -116,7 +116,7 @@ export default async function MannschaftenPage({
                     </div>
                   </div>
                   <div className="rounded-lg bg-brand-off-white px-2 py-2">
-                    <div className="font-display font-black text-base text-brand-night-navy">
+                    <div className="font-display font-bold text-base text-brand-night-navy">
                       {matches30d}
                     </div>
                     <div className="text-[0.6rem] uppercase tracking-widest font-semibold text-brand-night-navy/50">

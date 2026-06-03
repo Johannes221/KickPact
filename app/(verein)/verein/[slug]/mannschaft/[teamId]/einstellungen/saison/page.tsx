@@ -45,7 +45,7 @@ export default async function TeamEinstellungenSaisonPage({
         >
           ← Einstellungen
         </Link>
-        <h2 className="mt-1.5 font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+        <h2 className="mt-1.5 font-display font-bold text-2xl md:text-3xl tracking-tight text-brand-night-navy">
           Saison-Ergebnis manuell setzen
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">

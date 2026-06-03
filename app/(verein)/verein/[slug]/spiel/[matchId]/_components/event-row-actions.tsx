@@ -168,7 +168,7 @@ export function EventRowActions({
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display font-black text-xl tracking-tight">
+            <DialogTitle className="font-display font-bold text-xl tracking-tight">
               Event bearbeiten
             </DialogTitle>
             <DialogDescription>
@@ -290,7 +290,7 @@ export function EventRowActions({
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display font-black text-xl tracking-tight text-brand-alert-red">
+            <DialogTitle className="font-display font-bold text-xl tracking-tight text-brand-alert-red">
               Event wirklich löschen?
             </DialogTitle>
             <DialogDescription className="space-y-2 pt-2">

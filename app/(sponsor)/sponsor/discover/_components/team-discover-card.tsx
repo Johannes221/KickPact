@@ -76,7 +76,7 @@ export function TeamDiscoverCard({
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-brand-night-navy via-brand-night-navy/40 to-transparent" />
           {/* Logo badge */}
-          <div className="absolute bottom-3 left-3 flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-accent text-base font-black text-brand-night-navy shadow-lg">
+          <div className="absolute bottom-3 left-3 flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-accent text-base font-bold text-brand-night-navy shadow-lg">
             {team.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -92,7 +92,7 @@ export function TeamDiscoverCard({
 
         {/* Body */}
         <div className="flex flex-1 flex-col gap-1.5 px-4 py-3">
-          <h3 className="font-display text-base font-black tracking-tight text-brand-night-navy leading-tight">
+          <h3 className="font-display text-base font-bold tracking-tight text-brand-night-navy leading-tight">
             {team.teamName}
           </h3>
           {meta && (
@@ -170,7 +170,7 @@ export function TeamDiscoverCard({
                 <span className="block text-[0.65rem] uppercase tracking-widest font-semibold text-brand-night-navy/50">
                   Sponsoring anfragen
                 </span>
-                <span className="block font-display font-black text-xl tracking-tight text-brand-night-navy">
+                <span className="block font-display font-bold text-xl tracking-tight text-brand-night-navy">
                   {team.clubName} · {team.teamName}
                 </span>
               </SheetTitle>

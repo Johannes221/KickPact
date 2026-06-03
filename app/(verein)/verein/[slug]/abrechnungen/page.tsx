@@ -61,7 +61,7 @@ export default async function AbrechnungenPage({
   return (
     <div className="space-y-5 md:space-y-8">
       <div>
-        <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
           Abrechnungen
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -78,7 +78,7 @@ export default async function AbrechnungenPage({
       {result.total === 0 ? (
         <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-6 md:p-8">
           <div className="text-3xl md:text-4xl mb-2 md:mb-3">📄</div>
-          <p className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+          <p className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
             Noch keine Rechnungen
           </p>
           <p className="mt-1.5 md:mt-2 text-sm text-brand-night-navy/60 max-w-md">
@@ -112,7 +112,7 @@ function StatCard({ label, value, hint }: { label: string; value: string; hint?:
       <div className="text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
         {label}
       </div>
-      <div className="mt-1.5 font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+      <div className="mt-1.5 font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
         {value}
       </div>
       {hint && <div className="text-xs text-brand-night-navy/40 mt-0.5">{hint}</div>}

@@ -56,7 +56,7 @@ export default async function PactsPage({
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="font-display font-black text-2xl md:text-3xl tracking-tight">Pacts</h1>
+        <h1 className="font-display font-bold text-2xl md:text-3xl tracking-tight">Pacts</h1>
         <p className="text-sm text-brand-night-navy/60 mt-1">
           Alle Sponsoring-Vereinbarungen auf diese Mannschaft. Sortiert nach Betrag.
         </p>

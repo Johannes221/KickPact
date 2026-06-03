@@ -205,7 +205,7 @@ export function NeuesTeamWizard({
             <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
               Ausgewählte Mannschaft
             </div>
-            <div className="mt-1 font-display font-black text-xl tracking-tight text-brand-night-navy">
+            <div className="mt-1 font-display font-bold text-xl tracking-tight text-brand-night-navy">
               {selectedTeam.name}
             </div>
             <div className="text-xs text-brand-night-navy/60 mt-0.5">

@@ -108,7 +108,7 @@ export default async function PledgesPage({
   return (
     <div className="space-y-5 md:space-y-8">
       <div>
-        <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
           Pacts
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -164,7 +164,7 @@ function StatCard({ label, value, hint }: { label: string; value: string; hint?:
       <div className="text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
         {label}
       </div>
-      <div className="mt-1.5 font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+      <div className="mt-1.5 font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
         {value}
       </div>
       {hint && <div className="text-xs text-brand-night-navy/40 mt-0.5">{hint}</div>}

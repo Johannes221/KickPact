@@ -20,7 +20,7 @@ export default async function RecapPage({
   return (
     <div className="mx-auto max-w-2xl space-y-5 md:space-y-6">
       <div>
-        <h1 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+        <h1 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
           Saison-Recap
         </h1>
         <p className="mt-1 text-sm text-brand-night-navy/60">

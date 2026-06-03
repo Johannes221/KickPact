@@ -65,7 +65,7 @@ export function VereinHeaderShell({
           <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
             Vereins-Dashboard
           </p>
-          <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
+          <h1 className="font-display font-bold text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
             {clubName}
           </h1>
         </div>

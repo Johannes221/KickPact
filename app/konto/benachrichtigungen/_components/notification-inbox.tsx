@@ -60,7 +60,7 @@ export function NotificationInbox({ initial }: { initial: InboxItem[] }) {
   return (
     <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
           Verlauf
         </h2>
         {hasUnread && (

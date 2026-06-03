@@ -33,7 +33,7 @@ export function SegmentedControl({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex w-full rounded-full bg-brand-off-white p-1",
+        "inline-flex w-full rounded-full bg-ios-fill-tertiary p-1",
         className
       )}
     >

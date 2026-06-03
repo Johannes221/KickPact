@@ -9,7 +9,7 @@ import { Logo } from "@/components/shared/logo";
  */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="native-shell min-h-[100dvh] bg-brand-off-white">
+    <div className="native-shell min-h-[100dvh] bg-ios-bg">
       <div className="flex flex-col items-center px-6 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-1 text-center">
         <Logo variant="full" href="/" className="h-6 w-auto" />
         <p className="mt-3 text-sm font-medium text-brand-night-navy/45">

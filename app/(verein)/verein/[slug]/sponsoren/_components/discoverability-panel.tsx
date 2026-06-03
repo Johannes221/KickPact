@@ -15,7 +15,7 @@ interface Team {
 export function DiscoverabilityPanel({ teams }: { teams: Team[] }) {
   return (
     <section>
-      <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+      <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
         Öffentliche Sichtbarkeit
       </h2>
       <p className="mt-1 text-sm text-brand-night-navy/60">

@@ -27,7 +27,7 @@ export default async function VereinVerifikationPage({
         <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
           Verein-Verifikation
         </div>
-        <h2 className="mt-1 font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+        <h2 className="mt-1 font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
           {club.name}
         </h2>
         <p className="mt-2 text-sm text-brand-night-navy/60">

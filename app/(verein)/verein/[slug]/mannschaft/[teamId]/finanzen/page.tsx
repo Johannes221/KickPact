@@ -82,7 +82,7 @@ export default async function FinanzenPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display font-black text-2xl md:text-3xl tracking-tight">Finanzen</h1>
+        <h1 className="font-display font-bold text-2xl md:text-3xl tracking-tight">Finanzen</h1>
         <p className="text-sm text-brand-night-navy/60 mt-1">
           Übersicht aller bestätigten Charges auf diese Mannschaft.
         </p>
@@ -93,7 +93,7 @@ export default async function FinanzenPage({
         <div className="text-xs uppercase tracking-wider font-semibold text-accent-dark">
           Eingenommen insgesamt
         </div>
-        <div className="font-display font-black text-4xl md:text-5xl tracking-tight text-brand-night-navy mt-1 tabular-nums">
+        <div className="font-display font-bold text-4xl md:text-5xl tracking-tight text-brand-night-navy mt-1 tabular-nums">
           {eur(totalCents)}
         </div>
         <div className="text-sm text-brand-night-navy/60 mt-1">

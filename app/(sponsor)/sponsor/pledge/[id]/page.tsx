@@ -58,7 +58,7 @@ export default async function PledgeDetailPage({
         <Link href="/sponsor" className="text-sm text-brand-night-navy/60 hover:text-accent">
           ← Sponsor-Dashboard
         </Link>
-        <h1 className="mt-2 md:mt-3 font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
+        <h1 className="mt-2 md:mt-3 font-display font-bold text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
           {pledge.teamName}
         </h1>
         <p className="mt-1 text-sm md:text-base text-brand-night-navy/60">{pledge.clubName}</p>
@@ -92,7 +92,7 @@ export default async function PledgeDetailPage({
       </div>
 
       <div className="mt-8 md:mt-12 flex items-baseline justify-between gap-3">
-        <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
           Wetten
         </h2>
         <span className="text-xs text-brand-night-navy/50">
@@ -111,7 +111,7 @@ export default async function PledgeDetailPage({
       {/* Charges-Summary */}
       <div className="mt-8 md:mt-12 space-y-4">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+          <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
             Charge-Verlauf
           </h2>
           <span className="font-mono tabular-nums text-brand-night-navy/60 text-sm">
@@ -158,7 +158,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="font-display font-black text-xl tracking-tight text-brand-night-navy capitalize">
+        <div className="font-display font-bold text-xl tracking-tight text-brand-night-navy capitalize">
           {value}
         </div>
       </CardContent>

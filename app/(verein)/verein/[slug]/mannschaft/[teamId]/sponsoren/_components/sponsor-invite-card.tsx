@@ -70,7 +70,7 @@ export function SponsorInviteCard({
         <div className="flex items-start gap-3">
           <span className="text-amber-600 text-lg shrink-0" aria-hidden>🔒</span>
           <div className="flex-1">
-            <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+            <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
               Erst {verifyEntity} verifizieren
             </h3>
             <p className="mt-1 text-sm text-brand-night-navy/70">
@@ -91,7 +91,7 @@ export function SponsorInviteCard({
 
   return (
     <div className="rounded-2xl border border-accent/40 bg-accent/5 p-5">
-      <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+      <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
         Sponsoren einladen
       </h3>
       <p className="mt-1 text-sm text-brand-night-navy/70">

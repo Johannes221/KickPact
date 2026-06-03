@@ -58,7 +58,7 @@ export function ContactForm({ defaults }: { defaults?: { name?: string; email?: 
   if (sent) {
     return (
       <div className="rounded-2xl border border-brand-neutral/40 bg-white p-6 text-center">
-        <p className="font-display font-black text-lg text-brand-night-navy">Danke!</p>
+        <p className="font-display font-bold text-lg text-brand-night-navy">Danke!</p>
         <p className="mt-1 text-sm text-brand-night-navy/60">
           Wir haben deine Anfrage erhalten und melden uns per E-Mail.
         </p>

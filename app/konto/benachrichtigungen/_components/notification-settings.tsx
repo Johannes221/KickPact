@@ -55,7 +55,7 @@ export function NotificationSettings({ initial }: { initial: NotificationSetting
   return (
     <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-4">
       <div>
-        <h2 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
           Push-Benachrichtigungen
         </h2>
         <p className="mt-0.5 text-xs text-brand-night-navy/60">

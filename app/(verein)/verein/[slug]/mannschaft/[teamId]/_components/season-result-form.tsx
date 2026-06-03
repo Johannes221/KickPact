@@ -63,7 +63,7 @@ export function SeasonResultForm({
       <section className="rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+            <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
               Saison-Ergebnis {saison}
             </h3>
             <div className="mt-2 text-xs md:text-sm text-brand-night-navy/70 space-y-0.5">
@@ -89,7 +89,7 @@ export function SeasonResultForm({
 
   return (
     <section className="rounded-2xl border border-accent/30 bg-accent/5 p-4 md:p-5">
-      <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+      <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
         Saison-Ergebnis eintragen
       </h3>
       <p className="mt-1 text-xs md:text-sm text-brand-night-navy/70">

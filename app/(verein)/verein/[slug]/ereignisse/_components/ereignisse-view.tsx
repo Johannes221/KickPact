@@ -128,7 +128,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
             >
               <TriggerIcon type={type} className="h-5 w-5 text-accent-dark" />
               <div className="mt-1 font-semibold text-xs text-brand-night-navy">{meta?.label ?? type}</div>
-              <div className="mt-0.5 font-mono tabular-nums font-black text-sm text-accent">{eur(cents)}</div>
+              <div className="mt-0.5 font-mono tabular-nums font-bold text-sm text-accent">{eur(cents)}</div>
               <div className="flex items-center gap-1.5 text-[0.65rem] text-brand-night-navy/50 mt-0.5">
                 <span>{count}×</span>
                 {sponsors.size > 0 && (
@@ -311,7 +311,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
                     )}
                   </div>
                 </div>
-                <span className="font-mono tabular-nums font-black text-accent shrink-0">
+                <span className="font-mono tabular-nums font-bold text-accent shrink-0">
                   {eur(r.amountCents)}
                 </span>
               </div>

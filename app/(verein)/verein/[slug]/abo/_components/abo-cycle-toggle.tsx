@@ -106,7 +106,7 @@ export function AboCycleToggle({
               }
             >
               <div className="flex items-baseline justify-between">
-                <h3 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+                <h3 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
                   {plan.label}
                 </h3>
                 {key === "pro" && (
@@ -116,7 +116,7 @@ export function AboCycleToggle({
                 )}
               </div>
               <div className="mt-2 md:mt-3 flex items-baseline gap-2">
-                <span className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+                <span className="font-display font-bold text-2xl md:text-3xl tracking-tight text-brand-night-navy">
                   {price.display}
                 </span>
                 <span className="text-xs text-brand-night-navy/60">

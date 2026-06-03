@@ -48,7 +48,7 @@ export default async function MitgliederPage({
         >
           ← Einstellungen
         </Link>
-        <h2 className="mt-1.5 font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+        <h2 className="mt-1.5 font-display font-bold text-2xl md:text-3xl tracking-tight text-brand-night-navy">
           Mitglieder
         </h2>
         <p className="text-sm text-brand-night-navy/60">
@@ -58,7 +58,7 @@ export default async function MitgliederPage({
 
       {/* Trainer/Viewer einladen */}
       <section>
-        <h3 className="font-display font-black text-xl tracking-tight text-brand-night-navy mb-1">
+        <h3 className="font-display font-bold text-xl tracking-tight text-brand-night-navy mb-1">
           Trainer oder Viewer einladen
         </h3>
         <p className="text-sm text-brand-night-navy/60 mb-3">
@@ -79,7 +79,7 @@ export default async function MitgliederPage({
 
       {/* Offene Einladungen */}
       <section>
-        <h3 className="font-display font-black text-xl tracking-tight text-brand-night-navy mb-1">
+        <h3 className="font-display font-bold text-xl tracking-tight text-brand-night-navy mb-1">
           Offene Einladungen
           {pendingInvitations.length > 0 && (
             <span className="ml-2 inline-flex items-center rounded-full bg-accent/10 px-2 py-0.5 text-xs font-bold text-accent">
@@ -111,7 +111,7 @@ export default async function MitgliederPage({
 
       {/* Offene Anfragen */}
       <section>
-        <h3 className="font-display font-black text-xl tracking-tight text-brand-night-navy mb-3">
+        <h3 className="font-display font-bold text-xl tracking-tight text-brand-night-navy mb-3">
           Offene Anfragen
           {pendingRequests.length > 0 && (
             <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
@@ -129,7 +129,7 @@ export default async function MitgliederPage({
 
       {/* Aktive Mitglieder */}
       <section>
-        <h3 className="font-display font-black text-xl tracking-tight text-brand-night-navy mb-3">
+        <h3 className="font-display font-bold text-xl tracking-tight text-brand-night-navy mb-3">
           Aktive Mitglieder
         </h3>
 

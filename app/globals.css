@@ -9,6 +9,54 @@
 html, body { height: 100%; }
 body { @apply bg-white text-neutral-900 antialiased; }
 
+/* ───────────────────────────────────────────────────────────────────────────
+   iOS-Design-Tokens. Spiegeln Apples HIG-System-Werte als CSS-Variablen, damit
+   sie auch außerhalb von Tailwind (portalte Sheets, inline styles) verfügbar
+   sind. Tailwind-Pendants liegen unter `ios.*` / `shadow-ios-*` in der Config.
+   Brand-Akzente (--accent) bleiben führend; diese Tokens liefern nur das
+   neutrale iOS-Chrome (Flächen, Trennlinien, Fills).
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  --ios-bg: #F2F2F7;
+  --ios-card: #FFFFFF;
+  --ios-label-secondary: rgba(60, 60, 67, 0.6);
+  --ios-label-tertiary: rgba(60, 60, 67, 0.3);
+  --ios-separator: rgba(60, 60, 67, 0.29);
+  --ios-separator-opaque: #C6C6C8;
+  --ios-fill-tertiary: rgba(118, 118, 128, 0.12);
+  --accent: #01C457; /* KickPact-Brand-Grün = primärer CTA-/„System"-Akzent */
+  --shadow-ios-card: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+}
+
+/* Native iOS-Feel: keine grauen Tap-Flashes, kein Long-Press-Callout-Menü,
+   kein Text-Selektieren auf Chrome-Flächen. Greift global — im Browser
+   unschädlich, in der WebView entscheidend für „fühlt sich nativ an". */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+input, textarea, [contenteditable] { -webkit-user-select: text; user-select: text; }
+
+/* Der authentifizierte App-Bereich liegt auf iOS-Grouped-Background statt Weiß.
+   Cards/Listen heben sich dadurch als weiße Flächen ab (iOS-Settings-Optik). */
+.native-shell {
+  background-color: var(--ios-bg);
+}
+
+/* Press-Feedback für interaktive Flächen — kurzer Scale-Down wie auf iOS.
+   Per Klasse opt-in, damit es nur dort greift, wo wir es wollen. */
+.press {
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+.press:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+@media (prefers-reduced-motion: reduce) {
+  .press { transition: opacity 0.1s ease; }
+  .press:active { transform: none; }
+}
+
 /* Safe-Area-Helfer für den späteren Capacitor/iOS-Wrapper. Greifen nur, wenn
    viewport-fit=cover gesetzt ist (siehe app/layout.tsx) UND ein Notch/Home-
    Indicator existiert — im normalen Browser sind die env()-Werte 0, die Klassen

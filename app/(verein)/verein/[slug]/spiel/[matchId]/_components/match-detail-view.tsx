@@ -121,7 +121,7 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
           {/* Score zuerst, groß und mittig — Teamnamen darunter, damit lange
               Namen nicht seitlich gequetscht werden müssen. */}
           <div className="flex flex-col items-center gap-3 text-center">
-            <div className="font-black text-5xl sm:text-6xl tracking-tight text-brand-night-navy tabular-nums">
+            <div className="font-bold text-5xl sm:text-6xl tracking-tight text-brand-night-navy tabular-nums">
               {match.ergebnisHeim ?? "—"}
               <span className="text-brand-night-navy/30 mx-2">:</span>
               {match.ergebnisGast ?? "—"}

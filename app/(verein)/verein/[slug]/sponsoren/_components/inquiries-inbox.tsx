@@ -20,7 +20,7 @@ export function InquiriesInbox({ inquiries }: { inquiries: Inquiry[] }) {
   return (
     <section>
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
           Sponsor-Anfragen
         </h2>
         <span className="inline-flex items-center rounded-full bg-accent/15 text-accent-dark px-2.5 py-1 text-xs font-bold">

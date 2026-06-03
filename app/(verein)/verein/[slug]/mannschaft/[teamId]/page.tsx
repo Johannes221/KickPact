@@ -170,7 +170,7 @@ export default async function TeamDetailPage({
                 {s.label}
               </div>
               <div
-                className={`font-display font-black text-xl tracking-tight mt-1 ${s.accent ? "text-accent" : "text-brand-night-navy"}`}
+                className={`font-display font-bold text-xl tracking-tight mt-1 ${s.accent ? "text-accent" : "text-brand-night-navy"}`}
               >
                 {s.value}
               </div>
@@ -182,7 +182,7 @@ export default async function TeamDetailPage({
       {/* Saison-Wetten dieser Mannschaft */}
       {seasonPledges.length > 0 && (
         <section>
-          <h3 className="font-display font-black text-xl tracking-tight text-brand-night-navy mb-3">
+          <h3 className="font-display font-bold text-xl tracking-tight text-brand-night-navy mb-3">
             Saison-Wetten
           </h3>
           <ul className="space-y-2">
@@ -215,7 +215,7 @@ export default async function TeamDetailPage({
                     <div className="text-xs text-brand-night-navy/60">{r.sponsorDisplayName}</div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="font-display font-black text-base text-brand-night-navy">
+                    <div className="font-display font-bold text-base text-brand-night-navy">
                       {eur(r.amountCents)}
                     </div>
                     <span
@@ -245,7 +245,7 @@ export default async function TeamDetailPage({
       {/* Spiele */}
       <section>
         <div className="flex items-baseline justify-between gap-3 mb-4">
-          <h3 className="font-display font-black text-xl tracking-tight text-brand-night-navy">
+          <h3 className="font-display font-bold text-xl tracking-tight text-brand-night-navy">
             Alle Spiele
           </h3>
           <span className="text-xs text-brand-night-navy/50">
@@ -376,7 +376,7 @@ function SeasonStatusBlock({
         aria-label={`Saison-Endstand ${saison}`}
         className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-4 md:p-5"
       >
-        <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+        <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
           Saison-Endstand {saison}
         </h3>
         <p className="mt-1 text-xs md:text-sm text-brand-night-navy/70">
@@ -397,7 +397,7 @@ function SeasonStatusBlock({
     >
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+          <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
             Saison-Endstand {saison}
           </h3>
           <div className="mt-2 text-xs md:text-sm text-brand-night-navy/70 space-y-1">

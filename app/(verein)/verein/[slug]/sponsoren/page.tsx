@@ -74,7 +74,7 @@ export default async function SponsorenPage({
       />
 
       <section>
-        <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
           Aktive Sponsoren ({activeSponsors.length})
         </h2>
         {activeSponsors.length === 0 ? (

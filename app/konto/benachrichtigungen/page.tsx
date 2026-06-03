@@ -44,7 +44,7 @@ export default async function NotificationsPage() {
           </Link>{" "}
           / Benachrichtigungen
         </p>
-        <h1 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
+        <h1 className="font-display font-bold text-2xl md:text-4xl tracking-tight text-brand-night-navy">
           Benachrichtigungen
         </h1>
         <p className="mt-1 text-sm text-brand-night-navy/60">

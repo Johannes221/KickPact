@@ -22,7 +22,7 @@ export default async function KontoSupportPage() {
           <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
             Hilfe &amp; Support
           </p>
-          <h1 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
+          <h1 className="font-display font-bold text-2xl md:text-4xl tracking-tight text-brand-night-navy">
             Meine Anfragen
           </h1>
           <p className="mt-1 text-sm text-brand-night-navy/60">

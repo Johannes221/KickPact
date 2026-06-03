@@ -130,7 +130,7 @@ export function SponsorsManager({
 
   return (
     <section>
-      <h2 className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
+      <h2 className="font-display font-bold text-2xl tracking-tight text-brand-night-navy">
         Einladungslinks
       </h2>
       <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -139,7 +139,7 @@ export function SponsorsManager({
 
       <Card className="mt-5 border-brand-neutral/40">
         <CardHeader>
-          <CardTitle className="text-base font-display font-black tracking-tight">
+          <CardTitle className="text-base font-display font-bold tracking-tight">
             Neue Einladung erstellen
           </CardTitle>
         </CardHeader>

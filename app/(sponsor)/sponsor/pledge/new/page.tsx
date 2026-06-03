@@ -48,7 +48,7 @@ export default async function NewPledgePage({
 
   return (
     <div className="mx-auto max-w-4xl">
-      <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
+      <h1 className="font-display font-bold text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
         Sponsoring <span className="text-accent">einrichten</span>
       </h1>
       <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60 max-w-2xl">

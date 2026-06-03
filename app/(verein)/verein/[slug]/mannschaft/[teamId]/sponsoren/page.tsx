@@ -65,7 +65,7 @@ export default async function TeamSponsorenPage({
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <h2 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-2xl md:text-3xl tracking-tight text-brand-night-navy">
           Sponsoren
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -96,7 +96,7 @@ export default async function TeamSponsorenPage({
       )}
 
       <section className="space-y-3">
-        <h3 className="font-display font-black text-lg tracking-tight text-brand-night-navy">
+        <h3 className="font-display font-bold text-lg tracking-tight text-brand-night-navy">
           Deine Sponsoren ({sponsorRows.length})
         </h3>
 

@@ -61,7 +61,7 @@ export default async function KontoPage() {
         <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
           Konto-Einstellungen
         </p>
-        <h1 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
+        <h1 className="font-display font-bold text-2xl md:text-4xl tracking-tight text-brand-night-navy">
           Mein Konto
         </h1>
         <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -86,7 +86,7 @@ export default async function KontoPage() {
             🔔
           </span>
           <div className="min-w-0">
-            <h2 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+            <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
               Benachrichtigungen
             </h2>
             <p className="mt-0.5 text-xs text-brand-night-navy/60">
@@ -109,7 +109,7 @@ export default async function KontoPage() {
       {/* === Profil === */}
       <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-4">
         <div>
-          <h2 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+          <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
             Profil
           </h2>
           <p className="mt-0.5 text-xs text-brand-night-navy/60">
@@ -187,7 +187,7 @@ export default async function KontoPage() {
       {/* === Rollen-Übersicht === */}
       <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-4">
         <div>
-          <h2 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+          <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
             Meine Rollen
           </h2>
           <p className="mt-0.5 text-xs text-brand-night-navy/60">
@@ -284,7 +284,7 @@ export default async function KontoPage() {
       {/* === Sicherheit === */}
       <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-3">
         <div>
-          <h2 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+          <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
             Sicherheit
           </h2>
           <p className="mt-0.5 text-xs text-brand-night-navy/60">
@@ -301,7 +301,7 @@ export default async function KontoPage() {
       {/* === Hilfe & Support === */}
       <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-3">
         <div>
-          <h2 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+          <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
             Hilfe &amp; Support
           </h2>
           <p className="mt-0.5 text-xs text-brand-night-navy/60">
@@ -328,7 +328,7 @@ export default async function KontoPage() {
       {/* === Daten & Privatsphäre === */}
       <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-4">
         <div>
-          <h2 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+          <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
             Daten &amp; Privatsphäre
           </h2>
           <p className="mt-0.5 text-xs text-brand-night-navy/60">

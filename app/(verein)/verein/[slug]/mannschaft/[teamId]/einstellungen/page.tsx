@@ -50,7 +50,7 @@ export default async function TeamEinstellungenPage({
   return (
     <div className="max-w-2xl space-y-8">
       <div>
-        <h2 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-2xl md:text-3xl tracking-tight text-brand-night-navy">
           Einstellungen
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -63,7 +63,7 @@ export default async function TeamEinstellungenPage({
       {clubData && (
         <section id="zahlungsdaten" className="scroll-mt-24 space-y-4">
           <header>
-            <h3 className="font-display font-black text-lg tracking-tight text-brand-night-navy">
+            <h3 className="font-display font-bold text-lg tracking-tight text-brand-night-navy">
               Rechnungs- &amp; Zahlungsdaten
             </h3>
             <p className="mt-0.5 text-sm text-brand-night-navy/60">
@@ -91,7 +91,7 @@ export default async function TeamEinstellungenPage({
       {/* Lifecycle */}
       <section className="space-y-4 rounded-2xl border border-brand-neutral/40 bg-white p-5">
         <header>
-          <h3 className="font-display font-black text-lg tracking-tight text-brand-night-navy">
+          <h3 className="font-display font-bold text-lg tracking-tight text-brand-night-navy">
             Lifecycle
           </h3>
           <p className="mt-0.5 text-sm text-brand-night-navy/60">
@@ -104,7 +104,7 @@ export default async function TeamEinstellungenPage({
 
       {/* Weitere Sub-Bereiche */}
       <section>
-        <h3 className="font-display font-black text-lg tracking-tight text-brand-night-navy mb-3">
+        <h3 className="font-display font-bold text-lg tracking-tight text-brand-night-navy mb-3">
           Weitere Bereiche
         </h3>
         <ul className="space-y-3">
@@ -115,7 +115,7 @@ export default async function TeamEinstellungenPage({
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h4 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+                  <h4 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
                     Mitglieder &amp; Zugriff
                   </h4>
                   <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -136,7 +136,7 @@ export default async function TeamEinstellungenPage({
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h4 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+                  <h4 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
                     Spieler & DSGVO-Opt-out
                   </h4>
                   <p className="mt-1 text-sm text-brand-night-navy/60">

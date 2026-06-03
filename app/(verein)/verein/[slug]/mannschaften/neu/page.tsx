@@ -52,7 +52,7 @@ export default async function NeuesTeamPage({
         >
           ← Mannschaften
         </Link>
-        <h1 className="mt-1.5 font-display font-black text-3xl md:text-4xl tracking-tight text-brand-night-navy">
+        <h1 className="mt-1.5 font-display font-bold text-3xl md:text-4xl tracking-tight text-brand-night-navy">
           Mannschaft hinzufügen
         </h1>
         <p className="mt-1 text-sm text-brand-night-navy/60">
