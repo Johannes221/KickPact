@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/data-table";
 import { triggerLabel, triggerEmoji } from "@/lib/triggers/labels";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 
 interface Row {
   id: string;
@@ -38,23 +39,14 @@ function eur(cents: number): string {
 }
 
 function StatusPill({ status }: { status: string }) {
-  const cfg: Record<string, { label: string; cls: string }> = {
-    confirmed: { label: "Bestätigt", cls: "bg-emerald-100 text-emerald-800" },
-    invoiced: { label: "Berechnet", cls: "bg-sky-100 text-sky-800" },
-    pending_approval: { label: "Wartet", cls: "bg-amber-100 text-amber-800" },
-    cancelled: { label: "Storniert", cls: "bg-neutral-200 text-neutral-700" }
+  const cfg: Record<string, { label: string; tone: BadgeProps["tone"] }> = {
+    confirmed: { label: "Bestätigt", tone: "success" },
+    invoiced: { label: "Berechnet", tone: "info" },
+    pending_approval: { label: "Wartet", tone: "warning" },
+    cancelled: { label: "Storniert", tone: "neutral" }
   };
-  const c = cfg[status] ?? { label: status, cls: "bg-neutral-100 text-neutral-700" };
-  return (
-    <span
-      className={
-        "inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold " +
-        c.cls
-      }
-    >
-      {c.label}
-    </span>
-  );
+  const c = cfg[status] ?? { label: status, tone: "neutral" as const };
+  return <Badge tone={c.tone}>{c.label}</Badge>;
 }
 
 export function SponsorChargesTable({
