@@ -45,22 +45,22 @@ export function DraftChangeGate({ role, clubId, vereinName, teamCount }: Props) 
   }
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-accent/40 bg-accent/5 p-5">
-        <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
+    <div className="space-y-5">
+      <div className="rounded-2xl border border-accent/30 bg-accent/[0.06] p-5">
+        <div className="text-[11px] font-semibold uppercase tracking-widest text-brand-night-navy/45">
           Aktuell gewählt
         </div>
-        <div className="mt-1 font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+        <div className="mt-1 text-xl font-bold leading-tight text-brand-night-navy md:text-2xl">
           {vereinName}
         </div>
-        <div className="mt-1 text-sm text-brand-night-navy/60">
+        <div className="mt-1 text-sm text-brand-night-navy/55">
           {teamCount} Mannschaft{teamCount === 1 ? "" : "en"} ausgewählt
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <Button variant="accent" size="lg" onClick={handleWeiter} disabled={pending}>
-          Weiter mit {vereinName} →
+          Weiter
         </Button>
         <Button
           variant="outline"
@@ -72,7 +72,7 @@ export function DraftChangeGate({ role, clubId, vereinName, teamCount }: Props) 
         </Button>
       </div>
 
-      <p className="text-xs text-brand-night-navy/50">
+      <p className="text-xs leading-relaxed text-brand-night-navy/50">
         „Anderen Verein wählen" verwirft deine aktuelle Auswahl. Eingegebene
         Stammdaten gehen dabei verloren.
       </p>

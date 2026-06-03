@@ -77,10 +77,10 @@ const MILESTONES: Milestone[] = [
 function SlideAmount() {
   return (
     <div className="w-full">
-      <SlideTitle>{"Du bestimmst\nden Betrag."}</SlideTitle>
+      <SlideTitle>{"Jedes Tor\nbringt Geld."}</SlideTitle>
       <SlideBody>
-        Sponsoren versprechen einen Betrag pro Ereignis — 100 % bleibt bei der
-        Mannschaft.
+        Sponsoren versprechen einen Betrag pro Ereignis. 100 % davon bleibt bei
+        eurer Mannschaft.
       </SlideBody>
       <div className="mt-8 space-y-3">
         {MILESTONES.map((m) => {
@@ -109,10 +109,10 @@ function SlideAmount() {
 
 type Step = { title: string; body: string };
 const STEPS: Step[] = [
-  { title: "Mannschaft anlegen", body: "Wizard findet euer Team — in 90 Sekunden." },
-  { title: "Spiele auswählen", body: "Ihr bestimmt, welche zählen." },
+  { title: "Mannschaft anlegen", body: "Wir finden euer Team — in 90 Sekunden." },
+  { title: "Verein verifizieren", body: "Kurzer Nachweis, einmalig — dann seid ihr startklar." },
   { title: "Sponsoren einladen", body: "Ein Link für Familie, Stammtisch & lokale Firmen." },
-  { title: "Automatisch erfasst", body: "Tore, Siege, Aufstieg — die Kasse füllt sich von allein." }
+  { title: "Geld fließt automatisch", body: "Tore, Siege, Aufstieg werden automatisch erfasst & abgerechnet." }
 ];
 
 /** Slide 3 — echter Ablauf in 4 Schritten (Timeline). */
@@ -174,7 +174,7 @@ const BENEFITS: BenefitCard[] = [
 function SlideBenefits() {
   return (
     <div className="w-full">
-      <SlideTitle>{"Gemacht für\nbeide Seiten."}</SlideTitle>
+      <SlideTitle>{"Vorteile für\nbeide Seiten."}</SlideTitle>
       <div className="mt-6 space-y-3">
         {BENEFITS.map((b) => {
           const Icon = b.icon;
@@ -216,7 +216,7 @@ function SlideBenefits() {
 const TRIAL_POINTS = [
   "Alle Features frei",
   "Jederzeit kündbar",
-  "Keine versteckten Kosten"
+  "Ohne Kreditkarte"
 ] as const;
 
 /** Slide 5 — Trial-Angebot: 30 Tage gratis, risikofrei. */

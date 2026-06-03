@@ -7,6 +7,7 @@ import {
   type SortDirection
 } from "@/components/ui/data-table";
 import { triggerLabel, triggerEmoji } from "@/lib/triggers/labels";
+import { abbreviateTeamName } from "@/lib/utils/team-name";
 
 interface Row {
   id: string;
@@ -132,8 +133,8 @@ export function SponsorChargesTable({
         const hasResult = r.ergebnisHeim !== null && r.ergebnisGast !== null;
         return (
           <div className="text-xs">
-            <div className="truncate max-w-[18ch]">
-              {r.heimName} vs. {r.gastName}
+            <div className="truncate max-w-[18ch]" title={`${r.heimName} vs. ${r.gastName}`}>
+              {abbreviateTeamName(r.heimName)} vs. {abbreviateTeamName(r.gastName)}
             </div>
             {hasResult && (
               <div className="font-mono tabular-nums text-brand-night-navy/60">

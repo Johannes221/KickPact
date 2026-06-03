@@ -132,17 +132,17 @@ export default async function SignupPage({
     return <AuthenticatedRoleChooser addMode={wantsAddRole && total > 0} />;
   }
 
-  // Google blockt OAuth in eingebetteten WebViews → in der nativen App ausblenden
-  // (bis nativer Google-Flow existiert). Apple nativ, Magic-Link als Mail-Weg.
+  // Google NUR im Web. In der nativen iOS-App ausgeblendet, weil der native
+  // GoogleAuth-Flow (@codetrix-studio/capacitor-google-auth) aktuell einen
+  // nicht-JS-fangbaren Crash auslöst (vermutlich fehlendes
+  // GoogleAuth.initialize() oder Presenting-VC-Problem mit dem custom
+  // MainViewController). Erst nach Geräte-Log-Debugging wieder aktivieren.
+  // Apple nativ, Magic-Link als Mail-Weg.
   const isNativeApp = ((await headers()).get("user-agent") ?? "").includes("KickPactApp");
   const oauthEnabled = {
-    // Web: immer (wenn Web-Creds da). Native iOS: nur wenn der iOS-OAuth-Client
-    // konfiguriert ist (GOOGLE_IOS_CLIENT_ID) — die Env wird erst gesetzt, NACHDEM
-    // ein App-Build mit dem GoogleAuth-Plugin installiert ist, damit der Button
-    // nie in einem Build ohne Plugin auftaucht.
     google:
       Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) &&
-      (!isNativeApp || Boolean(process.env.GOOGLE_IOS_CLIENT_ID)),
+      !isNativeApp,
     apple: isAppleConfigured()
   };
   const anyOauth = oauthEnabled.google || oauthEnabled.apple;

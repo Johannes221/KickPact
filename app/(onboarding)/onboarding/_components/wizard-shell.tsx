@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ArrowLeft, Check } from "lucide-react";
+import { PageHeader } from "@/components/shared/page-header";
 import { cn } from "@/lib/utils";
 
 const STEPS_LABELS = ["Verein & Mannschaft", "Stammdaten"] as const;
@@ -7,7 +9,15 @@ interface Props {
   step: 1 | 2;
   role: "mannschaft" | "verein";
   children: React.ReactNode;
-  /** Optionaler „← Zurück"-Link zum vorherigen Step. */
+  /**
+   * Dezenter Kontext oben (z.B. der User-Name). Ersetzt den früheren klobigen
+   * Top-Zurück-Button als primären „Wo bin ich?"-Anker.
+   */
+  userContext?: string;
+  /**
+   * Ziel des Zurück-Links. Wenn gesetzt, erscheint links oben ein dezenter
+   * „Zurück"-Pfeil (Step 2 → Step 1). Auf Step 1 weggelassen.
+   */
   backHref?: string;
 }
 
@@ -15,72 +25,103 @@ interface Props {
  * Shared 2-Step Wizard-Shell. Server-Component — kein State, kein Hook.
  * Wird von `/onboarding/{mannschaft|verein}/{verein|stammdaten}/page.tsx`
  * gemountet. Nach Schritt 2 (Stammdaten) wird direkt abgeschlossen und ins
- * Dashboard geleitet — Sponsoren einladen ist dort eine Aufgabe (kein eigener
- * Wizard-Schritt mehr).
+ * Dashboard geleitet.
  *
- * Tabs sind read-only (Klick navigiert NICHT zurück) — Resume regelt der
- * Dispatcher, freie Navigation würde die State-Machine umgehen.
+ * Clean/native Styling: System-/Sans-Font statt Display-Black, ein einziger
+ * `<PageHeader>`-Titel, dezenter User-Kontext oben (kein klobiger Zurück-Button
+ * mehr) und eine schlanke, klickbare Step-Leiste. Bereits abgeschlossene Steps
+ * sind als Link zurück erreichbar (Step 1 ↔ Step 2), zukünftige Steps sind
+ * inert — die State-Machine bleibt die Quelle der Wahrheit.
  */
-export function WizardShell({ step, role, children, backHref }: Props) {
+export function WizardShell({ step, role, children, userContext, backHref }: Props) {
   const headline = role === "verein" ? "Verein anlegen" : "Mannschaft anlegen";
   const subline =
     role === "verein"
-      ? "2 Schritte, ca. 2 Minuten. Du startest direkt in 30 Tagen Vereinslizenz-Trial — keine Kreditkarte."
-      : "2 Schritte, ca. 2 Minuten. Du startest direkt in 30 Tagen Pro-Trial — keine Kreditkarte.";
+      ? "2 Schritte, ca. 2 Minuten — 30 Tage Vereinslizenz-Trial, keine Kreditkarte."
+      : "2 Schritte, ca. 2 Minuten — 30 Tage Pro-Trial, keine Kreditkarte.";
 
   return (
-    <main className="mx-auto max-w-3xl px-5 md:px-6 py-8 md:py-12">
-      {backHref && (
-        <div className="mb-3">
+    <main className="mx-auto max-w-2xl px-5 pb-16 pt-4 md:px-6 md:pt-8">
+      {/* Dezente Top-Zeile: Zurück-Pfeil (nur wenn sinnvoll) links, Kontext rechts. */}
+      <div className="mb-5 flex min-h-7 items-center justify-between gap-3">
+        {backHref ? (
           <Link
             href={backHref}
-            className="inline-flex items-center gap-1 text-sm font-medium text-brand-night-navy/60 hover:text-brand-night-navy transition-colors"
+            className="-ml-1 inline-flex items-center gap-1.5 rounded-full px-1.5 py-1 text-[15px] font-medium text-brand-night-navy/60 transition-colors hover:text-brand-night-navy"
           >
-            ← Zurück
+            <ArrowLeft className="h-[18px] w-[18px]" aria-hidden />
+            Zurück
           </Link>
-        </div>
-      )}
-      <div className="mb-6 md:mb-10">
-        <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
-          {headline}
-        </h1>
-        <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
-          {subline}
-        </p>
+        ) : (
+          <span aria-hidden />
+        )}
+        {userContext ? (
+          <span className="truncate text-[13px] font-medium text-brand-night-navy/45">
+            {userContext}
+          </span>
+        ) : null}
       </div>
 
-      <ol className="mb-8 md:mb-12 flex gap-2">
+      <PageHeader title={headline} subtitle={subline} />
+
+      {/* Schlanke Step-Leiste: erledigte Steps sind klickbare Links zurück. */}
+      <ol className="mb-8 mt-7 flex items-center gap-2">
         {STEPS_LABELS.map((label, i) => {
-          const stepNum = (i + 1) as 1 | 2 | 3;
+          const stepNum = (i + 1) as 1 | 2;
           const done = stepNum < step;
           const active = stepNum === step;
-          return (
-            <li key={label} className="flex-1">
-              <div
+          // Nur erledigte Steps sind als Zurück-Link erreichbar.
+          const href = done && backHref ? backHref : undefined;
+
+          const inner = (
+            <div className="flex items-center gap-2.5">
+              <span
                 className={cn(
-                  "rounded-xl border px-3 py-2 md:px-4 md:py-3 transition-colors",
-                  active && "border-accent bg-accent/10",
-                  done && "border-accent/40 bg-accent/5",
-                  !active && !done && "border-brand-neutral/30 bg-brand-off-white"
+                  "grid h-7 w-7 shrink-0 place-items-center rounded-full text-[13px] font-semibold transition-colors",
+                  active && "bg-accent text-white",
+                  done && "bg-accent/15 text-accent-dark",
+                  !active && !done && "bg-brand-neutral/15 text-brand-night-navy/40"
                 )}
               >
-                <div
-                  className={cn(
-                    "text-[0.6rem] md:text-xs font-bold uppercase tracking-widest",
-                    active ? "text-accent-dark" : "text-brand-night-navy/40"
-                  )}
+                {done ? <Check className="h-4 w-4" aria-hidden /> : stepNum}
+              </span>
+              <span
+                className={cn(
+                  "text-[13px] font-medium",
+                  active
+                    ? "text-brand-night-navy"
+                    : done
+                      ? "text-brand-night-navy/70"
+                      : "text-brand-night-navy/40"
+                )}
+              >
+                {label}
+              </span>
+            </div>
+          );
+
+          return (
+            <li key={label} className="flex items-center gap-2">
+              {href ? (
+                <Link
+                  href={href}
+                  className="rounded-lg transition-opacity hover:opacity-80"
+                  aria-label={`Zurück zu Schritt ${stepNum}: ${label}`}
                 >
-                  Schritt {stepNum}
-                </div>
-                <div
+                  {inner}
+                </Link>
+              ) : (
+                <div aria-current={active ? "step" : undefined}>{inner}</div>
+              )}
+              {i < STEPS_LABELS.length - 1 ? (
+                <span
                   className={cn(
-                    "mt-0.5 text-xs md:text-sm font-semibold truncate",
-                    active ? "text-brand-night-navy" : "text-brand-night-navy/60"
+                    "h-px w-5 md:w-8",
+                    done ? "bg-accent/40" : "bg-brand-neutral/30"
                   )}
-                >
-                  {label}
-                </div>
-              </div>
+                  aria-hidden
+                />
+              ) : null}
             </li>
           );
         })}

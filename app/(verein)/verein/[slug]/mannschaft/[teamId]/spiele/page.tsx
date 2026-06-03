@@ -255,16 +255,31 @@ export default async function SpielePage({
                   <span className="hidden sm:block shrink-0 text-xs text-brand-night-navy/50 w-24">
                     {fmtDate(m.datum)}
                   </span>
-                  <span className="flex-1 min-w-0 text-sm truncate">
-                    <span className={m.isHeim ? "font-semibold" : "text-brand-night-navy/70"}>
-                      {/* Mobile: abgekürzt (passt in dichte Liste), Desktop: voll. */}
-                      <span className="sm:hidden">{abbreviateTeamName(m.heimName)}</span>
-                      <span className="hidden sm:inline">{m.heimName}</span>
+                  {/* Score-Block: Heim (gekürzt/rechtsbündig) — Ergebnis (fix
+                      mittig, tabular-nums) — Gast (gekürzt/linksbündig). Feste
+                      mittlere Spalte hält das Ergebnis sichtbar; lange Namen
+                      werden gekürzt + truncate statt das Resultat zu verdrängen. */}
+                  <span className="flex-1 min-w-0 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm">
+                    <span
+                      className={`min-w-0 truncate text-right ${m.isHeim ? "font-semibold" : "text-brand-night-navy/70"}`}
+                      title={m.heimName}
+                    >
+                      {abbreviateTeamName(m.heimName)}
                     </span>
-                    <span className="mx-2 text-brand-night-navy/40">vs</span>
-                    <span className={!m.isHeim ? "font-semibold" : "text-brand-night-navy/70"}>
-                      <span className="sm:hidden">{abbreviateTeamName(m.gastName)}</span>
-                      <span className="hidden sm:inline">{m.gastName}</span>
+                    {m.isScheduled ? (
+                      <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/40 whitespace-nowrap">
+                        vs
+                      </span>
+                    ) : (
+                      <span className="font-bold tabular-nums whitespace-nowrap">
+                        {m.ergebnisHeim ?? "—"}:{m.ergebnisGast ?? "—"}
+                      </span>
+                    )}
+                    <span
+                      className={`min-w-0 truncate text-left ${!m.isHeim ? "font-semibold" : "text-brand-night-navy/70"}`}
+                      title={m.gastName}
+                    >
+                      {abbreviateTeamName(m.gastName)}
                     </span>
                   </span>
                   {m.isScheduled ? (
@@ -272,16 +287,11 @@ export default async function SpielePage({
                       Kommend
                     </span>
                   ) : (
-                    <>
-                      <span className="shrink-0 font-bold tabular-nums">
-                        {m.ergebnisHeim ?? "—"}:{m.ergebnisGast ?? "—"}
+                    m.chargesSum > 0 && (
+                      <span className="hidden sm:inline-block shrink-0 text-xs font-semibold text-accent-dark tabular-nums">
+                        {eur(m.chargesSum)}
                       </span>
-                      {m.chargesSum > 0 && (
-                        <span className="hidden sm:inline-block shrink-0 text-xs font-semibold text-accent-dark tabular-nums">
-                          {eur(m.chargesSum)}
-                        </span>
-                      )}
-                    </>
+                    )
                   )}
                 </>
               );

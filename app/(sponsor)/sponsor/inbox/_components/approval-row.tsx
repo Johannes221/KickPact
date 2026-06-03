@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { MatchEventIcon } from "@/components/shared/match-event-icon";
+import { abbreviateTeamName } from "@/lib/utils/team-name";
 import {
   Dialog,
   DialogContent,
@@ -117,8 +118,15 @@ export function ApprovalRow({ data }: { data: ApprovalRowData }) {
           {data.playerName && (
             <div className="text-sm text-brand-night-navy/70 mt-0.5">{data.playerName}</div>
           )}
-          <div className="text-xs text-brand-night-navy/50 mt-1">
-            {data.heimName} {data.ergebnisHeim ?? "—"}:{data.ergebnisGast ?? "—"} {data.gastName}
+          <div
+            className="text-xs text-brand-night-navy/50 mt-1 truncate"
+            title={`${data.heimName} ${data.ergebnisHeim ?? "—"}:${data.ergebnisGast ?? "—"} ${data.gastName}`}
+          >
+            {abbreviateTeamName(data.heimName)}{" "}
+            <span className="font-mono tabular-nums">
+              {data.ergebnisHeim ?? "—"}:{data.ergebnisGast ?? "—"}
+            </span>{" "}
+            {abbreviateTeamName(data.gastName)}
           </div>
         </div>
         <div className="text-right">

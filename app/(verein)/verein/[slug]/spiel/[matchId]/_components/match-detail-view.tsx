@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth/session";
 import { resolveTeamAccess } from "@/lib/auth/scope";
 import { getMatchById, listMatchEvents, listMatchCharges } from "@/lib/db/queries/matches";
 import { detectTeamSide } from "@/lib/crawler/team-side";
+import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MatchEventsList } from "./match-events-list";
 import { ManualEventEditor } from "./manual-event-editor";
@@ -118,38 +119,48 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
           </div>
         </CardHeader>
         <CardContent>
-          {/* Score zuerst, groß und mittig — Teamnamen darunter, damit lange
-              Namen nicht seitlich gequetscht werden müssen. */}
-          <div className="flex flex-col items-center gap-3 text-center">
-            <div className="font-bold text-5xl sm:text-6xl tracking-tight text-brand-night-navy tabular-nums">
-              {match.ergebnisHeim ?? "—"}
-              <span className="text-brand-night-navy/30 mx-2">:</span>
-              {match.ergebnisGast ?? "—"}
+          {/* Score-Zeile: Heim (rechtsbündig, gekürzt/truncate) — Ergebnis (fix
+              mittig, tabular-nums) — Gast (linksbündig, gekürzt/truncate). Die
+              feste mittlere Spalte sorgt dafür, dass das Ergebnis IMMER sichtbar
+              und ausgerichtet bleibt, egal wie lang die Vereinsnamen sind. */}
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-4">
+            {/* Heim */}
+            <div className={`min-w-0 text-right ${isHeim ? "font-semibold" : ""}`}>
+              <div
+                className="truncate text-sm sm:text-base font-semibold text-brand-night-navy leading-snug"
+                title={match.heimName}
+              >
+                {abbreviateTeamName(match.heimName)}
+              </div>
+              <div className="text-xs text-brand-night-navy/50 mt-1">
+                {isHeim ? "Heim · deine Mannschaft" : "Heim"}
+              </div>
             </div>
-            {match.halbzeitHeim !== null && match.halbzeitGast !== null && (
-              <div className="-mt-1 text-xs text-brand-night-navy/50 tabular-nums">
-                HZ {match.halbzeitHeim} : {match.halbzeitGast}
+
+            {/* Ergebnis — feste mittige Spalte */}
+            <div className="flex flex-col items-center">
+              <div className="font-bold text-4xl sm:text-5xl tracking-tight text-brand-night-navy tabular-nums whitespace-nowrap">
+                {match.ergebnisHeim ?? "—"}
+                <span className="text-brand-night-navy/30 mx-1.5 sm:mx-2">:</span>
+                {match.ergebnisGast ?? "—"}
               </div>
-            )}
-            <div className="grid w-full grid-cols-[1fr_auto_1fr] items-start gap-3 pt-1">
-              <div className={`min-w-0 text-right ${isHeim ? "font-semibold" : ""}`}>
-                <div className="title-wrap text-sm sm:text-base font-semibold text-brand-night-navy leading-snug">
-                  {match.heimName}
+              {match.halbzeitHeim !== null && match.halbzeitGast !== null && (
+                <div className="mt-1 text-xs text-brand-night-navy/50 tabular-nums whitespace-nowrap">
+                  HZ {match.halbzeitHeim} : {match.halbzeitGast}
                 </div>
-                <div className="text-xs text-brand-night-navy/50 mt-1">
-                  {isHeim ? "Heim · deine Mannschaft" : "Heim"}
-                </div>
+              )}
+            </div>
+
+            {/* Gast */}
+            <div className={`min-w-0 text-left ${!isHeim ? "font-semibold" : ""}`}>
+              <div
+                className="truncate text-sm sm:text-base font-semibold text-brand-night-navy leading-snug"
+                title={match.gastName}
+              >
+                {abbreviateTeamName(match.gastName)}
               </div>
-              <div className="pt-0.5 text-xs font-bold uppercase tracking-widest text-brand-night-navy/30">
-                vs
-              </div>
-              <div className={`min-w-0 text-left ${!isHeim ? "font-semibold" : ""}`}>
-                <div className="title-wrap text-sm sm:text-base font-semibold text-brand-night-navy leading-snug">
-                  {match.gastName}
-                </div>
-                <div className="text-xs text-brand-night-navy/50 mt-1">
-                  {!isHeim ? "Gast · deine Mannschaft" : "Gast"}
-                </div>
+              <div className="text-xs text-brand-night-navy/50 mt-1">
+                {!isHeim ? "Gast · deine Mannschaft" : "Gast"}
               </div>
             </div>
           </div>

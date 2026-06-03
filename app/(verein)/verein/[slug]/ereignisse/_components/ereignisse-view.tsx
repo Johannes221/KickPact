@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import type { EreignisRow } from "@/lib/db/queries/club-dashboard";
 import { TriggerIcon } from "@/components/shared/trigger-icon";
+import { abbreviateTeamName } from "@/lib/utils/team-name";
 
 const TRIGGER_LABELS: Record<string, { label: string; emoji: string }> = {
   goal_total:           { label: "Pro Tor",          emoji: "⚽" },
@@ -263,10 +264,14 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
                   </td>
                   <td className="px-4 py-3 text-brand-night-navy/70">
                     {matchHref ? (
-                      <Link href={matchHref} className="hover:text-accent hover:underline">
-                        {r.heimName} – {r.gastName}
+                      <Link
+                        href={matchHref}
+                        className="hover:text-accent hover:underline"
+                        title={r.heimName ? `${r.heimName} – ${r.gastName}` : undefined}
+                      >
+                        {abbreviateTeamName(r.heimName ?? "")} – {abbreviateTeamName(r.gastName ?? "")}
                         {r.ergebnisHeim !== null && (
-                          <span className="ml-1.5 font-mono font-semibold text-brand-night-navy">
+                          <span className="ml-1.5 font-mono font-semibold text-brand-night-navy tabular-nums">
                             {r.ergebnisHeim}:{r.ergebnisGast}
                           </span>
                         )}
@@ -320,7 +325,8 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
                   {r.matchDatum
                     ? new Date(r.matchDatum).toLocaleDateString("de-DE")
                     : new Date(r.createdAt).toLocaleDateString("de-DE")}
-                  {r.heimName && ` · ${r.heimName} – ${r.gastName}`}
+                  {r.heimName &&
+                    ` · ${abbreviateTeamName(r.heimName)} – ${abbreviateTeamName(r.gastName ?? "")}`}
                   {r.ergebnisHeim !== null && ` · ${r.ergebnisHeim}:${r.ergebnisGast}`}
                 </div>
               )}

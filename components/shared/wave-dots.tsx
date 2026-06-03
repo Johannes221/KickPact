@@ -26,7 +26,7 @@ export function WaveDots({ className = "" }: { className?: string }) {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     // Zeilen-Abstand der Wellen-Strähnen + Dot-Schritt entlang einer Strähne.
-    const rowGap = 16;
+    const rowGap = 18;
     const dx = 7;
     let w = 0;
     let h = 0;
@@ -51,23 +51,26 @@ export function WaveDots({ className = "" }: { className?: string }) {
       // versetzt → sie überlagern/kreuzen sich zu einem fließenden Mesh.
       for (let baseY = -rowGap; baseY <= h + rowGap; baseY += rowGap) {
         const s = baseY / rowGap;
+        // Amplitude alterniert pro Zeile → benachbarte Strähnen divergieren.
+        const amp = 10 + 10 * Math.sin(s * 0.5);
         for (let x = -dx; x <= w + dx; x += dx) {
-          const phase = x * 0.012 + t * 0.55 + s * 0.2;
+          // Große Phasen-Verschiebung pro Zeile (s * 0.45) + weite, langsam
+          // sweepende Welle → die Strähnen kreuzen sich ineinander = Netz.
+          const phase = x * 0.011 + t * 0.5 + s * 0.45;
           const wave =
-            Math.sin(phase) * 13 +
-            Math.sin(x * 0.025 - t * 0.4 + s * 0.12) * 7 +
-            Math.cos(x * 0.006 + t * 0.5 - s * 0.18) * 10;
+            Math.sin(phase) * amp +
+            Math.sin(x * 0.005 - t * 0.32 + s * 0.25) * 16;
           const py = baseY + wave;
 
-          // Nach oben ausblenden (unten dichtes Feld, oben frei für Text).
-          const vfade = Math.min(1, Math.max(0, (py / h - 0.1) / 0.85));
+          // Nach oben ausblenden (unten dichtes Netz, oben frei für Text).
+          const vfade = Math.min(1, Math.max(0, (py / h - 0.08) / 0.9));
           if (vfade <= 0) continue;
           // Wellenkamm → Helligkeit/Größe (durchlaufende Ridges).
           const crest = 0.5 + 0.5 * Math.sin(phase);
-          const alpha = vfade * (0.08 + crest * 0.3);
+          const alpha = vfade * (0.1 + crest * 0.26);
           if (alpha <= 0.015) continue;
 
-          const r = 0.8 + crest * 0.9;
+          const r = 0.75 + crest * 0.85;
           ctx.beginPath();
           ctx.arc(x, py, r, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(1, 196, 87, ${alpha})`;

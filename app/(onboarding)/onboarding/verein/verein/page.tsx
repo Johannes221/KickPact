@@ -4,6 +4,7 @@ import { getActiveDraftForUser, nextOnboardingStep } from "@/lib/db/queries/onbo
 import { WizardShell } from "../../_components/wizard-shell";
 import { VereinSearchStep } from "../../_components/verein-search-step";
 import { DraftChangeGate } from "../../_components/draft-change-gate";
+import { redirectIfAlreadyOnboarded } from "../../_lib/entry-guard";
 
 export const metadata = { title: "Verein wählen · KickPact" };
 
@@ -15,6 +16,8 @@ export const metadata = { title: "Verein wählen · KickPact" };
  * normalen Aufruf zur passenden Step weiter. Kommt er aber per „← Zurück"
  * (`?change=1`) hierher, zeigen wir das DraftChangeGate — er kann seine Wahl
  * behalten oder den Draft verwerfen und einen anderen Verein wählen.
+ * Wer hier OHNE Draft, aber MIT bestehender Identität landet (Marketing-Link
+ * umgeht den /dashboard-Dispatcher), wird ins Dashboard geleitet.
  */
 export default async function VereinFlowStep1({
   searchParams
@@ -25,9 +28,10 @@ export default async function VereinFlowStep1({
   const { change } = await searchParams;
   const draft = await getActiveDraftForUser(user.id);
   if (draft && !change) redirect(nextOnboardingStep(draft));
+  if (!draft) await redirectIfAlreadyOnboarded(user.id);
 
   return (
-    <WizardShell step={1} role="verein">
+    <WizardShell step={1} role="verein" userContext={user.name || user.email}>
       {draft ? (
         <DraftChangeGate
           role="verein"

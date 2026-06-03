@@ -283,7 +283,7 @@ export function VereinSearchStep({ role }: Props) {
               <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
                 Gewählter Verein
               </div>
-              <div className="mt-1 font-display font-black text-xl tracking-tight text-brand-night-navy">
+              <div className="mt-1 text-xl font-bold leading-tight text-brand-night-navy">
                 {chosenVerein.name}
               </div>
             </div>

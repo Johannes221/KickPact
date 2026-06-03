@@ -313,19 +313,20 @@ export default async function TeamDetailPage({
                             year: "2-digit"
                           })}
                         </div>
-                        <div className="font-semibold text-sm text-brand-night-navy truncate">
-                          {/* Mobile: abgekürzte Vereinsnamen, Desktop: volle. */}
-                          <span className="sm:hidden">
+                        {/* Score-Zeile: Heim (gekürzt/rechtsbündig) — Ergebnis
+                            (fix mittig, tabular-nums) — Gast (gekürzt/linksbündig).
+                            Lange Vereinsnamen werden gekürzt + truncate, das
+                            Ergebnis bleibt in seiner festen Spalte sichtbar. */}
+                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm font-semibold text-brand-night-navy">
+                          <span className="min-w-0 truncate text-right" title={m.heimName}>
                             {abbreviateTeamName(m.heimName)}
                           </span>
-                          <span className="hidden sm:inline">{m.heimName}</span>
-                          <span className="font-mono text-accent mx-2">
+                          <span className="font-mono tabular-nums text-accent whitespace-nowrap">
                             {m.ergebnisHeim ?? "—"}:{m.ergebnisGast ?? "—"}
                           </span>
-                          <span className="sm:hidden">
+                          <span className="min-w-0 truncate text-left" title={m.gastName}>
                             {abbreviateTeamName(m.gastName)}
                           </span>
-                          <span className="hidden sm:inline">{m.gastName}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">

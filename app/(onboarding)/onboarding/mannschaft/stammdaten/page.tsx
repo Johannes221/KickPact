@@ -18,7 +18,12 @@ export default async function MannschaftFlowStep2() {
   const club = await getClubStammdaten(draft.clubId);
 
   return (
-    <WizardShell step={2} role="mannschaft" backHref="/onboarding/mannschaft/verein?change=1">
+    <WizardShell
+      step={2}
+      role="mannschaft"
+      userContext={user.name || user.email}
+      backHref="/onboarding/mannschaft/verein?change=1"
+    >
       <StammdatenForm
         clubId={draft.clubId}
         role="mannschaft"

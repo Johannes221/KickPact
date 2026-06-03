@@ -70,6 +70,18 @@ export function OAuthButtons({ mode, enabled, role }: OAuthButtonsProps) {
         const { GoogleAuth } = await import(
           "@codetrix-studio/capacitor-google-auth"
         );
+        // GoogleAuth.initialize() VOR signIn() ist Pflicht — fehlt es, crasht das
+        // Plugin nativ (nicht JS-fangbar). clientId = iOS-OAuth-Client (aud des
+        // idTokens auf iOS); serverClientId macht den Token zusätzlich fürs
+        // Backend gültig (better-auth akzeptiert beide Audiences). Hinweis:
+        // Native Google ist aktuell in der App per Server-Gate ausgeblendet —
+        // dieser Block läuft nur, sobald der Flow auf Gerät verifiziert ist.
+        await GoogleAuth.initialize({
+          clientId:
+            "61970500774-vndgkcbi8073g8hk91jsb9rml1747nn9.apps.googleusercontent.com",
+          scopes: ["profile", "email"],
+          grantOfflineAccess: true
+        });
         const result = await GoogleAuth.signIn();
         const token = result.authentication?.idToken;
         if (!token) throw new Error("Kein Google-Identity-Token erhalten");

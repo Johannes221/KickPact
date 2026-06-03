@@ -10,6 +10,7 @@ import {
   type SortDirection
 } from "@/components/ui/data-table";
 import { triggerEmoji, triggerLabel } from "@/lib/triggers/labels";
+import { abbreviateTeamName } from "@/lib/utils/team-name";
 import type { ClubChargeRow } from "@/lib/db/queries/club-reporting";
 import { Button } from "@/components/ui/button";
 import {
@@ -138,8 +139,11 @@ export function ChargesTable({
             {fmtDate(r.matchDate)}
           </div>
           {r.heimName && r.gastName && (
-            <div className="text-xs text-brand-night-navy/50 truncate max-w-[18ch] sm:max-w-none">
-              {r.heimName} – {r.gastName}
+            <div
+              className="text-xs text-brand-night-navy/50 truncate max-w-[18ch] sm:max-w-none"
+              title={`${r.heimName} – ${r.gastName}`}
+            >
+              {abbreviateTeamName(r.heimName)} – {abbreviateTeamName(r.gastName)}
             </div>
           )}
         </div>
