@@ -185,7 +185,7 @@ export function SponsorChargesTable({
       totalPages={totalPages}
       sort={sort}
       dir={dir}
-      emptyState="Keine Charges auf dieser Seite — Filter angepasst?"
+      emptyState="Keine Beiträge auf dieser Seite — Filter angepasst?"
     />
   );
 }

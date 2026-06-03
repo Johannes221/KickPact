@@ -159,7 +159,7 @@ export async function createPledge(input: PledgeInput) {
     } catch (e) {
       if (e instanceof WagerWindowClosedError) {
         throw new Error(
-          `Saison-Wetten sind für Saison ${e.seasonCode ?? "?"} nicht mehr buchbar ` +
+          `Saison-Regeln sind für Saison ${e.seasonCode ?? "?"} nicht mehr buchbar ` +
             `(Cutoff am 5. Spieltag). Wieder verfügbar zur nächsten Saison ab Juli.`
         );
       }

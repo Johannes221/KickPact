@@ -235,7 +235,7 @@ export function PledgeBuilder() {
                 Wie viel pro Ereignis?
               </h2>
               <p className="mt-1 text-sm text-brand-night-navy/60">
-                Leg fest, was jedes Ereignis wert ist. Optional: ein Cap pro Wette —
+                Leg fest, was jedes Ereignis wert ist. Optional: ein Cap pro Regel —
                 begrenzt die Auszahlung pro Monat oder pro Saison (sinnvoll bei torreichen Teams).
               </p>
             </div>

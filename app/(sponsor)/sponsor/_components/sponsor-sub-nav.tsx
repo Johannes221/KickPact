@@ -22,7 +22,7 @@ type Tab = { label: string; href: string; icon: LucideIcon };
 const PRIMARY_TABS: readonly Tab[] = [
   { label: "Übersicht", href: "/sponsor", icon: House },
   { label: "Entdecken", href: "/sponsor/discover", icon: Compass },
-  { label: "Wetten", href: "/sponsor/pledge", icon: Target },
+  { label: "Pacts", href: "/sponsor/pledge", icon: Target },
   { label: "Inbox", href: "/sponsor/inbox", icon: Inbox },
   { label: "Profil", href: "/sponsor/profil", icon: User }
 ] as const;
@@ -30,7 +30,7 @@ const PRIMARY_TABS: readonly Tab[] = [
 // Sekundär → Zahnrad-Sheet.
 const OVERFLOW_TABS: readonly Tab[] = [
   { label: "Bilanz", href: "/sponsor/bilanz", icon: TrendingUp },
-  { label: "Charges", href: "/sponsor/charges", icon: ChartColumnIncreasing },
+  { label: "Beiträge", href: "/sponsor/charges", icon: ChartColumnIncreasing },
   { label: "Rechnungen", href: "/sponsor/rechnungen", icon: FileText }
 ] as const;
 

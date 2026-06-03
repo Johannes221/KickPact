@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { confirmApproval, disputeApproval } from "@/lib/actions/approvals";
+import { triggerLabel } from "@/lib/triggers/labels";
 import { toast } from "sonner";
 
 function eur(cents: number) {
@@ -77,7 +78,7 @@ export function ApprovalRow({ data }: { data: ApprovalRowData }) {
     startTransition(async () => {
       try {
         await disputeApproval({ approvalId: data.approvalId, reason: reason || undefined });
-        toast.success("Bestritten — keine Charge");
+        toast.success("Bestritten — kein Beitrag");
         setDisputeOpen(false);
         setReason("");
         router.refresh();
@@ -133,7 +134,7 @@ export function ApprovalRow({ data }: { data: ApprovalRowData }) {
           <div className="font-display font-bold text-2xl tracking-tight text-accent tabular-nums">
             {eur(data.amountCents)}
           </div>
-          <div className="text-xs text-brand-night-navy/50 mt-0.5">via {data.triggerType}</div>
+          <div className="text-xs text-brand-night-navy/50 mt-0.5">via {triggerLabel(data.triggerType)}</div>
         </div>
       </div>
 
@@ -158,7 +159,7 @@ export function ApprovalRow({ data }: { data: ApprovalRowData }) {
               Event bestreiten?
             </DialogTitle>
             <DialogDescription>
-              Du sagst, der Verein hat das Event falsch gemeldet. Die Charge wird storniert.
+              Du sagst, der Verein hat das Event falsch gemeldet. Der Beitrag wird storniert.
               Optional ein Grund (sieht der Verein).
             </DialogDescription>
           </DialogHeader>
