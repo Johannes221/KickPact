@@ -14,7 +14,7 @@
  * Nutzer überspringen automatisch (localStorage) → Login.
  */
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -273,6 +273,9 @@ export function IntroWizard() {
   const router = useRouter();
   const [index, setIndex] = useState(0);
   const [ready, setReady] = useState(false);
+  // Live-Drag-Offset (px) während des Wischens — echtes natives Swipe-Gefühl.
+  const [drag, setDrag] = useState(0);
+  const startX = useRef<number | null>(null);
 
   useEffect(() => {
     if (window.localStorage.getItem(INTRO_SEEN_KEY)) {
@@ -289,6 +292,24 @@ export function IntroWizard() {
       // localStorage im WebView ggf. restriktiv — Flag ist nur Komfort.
     }
     router.push("/login");
+  }
+
+  const goTo = (i: number) =>
+    setIndex(Math.max(0, Math.min(SLIDES.length - 1, i)));
+
+  function onTouchStart(e: React.TouchEvent) {
+    startX.current = e.touches[0].clientX;
+  }
+  function onTouchMove(e: React.TouchEvent) {
+    if (startX.current === null) return;
+    setDrag(e.touches[0].clientX - startX.current);
+  }
+  function onTouchEnd() {
+    if (startX.current === null) return;
+    if (drag <= -60) goTo(index + 1);
+    else if (drag >= 60) goTo(index - 1);
+    startX.current = null;
+    setDrag(0);
   }
 
   if (!ready) return null;
@@ -309,9 +330,32 @@ export function IntroWizard() {
         </button>
       </header>
 
-      {/* Slide-Inhalt */}
-      <div className="flex flex-1 flex-col justify-center overflow-y-auto px-7 py-6">
-        {SLIDES[index].render()}
+      {/* Slide-Inhalt als wischbarer Carousel-Track (Live-Finger-Tracking). */}
+      <div
+        className="relative flex-1 overflow-hidden"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        <div
+          className="flex h-full"
+          style={{
+            transform: `translateX(calc(-${index * 100}% + ${drag}px))`,
+            transition:
+              drag === 0
+                ? "transform 0.35s cubic-bezier(0.22,1,0.36,1)"
+                : "none"
+          }}
+        >
+          {SLIDES.map((s) => (
+            <div
+              key={s.id}
+              className="flex h-full w-full shrink-0 flex-col justify-center overflow-y-auto px-7 py-6"
+            >
+              {s.render()}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Footer: Progress-Dots + CTA */}
@@ -325,8 +369,11 @@ export function IntroWizard() {
           aria-label={`Schritt ${index + 1} von ${SLIDES.length}`}
         >
           {SLIDES.map((s, i) => (
-            <span
+            <button
               key={s.id}
+              type="button"
+              aria-label={`Zu Schritt ${i + 1}`}
+              onClick={() => goTo(i)}
               className={`h-1.5 rounded-full transition-all duration-300 ${
                 i === index
                   ? "w-8 bg-accent"
@@ -339,7 +386,7 @@ export function IntroWizard() {
         </div>
         <button
           type="button"
-          onClick={() => (isLast ? finish() : setIndex((i) => i + 1))}
+          onClick={() => (isLast ? finish() : goTo(index + 1))}
           className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-accent text-base font-bold text-white shadow-[0_10px_30px_-8px_rgba(1,196,87,0.5)] transition-transform active:scale-[0.98]"
         >
           {isLast ? "Los geht's" : "Weiter"}
