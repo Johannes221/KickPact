@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { Clock } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import { listPledgesForSponsor } from "@/lib/db/queries/pledges";
+import { listInquiriesForSponsor } from "@/lib/db/queries/sponsor-discover";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/page-header";
 
@@ -16,6 +18,13 @@ export default async function PledgeListPage() {
 
   const sponsor = await findSponsorForUser(user.id);
   const myPledges = sponsor ? await listPledgesForSponsor(sponsor.id) : [];
+
+  // Offene Sponsoring-Anfragen (angefragt, aber noch nicht zugesagt) — werden
+  // hier mit angezeigt; den „Mannschaft finden"-CTA gibt's nur, wenn es WEDER
+  // einen Pact NOCH eine offene Anfrage gibt.
+  const inquiries = await listInquiriesForSponsor(user.id);
+  const pendingInquiries = inquiries.filter((i) => i.status === "pending");
+  const isEmpty = myPledges.length === 0 && pendingInquiries.length === 0;
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -34,7 +43,7 @@ export default async function PledgeListPage() {
       </div>
 
       <div className="mt-6 md:mt-10 space-y-3">
-        {myPledges.length === 0 ? (
+        {isEmpty ? (
           <Card className="border-brand-neutral/40">
             <CardContent className="p-8 text-center">
               <p className="font-semibold text-brand-night-navy text-base">Noch keine Pacts.</p>
@@ -51,34 +60,57 @@ export default async function PledgeListPage() {
             </CardContent>
           </Card>
         ) : (
-          myPledges.map((p) => (
-            <Link
-              key={p.id}
-              href={`/sponsor/pledge/${p.id}`}
-              className="block rounded-xl bg-white shadow-ios-card p-4 hover:border-accent/50 transition-colors"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="font-semibold text-brand-night-navy">{p.teamName}</div>
-                  <div className="text-xs text-brand-night-navy/50 mt-0.5">{p.clubName}</div>
+          <>
+            {myPledges.map((p) => (
+              <Link
+                key={p.id}
+                href={`/sponsor/pledge/${p.id}`}
+                className="block rounded-xl bg-white shadow-ios-card p-4 hover:border-accent/50 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-semibold text-brand-night-navy">{p.teamName}</div>
+                    <div className="text-xs text-brand-night-navy/50 mt-0.5">{p.clubName}</div>
+                  </div>
+                  <StatusBadge status={p.status} />
                 </div>
-                <StatusBadge status={p.status} />
+                <div className="mt-3 flex gap-4 text-xs text-brand-night-navy/60">
+                  <span>
+                    {p.startsAt.toLocaleDateString("de-DE")} –{" "}
+                    {p.endsAt.toLocaleDateString("de-DE")}
+                  </span>
+                  {p.monthlyCapCents && (
+                    <span>Cap: {eur(p.monthlyCapCents)} / Monat</span>
+                  )}
+                </div>
+              </Link>
+            ))}
+
+            {pendingInquiries.map((q) => (
+              <div
+                key={q.id}
+                className="rounded-xl bg-white shadow-ios-card p-4 border border-dashed border-amber-300"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-semibold text-brand-night-navy">{q.teamName}</div>
+                    <div className="text-xs text-brand-night-navy/50 mt-0.5">{q.clubName}</div>
+                  </div>
+                  <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                    <Clock className="h-3 w-3" aria-hidden /> Angefragt
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-brand-night-navy/60">
+                  Anfrage gesendet am {q.createdAt.toLocaleDateString("de-DE")} — wartet auf Zusage
+                  des Vereins. Sobald zugesagt, kannst du hier deinen Pact einrichten.
+                </p>
               </div>
-              <div className="mt-3 flex gap-4 text-xs text-brand-night-navy/60">
-                <span>
-                  {p.startsAt.toLocaleDateString("de-DE")} –{" "}
-                  {p.endsAt.toLocaleDateString("de-DE")}
-                </span>
-                {p.monthlyCapCents && (
-                  <span>Cap: {eur(p.monthlyCapCents)} / Monat</span>
-                )}
-              </div>
-            </Link>
-          ))
+            ))}
+          </>
         )}
       </div>
 
-      {myPledges.length > 0 && (
+      {!isEmpty && (
         <div className="mt-8 rounded-lg border border-brand-neutral/40 bg-brand-off-white p-4 text-sm text-brand-night-navy/60">
           <strong className="text-brand-night-navy">Weiteren Pact einrichten?</strong>
           <p className="mt-1">

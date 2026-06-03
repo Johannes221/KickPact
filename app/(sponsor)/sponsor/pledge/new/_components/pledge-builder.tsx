@@ -97,7 +97,7 @@ function defForRule(rule: { triggerType: string; params?: Record<string, unknown
   return TRIGGER_LIBRARY.find((l) => l.key === ruleKey(rule.triggerType, rule.params));
 }
 
-type WizardStep = 1 | 2 | 3;
+type WizardStep = 1 | 2 | 3 | 4;
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -132,7 +132,7 @@ export function PledgeBuilder() {
   // Load squad when step 2 is reached and goal_by_player is selected
   useEffect(() => {
     if (
-      step === 2 &&
+      step === 3 &&
       enabled.has("goal_by_player") &&
       squadPlayers.length === 0 &&
       invitationToken
@@ -206,8 +206,36 @@ export function PledgeBuilder() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <StepIndicator currentStep={step} />
 
-        {/* ── Step 1: Ereignisse wählen ── */}
+        {/* ── Step 1: Erklärung ── */}
         {step === 1 && (
+          <section className="space-y-6">
+            <div>
+              <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
+                So funktioniert dein Sponsoring
+              </h2>
+              <p className="mt-1 text-sm text-brand-night-navy/60">
+                Kurz, wie's läuft — danach wählst du die Ereignisse und legst die Beträge fest.
+              </p>
+            </div>
+
+            <HowItWorks />
+
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="accent"
+                size="lg"
+                onClick={() => setStep(2)}
+                className="min-h-12 w-full sm:w-auto"
+              >
+                Los geht's →
+              </Button>
+            </div>
+          </section>
+        )}
+
+        {/* ── Step 2: Ereignisse wählen ── */}
+        {step === 2 && (
           <section className="space-y-6">
             <div>
               <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
@@ -217,8 +245,6 @@ export function PledgeBuilder() {
                 Wähle beliebig viele aus — im nächsten Schritt legst du die Beträge und Caps fest.
               </p>
             </div>
-
-            <HowItWorks />
 
             <TriggerGroupBlock
               title="Automatisch erfasst"
@@ -248,13 +274,21 @@ export function PledgeBuilder() {
               onToggle={toggleTrigger}
             />
 
-            <div className="flex flex-col-reverse sm:flex-row sm:justify-end">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep(1)}
+                className="min-h-12 w-full sm:w-auto"
+              >
+                ← Erklärung
+              </Button>
               <Button
                 type="button"
                 variant="accent"
                 size="lg"
                 disabled={enabled.size === 0}
-                onClick={() => setStep(2)}
+                onClick={() => setStep(3)}
                 className="min-h-12 w-full sm:w-auto"
               >
                 Weiter: Beträge festlegen →
@@ -263,8 +297,8 @@ export function PledgeBuilder() {
           </section>
         )}
 
-        {/* ── Step 2: Beträge festlegen ── */}
-        {step === 2 && (
+        {/* ── Step 3: Beträge festlegen ── */}
+        {step === 3 && (
           <section className="space-y-6">
             <div>
               <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
@@ -580,7 +614,7 @@ export function PledgeBuilder() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setStep(1)}
+                onClick={() => setStep(2)}
                 className="min-h-12 w-full sm:w-auto"
               >
                 ← Ereignisse ändern
@@ -589,7 +623,7 @@ export function PledgeBuilder() {
                 type="button"
                 variant="accent"
                 size="lg"
-                onClick={() => setStep(3)}
+                onClick={() => setStep(4)}
                 className="min-h-12 w-full sm:w-auto"
               >
                 Weiter: Zusammenfassung →
@@ -598,8 +632,8 @@ export function PledgeBuilder() {
           </section>
         )}
 
-        {/* ── Step 3: Zusammenfassung & aktivieren ── */}
-        {step === 3 && (
+        {/* ── Step 4: Zusammenfassung & aktivieren ── */}
+        {step === 4 && (
           <section className="space-y-6">
             <div>
               <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
@@ -727,7 +761,7 @@ export function PledgeBuilder() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setStep(2)}
+                onClick={() => setStep(3)}
                 className="min-h-12 w-full sm:w-auto"
               >
                 ← Beträge anpassen
@@ -845,9 +879,10 @@ function TriggerGroupBlock({
 
 function StepIndicator({ currentStep }: { currentStep: WizardStep }) {
   const steps = [
-    { n: 1 as WizardStep, label: "Ereignisse" },
-    { n: 2 as WizardStep, label: "Beträge" },
-    { n: 3 as WizardStep, label: "Aktivieren" },
+    { n: 1 as WizardStep, label: "Erklärung" },
+    { n: 2 as WizardStep, label: "Ereignisse" },
+    { n: 3 as WizardStep, label: "Beträge" },
+    { n: 4 as WizardStep, label: "Aktivieren" },
   ];
 
   return (
