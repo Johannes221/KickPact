@@ -274,12 +274,25 @@ export async function getTeamPlayerNames(teamId: string): Promise<string[]> {
 
   const names = new Set<string>();
   for (const r of rows) {
-    const name = r.playerName?.trim();
+    const name = cleanPlayerName(r.playerName);
     if (!name) continue;
     const ownSide = detectTeamSide([team.name, team.clubName], r.heimName);
     if (r.side === ownSide) names.add(name);
   }
   return [...names].sort((a, b) => a.localeCompare(b, "de"));
+}
+
+/**
+ * Säubert gescrapte Spielernamen: manche fussball.de-Linktexte hängen den
+ * Vereinsnamen + " Spieler" an (z.B. "Max Mustermann (FC Sportfr. Dossenheim)
+ * Spieler"). Wir strippen dieses Suffix, damit das Dropdown nur den reinen
+ * Namen zeigt (E2E-Finding 2026-06-03).
+ */
+function cleanPlayerName(raw: string | null): string {
+  return (raw ?? "")
+    .replace(/\s*\([^)]*\)\s*Spieler\s*$/u, "")
+    .replace(/\s+Spieler\s*$/u, "")
+    .trim();
 }
 
 /**
