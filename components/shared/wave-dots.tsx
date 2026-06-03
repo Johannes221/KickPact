@@ -25,7 +25,9 @@ export function WaveDots({ className = "" }: { className?: string }) {
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const spacing = 22;
+    // Zeilen-Abstand der Wellen-Strähnen + Dot-Schritt entlang einer Strähne.
+    const rowGap = 16;
+    const dx = 7;
     let w = 0;
     let h = 0;
     let raf = 0;
@@ -44,25 +46,28 @@ export function WaveDots({ className = "" }: { className?: string }) {
     function draw(tms: number) {
       const t = tms / 1000;
       ctx.clearRect(0, 0, w, h);
-      for (let x = -spacing; x <= w + spacing; x += spacing) {
-        for (let y = -spacing; y <= h + spacing; y += spacing) {
-          // Primäres, leicht diagonal wanderndes Wellenband + organische Overlays
-          const phase = x * 0.011 + y * 0.004 + t * 0.7;
+      // Jede Zeile ist eine kohärent undulierende Wellen-Strähne aus Dots.
+      // Die Strähnen teilen sich die Wellen, sind aber per Zeilen-Phase (s)
+      // versetzt → sie überlagern/kreuzen sich zu einem fließenden Mesh.
+      for (let baseY = -rowGap; baseY <= h + rowGap; baseY += rowGap) {
+        const s = baseY / rowGap;
+        for (let x = -dx; x <= w + dx; x += dx) {
+          const phase = x * 0.012 + t * 0.55 + s * 0.2;
           const wave =
-            Math.sin(phase) * 16 +
-            Math.sin((x * 0.5 + y) * 0.012 - t * 0.5) * 10 +
-            Math.cos((x - y) * 0.009 + t * 0.45) * 7;
-          const py = y + wave;
+            Math.sin(phase) * 13 +
+            Math.sin(x * 0.025 - t * 0.4 + s * 0.12) * 7 +
+            Math.cos(x * 0.006 + t * 0.5 - s * 0.18) * 10;
+          const py = baseY + wave;
 
-          // Nach oben ausblenden (unten dichtes Feld, oben frei für Text)
-          const vfade = Math.min(1, Math.max(0, (py / h - 0.18) / 0.8));
+          // Nach oben ausblenden (unten dichtes Feld, oben frei für Text).
+          const vfade = Math.min(1, Math.max(0, (py / h - 0.1) / 0.85));
           if (vfade <= 0) continue;
-          // Wellenkamm → Helligkeit (durchlaufende Ridges)
+          // Wellenkamm → Helligkeit/Größe (durchlaufende Ridges).
           const crest = 0.5 + 0.5 * Math.sin(phase);
-          const alpha = vfade * (0.10 + crest * 0.45);
+          const alpha = vfade * (0.08 + crest * 0.3);
           if (alpha <= 0.015) continue;
 
-          const r = 1 + crest * 1.1;
+          const r = 0.8 + crest * 0.9;
           ctx.beginPath();
           ctx.arc(x, py, r, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(1, 196, 87, ${alpha})`;
