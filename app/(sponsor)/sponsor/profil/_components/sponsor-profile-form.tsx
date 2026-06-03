@@ -19,10 +19,13 @@ import {
   updateSponsorProfile,
   type UpdateSponsorInput
 } from "@/lib/actions/sponsor-profile";
+import { SPONSOR_ROLES } from "@/lib/validations/sponsor";
 
 const familieSchema = z.object({
   type: z.literal("familie"),
-  displayName: z.string().min(2, "Name fehlt")
+  displayName: z.string().min(2, "Name fehlt"),
+  role: z.string().max(40).optional().or(z.literal("")),
+  description: z.string().max(200, "Max. 200 Zeichen").optional().or(z.literal(""))
 });
 
 const businessSchema = z.object({
@@ -67,6 +70,9 @@ function FamilieForm({ defaultValues }: { defaultValues: FamilieValues }) {
           <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
             Dein Profil
           </h3>
+          <p className="text-xs text-brand-night-navy/60 -mt-3">
+            Du sponserst privat — keine USt-Rechnung. Sag dem Verein kurz, wer du bist.
+          </p>
 
           <FormField
             control={form.control}
@@ -76,6 +82,43 @@ function FamilieForm({ defaultValues }: { defaultValues: FamilieValues }) {
                 <FormLabel>Anzeigename</FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="Familie Mustermann" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Rolle</FormLabel>
+                <FormControl>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                  >
+                    <option value="">— wählen —</option>
+                    {SPONSOR_ROLES.map((r) => (
+                      <option key={r.value} value={r.value}>{r.label}</option>
+                    ))}
+                  </select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Beschreibung <span className="text-brand-night-navy/40 font-normal">(optional)</span></FormLabel>
+                <FormControl>
+                  <Input {...field} value={field.value ?? ""} placeholder="z.B. Papa von Tim · Onkel von Lisa · Freund von Max" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

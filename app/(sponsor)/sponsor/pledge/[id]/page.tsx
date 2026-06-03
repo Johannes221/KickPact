@@ -109,7 +109,7 @@ export default async function PledgeDetailPage({
 
       <div className="mt-8 md:mt-12 flex items-baseline justify-between gap-3">
         <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
-          Wetten
+          Regeln
         </h2>
         <span className="text-xs text-brand-night-navy/50">
           Änderungen gelten nur für künftige Spiele.
@@ -124,11 +124,11 @@ export default async function PledgeDetailPage({
         />
       </div>
 
-      {/* Charges-Summary */}
+      {/* Beiträge-Summary */}
       <div className="mt-8 md:mt-12 space-y-4">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
-            Charge-Verlauf
+            Beitrags-Verlauf
           </h2>
           <span className="font-mono tabular-nums text-brand-night-navy/60 text-sm">
             Gesamt bestätigt:{" "}
@@ -138,7 +138,7 @@ export default async function PledgeDetailPage({
 
         {recentCharges.length === 0 ? (
           <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-5 text-sm text-brand-night-navy/60">
-            Noch keine Charges. Sobald die Mannschaft spielt und Trigger zünden, erscheinen sie hier.
+            Noch keine Beiträge. Sobald die Mannschaft spielt und Ereignisse zünden, erscheinen sie hier.
           </div>
         ) : (
           <ul className="space-y-2">

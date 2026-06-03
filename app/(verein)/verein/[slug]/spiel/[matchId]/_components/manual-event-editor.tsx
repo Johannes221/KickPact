@@ -54,7 +54,8 @@ const SPEZIAL_SUBTYPES = [
   { value: "elfmeter", label: "Elfmeter" },
   { value: "freistoss", label: "Freistoß" },
   { value: "assist", label: "Vorlage (Assist)" },
-  { value: "man_of_match", label: "Spieler des Spiels" }
+  { value: "man_of_match", label: "Spieler des Spiels" },
+  { value: "sonstiges", label: "Sonstiges Spezialtor (Kommentar)" }
 ];
 
 const KARTE_SUBTYPES = [

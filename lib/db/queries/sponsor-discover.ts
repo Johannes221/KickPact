@@ -1,7 +1,25 @@
 import { and, eq, ilike, isNotNull, or, sql, desc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { teams, clubs, sponsorInquiries, seasonResults } from "@/lib/db/schema";
+import {
+  teams,
+  clubs,
+  sponsorInquiries,
+  sponsorInvitations,
+  sponsors,
+  pledges,
+  seasonResults
+} from "@/lib/db/schema";
 import { listTeamImages } from "./team-images";
+
+/**
+ * Beziehung des eingeloggten Sponsors zu einer Mannschaft — treibt die CTA auf
+ * der Discover-Karte:
+ * - `none`       → noch keine (offene) Anfrage → "Anfragen"
+ * - `pending`    → Anfrage gestellt, wartet auf Antwort → "Angefragt" (disabled)
+ * - `accepted`   → angenommen, aber noch kein Pledge → "Jetzt sponsern" (Token-Link)
+ * - `sponsoring` → aktiver Pledge läuft → "Du sponserst" (Link zur Pledge-Übersicht)
+ */
+export type SponsorTeamState = "none" | "pending" | "accepted" | "sponsoring";
 
 export interface DiscoverableTeam {
   teamId: string;
@@ -17,7 +35,15 @@ export interface DiscoverableTeam {
   logoUrl: string | null;
   lastSeasonPosition: number | null;
   lastSeasonPromoted: boolean;
-  hasOpenInquiry: boolean;
+  /** Beziehung des Sponsors zu dieser Mannschaft (steuert die CTA). */
+  sponsorState: SponsorTeamState;
+  /**
+   * Nur bei `sponsorState === "accepted"` gesetzt: gültiger Einladungs-Token,
+   * mit dem der Sponsor direkt in den Pledge-Builder springt
+   * (`/sponsor/pledge/new?invitation=<token>`). Null, wenn die Einladung
+   * abgelaufen/zurückgezogen wurde.
+   */
+  pledgeInviteToken: string | null;
   clubVerifiedAt: Date | null;
 }
 
@@ -83,14 +109,40 @@ export async function listDiscoverableTeams(opts: {
         SELECT sr.promoted FROM ${seasonResults} sr
         WHERE sr.team_id = ${teams.id} AND sr.saison <> ${teams.saison}
         ORDER BY sr.saison DESC LIMIT 1), false)`,
-      hasInquiry: opts.sponsorUserId
+      // Läuft ein aktiver Pledge des Sponsors für dieses Team?
+      hasActivePledge: opts.sponsorUserId
         ? sql<boolean>`EXISTS (
-            SELECT 1 FROM ${sponsorInquiries}
+            SELECT 1 FROM ${pledges}
+            INNER JOIN ${sponsors} ON ${sponsors.id} = ${pledges.sponsorId}
+            WHERE ${pledges.teamId} = ${teams.id}
+              AND ${sponsors.userId} = ${opts.sponsorUserId}
+              AND ${pledges.status} = 'active'
+          )`
+        : sql<boolean>`false`,
+      // Letzter Anfrage-Status des Sponsors für dieses Team (oder NULL).
+      inquiryStatus: opts.sponsorUserId
+        ? sql<string | null>`(
+            SELECT ${sponsorInquiries.status} FROM ${sponsorInquiries}
             WHERE ${sponsorInquiries.teamId} = ${teams.id}
               AND ${sponsorInquiries.sponsorUserId} = ${opts.sponsorUserId}
-              AND ${sponsorInquiries.status} IN ('pending', 'accepted')
+            ORDER BY ${sponsorInquiries.createdAt} DESC LIMIT 1
           )`
-        : sql<boolean>`false`
+        : sql<string | null>`NULL`,
+      // Bei angenommener Anfrage: gültiger Einladungs-Token für den Pledge-Einstieg.
+      inviteToken: opts.sponsorUserId
+        ? sql<string | null>`(
+            SELECT ${sponsorInvitations.token}
+            FROM ${sponsorInquiries}
+            INNER JOIN ${sponsorInvitations}
+              ON ${sponsorInvitations.id} = ${sponsorInquiries.invitationId}
+            WHERE ${sponsorInquiries.teamId} = ${teams.id}
+              AND ${sponsorInquiries.sponsorUserId} = ${opts.sponsorUserId}
+              AND ${sponsorInquiries.status} = 'accepted'
+              AND ${sponsorInvitations.status} = 'pending'
+              AND ${sponsorInvitations.expiresAt} > now()
+            ORDER BY ${sponsorInquiries.createdAt} DESC LIMIT 1
+          )`
+        : sql<string | null>`NULL`
     })
     .from(teams)
     .innerJoin(clubs, eq(teams.clubId, clubs.id))
@@ -112,9 +164,26 @@ export async function listDiscoverableTeams(opts: {
     logoUrl: r.logoUrlRaw ? `/api/teams/${r.teamId}/image?slot=logo` : null,
     lastSeasonPosition: r.lastSeasonPosition ?? null,
     lastSeasonPromoted: Boolean(r.lastSeasonPromoted),
-    hasOpenInquiry: Boolean(r.hasInquiry),
+    sponsorState: deriveSponsorState(r.hasActivePledge, r.inquiryStatus),
+    pledgeInviteToken: r.inviteToken ?? null,
     clubVerifiedAt: r.clubVerifiedAt
   }));
+}
+
+/**
+ * Leitet den Sponsor-Beziehungs-Status aus aktivem Pledge + letztem
+ * Anfrage-Status ab. Aktiver Pledge schlägt alles (man sponsert bereits);
+ * sonst zählt nur ein noch offener (pending) oder angenommener (accepted)
+ * Anfrage-Status. `rejected`/`expired` → `none` (Sponsor darf neu anfragen).
+ */
+export function deriveSponsorState(
+  hasActivePledge: boolean | null | undefined,
+  inquiryStatus: string | null | undefined
+): SponsorTeamState {
+  if (hasActivePledge) return "sponsoring";
+  if (inquiryStatus === "accepted") return "accepted";
+  if (inquiryStatus === "pending") return "pending";
+  return "none";
 }
 
 export interface PublicTeamProfile {
@@ -259,7 +328,22 @@ export async function listInquiriesForSponsor(sponsorUserId: string) {
       message: sponsorInquiries.message,
       responseMessage: sponsorInquiries.responseMessage,
       createdAt: sponsorInquiries.createdAt,
-      respondedAt: sponsorInquiries.respondedAt
+      respondedAt: sponsorInquiries.respondedAt,
+      // Gültiger Einladungs-Token einer angenommenen Anfrage → Pledge-Einstieg.
+      inviteToken: sql<string | null>`(
+        SELECT ${sponsorInvitations.token} FROM ${sponsorInvitations}
+        WHERE ${sponsorInvitations.id} = ${sponsorInquiries.invitationId}
+          AND ${sponsorInvitations.status} = 'pending'
+          AND ${sponsorInvitations.expiresAt} > now()
+      )`,
+      // Läuft schon ein aktiver Pledge für dieses Team? → "Du sponserst".
+      hasActivePledge: sql<boolean>`EXISTS (
+        SELECT 1 FROM ${pledges}
+        INNER JOIN ${sponsors} ON ${sponsors.id} = ${pledges.sponsorId}
+        WHERE ${pledges.teamId} = ${sponsorInquiries.teamId}
+          AND ${sponsors.userId} = ${sponsorUserId}
+          AND ${pledges.status} = 'active'
+      )`
     })
     .from(sponsorInquiries)
     .innerJoin(teams, eq(sponsorInquiries.teamId, teams.id))

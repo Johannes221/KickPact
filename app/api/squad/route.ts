@@ -62,6 +62,29 @@ export async function GET(req: NextRequest) {
 
   for (const n of await getTeamPlayerNames(teamId)) names.add(n);
 
-  const players = [...names].sort((a, b) => a.localeCompare(b, "de"));
+  const players = [...names]
+    .filter(isReadableName)
+    .sort((a, b) => a.localeCompare(b, "de"));
   return NextResponse.json({ players });
+}
+
+/**
+ * fussball.de obfuskiert die Spielernamen auf der Live-Kader-Seite mit einem
+ * Custom-Font: die echten Buchstaben sind auf Codepoints in der Unicode
+ * Private Use Area (U+E000–U+F8FF) gemappt und nur mit deren Font lesbar.
+ * Der Live-Scrape (getKader) zieht daher unbrauchbaren Müll, der im UI als
+ * Tofu-Boxen erscheint (E2E-Finding 2026-06-03). Diese Namen filtern wir raus
+ * — die echten Namen kommen ohnehin aus match_events (getTeamPlayerNames).
+ */
+function isReadableName(name: string): boolean {
+  let hasLetter = false;
+  for (const ch of name) {
+    const cp = ch.codePointAt(0)!;
+    // Private Use Area oder Steuerzeichen → obfuskiert/kaputt
+    if (cp >= 0xe000 && cp <= 0xf8ff) return false;
+    if (cp < 0x20 && cp !== 0x09) return false;
+    if (cp === 0xfffd) return false; // Replacement Character
+    if (/\p{L}/u.test(ch)) hasLetter = true;
+  }
+  return hasLetter;
 }

@@ -14,7 +14,7 @@ import { CsvExportButton } from "@/components/shared/csv-export-button";
 import { SponsorChargesTable } from "./_components/sponsor-charges-table";
 import { PageHeader } from "@/components/shared/page-header";
 
-export const metadata = { title: "Charges · KickPact" };
+export const metadata = { title: "Beiträge · KickPact" };
 
 type SP = Record<string, string | undefined>;
 
@@ -54,14 +54,14 @@ export default async function ChargesPage({
     return (
       <div className="mx-auto max-w-3xl">
         <div className="mb-6 md:mb-10">
-          <PageHeader className="md:hidden" title="Charges" />
+          <PageHeader className="md:hidden" title="Beiträge" />
           <h1 className="hidden md:block text-2xl md:text-4xl font-bold text-brand-night-navy">
-            Charges
+            Beiträge
           </h1>
         </div>
         <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 md:p-8">
           <p className="text-sm md:text-base text-brand-night-navy/70">
-            Du brauchst zuerst ein Sponsor-Profil bevor hier Charges erscheinen.
+            Du brauchst zuerst ein Sponsor-Profil, bevor hier Beiträge erscheinen.
           </p>
         </div>
       </div>
@@ -154,15 +154,15 @@ export default async function ChargesPage({
     <div className="space-y-6">
       <PageHeader
         className="md:hidden"
-        title="Charges"
-        subtitle="Jeder einzelne Trigger, der für dich ausgelöst wurde — über alle Vereine und Mannschaften hinweg."
+        title="Beiträge"
+        subtitle="Jedes einzelne Ereignis, das für dich ausgelöst wurde — über alle Vereine und Mannschaften hinweg."
       />
       <div className="hidden md:block">
         <h1 className="text-2xl md:text-4xl font-bold text-brand-night-navy">
-          Charges
+          Beiträge
         </h1>
         <p className="mt-1.5 text-sm md:text-base text-brand-night-navy/60">
-          Jeder einzelne Trigger, der für dich ausgelöst wurde — über alle
+          Jedes einzelne Ereignis, das für dich ausgelöst wurde — über alle
           Vereine und Mannschaften hinweg.
         </p>
       </div>

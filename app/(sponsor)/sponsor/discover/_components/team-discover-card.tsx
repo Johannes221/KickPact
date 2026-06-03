@@ -13,7 +13,10 @@ import {
 import { toast } from "sonner";
 import { createSponsorInquiry } from "@/lib/actions/sponsor-inquiries";
 import { TeamCrest } from "@/components/shared/team-crest";
-import type { DiscoverableTeam } from "@/lib/db/queries/sponsor-discover";
+import type {
+  DiscoverableTeam,
+  SponsorTeamState
+} from "@/lib/db/queries/sponsor-discover";
 
 export function TeamDiscoverCard({
   team,
@@ -25,13 +28,14 @@ export function TeamDiscoverCard({
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
-  const [done, setDone] = useState(team.hasOpenInquiry);
+  // Lokaler State (optimistisch nach Absenden), initialisiert vom Server-State.
+  const [state, setState] = useState<SponsorTeamState>(team.sponsorState);
 
   async function handleSubmit() {
     setPending(true);
     try {
       await createSponsorInquiry({ teamId: team.teamId, message: message || undefined });
-      setDone(true);
+      setState("pending");
       setOpen(false);
       toast.success("Anfrage versendet!");
     } catch (e) {
@@ -137,13 +141,34 @@ export function TeamDiscoverCard({
                 Anfragen
               </Link>
             ) : null
-          ) : done ? (
+          ) : state === "sponsoring" ? (
+            <Link
+              href="/sponsor/pledge"
+              className="flex-1 rounded-lg bg-success-muted px-3 py-2 text-center text-xs font-semibold text-success-dark hover:bg-success/20 transition-colors"
+            >
+              ✓ Du sponserst
+            </Link>
+          ) : state === "accepted" ? (
+            team.pledgeInviteToken ? (
+              <Link
+                href={`/sponsor/pledge/new?invitation=${team.pledgeInviteToken}`}
+                className="flex-1 rounded-lg bg-accent px-3 py-2 text-center text-xs font-semibold text-brand-night-navy hover:bg-accent/90 transition-colors"
+              >
+                Jetzt sponsern →
+              </Link>
+            ) : (
+              // Angenommen, aber Einladung abgelaufen/zurückgezogen.
+              <span className="flex-1 rounded-lg bg-success-muted px-3 py-2 text-center text-xs font-semibold text-success-dark">
+                ✓ Angenommen
+              </span>
+            )
+          ) : state === "pending" ? (
             <button
               type="button"
               disabled
-              className="flex-1 rounded-lg bg-success-muted px-3 py-2 text-center text-xs font-semibold text-success-dark cursor-not-allowed"
+              className="flex-1 rounded-lg bg-warning-muted px-3 py-2 text-center text-xs font-semibold text-warning-dark cursor-not-allowed"
             >
-              ✓ Bereits angefragt
+              Anfrage läuft …
             </button>
           ) : (
             <button
@@ -182,7 +207,7 @@ export function TeamDiscoverCard({
               </p>
             )}
 
-            {done ? (
+            {state !== "none" ? (
               <div className="mt-6 rounded-xl border border-success/30 bg-success-muted p-4 text-sm text-success-dark">
                 ✓ Deine Anfrage wurde versendet. Die Mannschaft meldet sich per Mail.
               </div>

@@ -15,6 +15,12 @@ export const sponsors = pgTable(
     userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     displayName: text("display_name").notNull(),
     type: sponsorTypeEnum("type").notNull(),
+    // Privat-Sponsoren (type=familie): Beziehung zur Mannschaft. `role` ist eine
+    // grobe Kategorie (freund | bekannter | verwandt | fan | sonstiges), die
+    // freie `description` der Kontext ("Papa von Tim", "Onkel von …"). Beide
+    // nullable — Business-Sponsoren nutzen sie i.d.R. nicht.
+    role: text("role"),
+    description: text("description"),
     businessName: text("business_name"),
     businessAddressJson: jsonb("business_address_json").$type<{
       street: string;

@@ -48,8 +48,9 @@ export default async function TeamVerifikationPage({
         <p className="mt-2 text-sm text-brand-night-navy/60">
           Lade einen Nachweis hoch, dass du die Mannschaft betreust (Trainerlizenz,
           Vereinsbestätigung, Mannschaftsfoto oder ein Spielleitungs-Eintrag).
-          Unser Team prüft innerhalb von 1–2 Werktagen. Bis dahin werden
-          Sponsoren-Rechnungen zurückgehalten — alles andere läuft normal weiter.
+          Unser Team prüft innerhalb von 1–2 Werktagen. Bis die Mannschaft
+          verifiziert ist, kannst du noch keine Sponsoren einladen — alles andere
+          läuft normal weiter.
         </p>
       </div>
 
@@ -71,8 +72,9 @@ export default async function TeamVerifikationPage({
             {existing.submittedAt.toLocaleDateString("de-DE")}
           </div>
           <p className="mt-1 text-brand-night-navy/70">
-            Wir prüfen den Nachweis. Du kannst hier einen weiteren Nachweis einreichen,
-            falls etwas geändert hat oder du mehrere Belege liefern möchtest.
+            Solange die Prüfung läuft, kannst du noch keine Sponsoren einladen. Du
+            kannst hier einen weiteren Nachweis einreichen, falls sich etwas geändert
+            hat oder du mehrere Belege liefern möchtest.
           </p>
         </div>
       ) : existing?.status === "rejected" ? (

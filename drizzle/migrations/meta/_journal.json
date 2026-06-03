@@ -337,6 +337,20 @@
       "when": 1782361500000,
       "tag": "0048_user_primary_role",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1782361600000,
+      "tag": "0049_cloudy_supreme_intelligence",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1782361700000,
+      "tag": "0050_swift_liz_osborn",
+      "breakpoints": true
     }
   ]
 }

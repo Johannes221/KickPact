@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 
 interface Inquiry {
@@ -12,6 +13,8 @@ interface Inquiry {
   responseMessage: string | null;
   createdAt: Date;
   respondedAt: Date | null;
+  inviteToken: string | null;
+  hasActivePledge: boolean;
 }
 
 export function InquiriesList({ inquiries }: { inquiries: Inquiry[] }) {
@@ -47,9 +50,44 @@ export function InquiriesList({ inquiries }: { inquiries: Inquiry[] }) {
               <span> · Antwort {new Date(inq.respondedAt).toLocaleDateString("de-DE")}</span>
             )}
           </div>
+          {inq.status === "accepted" && <AcceptedCta inquiry={inq} />}
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * CTA für eine angenommene Anfrage: führt den Sponsor zum eigentlichen
+ * Sponsoring — entweder in den Pledge-Builder (Einladungs-Token) oder, wenn
+ * bereits ein Pledge läuft, zur Pledge-Übersicht.
+ */
+function AcceptedCta({ inquiry }: { inquiry: Inquiry }) {
+  if (inquiry.hasActivePledge) {
+    return (
+      <Link
+        href="/sponsor/pledge"
+        className="mt-3 inline-flex items-center gap-1 rounded-lg bg-emerald-100 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-200 transition-colors"
+      >
+        ✓ Du sponserst — Übersicht
+      </Link>
+    );
+  }
+  if (inquiry.inviteToken) {
+    return (
+      <Link
+        href={`/sponsor/pledge/new?invitation=${inquiry.inviteToken}`}
+        className="mt-3 inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-brand-night-navy hover:bg-accent/90 transition-colors"
+      >
+        Jetzt sponsern →
+      </Link>
+    );
+  }
+  // Angenommen, aber Einladung abgelaufen/zurückgezogen.
+  return (
+    <p className="mt-3 text-xs text-brand-night-navy/50">
+      Einladung abgelaufen — frag die Mannschaft nach einem neuen Link.
+    </p>
   );
 }
 

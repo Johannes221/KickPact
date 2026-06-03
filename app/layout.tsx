@@ -172,7 +172,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dashboardHref={dashboardHref}
           isNativeApp={isNativeApp}
         />
-        <div id="main">{children}</div>
+        <div id="main" tabIndex={-1} className="scroll-mt-20 outline-none">{children}</div>
         {/* Native iOS-Push-Registrierung (web-inert; nur in der Capacitor-App aktiv). */}
         {authenticated && <PushRegistrar />}
         <Toaster />
