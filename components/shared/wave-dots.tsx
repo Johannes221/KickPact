@@ -1,105 +1,223 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import * as THREE from "three";
 
 /**
- * WaveDots — fließendes grünes Punkt-Wellenfeld (Canvas). Ein Raster feiner
- * Dots wird von mehreren wandernden Sinuswellen verschoben & in der Helligkeit
- * moduliert → smooth durchlaufende Wellenbänder. Unten dichter/heller, nach oben
- * ausgeblendet, damit zentrierter Content lesbar bleibt.
+ * WaveDots — seidiges grünes Punkt-Wellenfeld (Three.js).
  *
- * Performance: ein Canvas, requestAnimationFrame, DPR-gecappt. Bei
- * `prefers-reduced-motion` wird nur EIN statischer Frame gezeichnet.
+ * Ein perspektivisches Gitter aus Punkten wogt über zwei gekreuzte Sinuswellen
+ * (x- und y-Achse) → die Reihen laufen in der Perspektive zu fließenden, sich
+ * kreuzenden Bändern zusammen. Wo Wellenkämme liegen, werden die Dots heller
+ * & größer (per-Vertex-Farbe + sizeAttenuation); weißer Fog lässt das Feld in
+ * die Ferne ausbleichen → „an manchen Orten dichter/heller". Oben weich
+ * ausgeblendet (CSS-Mask), damit zentrierter Content lesbar bleibt.
+ *
+ * Technik aus 21st.dev „Dotted Surface" / three.js webgl_points_waves,
+ * adaptiert: Brand-Grün, transparenter Hintergrund, an den Eltern-Container
+ * gebunden (ResizeObserver), DPR-gecappt, `prefers-reduced-motion`-aware.
  */
 export function WaveDots({ className = "" }: { className?: string }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const canvasEl = canvasRef.current;
-    if (!canvasEl) return;
-    const context = canvasEl.getContext("2d");
-    if (!context) return;
-    // Non-null-typisierte Consts, damit das Narrowing in den Closures hält.
-    const canvas: HTMLCanvasElement = canvasEl;
-    const ctx: CanvasRenderingContext2D = context;
+    const container = containerRef.current;
+    if (!container) return;
 
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    // Zeilen-Abstand der Wellen-Strähnen + Dot-Schritt entlang einer Strähne.
-    // Dichter (kleinerer rowGap) → mehr überlagernde Linien = volleres Netz.
-    const rowGap = 13;
-    const dx = 6;
-    let w = 0;
-    let h = 0;
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    // ── Gitter-Parameter ──────────────────────────────────────────────────
+    // Strähnen laufen entlang X (viele feine Dots), gestapelt entlang Z (eng).
+    const SEP_X = 13; // Dot-Abstand entlang einer Strähne (fein)
+    const SEP_Z = 30; // Abstand benachbarter Strähnen (eng gestapelt)
+    const AMOUNTX = 170; // Dots pro Strähne
+    const AMOUNTY = 150; // Anzahl Strähnen
+    const COUNT_STEP = 0.018; // Animations-Geschwindigkeit
+
+    // Brand-Grün #01C457 als Basis + helleres Mint für die Kämme.
+    const baseCol = new THREE.Color(0x01c457);
+    const crestCol = new THREE.Color(0x8df5bd);
+
+    // Runde, weiche Dot-Textur (sonst rendert PointsMaterial harte Quadrate).
+    const dotTexture = (() => {
+      const s = 64;
+      const c = document.createElement("canvas");
+      c.width = c.height = s;
+      const g = c.getContext("2d")!;
+      const grad = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+      grad.addColorStop(0, "rgba(255,255,255,1)");
+      grad.addColorStop(0.45, "rgba(255,255,255,1)");
+      grad.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = grad;
+      g.fillRect(0, 0, s, s);
+      const tex = new THREE.CanvasTexture(c);
+      return tex;
+    })();
+
+    // ── Szene / Kamera / Renderer ─────────────────────────────────────────
+    const scene = new THREE.Scene();
+    // Weißer Fog → ferne Dots bleichen sanft in die weiße Seite aus.
+    scene.fog = new THREE.Fog(0xffffff, 900, 3200);
+
+    let w = Math.max(1, container.clientWidth);
+    let h = Math.max(1, container.clientHeight);
+
+    // Orthografisch → kein Tiefen-Dichtegradient. Dichte/helle Bänder entstehen
+    // dort, wo die wogende Fläche sich edge-on faltet (Dots projizieren eng).
+    const FRUSTUM = 1150;
+    const camera = new THREE.OrthographicCamera(
+      (-FRUSTUM * (w / h)) / 2,
+      (FRUSTUM * (w / h)) / 2,
+      FRUSTUM / 2,
+      -FRUSTUM / 2,
+      -5000,
+      10000
+    );
+    // Sehr flacher Blickwinkel → Strähnen werden zu glatten Sinus-Kurven, die
+    // sich kreuzen und an den Falten zu hellen Bändern bündeln (Seiden-Look).
+    camera.position.set(0, 250, 1150);
+    camera.lookAt(0, 0, -350);
+
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(w, h);
+    renderer.setClearColor(0xffffff, 0); // transparent
+    container.appendChild(renderer.domElement);
+    renderer.domElement.style.width = "100%";
+    renderer.domElement.style.height = "100%";
+
+    // ── Geometrie: Punkte-Gitter ──────────────────────────────────────────
+    const count = AMOUNTX * AMOUNTY;
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+
+    // Basis-Positionen (Weltkoordinaten) vorab speichern; die Welle moduliert
+    // pro Frame nur Y. Glattes Raster (kein Jitter) → klare Strähnen.
+    const baseX = new Float32Array(count);
+    const baseZ = new Float32Array(count);
+    let i = 0;
+    for (let ix = 0; ix < AMOUNTX; ix++) {
+      for (let iy = 0; iy < AMOUNTY; iy++) {
+        // Brick-Offset pro Strähne + Mini-Jitter → bricht vertikales Moiré.
+        const stagger = (iy % 2) * SEP_X * 0.5 + (Math.random() - 0.5) * SEP_X;
+        const x = ix * SEP_X - (AMOUNTX * SEP_X) / 2 + stagger;
+        const z = iy * SEP_Z - (AMOUNTY * SEP_Z) / 2;
+        baseX[i] = x;
+        baseZ[i] = z;
+        positions[i * 3] = x;
+        positions[i * 3 + 1] = 0;
+        positions[i * 3 + 2] = z;
+        baseCol.toArray(colors, i * 3);
+        i++;
+      }
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+    const material = new THREE.PointsMaterial({
+      size: 2.8,
+      map: dotTexture,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.95,
+      sizeAttenuation: false, // alle Dots gleich fein → gleichmäßig dichtes Feld
+      depthWrite: false
+    });
+
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+
+    const posAttr = geometry.attributes.position as THREE.BufferAttribute;
+    const colAttr = geometry.attributes.color as THREE.BufferAttribute;
+    const tmp = new THREE.Color();
+
+    let countAnim = 0;
     let raf = 0;
 
-    function resize() {
-      const rect = canvas.parentElement?.getBoundingClientRect();
-      w = Math.max(1, Math.floor(rect?.width ?? window.innerWidth));
-      h = Math.max(1, Math.floor(rect?.height ?? window.innerHeight));
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
+    const pos = posAttr.array as Float32Array;
+    const col = colAttr.array as Float32Array;
+    const AMP_TOTAL = 320; // Summe der Amplituden (für Farb-Normalisierung)
 
-    function draw(tms: number) {
-      const t = tms / 1000;
-      ctx.clearRect(0, 0, w, h);
-      // Jede Zeile ist eine kohärent undulierende Wellen-Strähne aus Dots.
-      // Die Strähnen teilen sich die Wellen, sind aber per Zeilen-Phase (s)
-      // versetzt → sie überlagern/kreuzen sich zu einem fließenden Mesh.
-      for (let baseY = -rowGap; baseY <= h + rowGap; baseY += rowGap) {
-        const s = baseY / rowGap;
-        // Amplitude alterniert pro Zeile → benachbarte Strähnen divergieren.
-        const amp = 10 + 10 * Math.sin(s * 0.5);
-        for (let x = -dx; x <= w + dx; x += dx) {
-          // Große Phasen-Verschiebung pro Zeile (s * 0.45) + weite, langsam
-          // sweepende Welle → die Strähnen kreuzen sich ineinander = Netz.
-          const phase = x * 0.011 + t * 0.5 + s * 0.45;
-          const wave =
-            Math.sin(phase) * amp +
-            Math.sin(x * 0.005 - t * 0.32 + s * 0.25) * 16;
-          const py = baseY + wave;
+    function frame() {
+      const t = countAnim;
+      for (let idx = 0; idx < count; idx++) {
+        const x = baseX[idx];
+        const z = baseZ[idx];
+        // Welle über Weltkoordinaten → glatte, breite Sinus-Strähnen, die als
+        // Familien gegeneinander laufen und sich zu einem X kreuzen.
+        const y =
+          Math.sin(x * 0.0045 + z * 0.0011 + t) * 160 +
+          Math.sin(z * 0.0045 - x * 0.0013 - t * 0.7) * 120 +
+          Math.sin((x + z) * 0.0016 + t * 0.45) * 40;
+        pos[idx * 3 + 1] = y;
 
-          // Nach oben ausblenden (unten dichtes Netz, oben frei für Text).
-          const vfade = Math.min(1, Math.max(0, (py / h - 0.08) / 0.9));
-          if (vfade <= 0) continue;
-          // Wellenkamm → Helligkeit/Größe (durchlaufende Ridges).
-          const crest = 0.5 + 0.5 * Math.sin(phase);
-          const alpha = vfade * (0.1 + crest * 0.26);
-          if (alpha <= 0.015) continue;
-
-          const r = 0.75 + crest * 0.85;
-          ctx.beginPath();
-          ctx.arc(x, py, r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(1, 196, 87, ${alpha})`;
-          ctx.fill();
-        }
+        // Kamm (y hoch) → heller/mintiger; Tal → Brand-Grün.
+        const tcol = (y + AMP_TOTAL) / (2 * AMP_TOTAL); // ~0..1
+        tmp.copy(baseCol).lerp(crestCol, tcol < 0 ? 0 : tcol > 1 ? 1 : tcol);
+        col[idx * 3] = tmp.r;
+        col[idx * 3 + 1] = tmp.g;
+        col[idx * 3 + 2] = tmp.b;
       }
-      if (!reduce) raf = requestAnimationFrame(draw);
+      posAttr.needsUpdate = true;
+      colAttr.needsUpdate = true;
+      renderer.render(scene, camera);
+      countAnim += COUNT_STEP;
     }
 
-    resize();
-    const ro = new ResizeObserver(() => {
-      resize();
-      if (reduce) draw(0);
-    });
-    if (canvas.parentElement) ro.observe(canvas.parentElement);
+    function loop() {
+      frame();
+      raf = requestAnimationFrame(loop);
+    }
 
-    raf = requestAnimationFrame(draw);
+    function resize() {
+      const el = containerRef.current;
+      if (!el) return;
+      w = Math.max(1, el.clientWidth);
+      h = Math.max(1, el.clientHeight);
+      camera.left = (-FRUSTUM * (w / h)) / 2;
+      camera.right = (FRUSTUM * (w / h)) / 2;
+      camera.top = FRUSTUM / 2;
+      camera.bottom = -FRUSTUM / 2;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+      if (reduce) frame();
+    }
+
+    const ro = new ResizeObserver(resize);
+    ro.observe(container);
+
+    if (reduce) frame();
+    else raf = requestAnimationFrame(loop);
+
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      geometry.dispose();
+      material.dispose();
+      dotTexture.dispose();
+      renderer.dispose();
+      if (renderer.domElement.parentNode === container) {
+        container.removeChild(renderer.domElement);
+      }
     };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
+    <div
+      ref={containerRef}
       aria-hidden
       className={`absolute inset-0 h-full w-full ${className}`}
+      style={{
+        // Oben weich ausblenden, damit Überschrift/Text lesbar bleiben.
+        maskImage:
+          "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.25) 18%, #000 42%)",
+        WebkitMaskImage:
+          "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.25) 18%, #000 42%)"
+      }}
     />
   );
 }
