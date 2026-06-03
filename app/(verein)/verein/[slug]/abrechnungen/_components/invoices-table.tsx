@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { openInNewTab } from "@/lib/platform/files";
 import { DataTable, type DataTableColumn, type SortDirection } from "@/components/ui/data-table";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { markInvoicePaid, invoiceDownloadUrl } from "@/lib/actions/invoices";
 
 interface Row {
@@ -158,22 +159,13 @@ export function InvoicesTable({
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    draft: { label: "Entwurf", cls: "bg-neutral-100 text-neutral-700" },
-    sent: { label: "Versendet", cls: "bg-accent/10 text-accent-dark" },
-    paid: { label: "Bezahlt", cls: "bg-emerald-100 text-emerald-800" },
-    overdue: { label: "Überfällig", cls: "bg-rose-100 text-rose-700" },
-    cancelled: { label: "Storniert", cls: "bg-neutral-100 text-neutral-500" }
+  const map: Record<string, { label: string; tone: BadgeProps["tone"] }> = {
+    draft: { label: "Entwurf", tone: "neutral" },
+    sent: { label: "Versendet", tone: "info" },
+    paid: { label: "Bezahlt", tone: "success" },
+    overdue: { label: "Überfällig", tone: "danger" },
+    cancelled: { label: "Storniert", tone: "neutral" }
   };
-  const entry = map[status] ?? { label: status, cls: "bg-neutral-100 text-neutral-700" };
-  return (
-    <span
-      className={
-        "inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] md:text-xs font-semibold " +
-        entry.cls
-      }
-    >
-      {entry.label}
-    </span>
-  );
+  const entry = map[status] ?? { label: status, tone: "neutral" as const };
+  return <Badge tone={entry.tone}>{entry.label}</Badge>;
 }
