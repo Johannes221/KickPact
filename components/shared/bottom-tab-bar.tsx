@@ -67,14 +67,19 @@ export function BottomTabBar({
   const cols = primary.length + (needsMore ? 1 : 0);
 
   return (
-    <nav
-      className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-brand-neutral/30 bg-white/80 backdrop-blur-xl pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_16px_rgba(0,0,0,0.05)]"
-      aria-label={contextLabel ?? "Navigation"}
-    >
-      <div
-        className="grid"
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+    // Schwebende, transluzente Tab-Bar (iOS-18/26-Sprache): zentrierte Pille mit
+    // Seitenrand + Bottom-Offset, starkes Blur + weicher Schatten. Der äußere
+    // Container fängt keine Taps ab (pointer-events-none), nur die Pille selbst —
+    // so bleiben die Ränder neben der Bar für den Content durchklickbar.
+    <div className="md:hidden fixed inset-x-0 bottom-0 z-40 pointer-events-none px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
+      <nav
+        className="pointer-events-auto mx-auto max-w-md rounded-[1.75rem] border border-white/40 bg-white/70 backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.14)]"
+        aria-label={contextLabel ?? "Navigation"}
       >
+        <div
+          className="grid"
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        >
         {primary.map((it) => {
           const active = it.href === activeHref;
           const Icon = it.icon;
@@ -194,7 +199,8 @@ export function BottomTabBar({
             </SheetContent>
           </Sheet>
         )}
-      </div>
-    </nav>
+        </div>
+      </nav>
+    </div>
   );
 }

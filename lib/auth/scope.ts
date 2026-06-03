@@ -126,15 +126,23 @@ type TeamRole = "admin" | "viewer";
 const TEAM_RANK: Record<TeamRole, number> = { viewer: 1, admin: 2 };
 
 /**
- * Ein Team ist „vereinsgeführt", wenn seine Lizenz unter der Vereinslizenz
- * gebündelt ist (plan='verein' ODER parentClubLicenseId gesetzt). Sonst gilt
- * es als autark (eigene basic/pro-Lizenz oder noch ohne Lizenz).
+ * Ein Team ist „autark", wenn es eine EIGENE, gekaufte Einzel-Lizenz hat
+ * (plan='basic'|'pro') OHNE Bündelung unter einer Vereinslizenz
+ * (parentClubLicenseId === null). Solche Teams gehören einem eigenständigen
+ * Mannschafts-Inhaber und sind dem Verein-Admin NICHT unterstellt — der Zugriff
+ * kommt dort ausschließlich aus team_memberships.
  *
- * Steuert den Club-Admin-Durchgriff: nur vereinsgeführte Teams sind dem
- * Verein-Admin unterstellt. Autarke Teams beziehen ihren Zugriff ausschließlich
- * aus team_memberships.
+ * Wichtig: Ein Team OHNE Lizenz-Zeile ist NICHT autark. Es ist eine schlichte
+ * Mannschaft im Vereins-Container (z.B. die noch unlizenzierte Erstmannschaft
+ * eines Clubs, dessen andere Teams je eine eigene Lizenz haben). Dafür darf der
+ * Club-Admin durchgreifen — sonst routet ihn die Identity-Logik in genau dieses
+ * Team und der Page-Guard wirft ihn zurück → Endlos-Redirect (/dashboard ⇄ Team).
+ *
+ * Steuert den Club-Admin-Durchgriff: blockiert wird er NUR für autarke Teams.
+ * Vereinsgeführte Teams (plan='verein' ODER parentClubLicenseId gesetzt) UND
+ * lizenzlose Container-Teams sind dem Verein-Admin unterstellt.
  */
-export async function isTeamUnderClubLicense(teamId: string): Promise<boolean> {
+export async function isTeamAutark(teamId: string): Promise<boolean> {
   const [lic] = await db
     .select({
       plan: teamLicenses.plan,
@@ -144,7 +152,7 @@ export async function isTeamUnderClubLicense(teamId: string): Promise<boolean> {
     .where(eq(teamLicenses.teamId, teamId))
     .limit(1);
   if (!lic) return false;
-  return lic.plan === "verein" || lic.parentId !== null;
+  return (lic.plan === "basic" || lic.plan === "pro") && lic.parentId === null;
 }
 
 export type TeamAccessResult =
@@ -173,9 +181,11 @@ export async function resolveTeamAccess(
   if (!team) return { granted: false };
 
   // Club-level first — admins and trainers of the parent club see everything,
-  // ABER nur bei vereinsgeführten Teams. Autarke Teams (eigene Lizenz, nicht
-  // unter Vereinslizenz) sind dem Verein-Admin nicht unterstellt; dort kommt
-  // der Zugriff ausschließlich aus team_memberships (siehe unten).
+  // AUSSER autarke Teams (eigene basic/pro-Einzellizenz ohne Vereinsbündelung).
+  // Die sind dem Verein-Admin nicht unterstellt; dort kommt der Zugriff
+  // ausschließlich aus team_memberships (siehe unten). Lizenzlose Container-
+  // Teams sind NICHT autark → Durchgriff erlaubt (sonst Redirect-Loop, weil die
+  // Identity-Logik den Club-Admin in genau dieses Team routet).
   const [clubMem] = await db
     .select({ role: clubMemberships.role })
     .from(clubMemberships)
@@ -187,7 +197,7 @@ export async function resolveTeamAccess(
     )
     .limit(1);
   if (clubMem && ROLE_RANK[clubMem.role] >= ROLE_RANK[minRole]) {
-    if (await isTeamUnderClubLicense(team.id)) {
+    if (!(await isTeamAutark(team.id))) {
       return {
         granted: true,
         scope: "club",
@@ -382,7 +392,7 @@ export async function canManageTeamMembers(
       )
     )
     .limit(1);
-  if (clubMem?.role === "admin" && (await isTeamUnderClubLicense(teamId))) {
+  if (clubMem?.role === "admin" && !(await isTeamAutark(teamId))) {
     return true;
   }
   return false;

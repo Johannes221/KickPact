@@ -2,6 +2,7 @@ import Link from "next/link";
 import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { listClubTeamsWithStatus } from "@/lib/db/queries/club-admin";
 import { getClubTeamStats } from "@/lib/db/queries/club-reporting";
+import { TeamCrest } from "@/components/shared/team-crest";
 
 export const metadata = { title: "Mannschaften · KickPact" };
 
@@ -81,7 +82,13 @@ export default async function MannschaftenPage({
                   (t.isActive ? "border-brand-neutral/40" : "border-brand-neutral/20 opacity-60")
                 }
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <TeamCrest
+                    name={t.name}
+                    src={`/api/teams/${t.id}/image?slot=logo`}
+                    size={44}
+                    shape="squircle"
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-display font-bold text-lg tracking-tight text-brand-night-navy truncate">

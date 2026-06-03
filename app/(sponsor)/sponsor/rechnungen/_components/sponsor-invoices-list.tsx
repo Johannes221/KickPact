@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { openInNewTab } from "@/lib/platform/files";
 import { DataTable, type DataTableColumn, type SortDirection } from "@/components/ui/data-table";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { invoiceDownloadUrl, markInvoicePaidBySponsor } from "@/lib/actions/invoices";
 
 interface Row {
@@ -168,26 +169,14 @@ function RowActions({ row, onDownload }: { row: Row; onDownload: () => void }) {
 }
 
 function PayPill({ state }: { state: PayState }) {
-  const cfg =
+  const cfg: { label: string; tone: BadgeProps["tone"] } =
     state.kind === "club_confirmed"
       ? {
           label: `Bezahlt · bestätigt ${state.at.toLocaleDateString("de-DE")}`,
-          cls: "bg-emerald-100 text-emerald-800"
+          tone: "success"
         }
       : state.kind === "sponsor_marked"
-        ? {
-            label: `Bezahlt · warte auf Verein`,
-            cls: "bg-amber-100 text-amber-800"
-          }
-        : { label: "Offen", cls: "bg-neutral-100 text-neutral-700" };
-  return (
-    <span
-      className={
-        "inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold " +
-        cfg.cls
-      }
-    >
-      {cfg.label}
-    </span>
-  );
+        ? { label: `Bezahlt · warte auf Verein`, tone: "warning" }
+        : { label: "Offen", tone: "neutral" };
+  return <Badge tone={cfg.tone}>{cfg.label}</Badge>;
 }

@@ -7,6 +7,7 @@ import {
   type SortDirection
 } from "@/components/ui/data-table";
 import { triggerEmoji, triggerLabel } from "@/lib/triggers/labels";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import type { ClubChargeRow } from "@/lib/db/queries/club-reporting";
 
 function eur(cents: number): string {
@@ -25,11 +26,11 @@ function fmtDate(d: Date | null): string {
   });
 }
 
-const STATUS_MAP: Record<string, { label: string; cls: string }> = {
-  pending_approval: { label: "Offen", cls: "bg-amber-100 text-amber-800" },
-  confirmed: { label: "Bestätigt", cls: "bg-emerald-100 text-emerald-800" },
-  invoiced: { label: "Abgerechnet", cls: "bg-sky-100 text-sky-800" },
-  cancelled: { label: "Storniert", cls: "bg-neutral-100 text-neutral-500" }
+const STATUS_MAP: Record<string, { label: string; tone: BadgeProps["tone"] }> = {
+  pending_approval: { label: "Offen", tone: "warning" },
+  confirmed: { label: "Bestätigt", tone: "success" },
+  invoiced: { label: "Abgerechnet", tone: "info" },
+  cancelled: { label: "Storniert", tone: "neutral" }
 };
 
 interface Props {
@@ -108,20 +109,8 @@ export function SponsorChargesTable({
       label: "Status",
       sortable: true,
       render: (r) => {
-        const e = STATUS_MAP[r.status] ?? {
-          label: r.status,
-          cls: "bg-neutral-100 text-neutral-700"
-        };
-        return (
-          <span
-            className={
-              "inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] md:text-xs font-semibold " +
-              e.cls
-            }
-          >
-            {e.label}
-          </span>
-        );
+        const e = STATUS_MAP[r.status] ?? { label: r.status, tone: "neutral" as const };
+        return <Badge tone={e.tone}>{e.label}</Badge>;
       }
     },
     {

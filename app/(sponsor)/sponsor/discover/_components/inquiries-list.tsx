@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 
 interface Inquiry {
   id: string;
@@ -91,21 +92,12 @@ function AcceptedCta({ inquiry }: { inquiry: Inquiry }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    pending: { label: "Wartet", cls: "bg-accent/10 text-accent-dark" },
-    accepted: { label: "Angenommen", cls: "bg-emerald-100 text-emerald-800" },
-    rejected: { label: "Abgelehnt", cls: "bg-rose-100 text-rose-700" },
-    expired: { label: "Abgelaufen", cls: "bg-neutral-100 text-neutral-700" }
+  const map: Record<string, { label: string; tone: BadgeProps["tone"] }> = {
+    pending: { label: "Wartet", tone: "warning" },
+    accepted: { label: "Angenommen", tone: "success" },
+    rejected: { label: "Abgelehnt", tone: "danger" },
+    expired: { label: "Abgelaufen", tone: "neutral" }
   };
-  const entry = map[status] ?? { label: status, cls: "bg-neutral-100 text-neutral-700" };
-  return (
-    <span
-      className={
-        "inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold " +
-        entry.cls
-      }
-    >
-      {entry.label}
-    </span>
-  );
+  const entry = map[status] ?? { label: status, tone: "neutral" as const };
+  return <Badge tone={entry.tone}>{entry.label}</Badge>;
 }

@@ -7,6 +7,7 @@ import {
   type SortDirection
 } from "@/components/ui/data-table";
 import { triggerEmoji, triggerLabel } from "@/lib/triggers/labels";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import type { ClubPledgeReportRow } from "@/lib/db/queries/club-reporting";
 
 function eur(cents: number | null | undefined): string {
@@ -25,27 +26,15 @@ function fmtDate(d: Date): string {
   });
 }
 
-const STATUS_MAP: Record<string, { label: string; cls: string }> = {
-  active: { label: "Aktiv", cls: "bg-emerald-100 text-emerald-800" },
-  paused: { label: "Pausiert", cls: "bg-amber-100 text-amber-800" },
-  ended: { label: "Beendet", cls: "bg-neutral-100 text-neutral-500" }
+const STATUS_MAP: Record<string, { label: string; tone: BadgeProps["tone"] }> = {
+  active: { label: "Aktiv", tone: "success" },
+  paused: { label: "Pausiert", tone: "warning" },
+  ended: { label: "Beendet", tone: "neutral" }
 };
 
 function StatusBadge({ status }: { status: string }) {
-  const entry = STATUS_MAP[status] ?? {
-    label: status,
-    cls: "bg-neutral-100 text-neutral-700"
-  };
-  return (
-    <span
-      className={
-        "inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] md:text-xs font-semibold " +
-        entry.cls
-      }
-    >
-      {entry.label}
-    </span>
-  );
+  const entry = STATUS_MAP[status] ?? { label: status, tone: "neutral" as const };
+  return <Badge tone={entry.tone}>{entry.label}</Badge>;
 }
 
 function CapBar({

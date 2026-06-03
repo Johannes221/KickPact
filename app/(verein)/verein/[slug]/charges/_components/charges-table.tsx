@@ -13,6 +13,7 @@ import { triggerEmoji, triggerLabel } from "@/lib/triggers/labels";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import type { ClubChargeRow } from "@/lib/db/queries/club-reporting";
 import { Button } from "@/components/ui/button";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -60,31 +61,16 @@ interface ChargesTableProps {
   canEdit?: boolean;
 }
 
-const STATUS_MAP: Record<string, { label: string; cls: string }> = {
-  pending_approval: {
-    label: "Bestätigung offen",
-    cls: "bg-amber-100 text-amber-800"
-  },
-  confirmed: { label: "Bestätigt", cls: "bg-emerald-100 text-emerald-800" },
-  invoiced: { label: "Abgerechnet", cls: "bg-sky-100 text-sky-800" },
-  cancelled: { label: "Storniert", cls: "bg-neutral-100 text-neutral-500" }
+const STATUS_MAP: Record<string, { label: string; tone: BadgeProps["tone"] }> = {
+  pending_approval: { label: "Bestätigung offen", tone: "warning" },
+  confirmed: { label: "Bestätigt", tone: "success" },
+  invoiced: { label: "Abgerechnet", tone: "info" },
+  cancelled: { label: "Storniert", tone: "neutral" }
 };
 
 function StatusBadge({ status }: { status: string }) {
-  const entry = STATUS_MAP[status] ?? {
-    label: status,
-    cls: "bg-neutral-100 text-neutral-700"
-  };
-  return (
-    <span
-      className={
-        "inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] md:text-xs font-semibold " +
-        entry.cls
-      }
-    >
-      {entry.label}
-    </span>
-  );
+  const entry = STATUS_MAP[status] ?? { label: status, tone: "neutral" as const };
+  return <Badge tone={entry.tone}>{entry.label}</Badge>;
 }
 
 /** Whether a charge in this status can still be cancelled. */

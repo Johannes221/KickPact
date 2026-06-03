@@ -6,6 +6,7 @@ import { categorize } from "@/lib/billing/trigger-categories";
 import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
 import { AvailableTriggers } from "./_components/available-triggers";
 import { PactsFilterBar } from "./_components/pacts-filter-bar";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 
 export const metadata = { title: "Pacts · KickPact" };
 
@@ -16,10 +17,10 @@ function eur(cents: number): string {
   return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 }
 
-function statusBadge(s: string): { label: string; cls: string } {
-  if (s === "active") return { label: "Aktiv", cls: "bg-accent/10 text-accent-dark" };
-  if (s === "paused") return { label: "Pausiert", cls: "bg-amber-100 text-amber-700" };
-  return { label: "Beendet", cls: "bg-neutral-100 text-neutral-600" };
+function statusBadge(s: string): { label: string; tone: BadgeProps["tone"] } {
+  if (s === "active") return { label: "Aktiv", tone: "success" };
+  if (s === "paused") return { label: "Pausiert", tone: "warning" };
+  return { label: "Beendet", tone: "neutral" };
 }
 
 export default async function PactsPage({
@@ -127,9 +128,7 @@ export default async function PactsPage({
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">{eur(Number(r.chargedSum))}</td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[0.7rem] font-semibold ${sb.cls}`}>
-                          {sb.label}
-                        </span>
+                        <Badge tone={sb.tone}>{sb.label}</Badge>
                       </td>
                     </tr>
                   );
@@ -151,9 +150,7 @@ export default async function PactsPage({
                         {getTriggerLabel(r.triggerType, r.triggerParams as Record<string, unknown>)}
                       </div>
                     </div>
-                    <span className={`shrink-0 inline-flex rounded-full px-2 py-0.5 text-[0.7rem] font-semibold ${sb.cls}`}>
-                      {sb.label}
-                    </span>
+                    <Badge tone={sb.tone} className="shrink-0">{sb.label}</Badge>
                   </div>
                   <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
                     <div>

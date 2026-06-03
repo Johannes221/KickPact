@@ -51,12 +51,12 @@ function SlideBody({ children }: { children: ReactNode }) {
 }
 
 const EVENT_WORDS = [
-  "Tor",
-  "Sieg",
-  "Aufstieg",
-  "Hattrick",
-  "Assist",
-  "Zu-Null-Spiel"
+  "Jedes Tor",
+  "Jeder Sieg",
+  "Jeder Aufstieg",
+  "Jeder Hattrick",
+  "Jeder Assist",
+  "Jedes Zu-Null"
 ] as const;
 
 /** Rotierendes Ereignis-Wort, das hereinfliegt (Marken-Motion). */

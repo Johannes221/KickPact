@@ -3,13 +3,6 @@ import { requireUser } from "@/lib/auth/session";
 import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import { SponsorProfileForm } from "./_components/sponsor-profile-form";
 import { PageHeader } from "@/components/shared/page-header";
-import { SettingsButton, type SettingsNavItem } from "@/components/shared/settings-button";
-
-const SPONSOR_SETTINGS: SettingsNavItem[] = [
-  { label: "Bilanz", href: "/sponsor/bilanz", icon: "trending" },
-  { label: "Beiträge", href: "/sponsor/charges", icon: "chart" },
-  { label: "Rechnungen", href: "/sponsor/rechnungen", icon: "file" }
-];
 
 export const metadata = { title: "Profil · KickPact" };
 
@@ -34,7 +27,6 @@ export default async function SponsorProfilPage() {
             ? "Firmendaten erscheinen auf Rechnungen."
             : "Dein Anzeigename für Vereine."
         }
-        action={<SettingsButton contextLabel="Sponsor" overflowItems={SPONSOR_SETTINGS} />}
       />
       <div className="hidden md:block">
         <h2 className="text-2xl md:text-3xl font-bold text-brand-night-navy">
