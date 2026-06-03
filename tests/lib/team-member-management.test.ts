@@ -12,7 +12,7 @@ import {
 } from "@/lib/db/schema";
 import {
   canManageTeamMembers,
-  isTeamUnderClubLicense
+  isTeamAutark
 } from "@/lib/auth/scope";
 import { countTeamAdmins } from "@/lib/db/queries/membership-requests";
 import { resetTestDb } from "../setup/db";
@@ -58,29 +58,38 @@ async function setLicense(
   });
 }
 
-describe("isTeamUnderClubLicense", () => {
+describe("isTeamAutark", () => {
   beforeEach(async () => {
     await resetTestDb();
   });
 
-  it("false when no license", async () => {
+  it("NOT autark when no license (plain container team → club durchgriff allowed)", async () => {
+    // Regressions-Guard: ein lizenzloses Team darf NICHT autark sein, sonst
+    // wird der Club-Admin in genau dieses Team geroutet und vom Page-Guard
+    // zurück auf /dashboard geworfen → Endlos-Redirect (/dashboard ⇄ Team).
     const { teamId } = await seedClubTeam();
-    expect(await isTeamUnderClubLicense(teamId)).toBe(false);
+    expect(await isTeamAutark(teamId)).toBe(false);
   });
 
-  it("false for autark pro license without parent", async () => {
+  it("autark for own pro license without parent", async () => {
     const { clubId, teamId } = await seedClubTeam();
     await setLicense(clubId, teamId, "pro");
-    expect(await isTeamUnderClubLicense(teamId)).toBe(false);
+    expect(await isTeamAutark(teamId)).toBe(true);
   });
 
-  it("true for plan=verein", async () => {
+  it("autark for own basic license without parent", async () => {
+    const { clubId, teamId } = await seedClubTeam();
+    await setLicense(clubId, teamId, "basic");
+    expect(await isTeamAutark(teamId)).toBe(true);
+  });
+
+  it("NOT autark for plan=verein", async () => {
     const { clubId, teamId } = await seedClubTeam();
     await setLicense(clubId, teamId, "verein");
-    expect(await isTeamUnderClubLicense(teamId)).toBe(true);
+    expect(await isTeamAutark(teamId)).toBe(false);
   });
 
-  it("true when bundled under a parent club license", async () => {
+  it("NOT autark when bundled under a parent club license", async () => {
     const { clubId, teamId } = await seedClubTeam();
     // Parent-Lizenz auf eigenem Team, dann Kind-Team daran hängen.
     const parentTeamId = createId();
@@ -97,7 +106,7 @@ describe("isTeamUnderClubLicense", () => {
       status: "active",
       parentClubLicenseId: parent.id
     });
-    expect(await isTeamUnderClubLicense(teamId)).toBe(true);
+    expect(await isTeamAutark(teamId)).toBe(false);
   });
 });
 
@@ -152,12 +161,20 @@ describe("canManageTeamMembers", () => {
     expect(await canManageTeamMembers(u, teamId)).toBe(true);
   });
 
-  it("false for a club-admin of an autark team (no Vereinslizenz)", async () => {
+  it("false for a club-admin of an autark team (own pro license)", async () => {
     const { clubId, teamId } = await seedClubTeam();
     const u = await seedUser();
     await db.insert(clubMemberships).values({ userId: u, clubId, role: "admin" });
     await setLicense(clubId, teamId, "pro");
     expect(await canManageTeamMembers(u, teamId)).toBe(false);
+  });
+
+  it("true for a club-admin of a licenseless container team", async () => {
+    const { clubId, teamId } = await seedClubTeam();
+    const u = await seedUser();
+    await db.insert(clubMemberships).values({ userId: u, clubId, role: "admin" });
+    // Keine Lizenz-Zeile → nicht autark → Club-Admin darf verwalten.
+    expect(await canManageTeamMembers(u, teamId)).toBe(true);
   });
 
   it("false for a club-trainer even on a vereinsgeführt team", async () => {
