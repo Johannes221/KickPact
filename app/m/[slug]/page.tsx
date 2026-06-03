@@ -29,7 +29,7 @@ export async function generateMetadata({
       title,
       description,
       type: "profile",
-      images: profile.coverUrl ? [`${base}${profile.coverUrl}`] : undefined
+      images: [profile.coverUrl ? `${base}${profile.coverUrl}` : `${base}/brand/team-fallback.jpg`]
     },
     robots: { index: true, follow: true }
   };

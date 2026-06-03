@@ -286,12 +286,11 @@ export function MeinProfilEditor({
             className="absolute inset-0 h-full w-full object-cover opacity-50"
           />
         ) : (
-          <div
-            className="absolute inset-0 opacity-[0.12]"
-            style={{
-              backgroundImage:
-                "repeating-linear-gradient(45deg,#01C457 0 2px,transparent 2px 20px)"
-            }}
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src="/brand/team-fallback.jpg"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-center"
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-brand-night-navy via-brand-night-navy/45 to-brand-night-navy/10" />
