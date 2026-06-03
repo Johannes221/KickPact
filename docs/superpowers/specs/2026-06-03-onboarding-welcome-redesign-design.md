@@ -47,11 +47,13 @@ Visuell: vertikale Schritt-Liste mit verbundenen Nummern-Badges (Timeline-Stil w
 
 ## C · Hintergrund / Motion
 
-Brand-Hintergrund hinter Wizard-Slides (und optional Chooser), CSS-only (WebView-Performance), `prefers-reduced-motion`-aware (statisch bei reduce):
-- **Variante A (Empfehlung):** dezentes **grünes Netz-Grid** (SVG/CSS-Linien, accent @ ~6–10 % Opazität) das langsam driftet, plus weicher radialer grüner Glow hinter dem Fokus-Element.
-- **Variante B:** 2–3 **grüne Mesh-Gradient-Blobs**, langsam schwebend (`@keyframes` translate/scale), stark weichgezeichnet.
+Brand-Hintergrund hinter Wizard-Slides + Chooser, `prefers-reduced-motion`-aware. Komponente `components/shared/brand-backdrop.tsx` mit `variant`-Prop.
 
-Beide werden gebaut und am echten Slide verglichen; finale Wahl durch User. Implementierung als isolierte Komponente `components/shared/brand-backdrop.tsx` mit `variant`-Prop, damit austauschbar.
+**Finale Wahl (User): `dots`** — fließendes grünes **Punkt-Wellenfeld** (Canvas, `components/shared/wave-dots.tsx`): Dot-Raster, von wandernden Sinuswellen in Position + Helligkeit moduliert → smooth durchlaufende Wellenbänder, unten dicht, nach oben ausgeblendet. Alternativen `waves`/`net`/`blobs` via `?bg=` umschaltbar.
+
+## D · Integration mit Parallel-Stand auf main
+
+main hatte parallel ein eigenes Intro-Update (5. Slide „30 Tage gratis testen" + nativer Google-Login in signup). Merge-Strategie: main als Basis, meine Verbesserungen daraufgelegt — **Trial-Slide bleibt** (meine redundante Trial-Badge entfällt), Google-Login bleibt. Mein Beitrag: 4-Schritt-Ablauf statt abstrakter Features, volle-Breite-Progress-Bar, Dot-Backdrop, kompakter Chooser. Slides final: intro · amount · how (4 Schritte) · benefits · trial.
 
 ## Nicht im Scope (YAGNI)
 

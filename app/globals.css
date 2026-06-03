@@ -151,6 +151,44 @@ input, textarea, [contenteditable] { -webkit-user-select: text; user-select: tex
   .animate-trigger-fly, .animate-trigger-pop { animation: none; }
 }
 
+/* ── Brand-Backdrop (Onboarding/Welcome) ──────────────────────────────────
+   Driftendes Netz-Grid, schwebende Mesh-Blobs bzw. fließende Wellenlinien.
+   Bewusst langsam & subtil — soll leben, nicht ablenken. */
+@keyframes grid-drift {
+  0%   { background-position: 0 0, 0 0; }
+  100% { background-position: 40px 40px, 40px 40px; }
+}
+.animate-grid-drift { animation: grid-drift 24s linear infinite; }
+
+@keyframes blob-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(8%, 6%) scale(1.08); }
+}
+@keyframes blob-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-7%, 9%) scale(1.1); }
+}
+@keyframes blob-c {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(6%, -7%) scale(1.06); }
+}
+.animate-blob-a { animation: blob-a 19s ease-in-out infinite; }
+.animate-blob-b { animation: blob-b 23s ease-in-out infinite; }
+.animate-blob-c { animation: blob-c 27s ease-in-out infinite; }
+
+/* Fließende grüne Wellen — horizontal scrollende, nahtlos gekachelte Sinuswellen
+   (eine Kachel = 1200px). Verschiedene Tempi/Richtungen → lebendiges Energiefeld. */
+@keyframes wave-left  { from { background-position: 0 0; }      to { background-position: -1200px 0; } }
+@keyframes wave-right { from { background-position: 0 0; }      to { background-position: 1200px 0; } }
+.animate-wave-fast { animation: wave-left 11s linear infinite; }
+.animate-wave-l    { animation: wave-left 18s linear infinite; }
+.animate-wave-r    { animation: wave-right 24s linear infinite; }
+.animate-wave-slow { animation: wave-left 34s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-grid-drift, .animate-blob-a, .animate-blob-b, .animate-blob-c,
+  .animate-wave-fast, .animate-wave-l, .animate-wave-r, .animate-wave-slow { animation: none; }
+}
+
 /* ── Tactile-Variante: Magnetic / Cursor-Effekte ──────────────────────────
    Magnetic-Pull-Cards bewegen sich NUR auf Geräten mit echtem Hover + feiner
    Pointer (Maus/Trackpad). Auf Touch (kein Hover) frieren wir die translate-

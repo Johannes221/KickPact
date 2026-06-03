@@ -21,9 +21,6 @@ import {
   Target,
   Trophy,
   Rocket,
-  Zap,
-  ShieldCheck,
-  Clock,
   Users,
   HandCoins,
   Check,
@@ -31,6 +28,7 @@ import {
   type LucideIcon
 } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
+import { BrandBackdrop, type BrandBackdropVariant } from "@/components/shared/brand-backdrop";
 
 const INTRO_SEEN_KEY = "kp_intro_seen";
 
@@ -109,50 +107,41 @@ function SlideAmount() {
   );
 }
 
-type Feature = { icon: LucideIcon; title: string; body: string };
-const FEATURES: Feature[] = [
-  {
-    icon: Zap,
-    title: "Automatisch erfasst",
-    body: "Spieldaten & Meldungen rechnen wir automatisch ab."
-  },
-  {
-    icon: ShieldCheck,
-    title: "Fair & transparent",
-    body: "Kein Take, keine versteckten Kosten."
-  },
-  {
-    icon: Clock,
-    title: "In 90 Sekunden startklar",
-    body: "Einrichten und loslegen — ohne Technik-Stress."
-  }
+type Step = { title: string; body: string };
+const STEPS: Step[] = [
+  { title: "Mannschaft anlegen", body: "Wizard findet euer Team — in 90 Sekunden." },
+  { title: "Spiele auswählen", body: "Ihr bestimmt, welche zählen." },
+  { title: "Sponsoren einladen", body: "Ein Link für Familie, Stammtisch & lokale Firmen." },
+  { title: "Automatisch erfasst", body: "Tore, Siege, Aufstieg — die Kasse füllt sich von allein." }
 ];
 
-/** Slide 3 — Features gebündelt. */
-function SlideFeatures() {
+/** Slide 3 — echter Ablauf in 4 Schritten (Timeline). */
+function SlideHowItWorks() {
   return (
     <div className="w-full">
-      <SlideTitle>{"So einfach\nläuft's."}</SlideTitle>
-      <div className="mt-8 space-y-5">
-        {FEATURES.map((f) => {
-          const Icon = f.icon;
-          return (
-            <div key={f.title} className="flex items-start gap-4">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
-                <Icon className="h-[1.4rem] w-[1.4rem]" strokeWidth={2.1} aria-hidden />
+      <SlideTitle>{"So läuft's."}</SlideTitle>
+      <ol className="mt-7 space-y-1">
+        {STEPS.map((s, i) => (
+          <li key={s.title} className="flex gap-4">
+            <div className="flex flex-col items-center">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-[15px] font-bold text-white">
+                {i + 1}
               </span>
-              <div className="min-w-0">
-                <div className="text-[17px] font-semibold text-brand-night-navy">
-                  {f.title}
-                </div>
-                <div className="text-[15px] leading-snug text-brand-night-navy/55">
-                  {f.body}
-                </div>
+              {i < STEPS.length - 1 && (
+                <span className="my-1 w-px flex-1 bg-accent/25" aria-hidden />
+              )}
+            </div>
+            <div className="min-w-0 pb-5">
+              <div className="text-[17px] font-semibold text-brand-night-navy">
+                {s.title}
+              </div>
+              <div className="text-[15px] leading-snug text-brand-night-navy/55">
+                {s.body}
               </div>
             </div>
-          );
-        })}
-      </div>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
@@ -163,9 +152,10 @@ const BENEFITS: BenefitCard[] = [
     icon: Users,
     audience: "Für Mannschaften",
     points: [
-      "Geld für jedes Tor, jeden Sieg, jeden Aufstieg",
       "100 % bleibt bei euch — kein Abzug",
-      "Null Aufwand: läuft vollautomatisch"
+      "Kasse wächst automatisch, ohne Aufwand",
+      "Eigenständig — keine Vorstands-Politik",
+      "Live mitfiebern: jedes Tor zählt"
     ]
   },
   {
@@ -173,8 +163,9 @@ const BENEFITS: BenefitCard[] = [
     audience: "Für Sponsoren",
     points: [
       "Zahl nur, wenn das Team wirklich liefert",
-      "Volle Transparenz über jeden Cent",
-      "Zeig Flagge für deinen Verein vor Ort"
+      "Frei wählbar: 0,50 € bis 500 € pro Event",
+      "Steuerlich absetzbar als Werbeleistung",
+      "Rechnung am Monatsende, 100 % ans Team"
     ]
   }
 ];
@@ -262,7 +253,7 @@ function SlideTrial() {
 const SLIDES: ReadonlyArray<{ id: string; render: () => ReactNode }> = [
   { id: "intro", render: () => <SlideIntro /> },
   { id: "amount", render: () => <SlideAmount /> },
-  { id: "features", render: () => <SlideFeatures /> },
+  { id: "how", render: () => <SlideHowItWorks /> },
   { id: "benefits", render: () => <SlideBenefits /> },
   { id: "trial", render: () => <SlideTrial /> }
 ];
@@ -276,12 +267,15 @@ export function IntroWizard() {
   // Live-Drag-Offset (px) während des Wischens — echtes natives Swipe-Gefühl.
   const [drag, setDrag] = useState(0);
   const startX = useRef<number | null>(null);
+  const [bgVariant, setBgVariant] = useState<BrandBackdropVariant>("dots");
 
   useEffect(() => {
     if (window.localStorage.getItem(INTRO_SEEN_KEY)) {
       router.replace("/login");
       return;
     }
+    const bg = new URLSearchParams(window.location.search).get("bg");
+    if (bg === "blobs" || bg === "net" || bg === "waves" || bg === "dots") setBgVariant(bg);
     setReady(true);
   }, [router]);
 
@@ -317,9 +311,10 @@ export function IntroWizard() {
   const isLast = index === SLIDES.length - 1;
 
   return (
-    <div className="native-shell flex min-h-[100dvh] flex-col bg-white pt-safe pb-safe text-brand-night-navy">
+    <div className="native-shell relative flex min-h-[100dvh] flex-col overflow-hidden bg-white pt-safe pb-safe text-brand-night-navy">
+      <BrandBackdrop variant={bgVariant} />
       {/* Header: Logo + Überspringen */}
-      <header className="flex items-center justify-between px-6 pt-4">
+      <header className="relative z-10 flex items-center justify-between px-6 pt-4">
         <Logo variant="full" href={null} className="h-5 w-auto" />
         <button
           type="button"
@@ -332,7 +327,7 @@ export function IntroWizard() {
 
       {/* Slide-Inhalt als wischbarer Carousel-Track (Live-Finger-Tracking). */}
       <div
-        className="relative flex-1 overflow-hidden"
+        className="relative z-10 flex-1 overflow-hidden"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -358,10 +353,10 @@ export function IntroWizard() {
         </div>
       </div>
 
-      {/* Footer: Progress-Dots + CTA */}
-      <footer className="space-y-6 px-6 pb-4 pt-6">
+      {/* Footer: Progress-Bar (volle Breite, segmentiert) + CTA */}
+      <footer className="relative z-10 space-y-6 px-6 pb-4 pt-6">
         <div
-          className="flex gap-1.5"
+          className="flex w-full gap-1.5"
           role="progressbar"
           aria-valuenow={index + 1}
           aria-valuemin={1}
@@ -374,12 +369,8 @@ export function IntroWizard() {
               type="button"
               aria-label={`Zu Schritt ${i + 1}`}
               onClick={() => goTo(i)}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === index
-                  ? "w-8 bg-accent"
-                  : i < index
-                    ? "w-1.5 bg-accent/40"
-                    : "w-1.5 bg-brand-night-navy/15"
+              className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
+                i <= index ? "bg-accent" : "bg-brand-night-navy/15"
               }`}
             />
           ))}

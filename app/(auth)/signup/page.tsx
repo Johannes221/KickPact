@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { Goal, Building2, HandCoins, type LucideIcon } from "lucide-react";
 import { MagicLinkForm, type SignupRole } from "@/components/auth/magic-link-form";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
+import { RoleChooser, type RoleTile } from "@/components/auth/role-chooser";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAppleConfigured } from "@/lib/auth/apple-client-secret";
 import { getServerSession } from "@/lib/auth/session";
@@ -53,6 +54,15 @@ const ROLE_META: Record<
     ]
   }
 };
+
+// Kurz-Taglines für die kompakten Chooser-Tiles (eine Zeile, kein Bullet-Block).
+const ROLE_SHORT: Record<SignupRole, string> = {
+  mannschaft: "Direkt in eure Kasse",
+  verein: "Mehrere Teams, ein Dach",
+  sponsor: "Performance-basiert fördern"
+};
+
+const SIGNUP_ROLES = ["mannschaft", "verein", "sponsor"] as const;
 
 function isSignupRole(v: string | undefined): v is SignupRole {
   return v === "mannschaft" || v === "verein" || v === "sponsor";
@@ -137,63 +147,28 @@ export default async function SignupPage({
   };
   const anyOauth = oauthEnabled.google || oauthEnabled.apple;
 
-  // Kein Role-Param → 3-Wege-Chooser anzeigen
+  // Kein Role-Param → 3-Wege-Chooser anzeigen (kompakt, ein Screen)
   if (!role) {
+    const tiles: RoleTile[] = SIGNUP_ROLES.map((r) => ({
+      icon: ROLE_META[r].icon,
+      title: ROLE_META[r].title,
+      tagline: ROLE_SHORT[r],
+      href: `/signup?role=${r}&from=chooser`
+    }));
     return (
-      <main className="mx-auto max-w-4xl px-5 md:px-6 py-12 md:py-16">
-        <div className="mb-8 md:mb-10 text-center">
-          <h1 className="font-display font-bold text-[34px] leading-tight md:text-4xl lg:text-5xl tracking-[-0.02em] text-brand-night-navy">
-            Bei KickPact starten
-          </h1>
-          <p className="mt-2 md:mt-3 text-[15px] md:text-base text-ios-label-secondary max-w-xl mx-auto">
-            Wähle, wie du KickPact nutzen willst. Du kannst später jederzeit eine weitere Rolle
-            hinzufügen.
+      <RoleChooser
+        heading="KickPact starten"
+        subline="Wähle, wie du startest — später jederzeit erweiterbar."
+        tiles={tiles}
+        footer={
+          <p className="text-center text-sm text-brand-night-navy/55">
+            Schon einen Account?{" "}
+            <Link href="/login" className="font-medium text-accent hover:underline">
+              Login
+            </Link>
           </p>
-        </div>
-
-        <div className="grid gap-3 md:gap-5 md:grid-cols-3">
-          {(["mannschaft", "verein", "sponsor"] as const).map((r) => {
-            const meta = ROLE_META[r];
-            return (
-              <Link
-                key={r}
-                href={`/signup?role=${r}&from=chooser`}
-                className="press group flex flex-col gap-4 rounded-2xl bg-ios-card p-5 shadow-ios-card transition-shadow hover:shadow-ios-elevated"
-              >
-                <span className="grid h-12 w-12 place-items-center rounded-xl bg-accent/10 text-accent-dark">
-                  <meta.icon className="h-6 w-6" aria-hidden />
-                </span>
-                <div>
-                  <h2 className="font-display font-bold text-xl tracking-[-0.01em] text-brand-night-navy">
-                    {meta.title}
-                  </h2>
-                  <p className="mt-2 text-sm text-brand-night-navy/60 leading-relaxed">
-                    {meta.tagline}
-                  </p>
-                </div>
-                <ul className="mt-auto space-y-1.5 text-xs text-brand-night-navy/70">
-                  {meta.bullets.map((b) => (
-                    <li key={b} className="flex gap-2">
-                      <span className="text-accent mt-0.5">·</span>
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-2 inline-flex items-center text-sm font-semibold text-accent group-hover:translate-x-0.5 transition-transform">
-                  Weiter →
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-
-        <p className="mt-8 text-center text-sm text-brand-night-navy/60">
-          Schon einen Account?{" "}
-          <Link href="/login" className="font-medium text-accent hover:underline">
-            Login
-          </Link>
-        </p>
-      </main>
+        }
+      />
     );
   }
 
@@ -259,57 +234,22 @@ export default async function SignupPage({
  * Onboarding-Wizard — kein erneutes Magic-Link/OAuth-Theater.
  */
 function AuthenticatedRoleChooser({ addMode = false }: { addMode?: boolean }) {
+  const tiles: RoleTile[] = SIGNUP_ROLES.map((r) => ({
+    icon: ROLE_META[r].icon,
+    title: ROLE_META[r].title,
+    tagline: ROLE_SHORT[r],
+    href: ADD_ROLE_HREF[r]
+  }));
   return (
-    <main className="mx-auto max-w-4xl px-5 md:px-6 py-12 md:py-16">
-      <div className="mb-8 md:mb-10 text-center">
-        <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.65rem] md:text-xs font-bold uppercase tracking-[0.15em] text-accent-dark">
-          {addMode ? "Weitere Rolle" : "Account vorhanden"}
-        </span>
-        <h1 className="mt-3 font-display font-bold text-[34px] leading-tight md:text-4xl lg:text-5xl tracking-[-0.02em] text-brand-night-navy">
-          {addMode ? "Was willst du hinzufügen?" : "Wie willst du starten?"}
-        </h1>
-        <p className="mt-2 md:mt-3 text-[15px] md:text-base text-ios-label-secondary max-w-xl mx-auto">
-          {addMode
-            ? "Lege eine weitere Mannschaft, einen Verein oder eine Sponsor-Rolle an. Du wechselst danach jederzeit über das Rollen-Menü."
-            : "Du bist eingeloggt, hast aber noch keine Rolle gewählt. Wähle eine — du kannst später jederzeit eine weitere hinzufügen."}
-        </p>
-      </div>
-
-      <div className="grid gap-4 md:gap-5 md:grid-cols-3">
-        {(["mannschaft", "verein", "sponsor"] as const).map((r) => {
-          const meta = ROLE_META[r];
-          return (
-            <Link
-              key={r}
-              href={ADD_ROLE_HREF[r]}
-              className="press group flex flex-col gap-4 rounded-2xl bg-ios-card p-5 shadow-ios-card transition-shadow hover:shadow-ios-elevated"
-            >
-              <span className="grid h-12 w-12 place-items-center rounded-xl bg-accent/10 text-accent-dark">
-                <meta.icon className="h-6 w-6" aria-hidden />
-              </span>
-              <div>
-                <h2 className="font-display font-bold text-xl tracking-[-0.01em] text-brand-night-navy">
-                  {meta.title}
-                </h2>
-                <p className="mt-2 text-sm text-brand-night-navy/60 leading-relaxed">
-                  {meta.tagline}
-                </p>
-              </div>
-              <ul className="mt-auto space-y-1.5 text-xs text-brand-night-navy/70">
-                {meta.bullets.map((b) => (
-                  <li key={b} className="flex gap-2">
-                    <span className="text-accent mt-0.5">·</span>
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-2 inline-flex items-center text-sm font-semibold text-accent group-hover:translate-x-0.5 transition-transform">
-                Starten →
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-    </main>
+    <RoleChooser
+      badge={addMode ? "Weitere Rolle" : "Account vorhanden"}
+      heading={addMode ? "Was willst du hinzufügen?" : "KickPact starten"}
+      subline={
+        addMode
+          ? "Lege eine weitere Mannschaft, einen Verein oder eine Sponsor-Rolle an."
+          : "Du bist eingeloggt — wähle, wie du startest. Später jederzeit erweiterbar."
+      }
+      tiles={tiles}
+    />
   );
 }
