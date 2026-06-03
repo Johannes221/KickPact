@@ -61,6 +61,26 @@ export function OAuthButtons({ mode, enabled, role }: OAuthButtonsProps) {
       });
     }
     try {
+      // Native iOS-App: Google-Login über das native GoogleSignIn-Sheet statt
+      // Web-OAuth (Google blockt OAuth in WebViews → „403 disallowed_useragent").
+      // Das native idToken (aud = iOS-Client-ID) geht direkt an better-auth, das
+      // serverseitig sowohl die iOS- als auch die Web-Client-ID als Audience
+      // akzeptiert (googleVerifyIdToken in lib/auth/server.ts).
+      if (provider === "google" && isNativeApp()) {
+        const { GoogleAuth } = await import(
+          "@codetrix-studio/capacitor-google-auth"
+        );
+        const result = await GoogleAuth.signIn();
+        const token = result.authentication?.idToken;
+        if (!token) throw new Error("Kein Google-Identity-Token erhalten");
+        const { error } = await signIn.social({
+          provider: "google",
+          idToken: { token }
+        });
+        if (error) throw new Error(error.message ?? "Google-Login fehlgeschlagen");
+        window.location.assign(callbackURL);
+        return;
+      }
       // Native iOS-App: Apple-Login über das native Sheet (ASAuthorization)
       // statt Web-OAuth (das im WKWebView nach Safari springen würde, WS-3).
       // Das native identityToken geht direkt an better-auth (Audience-Check

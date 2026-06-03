@@ -28,6 +28,21 @@ const config: CapacitorConfig = {
   server: {
     url: SERVER_URL,
     cleartext: false
+  },
+  plugins: {
+    // Nativer Google-Login (@codetrix-studio/capacitor-google-auth).
+    // serverClientId = Web-OAuth-Client (Audience des idTokens fürs Backend),
+    // iosClientId = iOS-OAuth-Client (für com.kickpact.app). Beides öffentliche
+    // OAuth-Client-IDs, kein Secret. Das zugehörige URL-Scheme (reversed iOS-ID)
+    // steht in ios/App/App/Info.plist.
+    GoogleAuth: {
+      scopes: ["profile", "email"],
+      serverClientId:
+        "61970500774-gvsogfm2m7tn1sdsnk06qvl1e3ffhn4g.apps.googleusercontent.com",
+      iosClientId:
+        "61970500774-vndgkcbi8073g8hk91jsb9rml1747nn9.apps.googleusercontent.com",
+      forceCodeForRefreshToken: true
+    }
   }
 };
 

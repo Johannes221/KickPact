@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { magicLink } from "better-auth/plugins";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema/auth";
@@ -17,8 +18,44 @@ const socialProviders: SocialProviders = {};
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   socialProviders.google = {
     clientId: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    // Nativer iOS-Login (GoogleAuth-Plugin) liefert ein idToken, dessen `aud`
+    // die iOS-OAuth-Client-ID ist — NICHT die Web-Client-ID, gegen die
+    // better-auth standardmäßig prüft (audience: options.clientId). Ohne diesen
+    // Override schlägt der native Google-Login mit Audience-Mismatch fehl.
+    // Wir akzeptieren beide Audiences (Web + iOS) und verifizieren ansonsten
+    // exakt wie better-auth (Google-JWKS, Issuer, maxTokenAge). Greift NUR beim
+    // idToken-Sign-in (signIn.social({ idToken })); der Web-OAuth-Code-Flow
+    // nutzt diesen Pfad nicht.
+    ...(process.env.GOOGLE_IOS_CLIENT_ID
+      ? { verifyIdToken: googleVerifyIdToken }
+      : {})
   };
+}
+
+const GOOGLE_JWKS = createRemoteJWKSet(
+  new URL("https://www.googleapis.com/oauth2/v3/certs")
+);
+
+async function googleVerifyIdToken(
+  token: string,
+  nonce?: string
+): Promise<boolean> {
+  const audiences = [
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_IOS_CLIENT_ID
+  ].filter((a): a is string => Boolean(a));
+  try {
+    const { payload } = await jwtVerify(token, GOOGLE_JWKS, {
+      issuer: ["https://accounts.google.com", "accounts.google.com"],
+      audience: audiences,
+      maxTokenAge: "1h"
+    });
+    if (nonce && payload.nonce !== nonce) return false;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // Apple Sign-in: clientSecret ist ein vor-generiertes ES256-JWT (max 6 Monate gültig).
