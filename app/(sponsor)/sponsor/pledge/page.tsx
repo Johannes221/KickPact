@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth/session";
 import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import { listPledgesForSponsor } from "@/lib/db/queries/pledges";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata = { title: "Meine Wetten · KickPact" };
@@ -84,15 +85,11 @@ export default async function PledgeListPage() {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    active:  { label: "Aktiv",        cls: "bg-emerald-100 text-emerald-800" },
-    paused:  { label: "Pausiert",     cls: "bg-amber-100 text-amber-800" },
-    ended:   { label: "Beendet",      cls: "bg-neutral-100 text-neutral-600" },
+  const map: Record<string, { label: string; tone: BadgeProps["tone"] }> = {
+    active: { label: "Aktiv", tone: "success" },
+    paused: { label: "Pausiert", tone: "warning" },
+    ended: { label: "Beendet", tone: "neutral" },
   };
-  const entry = map[status] ?? { label: status, cls: "bg-neutral-100 text-neutral-600" };
-  return (
-    <span className={"inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold " + entry.cls}>
-      {entry.label}
-    </span>
-  );
+  const entry = map[status] ?? { label: status, tone: "neutral" as const };
+  return <Badge tone={entry.tone}>{entry.label}</Badge>;
 }

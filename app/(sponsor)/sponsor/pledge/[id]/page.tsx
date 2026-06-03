@@ -9,6 +9,8 @@ import {
   listRecentChargesForPledge
 } from "@/lib/db/queries/pledges";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { StatCard } from "@/components/shared/stat-card";
 import { PledgeStatusToggle } from "./_components/pledge-status-toggle";
 import { PledgeCapEditor } from "./_components/pledge-cap-editor";
 import { PledgeRulesEditor, type EditableRule } from "./_components/pledge-rules-editor";
@@ -72,7 +74,14 @@ export default async function PledgeDetailPage({
       </div>
 
       <div className="mt-6 md:mt-10 grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-3">
-        <StatCard label="Status" value={pledge.status} />
+        <StatCard
+          label="Status"
+          value={
+            <Badge tone={(PLEDGE_STATUS[pledge.status] ?? { tone: "neutral" as const }).tone}>
+              {(PLEDGE_STATUS[pledge.status] ?? { label: pledge.status }).label}
+            </Badge>
+          }
+        />
         <StatCard
           label="Laufzeit"
           value={`${pledge.startsAt.toLocaleDateString("de-DE")} – ${pledge.endsAt.toLocaleDateString("de-DE")}`}
@@ -156,36 +165,23 @@ export default async function PledgeDetailPage({
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <Card className="border-brand-neutral/40">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
-          {label}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="font-display font-bold text-xl tracking-tight text-brand-night-navy capitalize">
-          {value}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+const PLEDGE_STATUS: Record<string, { label: string; tone: BadgeProps["tone"] }> = {
+  active: { label: "Aktiv", tone: "success" },
+  paused: { label: "Pausiert", tone: "warning" },
+  ended: { label: "Beendet", tone: "neutral" }
+};
 
 function ChargeStatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    pending_approval: { label: "Wartet", cls: "bg-amber-100 text-amber-800" },
-    confirmed: { label: "Bestätigt", cls: "bg-emerald-100 text-emerald-800" },
-    invoiced: { label: "Abgerechnet", cls: "bg-blue-100 text-blue-800" },
-    cancelled: { label: "Storniert", cls: "bg-rose-100 text-rose-700" }
+  const map: Record<string, { label: string; tone: BadgeProps["tone"] }> = {
+    pending_approval: { label: "Wartet", tone: "warning" },
+    confirmed: { label: "Bestätigt", tone: "success" },
+    invoiced: { label: "Abgerechnet", tone: "info" },
+    cancelled: { label: "Storniert", tone: "danger" }
   };
-  const entry = map[status] ?? { label: status, cls: "bg-neutral-100 text-neutral-600" };
+  const entry = map[status] ?? { label: status, tone: "neutral" as const };
   return (
-    <span
-      className={"ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold " + entry.cls}
-    >
+    <Badge tone={entry.tone} className="ml-2">
       {entry.label}
-    </span>
+    </Badge>
   );
 }
