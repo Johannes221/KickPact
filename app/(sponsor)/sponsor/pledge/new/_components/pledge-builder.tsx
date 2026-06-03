@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Zap, Handshake, Trophy, ShieldCheck, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,7 @@ import {
   pledgeInputSchema,
   isSeasonTriggerType,
   type PledgeInput,
+  type PledgeRuleInput,
   type TriggerType,
 } from "@/lib/validations/pledge";
 import { createPledge } from "../_actions/create-pledge";
@@ -30,34 +32,70 @@ import { CUP_ROUND_ORDER, CUP_ROUND_LABELS } from "@/lib/triggers/cup-rounds";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type TriggerDef = {
+/**
+ * "auto"   = KickPact erfasst das Ereignis automatisch aus den offiziellen
+ *            Spieldaten und verbucht es (Proof of Trust).
+ * "club"   = Der Verein meldet das Ereignis; KickPact kann es nicht automatisch
+ *            prüfen → du bestätigst es in deiner Inbox, bevor es zählt.
+ * "season" = 1× am Saison-Ende.
+ */
+type TriggerGroup = "auto" | "club" | "season";
+
+type LibItem = {
+  /** Stabile, eindeutige Auswahl-ID. Bei Spezialtoren `special_goal:<subtype>`. */
+  key: string;
   type: TriggerType;
+  /** Nur bei Spezialtoren gesetzt — landet in triggerParamsJson.subtype. */
+  subtype?: string;
   label: string;
   emoji: string;
   description: string;
   defaultEur: number;
-  manual?: boolean;
+  group: TriggerGroup;
 };
 
-type TriggerCategory = "match" | "season";
+const TRIGGER_LIBRARY: LibItem[] = [
+  // ── Automatisch von KickPact erfasst (pro Spiel) ──
+  { key: "goal_total", type: "goal_total", label: "Pro Tor", emoji: "⚽", description: "Für jedes Tor der eigenen Mannschaft", defaultEur: 5, group: "auto" },
+  { key: "win", type: "win", label: "Pro Sieg", emoji: "🏆", description: "Einmal pro gewonnenem Spiel", defaultEur: 10, group: "auto" },
+  { key: "clean_sheet", type: "clean_sheet", label: "Pro Zu-Null-Sieg", emoji: "🛡️", description: "Gewonnen + 0 Gegentore", defaultEur: 5, group: "auto" },
+  { key: "comeback_win", type: "comeback_win", label: "Pro Comeback-Sieg", emoji: "🔥", description: "Halbzeit hinten, am Ende vorne", defaultEur: 20, group: "auto" },
+  { key: "hattrick", type: "hattrick", label: "Pro Hattrick", emoji: "🎯", description: "1 Spieler ≥3 Tore in einem Spiel", defaultEur: 25, group: "auto" },
+  { key: "goal_by_player", type: "goal_by_player", label: "Tore von Spieler X", emoji: "💎", description: "Wähle deinen Lieblings-Spieler", defaultEur: 3, group: "auto" },
+  { key: "goals_scored_min", type: "goals_scored_min", label: "Mind. X Tore", emoji: "🎉", description: "z.B. ab 5 Toren pro Spiel", defaultEur: 30, group: "auto" },
+  { key: "goal_diff_min", type: "goal_diff_min", label: "Hoher Sieg (Diff ≥X)", emoji: "💪", description: "z.B. Tordifferenz ≥3", defaultEur: 15, group: "auto" },
 
-const TRIGGER_LIBRARY: (TriggerDef & { category: TriggerCategory })[] = [
-  { category: "match", type: "goal_total", label: "Pro Tor", emoji: "⚽", description: "Für jedes Tor der eigenen Mannschaft", defaultEur: 5 },
-  { category: "match", type: "win", label: "Pro Sieg", emoji: "🏆", description: "Einmal pro gewonnenem Spiel", defaultEur: 10 },
-  { category: "match", type: "clean_sheet", label: "Pro Zu-Null-Sieg", emoji: "🛡️", description: "Gewonnen + 0 Gegentore", defaultEur: 5 },
-  { category: "match", type: "comeback_win", label: "Pro Comeback-Sieg", emoji: "🔥", description: "Halbzeit hinten, am Ende vorne", defaultEur: 20 },
-  { category: "match", type: "hattrick", label: "Pro Hattrick", emoji: "🎯", description: "1 Spieler ≥3 Tore in einem Spiel", defaultEur: 25 },
-  { category: "match", type: "goal_by_player", label: "Tore von Spieler X", emoji: "💎", description: "Wähle deinen Lieblings-Spieler", defaultEur: 3 },
-  { category: "match", type: "special_goal", label: "Spezial-Tor", emoji: "🎭", description: "Kopfball, Hackentor, Elfmeter — Verein meldet, du bestätigst", defaultEur: 10, manual: true },
-  { category: "match", type: "goals_scored_min", label: "Mind. X Tore", emoji: "🎉", description: "z.B. ab 5 Toren pro Spiel", defaultEur: 30 },
-  { category: "match", type: "goal_diff_min", label: "Hoher Sieg (Diff ≥X)", emoji: "💪", description: "z.B. Tordifferenz ≥3", defaultEur: 15 },
-  { category: "season", type: "season_promotion", label: "Aufstieg", emoji: "⬆️", description: "1× wenn die Mannschaft aufsteigt", defaultEur: 200 },
-  { category: "season", type: "season_no_relegation", label: "Klassenerhalt", emoji: "🛟", description: "1× wenn nicht abgestiegen", defaultEur: 100 },
-  { category: "season", type: "season_champion", label: "Meister-Titel", emoji: "👑", description: "1× wenn Tabellenplatz 1 am Saison-Ende", defaultEur: 300 },
-  { category: "season", type: "season_table_position", label: "Endplatz im Bereich", emoji: "🥇", description: "z.B. Platz 1–5 (Range)", defaultEur: 75 },
-  { category: "season", type: "season_cup_round", label: "Pokal-Runde", emoji: "🏆", description: "z.B. Halbfinale erreicht — Verein meldet, du bestätigst", defaultEur: 150, manual: true },
-  { category: "season", type: "season_custom", label: "Eigenes Saison-Ziel", emoji: "🎺", description: "Verein meldet, du bestätigst", defaultEur: 50, manual: true },
+  // ── Vom Verein gemeldet (Spezialwetten — du bestätigst) ──
+  { key: "special_goal:kopfball", type: "special_goal", subtype: "kopfball", label: "Kopfballtor", emoji: "🤕", description: "Tor per Kopf", defaultEur: 10, group: "club" },
+  { key: "special_goal:hackentor", type: "special_goal", subtype: "hackentor", label: "Hackentor", emoji: "🦶", description: "Tor mit der Hacke", defaultEur: 15, group: "club" },
+  { key: "special_goal:elfmeter", type: "special_goal", subtype: "elfmeter", label: "Elfmetertor", emoji: "🎯", description: "Verwandelter Elfmeter", defaultEur: 8, group: "club" },
+  { key: "special_goal:freistoss", type: "special_goal", subtype: "freistoss", label: "Freistoßtor (direkt)", emoji: "🎯", description: "Direkt verwandelter Freistoß", defaultEur: 12, group: "club" },
+  { key: "special_goal:sonstiges", type: "special_goal", subtype: "sonstiges", label: "Sonstiges Spezialtor", emoji: "🎭", description: "Anderes besonderes Tor — Verein beschreibt es im Kommentar", defaultEur: 10, group: "club" },
+  { key: "assist", type: "assist", label: "Vorlage (Assist)", emoji: "🅰️", description: "Torvorlage eines Spielers", defaultEur: 3, group: "club" },
+  { key: "man_of_match", type: "man_of_match", label: "Spieler des Spiels", emoji: "⭐", description: "Vom Verein gekürt", defaultEur: 10, group: "club" },
+  { key: "yellow_card", type: "yellow_card", label: "Gelbe Karte", emoji: "🟨", description: "Für die Mannschaftskasse 😉", defaultEur: 2, group: "club" },
+  { key: "red_card", type: "red_card", label: "Rote Karte", emoji: "🟥", description: "Für die Mannschaftskasse 😉", defaultEur: 5, group: "club" },
+
+  // ── Pro Saison ──
+  { key: "season_promotion", type: "season_promotion", label: "Aufstieg", emoji: "⬆️", description: "1× wenn die Mannschaft aufsteigt", defaultEur: 200, group: "season" },
+  { key: "season_no_relegation", type: "season_no_relegation", label: "Klassenerhalt", emoji: "🛟", description: "1× wenn nicht abgestiegen", defaultEur: 100, group: "season" },
+  { key: "season_champion", type: "season_champion", label: "Meister-Titel", emoji: "👑", description: "1× wenn Tabellenplatz 1 am Saison-Ende", defaultEur: 300, group: "season" },
+  { key: "season_table_position", type: "season_table_position", label: "Endplatz im Bereich", emoji: "🥇", description: "z.B. Platz 1–5 (Range)", defaultEur: 75, group: "season" },
+  { key: "season_cup_round", type: "season_cup_round", label: "Pokal-Runde", emoji: "🏆", description: "z.B. Halbfinale erreicht — Verein meldet, du bestätigst", defaultEur: 150, group: "season" },
+  { key: "season_custom", type: "season_custom", label: "Eigenes Saison-Ziel", emoji: "🎺", description: "Verein meldet, du bestätigst", defaultEur: 50, group: "season" },
 ];
+
+/** Eindeutige Auswahl-ID einer Regel (matcht LibItem.key). */
+function ruleKey(triggerType: string, params: Record<string, unknown> | undefined): string {
+  if (triggerType === "special_goal") {
+    return `special_goal:${(params?.subtype as string) ?? ""}`;
+  }
+  return triggerType;
+}
+
+function defForRule(rule: { triggerType: string; params?: Record<string, unknown> }): LibItem | undefined {
+  return TRIGGER_LIBRARY.find((l) => l.key === ruleKey(rule.triggerType, rule.params));
+}
 
 type WizardStep = 1 | 2 | 3;
 
@@ -69,7 +107,7 @@ export function PledgeBuilder() {
   const invitationToken = params.get("invitation");
   const [pending, startTransition] = useTransition();
   const [step, setStep] = useState<WizardStep>(1);
-  const [enabled, setEnabled] = useState<Set<TriggerType>>(new Set(["goal_total", "win"]));
+  const [enabled, setEnabled] = useState<Set<string>>(new Set(["goal_total", "win"]));
   const [squadPlayers, setSquadPlayers] = useState<string[]>([]);
   const [squadLoading, setSquadLoading] = useState(false);
 
@@ -112,16 +150,19 @@ export function PledgeBuilder() {
     }
   }, [step, enabled, invitationToken, squadPlayers.length]);
 
-  function toggleTrigger(type: TriggerType) {
+  function toggleTrigger(item: LibItem) {
     const next = new Set(enabled);
-    if (next.has(type)) {
-      next.delete(type);
-      const idx = fields.findIndex((f) => f.triggerType === type);
+    if (next.has(item.key)) {
+      next.delete(item.key);
+      const idx = fields.findIndex((f) => ruleKey(f.triggerType, f.params) === item.key);
       if (idx >= 0) remove(idx);
     } else {
-      next.add(type);
-      const def = TRIGGER_LIBRARY.find((t) => t.type === type)!;
-      append({ triggerType: type, amountEur: def.defaultEur, params: {} });
+      next.add(item.key);
+      append({
+        triggerType: item.type,
+        amountEur: item.defaultEur,
+        params: item.subtype ? { subtype: item.subtype } : {},
+      });
     }
     setEnabled(next);
   }
@@ -173,44 +214,39 @@ export function PledgeBuilder() {
                 Welche Ereignisse sollen zählen?
               </h2>
               <p className="mt-1 text-sm text-brand-night-navy/60">
-                Wähle beliebig viele aus — im nächsten Schritt legst du die Beträge fest.
+                Wähle beliebig viele aus — im nächsten Schritt legst du die Beträge und Caps fest.
               </p>
             </div>
 
-            <div>
-              <h4 className="text-xs uppercase tracking-widest font-bold text-accent-dark mb-3">
-                ⚽ Pro Spiel
-              </h4>
-              <div className="grid gap-2.5 md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {TRIGGER_LIBRARY.filter((t) => t.category === "match").map((t) => (
-                  <TriggerToggle
-                    key={t.type}
-                    def={t}
-                    enabled={enabled.has(t.type)}
-                    onToggle={() => toggleTrigger(t.type)}
-                  />
-                ))}
-              </div>
-            </div>
+            <HowItWorks />
 
-            <div>
-              <h4 className="text-xs uppercase tracking-widest font-bold text-accent-dark mb-3">
-                🏆 Pro Saison{" "}
-                <span className="ml-1 text-brand-night-navy/40 font-normal normal-case tracking-normal">
-                  — 1× am Saison-Ende
-                </span>
-              </h4>
-              <div className="grid gap-2.5 md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {TRIGGER_LIBRARY.filter((t) => t.category === "season").map((t) => (
-                  <TriggerToggle
-                    key={t.type}
-                    def={t}
-                    enabled={enabled.has(t.type)}
-                    onToggle={() => toggleTrigger(t.type)}
-                  />
-                ))}
-              </div>
-            </div>
+            <TriggerGroupBlock
+              title="Automatisch erfasst"
+              icon={<Zap className="h-4 w-4" />}
+              note="KickPact zieht diese Ereignisse automatisch aus den offiziellen Spieldaten — nichts zu melden, alles nachweisbar verbucht."
+              items={TRIGGER_LIBRARY.filter((t) => t.group === "auto")}
+              enabled={enabled}
+              onToggle={toggleTrigger}
+            />
+
+            <TriggerGroupBlock
+              title="Vom Verein gemeldet"
+              icon={<Handshake className="h-4 w-4" />}
+              note="Diese Ereignisse kann KickPact nicht automatisch prüfen. Der Verein meldet sie — du bestätigst sie in deiner Inbox, bevor ein Beitrag fällig wird."
+              items={TRIGGER_LIBRARY.filter((t) => t.group === "club")}
+              enabled={enabled}
+              onToggle={toggleTrigger}
+              tone="club"
+            />
+
+            <TriggerGroupBlock
+              title="Pro Saison"
+              icon={<Trophy className="h-4 w-4" />}
+              note="Feuern 1× am Saison-Ende."
+              items={TRIGGER_LIBRARY.filter((t) => t.group === "season")}
+              enabled={enabled}
+              onToggle={toggleTrigger}
+            />
 
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end">
               <Button
@@ -235,14 +271,14 @@ export function PledgeBuilder() {
                 Wie viel pro Ereignis?
               </h2>
               <p className="mt-1 text-sm text-brand-night-navy/60">
-                Leg fest, was jedes Ereignis wert ist. Optional: ein Cap pro Regel —
+                Leg fest, was jedes Ereignis wert ist. Optional: ein Cap pro Wette —
                 begrenzt die Auszahlung pro Monat oder pro Saison (sinnvoll bei torreichen Teams).
               </p>
             </div>
 
             <div className="space-y-3">
               {fields.map((field, index) => {
-                const def = TRIGGER_LIBRARY.find((t) => t.type === field.triggerType);
+                const def = defForRule(field);
                 return (
                   <div
                     key={field.id}
@@ -252,6 +288,11 @@ export function PledgeBuilder() {
                       <div className="flex items-center gap-1.5 text-sm font-semibold text-brand-night-navy">
                         {def && <TriggerIcon type={def.type} className="h-4 w-4 shrink-0 text-accent-dark" />}
                         {def?.label}
+                        {def?.group === "club" && (
+                          <span className="ml-1 inline-flex items-center text-[0.55rem] uppercase tracking-widest font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+                            Verein meldet
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs text-brand-night-navy/50 mt-0.5 leading-snug">
                         {def?.description}
@@ -665,15 +706,15 @@ export function PledgeBuilder() {
                     Deine Ereignisse
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {watchedRules.map((r) => {
-                      const def = TRIGGER_LIBRARY.find((t) => t.type === r.triggerType);
+                    {watchedRules.map((r, i) => {
+                      const def = defForRule(r);
                       return (
                         <span
-                          key={r.triggerType}
+                          key={`${ruleKey(r.triggerType, r.params)}-${i}`}
                           className="inline-flex items-center gap-1.5 rounded-full bg-white border border-accent/30 px-2.5 py-1 text-xs font-medium text-brand-night-navy"
                         >
                           {def && <TriggerIcon type={def.type} className="h-3.5 w-3.5 shrink-0 text-accent-dark" />}
-                          {def?.label} — {r.amountEur} €
+                          {def?.label ?? r.triggerType} — {r.amountEur} €
                         </span>
                       );
                     })}
@@ -705,6 +746,98 @@ export function PledgeBuilder() {
         )}
       </form>
     </Form>
+  );
+}
+
+// ─── "So funktioniert's"-Erklärung ─────────────────────────────────────────────
+
+function HowItWorks() {
+  return (
+    <div className="rounded-2xl bg-brand-off-white p-4 md:p-5 space-y-3">
+      <div className="text-xs font-bold uppercase tracking-widest text-brand-night-navy/50">
+        So funktioniert dein Sponsoring
+      </div>
+      <ul className="space-y-2.5">
+        <li className="flex gap-3">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent/10 text-accent-dark">
+            <Zap className="h-4 w-4" aria-hidden />
+          </span>
+          <p className="text-sm text-brand-night-navy/80 leading-snug">
+            <strong className="text-brand-night-navy">Automatisch erfasst:</strong> Tore, Siege &
+            Saison-Ziele zieht KickPact selbst aus den offiziellen Spieldaten, verwaltet sie und
+            verbucht jeden Beitrag nachvollziehbar — du musst nichts melden.
+          </p>
+        </li>
+        <li className="flex gap-3">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-100 text-amber-700">
+            <Handshake className="h-4 w-4" aria-hidden />
+          </span>
+          <p className="text-sm text-brand-night-navy/80 leading-snug">
+            <strong className="text-brand-night-navy">Vom Verein gemeldet (Spezialwetten):</strong>{" "}
+            Dinge wie Kopfball- oder Hackentore kann KickPact nicht automatisch prüfen. Der Verein
+            meldet sie — und <strong className="text-brand-night-navy">du bestätigst sie</strong>,
+            bevor ein Beitrag fällig wird.
+          </p>
+        </li>
+        <li className="flex gap-3">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent/10 text-accent-dark">
+            <Gauge className="h-4 w-4" aria-hidden />
+          </span>
+          <p className="text-sm text-brand-night-navy/80 leading-snug">
+            <strong className="text-brand-night-navy">Caps schützen dich:</strong> Pro Wette und
+            zusätzlich pro Monat/Saison kannst du ein Limit setzen — so zahlst du nie mehr, als du
+            möchtest, egal wie gut die Mannschaft läuft.
+          </p>
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+// ─── Trigger-Gruppe ─────────────────────────────────────────────────────────────
+
+function TriggerGroupBlock({
+  title,
+  icon,
+  note,
+  items,
+  enabled,
+  onToggle,
+  tone = "default",
+}: {
+  title: string;
+  icon: React.ReactNode;
+  note: string;
+  items: LibItem[];
+  enabled: Set<string>;
+  onToggle: (item: LibItem) => void;
+  tone?: "default" | "club";
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 mb-1">
+        <span className={tone === "club" ? "text-amber-700" : "text-accent-dark"}>{icon}</span>
+        <h4
+          className={
+            "text-xs uppercase tracking-widest font-bold " +
+            (tone === "club" ? "text-amber-700" : "text-accent-dark")
+          }
+        >
+          {title}
+        </h4>
+      </div>
+      <p className="text-xs text-brand-night-navy/50 mb-3 leading-snug max-w-2xl">{note}</p>
+      <div className="grid gap-2.5 md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((item) => (
+          <TriggerToggle
+            key={item.key}
+            item={item}
+            enabled={enabled.has(item.key)}
+            onToggle={() => onToggle(item)}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -760,11 +893,11 @@ function StepIndicator({ currentStep }: { currentStep: WizardStep }) {
 // ─── Trigger Toggle ───────────────────────────────────────────────────────────
 
 function TriggerToggle({
-  def,
+  item,
   enabled,
   onToggle,
 }: {
-  def: TriggerDef;
+  item: LibItem;
   enabled: boolean;
   onToggle: () => void;
 }) {
@@ -782,14 +915,14 @@ function TriggerToggle({
     >
       <div className="flex items-start gap-3">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/10 text-accent-dark">
-          <TriggerIcon type={def.type} className="h-[1.15rem] w-[1.15rem]" />
+          <TriggerIcon type={item.type} className="h-[1.15rem] w-[1.15rem]" />
         </span>
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm text-brand-night-navy">{def.label}</div>
-          <div className="text-xs text-brand-night-navy/60 mt-0.5 leading-snug">{def.description}</div>
-          {def.manual && (
-            <div className="mt-1 inline-flex items-center text-[0.6rem] uppercase tracking-widest font-bold text-accent-dark bg-accent/10 px-1.5 py-0.5 rounded">
-              Verein meldet
+          <div className="font-semibold text-sm text-brand-night-navy">{item.label}</div>
+          <div className="text-xs text-brand-night-navy/60 mt-0.5 leading-snug">{item.description}</div>
+          {item.group === "club" && (
+            <div className="mt-1 inline-flex items-center text-[0.6rem] uppercase tracking-widest font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+              Verein meldet · du bestätigst
             </div>
           )}
         </div>
@@ -825,9 +958,13 @@ function estimateWorstCase(
   const COMEBACK_RATE = 0.1;
   const CLEAN_SHEET_RATE = 0.15;
   const HATTRICK_RATE = 0.05;
-  const SPECIAL_GOAL_PER_GAME = 0.5;
+  const SPECIAL_GOAL_PER_GAME = 0.3;
   const HIGH_DIFF_RATE = 0.1;
   const FIVE_PLUS_GOALS_RATE = 0.1;
+  const ASSIST_PER_GAME = 1.5;
+  const YELLOW_PER_GAME = 1.5;
+  const RED_PER_GAME = 0.1;
+  const MOTM_PER_GAME = 1;
 
   return Math.round(
     rules.reduce((total, r) => {
@@ -850,6 +987,14 @@ function estimateWorstCase(
           return total + r.amountEur * SAISON_GAMES * HIGH_DIFF_RATE;
         case "goals_scored_min":
           return total + r.amountEur * SAISON_GAMES * FIVE_PLUS_GOALS_RATE;
+        case "assist":
+          return total + Math.min(r.amountEur * ASSIST_PER_GAME, cap) * SAISON_GAMES;
+        case "yellow_card":
+          return total + Math.min(r.amountEur * YELLOW_PER_GAME, cap) * SAISON_GAMES;
+        case "red_card":
+          return total + r.amountEur * SAISON_GAMES * RED_PER_GAME;
+        case "man_of_match":
+          return total + r.amountEur * SAISON_GAMES * MOTM_PER_GAME;
         default:
           return total + r.amountEur;
       }

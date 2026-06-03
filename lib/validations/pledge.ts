@@ -5,19 +5,29 @@ import type { TriggerType as CanonicalTriggerType } from "@/lib/triggers/labels"
  * Die im Pact-Wizard BEWETTBAREN Trigger — eine bewusste Teilmenge des
  * kanonischen Trigger-Enums (lib/triggers/labels.ts ↔ DB-Enum
  * lib/db/schema/pledges.ts). Nicht bewettbar (nur als Anzeige/Charge möglich):
- * loss, draw, yellow_card, red_card, assist, man_of_match, custom.
+ * loss, draw, custom.
+ *
+ * `special_goal`, `assist`, `man_of_match`, `yellow_card`, `red_card` sind
+ * vom-Verein-gemeldete Spezialwetten (manual + requiresApproval); Spezialtore
+ * werden über `params.subtype` (kopfball | hackentor | elfmeter | freistoss |
+ * sonstiges) als einzelne Wetten ausgewiesen.
  */
 export const TRIGGER_TYPES = [
-  // pro Spiel
+  // pro Spiel — automatisch
   "goal_total",
   "win",
   "clean_sheet",
   "comeback_win",
   "hattrick",
   "goal_by_player",
-  "special_goal",
   "goals_scored_min",
   "goal_diff_min",
+  // pro Spiel — vom Verein gemeldet (manual)
+  "special_goal",
+  "assist",
+  "man_of_match",
+  "yellow_card",
+  "red_card",
   // pro Saison
   "season_promotion",
   "season_no_relegation",
