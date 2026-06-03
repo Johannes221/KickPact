@@ -3,6 +3,7 @@ import { chromium, type Page } from "playwright";
 import { fetch as undiciFetch } from "undici";
 import { parse as parseHtml, type HTMLElement } from "node-html-parser";
 import { saisonStartDate } from "@/lib/utils/saison";
+import { isReadableName } from "@/lib/players/readable-name";
 
 /**
  * Audit 2026-05-24 Phase 5 / Task 5.2: User-Agent-Rotation gegen fussball.de-Bann.
@@ -125,7 +126,23 @@ async function fetchHtml(url: string): Promise<HTMLElement> {
 
 /** Normalisiert Whitespace eines Parser-Nodes (analog textContent.trim()). */
 function nodeText(el: { text?: string } | null | undefined): string {
-  return (el?.text ?? "").replace(/\s+/g, " ").trim();
+  return normalizeTeamName(el?.text ?? "");
+}
+
+/**
+ * Säubert einen von fussball.de stammenden Namen: entfernt unsichtbare Zeichen
+ * (Zero-Width-Space U+200B, ZWNJ/ZWJ, BOM) und wandelt geschützte Leerzeichen in
+ * normale um, bevor Whitespace kollabiert wird. fussball.de streut Zero-Width-
+ * Spaces zwischen Pfad-Segmente von Spielgemeinschafts-Namen
+ * ("Dossenheim/​Handschuhsheim") — ohne diese Bereinigung erscheint dieselbe
+ * Mannschaft mehrfach mit scheinbar unterschiedlichem Namen.
+ */
+export function normalizeTeamName(raw: string): string {
+  return raw
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\u00A0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**
@@ -203,6 +220,110 @@ export interface MannschaftHit {
   saison: string;
   teamId: string;
   url: string;
+}
+
+/** Minimaler Form-Vertrag, den {@link dedupeMannschaften} zum Gruppieren braucht. */
+export interface TeamIdentityLike {
+  name: string;
+  slug: string;
+  saison: string;
+  teamId: string;
+}
+
+/**
+ * Zerlegt einen Mannschaftsnamen in Alters-/Wettbewerbskategorie ("A-Junioren",
+ * "Herren", "Frauen") und Vereins-/SG-Teil ("FC Sportfr. Dossenheim 2").
+ */
+function splitTeamName(name: string): { category: string; rest: string } {
+  const clean = normalizeTeamName(name);
+  const idx = clean.indexOf(" - ");
+  if (idx < 0) return { category: "", rest: clean.toLowerCase() };
+  return {
+    category: clean.slice(0, idx).trim().toLowerCase(),
+    rest: clean.slice(idx + 3).trim().toLowerCase(),
+  };
+}
+
+/** Tokens, an deren letztem ein Mannschaftsname die Reservenummer trägt. */
+const SQUAD_QUALIFIERS = new Set(["zg", "zugeordnet", "zg."]);
+
+/**
+ * Ermittelt die Mannschaftsnummer (1. = 1, "… 2" = 2, "… 2 zg." = 2). Nur eine
+ * abschließende Zahl zählt — Jahreszahlen mitten im Vereinsnamen ("1910") nicht.
+ */
+function squadNumber(rest: string): number {
+  const tokens = rest
+    .replace(/[^a-z0-9äöüß ]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+  while (tokens.length && SQUAD_QUALIFIERS.has(tokens[tokens.length - 1])) {
+    tokens.pop();
+  }
+  const last = tokens[tokens.length - 1];
+  return last && /^\d+$/.test(last) ? parseInt(last, 10) : 1;
+}
+
+/** Aussagekräftige Vereins-/Ortstokens (≥4 Zeichen, keine reinen Zahlen). */
+function clubTokens(rest: string): Set<string> {
+  return new Set(
+    rest
+      .replace(/[^a-z0-9äöüß ]/g, " ")
+      .split(/[\s/]+/)
+      .filter((t) => t.length >= 4 && /[a-zäöüß]/.test(t)),
+  );
+}
+
+/**
+ * Entscheidet, ob zwei fussball.de-Einträge dieselbe physische Mannschaft sind.
+ * fussball.de listet dieselbe Mannschaft mehrfach mit je EIGENER teamId — daher
+ * greift reine teamId-Dedup nicht. Voraussetzung ist immer gleiche Saison,
+ * Kategorie ("A-Junioren") UND Reservenummer (so bleiben 1. und 2. Mannschaft
+ * sowie verschiedene Altersklassen getrennt — fussball.de-Slugs kodieren die
+ * Altersklasse NICHT). Sind die gleich, gelten zwei Einträge als identisch, wenn
+ *  (a) der Slug übereinstimmt (Zero-Width-Space-Doppel), ODER
+ *  (b) sich der Vereinsname ein aussagekräftiges Kernwort teilt ("FC Dossenheim"
+ *      ≙ "FC Sportfr. Dossenheim"). Fremde Spielgemeinschaften ohne gemeinsames
+ *      Kernwort fallen dadurch NICHT zusammen.
+ */
+function isSameTeam(a: TeamIdentityLike, b: TeamIdentityLike): boolean {
+  if (a.saison !== b.saison) return false;
+
+  const idA = splitTeamName(a.name);
+  const idB = splitTeamName(b.name);
+  if (!idA.category || idA.category !== idB.category) return false;
+  if (squadNumber(idA.rest) !== squadNumber(idB.rest)) return false;
+
+  const slugA = a.slug.trim().toLowerCase();
+  const slugB = b.slug.trim().toLowerCase();
+  if (slugA && slugA === slugB) return true;
+
+  const tokensB = clubTokens(idB.rest);
+  for (const t of clubTokens(idA.rest)) {
+    if (tokensB.has(t)) return true;
+  }
+  return false;
+}
+
+/**
+ * Faltet von fussball.de mehrfach gelistete Mannschaften auf je einen Eintrag
+ * zusammen (siehe {@link isSameTeam}). `preferred` bestimmt bei einer Kollision
+ * den Gewinner — Default: bestehender Eintrag bleibt (stabile Reihenfolge).
+ * So lässt sich z.B. ein bereits registrierter Eintrag bevorzugt behalten.
+ */
+export function dedupeMannschaften<T extends TeamIdentityLike>(
+  teams: T[],
+  preferred?: (incoming: T, current: T) => boolean,
+): T[] {
+  const kept: T[] = [];
+  for (const team of teams) {
+    const idx = kept.findIndex((k) => isSameTeam(k, team));
+    if (idx === -1) {
+      kept.push(team);
+    } else if (preferred?.(team, kept[idx])) {
+      kept[idx] = team;
+    }
+  }
+  return kept;
 }
 
 export interface SpielListItem {
@@ -870,7 +991,7 @@ export async function getKader(
   slug: string,
   saison: string
 ): Promise<KaderPlayer[]> {
-  return withPage(async (page) => {
+  const raw = await withPage(async (page) => {
     // SECURITY (M2): URL-Segmente encodieren (Defense-in-depth, s. paginateTeamGames).
     const url = `https://www.fussball.de/mannschaft/${encodeURIComponent(slug)}/-/saison/${encodeURIComponent(saison)}/team-id/${encodeURIComponent(teamId)}#!/`;
     await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
@@ -890,7 +1011,7 @@ export async function getKader(
         var name = (link.textContent || "").replace(/\\s+/g, " ").trim();
         if (name.length < 2) return;
         if (id) seen.add(id);
-        players.push({ name: name, spielerId: id || undefined });
+        players.push({ name: name, spielerId: id || undefined, href: href || undefined });
       });
 
       // Strategy 2: .column-name cells in kader tables (fallback if links have no text)
@@ -905,6 +1026,31 @@ export async function getKader(
       }
 
       return players;
-    })()`) as KaderPlayer[];
+    })()`) as Array<KaderPlayer & { href?: string }>;
   });
+
+  // fussball.de obfuskiert die Namen auf der Kader-Seite mit einem Custom-Font
+  // (Private Use Area) → der Linktext ist oft Tofu. Wir lösen solche Namen über
+  // die Spieler-Profilseite auf (gleicher Mechanismus + Cache wie Torschützen in
+  // getSpielDetails), sequenziell mit kleinem Delay gegen Rate-Limiting. So
+  // landet der VOLLE, lesbare Kader in der DB — auch Spieler ohne Tor.
+  const out: KaderPlayer[] = [];
+  for (const p of raw) {
+    let name = p.name;
+    const url = p.href
+      ? p.href.startsWith("http")
+        ? p.href
+        : `https://www.fussball.de${p.href}`
+      : null;
+    if (url && !isReadableName(name)) {
+      const id = extractPlayerIdFromUrl(url);
+      if (id && !playerNameCache.has(id)) {
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      const resolved = await resolvePlayerName(url);
+      if (isReadableName(resolved)) name = resolved;
+    }
+    out.push({ name, spielerId: p.spielerId });
+  }
+  return out;
 }

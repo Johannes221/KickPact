@@ -83,7 +83,6 @@ export function MeinProfilEditor({
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
 
   const verifikationHref = `/verein/${slug}/mannschaft/${teamId}/verifikation`;
-  const displayName = publicName.trim() || name.trim() || teamName;
   const meta = [clubName, league, clubOrt].filter(Boolean).join(" · ");
 
   // ---- Uploads (Cover / Logo / Galerie) -------------------------------------
@@ -286,12 +285,11 @@ export function MeinProfilEditor({
             className="absolute inset-0 h-full w-full object-cover opacity-50"
           />
         ) : (
-          <div
-            className="absolute inset-0 opacity-[0.12]"
-            style={{
-              backgroundImage:
-                "repeating-linear-gradient(45deg,#01C457 0 2px,transparent 2px 20px)"
-            }}
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src="/brand/team-fallback.jpg"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-center"
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-brand-night-navy via-brand-night-navy/45 to-brand-night-navy/10" />
@@ -329,16 +327,12 @@ export function MeinProfilEditor({
           {/* Logo-Badge + ändern */}
           <div className="relative inline-block">
             <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-accent text-xl font-bold text-brand-night-navy shadow-lg">
-              {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={logoUrl}
-                  alt="Logo"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                displayName.charAt(0).toUpperCase()
-              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={logoUrl ?? "/brand/team-crest-fallback.png"}
+                alt="Logo"
+                className="h-full w-full object-cover"
+              />
             </div>
             <button
               type="button"

@@ -10,6 +10,7 @@
  */
 
 import { CUP_ROUND_LABELS, type CupRound } from "@/lib/triggers/cup-rounds";
+import { SPECIAL_GOAL_SUBTYPE_LABELS } from "@/lib/triggers/special-goals";
 
 /**
  * Liefert eine kurze, deutsche Bezeichnung für einen Trigger-Typ.
@@ -112,11 +113,12 @@ function stringParam(
 }
 
 const SPECIAL_GOAL_LABELS: Record<string, string> = {
-  kopfball: "Kopfballtor",
-  hackentor: "Hackentor",
+  // Aktuell wählbare Subtypen — aus der gemeinsamen Quelle abgeleitet.
+  ...SPECIAL_GOAL_SUBTYPE_LABELS,
+  // Legacy-/Sonder-Subtypen: nicht im Spezialtor-Auswähler des Editors, aber
+  // bestehende Regeln/Charges (bzw. der Builder-Catch-all) sollen lesbar rendern.
   volley: "Volleytor",
   fernschuss: "Fernschuss",
-  elfmeter: "Elfmeter",
-  freistoss: "Freistoßtor"
+  sonstiges: "Sonstiges Spezialtor"
 };
 

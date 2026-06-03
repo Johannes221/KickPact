@@ -34,12 +34,11 @@ export function ProfileHero({
           className="absolute inset-0 h-full w-full object-cover opacity-50"
         />
       ) : (
-        <div
-          className="absolute inset-0 opacity-[0.12]"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(45deg,#01C457 0 2px,transparent 2px 20px)"
-          }}
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src="/brand/team-fallback.jpg"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-center"
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-brand-night-navy via-brand-night-navy/40 to-transparent" />
@@ -48,16 +47,12 @@ export function ProfileHero({
       </span>
       <div className="absolute inset-x-4 bottom-4">
         <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-accent text-xl font-black text-brand-night-navy shadow-lg">
-          {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={logoUrl}
-              alt="Logo"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            displayName.charAt(0).toUpperCase()
-          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logoUrl ?? "/brand/team-crest-fallback.png"}
+            alt=""
+            className="h-full w-full object-cover"
+          />
         </div>
         <h1 className="mt-2 font-display text-3xl font-black tracking-tight text-white">
           {displayName}

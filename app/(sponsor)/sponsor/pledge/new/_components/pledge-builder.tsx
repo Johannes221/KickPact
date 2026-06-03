@@ -12,7 +12,6 @@ import { TriggerIcon } from "@/components/shared/trigger-icon";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -29,6 +28,7 @@ import { createPledge } from "../_actions/create-pledge";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics/track";
 import { CUP_ROUND_ORDER, CUP_ROUND_LABELS } from "@/lib/triggers/cup-rounds";
+import { RULE_SELECT_CLASS, RULE_FIELD_LABEL_CLASS } from "../../_components/rule-fields";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -59,7 +59,7 @@ const TRIGGER_LIBRARY: LibItem[] = [
   { key: "goal_total", type: "goal_total", label: "Pro Tor", emoji: "⚽", description: "Für jedes Tor der eigenen Mannschaft", defaultEur: 5, group: "auto" },
   { key: "win", type: "win", label: "Pro Sieg", emoji: "🏆", description: "Einmal pro gewonnenem Spiel", defaultEur: 10, group: "auto" },
   { key: "clean_sheet", type: "clean_sheet", label: "Pro Zu-Null-Sieg", emoji: "🛡️", description: "Gewonnen + 0 Gegentore", defaultEur: 5, group: "auto" },
-  { key: "comeback_win", type: "comeback_win", label: "Pro Comeback-Sieg", emoji: "🔥", description: "Halbzeit hinten, am Ende vorne", defaultEur: 20, group: "auto" },
+  { key: "comeback_win", type: "comeback_win", label: "Pro Comeback-Sieg", emoji: "🔥", description: "Irgendwann hinten gelegen, am Ende gewonnen", defaultEur: 20, group: "auto" },
   { key: "hattrick", type: "hattrick", label: "Pro Hattrick", emoji: "🎯", description: "1 Spieler ≥3 Tore in einem Spiel", defaultEur: 25, group: "auto" },
   { key: "goal_by_player", type: "goal_by_player", label: "Tore von Spieler X", emoji: "💎", description: "Wähle deinen Lieblings-Spieler", defaultEur: 3, group: "auto" },
   { key: "goals_scored_min", type: "goals_scored_min", label: "Mind. X Tore", emoji: "🎉", description: "z.B. ab 5 Toren pro Spiel", defaultEur: 30, group: "auto" },
@@ -70,6 +70,8 @@ const TRIGGER_LIBRARY: LibItem[] = [
   { key: "special_goal:hackentor", type: "special_goal", subtype: "hackentor", label: "Hackentor", emoji: "🦶", description: "Tor mit der Hacke", defaultEur: 15, group: "club" },
   { key: "special_goal:elfmeter", type: "special_goal", subtype: "elfmeter", label: "Elfmetertor", emoji: "🎯", description: "Verwandelter Elfmeter", defaultEur: 8, group: "club" },
   { key: "special_goal:freistoss", type: "special_goal", subtype: "freistoss", label: "Freistoßtor (direkt)", emoji: "🎯", description: "Direkt verwandelter Freistoß", defaultEur: 12, group: "club" },
+  { key: "special_goal:eckentor", type: "special_goal", subtype: "eckentor", label: "Eckentor (direkt)", emoji: "🚩", description: "Direkt verwandelter Eckstoß", defaultEur: 20, group: "club" },
+  { key: "special_goal:tor_mittellinie", type: "special_goal", subtype: "tor_mittellinie", label: "Tor hinter Mittellinie", emoji: "🎯", description: "Tor aus der eigenen Hälfte", defaultEur: 25, group: "club" },
   { key: "special_goal:sonstiges", type: "special_goal", subtype: "sonstiges", label: "Sonstiges Spezialtor", emoji: "🎭", description: "Anderes besonderes Tor — Verein beschreibt es im Kommentar", defaultEur: 10, group: "club" },
   { key: "assist", type: "assist", label: "Vorlage (Assist)", emoji: "🅰️", description: "Torvorlage eines Spielers", defaultEur: 3, group: "club" },
   { key: "man_of_match", type: "man_of_match", label: "Spieler des Spiels", emoji: "⭐", description: "Vom Verein gekürt", defaultEur: 10, group: "club" },
@@ -129,26 +131,23 @@ export function PledgeBuilder() {
     name: "rules",
   });
 
-  // Load squad when step 2 is reached and goal_by_player is selected
+  // Spielerliste sofort beim Mount vorladen (sobald der Token da ist), nicht
+  // erst lazy bei Step 3 — die /api/squad-Quelle ist jetzt DB-only (Kader ∪
+  // alle Auftritte) und schnell, also ist die Liste fertig, bevor der Sponsor
+  // „Tore von Spieler X" überhaupt aufklappt. Skeleton bleibt nur als Fallback.
   useEffect(() => {
-    if (
-      step === 3 &&
-      enabled.has("goal_by_player") &&
-      squadPlayers.length === 0 &&
-      invitationToken
-    ) {
-      setSquadLoading(true);
-      fetch(`/api/squad?invitationToken=${encodeURIComponent(invitationToken)}`)
-        .then((r) => r.json())
-        .then((data: { players?: string[] }) => {
-          if (data.players) setSquadPlayers(data.players);
-        })
-        .catch(() => {
-          // ignore — player name falls back to text input
-        })
-        .finally(() => setSquadLoading(false));
-    }
-  }, [step, enabled, invitationToken, squadPlayers.length]);
+    if (!invitationToken) return;
+    setSquadLoading(true);
+    fetch(`/api/squad?invitationToken=${encodeURIComponent(invitationToken)}`)
+      .then((r) => r.json())
+      .then((data: { players?: string[] }) => {
+        if (data.players) setSquadPlayers(data.players);
+      })
+      .catch(() => {
+        // ignore — player name falls back to text input
+      })
+      .finally(() => setSquadLoading(false));
+  }, [invitationToken]);
 
   function toggleTrigger(item: LibItem) {
     const next = new Set(enabled);
@@ -313,298 +312,298 @@ export function PledgeBuilder() {
             <div className="space-y-3">
               {fields.map((field, index) => {
                 const def = defForRule(field);
+                const isSeason = isSeasonTriggerType(field.triggerType);
                 return (
                   <div
                     key={field.id}
-                    className="flex flex-wrap items-end gap-3 rounded-xl bg-white shadow-ios-card p-4"
+                    className="rounded-xl bg-white shadow-ios-card p-4 space-y-3"
                   >
-                    <div className="flex-1 min-w-[180px]">
-                      <div className="flex items-center gap-1.5 text-sm font-semibold text-brand-night-navy">
-                        {def && <TriggerIcon type={def.type} className="h-4 w-4 shrink-0 text-accent-dark" />}
-                        {def?.label}
-                        {def?.group === "club" && (
-                          <span className="ml-1 inline-flex items-center text-[0.55rem] uppercase tracking-widest font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
-                            Verein meldet
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-brand-night-navy/50 mt-0.5 leading-snug">
-                        {def?.description}
+                    {/* Kopf: Ereignis + Beschreibung */}
+                    <div className="flex items-start gap-2">
+                      {def && (
+                        <TriggerIcon
+                          type={def.type}
+                          className="h-4 w-4 mt-0.5 shrink-0 text-accent-dark"
+                        />
+                      )}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 text-sm font-semibold text-brand-night-navy">
+                          {def?.label}
+                          {def?.group === "club" && (
+                            <span className="inline-flex items-center text-[0.55rem] uppercase tracking-widest font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+                              Verein meldet
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-brand-night-navy/50 mt-0.5 leading-snug">
+                          {def?.description}
+                        </div>
                       </div>
                     </div>
 
-                    <FormField
-                      control={form.control}
-                      name={`rules.${index}.amountEur`}
-                      render={({ field }) => (
-                        <FormItem className="w-32">
-                          <FormLabel className="text-xs text-brand-night-navy/60">Betrag (€)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              step="0.5"
-                              min="0.5"
-                              {...field}
-                              onChange={(e) => field.onChange(Number(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Felder: einheitliches Raster, alle Controls gleich hoch (50px) */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 items-start">
+                      <FormField
+                        control={form.control}
+                        name={`rules.${index}.amountEur`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={RULE_FIELD_LABEL_CLASS}>Betrag (€)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.5"
+                                min="0.5"
+                                {...field}
+                                onChange={(e) => field.onChange(Number(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    {/* Perioden-Cap nur für wiederkehrende Spiel-Wetten — Saison-Wetten
-                        feuern 1× und brauchen keinen Cap. */}
-                    {!isSeasonTriggerType(field.triggerType) && (
-                      <div className="flex items-end gap-2">
+                      {/* Perioden-Cap nur für wiederkehrende Spiel-Wetten — Saison-Wetten
+                          feuern 1× und brauchen keinen Cap. */}
+                      {!isSeason && (
+                        <>
+                          <FormField
+                            control={form.control}
+                            name={`rules.${index}.capEur`}
+                            render={({ field: cf }) => (
+                              <FormItem>
+                                <FormLabel className={RULE_FIELD_LABEL_CLASS}>Cap (€)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    step="1"
+                                    min="0"
+                                    placeholder="optional"
+                                    value={cf.value ?? ""}
+                                    onChange={(e) => {
+                                      const v = e.target.value === "" ? undefined : Number(e.target.value);
+                                      cf.onChange(v);
+                                      if (
+                                        v !== undefined &&
+                                        form.getValues(`rules.${index}.capPeriod`) === undefined
+                                      ) {
+                                        form.setValue(`rules.${index}.capPeriod`, "month");
+                                      }
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`rules.${index}.capPeriod`}
+                            render={({ field: pf }) => (
+                              <FormItem>
+                                <FormLabel className={RULE_FIELD_LABEL_CLASS}>pro</FormLabel>
+                                <FormControl>
+                                  <select
+                                    className={RULE_SELECT_CLASS}
+                                    value={pf.value ?? "month"}
+                                    disabled={form.watch(`rules.${index}.capEur`) === undefined}
+                                    onChange={(e) => pf.onChange(e.target.value as "month" | "season")}
+                                  >
+                                    <option value="month">Monat</option>
+                                    <option value="season">Saison</option>
+                                  </select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </>
+                      )}
+
+                      {field.triggerType === "goal_by_player" && (
                         <FormField
                           control={form.control}
-                          name={`rules.${index}.capEur`}
-                          render={({ field: cf }) => (
-                            <FormItem className="w-28">
-                              <FormLabel className="text-xs text-brand-night-navy/60">Cap (€)</FormLabel>
+                          name={`rules.${index}.params`}
+                          render={({ field: pf }) => (
+                            <FormItem className="col-span-2">
+                              <FormLabel className={RULE_FIELD_LABEL_CLASS}>Spieler</FormLabel>
+                              <FormControl>
+                                {squadLoading ? (
+                                  <div className="h-[50px] rounded-xl border border-ios-separator-opaque bg-brand-off-white animate-pulse" />
+                                ) : squadPlayers.length > 0 ? (
+                                  <select
+                                    className={RULE_SELECT_CLASS}
+                                    value={(pf.value as Record<string, string>)?.player_name ?? ""}
+                                    onChange={(e) =>
+                                      pf.onChange({
+                                        ...((pf.value as Record<string, unknown>) ?? {}),
+                                        player_name: e.target.value,
+                                      })
+                                    }
+                                  >
+                                    <option value="">Spieler wählen…</option>
+                                    {squadPlayers.map((name) => (
+                                      <option key={name} value={name}>
+                                        {name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <Input
+                                    placeholder="z.B. Schmidt"
+                                    value={(pf.value as Record<string, string>)?.player_name ?? ""}
+                                    onChange={(e) =>
+                                      pf.onChange({
+                                        ...((pf.value as Record<string, unknown>) ?? {}),
+                                        player_name: e.target.value,
+                                      })
+                                    }
+                                  />
+                                )}
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
+                      {field.triggerType === "goals_scored_min" && (
+                        <FormField
+                          control={form.control}
+                          name={`rules.${index}.params`}
+                          render={({ field: pf }) => (
+                            <FormItem>
+                              <FormLabel className={RULE_FIELD_LABEL_CLASS}>Min. Tore</FormLabel>
                               <FormControl>
                                 <Input
                                   type="number"
-                                  step="1"
-                                  min="0"
-                                  placeholder="optional"
-                                  value={cf.value ?? ""}
-                                  onChange={(e) => {
-                                    const v = e.target.value === "" ? undefined : Number(e.target.value);
-                                    cf.onChange(v);
-                                    if (
-                                      v !== undefined &&
-                                      form.getValues(`rules.${index}.capPeriod`) === undefined
-                                    ) {
-                                      form.setValue(`rules.${index}.capPeriod`, "month");
-                                    }
-                                  }}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name={`rules.${index}.capPeriod`}
-                          render={({ field: pf }) => (
-                            <FormItem className="w-28">
-                              <FormLabel className="text-xs text-brand-night-navy/60">pro</FormLabel>
-                              <FormControl>
-                                <select
-                                  className="flex h-10 w-full rounded-md border border-input bg-background px-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                                  value={pf.value ?? "month"}
-                                  disabled={form.watch(`rules.${index}.capEur`) === undefined}
-                                  onChange={(e) => pf.onChange(e.target.value as "month" | "season")}
-                                >
-                                  <option value="month">Monat</option>
-                                  <option value="season">Saison</option>
-                                </select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    )}
-
-                    {field.triggerType === "goal_by_player" && (
-                      <FormField
-                        control={form.control}
-                        name={`rules.${index}.params`}
-                        render={({ field: pf }) => (
-                          <FormItem className="w-56">
-                            <FormLabel className="text-xs text-brand-night-navy/60">Spieler</FormLabel>
-                            <FormControl>
-                              {squadLoading ? (
-                                <div className="h-10 rounded-md border border-brand-neutral/40 bg-brand-off-white animate-pulse" />
-                              ) : squadPlayers.length > 0 ? (
-                                <select
-                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                  value={(pf.value as Record<string, string>)?.player_name ?? ""}
+                                  min="2"
+                                  max="20"
+                                  placeholder="5"
+                                  value={(pf.value as Record<string, number>)?.min_goals ?? ""}
                                   onChange={(e) =>
                                     pf.onChange({
                                       ...((pf.value as Record<string, unknown>) ?? {}),
-                                      player_name: e.target.value,
+                                      min_goals: Number(e.target.value),
+                                    })
+                                  }
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
+                      {field.triggerType === "goal_diff_min" && (
+                        <FormField
+                          control={form.control}
+                          name={`rules.${index}.params`}
+                          render={({ field: pf }) => (
+                            <FormItem>
+                              <FormLabel className={RULE_FIELD_LABEL_CLASS}>Min. Tordiff.</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min="2"
+                                  max="20"
+                                  placeholder="3"
+                                  value={(pf.value as Record<string, number>)?.min_diff ?? ""}
+                                  onChange={(e) =>
+                                    pf.onChange({
+                                      ...((pf.value as Record<string, unknown>) ?? {}),
+                                      min_diff: Number(e.target.value),
+                                    })
+                                  }
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
+                      {field.triggerType === "season_table_position" && (
+                        <>
+                          <FormField
+                            control={form.control}
+                            name={`rules.${index}.params`}
+                            render={({ field: pf }) => (
+                              <FormItem>
+                                <FormLabel className={RULE_FIELD_LABEL_CLASS}>Platz von</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="1"
+                                    max="30"
+                                    placeholder="1"
+                                    value={(pf.value as Record<string, number>)?.min_pos ?? ""}
+                                    onChange={(e) =>
+                                      pf.onChange({
+                                        ...((pf.value as Record<string, unknown>) ?? {}),
+                                        min_pos: Number(e.target.value),
+                                      })
+                                    }
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`rules.${index}.params`}
+                            render={({ field: pf }) => (
+                              <FormItem>
+                                <FormLabel className={RULE_FIELD_LABEL_CLASS}>bis Platz</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="1"
+                                    max="30"
+                                    placeholder="5"
+                                    value={(pf.value as Record<string, number>)?.max_pos ?? ""}
+                                    onChange={(e) =>
+                                      pf.onChange({
+                                        ...((pf.value as Record<string, unknown>) ?? {}),
+                                        max_pos: Number(e.target.value),
+                                      })
+                                    }
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </>
+                      )}
+
+                      {field.triggerType === "season_cup_round" && (
+                        <FormField
+                          control={form.control}
+                          name={`rules.${index}.params`}
+                          render={({ field: pf }) => (
+                            <FormItem className="col-span-2">
+                              <FormLabel className={RULE_FIELD_LABEL_CLASS}>Mindestens erreichte Runde</FormLabel>
+                              <FormControl>
+                                <select
+                                  className={RULE_SELECT_CLASS}
+                                  value={(pf.value as Record<string, string>)?.min_round ?? ""}
+                                  onChange={(e) =>
+                                    pf.onChange({
+                                      ...((pf.value as Record<string, unknown>) ?? {}),
+                                      min_round: e.target.value,
                                     })
                                   }
                                 >
-                                  <option value="">Spieler wählen…</option>
-                                  {squadPlayers.map((name) => (
-                                    <option key={name} value={name}>
-                                      {name}
+                                  <option value="">Runde wählen…</option>
+                                  {CUP_ROUND_ORDER.map((r) => (
+                                    <option key={r} value={r}>
+                                      {CUP_ROUND_LABELS[r]}
                                     </option>
                                   ))}
                                 </select>
-                              ) : (
-                                <Input
-                                  placeholder="z.B. Schmidt"
-                                  value={(pf.value as Record<string, string>)?.player_name ?? ""}
-                                  onChange={(e) =>
-                                    pf.onChange({
-                                      ...((pf.value as Record<string, unknown>) ?? {}),
-                                      player_name: e.target.value,
-                                    })
-                                  }
-                                />
-                              )}
-                            </FormControl>
-                            <FormDescription className="text-xs">
-                              Tore dieses Spielers zählen für dein Sponsoring.
-                            </FormDescription>
-                          </FormItem>
-                        )}
-                      />
-                    )}
-
-                    {field.triggerType === "goals_scored_min" && (
-                      <FormField
-                        control={form.control}
-                        name={`rules.${index}.params`}
-                        render={({ field: pf }) => (
-                          <FormItem className="w-32">
-                            <FormLabel className="text-xs text-brand-night-navy/60">Min. Tore</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min="2"
-                                max="20"
-                                placeholder="5"
-                                value={(pf.value as Record<string, number>)?.min_goals ?? ""}
-                                onChange={(e) =>
-                                  pf.onChange({
-                                    ...((pf.value as Record<string, unknown>) ?? {}),
-                                    min_goals: Number(e.target.value),
-                                  })
-                                }
-                              />
-                            </FormControl>
-                            <FormDescription className="text-xs">
-                              Ab wie vielen Toren der Betrag fällig wird.
-                            </FormDescription>
-                          </FormItem>
-                        )}
-                      />
-                    )}
-
-                    {field.triggerType === "goal_diff_min" && (
-                      <FormField
-                        control={form.control}
-                        name={`rules.${index}.params`}
-                        render={({ field: pf }) => (
-                          <FormItem className="w-32">
-                            <FormLabel className="text-xs text-brand-night-navy/60">Min. Tordiff.</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min="2"
-                                max="20"
-                                placeholder="3"
-                                value={(pf.value as Record<string, number>)?.min_diff ?? ""}
-                                onChange={(e) =>
-                                  pf.onChange({
-                                    ...((pf.value as Record<string, unknown>) ?? {}),
-                                    min_diff: Number(e.target.value),
-                                  })
-                                }
-                              />
-                            </FormControl>
-                            <FormDescription className="text-xs">
-                              Tordiff. ab der der Betrag fällig wird (z.B. 3 = mind. 3:0).
-                            </FormDescription>
-                          </FormItem>
-                        )}
-                      />
-                    )}
-
-                    {field.triggerType === "season_table_position" && (
-                      <div className="flex gap-2 items-end">
-                        <FormField
-                          control={form.control}
-                          name={`rules.${index}.params`}
-                          render={({ field: pf }) => (
-                            <FormItem className="w-24">
-                              <FormLabel className="text-xs text-brand-night-navy/60">Platz von</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  min="1"
-                                  max="30"
-                                  placeholder="1"
-                                  value={(pf.value as Record<string, number>)?.min_pos ?? ""}
-                                  onChange={(e) =>
-                                    pf.onChange({
-                                      ...((pf.value as Record<string, unknown>) ?? {}),
-                                      min_pos: Number(e.target.value),
-                                    })
-                                  }
-                                />
                               </FormControl>
                             </FormItem>
                           )}
                         />
-                        <FormField
-                          control={form.control}
-                          name={`rules.${index}.params`}
-                          render={({ field: pf }) => (
-                            <FormItem className="w-24">
-                              <FormLabel className="text-xs text-brand-night-navy/60">bis Platz</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  min="1"
-                                  max="30"
-                                  placeholder="5"
-                                  value={(pf.value as Record<string, number>)?.max_pos ?? ""}
-                                  onChange={(e) =>
-                                    pf.onChange({
-                                      ...((pf.value as Record<string, unknown>) ?? {}),
-                                      max_pos: Number(e.target.value),
-                                    })
-                                  }
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    )}
-
-                    {field.triggerType === "season_cup_round" && (
-                      <FormField
-                        control={form.control}
-                        name={`rules.${index}.params`}
-                        render={({ field: pf }) => (
-                          <FormItem className="w-56">
-                            <FormLabel className="text-xs text-brand-night-navy/60">Mindestens erreichte Runde</FormLabel>
-                            <FormControl>
-                              <select
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                value={(pf.value as Record<string, string>)?.min_round ?? ""}
-                                onChange={(e) =>
-                                  pf.onChange({
-                                    ...((pf.value as Record<string, unknown>) ?? {}),
-                                    min_round: e.target.value,
-                                  })
-                                }
-                              >
-                                <option value="">Runde wählen…</option>
-                                {CUP_ROUND_ORDER.map((r) => (
-                                  <option key={r} value={r}>
-                                    {CUP_ROUND_LABELS[r]}
-                                  </option>
-                                ))}
-                              </select>
-                            </FormControl>
-                            <FormDescription className="text-xs">
-                              Zahlt 1×, wenn die Mannschaft mindestens diese Pokal-Runde erreicht.
-                            </FormDescription>
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                      )}
+                    </div>
                   </div>
                 );
               })}

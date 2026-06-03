@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TriggerIcon } from "@/components/shared/trigger-icon";
 import { TRIGGER_META } from "@/lib/triggers/labels";
+import { getTriggerLabel } from "@/lib/billing/trigger-labels";
 import { isSeasonTriggerType } from "@/lib/validations/pledge";
 import { CUP_ROUND_ORDER, CUP_ROUND_LABELS } from "@/lib/triggers/cup-rounds";
+import { SPECIAL_GOAL_SUBTYPES } from "@/lib/triggers/special-goals";
 import {
   updatePledgeRule,
   deletePledgeRule,
@@ -45,6 +47,21 @@ function ParamFields({
 }) {
   const set = (k: string, v: unknown) => onChange({ ...params, [k]: v });
 
+  if (triggerType === "special_goal") {
+    const val = (params.subtype as string) ?? "";
+    return (
+      <select
+        className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+        value={val}
+        onChange={(e) => set("subtype", e.target.value)}
+      >
+        <option value="">Tor-Art wählen…</option>
+        {SPECIAL_GOAL_SUBTYPES.map((s) => (
+          <option key={s.value} value={s.value}>{s.label}</option>
+        ))}
+      </select>
+    );
+  }
   if (triggerType === "goal_by_player") {
     const val = (params.player_name as string) ?? (params.playerName as string) ?? "";
     return playerNames.length > 0 ? (
@@ -149,8 +166,6 @@ function RuleRow({
   const [capPeriod, setCapPeriod] = useState<CapPeriod | null>(rule.capPeriod);
   const [params, setParams] = useState<Record<string, unknown>>(rule.params ?? {});
 
-  const meta = TRIGGER_META[rule.triggerType as keyof typeof TRIGGER_META];
-
   function save() {
     const euros = parseFloat(amountEur.replace(",", "."));
     if (isNaN(euros) || euros < 0.5) {
@@ -186,7 +201,7 @@ function RuleRow({
         <div className="flex items-center gap-2 min-w-0">
           <TriggerIcon type={rule.triggerType as keyof typeof TRIGGER_META} className="h-4 w-4 shrink-0 text-accent-dark" />
           <div className="min-w-0">
-            <div className="font-semibold text-brand-night-navy truncate">{meta?.label ?? rule.triggerType}</div>
+            <div className="font-semibold text-brand-night-navy truncate">{getTriggerLabel(rule.triggerType, rule.params)}</div>
             {rule.capCents != null && (
               <div className="text-xs text-brand-night-navy/40 mt-0.5">
                 Max {eur(rule.capCents)} / {rule.capPeriod === "season" ? "Saison" : "Monat"}
@@ -215,7 +230,7 @@ function RuleRow({
     <li className="rounded-lg border border-accent/50 bg-accent/5 p-4">
       <div className="flex items-center gap-2 mb-3">
         <TriggerIcon type={rule.triggerType as keyof typeof TRIGGER_META} className="h-4 w-4 shrink-0 text-accent-dark" />
-        <span className="font-semibold text-brand-night-navy">{meta?.label ?? rule.triggerType}</span>
+        <span className="font-semibold text-brand-night-navy">{getTriggerLabel(rule.triggerType, params)}</span>
       </div>
       <div className="flex flex-wrap items-end gap-3">
         <label className="text-xs text-brand-night-navy/60">
@@ -258,10 +273,16 @@ function AddBet({
 
   const options = (Object.keys(TRIGGER_META) as (keyof typeof TRIGGER_META)[])
     .filter((t) => TRIGGER_META[t].auto || ["special_goal", "season_cup_round", "season_custom"].includes(t))
-    .filter((t) => !existingTypes.includes(t));
+    // special_goal darf mehrfach existieren (eine Regel je Tor-Art), die übrigen
+    // Typen nur einmal.
+    .filter((t) => t === "special_goal" || !existingTypes.includes(t));
 
   function add() {
     if (!triggerType) { toast.error("Regel-Typ wählen."); return; }
+    if (triggerType === "special_goal" && !params.subtype) {
+      toast.error("Bitte eine Tor-Art wählen.");
+      return;
+    }
     const euros = parseFloat(amountEur.replace(",", "."));
     if (isNaN(euros) || euros < 0.5) { toast.error("Betrag muss mindestens 0,50 € sein."); return; }
     start(async () => {

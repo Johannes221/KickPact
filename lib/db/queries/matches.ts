@@ -1,6 +1,7 @@
 import { and, eq, ne, desc, gte, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { matches, matchEvents, teams, clubs } from "@/lib/db/schema";
+import { matches, matchEvents, teams, clubs, players } from "@/lib/db/schema";
+import { isReadableName } from "@/lib/players/readable-name";
 import { charges, charges as chargesTable } from "@/lib/db/schema/charges";
 import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
 import { sponsors } from "@/lib/db/schema/sponsors";
@@ -280,6 +281,40 @@ export async function getTeamPlayerNames(teamId: string): Promise<string[]> {
     if (r.side === ownSide) names.add(name);
   }
   return [...names].sort((a, b) => a.localeCompare(b, "de"));
+}
+
+/**
+ * Vollständige, sofort verfügbare Spieler-Auswahlliste für das Sponsor-Dropdown
+ * („Tore von Spieler X"). Vereint zwei DB-Quellen — kein Live-Scrape mehr, daher
+ * schnell und vorladbar:
+ *
+ *   1) `players` — der vom Crawl persistierte Kader (auch Spieler, die noch kein
+ *      Tor geschossen haben). Blockierte (DSGVO-Opt-out) werden ausgeschlossen.
+ *   2) `match_events` — alle Spieler, die je für die Mannschaft aufgelaufen sind
+ *      (via {@link getTeamPlayerNames}, eigene Seite, bereinigt).
+ *
+ * Obfuskierte (Tofu-)Namen werden via {@link isReadableName} gefiltert, das
+ * Ergebnis ist dedupliziert und deutsch-alphabetisch sortiert.
+ */
+export async function getTeamPlayerPool(teamId: string): Promise<string[]> {
+  const [rosterRows, eventNames] = await Promise.all([
+    db
+      .select({ name: players.name })
+      .from(players)
+      .where(and(eq(players.teamId, teamId), eq(players.blocked, false))),
+    getTeamPlayerNames(teamId)
+  ]);
+
+  const names = new Set<string>();
+  for (const r of rosterRows) {
+    const name = (r.name ?? "").trim();
+    if (name) names.add(name);
+  }
+  for (const n of eventNames) names.add(n);
+
+  return [...names]
+    .filter(isReadableName)
+    .sort((a, b) => a.localeCompare(b, "de"));
 }
 
 /**
