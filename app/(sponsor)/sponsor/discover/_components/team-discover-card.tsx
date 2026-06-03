@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { createSponsorInquiry } from "@/lib/actions/sponsor-inquiries";
+import { TeamCrest } from "@/components/shared/team-crest";
 import type { DiscoverableTeam } from "@/lib/db/queries/sponsor-discover";
 
 export function TeamDiscoverCard({
@@ -75,19 +76,14 @@ export function TeamDiscoverCard({
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-brand-night-navy via-brand-night-navy/40 to-transparent" />
-          {/* Logo badge */}
-          <div className="absolute bottom-3 left-3 flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-accent text-base font-bold text-brand-night-navy shadow-lg">
-            {team.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={team.logoUrl}
-                alt="Logo"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              team.teamName.charAt(0).toUpperCase()
-            )}
-          </div>
+          {/* Wappen (Logo oder Initialen-Fallback) */}
+          <TeamCrest
+            name={team.teamName}
+            src={team.logoUrl}
+            size={40}
+            shape="squircle"
+            className="absolute bottom-3 left-3 shadow-lg"
+          />
         </div>
 
         {/* Body */}
@@ -145,7 +141,7 @@ export function TeamDiscoverCard({
             <button
               type="button"
               disabled
-              className="flex-1 rounded-lg bg-emerald-100 px-3 py-2 text-center text-xs font-semibold text-emerald-700 cursor-not-allowed"
+              className="flex-1 rounded-lg bg-success-muted px-3 py-2 text-center text-xs font-semibold text-success-dark cursor-not-allowed"
             >
               ✓ Bereits angefragt
             </button>
@@ -187,7 +183,7 @@ export function TeamDiscoverCard({
             )}
 
             {done ? (
-              <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+              <div className="mt-6 rounded-xl border border-success/30 bg-success-muted p-4 text-sm text-success-dark">
                 ✓ Deine Anfrage wurde versendet. Die Mannschaft meldet sich per Mail.
               </div>
             ) : (
