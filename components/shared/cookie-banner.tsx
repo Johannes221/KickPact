@@ -50,11 +50,11 @@ export function CookieBanner({ isNativeApp = false }: { isNativeApp?: boolean })
     setVisible(false);
   }
 
-  // App-Intro (/willkommen) + native Auth-/Onboarding-Routen: keine Chrome.
+  // In der nativen App gibt es keinen Cookie-Banner — kein Browser-Storage-
+  // Consent nötig, und er gehört nicht ins native App-Gefühl.
+  if (isNativeApp) return null;
+  // App-Intro (/willkommen): keine Chrome.
   if (pathname === "/willkommen" || !visible) return null;
-  if (isNativeApp && NATIVE_CHROMELESS_PREFIXES.some((p) => pathname.startsWith(p))) {
-    return null;
-  }
 
   return (
     <div

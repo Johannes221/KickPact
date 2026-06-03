@@ -1,7 +1,9 @@
+import { Wallet, Gem, Settings } from "lucide-react";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { listTeamImages } from "@/lib/db/queries/team-images";
 import { getTeamProfileForEditor } from "@/lib/db/queries/team-lifecycle";
 import { getClubNameOrt } from "@/lib/db/queries/club-admin";
+import { SettingsButton, type SettingsNavItem } from "@/components/shared/settings-button";
 import { MeinProfilEditor } from "./_components/mein-profil-editor";
 
 export const metadata = { title: "Mein Profil · Mannschaft · KickPact" };
@@ -41,8 +43,21 @@ export default async function MeinProfilPage({
     : null;
   const logoUrl = team.logoUrl ? `/api/teams/${teamId}/image?slot=logo` : null;
 
+  // Zahnrad (Verwaltung + Konto + Logout) lebt im Profil-Tab — nicht auf jedem
+  // Screen. Verwaltungs-Links team-scoped.
+  const teamBase = `/verein/${slug}/mannschaft/${team.id}`;
+  const settingsItems: SettingsNavItem[] = [
+    { label: "Finanzen", href: `${teamBase}/finanzen`, icon: Wallet },
+    { label: "Abo", href: `${teamBase}/abo`, icon: Gem },
+    { label: "Einstellungen", href: `${teamBase}/einstellungen`, icon: Settings }
+  ];
+
   return (
-    <MeinProfilEditor
+    <div className="space-y-3">
+      <div className="flex items-center justify-end md:hidden">
+        <SettingsButton contextLabel={team.name} overflowItems={settingsItems} />
+      </div>
+      <MeinProfilEditor
       slug={slug}
       teamId={team.id}
       teamName={team.name}
@@ -60,6 +75,7 @@ export default async function MeinProfilPage({
       publicName={team.publicName ?? ""}
       publicTagline={team.publicTagline ?? ""}
       publicGoals={team.publicGoals ?? ""}
-    />
+      />
+    </div>
   );
 }

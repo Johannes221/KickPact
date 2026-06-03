@@ -47,7 +47,7 @@ export default async function LoginPage({
 
   return (
     <main className="mx-auto w-full max-w-md px-6 pb-16 pt-4">
-      <Card className="border-brand-neutral/30 shadow-sm">
+      <Card className="border-brand-neutral/25 shadow-[0_24px_60px_-24px_rgba(26,26,46,0.25)]">
         <CardHeader className="space-y-1.5">
           <CardTitle className="text-[26px] font-bold tracking-tight text-brand-night-navy">
             Willkommen zurück

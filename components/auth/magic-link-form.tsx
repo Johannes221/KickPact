@@ -54,18 +54,16 @@ export function MagicLinkForm({
     // Sponsor-Signup MUSS auf /sponsor/onboarding gehen (Profil-Wizard) und
     // nicht auf /sponsor — sonst landet der User auf einem leeren Dashboard
     // ohne Sponsor-Profil und die Page redirected ihn potentiell hin und her.
+    // Auch Signup läuft über den /dashboard-Dispatcher (siehe oauth-buttons):
+    // Ein returning User, der den Magic-Link vom Signup-Screen anfordert, landet
+    // so in seinem bestehenden Rollen-Dashboard statt im Anlegen-Wizard. Der
+    // `role`-Hint greift im Dispatcher NUR bei 0 Identities (echter Erst-Signup).
     const callbackURL = teamInviteToken
       ? `/team-einladung/${teamInviteToken}`
       : invitationToken
         ? `/sponsor/onboarding?invitation=${invitationToken}`
-        : mode === "signup"
-          ? role === "sponsor"
-            ? "/sponsor/onboarding"
-            : role === "mannschaft"
-              ? "/onboarding/mannschaft/verein"
-              : role === "verein"
-                ? "/onboarding/verein/verein"
-                : "/onboarding"
+        : mode === "signup" && role
+          ? `/dashboard?role=${role}`
           : "/dashboard"; // rollenbasiert weiterleiten
 
     const result = await signIn.magicLink({

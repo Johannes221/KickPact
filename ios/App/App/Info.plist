@@ -45,5 +45,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>KickPact braucht Kamerazugriff, um dein Profil- oder Vereinsbild aufzunehmen.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>KickPact braucht Zugriff auf deine Fotos, um ein Profil- oder Vereinsbild auszuwählen.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>KickPact braucht Zugriff, um Bilder in deiner Foto-Mediathek zu speichern.</string>
 </dict>
 </plist>

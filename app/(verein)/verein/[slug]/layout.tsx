@@ -11,9 +11,7 @@ import { listClubsForUser, getClubById } from "@/lib/db/queries/club-admin";
 import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
 import { countActivePledgesForClub } from "@/lib/db/queries/club-reporting";
 import { VereinHeaderShell } from "./_components/verein-header-shell";
-import { VereinFAB } from "./_components/verein-fab";
 import { StatusBar, type StatusItem } from "@/components/shared/status-bar";
-import { AppNavBarSpacer } from "@/components/shared/app-nav-bar";
 
 export default async function VereinLayout({
   params,
@@ -180,11 +178,7 @@ export default async function VereinLayout({
   }
 
   return (
-    <main className="native-shell mx-auto max-w-5xl px-4 md:px-6 pt-0 md:pt-8 pb-28 md:pb-12">
-      {/* Platz für die fixe mobile AppNavBar (oben). Genau EINMAL pro Scroll-
-          Container, damit verschachtelte Sub-Navs nicht doppelt spacern. */}
-      <AppNavBarSpacer />
-
+    <main className="native-shell mx-auto max-w-5xl px-4 md:px-6 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:pt-8 pb-28 md:pb-12">
       {/* Header-Bereich: Vereinsname + Sub-Nav.
           Auf /verein/<slug>/mannschaft/<teamId>... bei basic/pro-Lizenzen
           ausgeblendet — der TeamSubNav übernimmt dort die Navigation. */}
@@ -224,9 +218,6 @@ export default async function VereinLayout({
       <StatusBar items={isTeamOnly ? [] : statusItems} />
 
       {children}
-
-      {/* Mobile FAB — only visible on small screens */}
-      <VereinFAB slug={slug} clubRole={clubRole} />
 
       {/* Footer nur Desktop — auf Mobile liegen Impressum/Datenschutz/AGB im
           Zahnrad-Sheet (Rechtliches), damit die App-Ansicht kein Web-Chrome trägt. */}

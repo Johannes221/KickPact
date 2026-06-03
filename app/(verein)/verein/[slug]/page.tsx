@@ -1,8 +1,19 @@
 import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { getVereinDashboardKpis } from "@/lib/db/queries/club-reporting";
-import { TrendingUp, Users, HandCoins, Receipt, Share2 } from "lucide-react";
+import {
+  TrendingUp,
+  Users,
+  HandCoins,
+  Receipt,
+  Share2,
+  Goal,
+  ChartColumnIncreasing,
+  Gem,
+  Settings
+} from "lucide-react";
 import { DashboardTile } from "@/components/shared/dashboard-tile";
 import { PageHeader } from "@/components/shared/page-header";
+import { SettingsButton, type SettingsNavItem } from "@/components/shared/settings-button";
 
 export const metadata = { title: "Dashboard · KickPact" };
 
@@ -32,14 +43,24 @@ export default async function VereinDashboard({
 
   const teamCount = teamRows.length;
 
+  const base = `/verein/${slug}`;
+  const clubSettings: SettingsNavItem[] = [
+    { label: "Ereignisse", href: `${base}/ereignisse`, icon: Goal },
+    { label: "Charges", href: `${base}/charges`, icon: ChartColumnIncreasing },
+    { label: "Abo", href: `${base}/abo`, icon: Gem },
+    { label: "Einstellungen", href: `${base}/einstellungen`, icon: Settings }
+  ];
+
   return (
     <div className="space-y-4">
       {/* Mobile-Titel: auf Desktop liefert das Header-Shell bereits den großen
-          Vereinsnamen, daher hier nur md:hidden (kein Doppel-Titel). */}
+          Vereinsnamen, daher hier nur md:hidden (kein Doppel-Titel). Zahnrad
+          (Verwaltung + Konto) lebt hier auf der Übersicht. */}
       <PageHeader
         className="md:hidden"
         title={club.name}
         subtitle="Vereins-Dashboard"
+        action={<SettingsButton contextLabel={club.name} overflowItems={clubSettings} />}
       />
       {showSubscribedBanner && (
         <div

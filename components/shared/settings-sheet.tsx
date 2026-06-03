@@ -291,11 +291,18 @@ export function SettingsSheet({
                 type="button"
                 onClick={async () => {
                   // Harter Reload: signOut() löscht das Cookie serverseitig, der
-                  // Client-Store hält den User sonst weiter im Cache.
+                  // Client-Store hält den User sonst weiter im Cache. Nach dem
+                  // Logout zurück auf den Onboarding-Vorscreen (Intro), nicht
+                  // direkt in den Login — dafür das Intro-Flag zurücksetzen.
                   try {
                     await signOut();
                   } finally {
-                    window.location.href = "/";
+                    try {
+                      window.localStorage.removeItem("kp_intro_seen");
+                    } catch {
+                      /* localStorage ggf. gesperrt */
+                    }
+                    window.location.href = "/willkommen";
                   }
                 }}
                 className="flex w-full items-center gap-3 border-t border-brand-neutral/25 px-3.5 py-3 text-left text-brand-night-navy active:bg-brand-off-white"
