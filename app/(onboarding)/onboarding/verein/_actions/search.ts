@@ -1,7 +1,11 @@
 "use server";
 
 import { z } from "zod";
-import { searchVereine, getMannschaften } from "@/lib/crawler/fussballde";
+import {
+  searchVereine,
+  getMannschaften,
+  dedupeMannschaften,
+} from "@/lib/crawler/fussballde";
 import { getServerSession } from "@/lib/auth/session";
 import { checkTeamCollision } from "@/lib/db/queries/onboarding-collision";
 import { isClubMember } from "@/lib/db/queries/membership-requests";
@@ -94,7 +98,20 @@ export async function getMannschaftenAction(input: {
       })
     );
 
-    return { ok: true as const, results: enriched };
+    // fussball.de listet dieselbe Mannschaft mehrfach (Zero-Width-Space-Doppel,
+    // alte vs. aktuelle Vereins-Schreibweise) mit je eigener teamId. Auf je
+    // einen Eintrag zusammenfalten — bei Kollision den registrierten/eigenen
+    // bzw. denjenigen mit vollständigerem Namen behalten, damit der Status nicht
+    // verloren geht und die kanonische Schreibweise gewinnt.
+    const rank = (m: MannschaftWithStatus): number =>
+      (m.ownedByMe ? 4 : 0) + (m.registeredTeamDbId ? 2 : 0);
+    const deduped = dedupeMannschaften(enriched, (incoming, current) => {
+      const byStatus = rank(incoming) - rank(current);
+      if (byStatus !== 0) return byStatus > 0;
+      return incoming.name.length > current.name.length;
+    });
+
+    return { ok: true as const, results: deduped };
   } catch (e) {
     return {
       ok: false as const,
