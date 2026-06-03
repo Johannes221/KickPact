@@ -140,19 +140,24 @@ export function WaveDots({ className = "" }: { className?: string }) {
 
     const pos = posAttr.array as Float32Array;
     const col = colAttr.array as Float32Array;
-    const AMP_TOTAL = 320; // Summe der Amplituden (für Farb-Normalisierung)
+    const AMP_TOTAL = 340; // Summe der Amplituden (für Farb-Normalisierung)
 
     function frame() {
       const t = countAnim;
       for (let idx = 0; idx < count; idx++) {
         const x = baseX[idx];
         const z = baseZ[idx];
-        // Welle über Weltkoordinaten → glatte, breite Sinus-Strähnen, die als
-        // Familien gegeneinander laufen und sich zu einem X kreuzen.
+        // Niederfrequentes Phase-Warping (Sinus im Sinus, GROSSE Wellenlänge)
+        // verbiegt die Haupt-Ribbons, sodass sie ungleichmäßig wandern,
+        // anschwellen und chaotischer kreuzen — verspielt, aber weiterhin
+        // glatte Strähnen (KEINE hohen Frequenzen → kein Korn/Rauschen).
+        // Zeit-Faktoren = Tempo (bewusst unverändert).
+        const warp = Math.sin(x * 0.0015 + z * 0.0009 + t * 0.2) * 1.8;
         const y =
-          Math.sin(x * 0.0045 + z * 0.0011 + t) * 160 +
-          Math.sin(z * 0.0045 - x * 0.0013 - t * 0.7) * 120 +
-          Math.sin((x + z) * 0.0016 + t * 0.45) * 40;
+          Math.sin(x * 0.0040 + z * 0.0012 + t + warp * 0.7) * 140 +
+          Math.sin(z * 0.0050 - x * 0.0015 - t * 0.7 + warp * 0.5) * 105 +
+          Math.sin((x + z) * 0.0021 + t * 0.45) * 60 +
+          Math.sin(x * 0.0062 - z * 0.0036 + t * 0.85) * 35;
         pos[idx * 3 + 1] = y;
 
         // Kamm (y hoch) → heller/mintiger; Tal → Brand-Grün.
