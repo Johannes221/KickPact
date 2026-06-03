@@ -34,7 +34,7 @@ export function WaveDots({ className = "" }: { className?: string }) {
     const SEP_Z = 30; // Abstand benachbarter Strähnen (eng gestapelt)
     const AMOUNTX = 170; // Dots pro Strähne
     const AMOUNTY = 150; // Anzahl Strähnen
-    const COUNT_STEP = 0.018; // Animations-Geschwindigkeit
+    const COUNT_STEP = 0.009; // Animations-Geschwindigkeit (ruhig, nicht hektisch)
 
     // Brand-Grün #01C457 als Basis + helleres Mint für die Kämme.
     const baseCol = new THREE.Color(0x01c457);

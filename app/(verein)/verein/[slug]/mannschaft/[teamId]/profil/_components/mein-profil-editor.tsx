@@ -83,7 +83,6 @@ export function MeinProfilEditor({
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
 
   const verifikationHref = `/verein/${slug}/mannschaft/${teamId}/verifikation`;
-  const displayName = publicName.trim() || name.trim() || teamName;
   const meta = [clubName, league, clubOrt].filter(Boolean).join(" · ");
 
   // ---- Uploads (Cover / Logo / Galerie) -------------------------------------
@@ -328,16 +327,12 @@ export function MeinProfilEditor({
           {/* Logo-Badge + ändern */}
           <div className="relative inline-block">
             <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-accent text-xl font-bold text-brand-night-navy shadow-lg">
-              {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={logoUrl}
-                  alt="Logo"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                displayName.charAt(0).toUpperCase()
-              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={logoUrl ?? "/brand/team-crest-fallback.png"}
+                alt="Logo"
+                className="h-full w-full object-cover"
+              />
             </div>
             <button
               type="button"

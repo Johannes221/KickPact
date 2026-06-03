@@ -47,16 +47,12 @@ export function ProfileHero({
       </span>
       <div className="absolute inset-x-4 bottom-4">
         <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-accent text-xl font-black text-brand-night-navy shadow-lg">
-          {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={logoUrl}
-              alt="Logo"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            displayName.charAt(0).toUpperCase()
-          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logoUrl ?? "/brand/team-crest-fallback.png"}
+            alt=""
+            className="h-full w-full object-cover"
+          />
         </div>
         <h1 className="mt-2 font-display text-3xl font-black tracking-tight text-white">
           {displayName}

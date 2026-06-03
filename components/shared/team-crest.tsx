@@ -87,19 +87,15 @@ export function TeamCrest({
           }}
         />
       ) : (
-        <span style={{ fontSize: Math.round(size * 0.4) }}>{initials(name)}</span>
+        // Einheitliches Platzhalter-Wappen (KickPact-Icon), wenn kein Logo
+        // hochgeladen wurde — ersetzt die früheren Initialen.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src="/brand/team-crest-fallback.png"
+          alt={name}
+          className="h-full w-full object-cover"
+        />
       )}
     </span>
   );
-}
-
-/** 1–2 Initialen aus dem Namen (erste Buchstaben der ersten beiden Wörter). */
-function initials(name: string): string {
-  const words = name
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .split(/\s+/)
-    .filter(Boolean);
-  if (words.length === 0) return "?";
-  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-  return (words[0][0] + words[1][0]).toUpperCase();
 }

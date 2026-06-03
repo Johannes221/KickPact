@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock } from "lucide-react";
+import { Clock, ArrowRight } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import { listPledgesForSponsor } from "@/lib/db/queries/pledges";
@@ -20,12 +20,20 @@ export default async function PledgeListPage() {
   const sponsor = await findSponsorForUser(user.id);
   const myPledges = sponsor ? await listPledgesForSponsor(sponsor.id) : [];
 
-  // Offene Sponsoring-Anfragen (angefragt, aber noch nicht zugesagt) — werden
-  // hier mit angezeigt; den „Mannschaft finden"-CTA gibt's nur, wenn es WEDER
-  // einen Pact NOCH eine offene Anfrage gibt.
+  // Sponsoring-Anfragen einordnen:
+  //  - accepted + noch kein aktiver Pact → "Pact anlegen für …" (direkter Vorschlag)
+  //  - pending → "Angefragt, wartet auf Zusage"
+  // Der „Mannschaft finden"-CTA kommt nur, wenn es WEDER einen Pact NOCH eine
+  // angenommene/offene Anfrage gibt.
   const inquiries = await listInquiriesForSponsor(user.id);
+  const acceptedInquiries = inquiries.filter(
+    (i) => i.status === "accepted" && !i.hasActivePledge
+  );
   const pendingInquiries = inquiries.filter((i) => i.status === "pending");
-  const isEmpty = myPledges.length === 0 && pendingInquiries.length === 0;
+  const isEmpty =
+    myPledges.length === 0 &&
+    acceptedInquiries.length === 0 &&
+    pendingInquiries.length === 0;
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -62,6 +70,45 @@ export default async function PledgeListPage() {
           </Card>
         ) : (
           <>
+            {acceptedInquiries.map((q) =>
+              q.inviteToken ? (
+                <Link
+                  key={q.id}
+                  href={`/sponsor/pledge/new?invitation=${q.inviteToken}`}
+                  className="block rounded-xl border border-accent/40 bg-accent/5 p-4 transition-colors hover:bg-accent/10"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-semibold text-brand-night-navy">{q.teamName}</div>
+                      <div className="text-xs text-brand-night-navy/50 mt-0.5">{q.clubName}</div>
+                    </div>
+                    <Badge tone="success">Angenommen ✓</Badge>
+                  </div>
+                  <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
+                    Jetzt Pact für {q.teamName} anlegen
+                    <ArrowRight className="h-4 w-4" aria-hidden />
+                  </div>
+                </Link>
+              ) : (
+                <div
+                  key={q.id}
+                  className="rounded-xl bg-white shadow-ios-card p-4 border border-dashed border-emerald-300"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-semibold text-brand-night-navy">{q.teamName}</div>
+                      <div className="text-xs text-brand-night-navy/50 mt-0.5">{q.clubName}</div>
+                    </div>
+                    <Badge tone="success">Angenommen ✓</Badge>
+                  </div>
+                  <p className="mt-2 text-xs text-brand-night-navy/60">
+                    Der Verein hat zugesagt, aber die Einladung ist abgelaufen. Frag deinen
+                    Ansprechpartner nach einem neuen Link, dann kannst du den Pact einrichten.
+                  </p>
+                </div>
+              )
+            )}
+
             {myPledges.map((p) => (
               <Link
                 key={p.id}
