@@ -35,17 +35,14 @@ export default async function LoginPage({
     redirect("/dashboard");
   }
 
-  // Google NUR im Web. In der nativen iOS-App ausgeblendet, weil der native
-  // GoogleAuth-Flow (@codetrix-studio/capacitor-google-auth) aktuell einen
-  // nicht-JS-fangbaren Crash auslöst (vermutlich fehlendes
-  // GoogleAuth.initialize() oder Presenting-VC-Problem mit dem custom
-  // MainViewController). Erst nach Geräte-Log-Debugging wieder aktivieren.
-  // Apple läuft nativ (WS-3), Magic-Link bleibt als Mail-Weg.
+  // Google: in der nativen App über das @codetrix-GoogleAuth-Plugin
+  // (iosClientId aus capacitor.config — kein Web-Env nötig); im Web nur mit
+  // Web-OAuth-Creds. Apple läuft nativ, Magic-Link bleibt als Mail-Weg.
   const isNativeApp = ((await headers()).get("user-agent") ?? "").includes("KickPactApp");
   const oauthEnabled = {
-    google:
-      Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) &&
-      !isNativeApp,
+    google: isNativeApp
+      ? true
+      : Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
     apple: isAppleConfigured()
   };
   const anyOauth = oauthEnabled.google || oauthEnabled.apple;
@@ -55,10 +52,10 @@ export default async function LoginPage({
       <Card className="border-brand-neutral/25 shadow-[0_24px_60px_-24px_rgba(26,26,46,0.25)]">
         <CardHeader className="space-y-1.5">
           <CardTitle className="text-[26px] font-bold tracking-tight text-brand-night-navy">
-            Willkommen zurück
+            Anmelden
           </CardTitle>
           <CardDescription className="text-[15px] text-brand-night-navy/55">
-            Melde dich an, um loszulegen.
+            Weiter mit Apple, Google oder per Magic-Link.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -88,7 +85,7 @@ export default async function LoginPage({
           >
             <span className="text-sm text-brand-night-navy/70">
               Noch kein Account?{" "}
-              <span className="font-semibold text-brand-night-navy">Jetzt anlegen</span>
+              <span className="font-semibold text-brand-night-navy">Jetzt loslegen</span>
             </span>
             <ArrowRight className="h-4 w-4 shrink-0 text-accent-dark" aria-hidden />
           </Link>

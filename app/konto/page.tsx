@@ -14,6 +14,8 @@ import { DeletionBanner } from "./_components/deletion-banner";
 import { DataPrivacyActions } from "./_components/data-privacy-actions";
 import { AvatarUpload } from "./_components/avatar-upload";
 import { PrimaryRoleSelector } from "./_components/primary-role-selector";
+import { LoginMethods } from "./_components/login-methods";
+import { configuredSocialProviders } from "@/lib/auth/server";
 
 export const metadata = { title: "Mein Konto · KickPact" };
 
@@ -52,6 +54,13 @@ export default async function KontoPage() {
       .slice(0, 2)
       .join("")
       .toUpperCase() || user.email[0]!.toUpperCase();
+
+  const linkedProviderIds = linkedAccounts.map((a) => a.providerId);
+  // configuredSocialProviders ist `("google" | "apple")[]`; LoginMethods bietet
+  // nur diese beiden Provider an. Stabile Reihenfolge: Apple zuerst (iOS-First).
+  const linkableProviders = (["apple", "google"] as const).filter((p) =>
+    configuredSocialProviders.includes(p)
+  );
 
   const deletionScheduledFor = userRow?.deletionRequestedAt
     ? new Date(userRow.deletionRequestedAt.getTime() + 14 * 24 * 60 * 60 * 1000)
@@ -275,6 +284,24 @@ export default async function KontoPage() {
         >
           + Neue Rolle hinzufügen
         </Link>
+      </section>
+
+      {/* === Anmeldemethoden === */}
+      <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-4">
+        <div>
+          <h2 className="title-wrap text-lg font-semibold text-brand-night-navy">
+            Anmeldemethoden
+          </h2>
+          <p className="mt-0.5 text-xs text-brand-night-navy/60">
+            Verknüpfe Apple oder Google mit deinem Konto, damit du dich über
+            mehrere Wege einloggen kannst — alle landen im selben Konto inkl.
+            deiner Mannschaften und Rollen.
+          </p>
+        </div>
+        <LoginMethods
+          linkedProviderIds={linkedProviderIds}
+          configuredProviders={linkableProviders}
+        />
       </section>
 
       {/* === Sicherheit === */}

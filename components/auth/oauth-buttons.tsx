@@ -8,6 +8,39 @@ import { toast } from "sonner";
 import { track } from "@/lib/analytics/track";
 import { isNativeApp } from "@/lib/platform/native";
 
+/**
+ * iOS-OAuth-Client-ID (aud des nativen Google-idTokens). Identisch zu
+ * `GoogleAuth.iosClientId` in `capacitor.config.ts` und `GIDClientID` in
+ * `ios/App/App/Info.plist` — die drei MÜSSEN übereinstimmen, sonst lehnt
+ * GoogleSignIn nativ ab.
+ */
+const GOOGLE_IOS_CLIENT_ID =
+  "61970500774-vndgkcbi8073g8hk91jsb9rml1747nn9.apps.googleusercontent.com";
+
+/**
+ * Native-Google-Init ist idempotent: das Plugin registriert bei jedem
+ * `initialize()` einen neuen NotificationCenter-Observer und baut die
+ * GIDConfiguration neu. Einmal pro App-Lifecycle reicht — wir merken uns das
+ * Promise, damit parallele/wiederholte Taps denselben Init teilen.
+ */
+let googleInitPromise: Promise<void> | null = null;
+
+/**
+ * Echter Capacitor-Bridge-Check (NICHT der UA-Fallback aus `isNativeApp()`).
+ *
+ * `isNativeApp()` liefert auf remote geladenen Seiten u.U. `true` allein über
+ * den User-Agent, OHNE dass die Capacitor-Bridge/Plugin-Runtime wirklich
+ * verfügbar ist. Ein nativer Plugin-Call (`GoogleAuth.signIn()`) würde dann ins
+ * Leere oder in einen halb-initialisierten Plugin-Zustand dispatchen — das
+ * Plugin force-unwrappt nativ seine `GIDSignIn!`-Instanz und CRASHT
+ * (nicht JS-fangbar). Darum starten wir den nativen Pfad nur, wenn die Bridge
+ * sich selbst als nativ meldet.
+ */
+function hasCapacitorBridge(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.Capacitor?.isNativePlatform?.() === true;
+}
+
 interface OAuthButtonsProps {
   /** Login → /dashboard (Smart-Dispatcher), Signup → wizard für `role`. */
   mode: "login" | "signup";
@@ -66,22 +99,42 @@ export function OAuthButtons({ mode, enabled, role }: OAuthButtonsProps) {
       // Das native idToken (aud = iOS-Client-ID) geht direkt an better-auth, das
       // serverseitig sowohl die iOS- als auch die Web-Client-ID als Audience
       // akzeptiert (googleVerifyIdToken in lib/auth/server.ts).
-      if (provider === "google" && isNativeApp()) {
+      // Nur in die native Google-Bridge gehen, wenn Capacitor sich SELBST als
+      // nativ meldet — nicht der UA-Fallback aus `isNativeApp()`. Sonst würde
+      // der Plugin-Call ins Leere/in einen halb-initialisierten Plugin-Zustand
+      // dispatchen und nativ crashen (siehe `hasCapacitorBridge`). Fehlt die
+      // Bridge trotz UA-„KickPactApp", fällt der Code unten auf den Web-OAuth-
+      // Pfad zurück (der in echtem WKWebView ohnehin nie greifen sollte, aber
+      // kein Crash ist).
+      if (provider === "google" && isNativeApp() && hasCapacitorBridge()) {
         const { GoogleAuth } = await import(
           "@codetrix-studio/capacitor-google-auth"
         );
-        // GoogleAuth.initialize() VOR signIn() ist Pflicht — fehlt es, crasht das
-        // Plugin nativ (nicht JS-fangbar). clientId = iOS-OAuth-Client (aud des
-        // idTokens auf iOS); serverClientId macht den Token zusätzlich fürs
-        // Backend gültig (better-auth akzeptiert beide Audiences). Hinweis:
-        // Native Google ist aktuell in der App per Server-Gate ausgeblendet —
-        // dieser Block läuft nur, sobald der Flow auf Gerät verifiziert ist.
-        await GoogleAuth.initialize({
-          clientId:
-            "61970500774-vndgkcbi8073g8hk91jsb9rml1747nn9.apps.googleusercontent.com",
-          scopes: ["profile", "email"],
-          grantOfflineAccess: true
-        });
+        // GoogleAuth.initialize() VOR signIn() ist PFLICHT: das Plugin setzt erst
+        // dort seine `GIDSignIn!`-Instanz; `signIn()` ohne vorheriges init
+        // force-unwrappt `nil` und crasht nativ (nicht JS-fangbar). Init ist
+        // idempotent gecacht (googleInitPromise) — das Plugin würde sonst bei
+        // jedem Tap einen neuen NotificationCenter-Observer registrieren.
+        // clientId = iOS-OAuth-Client (aud des idTokens auf iOS); serverClientId
+        // (aus capacitor.config.ts) macht den Token zusätzlich fürs Backend
+        // gültig (better-auth akzeptiert beide Audiences). Hinweis: Native Google
+        // ist aktuell per Server-Gate ausgeblendet — dieser Block läuft erst,
+        // sobald der Flow auf Gerät verifiziert ist.
+        if (!googleInitPromise) {
+          googleInitPromise = GoogleAuth.initialize({
+            clientId: GOOGLE_IOS_CLIENT_ID,
+            scopes: ["profile", "email"],
+            grantOfflineAccess: true
+          }).catch((err) => {
+            // Init fehlgeschlagen → Cache zurücksetzen, damit der nächste Tap
+            // erneut initialisieren kann (statt ein gescheitertes Promise zu
+            // re-awaiten und mit nicht-initialisiertem Plugin in signIn() zu
+            // laufen).
+            googleInitPromise = null;
+            throw err;
+          });
+        }
+        await googleInitPromise;
         const result = await GoogleAuth.signIn();
         const token = result.authentication?.idToken;
         if (!token) throw new Error("Kein Google-Identity-Token erhalten");

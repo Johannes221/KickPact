@@ -50,17 +50,43 @@ function SlideBody({ children }: { children: ReactNode }) {
   );
 }
 
-/** Slide 1 — Hook: was ist KickPact. */
+const EVENT_WORDS = [
+  "Tor",
+  "Sieg",
+  "Aufstieg",
+  "Hattrick",
+  "Assist",
+  "Zu-Null-Spiel"
+] as const;
+
+/** Rotierendes Ereignis-Wort, das hereinfliegt (Marken-Motion). */
+function RotatingWord() {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(
+      () => setI((p) => (p + 1) % EVENT_WORDS.length),
+      1900
+    );
+    return () => window.clearInterval(id);
+  }, []);
+  return (
+    <span key={i} className="animate-trigger-fly inline-block text-accent">
+      {EVENT_WORDS[i]}
+    </span>
+  );
+}
+
+/** Slide 1 — Hook: jedes Ereignis wird zu Geld (rotierend, ohne Logo-Kasten). */
 function SlideIntro() {
   return (
     <div className="flex flex-col items-center text-center">
-      <span className="mb-8 grid h-24 w-24 place-items-center rounded-[2rem] bg-accent shadow-[0_18px_40px_-12px_rgba(1,196,87,0.55)]">
-        <Logo variant="mark" inverted href={null} />
-      </span>
-      <SlideTitle>{"Sponsoring,\ndas mitfiebert."}</SlideTitle>
+      <h1 className="title-wrap whitespace-pre-line text-[2.6rem] font-extrabold leading-[1.04] tracking-tight text-brand-night-navy">
+        <RotatingWord />
+        {"\nwird zu Geld."}
+      </h1>
       <SlideBody>
-        KickPact macht jedes Tor, jeden Sieg und jeden Aufstieg zu echter
-        Unterstützung für deine Mannschaft.
+        Sponsoren versprechen einen Betrag pro Ereignis. KickPact lädt sie
+        automatisch nach Spielende — 100 % davon geht an eure Mannschaft.
       </SlideBody>
     </div>
   );
@@ -77,10 +103,9 @@ const MILESTONES: Milestone[] = [
 function SlideAmount() {
   return (
     <div className="w-full">
-      <SlideTitle>{"Jedes Tor\nbringt Geld."}</SlideTitle>
+      <SlideTitle>{"Zum\nBeispiel."}</SlideTitle>
       <SlideBody>
-        Sponsoren versprechen einen Betrag pro Ereignis. 100 % davon bleibt bei
-        eurer Mannschaft.
+        Sponsoren legen fest, was ihnen ein Tor, Sieg oder Aufstieg wert ist.
       </SlideBody>
       <div className="mt-8 space-y-3">
         {MILESTONES.map((m) => {
@@ -109,10 +134,11 @@ function SlideAmount() {
 
 type Step = { title: string; body: string };
 const STEPS: Step[] = [
-  { title: "Mannschaft anlegen", body: "Wir finden euer Team — in 90 Sekunden." },
-  { title: "Verein verifizieren", body: "Kurzer Nachweis, einmalig — dann seid ihr startklar." },
+  { title: "Mannschaft anlegen", body: "In wenigen Schritten startklar." },
+  { title: "Mannschaft verifizieren", body: "Kurzer Nachweis — einmalig." },
+  { title: "Spiele laden automatisch", body: "Nach Spielende ziehen wir Tore, Siege & Co." },
   { title: "Sponsoren einladen", body: "Ein Link für Familie, Stammtisch & lokale Firmen." },
-  { title: "Geld fließt automatisch", body: "Tore, Siege, Aufstieg werden automatisch erfasst & abgerechnet." }
+  { title: "Ereignisse werden verrechnet", body: "Die Kasse füllt sich von allein — 100 % für euch." }
 ];
 
 /** Slide 3 — echter Ablauf in 4 Schritten (Timeline). */

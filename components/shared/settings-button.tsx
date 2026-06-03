@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SettingsSheet, type SettingsNavItem } from "@/components/shared/settings-sheet";
+import {
+  SettingsSheet,
+  type SettingsNavItem,
+  type SettingsIconKey
+} from "@/components/shared/settings-sheet";
 
 /**
  * Zahnrad-Button (Instagram-artig) — lebt NUR im Profil-/Konto-Bereich, nicht
@@ -45,4 +49,4 @@ export function SettingsButton({
   );
 }
 
-export type { SettingsNavItem };
+export type { SettingsNavItem, SettingsIconKey };

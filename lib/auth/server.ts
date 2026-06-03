@@ -109,6 +109,31 @@ export const auth = betterAuth({
       console.log("[adminPasswordReset] sent", { to: maskEmail(user.email), id: result.data?.id });
     }
   },
+  // Account-Verknüpfung: ein Nutzer, mehrere Login-Wege (Apple, Google,
+  // E-Mail/Magic-Link) → derselbe User-Row inkl. seiner Mannschaft.
+  account: {
+    accountLinking: {
+      enabled: true,
+      // Auto-Verknüpfung beim Login NUR für vertrauenswürdige Provider, deren
+      // E-Mail verifiziert mit dem bestehenden Account übereinstimmt. Greift
+      // z.B. für Google oder Apple OHNE Private-Relay (echte Mail == bekannte
+      // Mail). Beim Apple-Relay weicht die Mail ab → greift dort bewusst NICHT;
+      // dieser Fall wird über das manuelle Verknüpfen in /konto gelöst.
+      trustedProviders: ["apple", "google"],
+      // PFLICHT für den Relay-Fall: Beim MANUELLEN Verknüpfen (eingeloggter
+      // User klickt „Mit Apple verknüpfen") liefert Apple eine Private-Relay-
+      // Mail, die NICHT der Original-Account-Mail entspricht. Ohne dieses Flag
+      // bricht better-auth mit „different emails not allowed" ab. Das Risiko
+      // (Account-Takeover) ist hier gemindert, weil:
+      //   1. das manuelle Verknüpfen eine bestehende, frische Session des
+      //      Ziel-Accounts voraussetzt (freshSessionMiddleware), und
+      //   2. das Login-Self-Service auf Magic-Link/OAuth beschränkt ist
+      //      (kein offenes Passwort-Signup für Endnutzer).
+      // Die AUTO-Verknüpfung beim Login bleibt davon getrennt durch
+      // trustedProviders + emailVerified geschützt.
+      allowDifferentEmails: true
+    }
+  },
   secret: process.env.BETTER_AUTH_SECRET!,
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3003",
   trustedOrigins: [process.env.BETTER_AUTH_URL ?? "http://localhost:3003"],
@@ -173,3 +198,12 @@ export const auth = betterAuth({
 });
 
 export type Session = typeof auth.$Infer.Session;
+
+/**
+ * Social-Provider, die auf diesem Deployment konfiguriert sind (Credentials
+ * gesetzt). Steuert, welche „Verknüpfen"-Buttons in /konto angeboten werden —
+ * ohne gesetzte Apple-Keys gäbe es z.B. keinen funktionierenden Apple-Link.
+ */
+export const configuredSocialProviders = Object.keys(
+  socialProviders
+) as Array<keyof SocialProviders>;

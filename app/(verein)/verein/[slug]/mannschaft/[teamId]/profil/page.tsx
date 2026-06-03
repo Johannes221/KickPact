@@ -1,4 +1,3 @@
-import { Wallet, Gem, Settings } from "lucide-react";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { listTeamImages } from "@/lib/db/queries/team-images";
 import { getTeamProfileForEditor } from "@/lib/db/queries/team-lifecycle";
@@ -47,9 +46,9 @@ export default async function MeinProfilPage({
   // Screen. Verwaltungs-Links team-scoped.
   const teamBase = `/verein/${slug}/mannschaft/${team.id}`;
   const settingsItems: SettingsNavItem[] = [
-    { label: "Finanzen", href: `${teamBase}/finanzen`, icon: Wallet },
-    { label: "Abo", href: `${teamBase}/abo`, icon: Gem },
-    { label: "Einstellungen", href: `${teamBase}/einstellungen`, icon: Settings }
+    { label: "Finanzen", href: `${teamBase}/finanzen`, icon: "wallet" },
+    { label: "Abo", href: `${teamBase}/abo`, icon: "gem" },
+    { label: "Einstellungen", href: `${teamBase}/einstellungen`, icon: "settings" }
   ];
 
   return (

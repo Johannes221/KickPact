@@ -11,6 +11,12 @@ import {
   LifeBuoy,
   Hourglass,
   ChevronRight,
+  Wallet,
+  Gem,
+  Goal,
+  ChartColumnIncreasing,
+  FileText,
+  TrendingUp,
   type LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,10 +35,29 @@ import {
 import type { UserIdentities } from "@/lib/db/queries/user-identities";
 import type { MyPendingRequest } from "@/lib/db/queries/membership-requests";
 
+/**
+ * Icon-Registry: Server Components dürfen Komponenten-Referenzen (forwardRef-
+ * Objekte wie lucide-Icons) NICHT als Props über die RSC-Grenze an Client
+ * Components reichen — Next wirft sonst „Functions cannot be passed directly to
+ * Client Components". Deshalb transportieren wir nur einen serialisierbaren
+ * String-Key und lösen ihn hier (Client-seitig) zur tatsächlichen Komponente auf.
+ */
+const SETTINGS_ICONS = {
+  wallet: Wallet,
+  gem: Gem,
+  settings: Settings,
+  goal: Goal,
+  chart: ChartColumnIncreasing,
+  file: FileText,
+  trending: TrendingUp
+} satisfies Record<string, LucideIcon>;
+
+export type SettingsIconKey = keyof typeof SETTINGS_ICONS;
+
 export interface SettingsNavItem {
   label: string;
   href: string;
-  icon: LucideIcon;
+  icon: SettingsIconKey;
   badge?: number;
 }
 
@@ -124,7 +149,7 @@ export function SettingsSheet({
             <SectionLabel>Verwaltung</SectionLabel>
             <div className="overflow-hidden rounded-2xl bg-white shadow-ios-card">
               {overflowItems.map((it, i) => {
-                const Icon = it.icon;
+                const Icon = SETTINGS_ICONS[it.icon];
                 const isActive = activeHref === it.href;
                 return (
                   <Link

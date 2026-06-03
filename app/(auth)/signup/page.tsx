@@ -132,17 +132,14 @@ export default async function SignupPage({
     return <AuthenticatedRoleChooser addMode={wantsAddRole && total > 0} />;
   }
 
-  // Google NUR im Web. In der nativen iOS-App ausgeblendet, weil der native
-  // GoogleAuth-Flow (@codetrix-studio/capacitor-google-auth) aktuell einen
-  // nicht-JS-fangbaren Crash auslöst (vermutlich fehlendes
-  // GoogleAuth.initialize() oder Presenting-VC-Problem mit dem custom
-  // MainViewController). Erst nach Geräte-Log-Debugging wieder aktivieren.
-  // Apple nativ, Magic-Link als Mail-Weg.
+  // Google: in der nativen App über das @codetrix-GoogleAuth-Plugin (iosClientId
+  // aus capacitor.config — kein Web-Env nötig, Bridge-Gate im Button); im Web
+  // nur mit Web-OAuth-Creds. Apple nativ, Magic-Link als Mail-Weg.
   const isNativeApp = ((await headers()).get("user-agent") ?? "").includes("KickPactApp");
   const oauthEnabled = {
-    google:
-      Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) &&
-      !isNativeApp,
+    google: isNativeApp
+      ? true
+      : Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
     apple: isAppleConfigured()
   };
   const anyOauth = oauthEnabled.google || oauthEnabled.apple;

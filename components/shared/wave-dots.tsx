@@ -26,8 +26,9 @@ export function WaveDots({ className = "" }: { className?: string }) {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     // Zeilen-Abstand der Wellen-Strähnen + Dot-Schritt entlang einer Strähne.
-    const rowGap = 18;
-    const dx = 7;
+    // Dichter (kleinerer rowGap) → mehr überlagernde Linien = volleres Netz.
+    const rowGap = 13;
+    const dx = 6;
     let w = 0;
     let h = 0;
     let raf = 0;
