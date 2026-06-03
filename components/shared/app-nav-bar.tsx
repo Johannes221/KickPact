@@ -90,7 +90,7 @@ export function AppNavBar({
             >
               <ChevronLeft className="h-7 w-7" strokeWidth={2.2} aria-hidden />
               {backLabel ? (
-                <span className="max-w-[40vw] truncate text-[17px] font-normal leading-none">
+                <span className="max-w-[40vw] truncate text-ios-body leading-none">
                   {backLabel}
                 </span>
               ) : null}
@@ -106,11 +106,11 @@ export function AppNavBar({
                   : "pointer-events-none translate-y-0.5 opacity-0"
               )}
             >
-              <h1 className="truncate text-[17px] font-semibold leading-tight text-brand-night-navy">
+              <h1 className="truncate text-ios-headline leading-tight text-ios-label">
                 {title}
               </h1>
               {subtitle ? (
-                <p className="truncate text-[12px] font-medium text-ios-label-secondary">
+                <p className="truncate text-ios-caption font-medium text-ios-label-secondary">
                   {subtitle}
                 </p>
               ) : null}

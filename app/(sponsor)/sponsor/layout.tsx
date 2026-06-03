@@ -16,7 +16,7 @@ export default async function SponsorLayout({
   // läuft über den globalen Rollen-Switcher im Header — kein doppelter
   // Inline-Switcher mehr.
   return (
-    <main className="native-shell mx-auto max-w-5xl px-5 md:px-6 md:pt-12 pb-28 md:pb-12">
+    <main className="native-shell mx-auto max-w-5xl px-4 md:px-6 md:pt-12 pb-28 md:pb-12">
       <AppNavBarSpacer />
       <div className="mb-6 md:mb-10">
         {/* Großes Dashboard-Heading nur Desktop — auf Mobile trägt die AppNavBar

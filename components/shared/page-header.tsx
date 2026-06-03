@@ -25,11 +25,11 @@ export function PageHeader({ title, subtitle, action, className }: PageHeaderPro
   return (
     <div className={cn("flex items-start justify-between gap-3", className)}>
       <div className="min-w-0">
-        <h1 className="title-wrap text-[26px] font-bold leading-[1.15] text-brand-night-navy">
+        <h1 className="title-wrap text-ios-title1 text-ios-label">
           {title}
         </h1>
         {subtitle ? (
-          <p className="title-wrap mt-1 text-[15px] leading-snug text-brand-night-navy/55">
+          <p className="title-wrap mt-1 text-ios-subhead text-ios-label-secondary">
             {subtitle}
           </p>
         ) : null}
