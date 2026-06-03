@@ -2,13 +2,14 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 import { MagicLinkForm } from "@/components/auth/magic-link-form";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAppleConfigured } from "@/lib/auth/apple-client-secret";
 import { getServerSession } from "@/lib/auth/session";
 
-export const metadata = { title: "Login · KickPact" };
+export const metadata = { title: "Anmelden · KickPact" };
 
 export default async function LoginPage({
   searchParams
@@ -45,11 +46,15 @@ export default async function LoginPage({
   const anyOauth = oauthEnabled.google || oauthEnabled.apple;
 
   return (
-    <main className="mx-auto max-w-md px-6 py-16">
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-3xl tracking-wide">Login</CardTitle>
-          <CardDescription>Einloggen per Magic-Link oder mit deinem Account.</CardDescription>
+    <main className="mx-auto w-full max-w-md px-6 pb-16 pt-4">
+      <Card className="border-brand-neutral/30 shadow-sm">
+        <CardHeader className="space-y-1.5">
+          <CardTitle className="text-[26px] font-bold tracking-tight text-brand-night-navy">
+            Willkommen zurück
+          </CardTitle>
+          <CardDescription className="text-[15px] text-brand-night-navy/55">
+            Melde dich an, um loszulegen.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {anyOauth && (
@@ -59,10 +64,10 @@ export default async function LoginPage({
               </Suspense>
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-neutral-200" />
+                  <span className="w-full border-t border-brand-neutral/40" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase tracking-wider">
-                  <span className="bg-white px-2 text-neutral-500">oder per Mail</span>
+                  <span className="bg-white px-2 text-brand-night-navy/45">oder per Mail</span>
                 </div>
               </div>
             </>
@@ -70,12 +75,18 @@ export default async function LoginPage({
           <Suspense fallback={<div className="h-32" />}>
             <MagicLinkForm mode="login" />
           </Suspense>
-          <p className="mt-6 text-sm text-neutral-500">
-            Noch keinen Account?{" "}
-            <Link href="/signup" className="font-medium text-accent hover:underline">
-              Account anlegen
-            </Link>
-          </p>
+
+          {/* Registrieren — eigener, klar sichtbarer Weg statt versteckter Link. */}
+          <Link
+            href="/signup"
+            className="mt-6 flex items-center justify-between gap-3 rounded-xl border border-brand-neutral/40 bg-brand-off-white/60 px-4 py-3 transition-colors active:bg-brand-off-white"
+          >
+            <span className="text-sm text-brand-night-navy/70">
+              Noch kein Account?{" "}
+              <span className="font-semibold text-brand-night-navy">Jetzt anlegen</span>
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-accent-dark" aria-hidden />
+          </Link>
         </CardContent>
       </Card>
     </main>

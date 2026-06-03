@@ -50,6 +50,12 @@ export function AppHeader({ authenticated, dashboardHref, isNativeApp = false }:
 
   // App-Intro (/willkommen, WS-8) ist full-screen ohne globale Chrome.
   if (pathname === "/willkommen") return null;
+  // Auth-Routen (Login/Registrieren/Verify) tragen ihr Branding jetzt selbst
+  // über das (auth)-Layout (zentriertes Logo) — kein Marketing-Header darüber,
+  // sonst Doppel-Logo. Gilt für Web UND native App.
+  if (["/login", "/signup", "/verify"].some((p) => pathname.startsWith(p))) {
+    return null;
+  }
   // In der nativen App: Auth-/Onboarding-Routen ohne Marketing-Header
   // (kein „Loslegen", man ist ja bereits in der App).
   if (isNativeApp && NATIVE_CHROMELESS_PREFIXES.some((p) => pathname.startsWith(p))) {
