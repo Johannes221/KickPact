@@ -24,7 +24,10 @@ body { @apply bg-white text-neutral-900 antialiased; }
   --ios-separator: rgba(60, 60, 67, 0.29);
   --ios-separator-opaque: #C6C6C8;
   --ios-fill-tertiary: rgba(118, 118, 128, 0.12);
-  --accent: #01C457; /* KickPact-Brand-Grün = primärer CTA-/„System"-Akzent */
+  --ios-label: #1A1A2E; /* primary label = brand-night-navy */
+  --accent: #01C457; /* Tint — NUR interaktiv (Links, Buttons, aktiver Tab, Back) */
+  --success: #1F9D57; /* positiver Status (SIEG, positive Beträge) — tiefer als Tint */
+  --success-dark: #0E7A40;
   --shadow-ios-card: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
 }
 
