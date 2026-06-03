@@ -224,7 +224,7 @@ function TypeCard({
       <div className="flex items-start gap-3">
         <RadioGroupItem value={value} id={`type-${value}`} />
         <div>
-          <div className="font-display font-black text-base tracking-tight text-brand-night-navy">
+          <div className="font-display font-bold text-base tracking-tight text-brand-night-navy">
             {title}
           </div>
           <p className="mt-1 text-xs text-brand-night-navy/60">{description}</p>

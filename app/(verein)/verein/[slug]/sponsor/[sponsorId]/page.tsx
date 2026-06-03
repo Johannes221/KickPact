@@ -70,7 +70,7 @@ export default async function SponsorDetailPage({
         </Link>
         <div className="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
           <div>
-            <h2 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+            <h2 className="font-display font-bold text-2xl md:text-3xl tracking-tight text-brand-night-navy">
               {overview.sponsor.displayName}
             </h2>
             <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -102,7 +102,7 @@ export default async function SponsorDetailPage({
 
       {/* Teams */}
       <section>
-        <h3 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy mb-3 md:mb-4">
+        <h3 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy mb-3 md:mb-4">
           Bei diesen Teams
         </h3>
         {overview.teams.length === 0 ? (
@@ -114,7 +114,7 @@ export default async function SponsorDetailPage({
             {overview.teams.map((t) => (
               <li
                 key={t.teamId}
-                className="rounded-xl border border-brand-neutral/40 bg-white p-3"
+                className="rounded-xl bg-white shadow-ios-card p-3"
               >
                 <Link
                   href={`/verein/${slug}/mannschaft/${t.teamId}`}
@@ -135,10 +135,10 @@ export default async function SponsorDetailPage({
       {/* Trigger-Breakdown */}
       {overview.triggerBreakdown.length > 0 && (
         <section>
-          <h3 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy mb-3 md:mb-4">
+          <h3 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy mb-3 md:mb-4">
             Aufschlüsselung nach Trigger
           </h3>
-          <div className="overflow-x-auto rounded-2xl border border-brand-neutral/40 bg-white">
+          <div className="overflow-x-auto rounded-2xl bg-white shadow-ios-card">
             <table className="w-full text-sm">
               <thead className="bg-brand-off-white text-[0.65rem] md:text-xs uppercase tracking-wider text-brand-night-navy/60">
                 <tr>
@@ -178,13 +178,13 @@ export default async function SponsorDetailPage({
 
       {/* Pledges */}
       <section>
-        <h3 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy mb-3 md:mb-4">
+        <h3 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy mb-3 md:mb-4">
           Pacts ({pledgeRows.length})
         </h3>
         {pledgeRows.length === 0 ? (
           <p className="text-sm text-brand-night-navy/60">Keine Pacts.</p>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-brand-neutral/40 bg-white">
+          <div className="overflow-x-auto rounded-2xl bg-white shadow-ios-card">
             <table className="w-full text-sm">
               <thead className="bg-brand-off-white text-[0.65rem] md:text-xs uppercase tracking-wider text-brand-night-navy/60">
                 <tr>
@@ -257,7 +257,7 @@ export default async function SponsorDetailPage({
       {/* Charges */}
       <section>
         <div className="flex items-end justify-between mb-3 md:mb-4">
-          <h3 className="font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
+          <h3 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
             Charges ({chargesResult.total})
           </h3>
           <CsvExportButton
@@ -298,11 +298,11 @@ function Tile({
   hint?: string;
 }) {
   return (
-    <div className="rounded-xl border border-brand-neutral/40 bg-white p-4 md:p-5">
+    <div className="rounded-xl bg-white shadow-ios-card p-4 md:p-5">
       <div className="text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
         {label}
       </div>
-      <div className="mt-1.5 font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+      <div className="mt-1.5 font-display font-bold text-2xl md:text-3xl tracking-tight text-brand-night-navy">
         {value}
       </div>
       {hint && <div className="text-xs text-brand-night-navy/40 mt-0.5">{hint}</div>}

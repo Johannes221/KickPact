@@ -20,7 +20,7 @@ export function InquiriesInbox({ inquiries }: { inquiries: Inquiry[] }) {
   return (
     <section>
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
           Sponsor-Anfragen
         </h2>
         <span className="inline-flex items-center rounded-full bg-accent/15 text-accent-dark px-2.5 py-1 text-xs font-bold">
@@ -72,7 +72,7 @@ function InquiryRow({ inquiry }: { inquiry: Inquiry }) {
   }
 
   return (
-    <li className="rounded-xl border border-brand-neutral/40 bg-white p-4 md:p-5">
+    <li className="rounded-xl bg-white shadow-ios-card p-4 md:p-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-widest text-accent-dark font-bold">
@@ -116,7 +116,7 @@ function InquiryRow({ inquiry }: { inquiry: Inquiry }) {
             }
             rows={2}
             maxLength={500}
-            className="w-full rounded-lg border border-brand-neutral/40 bg-white px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+            className="w-full rounded-lg bg-white shadow-ios-card px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           />
           <div className="flex flex-wrap gap-2">
             <Button

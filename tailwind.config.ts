@@ -18,7 +18,29 @@ const config: Config = {
   				'alert-red': '#FF3127',
   				'off-white': '#F5F8F5',
   				neutral: '#CDD2D1'
+  			},
+  			// iOS system semantics — used for the native-shell app surfaces.
+  			// Brand accents (accent/#01C457, night-navy, alert-red) stay the lead
+  			// colors; these only supply the neutral chrome iOS expects: grouped
+  			// backgrounds, hairline separators, translucent fills.
+  			ios: {
+  				bg: '#F2F2F7', // systemGroupedBackground
+  				card: '#FFFFFF', // secondarySystemGroupedBackground
+  				'label-secondary': 'rgba(60, 60, 67, 0.6)',
+  				'label-tertiary': 'rgba(60, 60, 67, 0.3)',
+  				'label-quaternary': 'rgba(60, 60, 67, 0.18)',
+  				separator: 'rgba(60, 60, 67, 0.29)',
+  				'separator-opaque': '#C6C6C8',
+  				fill: 'rgba(120, 120, 128, 0.2)',
+  				'fill-secondary': 'rgba(120, 120, 128, 0.16)',
+  				'fill-tertiary': 'rgba(118, 118, 128, 0.12)',
+  				blue: '#007AFF',
+  				gray: '#8E8E93'
   			}
+  		},
+  		boxShadow: {
+  			'ios-card': '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)',
+  			'ios-elevated': '0 4px 16px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)'
   		},
   		fontFamily: {
   			display: [

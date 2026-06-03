@@ -182,7 +182,7 @@ function RuleRow({
 
   if (!editing) {
     return (
-      <li className="rounded-lg border border-brand-neutral/40 bg-white p-4 flex items-center justify-between gap-3">
+      <li className="rounded-lg bg-white shadow-ios-card p-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <TriggerIcon type={rule.triggerType as keyof typeof TRIGGER_META} className="h-4 w-4 shrink-0 text-accent-dark" />
           <div className="min-w-0">

@@ -34,10 +34,12 @@ export function DashboardTile({
     <Tag
       {...(tagProps as { href: string })}
       className={cn(
-        "group block rounded-2xl border p-5 transition-all",
+        // iOS grouped card: shadow-only (no border), tactile press.
+        "group block rounded-2xl p-5 shadow-ios-card transition-shadow",
+        href && "press",
         variant === "cta"
-          ? "border-accent bg-accent text-white hover:bg-accent-dark"
-          : "border-brand-neutral/40 bg-white text-brand-night-navy hover:border-accent/60 hover:shadow-md",
+          ? "bg-accent text-white hover:bg-accent-dark"
+          : "bg-ios-card text-brand-night-navy hover:shadow-ios-elevated",
         href && "cursor-pointer",
         className
       )}
@@ -55,7 +57,7 @@ export function DashboardTile({
           {primary && (
             <div
               className={cn(
-                "mt-1 font-display font-black text-2xl md:text-3xl tracking-tight",
+                "mt-1 font-display font-bold text-2xl md:text-3xl tracking-tight",
                 variant === "cta" ? "text-white" : "text-brand-night-navy"
               )}
             >

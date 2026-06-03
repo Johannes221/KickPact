@@ -155,7 +155,7 @@ export function BottomTabBar({
               className="rounded-t-3xl border-brand-neutral/30 bg-white/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]"
             >
               <SheetHeader>
-                <SheetTitle className="text-left font-display font-black tracking-tight">
+                <SheetTitle className="text-left font-display font-bold tracking-tight">
                   Mehr
                 </SheetTitle>
               </SheetHeader>

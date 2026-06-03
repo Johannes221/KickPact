@@ -163,7 +163,7 @@ export function MembersTable({
         return (
           <li
             key={rowKey}
-            className="rounded-lg border border-brand-neutral/40 bg-white p-3 flex items-center justify-between gap-3"
+            className="rounded-lg bg-white shadow-ios-card p-3 flex items-center justify-between gap-3"
           >
             <div className="flex items-center gap-3 min-w-0">
               <span className="text-sm text-brand-night-navy truncate">
@@ -234,7 +234,7 @@ export function MembersTable({
         return (
           <li
             key={rowKey}
-            className="rounded-lg border border-brand-neutral/40 bg-white p-3 flex items-center justify-between gap-3"
+            className="rounded-lg bg-white shadow-ios-card p-3 flex items-center justify-between gap-3"
           >
             <div className="flex items-center gap-3 min-w-0">
               <span className="text-sm text-brand-night-navy truncate">{m.email}</span>

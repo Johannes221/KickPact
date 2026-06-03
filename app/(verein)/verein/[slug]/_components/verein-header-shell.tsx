@@ -65,7 +65,7 @@ export function VereinHeaderShell({
           <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
             Vereins-Dashboard
           </p>
-          <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
+          <h1 className="font-display font-bold text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
             {clubName}
           </h1>
         </div>
@@ -74,7 +74,7 @@ export function VereinHeaderShell({
         {hasSponsorProfile && (
           <Link
             href="/sponsor"
-            className="shrink-0 mt-1 inline-flex items-center gap-1.5 rounded-full border border-brand-neutral/40 bg-white px-3 py-1.5 text-xs font-semibold text-brand-night-navy/70 hover:bg-brand-off-white hover:text-brand-night-navy transition-colors"
+            className="shrink-0 mt-1 inline-flex items-center gap-1.5 rounded-full bg-white shadow-ios-card px-3 py-1.5 text-xs font-semibold text-brand-night-navy/70 hover:bg-brand-off-white hover:text-brand-night-navy transition-colors"
           >
             <Zap className="h-4 w-4" aria-hidden />
             Sponsor-Bereich

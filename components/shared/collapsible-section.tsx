@@ -64,7 +64,7 @@ export function CollapsibleSection({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-brand-neutral/30 bg-white",
+        "rounded-2xl bg-white shadow-ios-card",
         className
       )}
     >

@@ -42,7 +42,7 @@ export default async function TeamVerifikationPage({
         <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
           Mannschafts-Verifikation
         </div>
-        <h2 className="mt-1 font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+        <h2 className="mt-1 font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
           {team.name}
         </h2>
         <p className="mt-2 text-sm text-brand-night-navy/60">

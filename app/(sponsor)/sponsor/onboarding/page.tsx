@@ -32,7 +32,7 @@ export default async function SponsorOnboardingPage({
       {/* Feuert signup_completed einmal pro Session — Sponsor-Onboarding ist
           der erste authentifizierte Touchpoint für Sponsor-Signups. */}
       <SignupCompletedTracker />
-      <h1 className="font-display font-black text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
+      <h1 className="font-display font-bold text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
         Willkommen bei <span className="text-accent">KickPact</span>
       </h1>
       <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">

@@ -56,7 +56,7 @@ export default async function PactsPage({
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="font-display font-black text-2xl md:text-3xl tracking-tight">Pacts</h1>
+        <h1 className="font-display font-bold text-2xl md:text-3xl tracking-tight">Pacts</h1>
         <p className="text-sm text-brand-night-navy/60 mt-1">
           Alle Sponsoring-Vereinbarungen auf diese Mannschaft. Sortiert nach Betrag.
         </p>
@@ -94,13 +94,13 @@ export default async function PactsPage({
       <div className="text-xs text-brand-night-navy/50">{filtered.length} Pacts</div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-brand-neutral/30 bg-white p-8 text-center text-sm text-brand-night-navy/60">
+        <div className="rounded-2xl bg-white shadow-ios-card p-8 text-center text-sm text-brand-night-navy/60">
           Noch keine Pacts in diesem Filter.
         </div>
       ) : (
         <>
           {/* Desktop Table */}
-          <div className="hidden md:block rounded-2xl border border-brand-neutral/30 bg-white overflow-x-auto">
+          <div className="hidden md:block rounded-2xl bg-white shadow-ios-card overflow-x-auto">
             <table className="w-full text-sm min-w-[720px]">
               <thead>
                 <tr className="border-b border-brand-neutral/30 text-xs uppercase tracking-wider text-brand-night-navy/50 text-left">
@@ -143,7 +143,7 @@ export default async function PactsPage({
             {filtered.map((r) => {
               const sb = statusBadge(r.pledgeStatus);
               return (
-                <div key={r.ruleId} className="rounded-2xl border border-brand-neutral/30 bg-white p-4">
+                <div key={r.ruleId} className="rounded-2xl bg-white shadow-ios-card p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="font-semibold truncate">{r.sponsorDisplayName || "—"}</div>

@@ -13,7 +13,7 @@ export default function SponsorDashboardLoading() {
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5"
+              className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5"
             >
               <Skeleton className="h-3 w-24" />
               <Skeleton className="h-7 md:h-9 w-20 mt-2" />
@@ -21,7 +21,7 @@ export default function SponsorDashboardLoading() {
             </div>
           ))}
         </div>
-        <div className="mt-4 rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5">
+        <div className="mt-4 rounded-2xl bg-white shadow-ios-card p-4 md:p-5">
           <div className="flex items-baseline justify-between mb-2">
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-3 w-20" />
@@ -39,7 +39,7 @@ export default function SponsorDashboardLoading() {
           {Array.from({ length: 3 }).map((_, i) => (
             <li
               key={i}
-              className="rounded-lg border border-brand-neutral/40 bg-white p-4"
+              className="rounded-lg bg-white shadow-ios-card p-4"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 space-y-2">

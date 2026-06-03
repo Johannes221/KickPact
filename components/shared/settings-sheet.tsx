@@ -122,7 +122,7 @@ export function SettingsSheet({
         {overflowItems.length > 0 && (
           <div className="mt-3">
             <SectionLabel>Verwaltung</SectionLabel>
-            <div className="overflow-hidden rounded-2xl border border-brand-neutral/30 bg-white">
+            <div className="overflow-hidden rounded-2xl bg-white shadow-ios-card">
               {overflowItems.map((it, i) => {
                 const Icon = it.icon;
                 const isActive = activeHref === it.href;
@@ -167,7 +167,7 @@ export function SettingsSheet({
         {session?.user && (
           <div className="mt-4">
             <SectionLabel>Konto</SectionLabel>
-            <div className="rounded-2xl border border-brand-neutral/30 bg-white">
+            <div className="rounded-2xl bg-white shadow-ios-card">
               <div className="px-3.5 pt-3 pb-2">
                 <div className="text-[0.7rem] font-semibold uppercase tracking-wider text-brand-night-navy/45">
                   Angemeldet als

@@ -148,7 +148,7 @@ export function StatusBar({ items }: { items: StatusItem[] }) {
     const Icon = ICONS[primary.iconKey];
     const extra = items.length - 1;
     return (
-      <div className="mb-4 flex items-center gap-3 rounded-2xl border border-brand-neutral/40 bg-white px-3 py-2 shadow-sm">
+      <div className="mb-4 flex items-center gap-3 rounded-2xl bg-white shadow-ios-card px-3 py-2">
         <button
           type="button"
           onClick={() => setCollapse(false)}
@@ -189,7 +189,7 @@ export function StatusBar({ items }: { items: StatusItem[] }) {
     <section
       aria-label="Status-Hinweise"
       className={cn(
-        "mb-4 overflow-hidden rounded-2xl border bg-white shadow-sm",
+        "mb-4 overflow-hidden rounded-2xl border bg-white shadow-ios-card",
         topTone === "danger"
           ? "border-brand-alert-red/30"
           : topTone === "warn"

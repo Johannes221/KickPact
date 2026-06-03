@@ -65,7 +65,7 @@ export default async function TeamSponsorenPage({
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <h2 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-2xl md:text-3xl tracking-tight text-brand-night-navy">
           Sponsoren
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -96,7 +96,7 @@ export default async function TeamSponsorenPage({
       )}
 
       <section className="space-y-3">
-        <h3 className="font-display font-black text-lg tracking-tight text-brand-night-navy">
+        <h3 className="font-display font-bold text-lg tracking-tight text-brand-night-navy">
           Deine Sponsoren ({sponsorRows.length})
         </h3>
 
@@ -111,7 +111,7 @@ export default async function TeamSponsorenPage({
               <li key={s.sponsorId}>
                 <Link
                   href={`/verein/${slug}/sponsor/${s.sponsorId}`}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-brand-neutral/40 bg-white p-4 hover:border-accent/40 hover:bg-brand-off-white/60 transition-colors"
+                  className="flex items-center justify-between gap-3 rounded-2xl bg-white shadow-ios-card p-4 hover:border-accent/40 hover:bg-brand-off-white/60 transition-colors"
                 >
                   <div className="min-w-0">
                     <div className="font-semibold text-brand-night-navy truncate">

@@ -29,7 +29,7 @@ export function PledgeCapEditor({
 
   if (isEnded) {
     return (
-      <div className="font-display font-black text-xl tracking-tight text-brand-night-navy">
+      <div className="font-display font-bold text-xl tracking-tight text-brand-night-navy">
         {currentCapCents ? eurDisplay(currentCapCents) : "ohne Cap"}
       </div>
     );
@@ -108,7 +108,7 @@ export function PledgeCapEditor({
 
   return (
     <div className="flex items-center gap-1.5 group">
-      <div className="font-display font-black text-xl tracking-tight text-brand-night-navy">
+      <div className="font-display font-bold text-xl tracking-tight text-brand-night-navy">
         {currentCapCents ? eurDisplay(currentCapCents) : "ohne Cap"}
       </div>
       <Button

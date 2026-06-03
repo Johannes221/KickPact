@@ -9,7 +9,9 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-lg border border-neutral-200 bg-white text-neutral-950 shadow-sm",
+      // iOS grouped card: white surface, soft shadow ONLY (never border+shadow),
+      // 16px corners.
+      "rounded-2xl bg-ios-card text-neutral-950 shadow-ios-card",
       className
     )}
     {...props}

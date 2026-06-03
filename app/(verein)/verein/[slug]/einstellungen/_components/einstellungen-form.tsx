@@ -77,8 +77,8 @@ export function EinstellungenForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         {/* Vereinsdaten */}
-        <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-5">
-          <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+        <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-5">
+          <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
             {variant === "mannschaft" ? "Rechnungs-Stammdaten" : "Vereins-Stammdaten"}
           </h3>
 
@@ -116,8 +116,8 @@ export function EinstellungenForm({
         </section>
 
         {/* Adresse */}
-        <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-5">
-          <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+        <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-5">
+          <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
             Rechnungsadresse
           </h3>
           <p className="text-xs text-brand-night-navy/60 -mt-2">
@@ -170,8 +170,8 @@ export function EinstellungenForm({
         </section>
 
         {/* Steuer */}
-        <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-5">
-          <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+        <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-5">
+          <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
             Steuer &amp; IBAN
           </h3>
 

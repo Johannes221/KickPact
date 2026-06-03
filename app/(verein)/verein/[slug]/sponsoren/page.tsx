@@ -74,7 +74,7 @@ export default async function SponsorenPage({
       />
 
       <section>
-        <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
           Aktive Sponsoren ({activeSponsors.length})
         </h2>
         {activeSponsors.length === 0 ? (
@@ -86,7 +86,7 @@ export default async function SponsorenPage({
             {activeSponsors.map((s, i) => (
               <li
                 key={`${s.sponsorId}-${i}`}
-                className="rounded-lg border border-brand-neutral/40 bg-white p-3 md:p-4 flex items-center justify-between gap-3"
+                className="rounded-lg bg-white shadow-ios-card p-3 md:p-4 flex items-center justify-between gap-3"
               >
                 <div className="min-w-0">
                   <div className="font-semibold text-sm md:text-base text-brand-night-navy truncate">

@@ -108,7 +108,7 @@ export function InviteForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-lg border border-brand-neutral/40 bg-white p-4 space-y-4"
+      className="rounded-lg bg-white shadow-ios-card p-4 space-y-4"
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">

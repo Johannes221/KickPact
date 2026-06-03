@@ -49,7 +49,7 @@ export default async function PledgeListPage() {
             <Link
               key={p.id}
               href={`/sponsor/pledge/${p.id}`}
-              className="block rounded-xl border border-brand-neutral/40 bg-white p-4 hover:border-accent/50 transition-colors"
+              className="block rounded-xl bg-white shadow-ios-card p-4 hover:border-accent/50 transition-colors"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>

@@ -33,7 +33,7 @@ export function SegmentedControl({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex w-full rounded-full bg-brand-off-white p-1",
+        "inline-flex w-full rounded-full bg-ios-fill-tertiary p-1",
         className
       )}
     >
@@ -52,7 +52,7 @@ export function SegmentedControl({
                 ? "px-3 py-1.5 text-sm"
                 : "px-2.5 py-1 text-[13px]",
               active
-                ? "bg-white text-brand-night-navy shadow-sm"
+                ? "bg-white text-brand-night-navy shadow-ios-card"
                 : "text-brand-night-navy/55 hover:text-brand-night-navy"
             )}
           >

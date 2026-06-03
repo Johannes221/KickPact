@@ -48,7 +48,7 @@ export function ReferralShareCard({ shareUrl }: { shareUrl: string }) {
           <Gift className="h-5 w-5" aria-hidden />
         </div>
         <div className="min-w-0 flex-1 space-y-2">
-          <h2 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+          <h2 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
             Kennst du einen Verein, dem das auch helfen würde?
           </h2>
           <p className="text-sm leading-relaxed text-brand-night-navy/70">

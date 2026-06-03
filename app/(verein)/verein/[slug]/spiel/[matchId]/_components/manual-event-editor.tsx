@@ -119,7 +119,7 @@ export function ManualEventEditor({ matchId }: { matchId: string }) {
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-display font-black text-2xl tracking-tight">
+          <DialogTitle className="font-display font-bold text-2xl tracking-tight">
             Manual Event
           </DialogTitle>
           <DialogDescription>

@@ -128,7 +128,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
             >
               <TriggerIcon type={type} className="h-5 w-5 text-accent-dark" />
               <div className="mt-1 font-semibold text-xs text-brand-night-navy">{meta?.label ?? type}</div>
-              <div className="mt-0.5 font-mono tabular-nums font-black text-sm text-accent">{eur(cents)}</div>
+              <div className="mt-0.5 font-mono tabular-nums font-bold text-sm text-accent">{eur(cents)}</div>
               <div className="flex items-center gap-1.5 text-[0.65rem] text-brand-night-navy/50 mt-0.5">
                 <span>{count}×</span>
                 {sponsors.size > 0 && (
@@ -146,7 +146,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
       {/* Filter + Sort Controls */}
       <div className="flex flex-wrap gap-2 items-center">
         <select
-          className="rounded-lg border border-brand-neutral/40 bg-white px-3 py-1.5 text-sm text-brand-night-navy"
+          className="rounded-lg bg-white shadow-ios-card px-3 py-1.5 text-sm text-brand-night-navy"
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
         >
@@ -159,7 +159,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
         </select>
         {teams.length > 1 && (
           <select
-            className="rounded-lg border border-brand-neutral/40 bg-white px-3 py-1.5 text-sm text-brand-night-navy"
+            className="rounded-lg bg-white shadow-ios-card px-3 py-1.5 text-sm text-brand-night-navy"
             value={filterTeam}
             onChange={(e) => setFilterTeam(e.target.value)}
           >
@@ -192,7 +192,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
       </div>
 
       {/* Desktop Table */}
-      <div className="hidden md:block overflow-x-auto rounded-2xl border border-brand-neutral/40 bg-white">
+      <div className="hidden md:block overflow-x-auto rounded-2xl bg-white shadow-ios-card">
         <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-brand-off-white text-xs uppercase tracking-wider text-brand-night-navy/60">
             <tr>
@@ -298,7 +298,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
           const meta = TRIGGER_LABELS[r.triggerType];
           const matchHref = r.matchId ? `/verein/${slug}/spiel/${r.matchId}` : null;
           const card = (
-            <div className="rounded-xl border border-brand-neutral/40 bg-white p-3">
+            <div className="rounded-xl bg-white shadow-ios-card p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <TriggerIcon type={r.triggerType} className="mt-0.5 h-5 w-5 shrink-0 text-accent-dark" />
@@ -311,7 +311,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
                     )}
                   </div>
                 </div>
-                <span className="font-mono tabular-nums font-black text-accent shrink-0">
+                <span className="font-mono tabular-nums font-bold text-accent shrink-0">
                   {eur(r.amountCents)}
                 </span>
               </div>

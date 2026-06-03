@@ -18,7 +18,7 @@ function eur(cents: number): string {
 export function FinanzenTrendChart({ data }: Props) {
   if (data.every((d) => d.totalCents === 0)) {
     return (
-      <div className="rounded-2xl border border-brand-neutral/30 bg-white p-8 text-center text-sm text-brand-night-navy/60">
+      <div className="rounded-2xl bg-white shadow-ios-card p-8 text-center text-sm text-brand-night-navy/60">
         Noch keine monatlichen Charges. Sobald die ersten Pacts ausgelöst werden,
         erscheint hier der Trend.
       </div>
@@ -26,7 +26,7 @@ export function FinanzenTrendChart({ data }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-brand-neutral/30 bg-white p-4 md:p-5">
+    <div className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5">
       <h2 className="font-semibold text-sm uppercase tracking-wider text-brand-night-navy/70 mb-3">
         Monatlicher Trend (12 Monate)
       </h2>

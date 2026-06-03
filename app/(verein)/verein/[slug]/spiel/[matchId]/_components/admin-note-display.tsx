@@ -67,7 +67,7 @@ export function AdminNoteDisplay({ adminNote }: { adminNote: string | null }) {
   return (
     <section>
       <div className="flex items-baseline justify-between gap-3 mb-3">
-        <h2 className="font-display font-black text-lg tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-lg tracking-tight text-brand-night-navy">
           Admin-Korrekturen
         </h2>
         <span className="text-xs text-brand-night-navy/50">

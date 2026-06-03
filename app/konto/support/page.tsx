@@ -22,7 +22,7 @@ export default async function KontoSupportPage() {
           <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
             Hilfe &amp; Support
           </p>
-          <h1 className="font-display font-black text-2xl md:text-4xl tracking-tight text-brand-night-navy">
+          <h1 className="font-display font-bold text-2xl md:text-4xl tracking-tight text-brand-night-navy">
             Meine Anfragen
           </h1>
           <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -51,7 +51,7 @@ export default async function KontoSupportPage() {
             <li key={t.id}>
               <Link
                 href={`/konto/support/${t.id}`}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-brand-neutral/40 bg-white px-4 py-3 transition-colors hover:bg-brand-off-white"
+                className="flex items-center justify-between gap-3 rounded-2xl bg-white shadow-ios-card px-4 py-3 transition-colors hover:bg-brand-off-white"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
