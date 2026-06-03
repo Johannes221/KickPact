@@ -39,31 +39,30 @@ APNS_PRODUCTION=false   # Sandbox für Dev-Builds; true erst beim App-Store-Buil
 
 ---
 
-## 2) Google-Login nativ — wartet auf Client-IDs
+## 2) Google-Login nativ — Code fertig, wartet auf Rebuild + Env
 
-**Status Code:** ⏳ vorbereitet. Google ist in der App aktuell **bewusst
-ausgeblendet** (Google blockt OAuth in WebViews). Der native Weg ist der
-idToken-Flow (analog zum bereits laufenden Apple-Native-Login).
+**Status Code:** ✅ komplett verdrahtet (2026-06-03).
+- Plugin `@codetrix-studio/capacitor-google-auth@3.4.0-rc.4` installiert + `cap sync` (Pod drin)
+- `GIDClientID` + reversed URL-Scheme in `ios/App/App/Info.plist`
+- `serverClientId` (Web) + `iosClientId` in `capacitor.config.ts`
+- Nativer Google-Branch in `oauth-buttons.tsx` (`GoogleAuth.signIn()` → idToken → `signIn.social`)
+- better-auth akzeptiert beide Audiences (Web + iOS) via `googleVerifyIdToken` in `lib/auth/server.ts`
 
-**Was DU machst (Google Cloud Console → APIs & Services → Credentials):**
-1. **iOS-OAuth-Client** erstellen → Bundle ID `com.kickpact.app`.
-   → liefert eine **iOS-Client-ID** + eine **reversed client ID**
-   (`com.googleusercontent.apps.XXXX`) für das URL-Scheme.
-2. Falls noch nicht vorhanden: den bestehenden **Web-OAuth-Client** bereithalten
-   (dessen Client-ID ist die `serverClientId` für die idToken-Audience).
+Client-IDs (Projekt `61970500774`):
+- **Web:** `61970500774-gvsogfm2m7tn1sdsnk06qvl1e3ffhn4g.apps.googleusercontent.com`
+- **iOS:** `61970500774-vndgkcbi8073g8hk91jsb9rml1747nn9.apps.googleusercontent.com`
+- **reversed:** `com.googleusercontent.apps.61970500774-vndgkcbi8073g8hk91jsb9rml1747nn9`
 
-**Was DU mir gibst:** die **iOS-Client-ID** (+ reversed) und die **Web-Client-ID**.
+**Sequenz (wichtig — Reihenfolge verhindert kaputten Button):**
+Der Google-Button erscheint in der App NUR, wenn die Server-Env
+`GOOGLE_IOS_CLIENT_ID` gesetzt ist. So taucht er nie in einem App-Build ohne das
+Plugin auf.
 
-**Dann mache ICH (ein Durchgang, dann brauchst du 1× Xcode-Rebuild):**
-- `@codetrix-studio/capacitor-google-auth` installieren + `npx cap sync ios`
-- `GIDClientID` + URL-Scheme (reversed iOS-ID) in `ios/App/App/Info.plist`
-- `serverClientId` in `capacitor.config.ts` (Plugin-Block)
-- Native Google-Branch in `components/auth/oauth-buttons.tsx`
-  (`GoogleAuth.signIn()` → `signIn.social({ provider: "google", idToken })`)
-- Google in der App wieder einblenden (Guard in login/signup-Page entfernen)
-- better-auth Google-Audience auf die iOS-Client-ID erweitern
+1. **DU:** In Xcode einmal neu bauen + auf dem iPhone installieren (zieht das
+   GoogleAuth-Plugin/den Pod). → sag mir „rebuild fertig".
+2. **ICH:** setze dann `GOOGLE_IOS_CLIENT_ID=61970500774-vndgkcbi8073g8hk91jsb9rml1747nn9.apps.googleusercontent.com`
+   als Coolify-Env → Google-Button erscheint in der App und der native Login läuft.
 
-> Grund, warum ich hier nicht „blind" vorbaue: Plugin-Config (Info.plist-Scheme,
-> serverClientId) braucht die echten IDs und einen Geräte-Test — halb gesetzte
-> Werte würden nur den nächsten Build gefährden. Mit den IDs ist es ein sauberer,
-> getesteter Durchgang.
+> Hinweis: cap sync auf diesem Mac braucht UTF-8-Locale, sonst bricht `pod install`
+> mit `Encoding::CompatibilityError` ab → vor dem Build
+> `export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8`.

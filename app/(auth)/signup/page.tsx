@@ -126,7 +126,13 @@ export default async function SignupPage({
   // (bis nativer Google-Flow existiert). Apple nativ, Magic-Link als Mail-Weg.
   const isNativeApp = ((await headers()).get("user-agent") ?? "").includes("KickPactApp");
   const oauthEnabled = {
-    google: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) && !isNativeApp,
+    // Web: immer (wenn Web-Creds da). Native iOS: nur wenn der iOS-OAuth-Client
+    // konfiguriert ist (GOOGLE_IOS_CLIENT_ID) — die Env wird erst gesetzt, NACHDEM
+    // ein App-Build mit dem GoogleAuth-Plugin installiert ist, damit der Button
+    // nie in einem Build ohne Plugin auftaucht.
+    google:
+      Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) &&
+      (!isNativeApp || Boolean(process.env.GOOGLE_IOS_CLIENT_ID)),
     apple: isAppleConfigured()
   };
   const anyOauth = oauthEnabled.google || oauthEnabled.apple;
