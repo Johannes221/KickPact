@@ -88,13 +88,24 @@ export const metadata: Metadata = {
 // auf iOS überhaupt Werte != 0 liefert (Notch/Home-Indicator). Die Bottom-Tab-
 // Bar und der Header nutzen diese Insets bereits — ohne cover bleiben sie 0.
 // themeColor matcht den Off-White-Body, damit die iOS-Statusbar nahtlos wirkt.
-// Auf dem Desktop-Browser hat das keinerlei sichtbaren Effekt.
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
-  themeColor: "#F5F8F5",
-};
+//
+// Zoom: In der nativen iOS-App (Capacitor-WebView) ist JEGLICHER Zoom verboten
+// (App-Feel): kein Pinch-Zoom, kein Doppeltipp-Zoom und kein Auto-Zoom beim
+// Fokussieren von Eingabefeldern (iOS zoomt sonst bei font-size < 16px rein).
+// `maximumScale: 1 + userScalable: false` schaltet das im WKWebView zuverlässig
+// ab. Im normalen Browser BLEIBT Zoom erlaubt (Accessibility/SEO) — deshalb per
+// User-Agent (`KickPactApp`) unterschieden statt global.
+export async function generateViewport(): Promise<Viewport> {
+  const userAgent = (await headers()).get("user-agent") ?? "";
+  const isNativeApp = userAgent.includes("KickPactApp");
+  return {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+    themeColor: "#F5F8F5",
+    ...(isNativeApp ? { maximumScale: 1, userScalable: false } : {})
+  };
+}
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Session + Identity-basiertes Logo-Routing: eingeloggte User springen vom
