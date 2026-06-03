@@ -9,6 +9,7 @@ import {
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { FilterBar, type FilterDefinition } from "@/components/shared/filter-bar";
 import { CsvExportButton } from "@/components/shared/csv-export-button";
+import { StatCard } from "@/components/shared/stat-card";
 import { ChargesTable } from "./_components/charges-table";
 
 export const metadata = { title: "Charges · KickPact" };
@@ -165,18 +166,4 @@ function eur(cents: number): string {
     style: "currency",
     currency: "EUR"
   });
-}
-
-function StatCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div className="rounded-xl bg-white shadow-ios-card p-4">
-      <div className="text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
-        {label}
-      </div>
-      <div className="mt-1.5 font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
-        {value}
-      </div>
-      {hint && <div className="text-xs text-brand-night-navy/40 mt-0.5">{hint}</div>}
-    </div>
-  );
 }

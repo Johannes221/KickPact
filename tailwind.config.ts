@@ -21,6 +21,13 @@ const config: Config = {
   				dark: '#0E7A40',
   				muted: '#DCF3E5'
   			},
+  			// `warning` = wartender/aufmerksamkeits-Status (iOS systemOrange).
+  			// danger nutzt das bestehende brand.alert-red.
+  			warning: {
+  				DEFAULT: '#FF9500',
+  				dark: '#B25E00',
+  				muted: '#FFF1DD'
+  			},
   			brand: {
   				primary: '#01C457',
   				'dark-green': '#00563A',

@@ -6,6 +6,7 @@ import {
   type ClubInvoiceSortKey
 } from "@/lib/db/queries/invoices";
 import { parsePaginationFromSearchParams } from "@/lib/db/queries/_helpers/paginate";
+import { StatCard } from "@/components/shared/stat-card";
 import { InvoicesTable } from "./_components/invoices-table";
 
 export const metadata = { title: "Abrechnungen · KickPact" };
@@ -104,18 +105,4 @@ export default async function AbrechnungenPage({
 
 function eur(cents: number): string {
   return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
-
-function StatCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div className="rounded-xl bg-white shadow-ios-card p-4">
-      <div className="text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
-        {label}
-      </div>
-      <div className="mt-1.5 font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
-        {value}
-      </div>
-      {hint && <div className="text-xs text-brand-night-navy/40 mt-0.5">{hint}</div>}
-    </div>
-  );
 }
