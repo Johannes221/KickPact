@@ -211,25 +211,34 @@ export async function respondToInquiry(input: {
     }
   }
 
+  // Bei accept erst die Einladung erzeugen, damit wir ihre ID am Inquiry
+  // verknüpfen können (Discover-Page löst darüber den Pledge-Einstieg auf).
+  let acceptedInvitation: Awaited<ReturnType<typeof createInvitation>> | null =
+    null;
+  if (parsed.accept) {
+    // Nutzt createInvitation-Helper (setzt korrekt expiresAt = +30d und
+    // einen base64url-Token statt cuid2 — konsistent mit allen anderen
+    // Invitations-Pfaden seit Audit 2026-05-24).
+    acceptedInvitation = await createInvitation({
+      teamId: row.team.id,
+      createdByUserId: user.id
+    });
+  }
+
   await db
     .update(sponsorInquiries)
     .set({
       status: parsed.accept ? "accepted" : "rejected",
       responseMessage: parsed.responseMessage ?? null,
       respondedAt: new Date(),
-      respondedBy: user.id
+      respondedBy: user.id,
+      invitationId: acceptedInvitation?.id ?? null
     })
     .where(eq(sponsorInquiries.id, parsed.inquiryId));
 
-  if (parsed.accept) {
-    // Erzeuge Einladungs-Token + mail an Sponsor.
-    // Nutzt createInvitation-Helper (setzt korrekt expiresAt = +30d und
-    // einen base64url-Token statt cuid2 — konsistent mit allen anderen
-    // Invitations-Pfaden seit Audit 2026-05-24).
-    const invitation = await createInvitation({
-      teamId: row.team.id,
-      createdByUserId: user.id
-    });
+  if (parsed.accept && acceptedInvitation) {
+    // Mail an Sponsor mit dem frisch erzeugten Einladungs-Token.
+    const invitation = acceptedInvitation;
     const token = invitation.token;
 
     const inviteUrl = `${process.env.BETTER_AUTH_URL ?? "https://kickpact.schartl.dev"}/einladung/${token}`;

@@ -13,8 +13,10 @@ import { DashboardTile } from "@/components/shared/dashboard-tile";
 import { getCapUsageForActivePledges } from "@/lib/db/queries/sponsor-reporting";
 import {
   findSponsorForUser,
-  getSponsorDashboardKpis
+  getSponsorDashboardKpis,
+  getSponsoredTeamMatches
 } from "@/lib/db/queries/sponsor-dashboard";
+import { SponsoredMatches } from "./_components/sponsored-matches";
 import { ReferralShareCard } from "@/components/sponsor/referral-share-card";
 import { buildReferralShareUrl } from "@/lib/referral/link";
 import { PageHeader } from "@/components/shared/page-header";
@@ -55,10 +57,12 @@ export default async function SponsorDashboard() {
   }
 
   const now = new Date();
-  const [kpis, capUsageRows] = await Promise.all([
+  const [kpis, capUsageRows, sponsoredMatches] = await Promise.all([
     getSponsorDashboardKpis(sponsorRow.id, now),
     // Cap-Auslastung: pro aktivem Pledge im aktuellen Monat
-    getCapUsageForActivePledges(sponsorRow.id, now)
+    getCapUsageForActivePledges(sponsorRow.id, now),
+    // Spiele-Überblick: letztes + nächstes Spiel je gesponserter Mannschaft
+    getSponsoredTeamMatches(sponsorRow.id, now)
   ]);
   const { activePledgeCount, monthlyCents, biggestRecent, ytdCents, lastYearCents } =
     kpis;
@@ -149,6 +153,8 @@ export default async function SponsorDashboard() {
           className="md:col-span-2"
         />
       </div>
+
+      <SponsoredMatches teams={sponsoredMatches} />
 
       <ReferralShareCard shareUrl={referralUrl} />
     </div>

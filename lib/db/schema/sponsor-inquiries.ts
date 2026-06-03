@@ -2,6 +2,7 @@ import { pgTable, text, timestamp, pgEnum, index } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
 import { users } from "./auth";
 import { teams } from "./clubs";
+import { sponsorInvitations } from "./invitations";
 
 /**
  * Sponsor-Discover Inquiries (Spec §6.10).
@@ -33,6 +34,17 @@ export const sponsorInquiries = pgTable(
     status: inquiryStatusEnum("status").notNull().default("pending"),
     message: text("message"),
     responseMessage: text("response_message"),
+    /**
+     * Beim Annehmen (status=accepted) erzeugt `respondToInquiry` eine
+     * Sponsor-Einladung und verknüpft sie hier. So weiß die Discover-Page,
+     * welcher Einladungs-Token zu *dieser* angenommenen Anfrage gehört, und
+     * kann den Sponsor direkt in den Pledge-Builder schicken (statt nur den
+     * E-Mail-Link als einzigen Weg zu haben). Nullable: pending/rejected haben
+     * keine Einladung. `set null`, falls die Einladung später hart gelöscht wird.
+     */
+    invitationId: text("invitation_id").references(() => sponsorInvitations.id, {
+      onDelete: "set null"
+    }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     respondedAt: timestamp("responded_at", { withTimezone: true }),
     respondedBy: text("responded_by").references(() => users.id, { onDelete: "set null" })

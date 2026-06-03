@@ -1,6 +1,14 @@
-import { and, eq, gte, lt, desc, sql, inArray } from "drizzle-orm";
+import { and, eq, gte, lte, lt, asc, desc, sql, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { charges, pledges, sponsors } from "@/lib/db/schema";
+import {
+  charges,
+  pledges,
+  sponsors,
+  teams,
+  clubs,
+  matches
+} from "@/lib/db/schema";
+import { saisonStartDate } from "@/lib/utils/saison";
 
 export interface SponsorDashboardKpis {
   activePledgeCount: number;
@@ -81,6 +89,102 @@ export async function getSponsorDashboardKpis(
     ytdCents: yearStats.ytdCents,
     lastYearCents: yearStats.lastYearCents
   };
+}
+
+export interface SponsoredTeamMatch {
+  id: string;
+  datum: Date;
+  heimName: string;
+  gastName: string;
+  ergebnisHeim: number | null;
+  ergebnisGast: number | null;
+  status: string;
+}
+
+export interface SponsoredTeamMatches {
+  teamId: string;
+  teamName: string;
+  clubName: string;
+  /** Letztes abgeschlossenes Spiel der aktuellen Saison (oder null). */
+  lastMatch: SponsoredTeamMatch | null;
+  /** Nächstes angesetztes Spiel ab jetzt (oder null). */
+  nextMatch: SponsoredTeamMatch | null;
+}
+
+const MATCH_COLS = {
+  id: matches.id,
+  datum: matches.datum,
+  heimName: matches.heimName,
+  gastName: matches.gastName,
+  ergebnisHeim: matches.ergebnisHeim,
+  ergebnisGast: matches.ergebnisGast,
+  status: matches.status
+};
+
+/**
+ * Spiele-Überblick für das Sponsor-Dashboard: pro Mannschaft mit aktivem Pledge
+ * das letzte abgeschlossene + das nächste angesetzte Spiel. Gegen Alt-Saison-
+ * Reste wird je Mannschaft am Saisonstart gegated (wie listMatchesForTeam).
+ */
+export async function getSponsoredTeamMatches(
+  sponsorId: string,
+  now: Date
+): Promise<SponsoredTeamMatches[]> {
+  // Mannschaften mit aktivem Pledge (distinct — ein Team kann mehrere Pledges haben).
+  const sponsoredTeams = await db
+    .selectDistinct({
+      teamId: teams.id,
+      teamName: teams.name,
+      saison: teams.saison,
+      clubName: clubs.name
+    })
+    .from(pledges)
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(and(eq(pledges.sponsorId, sponsorId), eq(pledges.status, "active")));
+
+  return Promise.all(
+    sponsoredTeams.map(async (t) => {
+      const fromDate = saisonStartDate(t.saison);
+      const seasonGate = fromDate ? [gte(matches.datum, fromDate)] : [];
+
+      const [lastRows, nextRows] = await Promise.all([
+        db
+          .select(MATCH_COLS)
+          .from(matches)
+          .where(
+            and(
+              eq(matches.teamId, t.teamId),
+              eq(matches.status, "finished"),
+              lte(matches.datum, now),
+              ...seasonGate
+            )
+          )
+          .orderBy(desc(matches.datum))
+          .limit(1),
+        db
+          .select(MATCH_COLS)
+          .from(matches)
+          .where(
+            and(
+              eq(matches.teamId, t.teamId),
+              inArray(matches.status, ["scheduled", "live", "postponed"]),
+              gte(matches.datum, now)
+            )
+          )
+          .orderBy(asc(matches.datum))
+          .limit(1)
+      ]);
+
+      return {
+        teamId: t.teamId,
+        teamName: t.teamName,
+        clubName: t.clubName,
+        lastMatch: lastRows[0] ?? null,
+        nextMatch: nextRows[0] ?? null
+      };
+    })
+  );
 }
 
 /**
