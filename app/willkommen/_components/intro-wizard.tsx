@@ -106,9 +106,16 @@ export function IntroWizard() {
           <MilestonePath />
         ) : (
           PlainIcon && (
-            <span className="flex h-24 w-24 items-center justify-center rounded-[1.75rem] bg-accent/10 text-accent">
-              <PlainIcon className="h-11 w-11" strokeWidth={2} aria-hidden />
-            </span>
+            <div className="relative">
+              {/* weicher Glow gibt dem Icon Tiefe statt 'einsam im Weiß'. */}
+              <span
+                className="absolute -inset-6 -z-10 rounded-full bg-accent/20 blur-3xl"
+                aria-hidden
+              />
+              <span className="flex h-28 w-28 items-center justify-center rounded-[2rem] bg-gradient-to-br from-accent/15 to-accent/[0.04] text-accent shadow-[0_24px_50px_-18px_rgba(1,196,87,0.45)] ring-1 ring-inset ring-accent/15">
+                <PlainIcon className="h-12 w-12" strokeWidth={2} aria-hidden />
+              </span>
+            </div>
           )
         )}
       </div>
@@ -125,12 +132,13 @@ export function IntroWizard() {
 
       {/* Footer: Dots + CTA */}
       <footer className="space-y-6 px-6 pb-4 pt-8">
-        <div className="flex gap-1.5" aria-hidden>
+        {/* Echter Step-Indikator: 3 gleich breite Segmente, gefüllt = Fortschritt. */}
+        <div className="flex gap-2" aria-hidden>
           {SLIDES.map((_, i) => (
             <span
               key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === index ? "w-8 bg-accent" : "w-1.5 bg-brand-night-navy/12"
+              className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
+                i <= index ? "bg-accent" : "bg-neutral-200"
               }`}
             />
           ))}

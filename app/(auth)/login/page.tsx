@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { MagicLinkForm } from "@/components/auth/magic-link-form";
@@ -45,8 +46,22 @@ export default async function LoginPage({
   const anyOauth = oauthEnabled.google || oauthEnabled.apple;
 
   return (
-    <main className="mx-auto max-w-md px-6 py-16">
-      <Card>
+    <main className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col justify-center px-6 pb-safe pt-safe">
+      {/* Markenanker oben statt Leerraum — gibt dem Screen Halt, Card sitzt mittig. */}
+      <div className="mb-7 flex flex-col items-center text-center">
+        <Image
+          src="/brand/logo-navy-horizontal.png"
+          alt="KickPact"
+          width={168}
+          height={22}
+          className="h-6 w-auto"
+          priority
+        />
+        <p className="mt-3 text-sm font-medium text-brand-night-navy/45">
+          Performance-Sponsoring für deinen Verein
+        </p>
+      </div>
+      <Card className="border-brand-neutral/40 shadow-[0_24px_60px_-28px_rgba(10,22,44,0.22)]">
         <CardHeader>
           <CardTitle className="font-display text-3xl tracking-wide">Login</CardTitle>
           <CardDescription>Einloggen per Magic-Link oder mit deinem Account.</CardDescription>
