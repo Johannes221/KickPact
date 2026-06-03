@@ -25,6 +25,8 @@ import {
   HandCoins,
   Check,
   Gift,
+  ShieldCheck,
+  Coins,
   type LucideIcon
 } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
@@ -76,6 +78,16 @@ function RotatingWord() {
   );
 }
 
+/** Eine Wert-Pill (Icon + Text) — füllt den Raum unter dem Intro mit Substanz. */
+function ValuePill({ icon: Icon, children }: { icon: LucideIcon; children: ReactNode }) {
+  return (
+    <span className="inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-full border border-brand-neutral/30 bg-white px-4 py-2.5 text-[15px] font-semibold text-brand-night-navy/80 shadow-[0_4px_14px_-8px_rgba(1,196,87,0.35)]">
+      <Icon className="h-[1.15rem] w-[1.15rem] shrink-0 text-accent" strokeWidth={2.3} aria-hidden />
+      {children}
+    </span>
+  );
+}
+
 /** Slide 1 — Hook: jedes Ereignis wird zu Geld (rotierend, ohne Logo-Kasten). */
 function SlideIntro() {
   return (
@@ -85,9 +97,13 @@ function SlideIntro() {
         {"\nwird zu Geld."}
       </h1>
       <SlideBody>
-        Sponsoren versprechen einen Betrag pro Ereignis. KickPact lädt sie
-        automatisch nach Spielende — 100 % davon geht an eure Mannschaft.
+        Sponsoren versprechen einen Betrag pro Ereignis — KickPact lädt sie
+        automatisch nach Spielende.
       </SlideBody>
+      <div className="mt-9 flex flex-col items-stretch gap-3">
+        <ValuePill icon={ShieldCheck}>100 % bleibt bei eurer Mannschaft</ValuePill>
+        <ValuePill icon={Coins}>Ab unter 1 € pro Spieler/Monat</ValuePill>
+      </div>
     </div>
   );
 }
