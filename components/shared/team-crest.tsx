@@ -35,13 +35,28 @@ export function TeamCrest({
   const [failed, setFailed] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  // SSR-Bild kann schon VOR der Hydration fertig (oder kaputt) geladen sein —
-  // dann feuern onLoad/onError nie an React. Beim Mount den fertigen Zustand
-  // prüfen und ggf. auf Initialen zurückfallen.
+  // SSR-Bild kann schon VOR der Hydration fertig (oder kaputt) sein — dann
+  // feuern React-onLoad/onError nie. Beim Mount den fertigen Zustand prüfen;
+  // ist das Bild noch am Laden, native Listener anhängen (fangen auch den Fall,
+  // dass die Logo-URL erst nach der Hydration fehlschlägt, z.B. Redirect-Ziel).
   useEffect(() => {
     setFailed(false);
     const img = imgRef.current;
-    if (img && img.complete && img.naturalWidth === 0) setFailed(true);
+    if (!img) return;
+    const markIfBroken = () => {
+      if (img.naturalWidth === 0) setFailed(true);
+    };
+    if (img.complete) {
+      markIfBroken();
+      return;
+    }
+    const onError = () => setFailed(true);
+    img.addEventListener("load", markIfBroken);
+    img.addEventListener("error", onError);
+    return () => {
+      img.removeEventListener("load", markIfBroken);
+      img.removeEventListener("error", onError);
+    };
   }, [src]);
 
   const showImg = Boolean(src) && !failed;
