@@ -173,7 +173,7 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
             {chargesData.byTrigger.map((t) => (
               <div
                 key={t.triggerType}
-                className="rounded-xl border border-brand-neutral/40 bg-white p-3 flex items-center gap-3"
+                className="rounded-xl bg-white shadow-ios-card p-3 flex items-center gap-3"
               >
                 <span className="text-2xl shrink-0">{t.emoji}</span>
                 <div className="flex-1 min-w-0">
@@ -189,7 +189,7 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
           </div>
 
           {/* Sponsor-Breakdown */}
-          <div className="rounded-2xl border border-brand-neutral/40 bg-white overflow-x-auto">
+          <div className="rounded-2xl bg-white shadow-ios-card overflow-x-auto">
             <table className="w-full min-w-[480px] text-sm">
               <thead className="bg-brand-off-white text-xs uppercase tracking-wider text-brand-night-navy/60">
                 <tr>

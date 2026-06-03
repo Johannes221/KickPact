@@ -205,7 +205,7 @@ export default async function BilanzPage({
       />
 
       {/* Breakdown per Trigger */}
-      <section className="rounded-2xl border border-brand-neutral/30 bg-white p-4 md:p-5">
+      <section className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5">
         <h2 className="font-semibold text-sm uppercase tracking-wider text-brand-night-navy/70 mb-3">
           Pro Trigger-Typ
         </h2>
@@ -241,7 +241,7 @@ export default async function BilanzPage({
       </section>
 
       {balance.eventsCount === 0 && (
-        <div className="rounded-2xl border border-brand-neutral/30 bg-white p-8 text-center text-sm text-brand-night-navy/60">
+        <div className="rounded-2xl bg-white shadow-ios-card p-8 text-center text-sm text-brand-night-navy/60">
           Im gewählten Zeitraum hat noch kein Pact gegriffen. Wähle einen anderen
           Zeitraum oder warte bis deine Mannschaft das nächste Spiel hat.
         </div>
@@ -260,7 +260,7 @@ function KpiTile({
   secondary: string;
 }) {
   return (
-    <div className="rounded-2xl border border-brand-neutral/40 bg-white p-4">
+    <div className="rounded-2xl bg-white shadow-ios-card p-4">
       <div className="text-[0.65rem] font-semibold uppercase tracking-widest text-brand-night-navy/50">
         {label}
       </div>
@@ -291,7 +291,7 @@ function BreakdownSection({
   emptyText: string;
 }) {
   return (
-    <section className="rounded-2xl border border-brand-neutral/30 bg-white p-4 md:p-5">
+    <section className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5">
       <h2 className="font-semibold text-sm uppercase tracking-wider text-brand-night-navy/70 mb-3">
         {title}
       </h2>

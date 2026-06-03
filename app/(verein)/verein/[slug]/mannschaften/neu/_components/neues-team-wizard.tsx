@@ -138,7 +138,7 @@ export function NeuesTeamWizard({
               Lade Mannschaften…
             </div>
           ) : teams.length === 0 ? (
-            <div className="rounded-lg border border-brand-neutral/40 bg-white p-4 text-sm text-brand-night-navy/60">
+            <div className="rounded-lg bg-white shadow-ios-card p-4 text-sm text-brand-night-navy/60">
               Keine Mannschaften auf fußball.de gefunden.
             </div>
           ) : (

@@ -93,7 +93,7 @@ export function ApprovalRow({ data }: { data: ApprovalRowData }) {
   });
 
   return (
-    <div className="rounded-lg border border-brand-neutral/40 bg-white p-5">
+    <div className="rounded-lg bg-white shadow-ios-card p-5">
       <div className="flex items-baseline justify-between gap-3 mb-3">
         <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
           {data.clubName} · {data.teamName}

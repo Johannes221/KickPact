@@ -246,7 +246,7 @@ export function PledgeBuilder() {
                 return (
                   <div
                     key={field.id}
-                    className="flex flex-wrap items-end gap-3 rounded-xl border border-brand-neutral/40 bg-white p-4"
+                    className="flex flex-wrap items-end gap-3 rounded-xl bg-white shadow-ios-card p-4"
                   >
                     <div className="flex-1 min-w-[180px]">
                       <div className="flex items-center gap-1.5 text-sm font-semibold text-brand-night-navy">

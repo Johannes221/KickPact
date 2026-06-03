@@ -18,7 +18,7 @@ export function InquiriesList({ inquiries }: { inquiries: Inquiry[] }) {
       {inquiries.map((inq) => (
         <li
           key={inq.id}
-          className="rounded-xl border border-brand-neutral/40 bg-white p-3 md:p-4"
+          className="rounded-xl bg-white shadow-ios-card p-3 md:p-4"
         >
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div className="min-w-0">

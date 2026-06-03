@@ -66,7 +66,7 @@ export default async function SpielerPage({
       </div>
 
       {roster.length === 0 ? (
-        <div className="rounded-lg border border-brand-neutral/40 bg-white p-6 text-sm text-brand-night-navy/60">
+        <div className="rounded-lg bg-white shadow-ios-card p-6 text-sm text-brand-night-navy/60">
           Noch keine Spieler. Spieler werden automatisch angelegt, sobald die
           ersten Spieldaten erfasst wurden.
         </div>

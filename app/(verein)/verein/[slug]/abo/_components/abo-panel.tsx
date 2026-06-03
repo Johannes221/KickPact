@@ -158,7 +158,7 @@ function CurrentSubscriptionCard({
       : null;
 
   return (
-    <div className="rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5 space-y-3">
+    <div className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5 space-y-3">
       <div className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
         Aktueller Status
       </div>
@@ -337,7 +337,7 @@ function UpgradePathsCard({
         </div>
       )}
       {(currentPlan === "basic" || currentPlan === "pro") && (
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl border border-brand-neutral/40 bg-white p-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl bg-white shadow-ios-card p-3">
           <div className="text-sm text-brand-night-navy/80">
             <strong>Vereinslizenz</strong> · alle Mannschaften unter einer
             Lizenz · ab 3 Mannschaften günstiger als 3× Pro · Master-Admin +

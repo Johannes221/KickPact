@@ -42,8 +42,8 @@ export function FilterChip({
       className={cn(
         "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors",
         active
-          ? "bg-accent text-white shadow-sm"
-          : "border border-brand-neutral/40 bg-white text-brand-night-navy/60 hover:border-brand-neutral hover:text-brand-night-navy"
+          ? "bg-accent text-white shadow-ios-card"
+          : "bg-white shadow-ios-card text-brand-night-navy/60 hover:border-brand-neutral hover:text-brand-night-navy"
       )}
     >
       {children}

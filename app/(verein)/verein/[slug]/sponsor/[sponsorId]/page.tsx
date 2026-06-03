@@ -114,7 +114,7 @@ export default async function SponsorDetailPage({
             {overview.teams.map((t) => (
               <li
                 key={t.teamId}
-                className="rounded-xl border border-brand-neutral/40 bg-white p-3"
+                className="rounded-xl bg-white shadow-ios-card p-3"
               >
                 <Link
                   href={`/verein/${slug}/mannschaft/${t.teamId}`}
@@ -138,7 +138,7 @@ export default async function SponsorDetailPage({
           <h3 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy mb-3 md:mb-4">
             Aufschlüsselung nach Trigger
           </h3>
-          <div className="overflow-x-auto rounded-2xl border border-brand-neutral/40 bg-white">
+          <div className="overflow-x-auto rounded-2xl bg-white shadow-ios-card">
             <table className="w-full text-sm">
               <thead className="bg-brand-off-white text-[0.65rem] md:text-xs uppercase tracking-wider text-brand-night-navy/60">
                 <tr>
@@ -184,7 +184,7 @@ export default async function SponsorDetailPage({
         {pledgeRows.length === 0 ? (
           <p className="text-sm text-brand-night-navy/60">Keine Pacts.</p>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-brand-neutral/40 bg-white">
+          <div className="overflow-x-auto rounded-2xl bg-white shadow-ios-card">
             <table className="w-full text-sm">
               <thead className="bg-brand-off-white text-[0.65rem] md:text-xs uppercase tracking-wider text-brand-night-navy/60">
                 <tr>
@@ -298,7 +298,7 @@ function Tile({
   hint?: string;
 }) {
   return (
-    <div className="rounded-xl border border-brand-neutral/40 bg-white p-4 md:p-5">
+    <div className="rounded-xl bg-white shadow-ios-card p-4 md:p-5">
       <div className="text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
         {label}
       </div>

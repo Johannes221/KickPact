@@ -77,7 +77,7 @@ export default async function MannschaftenPage({
               <Link
                 href={`/verein/${slug}/mannschaft/${t.id}`}
                 className={
-                  "block rounded-2xl border bg-white p-4 md:p-5 transition-all hover:border-accent hover:shadow-md " +
+                  "block rounded-2xl border bg-white p-4 md:p-5 transition-all hover:shadow-ios-elevated " +
                   (t.isActive ? "border-brand-neutral/40" : "border-brand-neutral/20 opacity-60")
                 }
               >

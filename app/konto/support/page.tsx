@@ -51,7 +51,7 @@ export default async function KontoSupportPage() {
             <li key={t.id}>
               <Link
                 href={`/konto/support/${t.id}`}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-brand-neutral/40 bg-white px-4 py-3 transition-colors hover:bg-brand-off-white"
+                className="flex items-center justify-between gap-3 rounded-2xl bg-white shadow-ios-card px-4 py-3 transition-colors hover:bg-brand-off-white"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">

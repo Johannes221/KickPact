@@ -44,7 +44,7 @@ export function TicketThread({
   return (
     <div className="space-y-3">
       {/* Ursprüngliche Meldung */}
-      <div className="rounded-2xl border border-brand-neutral/40 bg-white p-4">
+      <div className="rounded-2xl bg-white shadow-ios-card p-4">
         <div className="mb-1 flex items-center justify-between gap-2 text-xs">
           <span className="font-semibold text-brand-night-navy">{original.name}</span>
           <span className="text-brand-night-navy/50">{fmt(original.createdAt)}</span>

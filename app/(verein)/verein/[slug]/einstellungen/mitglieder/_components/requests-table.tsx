@@ -72,7 +72,7 @@ export function RequestsTable({
       {requests.map((r) => (
         <li
           key={r.id}
-          className="rounded-xl border border-brand-neutral/40 bg-white p-4"
+          className="rounded-xl bg-white shadow-ios-card p-4"
         >
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div className="flex-1 min-w-0">

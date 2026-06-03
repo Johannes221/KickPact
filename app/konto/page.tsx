@@ -79,7 +79,7 @@ export default async function KontoPage() {
       {/* === Benachrichtigungen === */}
       <Link
         href="/konto/benachrichtigungen"
-        className="flex items-center justify-between gap-3 rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 transition-colors hover:border-accent/50"
+        className="flex items-center justify-between gap-3 rounded-2xl bg-white shadow-ios-card p-5 md:p-6 transition-colors hover:border-accent/50"
       >
         <div className="flex items-center gap-3 min-w-0">
           <span aria-hidden className="text-xl">
@@ -107,7 +107,7 @@ export default async function KontoPage() {
       </Link>
 
       {/* === Profil === */}
-      <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-4">
+      <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-4">
         <div>
           <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
             Profil
@@ -185,7 +185,7 @@ export default async function KontoPage() {
       </section>
 
       {/* === Rollen-Übersicht === */}
-      <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-4">
+      <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-4">
         <div>
           <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
             Meine Rollen
@@ -282,7 +282,7 @@ export default async function KontoPage() {
       </section>
 
       {/* === Sicherheit === */}
-      <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-3">
+      <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-3">
         <div>
           <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
             Sicherheit
@@ -299,7 +299,7 @@ export default async function KontoPage() {
       </section>
 
       {/* === Hilfe & Support === */}
-      <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-3">
+      <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-3">
         <div>
           <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
             Hilfe &amp; Support
@@ -326,7 +326,7 @@ export default async function KontoPage() {
       </section>
 
       {/* === Daten & Privatsphäre === */}
-      <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-4">
+      <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-4">
         <div>
           <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
             Daten &amp; Privatsphäre

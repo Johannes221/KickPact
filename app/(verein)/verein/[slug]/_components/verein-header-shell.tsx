@@ -74,7 +74,7 @@ export function VereinHeaderShell({
         {hasSponsorProfile && (
           <Link
             href="/sponsor"
-            className="shrink-0 mt-1 inline-flex items-center gap-1.5 rounded-full border border-brand-neutral/40 bg-white px-3 py-1.5 text-xs font-semibold text-brand-night-navy/70 hover:bg-brand-off-white hover:text-brand-night-navy transition-colors"
+            className="shrink-0 mt-1 inline-flex items-center gap-1.5 rounded-full bg-white shadow-ios-card px-3 py-1.5 text-xs font-semibold text-brand-night-navy/70 hover:bg-brand-off-white hover:text-brand-night-navy transition-colors"
           >
             <Zap className="h-4 w-4" aria-hidden />
             Sponsor-Bereich

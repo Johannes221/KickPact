@@ -105,7 +105,7 @@ export function SponsorInviteCard({
             readOnly
             value={inviteUrl}
             onFocus={(e) => e.currentTarget.select()}
-            className="flex-1 min-w-0 rounded-lg border border-brand-neutral/40 bg-white px-3 py-2 text-sm text-brand-night-navy/80 font-mono truncate"
+            className="flex-1 min-w-0 rounded-lg bg-white shadow-ios-card px-3 py-2 text-sm text-brand-night-navy/80 font-mono truncate"
           />
           <Button variant="accent" onClick={copy} className="shrink-0">
             Kopieren

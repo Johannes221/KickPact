@@ -205,7 +205,7 @@ export function SponsorsManager({
           {invitations.map((i) => (
             <li
               key={i.id}
-              className="rounded-lg border border-brand-neutral/40 bg-white p-4 flex flex-wrap items-center justify-between gap-3"
+              className="rounded-lg bg-white shadow-ios-card p-4 flex flex-wrap items-center justify-between gap-3"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">

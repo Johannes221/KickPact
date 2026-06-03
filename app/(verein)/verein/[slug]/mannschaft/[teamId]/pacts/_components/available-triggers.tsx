@@ -34,7 +34,7 @@ const GROUPS: Array<{
  */
 export function AvailableTriggers() {
   return (
-    <details className="group rounded-2xl border border-brand-neutral/30 bg-white">
+    <details className="group rounded-2xl bg-white shadow-ios-card">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
         <div className="min-w-0">
           <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">

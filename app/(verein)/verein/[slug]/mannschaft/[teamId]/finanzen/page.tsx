@@ -111,7 +111,7 @@ export default async function FinanzenPage({
           return (
             <section
               key={cat}
-              className="rounded-2xl border border-brand-neutral/30 bg-white p-4 md:p-5"
+              className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5"
             >
               <div className="flex items-baseline justify-between mb-3">
                 <h2 className="font-semibold text-sm uppercase tracking-wider text-brand-night-navy/70">
@@ -144,7 +144,7 @@ export default async function FinanzenPage({
 
       {/* Top Sponsoren */}
       {topSponsors.length > 0 && (
-        <section className="rounded-2xl border border-brand-neutral/30 bg-white p-4 md:p-5">
+        <section className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5">
           <h2 className="font-semibold text-sm uppercase tracking-wider text-brand-night-navy/70 mb-3">
             Top Sponsoren
           </h2>
@@ -179,7 +179,7 @@ export default async function FinanzenPage({
       />
 
       {totalCount === 0 && (
-        <div className="rounded-2xl border border-brand-neutral/30 bg-white p-8 text-center text-sm text-brand-night-navy/60">
+        <div className="rounded-2xl bg-white shadow-ios-card p-8 text-center text-sm text-brand-night-navy/60">
           Noch keine bestätigten Charges. Sobald die ersten Pacts ausgelöst werden, erscheinen sie hier.
         </div>
       )}

@@ -257,7 +257,7 @@ export function MeinProfilEditor({
                 className="peer sr-only"
               />
               <span className="absolute inset-0 rounded-full bg-brand-neutral/50 transition-colors peer-checked:bg-accent peer-disabled:opacity-50" />
-              <span className="absolute left-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+              <span className="absolute left-0.5 h-4 w-4 rounded-full bg-white shadow-ios-card transition-transform peer-checked:translate-x-4" />
             </span>
             <span className="text-xs font-semibold text-brand-night-navy">
               Öffentlich
@@ -267,7 +267,7 @@ export function MeinProfilEditor({
             <Link
               href={`/m/${publicSlug}`}
               target="_blank"
-              className="inline-flex items-center gap-1.5 rounded-full border border-brand-neutral/40 bg-white px-3 py-1.5 text-xs font-semibold text-brand-night-navy shadow-sm transition-colors hover:bg-brand-off-white"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white shadow-ios-card px-3 py-1.5 text-xs font-semibold text-brand-night-navy transition-colors hover:bg-brand-off-white"
             >
               <Eye className="h-4 w-4" aria-hidden />
               Live-Vorschau
@@ -417,7 +417,7 @@ export function MeinProfilEditor({
 
       <div className="space-y-6 px-0 pt-6">
         {/* 3. Verifikations-Zeile */}
-        <div className="rounded-2xl border border-brand-neutral/40 bg-white p-4">
+        <div className="rounded-2xl bg-white shadow-ios-card p-4">
           {isVerified ? (
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-sm font-semibold text-accent-dark">
@@ -452,7 +452,7 @@ export function MeinProfilEditor({
         </div>
 
         {/* 4. Insights-Toggle */}
-        <div className="rounded-2xl border border-brand-neutral/40 bg-white p-4">
+        <div className="rounded-2xl bg-white shadow-ios-card p-4">
           <label className="flex cursor-pointer items-start gap-3">
             <input
               type="checkbox"
@@ -473,7 +473,7 @@ export function MeinProfilEditor({
         </div>
 
         {/* 5. Galerie */}
-        <div className="rounded-2xl border border-brand-neutral/40 bg-white p-4">
+        <div className="rounded-2xl bg-white shadow-ios-card p-4">
           <div className="flex items-center justify-between">
             <h3 className="text-[15px] font-semibold text-brand-night-navy">
               Galerie
@@ -528,7 +528,7 @@ export function MeinProfilEditor({
         </div>
 
         {/* 6. Über uns */}
-        <div className="space-y-5 rounded-2xl border border-brand-neutral/40 bg-white p-4">
+        <div className="space-y-5 rounded-2xl bg-white shadow-ios-card p-4">
           <h3 className="text-[15px] font-semibold text-brand-night-navy">
             Über uns
           </h3>

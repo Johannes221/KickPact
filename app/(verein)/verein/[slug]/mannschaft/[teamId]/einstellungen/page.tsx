@@ -89,7 +89,7 @@ export default async function TeamEinstellungenPage({
       )}
 
       {/* Lifecycle */}
-      <section className="space-y-4 rounded-2xl border border-brand-neutral/40 bg-white p-5">
+      <section className="space-y-4 rounded-2xl bg-white shadow-ios-card p-5">
         <header>
           <h3 className="font-display font-bold text-lg tracking-tight text-brand-night-navy">
             Lifecycle
@@ -111,7 +111,7 @@ export default async function TeamEinstellungenPage({
           <li>
             <Link
               href={`${base}/mitglieder`}
-              className="block rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5 hover:border-accent/40 hover:bg-brand-off-white/60 transition-colors"
+              className="block rounded-2xl bg-white shadow-ios-card p-4 md:p-5 hover:border-accent/40 hover:bg-brand-off-white/60 transition-colors"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -132,7 +132,7 @@ export default async function TeamEinstellungenPage({
           <li>
             <Link
               href={`/verein/${slug}/mannschaft/${teamId}/spieler`}
-              className="block rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5 hover:border-accent/40 hover:bg-brand-off-white/60 transition-colors"
+              className="block rounded-2xl bg-white shadow-ios-card p-4 md:p-5 hover:border-accent/40 hover:bg-brand-off-white/60 transition-colors"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>

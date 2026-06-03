@@ -41,13 +41,13 @@ export function DiscoverFilters({
           defaultValue={current.q}
           onBlur={(e) => update({ q: e.target.value })}
           placeholder="Mannschaft, Verein oder Ort …"
-          className="w-full rounded-lg border border-brand-neutral/40 bg-white px-4 py-3 text-base text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+          className="w-full rounded-lg bg-white shadow-ios-card px-4 py-3 text-base text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
         />
       </form>
       <select
         value={current.league}
         onChange={(e) => update({ league: e.target.value })}
-        className="rounded-lg border border-brand-neutral/40 bg-white px-3 py-3 text-sm text-brand-night-navy"
+        className="rounded-lg bg-white shadow-ios-card px-3 py-3 text-sm text-brand-night-navy"
       >
         <option value="">Alle Ligen</option>
         {facets.leagues.map((l) => (
@@ -59,7 +59,7 @@ export function DiscoverFilters({
       <select
         value={current.ort}
         onChange={(e) => update({ ort: e.target.value })}
-        className="rounded-lg border border-brand-neutral/40 bg-white px-3 py-3 text-sm text-brand-night-navy"
+        className="rounded-lg bg-white shadow-ios-card px-3 py-3 text-sm text-brand-night-navy"
       >
         <option value="">Alle Orte</option>
         {facets.orte.map((o) => (

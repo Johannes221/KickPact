@@ -60,7 +60,7 @@ export function SeasonResultForm({
 
   if (!expanded && current) {
     return (
-      <section className="rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5">
+      <section className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
@@ -130,7 +130,7 @@ export function SeasonResultForm({
           <select
             value={cupRoundReached}
             onChange={(e) => setCupRoundReached(e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-brand-neutral/40 bg-white px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+            className="mt-1.5 w-full rounded-lg bg-white shadow-ios-card px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           >
             <option value="">— keiner —</option>
             {CUP_ROUND_ORDER.map((r) => (
@@ -153,7 +153,7 @@ export function SeasonResultForm({
             rows={2}
             maxLength={2000}
             placeholder='z.B. "Mehr als 60 Tore", "Kein Spiel verloren"'
-            className="mt-1.5 w-full rounded-lg border border-brand-neutral/40 bg-white px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+            className="mt-1.5 w-full rounded-lg bg-white shadow-ios-card px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           />
         </label>
         <p className="mt-1 text-[0.7rem] text-brand-night-navy/50">
@@ -198,7 +198,7 @@ function NumberField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="mt-1.5 w-full rounded-lg border border-brand-neutral/40 bg-white px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+        className="mt-1.5 w-full rounded-lg bg-white shadow-ios-card px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
       />
     </label>
   );
@@ -214,7 +214,7 @@ function CheckField({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-brand-neutral/40 bg-white px-3 py-2.5">
+    <label className="flex items-center gap-2 cursor-pointer rounded-lg bg-white shadow-ios-card px-3 py-2.5">
       <input
         type="checkbox"
         checked={checked}

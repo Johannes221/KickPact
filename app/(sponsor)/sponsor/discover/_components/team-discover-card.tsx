@@ -55,7 +55,7 @@ export function TeamDiscoverCard({
 
   return (
     <>
-      <article className="flex flex-col overflow-hidden rounded-2xl border border-brand-neutral/30 bg-white shadow-sm hover:shadow-md transition-shadow">
+      <article className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-ios-card shadow-ios-card hover:shadow-ios-elevated transition-shadow">
         {/* Cover */}
         <div className="relative h-36 overflow-hidden bg-brand-night-navy">
           {team.coverUrl ? (
@@ -202,7 +202,7 @@ export function TeamDiscoverCard({
                     placeholder="Wer du bist, warum du unterstützen willst…"
                     rows={4}
                     maxLength={500}
-                    className="mt-1.5 w-full rounded-lg border border-brand-neutral/40 bg-white px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                    className="mt-1.5 w-full rounded-lg bg-white shadow-ios-card px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
                 </label>
                 <div className="flex gap-2">

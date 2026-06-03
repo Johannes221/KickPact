@@ -160,7 +160,7 @@ function eur(cents: number): string {
 
 function StatCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-xl border border-brand-neutral/40 bg-white p-4">
+    <div className="rounded-xl bg-white shadow-ios-card p-4">
       <div className="text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
         {label}
       </div>

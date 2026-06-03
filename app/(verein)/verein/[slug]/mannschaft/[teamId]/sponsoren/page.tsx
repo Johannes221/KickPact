@@ -111,7 +111,7 @@ export default async function TeamSponsorenPage({
               <li key={s.sponsorId}>
                 <Link
                   href={`/verein/${slug}/sponsor/${s.sponsorId}`}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-brand-neutral/40 bg-white p-4 hover:border-accent/40 hover:bg-brand-off-white/60 transition-colors"
+                  className="flex items-center justify-between gap-3 rounded-2xl bg-white shadow-ios-card p-4 hover:border-accent/40 hover:bg-brand-off-white/60 transition-colors"
                 >
                   <div className="min-w-0">
                     <div className="font-semibold text-brand-night-navy truncate">

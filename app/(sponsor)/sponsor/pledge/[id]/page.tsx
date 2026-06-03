@@ -129,7 +129,7 @@ export default async function PledgeDetailPage({
             {recentCharges.map((c) => (
               <li
                 key={c.id}
-                className="rounded-lg border border-brand-neutral/40 bg-white p-3 flex items-center justify-between"
+                className="rounded-lg bg-white shadow-ios-card p-3 flex items-center justify-between"
               >
                 <div>
                   <span className="text-sm text-brand-night-navy font-mono tabular-nums">

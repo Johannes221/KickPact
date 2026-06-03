@@ -37,7 +37,7 @@ export function AboCycleToggle({
         <div
           role="tablist"
           aria-label="Abrechnungs-Intervall"
-          className="flex w-full md:w-auto flex-col md:flex-row md:inline-flex items-stretch rounded-2xl bg-white p-1.5 ring-1 ring-brand-neutral/40 shadow-sm gap-1 md:gap-0"
+          className="flex w-full md:w-auto flex-col md:flex-row md:inline-flex items-stretch rounded-2xl bg-white p-1.5 ring-1 ring-brand-neutral/40 shadow-ios-card gap-1 md:gap-0"
         >
           {SELECTABLE_CYCLES.map((c) => {
             const active = c === cycle;
@@ -57,7 +57,7 @@ export function AboCycleToggle({
                   "flex flex-col items-center justify-center gap-1 rounded-xl px-4 md:px-5 py-2.5 md:py-2 text-sm font-semibold transition-all w-full md:w-auto",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
                   active
-                    ? "bg-brand-night-navy text-white shadow-sm"
+                    ? "bg-brand-night-navy text-white shadow-ios-card"
                     : "text-brand-night-navy/70 hover:text-brand-night-navy"
                 )}
               >

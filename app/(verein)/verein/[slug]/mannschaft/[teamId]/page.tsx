@@ -165,7 +165,7 @@ export default async function TeamDetailPage({
               accent: true
             }
           ].map((s) => (
-            <div key={s.label} className="rounded-xl border border-brand-neutral/40 bg-white p-3">
+            <div key={s.label} className="rounded-xl bg-white shadow-ios-card p-3">
               <div className="text-[0.65rem] uppercase tracking-widest font-semibold text-brand-night-navy/50">
                 {s.label}
               </div>
@@ -203,7 +203,7 @@ export default async function TeamDetailPage({
               return (
                 <li
                   key={`${r.pledgeId}-${r.ruleId}`}
-                  className="rounded-xl border border-brand-neutral/40 bg-white p-3 flex items-center gap-3"
+                  className="rounded-xl bg-white shadow-ios-card p-3 flex items-center gap-3"
                 >
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/10 text-accent-dark">
                     <TriggerIcon type={r.triggerType} className="h-[1.15rem] w-[1.15rem]" />
@@ -393,7 +393,7 @@ function SeasonStatusBlock({
   return (
     <section
       aria-label={`Saison-Endstand ${saison}`}
-      className="rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5"
+      className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5"
     >
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
