@@ -82,7 +82,7 @@ export default async function FinanzenPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display font-black text-2xl md:text-3xl tracking-tight">Finanzen</h1>
+        <h1 className="font-display font-bold text-2xl md:text-3xl tracking-tight">Finanzen</h1>
         <p className="text-sm text-brand-night-navy/60 mt-1">
           Übersicht aller bestätigten Charges auf diese Mannschaft.
         </p>
@@ -93,7 +93,7 @@ export default async function FinanzenPage({
         <div className="text-xs uppercase tracking-wider font-semibold text-accent-dark">
           Eingenommen insgesamt
         </div>
-        <div className="font-display font-black text-4xl md:text-5xl tracking-tight text-brand-night-navy mt-1 tabular-nums">
+        <div className="font-display font-bold text-4xl md:text-5xl tracking-tight text-brand-night-navy mt-1 tabular-nums">
           {eur(totalCents)}
         </div>
         <div className="text-sm text-brand-night-navy/60 mt-1">
@@ -111,7 +111,7 @@ export default async function FinanzenPage({
           return (
             <section
               key={cat}
-              className="rounded-2xl border border-brand-neutral/30 bg-white p-4 md:p-5"
+              className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5"
             >
               <div className="flex items-baseline justify-between mb-3">
                 <h2 className="font-semibold text-sm uppercase tracking-wider text-brand-night-navy/70">
@@ -144,7 +144,7 @@ export default async function FinanzenPage({
 
       {/* Top Sponsoren */}
       {topSponsors.length > 0 && (
-        <section className="rounded-2xl border border-brand-neutral/30 bg-white p-4 md:p-5">
+        <section className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5">
           <h2 className="font-semibold text-sm uppercase tracking-wider text-brand-night-navy/70 mb-3">
             Top Sponsoren
           </h2>
@@ -179,7 +179,7 @@ export default async function FinanzenPage({
       />
 
       {totalCount === 0 && (
-        <div className="rounded-2xl border border-brand-neutral/30 bg-white p-8 text-center text-sm text-brand-night-navy/60">
+        <div className="rounded-2xl bg-white shadow-ios-card p-8 text-center text-sm text-brand-night-navy/60">
           Noch keine bestätigten Charges. Sobald die ersten Pacts ausgelöst werden, erscheinen sie hier.
         </div>
       )}

@@ -93,7 +93,7 @@ export function ApprovalRow({ data }: { data: ApprovalRowData }) {
   });
 
   return (
-    <div className="rounded-lg border border-brand-neutral/40 bg-white p-5">
+    <div className="rounded-lg bg-white shadow-ios-card p-5">
       <div className="flex items-baseline justify-between gap-3 mb-3">
         <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
           {data.clubName} · {data.teamName}
@@ -106,7 +106,7 @@ export function ApprovalRow({ data }: { data: ApprovalRowData }) {
           <MatchEventIcon type={data.eventType} subtype={data.eventSubtype} className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-display font-black text-lg tracking-tight text-brand-night-navy">
+          <div className="font-display font-bold text-lg tracking-tight text-brand-night-navy">
             {eventLabel(data.eventType, data.eventSubtype)}
             {data.minute !== null && (
               <span className="text-brand-night-navy/40 ml-2 font-mono text-sm">
@@ -122,7 +122,7 @@ export function ApprovalRow({ data }: { data: ApprovalRowData }) {
           </div>
         </div>
         <div className="text-right">
-          <div className="font-display font-black text-2xl tracking-tight text-accent tabular-nums">
+          <div className="font-display font-bold text-2xl tracking-tight text-accent tabular-nums">
             {eur(data.amountCents)}
           </div>
           <div className="text-xs text-brand-night-navy/50 mt-0.5">via {data.triggerType}</div>
@@ -146,7 +146,7 @@ export function ApprovalRow({ data }: { data: ApprovalRowData }) {
       <Dialog open={disputeOpen} onOpenChange={setDisputeOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="font-display font-black tracking-tight">
+            <DialogTitle className="font-display font-bold tracking-tight">
               Event bestreiten?
             </DialogTitle>
             <DialogDescription>

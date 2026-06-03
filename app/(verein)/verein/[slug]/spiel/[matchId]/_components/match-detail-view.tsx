@@ -121,7 +121,7 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
           {/* Score zuerst, groß und mittig — Teamnamen darunter, damit lange
               Namen nicht seitlich gequetscht werden müssen. */}
           <div className="flex flex-col items-center gap-3 text-center">
-            <div className="font-black text-5xl sm:text-6xl tracking-tight text-brand-night-navy tabular-nums">
+            <div className="font-bold text-5xl sm:text-6xl tracking-tight text-brand-night-navy tabular-nums">
               {match.ergebnisHeim ?? "—"}
               <span className="text-brand-night-navy/30 mx-2">:</span>
               {match.ergebnisGast ?? "—"}
@@ -173,7 +173,7 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
             {chargesData.byTrigger.map((t) => (
               <div
                 key={t.triggerType}
-                className="rounded-xl border border-brand-neutral/40 bg-white p-3 flex items-center gap-3"
+                className="rounded-xl bg-white shadow-ios-card p-3 flex items-center gap-3"
               >
                 <span className="text-2xl shrink-0">{t.emoji}</span>
                 <div className="flex-1 min-w-0">
@@ -189,7 +189,7 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
           </div>
 
           {/* Sponsor-Breakdown */}
-          <div className="rounded-2xl border border-brand-neutral/40 bg-white overflow-x-auto">
+          <div className="rounded-2xl bg-white shadow-ios-card overflow-x-auto">
             <table className="w-full min-w-[480px] text-sm">
               <thead className="bg-brand-off-white text-xs uppercase tracking-wider text-brand-night-navy/60">
                 <tr>

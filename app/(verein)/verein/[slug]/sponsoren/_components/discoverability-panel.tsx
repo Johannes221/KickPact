@@ -15,7 +15,7 @@ interface Team {
 export function DiscoverabilityPanel({ teams }: { teams: Team[] }) {
   return (
     <section>
-      <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+      <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
         Öffentliche Sichtbarkeit
       </h2>
       <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -65,7 +65,7 @@ function TeamRow({ team }: { team: Team }) {
   }
 
   return (
-    <li className="rounded-xl border border-brand-neutral/40 bg-white p-4">
+    <li className="rounded-xl bg-white shadow-ios-card p-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
           <div className="font-semibold text-sm md:text-base text-brand-night-navy">{team.name}</div>
@@ -82,7 +82,7 @@ function TeamRow({ team }: { team: Team }) {
                 placeholder="Kurze Beschreibung für das Discover-Profil (max 280 Zeichen)"
                 rows={2}
                 maxLength={280}
-                className="w-full rounded-lg border border-brand-neutral/40 bg-white px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                className="w-full rounded-lg bg-white shadow-ios-card px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
               />
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" variant="accent" disabled={isPending} onClick={handleSaveTagline}>

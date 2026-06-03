@@ -130,7 +130,7 @@ export function SponsorsManager({
 
   return (
     <section>
-      <h2 className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
+      <h2 className="font-display font-bold text-2xl tracking-tight text-brand-night-navy">
         Einladungslinks
       </h2>
       <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -139,7 +139,7 @@ export function SponsorsManager({
 
       <Card className="mt-5 border-brand-neutral/40">
         <CardHeader>
-          <CardTitle className="text-base font-display font-black tracking-tight">
+          <CardTitle className="text-base font-display font-bold tracking-tight">
             Neue Einladung erstellen
           </CardTitle>
         </CardHeader>
@@ -205,7 +205,7 @@ export function SponsorsManager({
           {invitations.map((i) => (
             <li
               key={i.id}
-              className="rounded-lg border border-brand-neutral/40 bg-white p-4 flex flex-wrap items-center justify-between gap-3"
+              className="rounded-lg bg-white shadow-ios-card p-4 flex flex-wrap items-center justify-between gap-3"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">

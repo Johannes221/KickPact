@@ -56,7 +56,7 @@ export async function AboPanel({
   return (
     <div className="mx-auto max-w-3xl space-y-5 md:space-y-8">
       <div>
-        <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
           Abo
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -114,7 +114,7 @@ export async function AboPanel({
 
       {/* Plan-Wahl (für Erstbucher oder Wechsel) — inkl. Cycle-Toggle */}
       <div>
-        <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy mb-1">
+        <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy mb-1">
           {sub ? "Plan wechseln" : "Plan wählen"}
         </h3>
         {sub ? (
@@ -158,7 +158,7 @@ function CurrentSubscriptionCard({
       : null;
 
   return (
-    <div className="rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5 space-y-3">
+    <div className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5 space-y-3">
       <div className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
         Aktueller Status
       </div>
@@ -228,7 +228,7 @@ function TrialEndLossFraming({
   if (!impact.hasData) {
     return (
       <div className="rounded-2xl border border-accent/30 bg-accent/5 p-4 md:p-5 space-y-2">
-        <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+        <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
           Hol das Meiste aus deinem Pro-Trial
         </h3>
         <p className="text-sm leading-relaxed text-brand-night-navy/75">
@@ -261,7 +261,7 @@ function TrialEndLossFraming({
 
   return (
     <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 md:p-5 space-y-3">
-      <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+      <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
         Wenn dein Trial endet
       </h3>
       <p className="text-sm leading-relaxed text-brand-night-navy/80">
@@ -318,7 +318,7 @@ function UpgradePathsCard({
 }) {
   return (
     <div className="rounded-2xl border border-brand-night-navy/15 bg-brand-off-white p-4 md:p-5 space-y-3">
-      <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+      <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
         Upgrade-Optionen
       </h3>
       {currentPlan === "basic" && (
@@ -337,7 +337,7 @@ function UpgradePathsCard({
         </div>
       )}
       {(currentPlan === "basic" || currentPlan === "pro") && (
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl border border-brand-neutral/40 bg-white p-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl bg-white shadow-ios-card p-3">
           <div className="text-sm text-brand-night-navy/80">
             <strong>Vereinslizenz</strong> · alle Mannschaften unter einer
             Lizenz · ab 3 Mannschaften günstiger als 3× Pro · Master-Admin +

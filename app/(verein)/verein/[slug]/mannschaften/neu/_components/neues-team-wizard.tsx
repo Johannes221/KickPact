@@ -138,7 +138,7 @@ export function NeuesTeamWizard({
               Lade Mannschaften…
             </div>
           ) : teams.length === 0 ? (
-            <div className="rounded-lg border border-brand-neutral/40 bg-white p-4 text-sm text-brand-night-navy/60">
+            <div className="rounded-lg bg-white shadow-ios-card p-4 text-sm text-brand-night-navy/60">
               Keine Mannschaften auf fußball.de gefunden.
             </div>
           ) : (
@@ -205,7 +205,7 @@ export function NeuesTeamWizard({
             <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
               Ausgewählte Mannschaft
             </div>
-            <div className="mt-1 font-display font-black text-xl tracking-tight text-brand-night-navy">
+            <div className="mt-1 font-display font-bold text-xl tracking-tight text-brand-night-navy">
               {selectedTeam.name}
             </div>
             <div className="text-xs text-brand-night-navy/60 mt-0.5">

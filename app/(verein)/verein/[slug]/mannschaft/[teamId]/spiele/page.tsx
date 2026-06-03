@@ -162,7 +162,7 @@ export default async function SpielePage({
       {/* Filter — auf Mobile eingeklappt (spart Platz), per <details> ohne JS.
           Standardmäßig offen, sobald mind. ein Filter aktiv ist. */}
       <details className="group" open={activeFilterCount > 0}>
-        <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl border border-brand-neutral/40 bg-white px-4 py-2.5 text-sm font-semibold text-brand-night-navy/80 transition-colors hover:border-accent/40 [&::-webkit-details-marker]:hidden">
+        <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl bg-white shadow-ios-card px-4 py-2.5 text-sm font-semibold text-brand-night-navy/80 transition-colors hover:border-accent/40 [&::-webkit-details-marker]:hidden">
           <svg
             className="h-4 w-4 shrink-0 text-brand-night-navy/50"
             viewBox="0 0 24 24"
@@ -229,11 +229,11 @@ export default async function SpielePage({
       <div className="text-xs text-brand-night-navy/50">{filtered.length} Spiele</div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-brand-neutral/30 bg-white p-8 text-center text-sm text-brand-night-navy/60">
+        <div className="rounded-2xl bg-white shadow-ios-card p-8 text-center text-sm text-brand-night-navy/60">
           Keine Spiele in diesem Filter.
         </div>
       ) : (
-        <div className="rounded-2xl border border-brand-neutral/30 bg-white overflow-hidden">
+        <div className="rounded-2xl bg-white shadow-ios-card overflow-hidden">
           <ul className="divide-y divide-brand-neutral/15">
             {filtered.map((m) => {
               const badge = m.isScheduled

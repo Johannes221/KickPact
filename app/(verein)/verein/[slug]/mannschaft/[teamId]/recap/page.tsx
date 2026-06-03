@@ -20,7 +20,7 @@ export default async function RecapPage({
   return (
     <div className="mx-auto max-w-2xl space-y-5 md:space-y-6">
       <div>
-        <h1 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+        <h1 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
           Saison-Recap
         </h1>
         <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -30,7 +30,7 @@ export default async function RecapPage({
       </div>
 
       <div className="flex flex-col items-center gap-4">
-        <div className="overflow-hidden rounded-2xl border border-brand-neutral/40 shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-brand-neutral/40 shadow-ios-card">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={src}

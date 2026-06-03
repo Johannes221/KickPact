@@ -123,7 +123,7 @@ export function TeamSubNav({
               className={cn(
                 "shrink-0 rounded-xl px-4 py-2 text-sm font-semibold transition-all whitespace-nowrap",
                 isActive
-                  ? "bg-white text-brand-night-navy shadow-sm ring-1 ring-brand-neutral/20"
+                  ? "bg-white text-brand-night-navy shadow-ios-card ring-1 ring-brand-neutral/20"
                   : "text-brand-night-navy/60 hover:text-brand-night-navy hover:bg-white/70"
               )}
             >

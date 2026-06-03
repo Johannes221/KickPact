@@ -63,8 +63,8 @@ function FamilieForm({ defaultValues }: { defaultValues: FamilieValues }) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-5">
-          <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+        <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-5">
+          <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
             Dein Profil
           </h3>
 
@@ -122,8 +122,8 @@ function BusinessForm({ defaultValues }: { defaultValues: BusinessValues }) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Stammdaten */}
-        <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-5">
-          <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+        <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-5">
+          <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
             Stammdaten
           </h3>
 
@@ -157,8 +157,8 @@ function BusinessForm({ defaultValues }: { defaultValues: BusinessValues }) {
         </section>
 
         {/* Adresse */}
-        <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-5">
-          <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+        <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-5">
+          <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
             Rechnungsadresse
           </h3>
           <p className="text-xs text-brand-night-navy/60 -mt-2">
@@ -211,8 +211,8 @@ function BusinessForm({ defaultValues }: { defaultValues: BusinessValues }) {
         </section>
 
         {/* Steuer */}
-        <section className="rounded-2xl border border-brand-neutral/40 bg-white p-5 md:p-6 space-y-5">
-          <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+        <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-5">
+          <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
             Steuer
           </h3>
 

@@ -43,7 +43,7 @@ export default async function KontoSupportDetailPage({
           <CategoryBadge category={ticket.category} />
           <ContextBadge contextType={ticket.contextType} />
         </div>
-        <h1 className="font-display font-black text-xl md:text-3xl tracking-tight text-brand-night-navy">
+        <h1 className="font-display font-bold text-xl md:text-3xl tracking-tight text-brand-night-navy">
           {ticket.subject}
         </h1>
         <p className="text-xs text-brand-night-navy/50">

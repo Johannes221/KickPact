@@ -70,10 +70,10 @@ export default async function LoginPage({
               </Suspense>
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-brand-neutral/40" />
+                  <span className="w-full border-t border-ios-separator" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase tracking-wider">
-                  <span className="bg-white px-2 text-brand-night-navy/45">oder per Mail</span>
+                <div className="relative flex justify-center text-[12px] font-medium uppercase tracking-[0.08em]">
+                  <span className="bg-white px-3 text-ios-label-tertiary">oder per Mail</span>
                 </div>
               </div>
             </>
@@ -85,7 +85,7 @@ export default async function LoginPage({
           {/* Registrieren — eigener, klar sichtbarer Weg statt versteckter Link. */}
           <Link
             href="/signup"
-            className="mt-6 flex items-center justify-between gap-3 rounded-xl border border-brand-neutral/40 bg-brand-off-white/60 px-4 py-3 transition-colors active:bg-brand-off-white"
+            className="press mt-6 flex items-center justify-between gap-3 rounded-xl bg-ios-fill-tertiary px-4 py-3.5"
           >
             <span className="text-sm text-brand-night-navy/70">
               Noch kein Account?{" "}

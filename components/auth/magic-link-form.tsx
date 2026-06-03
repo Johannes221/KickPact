@@ -94,7 +94,7 @@ export function MagicLinkForm({
             </FormItem>
           )}
         />
-        <Button type="submit" variant="accent" className="w-full" disabled={pending}>
+        <Button type="submit" variant="accent" size="lg" className="press w-full" disabled={pending}>
           {pending ? "Sende Link..." : "Magic Link senden"}
         </Button>
       </form>

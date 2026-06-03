@@ -55,7 +55,7 @@ export function TeamDiscoverCard({
 
   return (
     <>
-      <article className="flex flex-col overflow-hidden rounded-2xl border border-brand-neutral/30 bg-white shadow-sm hover:shadow-md transition-shadow">
+      <article className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-ios-card shadow-ios-card hover:shadow-ios-elevated transition-shadow">
         {/* Cover */}
         <div className="relative h-36 overflow-hidden bg-brand-night-navy">
           {team.coverUrl ? (
@@ -76,7 +76,7 @@ export function TeamDiscoverCard({
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-brand-night-navy via-brand-night-navy/40 to-transparent" />
           {/* Logo badge */}
-          <div className="absolute bottom-3 left-3 flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-accent text-base font-black text-brand-night-navy shadow-lg">
+          <div className="absolute bottom-3 left-3 flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-accent text-base font-bold text-brand-night-navy shadow-lg">
             {team.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -92,7 +92,7 @@ export function TeamDiscoverCard({
 
         {/* Body */}
         <div className="flex flex-1 flex-col gap-1.5 px-4 py-3">
-          <h3 className="font-display text-base font-black tracking-tight text-brand-night-navy leading-tight">
+          <h3 className="font-display text-base font-bold tracking-tight text-brand-night-navy leading-tight">
             {team.teamName}
           </h3>
           {meta && (
@@ -170,7 +170,7 @@ export function TeamDiscoverCard({
                 <span className="block text-[0.65rem] uppercase tracking-widest font-semibold text-brand-night-navy/50">
                   Sponsoring anfragen
                 </span>
-                <span className="block font-display font-black text-xl tracking-tight text-brand-night-navy">
+                <span className="block font-display font-bold text-xl tracking-tight text-brand-night-navy">
                   {team.clubName} · {team.teamName}
                 </span>
               </SheetTitle>
@@ -202,7 +202,7 @@ export function TeamDiscoverCard({
                     placeholder="Wer du bist, warum du unterstützen willst…"
                     rows={4}
                     maxLength={500}
-                    className="mt-1.5 w-full rounded-lg border border-brand-neutral/40 bg-white px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                    className="mt-1.5 w-full rounded-lg bg-white shadow-ios-card px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
                 </label>
                 <div className="flex gap-2">

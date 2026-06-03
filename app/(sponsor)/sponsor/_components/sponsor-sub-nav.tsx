@@ -60,7 +60,7 @@ export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
               className={cn(
                 "relative shrink-0 rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors whitespace-nowrap",
                 isActive
-                  ? "bg-white text-brand-night-navy shadow-sm"
+                  ? "bg-white text-brand-night-navy shadow-ios-card"
                   : "text-brand-night-navy/50 hover:text-brand-night-navy hover:bg-white/60"
               )}
             >

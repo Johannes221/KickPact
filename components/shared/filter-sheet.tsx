@@ -42,7 +42,7 @@ export function FilterSheet({
         <button
           type="button"
           className={cn(
-            "inline-flex items-center gap-2 rounded-full border border-brand-neutral/40 bg-white px-3.5 py-2 text-sm font-semibold text-brand-night-navy",
+            "inline-flex items-center gap-2 rounded-full bg-white shadow-ios-card px-3.5 py-2 text-sm font-semibold text-brand-night-navy",
             triggerClassName
           )}
         >

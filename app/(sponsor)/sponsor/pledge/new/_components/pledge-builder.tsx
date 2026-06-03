@@ -169,7 +169,7 @@ export function PledgeBuilder() {
         {step === 1 && (
           <section className="space-y-6">
             <div>
-              <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+              <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
                 Welche Ereignisse sollen zählen?
               </h2>
               <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -231,7 +231,7 @@ export function PledgeBuilder() {
         {step === 2 && (
           <section className="space-y-6">
             <div>
-              <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+              <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
                 Wie viel pro Ereignis?
               </h2>
               <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -246,7 +246,7 @@ export function PledgeBuilder() {
                 return (
                   <div
                     key={field.id}
-                    className="flex flex-wrap items-end gap-3 rounded-xl border border-brand-neutral/40 bg-white p-4"
+                    className="flex flex-wrap items-end gap-3 rounded-xl bg-white shadow-ios-card p-4"
                   >
                     <div className="flex-1 min-w-[180px]">
                       <div className="flex items-center gap-1.5 text-sm font-semibold text-brand-night-navy">
@@ -561,7 +561,7 @@ export function PledgeBuilder() {
         {step === 3 && (
           <section className="space-y-6">
             <div>
-              <h2 className="font-display font-black text-xl md:text-2xl tracking-tight text-brand-night-navy">
+              <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
                 Alles klar?
               </h2>
               <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -631,7 +631,7 @@ export function PledgeBuilder() {
 
             <Card className="border-accent/40 bg-accent/5">
               <CardHeader>
-                <CardTitle className="font-display font-black text-lg tracking-tight text-brand-night-navy">
+                <CardTitle className="font-display font-bold text-lg tracking-tight text-brand-night-navy">
                   💰 Worst-Case-Hochrechnung
                 </CardTitle>
               </CardHeader>
@@ -641,7 +641,7 @@ export function PledgeBuilder() {
                     <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
                       Pro Saison
                     </div>
-                    <div className="mt-1 font-display font-black text-3xl tracking-tight text-accent">
+                    <div className="mt-1 font-display font-bold text-3xl tracking-tight text-accent">
                       {watchedMonthly
                         ? `≤ ${Math.min(worstCasePerSaison, watchedMonthly * 9)} €`
                         : `≈ ${worstCasePerSaison} €`}
@@ -651,7 +651,7 @@ export function PledgeBuilder() {
                     <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
                       Pro Monat (geschätzt)
                     </div>
-                    <div className="mt-1 font-display font-black text-3xl tracking-tight text-brand-night-navy">
+                    <div className="mt-1 font-display font-bold text-3xl tracking-tight text-brand-night-navy">
                       {watchedMonthly ? `≤ ${watchedMonthly} €` : `≈ ${worstCasePerMonth} €`}
                     </div>
                   </div>

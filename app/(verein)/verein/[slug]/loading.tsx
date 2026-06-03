@@ -13,7 +13,7 @@ export default function ClubDashboardLoading() {
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className="rounded-lg border border-brand-neutral/40 bg-white p-6"
+            className="rounded-lg bg-white shadow-ios-card p-6"
           >
             <Skeleton className="h-3 w-20" />
             <Skeleton className="h-7 md:h-9 w-24 mt-3" />
@@ -25,13 +25,13 @@ export default function ClubDashboardLoading() {
       <section className="grid gap-4 md:gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-3">
           <Skeleton className="h-7 w-72" />
-          <div className="rounded-2xl border border-brand-neutral/40 bg-white p-4 md:p-5">
+          <div className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5">
             <Skeleton className="h-56 md:h-64 w-full" />
           </div>
         </div>
         <div className="space-y-3">
           <Skeleton className="h-7 w-40" />
-          <div className="rounded-2xl border border-brand-neutral/40 bg-white p-3 space-y-3">
+          <div className="rounded-2xl bg-white shadow-ios-card p-3 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3">
                 <Skeleton className="h-7 w-7 rounded-full" />
@@ -54,7 +54,7 @@ export default function ClubDashboardLoading() {
             <Skeleton key={i} className="h-10 w-full" />
           ))}
         </div>
-        <div className="rounded-2xl border border-brand-neutral/40 bg-white p-4 space-y-3">
+        <div className="rounded-2xl bg-white shadow-ios-card p-4 space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3">
               <Skeleton className="h-4 flex-1" />

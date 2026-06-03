@@ -201,7 +201,7 @@ export default async function VereinLayout({
                 "rounded-full px-3 py-1 text-xs font-semibold transition-colors " +
                 (c.slug === slug
                   ? "bg-brand-night-navy text-white"
-                  : "border border-brand-neutral/40 bg-white text-brand-night-navy/60 hover:text-brand-night-navy")
+                  : "bg-white shadow-ios-card text-brand-night-navy/60 hover:text-brand-night-navy")
               }
             >
               {c.name}

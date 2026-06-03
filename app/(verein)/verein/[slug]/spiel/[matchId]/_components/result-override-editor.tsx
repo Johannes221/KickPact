@@ -109,7 +109,7 @@ export function ResultOverrideEditor({
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-display font-black text-xl tracking-tight">
+          <DialogTitle className="font-display font-bold text-xl tracking-tight">
             Ergebnis manuell korrigieren
           </DialogTitle>
           <DialogDescription className="space-y-2 pt-2">

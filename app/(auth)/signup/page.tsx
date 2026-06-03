@@ -142,29 +142,29 @@ export default async function SignupPage({
     return (
       <main className="mx-auto max-w-4xl px-5 md:px-6 py-12 md:py-16">
         <div className="mb-8 md:mb-10 text-center">
-          <h1 className="font-display font-black text-3xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
+          <h1 className="font-display font-bold text-[34px] leading-tight md:text-4xl lg:text-5xl tracking-[-0.02em] text-brand-night-navy">
             Bei KickPact starten
           </h1>
-          <p className="mt-2 md:mt-3 text-sm md:text-base text-brand-night-navy/60 max-w-xl mx-auto">
+          <p className="mt-2 md:mt-3 text-[15px] md:text-base text-ios-label-secondary max-w-xl mx-auto">
             Wähle, wie du KickPact nutzen willst. Du kannst später jederzeit eine weitere Rolle
             hinzufügen.
           </p>
         </div>
 
-        <div className="grid gap-4 md:gap-5 md:grid-cols-3">
+        <div className="grid gap-3 md:gap-5 md:grid-cols-3">
           {(["mannschaft", "verein", "sponsor"] as const).map((r) => {
             const meta = ROLE_META[r];
             return (
               <Link
                 key={r}
                 href={`/signup?role=${r}&from=chooser`}
-                className="group flex flex-col gap-4 rounded-2xl border border-brand-neutral/40 bg-white p-6 transition-all hover:border-accent hover:shadow-md"
+                className="press group flex flex-col gap-4 rounded-2xl bg-ios-card p-5 shadow-ios-card transition-shadow hover:shadow-ios-elevated"
               >
-                <span className="grid h-14 w-14 place-items-center rounded-2xl bg-accent/10 text-accent-dark">
-                  <meta.icon className="h-7 w-7" aria-hidden />
+                <span className="grid h-12 w-12 place-items-center rounded-xl bg-accent/10 text-accent-dark">
+                  <meta.icon className="h-6 w-6" aria-hidden />
                 </span>
                 <div>
-                  <h2 className="font-display font-black text-xl tracking-tight text-brand-night-navy">
+                  <h2 className="font-display font-bold text-xl tracking-[-0.01em] text-brand-night-navy">
                     {meta.title}
                   </h2>
                   <p className="mt-2 text-sm text-brand-night-navy/60 leading-relaxed">
@@ -202,24 +202,24 @@ export default async function SignupPage({
   return (
     <main className="mx-auto max-w-md px-6 py-12 md:py-16">
       {fromChooser && (
-        <div className="mb-2">
+        <div className="mb-3">
           <Link
             href="/signup"
-            className="text-xs text-brand-night-navy/50 hover:text-brand-night-navy"
+            className="press -ml-1 inline-flex items-center text-[15px] font-medium text-accent-dark"
           >
-            ← Andere Rolle wählen
+            ‹ Andere Rolle wählen
           </Link>
         </div>
       )}
       <Card>
         <CardHeader>
-          <span className="mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-accent/10 text-accent-dark">
+          <span className="mb-2 grid h-12 w-12 place-items-center rounded-xl bg-accent/10 text-accent-dark">
             <meta.icon className="h-6 w-6" aria-hidden />
           </span>
-          <CardTitle className="font-display text-2xl md:text-3xl tracking-wide">
+          <CardTitle className="font-display text-[26px] md:text-[28px] font-bold tracking-[-0.01em] text-brand-night-navy">
             {meta.title} registrieren
           </CardTitle>
-          <CardDescription>{meta.tagline}</CardDescription>
+          <CardDescription className="text-[15px] text-ios-label-secondary">{meta.tagline}</CardDescription>
         </CardHeader>
         <CardContent>
           {anyOauth && (
@@ -229,10 +229,10 @@ export default async function SignupPage({
               </Suspense>
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-neutral-200" />
+                  <span className="w-full border-t border-ios-separator" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase tracking-wider">
-                  <span className="bg-white px-2 text-neutral-500">oder per Mail</span>
+                <div className="relative flex justify-center text-[12px] font-medium uppercase tracking-[0.08em]">
+                  <span className="bg-white px-3 text-ios-label-tertiary">oder per Mail</span>
                 </div>
               </div>
             </>
@@ -240,9 +240,9 @@ export default async function SignupPage({
           <Suspense fallback={<div className="h-32" />}>
             <MagicLinkForm mode="signup" role={role} />
           </Suspense>
-          <p className="mt-6 text-sm text-neutral-500">
+          <p className="mt-6 text-center text-[15px] text-ios-label-secondary">
             Schon dabei?{" "}
-            <Link href="/login" className="font-medium text-accent hover:underline">
+            <Link href="/login" className="font-medium text-accent-dark hover:underline">
               Login
             </Link>
           </p>
@@ -265,10 +265,10 @@ function AuthenticatedRoleChooser({ addMode = false }: { addMode?: boolean }) {
         <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.65rem] md:text-xs font-bold uppercase tracking-[0.15em] text-accent-dark">
           {addMode ? "Weitere Rolle" : "Account vorhanden"}
         </span>
-        <h1 className="mt-3 font-display font-black text-3xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
+        <h1 className="mt-3 font-display font-bold text-[34px] leading-tight md:text-4xl lg:text-5xl tracking-[-0.02em] text-brand-night-navy">
           {addMode ? "Was willst du hinzufügen?" : "Wie willst du starten?"}
         </h1>
-        <p className="mt-2 md:mt-3 text-sm md:text-base text-brand-night-navy/60 max-w-xl mx-auto">
+        <p className="mt-2 md:mt-3 text-[15px] md:text-base text-ios-label-secondary max-w-xl mx-auto">
           {addMode
             ? "Lege eine weitere Mannschaft, einen Verein oder eine Sponsor-Rolle an. Du wechselst danach jederzeit über das Rollen-Menü."
             : "Du bist eingeloggt, hast aber noch keine Rolle gewählt. Wähle eine — du kannst später jederzeit eine weitere hinzufügen."}
@@ -282,13 +282,13 @@ function AuthenticatedRoleChooser({ addMode = false }: { addMode?: boolean }) {
             <Link
               key={r}
               href={ADD_ROLE_HREF[r]}
-              className="group flex flex-col gap-4 rounded-2xl border border-brand-neutral/40 bg-white p-6 transition-all hover:border-accent hover:shadow-md"
+              className="press group flex flex-col gap-4 rounded-2xl bg-ios-card p-5 shadow-ios-card transition-shadow hover:shadow-ios-elevated"
             >
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-accent/10 text-accent-dark">
-                <meta.icon className="h-7 w-7" aria-hidden />
+              <span className="grid h-12 w-12 place-items-center rounded-xl bg-accent/10 text-accent-dark">
+                <meta.icon className="h-6 w-6" aria-hidden />
               </span>
               <div>
-                <h2 className="font-display font-black text-xl tracking-tight text-brand-night-navy">
+                <h2 className="font-display font-bold text-xl tracking-[-0.01em] text-brand-night-navy">
                   {meta.title}
                 </h2>
                 <p className="mt-2 text-sm text-brand-night-navy/60 leading-relaxed">

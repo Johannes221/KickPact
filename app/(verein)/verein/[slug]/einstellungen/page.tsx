@@ -25,7 +25,7 @@ export default async function EinstellungenPage({
   return (
     <div className="max-w-2xl space-y-10">
       <div>
-        <h2 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
+        <h2 className="font-display font-bold text-2xl md:text-3xl tracking-tight text-brand-night-navy">
           Einstellungen
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">
@@ -49,7 +49,7 @@ export default async function EinstellungenPage({
 
       {/* Abo-Bereich */}
       <section className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-5 md:p-6">
-        <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy">
+        <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
           Abo &amp; Lizenzen
         </h3>
         <p className="mt-2 text-sm text-brand-night-navy/70">
