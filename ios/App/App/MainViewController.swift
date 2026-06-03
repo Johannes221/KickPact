@@ -1,4 +1,5 @@
 import UIKit
+import WebKit
 import Capacitor
 
 /// WebView-Host mit Brand-Hintergrund.
@@ -18,6 +19,10 @@ class MainViewController: CAPBridgeViewController {
                                     green: 0x1A / 255.0,
                                     blue: 0x2E / 255.0,
                                     alpha: 1.0)
+
+    // Steuert die Status-Bar: solange der Navy-Ladescreen sichtbar ist, helle
+    // Icons; sobald das helle App-UI gerendert hat, dunkle Icons.
+    private var webContentLoaded = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -54,5 +59,31 @@ class MainViewController: CAPBridgeViewController {
         webView.isOpaque = false
         webView.backgroundColor = .clear
         webView.scrollView.backgroundColor = .clear
+
+        // Ladefortschritt beobachten, um beim Erscheinen des hellen App-UIs die
+        // Status-Bar von hell (auf Navy) auf dunkel (auf Off-White) umzuschalten.
+        webView.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: .new, context: nil)
+    }
+
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?,
+                               change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
+        guard keyPath == #keyPath(WKWebView.estimatedProgress),
+              let progress = webView?.estimatedProgress, progress >= 1.0,
+              !webContentLoaded else {
+            return
+        }
+        webContentLoaded = true
+        setNeedsStatusBarAppearanceUpdate()
+    }
+
+    // Das App-UI ist durchgehend hell (Off-White), darum dunkle Status-Bar-Icons,
+    // unabhängig vom System-Dark-Mode. Während des Navy-Ladescreens (bevor das UI
+    // gerendert hat) helle Icons, damit sie auf dem dunklen Grund lesbar bleiben.
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return webContentLoaded ? .darkContent : .lightContent
+    }
+
+    deinit {
+        webView?.removeObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress))
     }
 }
