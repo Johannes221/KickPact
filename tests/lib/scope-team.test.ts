@@ -61,6 +61,24 @@ async function grantVereinsLizenz(clubId: string, teamId: string) {
   });
 }
 
+/**
+ * Gibt dem Team eine EIGENE basic/pro-Einzellizenz ohne Vereinsbündelung →
+ * autark. Voraussetzung dafür, dass der Club-Admin-Durchgriff BLOCKIERT wird.
+ */
+async function grantAutarkLizenz(
+  clubId: string,
+  teamId: string,
+  plan: "basic" | "pro" = "pro"
+) {
+  await db.insert(subscriptions).values({ clubId }).onConflictDoNothing();
+  await db.insert(teamLicenses).values({
+    subscriptionClubId: clubId,
+    teamId,
+    plan,
+    status: "active"
+  });
+}
+
 describe("resolveTeamAccess", () => {
   beforeEach(async () => {
     await resetTestDb();
@@ -116,18 +134,37 @@ describe("resolveTeamAccess", () => {
     expect(r.granted).toBe(false);
   });
 
-  it("denies club-admin durchgriff on an AUTARK team (no Vereinslizenz)", async () => {
+  it("denies club-admin durchgriff on an AUTARK team (own pro license, no parent)", async () => {
     const { userId, clubId, teamId } = await seed();
     await db.insert(clubMemberships).values({ userId, clubId, role: "admin" });
-    // Keine Vereinslizenz → autark → kein Durchgriff.
+    // Eigene pro-Einzellizenz ohne Parent → autark → kein Durchgriff.
+    await grantAutarkLizenz(clubId, teamId, "pro");
     const r = await resolveTeamAccess(userId, teamId, "viewer");
     expect(r.granted).toBe(false);
+  });
+
+  it("grants club-admin durchgriff on a LICENSELESS container team (loop regression)", async () => {
+    // Kern-Regression: ein lizenzloses Team im Vereins-Container ist NICHT
+    // autark. Würde der Durchgriff hier verweigert, routet die Identity-Logik
+    // den Club-Admin (primary_role = club-team-<teamId>) in genau dieses Team,
+    // der Page-Guard wirft ihn auf /dashboard zurück → Endlos-Redirect.
+    const { userId, clubId, teamId } = await seed();
+    await db.insert(clubMemberships).values({ userId, clubId, role: "admin" });
+    // KEINE Lizenz-Zeile für teamId (seed legt nur Teams an).
+    const r = await resolveTeamAccess(userId, teamId, "viewer");
+    expect(r.granted).toBe(true);
+    if (!r.granted) return;
+    expect(r.scope).toBe("club");
+    expect(r.role).toBe("admin");
   });
 
   it("grants autark-team access via direct team-membership despite gating", async () => {
     const { userId, clubId, teamId } = await seed();
     await db.insert(clubMemberships).values({ userId, clubId, role: "admin" });
     await db.insert(teamMemberships).values({ userId, teamId, role: "admin" });
+    // Eigene pro-Einzellizenz → autark → Club-Durchgriff blockiert → der Zugriff
+    // MUSS aus der direkten team_membership kommen (scope=team).
+    await grantAutarkLizenz(clubId, teamId, "pro");
     const r = await resolveTeamAccess(userId, teamId, "admin");
     expect(r.granted).toBe(true);
     if (!r.granted) return;
