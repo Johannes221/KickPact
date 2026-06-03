@@ -30,7 +30,7 @@ export function SegmentedControl({
 }: SegmentedControlProps) {
   return (
     <div
-      role="tablist"
+      role="radiogroup"
       aria-label={ariaLabel}
       className={cn(
         "inline-flex w-full rounded-full bg-ios-fill-tertiary p-1",
@@ -43,8 +43,8 @@ export function SegmentedControl({
           <button
             key={option.value}
             type="button"
-            role="tab"
-            aria-selected={active}
+            role="radio"
+            aria-checked={active}
             onClick={() => onValueChange(option.value)}
             className={cn(
               "flex-1 whitespace-nowrap rounded-full font-semibold transition-colors",

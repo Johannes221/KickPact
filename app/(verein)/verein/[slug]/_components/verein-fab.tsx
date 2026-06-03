@@ -77,7 +77,7 @@ export function VereinFAB({ slug, clubRole }: VereinFABProps) {
 
       {/* Bottom sheet with action links */}
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="bottom" className="rounded-t-2xl pb-safe-bottom">
+        <SheetContent side="bottom" className="rounded-t-2xl pb-safe">
           <SheetHeader className="mb-5 text-left">
             <SheetTitle className="font-display font-bold text-lg tracking-tight text-brand-night-navy">
               Was möchtest du tun?

@@ -88,14 +88,14 @@ export function MagicLinkForm({
             <FormItem>
               <FormLabel>E-Mail</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="du@beispiel.de" autoComplete="email" {...field} />
+                <Input type="email" inputMode="email" spellCheck={false} placeholder="du@beispiel.de" autoComplete="email" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <Button type="submit" variant="accent" size="lg" className="press w-full" disabled={pending}>
-          {pending ? "Sende Link..." : "Magic Link senden"}
+          {pending ? "Sende Link…" : "Magic Link senden"}
         </Button>
       </form>
     </Form>
