@@ -127,14 +127,14 @@ export default async function BilanzPage({
       <PageHeader
         className="md:hidden"
         title="Bilanz"
-        subtitle="Übersicht deiner Charges nach Zeitraum, Verein, Mannschaft und Trigger."
+        subtitle="Übersicht deiner Beiträge nach Zeitraum, Verein, Mannschaft und Ereignis."
       />
       <div className="hidden md:block">
         <h1 className="text-2xl md:text-4xl font-bold text-brand-night-navy">
           Bilanz
         </h1>
         <p className="mt-1.5 text-sm md:text-base text-brand-night-navy/60">
-          Übersicht deiner Charges nach Zeitraum, Verein, Mannschaft und Trigger.
+          Übersicht deiner Beiträge nach Zeitraum, Verein, Mannschaft und Ereignis.
         </p>
       </div>
 

@@ -40,7 +40,7 @@ export function PledgeStatusToggle({
     startTransition(async () => {
       const res = await setPledgeStatus(pledgeId, "ended");
       if (res.error) toast.error(res.error);
-      else toast.success("Wette beendet.");
+      else toast.success("Pact beendet.");
     });
   }
 
@@ -62,18 +62,18 @@ export function PledgeStatusToggle({
           onClick={() => setShowEndDialog(true)}
           className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-400"
         >
-          Wette beenden
+          Pact beenden
         </Button>
       </div>
 
       <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Wette endgültig beenden?</DialogTitle>
+            <DialogTitle>Pact endgültig beenden?</DialogTitle>
             <DialogDescription>
-              Die Wette wird sofort beendet — das ist nicht rückgängig zu machen.
-              Bereits gebuchte Charges bleiben erhalten, aber es werden keine
-              neuen Trigger-Events mehr ausgelöst.
+              Der Pact wird sofort beendet — das ist nicht rückgängig zu machen.
+              Bereits gebuchte Beiträge bleiben erhalten, aber es werden keine
+              neuen Ereignisse mehr ausgelöst.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
@@ -89,7 +89,7 @@ export function PledgeStatusToggle({
               onClick={handleEnd}
               disabled={pending}
             >
-              {pending ? "…" : "Ja, Wette beenden"}
+              {pending ? "…" : "Ja, Pact beenden"}
             </Button>
           </DialogFooter>
         </DialogContent>

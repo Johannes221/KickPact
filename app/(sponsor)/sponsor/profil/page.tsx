@@ -7,7 +7,7 @@ import { SettingsButton, type SettingsNavItem } from "@/components/shared/settin
 
 const SPONSOR_SETTINGS: SettingsNavItem[] = [
   { label: "Bilanz", href: "/sponsor/bilanz", icon: "trending" },
-  { label: "Charges", href: "/sponsor/charges", icon: "chart" },
+  { label: "Beiträge", href: "/sponsor/charges", icon: "chart" },
   { label: "Rechnungen", href: "/sponsor/rechnungen", icon: "file" }
 ];
 

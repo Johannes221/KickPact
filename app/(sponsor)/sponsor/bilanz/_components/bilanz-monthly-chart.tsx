@@ -36,7 +36,7 @@ export function BilanzMonthlyChart({ data, title = "Monatlicher Verlauf" }: Prop
   if (data.length === 0 || data.every((d) => d.totalCents === 0)) {
     return (
       <div className="rounded-2xl bg-white shadow-ios-card p-8 text-center text-sm text-brand-night-navy/60">
-        Noch keine Charges im gewählten Zeitraum.
+        Noch keine Beiträge im gewählten Zeitraum.
       </div>
     );
   }
@@ -74,7 +74,7 @@ export function BilanzMonthlyChart({ data, title = "Monatlicher Verlauf" }: Prop
                 border: "1px solid #e5e7eb",
                 fontSize: 12
               }}
-              formatter={(value) => [eur(Number(value) || 0), "Charges"]}
+              formatter={(value) => [eur(Number(value) || 0), "Beiträge"]}
             />
             <Bar dataKey="totalCents" fill="#01C457" radius={[6, 6, 0, 0]} />
           </BarChart>

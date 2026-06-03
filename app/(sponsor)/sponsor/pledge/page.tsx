@@ -5,7 +5,7 @@ import { listPledgesForSponsor } from "@/lib/db/queries/pledges";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/page-header";
 
-export const metadata = { title: "Meine Wetten · KickPact" };
+export const metadata = { title: "Meine Pacts · KickPact" };
 
 function eur(cents: number) {
   return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
@@ -21,15 +21,15 @@ export default async function PledgeListPage() {
     <div className="mx-auto max-w-3xl">
       <PageHeader
         className="md:hidden"
-        title="Meine Wetten"
-        subtitle="Hier siehst du alle deine aktiven und vergangenen Sponsoring-Versprechen."
+        title="Meine Pacts"
+        subtitle="Hier siehst du alle deine aktiven und vergangenen Pacts."
       />
       <div className="hidden md:block">
         <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-brand-night-navy">
-          Meine <span className="text-accent">Wetten</span>
+          Meine <span className="text-accent">Pacts</span>
         </h1>
         <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60 max-w-2xl">
-          Hier siehst du alle deine aktiven und vergangenen Sponsoring-Versprechen.
+          Hier siehst du alle deine aktiven und vergangenen Pacts.
         </p>
       </div>
 
@@ -37,9 +37,9 @@ export default async function PledgeListPage() {
         {myPledges.length === 0 ? (
           <Card className="border-brand-neutral/40">
             <CardContent className="p-6 text-center text-brand-night-navy/60 text-sm">
-              <p className="font-semibold text-brand-night-navy">Noch keine Wetten.</p>
+              <p className="font-semibold text-brand-night-navy">Noch keine Pacts.</p>
               <p className="mt-1">
-                Du brauchst einen Einladungslink deines Vereins, um eine Wette einzurichten.
+                Du brauchst einen Einladungslink deines Vereins, um einen Pact einzurichten.
                 Frag deinen Ansprechpartner im Verein nach dem Link.
               </p>
             </CardContent>
@@ -73,9 +73,9 @@ export default async function PledgeListPage() {
       </div>
 
       <div className="mt-8 rounded-lg border border-brand-neutral/40 bg-brand-off-white p-4 text-sm text-brand-night-navy/60">
-        <strong className="text-brand-night-navy">Neue Wette einrichten?</strong>
+        <strong className="text-brand-night-navy">Neuen Pact einrichten?</strong>
         <p className="mt-1">
-          Wetten werden über den Einladungslink eines Vereins erstellt. Bitte deinen
+          Pacts werden über den Einladungslink eines Vereins erstellt. Bitte deinen
           Ansprechpartner im Verein, dir den Link zu schicken.
         </p>
       </div>

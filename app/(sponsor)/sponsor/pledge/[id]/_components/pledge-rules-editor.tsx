@@ -165,7 +165,7 @@ function RuleRow({
         params
       });
       if (res.error) { toast.error(res.error); return; }
-      toast.success("Wette gespeichert.");
+      toast.success("Regel gespeichert.");
       setEditing(false);
       router.refresh();
     });
@@ -175,7 +175,7 @@ function RuleRow({
     start(async () => {
       const res = await deletePledgeRule(rule.id);
       if (res.error) { toast.error(res.error); return; }
-      toast.success("Wette gelöscht.");
+      toast.success("Regel gelöscht.");
       router.refresh();
     });
   }
@@ -261,7 +261,7 @@ function AddBet({
     .filter((t) => !existingTypes.includes(t));
 
   function add() {
-    if (!triggerType) { toast.error("Wett-Typ wählen."); return; }
+    if (!triggerType) { toast.error("Regel-Typ wählen."); return; }
     const euros = parseFloat(amountEur.replace(",", "."));
     if (isNaN(euros) || euros < 0.5) { toast.error("Betrag muss mindestens 0,50 € sein."); return; }
     start(async () => {
@@ -273,7 +273,7 @@ function AddBet({
         params
       });
       if (res.error) { toast.error(res.error); return; }
-      toast.success("Wette hinzugefügt.");
+      toast.success("Regel hinzugefügt.");
       setOpen(false);
       setTriggerType(""); setAmountEur("5"); setCapCents(null); setCapPeriod(null); setParams({});
       router.refresh();
@@ -283,7 +283,7 @@ function AddBet({
   if (!open) {
     return (
       <Button variant="outline" className="w-full" onClick={() => setOpen(true)}>
-        <Plus className="h-4 w-4 mr-1.5" /> Wette hinzufügen
+        <Plus className="h-4 w-4 mr-1.5" /> Regel hinzufügen
       </Button>
     );
   }
