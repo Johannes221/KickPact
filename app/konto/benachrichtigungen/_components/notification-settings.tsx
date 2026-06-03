@@ -6,6 +6,7 @@ import {
   updateNotificationSettings,
   type NotificationSettingsInput
 } from "@/lib/actions/notifications";
+import { PushEnableCard } from "./push-enable-card";
 
 type Key = keyof NotificationSettingsInput;
 
@@ -62,6 +63,9 @@ export function NotificationSettings({ initial }: { initial: NotificationSetting
           Browser siehst du alle Ereignisse weiterhin in der Liste unten.
         </p>
       </div>
+
+      {/* Rationale-first Freischaltung (nur in der iOS-App sichtbar). */}
+      <PushEnableCard />
 
       <ul className="divide-y divide-brand-neutral/30">
         {ROWS.map((row) => (
