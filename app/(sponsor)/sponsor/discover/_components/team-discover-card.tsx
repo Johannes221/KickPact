@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { createSponsorInquiry } from "@/lib/actions/sponsor-inquiries";
 import { TeamCrest } from "@/components/shared/team-crest";
+import { isPlausibleLeague } from "@/lib/utils/league";
 import type {
   DiscoverableTeam,
   SponsorTeamState
@@ -45,7 +46,10 @@ export function TeamDiscoverCard({
     }
   }
 
-  const metaParts = [team.clubName, team.league, team.clubOrt].filter(Boolean);
+  // Liga nur zeigen, wenn plausibel — alte Crawls speicherten teils den
+  // Wochentag ("So") als Liga; bis zum nächsten Crawl ausblenden.
+  const league = isPlausibleLeague(team.league) ? team.league : null;
+  const metaParts = [team.clubName, league, team.clubOrt].filter(Boolean);
   const meta = metaParts.join(" · ");
 
   const teaserParts: string[] = [];

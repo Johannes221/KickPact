@@ -1,3 +1,5 @@
+import { isPlausibleLeague } from "@/lib/utils/league";
+
 interface HeroProps {
   displayName: string;
   clubName: string;
@@ -23,7 +25,10 @@ export function ProfileHero({
   coverUrl,
   logoUrl
 }: HeroProps) {
-  const meta = [clubName, league, clubOrt].filter(Boolean).join(" · ");
+  // Liga nur zeigen, wenn plausibel (alte Crawls speicherten teils "So").
+  const meta = [clubName, isPlausibleLeague(league) ? league : null, clubOrt]
+    .filter(Boolean)
+    .join(" · ");
   return (
     <header className="relative h-64 overflow-hidden bg-brand-night-navy">
       {coverUrl ? (

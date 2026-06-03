@@ -8,6 +8,7 @@ import {
 } from "@/lib/db/schema";
 import type { SpielDetails, SpielListItem, KaderPlayer } from "@/lib/crawler/fussballde";
 import { isReadableName } from "@/lib/players/readable-name";
+import { isPlausibleLeague } from "@/lib/utils/league";
 
 export interface ActiveTeam {
   id: string;
@@ -122,6 +123,9 @@ export async function updateTeamLeague(
 ): Promise<void> {
   const trimmed = league?.trim();
   if (!trimmed) return;
+  // Defense-in-depth: niemals implausible Werte (Wochentag/Uhrzeit/ID) als Liga
+  // speichern — selbst wenn ein künftiger Parser-Regress sie durchreicht.
+  if (!isPlausibleLeague(trimmed)) return;
   await db
     .update(teams)
     .set({ league: trimmed })

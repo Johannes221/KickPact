@@ -4,6 +4,7 @@ import { fetch as undiciFetch } from "undici";
 import { parse as parseHtml, type HTMLElement } from "node-html-parser";
 import { saisonStartDate } from "@/lib/utils/saison";
 import { isReadableName } from "@/lib/players/readable-name";
+import { isPlausibleLeague } from "@/lib/utils/league";
 
 /**
  * Audit 2026-05-24 Phase 5 / Task 5.2: User-Agent-Rotation gegen fussball.de-Bann.
@@ -147,13 +148,37 @@ export function normalizeTeamName(raw: string): string {
 
 /**
  * Extrahiert die Liga/Spielklasse aus dem Text einer `row-competition`-Zeile.
- * fussball.de schreibt dort z.B. "Kreisliga A, Staffel 3, Herren" — uns
- * interessiert nur der erste Teil vor dem Komma (die eigentliche Spielklasse).
- * Gibt `null` zurück, wenn nichts Sinnvolles übrig bleibt.
+ *
+ * Aktuelles fussball.de-Format ist PIPE-getrennt:
+ *   "{Wochentag}, {Datum} | {Uhrzeit} {Altersklasse} | {Liga} | {Wettbewerb-ID}"
+ *   z.B. "Sa, 23.05.26 | 14:00 C-Junioren | Oberliga ME | 390013130"
+ * (der "Wochentag, Datum"-Block fehlt bei Folgespielen am selben Tag).
+ * Die Liga ist das Segment VOR der rein-numerischen Wettbewerb-ID. Das Komma
+ * trennt nur Wochentag/Datum — der alte `split(",")[0]` lieferte daher den
+ * Wochentag ("So"/"Sa") als vermeintliche Liga (Bug 2026-06-03).
+ *
+ * Legacy-Format ohne Pipes (z.B. "Kreisliga A, Staffel 3, Herren") wird weiter
+ * über das erste Komma-Segment behandelt. Implausible Werte (Wochentag/Uhrzeit/
+ * Datum/ID) → `null`.
  */
 export function extractLeagueFromCompetitionText(raw: string): string | null {
-  const league = (raw ?? "").split(",")[0].trim();
-  return league.length > 0 ? league : null;
+  const text = (raw ?? "").trim();
+  if (!text) return null;
+
+  let candidate: string;
+  if (text.includes("|")) {
+    const parts = text
+      .split("|")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    let idx = parts.length - 1;
+    if (idx >= 0 && /^\d+$/.test(parts[idx])) idx -= 1; // trailing Wettbewerb-ID
+    candidate = idx >= 0 ? parts[idx] : "";
+  } else {
+    candidate = text.split(",")[0].trim();
+  }
+
+  return isPlausibleLeague(candidate) ? candidate : null;
 }
 
 /**

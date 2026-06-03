@@ -10,6 +10,7 @@ import {
   seasonResults
 } from "@/lib/db/schema";
 import { listTeamImages } from "./team-images";
+import { isPlausibleLeague } from "@/lib/utils/league";
 
 /**
  * Beziehung des eingeloggten Sponsors zu einer Mannschaft — treibt die CTA auf
@@ -309,7 +310,9 @@ export async function listDiscoveryFacets(): Promise<{ leagues: string[]; orte: 
     );
 
   return {
-    leagues: clean(leagueRows.map((r) => r.v)),
+    // Altlasten (vor dem Liga-Parser-Fix gespeicherte Wochentage wie "So")
+    // defensiv ausfiltern, bis der nächste Crawl die echte Liga schreibt.
+    leagues: clean(leagueRows.map((r) => r.v)).filter(isPlausibleLeague),
     orte: clean(orteRows.map((r) => r.v))
   };
 }
