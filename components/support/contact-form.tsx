@@ -99,7 +99,7 @@ export function ContactForm({ defaults }: { defaults?: { name?: string; email?: 
             <FormItem>
               <FormLabel>E-Mail</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="du@beispiel.de" autoComplete="email" {...field} />
+                <Input type="email" inputMode="email" spellCheck={false} placeholder="du@beispiel.de" autoComplete="email" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -113,7 +113,7 @@ export function ContactForm({ defaults }: { defaults?: { name?: string; email?: 
               <FormLabel>Kategorie</FormLabel>
               <FormControl>
                 <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="flex h-[50px] w-full rounded-xl border border-ios-separator-opaque bg-white px-4 text-[17px] text-brand-night-navy ring-offset-white transition-[border-color,box-shadow] focus-visible:border-accent focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent/15"
                   {...field}
                 >
                   {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
@@ -154,7 +154,7 @@ export function ContactForm({ defaults }: { defaults?: { name?: string; email?: 
           )}
         />
         <Button type="submit" variant="accent" className="w-full" disabled={pending}>
-          {pending ? "Senden..." : "Anfrage senden"}
+          {pending ? "Senden…" : "Anfrage senden"}
         </Button>
       </form>
     </Form>
