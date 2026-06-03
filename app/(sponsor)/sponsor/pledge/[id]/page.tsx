@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { getTeamPlayerNames } from "@/lib/db/queries/matches";
 import {
@@ -55,8 +56,14 @@ export default async function PledgeDetailPage({
   return (
     <div className="mx-auto max-w-3xl">
       <div>
-        <Link href="/sponsor" className="text-sm text-brand-night-navy/60 hover:text-accent">
-          ← Sponsor-Dashboard
+        {/* Back nur Desktop — auf Mobile übernimmt die native AppNavBar (Chevron
+            + „Wetten"). */}
+        <Link
+          href="/sponsor/pledge"
+          className="hidden md:inline-flex items-center gap-0.5 text-sm font-medium text-accent hover:text-accent-dark"
+        >
+          <ChevronLeft className="h-4 w-4" aria-hidden />
+          Wetten
         </Link>
         <h1 className="mt-2 md:mt-3 font-display font-bold text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
           {pledge.teamName}

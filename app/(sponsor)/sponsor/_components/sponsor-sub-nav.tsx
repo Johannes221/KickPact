@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BottomTabBar } from "@/components/shared/bottom-tab-bar";
+import { AppNavBar } from "@/components/shared/app-nav-bar";
+import type { SettingsNavItem } from "@/components/shared/settings-sheet";
 
 type Tab = { label: string; href: string; icon: LucideIcon };
 
@@ -36,6 +38,15 @@ const OVERFLOW_TABS: readonly Tab[] = [
 
 const ALL_TABS: readonly Tab[] = [...PRIMARY_TABS, ...OVERFLOW_TABS];
 
+// Verwaltungs-Links fürs Zahnrad-Sheet (= Overflow, mit serialisierbaren
+// Icon-Keys). Single source of truth — die Profil-Seite reicht das nicht mehr
+// separat durch.
+const SETTINGS_ITEMS: SettingsNavItem[] = [
+  { label: "Bilanz", href: "/sponsor/bilanz", icon: "trending" },
+  { label: "Charges", href: "/sponsor/charges", icon: "chart" },
+  { label: "Rechnungen", href: "/sponsor/rechnungen", icon: "file" }
+];
+
 export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
   const pathname = usePathname() ?? "";
 
@@ -47,8 +58,28 @@ export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
     return best;
   }, null);
 
+  // Detail-Route = tiefer als der aktive Tab (z.B. /sponsor/pledge/<id>).
+  // Dann: Back-Chevron + Vorgänger-Name statt Sektions-Titel.
+  const isDetail =
+    !!activeTab &&
+    pathname !== activeTab.href &&
+    pathname.startsWith(activeTab.href + "/");
+
   return (
     <>
+      {/* Mobile: fixe iOS-NavBar (Titel/Back + Zahnrad). */}
+      <AppNavBar
+        title={isDetail ? undefined : activeTab?.label ?? "Sponsor"}
+        backHref={isDetail ? activeTab?.href : undefined}
+        backLabel={isDetail ? activeTab?.label : undefined}
+        settings={{
+          contextLabel: "Sponsor",
+          overflowItems: SETTINGS_ITEMS,
+          activeHref: pathname,
+          badge: pendingCount > 0
+        }}
+      />
+
       {/* Desktop: horizontaler Tab-Streifen (alle Tabs) */}
       <nav className="hidden md:flex gap-0.5 overflow-x-auto rounded-xl bg-brand-night-navy/5 p-1 no-scrollbar">
         {ALL_TABS.map(({ label, href }) => {

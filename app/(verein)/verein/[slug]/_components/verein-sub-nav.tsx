@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BottomTabBar } from "@/components/shared/bottom-tab-bar";
+import { AppNavBar } from "@/components/shared/app-nav-bar";
+import type { SettingsNavItem } from "@/components/shared/settings-sheet";
 
 type Tab = { label: string; href: string; icon: LucideIcon };
 
@@ -38,12 +40,13 @@ const OVERFLOW_TABS: readonly Tab[] = [
 
 const ALL_TABS: readonly Tab[] = [...PRIMARY_TABS, ...OVERFLOW_TABS];
 
-export function VereinSubNav({ slug }: { slug: string; clubName: string }) {
+export function VereinSubNav({ slug, clubName }: { slug: string; clubName: string }) {
   const pathname = usePathname() ?? "";
   const base = `/verein/${slug}`;
 
+  const fullHref = (href: string) => `${base}${href}`;
   const matches = (href: string) => {
-    const full = `${base}${href}`;
+    const full = fullHref(href);
     if (href === "") return pathname === base;
     return pathname === full || pathname.startsWith(full + "/");
   };
@@ -53,8 +56,51 @@ export function VereinSubNav({ slug }: { slug: string; clubName: string }) {
     return best;
   }, null);
 
+  // Auf Mannschafts-Routen besitzt die TeamSubNav die Top-Bar — hier KEINE
+  // zweite AppNavBar rendern (sonst zwei fixe Bars übereinander beim
+  // Vereinslizenz-User).
+  const isOnMannschaftRoute = pathname.startsWith(`${base}/mannschaft`);
+
+  // NavBar-Titel/Back.
+  let navTitle: string | undefined;
+  let backHref: string | undefined;
+  let backLabel: string | undefined;
+  if (
+    activeTab &&
+    activeTab.href !== "" &&
+    pathname !== fullHref(activeTab.href) &&
+    pathname.startsWith(fullHref(activeTab.href) + "/")
+  ) {
+    backHref = fullHref(activeTab.href);
+    backLabel = activeTab.label;
+  } else {
+    navTitle = activeTab?.label ?? clubName;
+  }
+
+  const settingsItems: SettingsNavItem[] = [
+    { label: "Ereignisse", href: `${base}/ereignisse`, icon: "goal" },
+    { label: "Charges", href: `${base}/charges`, icon: "chart" },
+    { label: "Abo", href: `${base}/abo`, icon: "gem" },
+    { label: "Einstellungen", href: `${base}/einstellungen`, icon: "settings" }
+  ];
+
   return (
     <>
+      {/* Mobile: fixe iOS-NavBar (Titel/Back + Zahnrad) — außer auf
+          Mannschafts-Routen, dort trägt die TeamSubNav die Bar. */}
+      {!isOnMannschaftRoute && (
+        <AppNavBar
+          title={navTitle}
+          backHref={backHref}
+          backLabel={backLabel}
+          settings={{
+            contextLabel: clubName,
+            overflowItems: settingsItems,
+            activeHref: pathname
+          }}
+        />
+      )}
+
       {/* Desktop: horizontale Tab-Leiste (alle Tabs) */}
       <nav className="hidden md:flex gap-1 rounded-2xl border border-brand-neutral/30 bg-brand-off-white p-1.5 overflow-x-auto">
         {ALL_TABS.map(({ label, href }) => {

@@ -12,6 +12,7 @@ import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
 import { countActivePledgesForClub } from "@/lib/db/queries/club-reporting";
 import { VereinHeaderShell } from "./_components/verein-header-shell";
 import { StatusBar, type StatusItem } from "@/components/shared/status-bar";
+import { AppNavBarSpacer } from "@/components/shared/app-nav-bar";
 
 export default async function VereinLayout({
   params,
@@ -178,7 +179,8 @@ export default async function VereinLayout({
   }
 
   return (
-    <main className="native-shell mx-auto max-w-5xl px-4 md:px-6 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:pt-8 pb-28 md:pb-12">
+    <main className="native-shell mx-auto max-w-5xl px-4 md:px-6 md:pt-8 pb-28 md:pb-12">
+      <AppNavBarSpacer />
       {/* Header-Bereich: Vereinsname + Sub-Nav.
           Auf /verein/<slug>/mannschaft/<teamId>... bei basic/pro-Lizenzen
           ausgeblendet — der TeamSubNav übernimmt dort die Navigation. */}

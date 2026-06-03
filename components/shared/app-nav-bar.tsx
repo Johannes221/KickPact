@@ -1,34 +1,48 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  SettingsSheet,
+  type SettingsNavItem
+} from "@/components/shared/settings-sheet";
 
 /**
- * Native iOS-Navigation-Bar (Mobile-only, `md:hidden`). Ersetzt im
- * authentifizierten App-Bereich den globalen Marketing-Logo-Header.
+ * Native iOS-Navigation-Bar (Mobile-only, `md:hidden`). Fixed, frosted,
+ * safe-area-aware. Trägt im authentifizierten App-Bereich den Sektions-Titel,
+ * links optional einen Back-Chevron (Tint-Farbe + Name des vorherigen Screens,
+ * Aufgabe 3) und rechts EINE persistente Aktion — i.d.R. das Zahnrad, das das
+ * `SettingsSheet` öffnet (Ecke nie leer, Aufgabe 2).
  *
- * Aufbau wie eine UIKit-Navigation-Bar: links optional ein Back-Chevron,
- * mittig/links der Screen-Titel (+ optionaler dezenter Subtitle), rechts EINE
- * Action — i.d.R. das Zahnrad, das das `SettingsSheet` öffnet.
- *
- * Bewusst statische (nicht kollabierende) Höhe in v1: full-bleed, fixed,
- * frosted, safe-area-aware. Der große, vollständig umbrechende Seitentitel
- * lebt im Content über `PageHeader` — die Bar trägt nur den kurzen Sektions-
- * Titel (kein Truncation-Problem, da Tab-Namen kurz sind).
+ * Large-Title-Kollaps (Aufgabe 2): Der große Seitentitel lebt im Content
+ * (`PageHeader`). Der Inline-Titel in der Bar ist am Scroll-Anfang ausgeblendet
+ * und faded erst ein, sobald der große Titel unter die Bar gescrollt ist — wie
+ * eine UIKit-NavigationBar mit `.large`-Display-Mode.
  */
 export interface AppNavBarProps {
-  /** Kurzer Sektions-Titel (z.B. "Übersicht", "Spiele"). */
-  title: string;
-  /** Optionaler dezenter Subtitle (z.B. Datum auf Detail-Screens). Wird in der
-   *  Bar einzeilig gekürzt — lange Namen gehören in den `PageHeader` im Content. */
+  /** Kurzer Sektions-Titel (z.B. "Übersicht", "Spiele"). Leer auf Detail-Screens. */
+  title?: string;
+  /** Optionaler dezenter Subtitle (einzeilig gekürzt). */
   subtitle?: string;
   /** Wenn gesetzt: Back-Chevron links, der hierhin navigiert. */
   backHref?: string;
-  /** Öffnet das Zahnrad-/Einstellungs-Sheet. */
-  onSettings?: () => void;
-  /** Zeigt einen roten Punkt auf dem Zahnrad (offene Hinweise). */
-  settingsBadge?: boolean;
+  /** Name des vorherigen Screens neben dem Chevron (z.B. "Spiele"). */
+  backLabel?: string;
+  /** Self-contained Zahnrad + SettingsSheet als rechte Aktion. */
+  settings?: {
+    contextLabel: string;
+    overflowItems: SettingsNavItem[];
+    activeHref?: string;
+    /** Roter Punkt auf dem Zahnrad (offene Hinweise). */
+    badge?: boolean;
+  };
+  /** Eigene rechte Aktion (überschreibt `settings`, selten gebraucht). */
+  right?: React.ReactNode;
+  /** Inline-Titel sofort zeigen statt erst beim Scrollen (z.B. Detail-Screens
+   *  ohne großen Body-Titel). */
+  alwaysShowTitle?: boolean;
   className?: string;
 }
 
@@ -36,64 +50,108 @@ export function AppNavBar({
   title,
   subtitle,
   backHref,
-  onSettings,
-  settingsBadge = false,
+  backLabel,
+  settings,
+  right,
+  alwaysShowTitle = false,
   className
 }: AppNavBarProps) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Large-Title-Kollaps: Inline-Titel erst zeigen, wenn der große Body-Titel
+  // weggescrollt ist. Schwelle bewusst klein (36px) — der PageHeader sitzt
+  // direkt unter der Bar.
+  useEffect(() => {
+    if (alwaysShowTitle) return;
+    const onScroll = () => setCollapsed(window.scrollY > 36);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [alwaysShowTitle]);
+
+  const titleVisible = alwaysShowTitle || collapsed;
+
   return (
-    <>
-      <header
-        className={cn(
-          "md:hidden fixed inset-x-0 top-0 z-40 border-b border-brand-neutral/30 bg-white/85 backdrop-blur-xl pt-[env(safe-area-inset-top)]",
-          className
-        )}
-      >
-        <div className="flex min-h-[56px] items-center gap-2 px-4 py-2">
+    <header
+      className={cn(
+        "md:hidden fixed inset-x-0 top-0 z-40 border-b border-brand-neutral/30 bg-white/85 backdrop-blur-xl pt-[env(safe-area-inset-top)]",
+        className
+      )}
+    >
+      <div className="flex min-h-[56px] items-center gap-1.5 px-2 py-2">
+        {/* Links: Back (Chevron + Vorgänger-Name) in Tint-Farbe. */}
+        <div className="flex min-w-0 flex-1 items-center">
           {backHref ? (
             <Link
               href={backHref}
-              aria-label="Zurück"
-              className="-ml-2 grid h-9 w-9 shrink-0 place-items-center rounded-full text-brand-night-navy transition-colors active:bg-brand-off-white"
+              aria-label={backLabel ? `Zurück zu ${backLabel}` : "Zurück"}
+              className="-ml-1 flex shrink-0 items-center gap-0.5 rounded-full py-1 pl-1 pr-2 text-accent transition-opacity active:opacity-60"
             >
-              <ChevronLeft className="h-6 w-6" strokeWidth={2.2} aria-hidden />
+              <ChevronLeft className="h-7 w-7" strokeWidth={2.2} aria-hidden />
+              {backLabel ? (
+                <span className="max-w-[40vw] truncate text-[17px] font-normal leading-none">
+                  {backLabel}
+                </span>
+              ) : null}
             </Link>
           ) : null}
 
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-[22px] font-bold leading-tight text-brand-night-navy">
-              {title}
-            </h1>
-            {subtitle ? (
-              <p className="truncate text-[13px] font-medium text-brand-night-navy/55">
-                {subtitle}
-              </p>
-            ) : null}
-          </div>
-
-          {onSettings ? (
-            <button
-              type="button"
-              onClick={onSettings}
-              aria-label="Menü & Einstellungen"
-              className="relative -mr-1 grid h-9 w-9 shrink-0 place-items-center rounded-full text-brand-night-navy transition-colors active:bg-brand-off-white"
+          {title ? (
+            <div
+              className={cn(
+                "min-w-0 px-1 transition-all duration-200",
+                titleVisible
+                  ? "translate-y-0 opacity-100"
+                  : "pointer-events-none translate-y-0.5 opacity-0"
+              )}
             >
-              <Settings2 className="h-[1.4rem] w-[1.4rem]" strokeWidth={2} aria-hidden />
-              {settingsBadge ? (
-                <span className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full bg-brand-alert-red ring-2 ring-white" />
+              <h1 className="truncate text-[17px] font-semibold leading-tight text-brand-night-navy">
+                {title}
+              </h1>
+              {subtitle ? (
+                <p className="truncate text-[12px] font-medium text-ios-label-secondary">
+                  {subtitle}
+                </p>
               ) : null}
-            </button>
+            </div>
           ) : null}
         </div>
-      </header>
-    </>
+
+        {/* Rechts: persistente Aktion — Zahnrad (Default) oder Custom. */}
+        {right ? (
+          <div className="shrink-0">{right}</div>
+        ) : settings ? (
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Menü & Einstellungen"
+            className="relative -mr-1 grid h-9 w-9 shrink-0 place-items-center rounded-full text-accent transition-colors active:bg-brand-off-white"
+          >
+            <Settings2 className="h-[1.4rem] w-[1.4rem]" strokeWidth={2} aria-hidden />
+            {settings.badge ? (
+              <span className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full bg-brand-alert-red ring-2 ring-white" />
+            ) : null}
+          </button>
+        ) : null}
+      </div>
+
+      {settings ? (
+        <SettingsSheet
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          contextLabel={settings.contextLabel}
+          overflowItems={settings.overflowItems}
+          activeHref={settings.activeHref}
+        />
+      ) : null}
+    </header>
   );
 }
 
 /**
  * Spacer passend zur fixen `AppNavBar`-Höhe. Wird EINMAL pro Scroll-Container
- * vom Layout ganz oben gerendert (nicht von der Bar selbst), damit bei
- * verschachtelten Sub-Navs nur ein Spacer existiert und die fixe Bar nichts
- * überlappt. Mobile-only.
+ * ganz oben gerendert, damit die fixe Bar nichts überlappt. Mobile-only.
  */
 export function AppNavBarSpacer() {
   return (

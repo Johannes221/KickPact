@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BottomTabBar } from "@/components/shared/bottom-tab-bar";
+import { AppNavBar } from "@/components/shared/app-nav-bar";
+import type { SettingsNavItem } from "@/components/shared/settings-sheet";
 import type { EffectivePlan } from "@/lib/db/queries/user-identities";
 
 /**
@@ -90,6 +92,7 @@ interface Props {
 export function TeamSubNav({
   slug,
   teamId,
+  teamName,
   effectivePlan
 }: Props) {
   const pathname = usePathname() ?? "";
@@ -98,8 +101,9 @@ export function TeamSubNav({
   const allTabs = getTeamSubNavTabs(effectivePlan);
 
   // Aktiven Tab über längstes passendes Pfad-Präfix bestimmen.
+  const fullHref = (href: string) => `${base}${href}`;
   const matches = (href: string) => {
-    const full = `${base}${href}`;
+    const full = fullHref(href);
     if (href === "") return pathname === base;
     return pathname === full || pathname.startsWith(full + "/");
   };
@@ -109,8 +113,55 @@ export function TeamSubNav({
     return best;
   }, null);
 
+  // NavBar-Titel/Back bestimmen.
+  let navTitle: string | undefined;
+  let backHref: string | undefined;
+  let backLabel: string | undefined;
+  if (
+    activeTab &&
+    activeTab.href !== "" &&
+    pathname !== fullHref(activeTab.href) &&
+    pathname.startsWith(fullHref(activeTab.href) + "/")
+  ) {
+    // Detail unter einem Tab (z.B. /sponsoren/<id>).
+    backHref = fullHref(activeTab.href);
+    backLabel = activeTab.label;
+  } else if (pathname.startsWith(`${base}/spiel/`)) {
+    // Spiel-Detail (Stamm „spiel" ≠ Tab „spiele") → zurück zu Spiele.
+    backHref = `${base}/spiele`;
+    backLabel = "Spiele";
+  } else {
+    navTitle = activeTab?.label ?? teamName;
+  }
+
+  // Verwaltungs-Links fürs Zahnrad-Sheet (plan-gefiltert wie die Overflow-Tabs).
+  const settingsItems: SettingsNavItem[] = getTeamOverflowTabs(effectivePlan).map(
+    (t) => ({
+      label: t.label,
+      href: fullHref(t.href),
+      icon:
+        t.href === "/finanzen"
+          ? "wallet"
+          : t.href === "/abo"
+            ? "gem"
+            : "settings"
+    })
+  );
+
   return (
     <>
+      {/* Mobile: fixe iOS-NavBar (Titel/Back + Zahnrad). */}
+      <AppNavBar
+        title={navTitle}
+        backHref={backHref}
+        backLabel={backLabel}
+        settings={{
+          contextLabel: teamName,
+          overflowItems: settingsItems,
+          activeHref: pathname
+        }}
+      />
+
       {/* Desktop: horizontale Tab-Leiste (alle Tabs) */}
       <nav className="hidden md:flex gap-1 rounded-2xl border border-brand-neutral/30 bg-brand-off-white p-1.5 overflow-x-auto">
         {allTabs.map(({ label, href }) => {
