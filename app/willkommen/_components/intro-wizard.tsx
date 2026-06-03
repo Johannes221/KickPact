@@ -3,11 +3,12 @@
 /**
  * App-Intro-Wizard — helles, natives iOS-Onboarding.
  *
- * 4 Slides, je EINE Botschaft (Reduktion):
+ * 5 Slides, je EINE Botschaft (Reduktion):
  *   1. Was ist KickPact (Hook + Value-Prop)
  *   2. Du bestimmst den Betrag (Meilenstein-Beispiel)
  *   3. So einfach läuft's (Features gebündelt)
  *   4. Was es bringt (Benefits für Mannschaften UND Sponsoren)
+ *   5. 30 Tage gratis testen (Trial-Angebot, risikofrei)
  *
  * Light-Theme, System-Font (native-shell), Safe-Area, skippable. Returnende
  * Nutzer überspringen automatisch (localStorage) → Login.
@@ -26,6 +27,7 @@ import {
   Users,
   HandCoins,
   Check,
+  Gift,
   type LucideIcon
 } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
@@ -220,11 +222,49 @@ function SlideBenefits() {
   );
 }
 
+const TRIAL_POINTS = [
+  "Alle Features frei",
+  "Jederzeit kündbar",
+  "Keine versteckten Kosten"
+] as const;
+
+/** Slide 5 — Trial-Angebot: 30 Tage gratis, risikofrei. */
+function SlideTrial() {
+  return (
+    <div className="flex flex-col items-center text-center">
+      <span className="mb-8 grid h-24 w-24 place-items-center rounded-[2rem] bg-accent shadow-[0_18px_40px_-12px_rgba(1,196,87,0.55)]">
+        <Gift className="h-11 w-11 text-white" strokeWidth={2} aria-hidden />
+      </span>
+      <SlideTitle>{"30 Tage\ngratis testen."}</SlideTitle>
+      <SlideBody>
+        Voller Funktionsumfang, keine Kreditkarte nötig. Danach weniger als 1 €
+        pro Spieler im Monat.
+      </SlideBody>
+      <ul className="mt-8 w-full max-w-xs space-y-3 text-left">
+        {TRIAL_POINTS.map((p) => (
+          <li
+            key={p}
+            className="flex items-center gap-3 rounded-2xl border border-brand-neutral/30 bg-white p-3.5"
+          >
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
+              <Check className="h-5 w-5" strokeWidth={2.6} aria-hidden />
+            </span>
+            <span className="text-[16px] font-semibold text-brand-night-navy/80">
+              {p}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 const SLIDES: ReadonlyArray<{ id: string; render: () => ReactNode }> = [
   { id: "intro", render: () => <SlideIntro /> },
   { id: "amount", render: () => <SlideAmount /> },
   { id: "features", render: () => <SlideFeatures /> },
-  { id: "benefits", render: () => <SlideBenefits /> }
+  { id: "benefits", render: () => <SlideBenefits /> },
+  { id: "trial", render: () => <SlideTrial /> }
 ];
 
 // ── Wizard ──────────────────────────────────────────────────────────────────

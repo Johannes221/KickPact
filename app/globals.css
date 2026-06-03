@@ -38,9 +38,13 @@ body { @apply bg-white text-neutral-900 antialiased; }
 input, textarea, [contenteditable] { -webkit-user-select: text; user-select: text; }
 
 /* Der authentifizierte App-Bereich liegt auf iOS-Grouped-Background statt Weiß.
-   Cards/Listen heben sich dadurch als weiße Flächen ab (iOS-Settings-Optik). */
-.native-shell {
-  background-color: var(--ios-bg);
+   Cards/Listen heben sich dadurch als weiße Flächen ab (iOS-Settings-Optik).
+   In @layer base, damit ein explizites bg-*-Utility am Container (z.B. das
+   Premium-Off-White des Auth-Layouts) diese Default-Fläche überschreiben kann. */
+@layer base {
+  .native-shell {
+    background-color: var(--ios-bg);
+  }
 }
 
 /* Press-Feedback für interaktive Flächen — kurzer Scale-Down wie auf iOS.

@@ -39,14 +39,15 @@ export function OAuthButtons({ mode, enabled, role }: OAuthButtonsProps) {
 
   if (!enabled.google && !enabled.apple) return null;
 
+  // Auch der Signup-Flow läuft über den /dashboard-Dispatcher: ein returning
+  // Apple-/Google-User (Identity existiert bereits) würde sonst trotzdem im
+  // Anlegen-Wizard stranden, weil OAuth nicht zwischen Login und Signup
+  // unterscheiden kann. Der `role`-Hint greift im Dispatcher NUR für 0-Identity-
+  // User (echter Erst-Signup) und wird bei bestehender Identity ignoriert.
   const callbackURL = invitationToken
     ? `/sponsor/onboarding?invitation=${invitationToken}`
-    : mode === "signup"
-      ? role === "sponsor"
-        ? "/sponsor/onboarding"
-        : role === "verein"
-          ? "/onboarding/verein/verein"
-          : "/onboarding/mannschaft/verein"
+    : mode === "signup" && role
+      ? `/dashboard?role=${role}`
       : "/dashboard"; // rollenbasiert weiterleiten
 
   async function handleSocial(provider: "google" | "apple") {

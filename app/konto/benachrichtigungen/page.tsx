@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageHeader } from "@/components/shared/page-header";
 import { requireUser } from "@/lib/auth/session";
 import {
   listNotifications,
@@ -37,20 +38,18 @@ export default async function NotificationsPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-5 md:px-6 py-8 md:py-12 space-y-6 md:space-y-8">
-      <header>
-        <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-brand-night-navy/40">
           <Link href="/konto" className="hover:text-accent">
             Mein Konto
           </Link>{" "}
           / Benachrichtigungen
         </p>
-        <h1 className="font-display font-bold text-2xl md:text-4xl tracking-tight text-brand-night-navy">
-          Benachrichtigungen
-        </h1>
-        <p className="mt-1 text-sm text-brand-night-navy/60">
-          Push-Mitteilungen in der App steuern und den Verlauf einsehen.
-        </p>
-      </header>
+        <PageHeader
+          title="Benachrichtigungen"
+          subtitle="Push-Mitteilungen in der App steuern und den Verlauf einsehen."
+        />
+      </div>
 
       <NotificationSettings initial={initialSettings} />
       <NotificationInbox initial={items} />

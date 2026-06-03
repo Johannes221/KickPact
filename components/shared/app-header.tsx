@@ -63,11 +63,19 @@ export function AppHeader({ authenticated, dashboardHref, isNativeApp = false }:
   }
 
   const onHero = isLanding && !scrolled;
-  // Im authentifizierten App-Bereich (Verein/Mannschaft/Sponsor) übernimmt auf
-  // Mobile die native AppNavBar (Titel + Zahnrad) den Header. Den globalen
-  // Marketing-Header dort auf Mobile ausblenden — Desktop behält ihn.
-  const appShellRoute =
-    pathname.startsWith("/verein") || pathname.startsWith("/sponsor");
+  // Im authentifizierten App-Bereich übernimmt auf Mobile die App selbst die
+  // Navigation (Bottom-Tabs + In-Content-Header). Den globalen Marketing-Header
+  // dort auf Mobile ausblenden (Web + native App) — Desktop behält ihn.
+  const APP_SHELL_PREFIXES = [
+    "/verein",
+    "/sponsor",
+    "/konto",
+    "/onboarding",
+    "/dashboard",
+    "/admin",
+    "/team-einladung"
+  ];
+  const appShellRoute = APP_SHELL_PREFIXES.some((p) => pathname.startsWith(p));
   // Eingeloggte User springen vom Logo direkt ins Dashboard (oder
   // /select-role bei mehreren Identities) — niemals auf die Marketing-
   // Landing. Unauthenticated user → "/" wie gehabt.

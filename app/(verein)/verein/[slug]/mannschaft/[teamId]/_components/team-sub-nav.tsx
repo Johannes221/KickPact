@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -16,8 +15,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BottomTabBar } from "@/components/shared/bottom-tab-bar";
-import { AppNavBar } from "@/components/shared/app-nav-bar";
-import { SettingsSheet, type SettingsNavItem } from "@/components/shared/settings-sheet";
 import type { EffectivePlan } from "@/lib/db/queries/user-identities";
 
 /**
@@ -93,15 +90,12 @@ interface Props {
 export function TeamSubNav({
   slug,
   teamId,
-  teamName,
   effectivePlan
 }: Props) {
   const pathname = usePathname() ?? "";
   const base = `/verein/${slug}/mannschaft/${teamId}`;
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const allTabs = getTeamSubNavTabs(effectivePlan);
-  const overflowTabs = getTeamOverflowTabs(effectivePlan);
 
   // Aktiven Tab über längstes passendes Pfad-Präfix bestimmen.
   const matches = (href: string) => {
@@ -114,13 +108,6 @@ export function TeamSubNav({
     if (!best || t.href.length > best.href.length) return t;
     return best;
   }, null);
-
-  const overflowItems: SettingsNavItem[] = overflowTabs.map((t) => ({
-    label: t.label,
-    href: `${base}${t.href}`,
-    icon: t.icon
-  }));
-  const overflowActive = overflowTabs.some((t) => matches(t.href));
 
   return (
     <>
@@ -146,13 +133,9 @@ export function TeamSubNav({
         })}
       </nav>
 
-      {/* Mobile: native Nav-Bar (oben) + Bottom-Tab-Bar (unten) + Zahnrad-Sheet */}
+      {/* Mobile: nur Bottom-Tab-Bar. Einstellungen/Konto/Logout liegen im
+          Profil-Tab (Zahnrad oben rechts) — nicht auf jedem Screen. */}
       <div className="md:hidden">
-        <AppNavBar
-          title={activeTab?.label ?? "Übersicht"}
-          onSettings={() => setSettingsOpen(true)}
-          settingsBadge={overflowActive}
-        />
         <BottomTabBar
           contextLabel="Mannschaft"
           items={PRIMARY_TABS.map(({ label, href, icon }) => ({
@@ -160,13 +143,6 @@ export function TeamSubNav({
             icon,
             href: `${base}${href}`
           }))}
-        />
-        <SettingsSheet
-          open={settingsOpen}
-          onOpenChange={setSettingsOpen}
-          contextLabel={teamName}
-          overflowItems={overflowItems}
-          activeHref={activeTab ? `${base}${activeTab.href}` : undefined}
         />
       </div>
     </>

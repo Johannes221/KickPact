@@ -1,8 +1,16 @@
 import { redirect } from "next/navigation";
+import { TrendingUp, ChartColumnIncreasing, FileText } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import { SponsorProfileForm } from "./_components/sponsor-profile-form";
 import { PageHeader } from "@/components/shared/page-header";
+import { SettingsButton, type SettingsNavItem } from "@/components/shared/settings-button";
+
+const SPONSOR_SETTINGS: SettingsNavItem[] = [
+  { label: "Bilanz", href: "/sponsor/bilanz", icon: TrendingUp },
+  { label: "Charges", href: "/sponsor/charges", icon: ChartColumnIncreasing },
+  { label: "Rechnungen", href: "/sponsor/rechnungen", icon: FileText }
+];
 
 export const metadata = { title: "Profil · KickPact" };
 
@@ -27,6 +35,7 @@ export default async function SponsorProfilPage() {
             ? "Firmendaten erscheinen auf Rechnungen."
             : "Dein Anzeigename für Vereine."
         }
+        action={<SettingsButton contextLabel="Sponsor" overflowItems={SPONSOR_SETTINGS} />}
       />
       <div className="hidden md:block">
         <h2 className="text-2xl md:text-3xl font-bold text-brand-night-navy">

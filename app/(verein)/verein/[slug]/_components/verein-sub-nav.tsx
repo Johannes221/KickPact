@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -17,8 +16,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BottomTabBar } from "@/components/shared/bottom-tab-bar";
-import { AppNavBar } from "@/components/shared/app-nav-bar";
-import { SettingsSheet, type SettingsNavItem } from "@/components/shared/settings-sheet";
 
 type Tab = { label: string; href: string; icon: LucideIcon };
 
@@ -41,10 +38,9 @@ const OVERFLOW_TABS: readonly Tab[] = [
 
 const ALL_TABS: readonly Tab[] = [...PRIMARY_TABS, ...OVERFLOW_TABS];
 
-export function VereinSubNav({ slug, clubName }: { slug: string; clubName: string }) {
+export function VereinSubNav({ slug }: { slug: string; clubName: string }) {
   const pathname = usePathname() ?? "";
   const base = `/verein/${slug}`;
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const matches = (href: string) => {
     const full = `${base}${href}`;
@@ -56,13 +52,6 @@ export function VereinSubNav({ slug, clubName }: { slug: string; clubName: strin
     if (!best || t.href.length > best.href.length) return t;
     return best;
   }, null);
-
-  const overflowItems: SettingsNavItem[] = OVERFLOW_TABS.map((t) => ({
-    label: t.label,
-    href: `${base}${t.href}`,
-    icon: t.icon
-  }));
-  const overflowActive = OVERFLOW_TABS.some((t) => matches(t.href));
 
   return (
     <>
@@ -88,13 +77,9 @@ export function VereinSubNav({ slug, clubName }: { slug: string; clubName: strin
         })}
       </nav>
 
-      {/* Mobile: native Nav-Bar + Bottom-Tab-Bar + Zahnrad-Sheet */}
+      {/* Mobile: nur Bottom-Tab-Bar. Verwaltung/Konto liegen im Zahnrad auf der
+          Übersicht — nicht auf jedem Screen. */}
       <div className="md:hidden">
-        <AppNavBar
-          title={activeTab?.label ?? "Übersicht"}
-          onSettings={() => setSettingsOpen(true)}
-          settingsBadge={overflowActive}
-        />
         <BottomTabBar
           contextLabel="Verein"
           items={PRIMARY_TABS.map(({ label, href, icon }) => ({
@@ -102,13 +87,6 @@ export function VereinSubNav({ slug, clubName }: { slug: string; clubName: strin
             icon,
             href: `${base}${href}`
           }))}
-        />
-        <SettingsSheet
-          open={settingsOpen}
-          onOpenChange={setSettingsOpen}
-          contextLabel={clubName}
-          overflowItems={overflowItems}
-          activeHref={activeTab ? `${base}${activeTab.href}` : undefined}
         />
       </div>
     </>

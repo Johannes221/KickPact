@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Plus, Settings, LogOut, ShieldCheck, Hourglass, LifeBuoy } from "lucide-react";
+import { Plus, Settings, LogOut, ShieldCheck, Hourglass, LifeBuoy, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeaderStatusDot } from "@/components/shared/status-bar";
 import { IdentityIcon } from "@/components/shared/identity-icon";
@@ -124,13 +124,17 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
     );
   }
 
+  // Initialen NUR aus dem Namen (Vorname + Nachname). Apple-Private-Relay liefert
+  // oft keinen Namen → dann KEINE Relay-Mail-Initiale (z.B. „2"), sondern unten
+  // ein neutrales Personen-Icon als Fallback.
   const initials =
     session.user.name
-      ?.split(" ")
+      ?.split(/\s+/)
+      .filter(Boolean)
       .map((p) => p[0])
       .slice(0, 2)
       .join("")
-      .toUpperCase() ?? session.user.email[0].toUpperCase();
+      .toUpperCase() || null;
 
   const entries = identities ? flattenIdentities(identities) : [];
   const active = activeIdentityFromPath(pathname);
@@ -153,7 +157,7 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
                 <AvatarImage src="/api/user/avatar" alt="" />
               )}
               <AvatarFallback className="bg-accent text-white text-xs font-bold">
-                {initials}
+                {initials ?? <User className="h-4 w-4" aria-hidden />}
               </AvatarFallback>
             </Avatar>
             <HeaderStatusDot />

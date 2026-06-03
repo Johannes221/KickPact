@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Bell, ChevronRight } from "lucide-react";
+import { PageHeader } from "@/components/shared/page-header";
 import { requireUser } from "@/lib/auth/session";
 import { getAccountOverview, getSponsorType } from "@/lib/db/queries/account";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
@@ -57,17 +59,10 @@ export default async function KontoPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-5 md:px-6 py-8 md:py-12 space-y-6 md:space-y-8">
-      <header>
-        <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
-          Konto-Einstellungen
-        </p>
-        <h1 className="font-display font-bold text-2xl md:text-4xl tracking-tight text-brand-night-navy">
-          Mein Konto
-        </h1>
-        <p className="mt-1 text-sm text-brand-night-navy/60">
-          Profil, Sicherheit und deine DSGVO-Rechte an einem Ort.
-        </p>
-      </header>
+      <PageHeader
+        title="Mein Konto"
+        subtitle="Profil, Sicherheit und deine DSGVO-Rechte an einem Ort."
+      />
 
       {userRow?.deletionRequestedAt && deletionScheduledFor && (
         <DeletionBanner
@@ -81,12 +76,15 @@ export default async function KontoPage() {
         href="/konto/benachrichtigungen"
         className="flex items-center justify-between gap-3 rounded-2xl bg-white shadow-ios-card p-5 md:p-6 transition-colors hover:border-accent/50"
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <span aria-hidden className="text-xl">
-            🔔
+        <div className="flex items-center gap-3.5 min-w-0">
+          <span
+            aria-hidden
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent"
+          >
+            <Bell className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
+            <h2 className="title-wrap text-lg font-semibold text-brand-night-navy">
               Benachrichtigungen
             </h2>
             <p className="mt-0.5 text-xs text-brand-night-navy/60">
@@ -100,16 +98,14 @@ export default async function KontoPage() {
               {unreadNotifications}
             </span>
           )}
-          <span aria-hidden className="text-accent font-semibold">
-            →
-          </span>
+          <ChevronRight aria-hidden className="h-5 w-5 text-brand-night-navy/30" />
         </div>
       </Link>
 
       {/* === Profil === */}
       <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-4">
         <div>
-          <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
+          <h2 className="title-wrap text-lg font-semibold text-brand-night-navy">
             Profil
           </h2>
           <p className="mt-0.5 text-xs text-brand-night-navy/60">
@@ -187,7 +183,7 @@ export default async function KontoPage() {
       {/* === Rollen-Übersicht === */}
       <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-4">
         <div>
-          <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
+          <h2 className="title-wrap text-lg font-semibold text-brand-night-navy">
             Meine Rollen
           </h2>
           <p className="mt-0.5 text-xs text-brand-night-navy/60">
@@ -284,7 +280,7 @@ export default async function KontoPage() {
       {/* === Sicherheit === */}
       <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-3">
         <div>
-          <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
+          <h2 className="title-wrap text-lg font-semibold text-brand-night-navy">
             Sicherheit
           </h2>
           <p className="mt-0.5 text-xs text-brand-night-navy/60">
@@ -301,7 +297,7 @@ export default async function KontoPage() {
       {/* === Hilfe & Support === */}
       <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-3">
         <div>
-          <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
+          <h2 className="title-wrap text-lg font-semibold text-brand-night-navy">
             Hilfe &amp; Support
           </h2>
           <p className="mt-0.5 text-xs text-brand-night-navy/60">
@@ -328,7 +324,7 @@ export default async function KontoPage() {
       {/* === Daten & Privatsphäre === */}
       <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-4">
         <div>
-          <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
+          <h2 className="title-wrap text-lg font-semibold text-brand-night-navy">
             Daten &amp; Privatsphäre
           </h2>
           <p className="mt-0.5 text-xs text-brand-night-navy/60">

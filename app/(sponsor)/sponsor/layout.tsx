@@ -2,7 +2,6 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
 import { SponsorSubNav } from "./_components/sponsor-sub-nav";
 import { countPendingForSponsor } from "@/lib/db/queries/approvals";
-import { AppNavBarSpacer } from "@/components/shared/app-nav-bar";
 
 export default async function SponsorLayout({
   children
@@ -16,10 +15,7 @@ export default async function SponsorLayout({
   // läuft über den globalen Rollen-Switcher im Header — kein doppelter
   // Inline-Switcher mehr.
   return (
-    <main className="native-shell mx-auto max-w-5xl px-5 md:px-6 pt-0 md:pt-12 pb-28 md:pb-12">
-      {/* Platz für die fixe mobile AppNavBar. */}
-      <AppNavBarSpacer />
-
+    <main className="native-shell mx-auto max-w-5xl px-5 md:px-6 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:pt-12 pb-28 md:pb-12">
       <div className="mb-6 md:mb-10">
         {/* Großes Dashboard-Heading nur Desktop — auf Mobile trägt die AppNavBar
             den Titel (kein doppeltes, Display-schweres Heading). */}

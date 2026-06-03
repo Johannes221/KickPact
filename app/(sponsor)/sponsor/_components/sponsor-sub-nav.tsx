@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -16,8 +15,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BottomTabBar } from "@/components/shared/bottom-tab-bar";
-import { AppNavBar } from "@/components/shared/app-nav-bar";
-import { SettingsSheet, type SettingsNavItem } from "@/components/shared/settings-sheet";
 
 type Tab = { label: string; href: string; icon: LucideIcon };
 
@@ -41,7 +38,6 @@ const ALL_TABS: readonly Tab[] = [...PRIMARY_TABS, ...OVERFLOW_TABS];
 
 export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
   const pathname = usePathname() ?? "";
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const matches = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
@@ -50,13 +46,6 @@ export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
     if (!best || t.href.length > best.href.length) return t;
     return best;
   }, null);
-
-  const overflowItems: SettingsNavItem[] = OVERFLOW_TABS.map((t) => ({
-    label: t.label,
-    href: t.href,
-    icon: t.icon
-  }));
-  const overflowActive = OVERFLOW_TABS.some((t) => matches(t.href));
 
   return (
     <>
@@ -86,13 +75,8 @@ export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
         })}
       </nav>
 
-      {/* Mobile: native Nav-Bar + Bottom-Tab-Bar + Zahnrad-Sheet */}
+      {/* Mobile: nur Bottom-Tab-Bar. Verwaltung/Konto liegen im Profil-Tab. */}
       <div className="md:hidden">
-        <AppNavBar
-          title={activeTab?.label ?? "Übersicht"}
-          onSettings={() => setSettingsOpen(true)}
-          settingsBadge={overflowActive}
-        />
         <BottomTabBar
           contextLabel="Sponsor"
           items={PRIMARY_TABS.map(({ label, href, icon }) => ({
@@ -101,13 +85,6 @@ export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
             href,
             badge: href === "/sponsor/inbox" ? pendingCount : undefined
           }))}
-        />
-        <SettingsSheet
-          open={settingsOpen}
-          onOpenChange={setSettingsOpen}
-          contextLabel="Sponsor"
-          overflowItems={overflowItems}
-          activeHref={activeTab?.href}
         />
       </div>
     </>
