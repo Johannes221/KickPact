@@ -15,6 +15,8 @@ export async function createSponsor(input: SponsorOnboardingInput, invitationTok
     userId: user.id,
     displayName: parsed.displayName,
     type: parsed.type,
+    role: parsed.type === "familie" ? parsed.role || null : null,
+    description: parsed.type === "familie" ? parsed.description || null : null,
     businessName: parsed.type === "business" ? parsed.businessName : null,
     businessAddressJson:
       parsed.type === "business"

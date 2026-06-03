@@ -17,7 +17,7 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
-import { sponsorOnboardingSchema, type SponsorOnboardingInput } from "@/lib/validations/sponsor";
+import { sponsorOnboardingSchema, SPONSOR_ROLES, type SponsorOnboardingInput } from "@/lib/validations/sponsor";
 import { createSponsor } from "../_actions/create-sponsor";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics/track";
@@ -111,6 +111,59 @@ export function SponsorTypeForm() {
             </FormItem>
           )}
         />
+
+        {/* Privat-Felder — nur wenn type=familie */}
+        {type === "familie" && (
+          <div className="space-y-4 rounded-lg border border-brand-neutral/40 bg-brand-off-white p-5">
+            <h3 className="text-sm font-semibold uppercase tracking-widest text-brand-night-navy/50">
+              Wie stehst du zur Mannschaft?
+            </h3>
+            <FormField
+              control={form.control}
+              name={"role" as never}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-brand-night-navy">Rolle</FormLabel>
+                  <FormControl>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      value={(field.value as string) ?? ""}
+                      onChange={field.onChange}
+                    >
+                      <option value="">— wählen —</option>
+                      {SPONSOR_ROLES.map((r) => (
+                        <option key={r.value} value={r.value}>{r.label}</option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name={"description" as never}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-brand-night-navy">
+                    Beschreibung <span className="text-brand-night-navy/40 font-normal">(optional)</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={(field.value as string) ?? ""}
+                      placeholder="z.B. Papa von Tim · Onkel von Lisa · Freund von Max"
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs text-brand-night-navy/60">
+                    Hilft dem Verein einzuordnen, wer du bist.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
 
         {/* Business-Felder — nur wenn type=business */}
         {type === "business" && (

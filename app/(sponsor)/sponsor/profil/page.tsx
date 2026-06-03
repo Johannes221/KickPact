@@ -51,7 +51,12 @@ export default async function SponsorProfilPage() {
         sponsorType={sponsor.type}
         defaultValues={
           sponsor.type === "familie"
-            ? { type: "familie", displayName: sponsor.displayName }
+            ? {
+                type: "familie",
+                displayName: sponsor.displayName,
+                role: sponsor.role ?? "",
+                description: sponsor.description ?? ""
+              }
             : {
                 type: "business",
                 displayName: sponsor.displayName,

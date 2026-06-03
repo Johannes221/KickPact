@@ -36,12 +36,18 @@ export default async function PledgeListPage() {
       <div className="mt-6 md:mt-10 space-y-3">
         {myPledges.length === 0 ? (
           <Card className="border-brand-neutral/40">
-            <CardContent className="p-6 text-center text-brand-night-navy/60 text-sm">
-              <p className="font-semibold text-brand-night-navy">Noch keine Pacts.</p>
-              <p className="mt-1">
-                Du brauchst einen Einladungslink deines Vereins, um einen Pact einzurichten.
-                Frag deinen Ansprechpartner im Verein nach dem Link.
+            <CardContent className="p-8 text-center">
+              <p className="font-semibold text-brand-night-navy text-base">Noch keine Pacts.</p>
+              <p className="mt-1.5 text-sm text-brand-night-navy/60 max-w-md mx-auto">
+                Finde eine Mannschaft, die du unterstützen möchtest, und frag sie für ein
+                Sponsoring an. Sobald der Verein zustimmt, richtest du hier deinen Pact ein.
               </p>
+              <Link
+                href="/sponsor/discover"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-accent-dark"
+              >
+                Mannschaft finden &amp; anfragen →
+              </Link>
             </CardContent>
           </Card>
         ) : (
@@ -72,13 +78,18 @@ export default async function PledgeListPage() {
         )}
       </div>
 
-      <div className="mt-8 rounded-lg border border-brand-neutral/40 bg-brand-off-white p-4 text-sm text-brand-night-navy/60">
-        <strong className="text-brand-night-navy">Neuen Pact einrichten?</strong>
-        <p className="mt-1">
-          Pacts werden über den Einladungslink eines Vereins erstellt. Bitte deinen
-          Ansprechpartner im Verein, dir den Link zu schicken.
-        </p>
-      </div>
+      {myPledges.length > 0 && (
+        <div className="mt-8 rounded-lg border border-brand-neutral/40 bg-brand-off-white p-4 text-sm text-brand-night-navy/60">
+          <strong className="text-brand-night-navy">Weiteren Pact einrichten?</strong>
+          <p className="mt-1">
+            Frag eine weitere Mannschaft über{" "}
+            <Link href="/sponsor/discover" className="font-semibold text-accent hover:underline">
+              Entdecken
+            </Link>{" "}
+            an — sobald der Verein zustimmt, kannst du den Pact einrichten.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

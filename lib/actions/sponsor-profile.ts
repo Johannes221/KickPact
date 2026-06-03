@@ -8,7 +8,9 @@ import { revalidatePath } from "next/cache";
 
 const updateFamilieSchema = z.object({
   type: z.literal("familie"),
-  displayName: z.string().min(2, "Name fehlt")
+  displayName: z.string().min(2, "Name fehlt"),
+  role: z.string().max(40).optional().or(z.literal("")),
+  description: z.string().max(200, "Max. 200 Zeichen").optional().or(z.literal(""))
 });
 
 const updateBusinessSchema = z.object({
@@ -46,7 +48,11 @@ export async function updateSponsorProfile(
     if (parsed.data.type === "familie") {
       await db
         .update(sponsors)
-        .set({ displayName: parsed.data.displayName })
+        .set({
+          displayName: parsed.data.displayName,
+          role: parsed.data.role || null,
+          description: parsed.data.description || null
+        })
         .where(eq(sponsors.userId, user.id));
     } else {
       await db
