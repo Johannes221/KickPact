@@ -90,6 +90,7 @@ export function VereinSubNav({ slug, clubName }: { slug: string; clubName: strin
           Mannschafts-Routen, dort trägt die TeamSubNav die Bar. */}
       {!isOnMannschaftRoute && (
         <AppNavBar
+          brand
           title={navTitle}
           backHref={backHref}
           backLabel={backLabel}

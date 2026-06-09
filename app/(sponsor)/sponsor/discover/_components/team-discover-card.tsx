@@ -185,18 +185,21 @@ export function TeamDiscoverCard({
         </div>
       </article>
 
-      {/* Inline inquiry sheet — only for sponsor mode */}
+      {/* Inline inquiry sheet — natives Bottom-Sheet (iOS), safe-area-bewusst */}
       {mode === "sponsor" && (
         <Sheet open={open} onOpenChange={setOpen}>
-          <SheetContent side="right" className="w-[90%] sm:max-w-md bg-white">
-            <SheetHeader>
-              <SheetTitle className="text-left">
-                <span className="block text-[0.65rem] uppercase tracking-widest font-semibold text-brand-night-navy/50">
-                  Sponsoring anfragen
-                </span>
-                <span className="block font-display font-bold text-xl tracking-tight text-brand-night-navy">
-                  {team.clubName} · {team.teamName}
-                </span>
+          <SheetContent
+            side="bottom"
+            className="native-font rounded-t-3xl border-brand-neutral/30 bg-white px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] max-h-[90vh] overflow-y-auto"
+          >
+            {/* Grabber */}
+            <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-brand-neutral/40" aria-hidden />
+            <SheetHeader className="space-y-1 text-left">
+              <span className="block text-[0.65rem] uppercase tracking-widest font-semibold text-accent-dark">
+                Sponsoring anfragen
+              </span>
+              <SheetTitle className="text-left font-display font-black text-2xl tracking-tight text-brand-night-navy">
+                {team.clubName} · {team.teamName}
               </SheetTitle>
               <SheetDescription className="text-left text-sm text-brand-night-navy/60">
                 Saison {team.saison}
@@ -205,17 +208,17 @@ export function TeamDiscoverCard({
             </SheetHeader>
 
             {team.publicTagline && (
-              <p className="mt-4 text-sm text-brand-night-navy/80 italic">
+              <p className="mt-4 rounded-2xl bg-brand-off-white p-3 text-sm text-brand-night-navy/80 italic">
                 „{team.publicTagline}"
               </p>
             )}
 
             {state !== "none" ? (
-              <div className="mt-6 rounded-xl border border-success/30 bg-success-muted p-4 text-sm text-success-dark">
+              <div className="mt-6 rounded-2xl border border-success/30 bg-success-muted p-4 text-sm text-success-dark">
                 ✓ Deine Anfrage wurde versendet. Die Mannschaft meldet sich per Mail.
               </div>
             ) : (
-              <div className="mt-6 space-y-3">
+              <div className="mt-5 space-y-4">
                 <label className="block">
                   <span className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
                     Nachricht (optional)
@@ -226,14 +229,25 @@ export function TeamDiscoverCard({
                     placeholder="Wer du bist, warum du unterstützen willst…"
                     rows={4}
                     maxLength={500}
-                    className="mt-1.5 w-full rounded-lg bg-white shadow-ios-card px-3 py-2 text-sm text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                    className="mt-1.5 w-full rounded-2xl border border-brand-neutral/40 bg-white px-3.5 py-3 text-base text-brand-night-navy focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
                 </label>
-                <div className="flex gap-2">
-                  <Button variant="accent" disabled={pending} onClick={handleSubmit}>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="accent"
+                    size="lg"
+                    disabled={pending}
+                    onClick={handleSubmit}
+                    className="w-full rounded-full"
+                  >
                     {pending ? "Sende…" : "Anfrage absenden"}
                   </Button>
-                  <Button variant="ghost" onClick={() => setOpen(false)}>
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    onClick={() => setOpen(false)}
+                    className="w-full rounded-full"
+                  >
                     Abbrechen
                   </Button>
                 </div>

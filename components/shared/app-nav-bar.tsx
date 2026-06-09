@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronLeft, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   SettingsSheet,
   type SettingsNavItem
 } from "@/components/shared/settings-sheet";
+import { NotificationsBell } from "@/components/shared/notifications-bell";
 
 /**
  * Native iOS-Navigation-Bar (Mobile-only, `md:hidden`). Fixed, frosted,
@@ -43,6 +45,13 @@ export interface AppNavBarProps {
   /** Inline-Titel sofort zeigen statt erst beim Scrollen (z.B. Detail-Screens
    *  ohne großen Body-Titel). */
   alwaysShowTitle?: boolean;
+  /**
+   * Root-/Dashboard-Screen-Modus: zeigt links die Benachrichtigungs-Glocke
+   * (mit Badge) und mittig die KickPact-Wortmarke statt des Inline-Titels.
+   * Greift nur, wenn KEIN `backHref` gesetzt ist (Detail-Screens behalten
+   * Back + Titel).
+   */
+  brand?: boolean;
   className?: string;
 }
 
@@ -54,6 +63,7 @@ export function AppNavBar({
   settings,
   right,
   alwaysShowTitle = false,
+  brand = false,
   className
 }: AppNavBarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -71,6 +81,8 @@ export function AppNavBar({
   }, [alwaysShowTitle]);
 
   const titleVisible = alwaysShowTitle || collapsed;
+  // Root-/Dashboard-Screen: Glocke links + Wortmarke mittig (nur ohne Back).
+  const brandCentered = brand && !backHref;
 
   return (
     <header
@@ -79,8 +91,8 @@ export function AppNavBar({
         className
       )}
     >
-      <div className="flex min-h-[56px] items-center gap-1.5 px-2 py-2">
-        {/* Links: Back (Chevron + Vorgänger-Name) in Tint-Farbe. */}
+      <div className="relative flex min-h-[56px] items-center gap-1.5 px-2 py-2">
+        {/* Links: Back (Detail) ODER Glocke (Root-/Dashboard-Screen). */}
         <div className="flex min-w-0 flex-1 items-center">
           {backHref ? (
             <Link
@@ -95,9 +107,12 @@ export function AppNavBar({
                 </span>
               ) : null}
             </Link>
+          ) : brand ? (
+            <NotificationsBell />
           ) : null}
 
-          {title ? (
+          {/* Inline-Titel nur, wenn die Wortmarke NICHT mittig steht. */}
+          {!brandCentered && title ? (
             <div
               className={cn(
                 "min-w-0 px-1 transition-all duration-200",
@@ -117,6 +132,20 @@ export function AppNavBar({
             </div>
           ) : null}
         </div>
+
+        {/* Mitte (absolut zentriert): KickPact-Wortmarke auf Root-Screens. */}
+        {brandCentered ? (
+          <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <Image
+              src="/brand/wordmark.png"
+              alt="KICKPACT"
+              width={1145}
+              height={216}
+              priority
+              className="h-[18px] w-auto"
+            />
+          </span>
+        ) : null}
 
         {/* Rechts: persistente Aktion — Zahnrad (Default) oder Custom. */}
         {right ? (

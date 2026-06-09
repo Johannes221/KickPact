@@ -12,6 +12,7 @@ import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
 import { countActivePledgesForClub } from "@/lib/db/queries/club-reporting";
 import { VereinHeaderShell } from "./_components/verein-header-shell";
 import { StatusBar, type StatusItem } from "@/components/shared/status-bar";
+import { StatusItemsProvider } from "@/components/shared/status-context";
 import { AppNavBarSpacer } from "@/components/shared/app-nav-bar";
 
 export default async function VereinLayout({
@@ -178,7 +179,11 @@ export default async function VereinLayout({
     });
   }
 
+  // Hinweise für die native App-Bar-Glocke (Verifizierung/Trial/Zahlung).
+  const navStatusItems = isTeamOnly ? [] : statusItems;
+
   return (
+    <StatusItemsProvider items={navStatusItems}>
     <main className="native-shell mx-auto max-w-5xl px-4 md:px-6 md:pt-8 pb-28 md:pb-12">
       <AppNavBarSpacer />
       {/* Header-Bereich: Vereinsname + Sub-Nav.
@@ -216,8 +221,12 @@ export default async function VereinLayout({
           kompakt, kollabierbar, wegklickbar. Ersetzt die früheren
           großflächigen Einzel-Banner. */}
       {/* Club-scoped Status-Banner (Trial/Verifizierung/Zahlung) sind für reine
-          Team-Mitglieder nicht relevant + nicht actionable → ausblenden. */}
-      <StatusBar items={isTeamOnly ? [] : statusItems} />
+          Team-Mitglieder nicht relevant + nicht actionable → ausblenden.
+          Auf der nativen App-Shell (Mobile) liegen diese Hinweise in der
+          Glocke oben links → hier nur noch Desktop. */}
+      <div className="hidden md:block">
+        <StatusBar items={navStatusItems} />
+      </div>
 
       {children}
 
@@ -232,5 +241,6 @@ export default async function VereinLayout({
         <span>© {new Date().getFullYear()} KickPact</span>
       </footer>
     </main>
+    </StatusItemsProvider>
   );
 }

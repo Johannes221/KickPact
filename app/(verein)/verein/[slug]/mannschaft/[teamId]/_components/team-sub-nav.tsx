@@ -152,6 +152,7 @@ export function TeamSubNav({
     <>
       {/* Mobile: fixe iOS-NavBar (Titel/Back + Zahnrad). */}
       <AppNavBar
+        brand
         title={navTitle}
         backHref={backHref}
         backLabel={backLabel}
