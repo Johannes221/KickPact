@@ -44,6 +44,10 @@ const config: NextConfig = {
     const csp = [
       "default-src 'self'",
       `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"} https://plausible.io`,
+      // Web-Worker aus Blobs (z.B. Bild-/WASM-Verarbeitung) erlauben — sonst
+      // greift script-src als Fallback und blockt blob:-Worker (CSP-Konsolen-
+      // Fehler + stilles Feature-Brechen).
+      "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
