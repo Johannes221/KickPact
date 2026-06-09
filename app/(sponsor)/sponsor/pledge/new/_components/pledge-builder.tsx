@@ -885,7 +885,7 @@ function StepIndicator({ currentStep }: { currentStep: WizardStep }) {
   ];
 
   return (
-    <div className="flex items-center gap-0">
+    <div className="flex items-center justify-center gap-0">
       {steps.map((s, i) => (
         <div key={s.n} className="flex items-center">
           <div className="flex items-center gap-2">

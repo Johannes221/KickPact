@@ -78,11 +78,13 @@ export default async function PledgeListPage() {
                   className="block rounded-xl border border-accent/40 bg-accent/5 p-4 transition-colors hover:bg-accent/10"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div>
+                    <div className="min-w-0">
                       <div className="font-semibold text-brand-night-navy">{q.teamName}</div>
                       <div className="text-xs text-brand-night-navy/50 mt-0.5">{q.clubName}</div>
                     </div>
-                    <Badge tone="success">Angenommen ✓</Badge>
+                    <Badge tone="success" className="shrink-0 whitespace-nowrap">
+                      Angenommen ✓
+                    </Badge>
                   </div>
                   <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
                     Jetzt Pact für {q.teamName} anlegen
@@ -95,11 +97,13 @@ export default async function PledgeListPage() {
                   className="rounded-xl bg-white shadow-ios-card p-4 border border-dashed border-emerald-300"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div>
+                    <div className="min-w-0">
                       <div className="font-semibold text-brand-night-navy">{q.teamName}</div>
                       <div className="text-xs text-brand-night-navy/50 mt-0.5">{q.clubName}</div>
                     </div>
-                    <Badge tone="success">Angenommen ✓</Badge>
+                    <Badge tone="success" className="shrink-0 whitespace-nowrap">
+                      Angenommen ✓
+                    </Badge>
                   </div>
                   <p className="mt-2 text-xs text-brand-night-navy/60">
                     Der Verein hat zugesagt, aber die Einladung ist abgelaufen. Frag deinen
