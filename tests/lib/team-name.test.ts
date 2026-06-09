@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { abbreviateTeamName } from "@/lib/utils/team-name";
+import { abbreviateTeamName, acronymTeamName } from "@/lib/utils/team-name";
 
 describe("abbreviateTeamName", () => {
   it("behält Präfix + erstes signifikantes Wort, droppt Gründungsjahr", () => {
@@ -26,5 +26,37 @@ describe("abbreviateTeamName", () => {
 
   it("ist robust gegen leere Eingabe", () => {
     expect(abbreviateTeamName("")).toBe("");
+  });
+});
+
+describe("acronymTeamName", () => {
+  it("erzeugt Scoreboard-Kürzel: Präfix-Block + Initialen", () => {
+    expect(acronymTeamName("SV Schwetzingen")).toBe("SVS");
+    expect(acronymTeamName("FC Sportfreunde Dossenheim")).toBe("FCSD");
+    expect(acronymTeamName("Heidelberger SC")).toBe("HSC");
+    expect(acronymTeamName("FG Union Heidelberg")).toBe("FGUH");
+  });
+
+  it("droppt Gründungsjahr + führende Ordnungszahl", () => {
+    expect(acronymTeamName("FC Sportfreunde 1910 Dossenheim")).toBe("FCSD");
+    expect(acronymTeamName("1. FC Köln")).toBe("FCK");
+  });
+
+  it("entfernt Rechtsform-Suffixe vor dem Kürzeln", () => {
+    expect(acronymTeamName("FC Beispiel e.V.")).toBe("FCB");
+  });
+
+  it("begrenzt sehr lange Ketten auf 6 Zeichen", () => {
+    expect(acronymTeamName("SV Eintracht Frohe Zukunft Magdeburg Reserve").length)
+      .toBeLessThanOrEqual(6);
+  });
+
+  it("gibt bei Einzelwort ein kompaktes Kürzel zurück", () => {
+    expect(acronymTeamName("Türkgücü")).toBe("Türk");
+    expect(acronymTeamName("FCB")).toBe("FCB");
+  });
+
+  it("ist robust gegen leere Eingabe", () => {
+    expect(acronymTeamName("")).toBe("");
   });
 });

@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth/session";
 import { resolveTeamAccess } from "@/lib/auth/scope";
 import { getMatchById, listMatchEvents, listMatchCharges } from "@/lib/db/queries/matches";
 import { detectTeamSide } from "@/lib/crawler/team-side";
-import { abbreviateTeamName } from "@/lib/utils/team-name";
+import { acronymTeamName } from "@/lib/utils/team-name";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MatchEventsList } from "./match-events-list";
 import { ManualEventEditor } from "./manual-event-editor";
@@ -127,10 +127,10 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
             {/* Heim */}
             <div className={`min-w-0 text-right ${isHeim ? "font-semibold" : ""}`}>
               <div
-                className="truncate text-sm sm:text-base font-semibold text-brand-night-navy leading-snug"
+                className="truncate text-base sm:text-lg font-bold tracking-tight text-brand-night-navy leading-snug"
                 title={match.heimName}
               >
-                {abbreviateTeamName(match.heimName)}
+                {acronymTeamName(match.heimName)}
               </div>
               <div className="text-xs text-brand-night-navy/50 mt-1">
                 {isHeim ? "Heim · deine Mannschaft" : "Heim"}
@@ -154,10 +154,10 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
             {/* Gast */}
             <div className={`min-w-0 text-left ${!isHeim ? "font-semibold" : ""}`}>
               <div
-                className="truncate text-sm sm:text-base font-semibold text-brand-night-navy leading-snug"
+                className="truncate text-base sm:text-lg font-bold tracking-tight text-brand-night-navy leading-snug"
                 title={match.gastName}
               >
-                {abbreviateTeamName(match.gastName)}
+                {acronymTeamName(match.gastName)}
               </div>
               <div className="text-xs text-brand-night-navy/50 mt-1">
                 {!isHeim ? "Gast · deine Mannschaft" : "Gast"}

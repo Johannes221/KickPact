@@ -27,7 +27,7 @@ const PRIMARY_TABS: readonly Tab[] = [
   { label: "Übersicht", href: "/sponsor", icon: House },
   { label: "Entdecken", href: "/sponsor/discover", icon: Compass },
   { label: "Pacts", href: "/sponsor/pledge", icon: Target },
-  { label: "Mannschaften", href: "/sponsor/mannschaften", icon: Users },
+  { label: "Teams", href: "/sponsor/mannschaften", icon: Users },
   { label: "Profil", href: "/sponsor/profil", icon: User }
 ] as const;
 

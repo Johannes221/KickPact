@@ -24,7 +24,7 @@ type Tab = { label: string; href: string; icon: LucideIcon };
 // Mobile-Primärset (5 Bottom-Tabs) — Club-Admin denkt in Mannschaften, Geld, Pacts.
 const PRIMARY_TABS: readonly Tab[] = [
   { label: "Übersicht", href: "", icon: LayoutDashboard },
-  { label: "Mannschaften", href: "/mannschaften", icon: Users },
+  { label: "Teams", href: "/mannschaften", icon: Users },
   { label: "Sponsoren", href: "/sponsoren", icon: HandCoins },
   { label: "Pacts", href: "/pledges", icon: Handshake },
   { label: "Abrechnungen", href: "/abrechnungen", icon: FileText }
