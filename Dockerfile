@@ -21,6 +21,9 @@ COPY . .
 # Build-time env vars need to be in scope here for Next.js prerender pages
 # (Coolify passes ENV vars during build automatically).
 ENV NEXT_TELEMETRY_DISABLED=1
+# next build überschritt das Node-Default-Heap-Limit (~2 GB) → OOM (exit 134).
+# Heap anheben, damit der Build mit dem gewachsenen Codebase durchläuft.
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build
 
 # ---------- Runner ----------
