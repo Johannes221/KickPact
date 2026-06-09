@@ -2,12 +2,19 @@ import { eq, and, inArray, isNotNull, desc, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   teams,
+  clubs,
   matches,
   matchEvents,
   players
 } from "@/lib/db/schema";
 import type { SpielDetails, SpielListItem, KaderPlayer } from "@/lib/crawler/fussballde";
 import { isReadableName } from "@/lib/players/readable-name";
+import {
+  isLikelyPlayerName,
+  extractSuffixClub,
+  suffixClubMatchesOwn
+} from "@/lib/players/person-name";
+import { detectTeamSide } from "@/lib/crawler/team-side";
 import { isPlausibleLeague } from "@/lib/utils/league";
 
 export interface ActiveTeam {
@@ -338,14 +345,46 @@ async function writeMatchEvents(
   teamId: string,
   details: SpielDetails
 ): Promise<number> {
-  // 1. Sammle alle (spielerId, name)-Paare aus den Events
+  // Eigene Mannschafts-Seite in DIESEM Spiel bestimmen — nur eigene Spieler
+  // dürfen in den `players`-Kader, NICHT die Gegner-Torschützen (sonst
+  // verschmutzen fremde Spieler den Pool, E2E-Finding 2026-06-09).
+  const [ctx] = await db
+    .select({ heimName: matches.heimName, teamName: teams.name, clubName: clubs.name })
+    .from(matches)
+    .innerJoin(teams, eq(matches.teamId, teams.id))
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(eq(matches.id, matchId))
+    .limit(1);
+  const ownSide: "heim" | "gast" = ctx
+    ? detectTeamSide([ctx.teamName, ctx.clubName], ctx.heimName)
+    : "heim";
+  const isOwn = (s: "heim" | "gast" | "unbekannt") => s === ownSide;
+  // Echter, eigener Spielername? (eigene Seite ist via isOwn schon geprüft;
+  // hier zusätzlich gegen falsche Seitenzuordnung das "(Fremdverein) Spieler"-
+  // Suffix prüfen + Überschriften/Tofu raus.)
+  const ownClub = ctx?.clubName ?? "";
+  const isOwnPlayer = (name: string | null | undefined): boolean => {
+    if (!isLikelyPlayerName(name)) return false;
+    const suffix = extractSuffixClub(name);
+    if (suffix && ownClub && !suffixClubMatchesOwn(suffix, ownClub)) return false;
+    return true;
+  };
+
+  // 1. Sammle (spielerId, name)-Paare NUR der eigenen Seite + nur echte Namen.
   const playerInputs = new Map<string, string>(); // spielerId → name
   for (const ev of details.events) {
+    if (!isOwn(ev.side)) continue;
     if (ev.typ === "TOR" && ev.spielerId) {
-      playerInputs.set(ev.spielerId, ev.spielerName ?? ev.spielerId);
+      if (isOwnPlayer(ev.spielerName)) {
+        playerInputs.set(ev.spielerId, ev.spielerName ?? ev.spielerId);
+      }
     } else if (ev.typ === "AUSWECHSLUNG" && ev.rein && ev.raus) {
-      if (ev.rein.id) playerInputs.set(ev.rein.id, ev.rein.name);
-      if (ev.raus.id) playerInputs.set(ev.raus.id, ev.raus.name);
+      if (ev.rein.id && isOwnPlayer(ev.rein.name)) {
+        playerInputs.set(ev.rein.id, ev.rein.name);
+      }
+      if (ev.raus.id && isOwnPlayer(ev.raus.name)) {
+        playerInputs.set(ev.raus.id, ev.raus.name);
+      }
     }
   }
 
@@ -514,7 +553,11 @@ export async function persistKader(
     inserted += unreadable.length;
   }
 
-  const withoutId = kader.filter((p) => !p.spielerId && p.name.trim().length > 0);
+  // OHNE spielerId: hier rutschten bisher Match-Überschriften / Fremd-Einträge
+  // rein (kein Unique-Index greift). Nur plausible Personennamen zulassen.
+  const withoutId = kader.filter(
+    (p) => !p.spielerId && p.name.trim().length > 0 && isLikelyPlayerName(p.name)
+  );
   if (withoutId.length > 0) {
     const names = [...new Set(withoutId.map((p) => p.name))];
     const existing = await db

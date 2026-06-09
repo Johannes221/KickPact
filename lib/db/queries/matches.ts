@@ -1,7 +1,13 @@
 import { and, eq, ne, desc, gte, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { matches, matchEvents, teams, clubs, players } from "@/lib/db/schema";
-import { isReadableName } from "@/lib/players/readable-name";
+import {
+  cleanPlayerName,
+  isLikelyPlayerName,
+  extractSuffixClub,
+  suffixClubMatchesOwn,
+  playerDedupKey
+} from "@/lib/players/person-name";
 import { charges, charges as chargesTable } from "@/lib/db/schema/charges";
 import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
 import { sponsors } from "@/lib/db/schema/sponsors";
@@ -275,8 +281,9 @@ export async function getTeamPlayerNames(teamId: string): Promise<string[]> {
 
   const names = new Set<string>();
   for (const r of rows) {
+    // Nur echte Personennamen (keine Match-Überschriften, kein Tofu).
+    if (!isLikelyPlayerName(r.playerName)) continue;
     const name = cleanPlayerName(r.playerName);
-    if (!name) continue;
     const ownSide = detectTeamSide([team.name, team.clubName], r.heimName);
     if (r.side === ownSide) names.add(name);
   }
@@ -297,37 +304,41 @@ export async function getTeamPlayerNames(teamId: string): Promise<string[]> {
  * Ergebnis ist dedupliziert und deutsch-alphabetisch sortiert.
  */
 export async function getTeamPlayerPool(teamId: string): Promise<string[]> {
-  const [rosterRows, eventNames] = await Promise.all([
-    db
-      .select({ name: players.name })
-      .from(players)
-      .where(and(eq(players.teamId, teamId), eq(players.blocked, false))),
-    getTeamPlayerNames(teamId)
-  ]);
+  const [team] = await db
+    .select({ name: teams.name, clubName: clubs.name })
+    .from(teams)
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  if (!team) return [];
 
-  const names = new Set<string>();
+  // Quelle = der bereinigte `players`-Kader (persistKader = Mannschaftsseite +
+  // writeMatchEvents = eigene Torschützen, beide seit 2026-06-09 nur eigene
+  // Spieler). Die frühere Union mit `match_events.player_name` führte Gegner ein,
+  // wenn die fussball.de-Seitenzuordnung eines Tors falsch war — gelöschte
+  // Gegner-Spieler haben dort jetzt ohnehin `player_id = NULL`.
+  const rosterRows = await db
+    .select({ name: players.name })
+    .from(players)
+    .where(and(eq(players.teamId, teamId), eq(players.blocked, false)));
+
+  // Dedup über normalisierten Schlüssel, behält die saubere Anzeige-Form.
+  const byKey = new Map<string, string>();
   for (const r of rosterRows) {
-    const name = (r.name ?? "").trim();
-    if (name) names.add(name);
+    const raw = (r.name ?? "").trim();
+    if (!raw) continue;
+    // Gegner ausschließen: "(Fremdverein) Spieler"-Suffix, das NICHT den eigenen
+    // Verein meint (exakte Token, kein Stadt-Substring-Fehlmatch).
+    const suffixClub = extractSuffixClub(raw);
+    if (suffixClub && !suffixClubMatchesOwn(suffixClub, team.clubName)) continue;
+    // Match-Überschriften / Vereins-/Ergebnis-Fragmente / Tofu raus.
+    if (!isLikelyPlayerName(raw)) continue;
+    const display = cleanPlayerName(raw);
+    const key = playerDedupKey(display);
+    if (key && !byKey.has(key)) byKey.set(key, display);
   }
-  for (const n of eventNames) names.add(n);
 
-  return [...names]
-    .filter(isReadableName)
-    .sort((a, b) => a.localeCompare(b, "de"));
-}
-
-/**
- * Säubert gescrapte Spielernamen: manche fussball.de-Linktexte hängen den
- * Vereinsnamen + " Spieler" an (z.B. "Max Mustermann (FC Sportfr. Dossenheim)
- * Spieler"). Wir strippen dieses Suffix, damit das Dropdown nur den reinen
- * Namen zeigt (E2E-Finding 2026-06-03).
- */
-function cleanPlayerName(raw: string | null): string {
-  return (raw ?? "")
-    .replace(/\s*\([^)]*\)\s*Spieler\s*$/u, "")
-    .replace(/\s+Spieler\s*$/u, "")
-    .trim();
+  return [...byKey.values()].sort((a, b) => a.localeCompare(b, "de"));
 }
 
 /**
