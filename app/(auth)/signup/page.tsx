@@ -9,7 +9,7 @@ import { RoleChooser, type RoleTile } from "@/components/auth/role-chooser";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAppleConfigured } from "@/lib/auth/apple-client-secret";
 import { getServerSession } from "@/lib/auth/session";
-import { isPlatformAdminEmail } from "@/lib/auth/admin";
+import { isPlatformAdminUser } from "@/lib/auth/admin";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { getActiveDraftForUser } from "@/lib/db/queries/onboarding-draft";
 import { pickAuthenticatedSignupDestination } from "@/lib/auth/signup-destination";
@@ -103,7 +103,9 @@ export default async function SignupPage({
   const session = await getServerSession();
   if (session?.user) {
     // Operator-Accounts haben keine Nutzer-Rolle und dürfen keine anlegen → /admin.
-    if (await isPlatformAdminEmail(session.user.email)) redirect("/admin");
+    // ID-basiert (statt E-Mail), damit der Check nicht an Casing-Differenzen
+    // scheitert und ein Operator nie im Nutzer-Rollen-Chooser landet.
+    if (await isPlatformAdminUser(session.user.id)) redirect("/admin");
     // Erst Draft-Check: User hat noch einen offenen Onboarding-Wizard →
     // direkt zum Resume-Dispatcher. Ohne diesen Check würde getUserIdentities
     // (das Draft-Clubs filtert!) 0 Identities zurückgeben und der User sieht

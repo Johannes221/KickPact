@@ -22,7 +22,8 @@ const {
   getClubIdForTeamMock,
   createPledgeWithRulesMock,
   isClubMemberMock,
-  getTeamMembershipRoleMock
+  getTeamMembershipRoleMock,
+  getTeamDataCoverageMock
 } = vi.hoisted(() => ({
   requireUserMock: vi.fn(),
   findInvitationMock: vi.fn(),
@@ -38,7 +39,8 @@ const {
   getClubIdForTeamMock: vi.fn(),
   createPledgeWithRulesMock: vi.fn(),
   isClubMemberMock: vi.fn(),
-  getTeamMembershipRoleMock: vi.fn()
+  getTeamMembershipRoleMock: vi.fn(),
+  getTeamDataCoverageMock: vi.fn()
 }));
 
 vi.mock("@/lib/auth/session", () => ({
@@ -81,6 +83,10 @@ vi.mock("@/lib/db/queries/pledges", () => ({
   countPledgeRulesForSponsorOnTeam: countPledgeRulesMock,
   getClubIdForTeam: getClubIdForTeamMock,
   createPledgeWithRules: createPledgeWithRulesMock
+}));
+
+vi.mock("@/lib/db/queries/crawler", () => ({
+  getTeamDataCoverage: getTeamDataCoverageMock
 }));
 
 vi.mock("@/lib/db/queries/sponsor-dashboard", () => ({
@@ -161,6 +167,8 @@ beforeEach(() => {
   getTeamMembershipRoleMock.mockResolvedValue(null);
   createPledgeWithRulesMock.mockResolvedValue({ pledgeId: "pledge-1" });
   markInvitationUsedMock.mockResolvedValue(undefined);
+  // Default: volle Daten-Coverage → kein Coverage-Gate (Bestand schonen).
+  getTeamDataCoverageMock.mockResolvedValue("full");
 });
 
 describe("createPledge — Tier-Gate fuer Saison-Wetten (Audit #4)", () => {
@@ -201,5 +209,47 @@ describe("createPledge — Tier-Gate fuer Saison-Wetten (Audit #4)", () => {
     await expect(createPledge(input)).resolves.toEqual({
       pledgeId: "pledge-1"
     });
+  });
+});
+
+describe("createPledge — Daten-Coverage-Gate", () => {
+  const playerRuleInput = {
+    ...VALID_INPUT,
+    rules: [
+      { triggerType: "goal_by_player", params: { player_name: "Müller" }, amountEur: 3, perMatchCapEur: null }
+    ]
+  };
+  const resultRuleInput = {
+    ...VALID_INPUT,
+    rules: [{ triggerType: "goal_total", params: {}, amountEur: 5, perMatchCapEur: null }]
+  };
+
+  beforeEach(() => {
+    getTeamLicensePlanMock.mockResolvedValue("pro");
+  });
+
+  it("results_only + goal_by_player → Fehler (Spieler-Wette geblockt)", async () => {
+    getTeamDataCoverageMock.mockResolvedValue("results_only");
+    await expect(createPledge(playerRuleInput)).rejects.toThrow(/Spieler-Wetten/i);
+  });
+
+  it("results_only + goal_total → erlaubt", async () => {
+    getTeamDataCoverageMock.mockResolvedValue("results_only");
+    await expect(createPledge(resultRuleInput)).resolves.toEqual({ pledgeId: "pledge-1" });
+  });
+
+  it("full + goal_by_player → erlaubt", async () => {
+    getTeamDataCoverageMock.mockResolvedValue("full");
+    await expect(createPledge(playerRuleInput)).resolves.toEqual({ pledgeId: "pledge-1" });
+  });
+
+  it("null (unklassifiziert) + goal_by_player → erlaubt (Grandfather)", async () => {
+    getTeamDataCoverageMock.mockResolvedValue(null);
+    await expect(createPledge(playerRuleInput)).resolves.toEqual({ pledgeId: "pledge-1" });
+  });
+
+  it("none → komplett geblockt (auch Ergebnis-Wette)", async () => {
+    getTeamDataCoverageMock.mockResolvedValue("none");
+    await expect(createPledge(resultRuleInput)).rejects.toThrow(/keine Spieldaten/i);
   });
 });

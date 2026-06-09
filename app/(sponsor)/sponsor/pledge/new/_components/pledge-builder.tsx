@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { track } from "@/lib/analytics/track";
 import { CUP_ROUND_ORDER, CUP_ROUND_LABELS } from "@/lib/triggers/cup-rounds";
 import { RULE_SELECT_CLASS, RULE_FIELD_LABEL_CLASS } from "../../_components/rule-fields";
+import { type Coverage, requiresNamedScorers } from "@/lib/triggers/coverage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -103,10 +104,26 @@ type WizardStep = 1 | 2 | 3 | 4;
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function PledgeBuilder() {
+export function PledgeBuilder({
+  dataCoverage = null,
+}: {
+  /**
+   * Daten-Coverage der Mannschaft (siehe lib/triggers/coverage.ts). Bei nicht-
+   * `full` werden Spieler-Wetten (goal_by_player, hattrick) ausgeblendet, weil
+   * fußball.de dort keine Torschützen liefert. NULL = unklassifiziert → alles.
+   * Das Server-Gate in createPledge ist die harte Linie; dies ist Komfort.
+   */
+  dataCoverage?: Coverage | null;
+}) {
   const router = useRouter();
   const params = useSearchParams();
   const invitationToken = params.get("invitation");
+
+  // Spieler-Wetten nur bei `full`-Coverage (oder unklassifiziertem Bestand).
+  const playerBetsAllowed = dataCoverage === "full" || dataCoverage == null;
+  const visibleLibrary = playerBetsAllowed
+    ? TRIGGER_LIBRARY
+    : TRIGGER_LIBRARY.filter((t) => !requiresNamedScorers(t.type));
   const [pending, startTransition] = useTransition();
   const [step, setStep] = useState<WizardStep>(1);
   const [enabled, setEnabled] = useState<Set<string>>(new Set(["goal_total", "win"]));
@@ -245,11 +262,21 @@ export function PledgeBuilder() {
               </p>
             </div>
 
+            {!playerBetsAllowed && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                Für diese Mannschaft liefert die offizielle Datenquelle nur das{" "}
+                <strong>Spielergebnis</strong>, keine einzelnen Torschützen.
+                Spieler-Wetten („Tore von Spieler X", „Hattrick") sind daher hier
+                nicht verfügbar — Ergebnis-, Comeback- und Saison-Wetten kannst du
+                ganz normal anlegen.
+              </div>
+            )}
+
             <TriggerGroupBlock
               title="Automatisch erfasst"
               icon={<Zap className="h-4 w-4" />}
               note="KickPact zieht diese Ereignisse automatisch aus den offiziellen Spieldaten — nichts zu melden, alles nachweisbar verbucht."
-              items={TRIGGER_LIBRARY.filter((t) => t.group === "auto")}
+              items={visibleLibrary.filter((t) => t.group === "auto")}
               enabled={enabled}
               onToggle={toggleTrigger}
             />
@@ -258,7 +285,7 @@ export function PledgeBuilder() {
               title="Vom Verein gemeldet"
               icon={<Handshake className="h-4 w-4" />}
               note="Diese Ereignisse kann KickPact nicht automatisch prüfen. Der Verein meldet sie — du bestätigst sie in deiner Inbox, bevor ein Beitrag fällig wird."
-              items={TRIGGER_LIBRARY.filter((t) => t.group === "club")}
+              items={visibleLibrary.filter((t) => t.group === "club")}
               enabled={enabled}
               onToggle={toggleTrigger}
               tone="club"
@@ -268,7 +295,7 @@ export function PledgeBuilder() {
               title="Pro Saison"
               icon={<Trophy className="h-4 w-4" />}
               note="Feuern 1× am Saison-Ende."
-              items={TRIGGER_LIBRARY.filter((t) => t.group === "season")}
+              items={visibleLibrary.filter((t) => t.group === "season")}
               enabled={enabled}
               onToggle={toggleTrigger}
             />

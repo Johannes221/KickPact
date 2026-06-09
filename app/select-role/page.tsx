@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Hourglass } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
-import { isPlatformAdminEmail } from "@/lib/auth/admin";
+import { isPlatformAdminUser } from "@/lib/auth/admin";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { listMyPendingRequests } from "@/lib/db/queries/membership-requests";
 import { pickDashboardDestination } from "@/lib/auth/identity-routing";
@@ -21,19 +21,22 @@ function eur(cents: number): string {
 
 export default async function SelectRolePage() {
   const user = await requireUser();
-  if (await isPlatformAdminEmail(user.email)) redirect("/admin");
+  if (await isPlatformAdminUser(user.id)) redirect("/admin");
   const [identities, pendingRequests] = await Promise.all([
     getUserIdentities(user.id),
     listMyPendingRequests(user.id)
   ]);
 
-  // If the user landed here with 0 or 1 identity (bookmark, refresh after
-  // role-revocation, etc.), bounce them to where they actually belong.
-  // Offene Zugriffs-Anfragen zählen mit — ein User mit 1 Rolle + 1 Anfrage soll
-  // die Liste sehen (inkl. "Angefragt"-Karte), statt weggeleitet zu werden.
+  // Diese Seite ist der „Account vorhanden"-Hub: vorhandene Rollen zur Auswahl
+  // + „Neue Rolle hinzufügen". Sie wird auch bei EINER Rolle gezeigt — der User
+  // soll seine Rolle(n) sehen und gezielt wählen können, statt stumm
+  // deep-gelinkt zu werden. Nur wenn es gar nichts zu zeigen gibt (0 Rollen,
+  // 0 offene Anfragen), bouncen wir zum Dispatcher (→ /signup-Chooser).
+  // Hinweis: Der Post-Login-Flow läuft über /dashboard (Hauptrolle) — diese
+  // Seite erreicht man bewusst (Header-Switcher, /signup), nie automatisch.
   const total =
     identities.clubs.length + identities.teamOnly.length + (identities.sponsor ? 1 : 0);
-  if (total + pendingRequests.length < 2) {
+  if (total + pendingRequests.length < 1) {
     redirect(pickDashboardDestination(identities));
   }
 
@@ -44,7 +47,9 @@ export default async function SelectRolePage() {
           Mit welcher Rolle willst du arbeiten?
         </h1>
         <p className="mt-2 md:mt-3 text-sm md:text-base text-brand-night-navy/60 max-w-xl mx-auto">
-          Du bist in {total} Rollen unterwegs. Wähle eine — du kannst jederzeit oben rechts wechseln.
+          {total === 1
+            ? "Hier ist deine Rolle — oder leg eine weitere an."
+            : `Du bist in ${total} Rollen unterwegs. Wähle eine — du kannst jederzeit oben rechts wechseln.`}
         </p>
       </div>
 

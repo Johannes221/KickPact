@@ -152,17 +152,38 @@ function ownGoals(match: MatchInput): MatchEventInput[] {
 }
 
 function goalTotal(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[] {
-  return ownGoals(match).map((event) => ({
+  const events = ownGoals(match);
+
+  // Liegen Tor-Events vor (voller Spielbericht), zählt jedes Event einzeln — wie
+  // bisher, inkl. der C1-Approval-Logik je Quelle. Unverändertes Verhalten.
+  if (events.length > 0) {
+    return events.map((event) => ({
+      pledgeId: rule.pledgeId,
+      pledgeRuleId: rule.id,
+      matchId: match.id,
+      matchEventId: event.id,
+      triggerType: rule.triggerType,
+      amountCents: rule.amountCents,
+      // SECURITY (C1): scraped goals are billed automatically (fussball.de is the
+      // source of truth), but a *manually* reported goal must be confirmed by the
+      // sponsor — otherwise a club could inject fake goals to inflate charges.
+      requiresApproval: event.source === "manual"
+    }));
+  }
+
+  // KEINE Tor-Events, aber echter Endstand → „nur Ergebnis"-Mannschaft
+  // (results_only: fußball.de liefert den Score ohne Spielbericht). „Pro Tor"
+  // muss trotzdem feuern: ownScore-mal als anonyme Auto-Charge (matchEventId
+  // null). Offizieller Endstand ist die Quelle → keine Sponsor-Freigabe nötig.
+  const score = ownScore(match);
+  return Array.from({ length: score }, () => ({
     pledgeId: rule.pledgeId,
     pledgeRuleId: rule.id,
     matchId: match.id,
-    matchEventId: event.id,
+    matchEventId: null,
     triggerType: rule.triggerType,
     amountCents: rule.amountCents,
-    // SECURITY (C1): scraped goals are billed automatically (fussball.de is the
-    // source of truth), but a *manually* reported goal must be confirmed by the
-    // sponsor — otherwise a club could inject fake goals to inflate charges.
-    requiresApproval: event.source === "manual"
+    requiresApproval: false
   }));
 }
 

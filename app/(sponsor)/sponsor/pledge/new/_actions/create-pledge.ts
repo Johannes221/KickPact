@@ -18,6 +18,8 @@ import {
   getClubIdForTeam,
   createPledgeWithRules
 } from "@/lib/db/queries/pledges";
+import { getTeamDataCoverage } from "@/lib/db/queries/crawler";
+import { coverageAllowsTrigger } from "@/lib/triggers/coverage";
 import {
   findSponsorForUser,
   createSponsorProfile
@@ -108,6 +110,28 @@ export async function createPledge(input: PledgeInput) {
   if (gate.isReadOnly) {
     throw new Error(
       "Diese Mannschaft ist aktuell pausiert. Sponsoring ist wieder möglich, sobald das Abo reaktiviert wurde."
+    );
+  }
+
+  // Daten-Coverage-Gate: fußball.de liefert für manche Mannschaften (C-/D-Jugend)
+  // nur das Ergebnis ohne Torschützen, für andere (E-Jugend abwärts) gar keine
+  // Daten. Spieler-Wetten (goal_by_player, hattrick) brauchen benannte Torschützen
+  // → nur bei `full`. `none`-Mannschaften sind komplett nicht bespielbar. Server-
+  // seitig autoritativ (der UI-Filter im Builder ist nur Komfort).
+  // Siehe lib/triggers/coverage.ts + project_spielbericht_coverage.
+  const teamCoverage = await getTeamDataCoverage(invitationTeamId);
+  if (teamCoverage === "none") {
+    throw new Error(
+      "Für diese Mannschaft liegen auf fußball.de keine Spieldaten vor – Sponsoring ist hier nicht möglich."
+    );
+  }
+  const blockedRule = parsed.rules.find(
+    (r) => !coverageAllowsTrigger(teamCoverage, r.triggerType)
+  );
+  if (blockedRule) {
+    throw new Error(
+      "Spieler-Wetten (Tor von Spieler, Hattrick) sind für diese Mannschaft nicht verfügbar – " +
+        "fußball.de liefert hier nur das Ergebnis, keine Torschützen."
     );
   }
 

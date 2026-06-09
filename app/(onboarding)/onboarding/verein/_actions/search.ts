@@ -9,6 +9,7 @@ import {
 import { getServerSession } from "@/lib/auth/session";
 import { checkTeamCollision } from "@/lib/db/queries/onboarding-collision";
 import { isClubMember } from "@/lib/db/queries/membership-requests";
+import { coverageFloorFromTeamName } from "@/lib/triggers/coverage";
 
 const searchSchema = z.object({
   query: z.string().min(2).max(80)
@@ -111,7 +112,15 @@ export async function getMannschaftenAction(input: {
       return incoming.name.length > current.name.length;
     });
 
-    return { ok: true as const, results: deduped };
+    // Mannschaften, für die fußball.de strukturell KEINE Ergebnisse führt
+    // (E-/F-/G-Jugend, Bambini — „Fair-Play-Liga ohne Tabelle"), gar nicht erst
+    // zur Auswahl anbieten. Rein namensbasiert (kein Fetch). Siehe
+    // lib/triggers/coverage.ts + project_spielbericht_coverage.
+    const eligible = deduped.filter(
+      (m) => coverageFloorFromTeamName(m.name) !== "none"
+    );
+
+    return { ok: true as const, results: eligible };
   } catch (e) {
     return {
       ok: false as const,

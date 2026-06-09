@@ -60,6 +60,22 @@ export async function isPlatformAdminEmail(email: string): Promise<boolean> {
 }
 
 /**
+ * Operator-Check über die User-ID statt der E-Mail. Vorzuziehen überall dort,
+ * wo bereits eine Session vorliegt: die ID ist die stabile Identität (kein
+ * Casing-/Whitespace-Risiko wie bei der E-Mail) und matcht genau die Zeile,
+ * unter der der User eingeloggt ist. Verhindert, dass ein Operator versehentlich
+ * den Nutzer-Rollen-Chooser sieht, weil ein E-Mail-Vergleich danebengeht.
+ */
+export async function isPlatformAdminUser(userId: string): Promise<boolean> {
+  const row = await db
+    .select({ isPlatformAdmin: users.isPlatformAdmin })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return row[0]?.isPlatformAdmin === true;
+}
+
+/**
  * Page-level guard für /admin/*. Lädt den User, prüft das is_platform_admin-
  * Flag und leitet bei Fehlen auf den Operator-Login um. Gibt den User zurück,
  * damit Admin-Seiten "Reviewed by …" zeigen können.

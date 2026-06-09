@@ -7,6 +7,8 @@ import { requireUser } from "@/lib/auth/session";
 import { revalidatePath } from "next/cache";
 import { TRIGGER_TYPES, normalizeTriggerParams } from "@/lib/validations/pledge";
 import { getTeamLicensePlan, countPledgeRulesForSponsorOnTeam } from "@/lib/db/queries/pledges";
+import { getTeamDataCoverage } from "@/lib/db/queries/crawler";
+import { coverageAllowsTrigger } from "@/lib/triggers/coverage";
 import { getMonthlyChargedCents } from "@/lib/db/queries/evaluation";
 import { PLAN_CAPS } from "@/lib/stripe/pricing";
 import { assertWagerWindowOpen, WagerWindowClosedError } from "@/lib/billing/wager-window";
@@ -324,6 +326,20 @@ export async function addPledgeRule(
     if (!(TRIGGER_TYPES as readonly string[]).includes(input.triggerType)) {
       return { error: "Unbekannter Wett-Typ." };
     }
+
+    // Daten-Coverage-Gate (analog create-pledge): Spieler-Wetten nur bei `full`,
+    // `none`-Mannschaften gar nicht. Bestehende Regeln bleiben (updatePledgeRule
+    // gatet bewusst nicht) — nur das NEU-Anlegen wird geblockt.
+    const coverage = await getTeamDataCoverage(pledge.teamId);
+    if (!coverageAllowsTrigger(coverage, input.triggerType)) {
+      return {
+        error:
+          coverage === "none"
+            ? "Für diese Mannschaft liegen auf fußball.de keine Spieldaten vor."
+            : "Spieler-Wetten (Tor von Spieler, Hattrick) sind für diese Mannschaft nicht verfügbar – fußball.de liefert nur das Ergebnis, keine Torschützen."
+      };
+    }
+
     if (!Number.isInteger(input.amountCents) || input.amountCents < 50) {
       return { error: "Betrag muss mindestens 0,50 € sein." };
     }

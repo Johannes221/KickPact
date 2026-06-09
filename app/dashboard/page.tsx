@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
-import { isPlatformAdminEmail } from "@/lib/auth/admin";
+import { isPlatformAdminUser } from "@/lib/auth/admin";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import {
   getStoredPrimaryRole,
@@ -53,7 +53,7 @@ export default async function DashboardRedirect({
 
   // Plattform-Operatoren gehören NICHT in die Nutzer-App (keine Doppelrolle) →
   // direkt ins Backoffice.
-  if (await isPlatformAdminEmail(user.email)) redirect("/admin");
+  if (await isPlatformAdminUser(user.id)) redirect("/admin");
 
   const draft = await getActiveDraftForUser(user.id);
   if (draft) redirect("/onboarding");

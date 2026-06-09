@@ -10,6 +10,7 @@ import {
   consumedTrials
 } from "@/lib/db/schema";
 import type { TeamCollision } from "./onboarding-collision";
+import { coverageFloorFromTeamName } from "@/lib/triggers/coverage";
 
 /** Ein Team-Input des Onboarding-Wizards (fussball.de-Identifier + Name/Saison). */
 export interface TeamDraftInput {
@@ -148,10 +149,20 @@ export async function persistDraftClubAndTeams(args: {
     for (let i = 0; i < teamList.length; i++) {
       const t = teamList[i];
       const c = collisions[i];
+      // Initiale Daten-Coverage aus der Altersklasse (Namens-Floor). Sofort-
+      // Default, der die Wett-UI direkt korrekt gatet; die Live-Probe (post-
+      // commit) und der Crawl schärfen `full`/`results_only` nach. Siehe
+      // lib/triggers/coverage.ts.
+      const coverageFloor = coverageFloorFromTeamName(t.teamName);
       if (c.kind === "scraped-unmanaged") {
         await tx
           .update(teams)
-          .set({ clubId: club.id, isActive: true, crawlStartedAt: new Date() })
+          .set({
+            clubId: club.id,
+            isActive: true,
+            crawlStartedAt: new Date(),
+            dataCoverage: coverageFloor
+          })
           .where(eq(teams.id, c.teamId));
         // Etwaige alte Lizenz lösen — die frische kommt unten unter den neuen Container.
         await tx.delete(teamLicenses).where(eq(teamLicenses.teamId, c.teamId));
@@ -166,7 +177,8 @@ export async function persistDraftClubAndTeams(args: {
             fussballdeTeamId: t.teamId,
             fussballdeSlug: t.teamSlug,
             isActive: true,
-            crawlStartedAt: new Date()
+            crawlStartedAt: new Date(),
+            dataCoverage: coverageFloor
           })
           .returning({ id: teams.id });
         insertedTeamIds.push(row.id);

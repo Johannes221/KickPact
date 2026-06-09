@@ -48,24 +48,22 @@ describe("pickAuthenticatedSignupDestination — kein role", () => {
     );
   });
 
-  it("1 Club → /verein/{slug}", () => {
+  it("1 Club → /select-role (Rollen-Hub statt stummem Deep-Link)", () => {
     const ids: UserIdentities = {
       clubs: [clubIdentity("dossenheim")],
       teamOnly: [],
       sponsor: null
     };
-    expect(pickAuthenticatedSignupDestination(ids, null)).toBe(
-      "/verein/dossenheim"
-    );
+    expect(pickAuthenticatedSignupDestination(ids, null)).toBe("/select-role");
   });
 
-  it("nur Sponsor → /sponsor", () => {
+  it("nur Sponsor → /select-role", () => {
     const ids: UserIdentities = {
       clubs: [],
       teamOnly: [],
       sponsor: sponsorIdentity()
     };
-    expect(pickAuthenticatedSignupDestination(ids, null)).toBe("/sponsor");
+    expect(pickAuthenticatedSignupDestination(ids, null)).toBe("/select-role");
   });
 
   it("2+ Identities → /select-role", () => {
@@ -77,15 +75,13 @@ describe("pickAuthenticatedSignupDestination — kein role", () => {
     expect(pickAuthenticatedSignupDestination(ids, null)).toBe("/select-role");
   });
 
-  it("team-only allein → Team-Deep-Link", () => {
+  it("team-only allein → /select-role", () => {
     const ids: UserIdentities = {
       clubs: [],
       teamOnly: [teamOnlyIdentity("schriesheim", "team-99")],
       sponsor: null
     };
-    expect(pickAuthenticatedSignupDestination(ids, null)).toBe(
-      "/verein/schriesheim/mannschaft/team-99"
-    );
+    expect(pickAuthenticatedSignupDestination(ids, null)).toBe("/select-role");
   });
 });
 

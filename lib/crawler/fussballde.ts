@@ -886,6 +886,25 @@ async function resolvePlayerName(playerUrl: string): Promise<string> {
   }
 }
 
+/**
+ * Liest den ANGEZEIGTEN Endstand aus dem `.result`-Element der Detailseite
+ * (Format ": [H : G]", auch "[- : -]" wenn kein Ergebnis eingetragen ist).
+ *
+ * Das ist die Quelle der Wahrheit für den Score — unabhängig davon, ob ein
+ * Spielbericht mit Tor-Events existiert. Für Mannschaften ohne Torschützen-
+ * Bericht („nur Ergebnis", z.B. C-/D-Jugend) gibt es 0 Tor-Events; die frühere
+ * Score-aus-Events-Logik lieferte dort fälschlich 0:0. `null`, wenn kein
+ * numerischer Stand vorliegt (Fallback auf Event-Zählung).
+ */
+export function parseDisplayedResult(
+  root: HTMLElement
+): { heim: number; gast: number } | null {
+  const txt = nodeText(root.querySelector(".result")).replace(/\s+/g, " ");
+  const m = txt.match(/\[\s*(\d+)\s*:\s*(\d+)\s*\]/);
+  if (!m) return null;
+  return { heim: parseInt(m[1], 10), gast: parseInt(m[2], 10) };
+}
+
 export async function getSpielDetails(
   spielId: string,
   slug: string
@@ -943,8 +962,17 @@ export async function getSpielDetails(
   }
 
   const goals = rawEvents.filter((e) => e.typ === "TOR");
-  const ergebnisHeim = goals.filter((g) => g.side === "heim").length;
-  const ergebnisGast = goals.filter((g) => g.side === "gast").length;
+  // Endstand PRIMÄR aus dem angezeigten `.result` lesen (Wahrheit), nur als
+  // Fallback aus den Tor-Events zählen. So bekommen „nur Ergebnis"-Mannschaften
+  // (kein Spielbericht → 0 Events) ihren echten Score statt 0:0; voll berichtete
+  // Spiele bleiben identisch (`.result` == Event-Anzahl → kein Hash-Drift).
+  const displayedResult = parseDisplayedResult(root);
+  const ergebnisHeim = displayedResult
+    ? displayedResult.heim
+    : goals.filter((g) => g.side === "heim").length;
+  const ergebnisGast = displayedResult
+    ? displayedResult.gast
+    : goals.filter((g) => g.side === "gast").length;
   const firstHalfGoals = goals.filter(
     (g) => g.minute !== null && g.minute <= 45
   );

@@ -4,6 +4,8 @@ import { requireUser } from "@/lib/auth/session";
 import { findInvitationByToken } from "@/lib/db/queries/invitations";
 import { getClubIdForTeam } from "@/lib/db/queries/pledges";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
+import { getTeamDataCoverage } from "@/lib/db/queries/crawler";
+import type { Coverage } from "@/lib/triggers/coverage";
 import { PledgeBuilder } from "./_components/pledge-builder";
 
 export const metadata = { title: "Sponsoring einrichten · KickPact" };
@@ -20,9 +22,14 @@ export default async function NewPledgePage({
   // auflösen können, holen wir das Gate und blocken UI-seitig direkt mit Banner.
   // Server-Action `createPledge` enforced das Gate nochmal hart, das hier ist UX.
   let gateBanner: React.ReactNode = null;
+  // Daten-Coverage der Mannschaft → steuert, welche Wett-Typen der Builder
+  // anbietet (Spieler-Wetten nur bei `full`). `createPledge` enforced das Gate
+  // server-seitig hart; dies hier ist Komfort. NULL = unklassifiziert → alles.
+  let dataCoverage: Coverage | null = null;
   if (invitationToken) {
     const invitation = await findInvitationByToken(invitationToken);
     if (invitation && invitation.teamId) {
+      dataCoverage = await getTeamDataCoverage(invitation.teamId);
       const clubId = await getClubIdForTeam(invitation.teamId);
       if (clubId) {
         const gate = await getSubscriptionGate(clubId);
@@ -57,7 +64,7 @@ export default async function NewPledgePage({
       <div className="mt-6 md:mt-10">
         {gateBanner ?? (
           <Suspense fallback={<div className="text-brand-night-navy/60">Lade…</div>}>
-            <PledgeBuilder />
+            <PledgeBuilder dataCoverage={dataCoverage} />
           </Suspense>
         )}
       </div>

@@ -16,6 +16,11 @@ import {
 } from "@/lib/players/person-name";
 import { detectTeamSide } from "@/lib/crawler/team-side";
 import { isPlausibleLeague } from "@/lib/utils/league";
+import {
+  type Coverage,
+  combineCoverage,
+  coverageFloorFromTeamName
+} from "@/lib/triggers/coverage";
 
 export interface ActiveTeam {
   id: string;
@@ -137,6 +142,50 @@ export async function updateTeamLeague(
     .update(teams)
     .set({ league: trimmed })
     .where(eq(teams.id, teamId));
+}
+
+/**
+ * Persistiert die erkannte Daten-Coverage auf dem Team. Der übergebene
+ * `scrapedSignal` (aus `classifyScrapedMatches`/`detectTeamCoverage`) wird mit
+ * dem Namens-Floor (Altersklasse) UND dem bereits gespeicherten Wert kombiniert
+ * — es wird also nur nach OBEN korrigiert. So zieht weder ein torarmer Spieltag
+ * noch ein vorübergehend leerer Crawl eine Mannschaft fälschlich herunter (z.B.
+ * eine Herren-Mannschaft auf `none`). Siehe lib/triggers/coverage.ts.
+ */
+export async function updateTeamCoverage(
+  teamId: string,
+  scrapedSignal: Coverage
+): Promise<void> {
+  const [row] = await db
+    .select({ name: teams.name, current: teams.dataCoverage })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  if (!row) return;
+  const floor = coverageFloorFromTeamName(row.name);
+  let next = combineCoverage(floor, scrapedSignal);
+  if (row.current) next = combineCoverage(next, row.current);
+  if (next === row.current) return; // idempotent — kein unnötiges Update
+  await db
+    .update(teams)
+    .set({ dataCoverage: next })
+    .where(eq(teams.id, teamId));
+}
+
+/**
+ * Liest die Daten-Coverage einer Mannschaft (für das Gating der Wett-Erstellung).
+ * `null` = unklassifizierter Bestand → Aufrufer behandelt es wie `full`
+ * (Grandfather, siehe coverageAllowsTrigger).
+ */
+export async function getTeamDataCoverage(
+  teamId: string
+): Promise<Coverage | null> {
+  const [row] = await db
+    .select({ dataCoverage: teams.dataCoverage })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  return row?.dataCoverage ?? null;
 }
 
 /**

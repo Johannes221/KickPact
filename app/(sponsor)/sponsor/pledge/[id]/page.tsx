@@ -8,6 +8,7 @@ import {
   listActivePledgeRules,
   listRecentChargesForPledge
 } from "@/lib/db/queries/pledges";
+import { getTeamDataCoverage } from "@/lib/db/queries/crawler";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { StatCard } from "@/components/shared/stat-card";
@@ -49,6 +50,13 @@ export default async function PledgeDetailPage({
   // Spieler-Namen für den „Tore von Spieler X"-Picker — vollständiger Pool
   // (Kader ∪ alle Auftritte), serverseitig vorgeladen.
   const playerNames = await getTeamPlayerPool(pledge.teamId);
+
+  // Spieler-Wetten nur anbieten, wenn fußball.de für die Mannschaft Torschützen
+  // liefert (`full`) oder die Mannschaft noch unklassifiziert ist (NULL). Bei
+  // `results_only`/`none` werden goal_by_player/hattrick im „Regel hinzufügen"-
+  // Dialog ausgeblendet (bestehende Regeln bleiben editierbar).
+  const teamCoverage = await getTeamDataCoverage(pledge.teamId);
+  const playerBetsAllowed = teamCoverage === "full" || teamCoverage == null;
 
   const recentCharges = await listRecentChargesForPledge(id, 10);
 
@@ -122,6 +130,7 @@ export default async function PledgeDetailPage({
           rules={editableRules}
           playerNames={playerNames}
           pledgeEnded={pledge.status === "ended"}
+          playerBetsAllowed={playerBetsAllowed}
         />
       </div>
 

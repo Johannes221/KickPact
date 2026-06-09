@@ -17,6 +17,7 @@ import {
   deletePledgeRule,
   addPledgeRule
 } from "@/lib/actions/pledges";
+import { requiresNamedScorers } from "@/lib/triggers/coverage";
 
 export type EditableRule = {
   id: string;
@@ -256,11 +257,13 @@ function RuleRow({
 function AddBet({
   pledgeId,
   playerNames,
-  existingTypes
+  existingTypes,
+  playerBetsAllowed
 }: {
   pledgeId: string;
   playerNames: string[];
   existingTypes: string[];
+  playerBetsAllowed: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -275,7 +278,10 @@ function AddBet({
     .filter((t) => TRIGGER_META[t].auto || ["special_goal", "season_cup_round", "season_custom"].includes(t))
     // special_goal darf mehrfach existieren (eine Regel je Tor-Art), die übrigen
     // Typen nur einmal.
-    .filter((t) => t === "special_goal" || !existingTypes.includes(t));
+    .filter((t) => t === "special_goal" || !existingTypes.includes(t))
+    // Spieler-Wetten (goal_by_player, hattrick) nur anbieten, wenn fußball.de für
+    // diese Mannschaft Torschützen liefert (`full`). Siehe lib/triggers/coverage.ts.
+    .filter((t) => playerBetsAllowed || !requiresNamedScorers(t));
 
   function add() {
     if (!triggerType) { toast.error("Regel-Typ wählen."); return; }
@@ -349,12 +355,20 @@ export function PledgeRulesEditor({
   pledgeId,
   rules,
   playerNames,
-  pledgeEnded
+  pledgeEnded,
+  playerBetsAllowed = true
 }: {
   pledgeId: string;
   rules: EditableRule[];
   playerNames: string[];
   pledgeEnded: boolean;
+  /**
+   * Ob für die Mannschaft Spieler-Wetten anlegbar sind (Coverage `full` oder
+   * unklassifiziert). Bei `false` werden goal_by_player/hattrick im „Regel
+   * hinzufügen"-Dialog ausgeblendet — bereits bestehende Spieler-Regeln bleiben
+   * aber editierbar (Grandfather).
+   */
+  playerBetsAllowed?: boolean;
 }) {
   return (
     <div className="space-y-3">
@@ -364,7 +378,12 @@ export function PledgeRulesEditor({
         ))}
       </ul>
       {!pledgeEnded && (
-        <AddBet pledgeId={pledgeId} playerNames={playerNames} existingTypes={rules.map((r) => r.triggerType)} />
+        <AddBet
+          pledgeId={pledgeId}
+          playerNames={playerNames}
+          existingTypes={rules.map((r) => r.triggerType)}
+          playerBetsAllowed={playerBetsAllowed}
+        />
       )}
     </div>
   );

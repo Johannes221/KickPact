@@ -72,6 +72,23 @@ export const onboardingStatusEnum = pgEnum("onboarding_status", [
  */
 export const onboardingRoleEnum = pgEnum("onboarding_role", ["mannschaft", "verein"]);
 
+/**
+ * Daten-Coverage einer Mannschaft auf fußball.de (Scraper-Probe 2026-05/06).
+ * Steuert das Gating der Wett-Typen:
+ *   - `full`         → benannte Torschützen vorhanden → alle Wetten inkl. Spieler.
+ *   - `results_only` → nur Endstand → Ergebnis-/Comeback-/Saison-Wetten, KEINE
+ *                      Auto-Spieler-Wetten.
+ *   - `none`         → keine Ergebnisse → Mannschaft nicht bespielbar (im
+ *                      Onboarding ausgeblendet).
+ * NULL (Spalte nullable) = unklassifizierter Bestand → wird wie `full` behandelt
+ * (Grandfather, bis der Backfill greift). Siehe lib/triggers/coverage.ts.
+ */
+export const teamDataCoverageEnum = pgEnum("team_data_coverage", [
+  "full",
+  "results_only",
+  "none"
+]);
+
 export const clubs = pgTable(
   "clubs",
   {
@@ -190,6 +207,13 @@ export const teams = pgTable(
      * NULL, wenn noch kein Crawl oder keine Liga gefunden.
      */
     league: text("league"),
+    /**
+     * Daten-Coverage auf fußball.de (siehe teamDataCoverageEnum). Bestimmt,
+     * welche Wett-Typen für die Mannschaft anbietbar sind. NULL = noch nicht
+     * klassifiziert → wird wie `full` behandelt (Bestand schonen). Gesetzt beim
+     * Onboarding (Namens-Floor + Live-Probe) und beim Crawl nachgeschärft.
+     */
+    dataCoverage: teamDataCoverageEnum("data_coverage"),
     /**
      * Mannschafts-Verifikations-Status (Spec §1.7). NULL = nicht verifiziert,
      * gesetzt = approved durch Plattform-Admin.

@@ -3,7 +3,8 @@ import {
   getSpiele,
   getSpielDetails,
   computeMatchHash,
-  getKader
+  getKader,
+  type SpielDetails
 } from "@/lib/crawler/fussballde";
 import { validateSpielListItem, validateSpielDetails } from "@/lib/crawler/validator";
 import {
@@ -16,9 +17,11 @@ import {
   markCrawlCompleted,
   markCrawlError,
   updateTeamLeague,
+  updateTeamCoverage,
   persistKader,
   type ActiveTeam
 } from "@/lib/db/queries/crawler";
+import { classifyScrapedMatches } from "@/lib/crawler/coverage";
 import { invalidateChargesForMatch } from "@/lib/db/queries/charges";
 import { upsertScheduledMatch } from "@/lib/db/queries/matches";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
@@ -204,6 +207,13 @@ export const crawlMatches = inngest.createFunction(
           return v.valid;
         });
 
+      // Gescrapte Detail-Daten der gespielten Spiele sammeln → Daten-Coverage
+      // klassifizieren (benannte Torschützen? nur Ergebnis?). Nach der Schleife
+      // einmal pro Team persistiert (updateTeamCoverage hebt nie unter den
+      // Namens-Floor, schärft also C-/D-Jugend bei vorhandenen Torschützen auf
+      // `full`). Siehe lib/crawler/coverage.ts.
+      const scrapedDetails: SpielDetails[] = [];
+
       for (const spiel of validSpiele) {
         const existing = await step.run(`check-${spiel.spielId}`, () =>
           findMatchByFussballdeId(spiel.spielId)
@@ -225,6 +235,8 @@ export const crawlMatches = inngest.createFunction(
           skippedInvalid++;
           continue;
         }
+
+        scrapedDetails.push(details);
 
         const newHash = computeMatchHash({
           ergebnisHeim: details.ergebnis.heim,
@@ -282,6 +294,14 @@ export const crawlMatches = inngest.createFunction(
         });
 
         totalNewMatches++;
+      }
+
+      // Daten-Coverage aus den gescrapten Spielen nachschärfen (nur wenn
+      // tatsächlich gespielte Spiele vorlagen — sonst kein Signal).
+      if (scrapedDetails.length > 0) {
+        await step.run(`coverage-${team.id}`, () =>
+          updateTeamCoverage(team.id, classifyScrapedMatches(scrapedDetails))
+        );
       }
 
       // Team fertig gecrawlt → Banner kann ausgeblendet werden.

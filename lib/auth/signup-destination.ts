@@ -31,15 +31,14 @@ export function pickAuthenticatedSignupDestination(
   const total =
     ids.clubs.length + ids.teamOnly.length + (ids.sponsor ? 1 : 0);
 
-  // ── Ohne explizite Rolle: einfach Smart-Dispatcher-Verhalten ──────────────
+  // ── Ohne explizite Rolle: Rollen-Hub zeigen ───────────────────────────────
+  // 0 Rollen → /signup (caller rendert den 3-Wege-Chooser „wähle wie du
+  // startest"). Ab 1 Rolle → /select-role: der eingeloggte User soll seine
+  // vorhandene(n) Rolle(n) sehen und auswählen + „Neue Rolle hinzufügen",
+  // statt bei genau einer Rolle stumm deep-gelinkt zu werden. (Der
+  // Post-Login-Direktsprung in die Hauptrolle läuft separat über /dashboard.)
   if (!role) {
-    if (total === 0) return "/signup";
-    if (total >= 2) return "/select-role";
-    if (ids.clubs[0]) return `/verein/${ids.clubs[0].slug}`;
-    if (ids.teamOnly[0]) {
-      return `/verein/${ids.teamOnly[0].clubSlug}/mannschaft/${ids.teamOnly[0].teamId}`;
-    }
-    return "/sponsor";
+    return total === 0 ? "/signup" : "/select-role";
   }
 
   // ── Sponsor-Add-Role ──────────────────────────────────────────────────────

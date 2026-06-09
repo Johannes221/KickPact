@@ -172,7 +172,11 @@ export async function createDraftClub(input: CreateDraftInput): Promise<CreateDr
   // Crawler sofort triggern damit die Mannschafts-Übersicht nicht ewig auf
   // "Wir suchen nach den letzten Spielen…" stehen bleibt. Fire-and-forget —
   // Inngest-Failures (z.B. INNGEST_SIGNING_KEY fehlt lokal) sollen den
-  // Onboarding-Abschluss nicht blocken.
+  // Onboarding-Abschluss nicht blocken. Dieser Crawl schärft auch die
+  // Daten-Coverage nach (classifyScrapedMatches → updateTeamCoverage in
+  // crawl-matches), d.h. C-/D-Jugend wird hier von ihrem konservativen
+  // Namens-Floor `results_only` auf `full` gehoben, sobald Torschützen
+  // tatsächlich vorliegen — ohne den Submit mit einer Live-Probe zu blockieren.
   await Promise.all(
     result.insertedTeamIds.map((teamId) =>
       inngest
