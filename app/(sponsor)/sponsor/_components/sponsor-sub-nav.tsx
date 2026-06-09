@@ -6,7 +6,7 @@ import {
   House,
   Compass,
   Target,
-  Inbox,
+  Users,
   User,
   TrendingUp,
   ChartColumnIncreasing,
@@ -20,12 +20,14 @@ import type { SettingsNavItem } from "@/components/shared/settings-sheet";
 
 type Tab = { label: string; href: string; icon: LucideIcon };
 
-// Mobile-Primärset (5 Bottom-Tabs). Inbox vorne wegen Pending-Badge.
+// Mobile-Primärset (5 Bottom-Tabs). Benachrichtigungen liegen jetzt in der
+// Glocke oben links → statt „Inbox" ein „Mannschaften"-Tab (Übersicht aller
+// gesponserten Teams).
 const PRIMARY_TABS: readonly Tab[] = [
   { label: "Übersicht", href: "/sponsor", icon: House },
   { label: "Entdecken", href: "/sponsor/discover", icon: Compass },
   { label: "Pacts", href: "/sponsor/pledge", icon: Target },
-  { label: "Inbox", href: "/sponsor/inbox", icon: Inbox },
+  { label: "Mannschaften", href: "/sponsor/mannschaften", icon: Users },
   { label: "Profil", href: "/sponsor/profil", icon: User }
 ] as const;
 
@@ -69,14 +71,14 @@ export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
     <>
       {/* Mobile: fixe iOS-NavBar (Titel/Back + Zahnrad). */}
       <AppNavBar
+        brand
         title={isDetail ? undefined : activeTab?.label ?? "Sponsor"}
         backHref={isDetail ? activeTab?.href : undefined}
         backLabel={isDetail ? activeTab?.label : undefined}
         settings={{
           contextLabel: "Sponsor",
           overflowItems: SETTINGS_ITEMS,
-          activeHref: pathname,
-          badge: pendingCount > 0
+          activeHref: pathname
         }}
       />
 
@@ -96,11 +98,6 @@ export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
               )}
             >
               {label}
-              {href === "/sponsor/inbox" && pendingCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-accent text-white text-[0.6rem] font-bold flex items-center justify-center px-1 leading-none">
-                  {pendingCount > 99 ? "99+" : pendingCount}
-                </span>
-              )}
             </Link>
           );
         })}
@@ -113,8 +110,7 @@ export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
           items={PRIMARY_TABS.map(({ label, href, icon }) => ({
             label,
             icon,
-            href,
-            badge: href === "/sponsor/inbox" ? pendingCount : undefined
+            href
           }))}
         />
       </div>
