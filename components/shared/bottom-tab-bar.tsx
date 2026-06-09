@@ -110,7 +110,7 @@ export function BottomTabBar({
               </span>
               <span
                 className={cn(
-                  "max-w-full truncate px-1 text-[0.65rem] font-semibold transition-colors",
+                  "max-w-full truncate px-0.5 text-[0.6rem] font-semibold tracking-tight transition-colors",
                   active ? "text-accent-dark" : "text-brand-night-navy/50"
                 )}
               >

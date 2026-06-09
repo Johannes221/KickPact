@@ -199,7 +199,7 @@ export default async function VereinLayout({
 
       {/* Weitere Vereins-Tabs wenn User mehrere Vereine hat */}
       {myClubs.length > 1 && (
-        <div className="mb-5 -mt-2 flex flex-wrap gap-1.5">
+        <div className="mb-5 flex flex-wrap gap-1.5">
           {myClubs.map((c) => (
             <Link
               key={c.id}
