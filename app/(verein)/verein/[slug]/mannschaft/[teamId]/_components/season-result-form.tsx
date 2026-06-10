@@ -50,7 +50,7 @@ export function SeasonResultForm({
           cupRoundReached: cupRoundReached || undefined,
           customNotes: customNotes || undefined
         });
-        toast.success("Saison-Ergebnis gespeichert. Saison-Wetten werden ausgewertet.");
+        toast.success("Saison-Ergebnis gespeichert. Saison-Regeln werden ausgewertet.");
         setExpanded(false);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen");
@@ -93,7 +93,7 @@ export function SeasonResultForm({
         Saison-Ergebnis eintragen
       </h3>
       <p className="mt-1 text-xs md:text-sm text-brand-night-navy/70">
-        Trage den End-Stand ein, sobald die Saison gewertet ist. Saison-Wetten der Sponsoren
+        Trage den End-Stand ein, sobald die Saison gewertet ist. Saison-Regeln der Sponsoren
         werden danach automatisch abgerechnet.
       </p>
 
@@ -145,7 +145,7 @@ export function SeasonResultForm({
       <div className="mt-3 md:mt-4">
         <label className="block">
           <span className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
-            Notizen für Custom-Saison-Wetten (optional)
+            Notizen für eigene Saison-Ziele (optional)
           </span>
           <textarea
             value={customNotes}
@@ -157,13 +157,13 @@ export function SeasonResultForm({
           />
         </label>
         <p className="mt-1 text-[0.7rem] text-brand-night-navy/50">
-          Sponsoren mit Custom-Saison-Wette bestätigen das Erreichen selbst.
+          Sponsoren mit eigenem Saison-Ziel bestätigen das Erreichen selbst.
         </p>
       </div>
 
       <div className="mt-4 md:mt-5 flex flex-wrap gap-2">
         <Button size="sm" variant="accent" disabled={isPending} onClick={handleSubmit}>
-          {isPending ? "Speichere…" : "Speichern + Saison-Wetten auswerten"}
+          {isPending ? "Speichere…" : "Speichern + Saison-Regeln auswerten"}
         </Button>
         {current && (
           <Button size="sm" variant="ghost" onClick={() => setExpanded(false)}>

@@ -3,7 +3,11 @@ import { listPendingForSponsor } from "@/lib/db/queries/approvals";
 import { ApprovalRow } from "./_components/approval-row";
 import { PageHeader } from "@/components/shared/page-header";
 
-export const metadata = { title: "Inbox · KickPact" };
+// Hieß früher „Inbox" (eigener Bottom-Tab). Der Tab ist weg — erreichbar bleibt
+// die Seite über „Nächste Schritte" auf der Übersicht + E-Mail-Deep-Links,
+// daher bleibt die Route /sponsor/inbox stabil, nur das Label heißt jetzt
+// „Bestätigungen" (das ist, was die Seite tut).
+export const metadata = { title: "Bestätigungen · KickPact" };
 
 export default async function SponsorInboxPage() {
   const user = await requireUser();
@@ -14,7 +18,7 @@ export default async function SponsorInboxPage() {
       <div className="mb-6 md:mb-10">
         <PageHeader
           className="md:hidden"
-          title="Inbox"
+          title="Bestätigungen"
           subtitle={
             pending.length === 0
               ? "Keine ausstehenden Events."
@@ -23,7 +27,7 @@ export default async function SponsorInboxPage() {
         />
         <div className="hidden md:block">
           <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-brand-night-navy">
-            Inbox
+            Bestätigungen
           </h1>
           <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
             {pending.length === 0

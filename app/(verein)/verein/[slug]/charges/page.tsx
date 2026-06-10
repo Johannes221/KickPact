@@ -12,7 +12,7 @@ import { CsvExportButton } from "@/components/shared/csv-export-button";
 import { StatCard } from "@/components/shared/stat-card";
 import { ChargesTable } from "./_components/charges-table";
 
-export const metadata = { title: "Charges · KickPact" };
+export const metadata = { title: "Beiträge · KickPact" };
 
 type SP = {
   page?: string;
@@ -119,7 +119,7 @@ export default async function ChargesPage({
     <div className="space-y-5 md:space-y-8">
       <div>
         <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-brand-night-navy">
-          Charges
+          Beiträge
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">
           Alle einzelnen Sponsor-Auslösungen quer durch alle Mannschaften.
@@ -127,7 +127,7 @@ export default async function ChargesPage({
       </div>
 
       <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard label="Charges (Treffer)" value={String(result.total)} />
+        <StatCard label="Beiträge (Treffer)" value={String(result.total)} />
         <StatCard
           label="Summe Seite"
           value={eur(sumOnPageCents)}
