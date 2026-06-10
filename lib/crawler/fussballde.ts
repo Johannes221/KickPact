@@ -112,13 +112,16 @@ async function fetchHtml(url: string): Promise<HTMLElement> {
       // Harte Block-/Captcha-Seite: nur bei KLEINER Seite + Block-Marker werfen.
       // Echte Seiten (Liste ~28 KB, Detail ~190 KB) referenzieren teils "captcha"
       // in Hidden-Forms → Längen-Guard verhindert False-Positives.
+      // Marker decken die echte fussball.de-Sperrseite ab: Titel/H1
+      // „Sicherheitsabfrage" + reCAPTCHA-iframe (recaptcha/api…). g-recaptcha
+      // allein verfehlte beide → stiller Leer-Parse statt lautem Fehler.
       if (
         html.length < 3000 &&
-        /g-recaptcha|datadome|captcha-delivery|zugriff verweigert|access denied/i.test(
+        /g-recaptcha|recaptcha\/api|sicherheitsabfrage|datadome|captcha-delivery|zugriff verweigert|access denied/i.test(
           html
         )
       ) {
-        throw new Error("Captcha/Block-Seite erkannt");
+        throw new Error("Captcha/Sicherheitsabfrage-Seite erkannt");
       }
       return parseHtml(html);
     },
