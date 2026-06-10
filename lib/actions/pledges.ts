@@ -93,7 +93,7 @@ function parseCap(
   if (capCents === undefined || capCents === null) {
     return { ok: true, capCents: null, capPeriod: null };
   }
-  if (isSeason) return { ok: false, error: "Saison-Wetten können keinen Cap haben." };
+  if (isSeason) return { ok: false, error: "Saison-Regeln können keinen Cap haben." };
   if (!Number.isInteger(capCents) || capCents <= 0) {
     return { ok: false, error: "Cap muss ein positiver Betrag sein." };
   }
@@ -196,9 +196,9 @@ export async function updatePledgeRule(
 ): Promise<{ error?: string }> {
   try {
     const rule = await loadOwnedRule(ruleId);
-    if (!rule) return { error: "Wette nicht gefunden oder kein Zugriff." };
+    if (!rule) return { error: "Regel nicht gefunden oder kein Zugriff." };
     if (rule.pledgeStatus === "ended") return { error: "Beendete Pacts können nicht geändert werden." };
-    if (!rule.active) return { error: "Gelöschte Wetten können nicht geändert werden." };
+    if (!rule.active) return { error: "Gelöschte Regeln können nicht geändert werden." };
 
     const patch: Partial<typeof pledgeRules.$inferInsert> = {};
 
@@ -285,7 +285,7 @@ export async function updatePledgeRule(
 export async function deletePledgeRule(ruleId: string): Promise<{ error?: string }> {
   try {
     const rule = await loadOwnedRule(ruleId);
-    if (!rule) return { error: "Wette nicht gefunden oder kein Zugriff." };
+    if (!rule) return { error: "Regel nicht gefunden oder kein Zugriff." };
     if (rule.pledgeStatus === "ended") return { error: "Beendete Pacts können nicht geändert werden." };
     if (!rule.active) return {};
     // SECURITY (H4b): `active=false` versteckt die Wette aus UI/Zählungen, und
@@ -336,7 +336,7 @@ export async function addPledgeRule(
         error:
           coverage === "none"
             ? "Für diese Mannschaft liegen auf fußball.de keine Spieldaten vor."
-            : "Spieler-Wetten (Tor von Spieler, Hattrick) sind für diese Mannschaft nicht verfügbar – fußball.de liefert nur das Ergebnis, keine Torschützen."
+            : "Spieler-Regeln (Tor von Spieler, Hattrick) sind für diese Mannschaft nicht verfügbar – fußball.de liefert nur das Ergebnis, keine Torschützen."
       };
     }
 
@@ -357,19 +357,19 @@ export async function addPledgeRule(
     if (ruleCap !== null) {
       const existing = await countPledgeRulesForSponsorOnTeam(pledge.sponsorId, pledge.teamId);
       if (existing + 1 > ruleCap) {
-        return { error: `Limit erreicht: max. ${ruleCap} Wetten auf dem ${plan}-Tier. Bitte Verein auf Pro upgraden.` };
+        return { error: `Limit erreicht: max. ${ruleCap} Regeln auf dem ${plan}-Tier. Bitte Verein auf Pro upgraden.` };
       }
     }
 
     // Saison-Wetten: nur Pro/Verein + nur vor dem 5. Spieltag buchbar.
     if (isSeason) {
-      if (plan === "basic") return { error: "Saison-Wetten sind erst ab dem Pro-Tier verfügbar." };
+      if (plan === "basic") return { error: "Saison-Ziele sind erst ab dem Pro-Tier verfügbar." };
       const now = new Date();
       try {
         assertWagerWindowOpen(await getActiveSeason(now), now);
       } catch (e) {
         if (e instanceof WagerWindowClosedError) {
-          return { error: "Saison-Wetten sind für diese Saison nicht mehr buchbar (Cutoff am 5. Spieltag)." };
+          return { error: "Saison-Ziele sind für diese Saison nicht mehr buchbar (Cutoff am 5. Spieltag)." };
         }
         throw e;
       }

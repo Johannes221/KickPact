@@ -38,7 +38,7 @@ export function AvailableTriggers() {
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
         <div className="min-w-0">
           <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
-            Welche Wetten können Sponsoren wählen?
+            Welche Regeln können Sponsoren wählen?
           </h3>
           <p className="mt-0.5 text-sm text-brand-night-navy/60">
             Alle Ereignisse, auf die Sponsoren bei euch setzen können — zur Transparenz.

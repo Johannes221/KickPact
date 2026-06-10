@@ -172,7 +172,7 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
         <section>
           <div className="flex items-baseline justify-between gap-3 mb-4">
             <h2 className="text-2xl font-bold tracking-tight text-brand-night-navy">
-              Sponsor-Charges
+              Sponsor-Beiträge
             </h2>
             <span className="text-2xl font-bold tracking-tight text-accent">
               {eur(chargesData.totalCents)}

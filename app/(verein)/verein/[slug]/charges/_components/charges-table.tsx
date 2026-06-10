@@ -110,7 +110,7 @@ export function ChargesTable({
         reason: cancelReason || undefined
       });
       if (!res.ok) toast.error(res.error);
-      else toast.success("Charge storniert.");
+      else toast.success("Beitrag storniert.");
     });
   }
 
@@ -213,7 +213,7 @@ export function ChargesTable({
               size="sm"
               variant="ghost"
               className="h-7 w-7 p-0 text-brand-night-navy/40 hover:text-red-600 hover:bg-red-50"
-              title="Charge stornieren"
+              title="Beitrag stornieren"
               disabled={pending}
               onClick={() => openCancel(r)}
             >
@@ -240,7 +240,7 @@ export function ChargesTable({
         totalPages={totalPages}
         sort={sort}
         dir={dir}
-        emptyState="Keine Charges für die aktuellen Filter."
+        emptyState="Keine Beiträge für die aktuellen Filter."
       />
 
       {/* Storno-Bestätigungsdialog */}
@@ -250,7 +250,7 @@ export function ChargesTable({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Charge stornieren?</DialogTitle>
+            <DialogTitle>Beitrag stornieren?</DialogTitle>
             <DialogDescription>
               {cancelTarget && (
                 <>
@@ -263,7 +263,7 @@ export function ChargesTable({
                   )}
                   <br />
                   <span className="text-brand-night-navy/60 text-xs mt-1 block">
-                    Bereits abgerechnete Charges können nicht storniert werden.
+                    Bereits abgerechnete Beiträge können nicht storniert werden.
                   </span>
                 </>
               )}
@@ -290,7 +290,7 @@ export function ChargesTable({
               Abbrechen
             </Button>
             <Button variant="destructive" onClick={handleConfirmCancel} disabled={pending}>
-              {pending ? "…" : "Charge stornieren"}
+              {pending ? "…" : "Beitrag stornieren"}
             </Button>
           </DialogFooter>
         </DialogContent>

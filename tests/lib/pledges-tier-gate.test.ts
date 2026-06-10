@@ -3,9 +3,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Pricing-v2-Audit Finding #4 (2026-05-24): Saison-Wetten muessen auf
 // Basic-Tier hart geblockt werden. Diese Tests fahren createPledge mit
 // gemockten DB-Layern und stellen sicher, dass:
-// - basic-Plan + season_* Trigger → SeasonWagerNotAllowedError
+// - basic-Plan + season_* Trigger → { ok: false } mit Saison-Wetten-Meldung
 // - pro/verein-Plan + season_* Trigger → kein Tier-Gate
 // - basic-Plan + normaler Trigger → kein Tier-Gate
+// Hinweis: createPledge wirft keine Business-Fehler mehr, sondern liefert
+// { ok: false, message } zurück (Next.js redacted geworfene Action-Fehler).
 
 const {
   requireUserMock,
@@ -21,8 +23,6 @@ const {
   createSponsorProfileMock,
   getClubIdForTeamMock,
   createPledgeWithRulesMock,
-  isClubMemberMock,
-  getTeamMembershipRoleMock,
   getTeamDataCoverageMock
 } = vi.hoisted(() => ({
   requireUserMock: vi.fn(),
@@ -38,8 +38,6 @@ const {
   createSponsorProfileMock: vi.fn(),
   getClubIdForTeamMock: vi.fn(),
   createPledgeWithRulesMock: vi.fn(),
-  isClubMemberMock: vi.fn(),
-  getTeamMembershipRoleMock: vi.fn(),
   getTeamDataCoverageMock: vi.fn()
 }));
 
@@ -94,11 +92,6 @@ vi.mock("@/lib/db/queries/sponsor-dashboard", () => ({
   createSponsorProfile: createSponsorProfileMock
 }));
 
-vi.mock("@/lib/db/queries/membership-requests", () => ({
-  isClubMember: isClubMemberMock,
-  getTeamMembershipRole: getTeamMembershipRoleMock
-}));
-
 vi.mock("@/lib/billing/wager-window", () => ({
   assertWagerWindowOpen: assertWagerWindowOpenMock,
   WagerWindowClosedError: class WagerWindowClosedError extends Error {
@@ -126,7 +119,6 @@ vi.mock("@/lib/db/queries/sponsor-label", () => ({
 }));
 
 import { createPledge } from "@/app/(sponsor)/sponsor/pledge/new/_actions/create-pledge";
-import { SeasonWagerNotAllowedError } from "@/lib/billing/season-wager-errors";
 
 const VALID_INPUT = {
   invitationToken: "tok-1",
@@ -162,9 +154,6 @@ beforeEach(() => {
   findSponsorMock.mockResolvedValue({ id: "sp-1" });
   createSponsorProfileMock.mockResolvedValue({ id: "sp-1" });
   getClubIdForTeamMock.mockResolvedValue("club-1");
-  // Self-Dealing-Check (L6): User ist weder Club- noch Team-Mitglied.
-  isClubMemberMock.mockResolvedValue(false);
-  getTeamMembershipRoleMock.mockResolvedValue(null);
   createPledgeWithRulesMock.mockResolvedValue({ pledgeId: "pledge-1" });
   markInvitationUsedMock.mockResolvedValue(undefined);
   // Default: volle Daten-Coverage → kein Coverage-Gate (Bestand schonen).
@@ -172,16 +161,18 @@ beforeEach(() => {
 });
 
 describe("createPledge — Tier-Gate fuer Saison-Wetten (Audit #4)", () => {
-  it("basic-Tier + season_* Trigger → SeasonWagerNotAllowedError", async () => {
+  it("basic-Tier + season_* Trigger → ok:false mit Saison-Wetten-Meldung", async () => {
     getTeamLicensePlanMock.mockResolvedValue("basic");
-    await expect(createPledge(VALID_INPUT)).rejects.toBeInstanceOf(
-      SeasonWagerNotAllowedError
-    );
+    await expect(createPledge(VALID_INPUT)).resolves.toEqual({
+      ok: false,
+      message: expect.stringMatching(/Saison-Ziele/i)
+    });
   });
 
   it("pro-Tier + season_* Trigger → kein Tier-Gate", async () => {
     getTeamLicensePlanMock.mockResolvedValue("pro");
     await expect(createPledge(VALID_INPUT)).resolves.toEqual({
+      ok: true,
       pledgeId: "pledge-1"
     });
   });
@@ -189,6 +180,7 @@ describe("createPledge — Tier-Gate fuer Saison-Wetten (Audit #4)", () => {
   it("verein-Tier + season_* Trigger → kein Tier-Gate", async () => {
     getTeamLicensePlanMock.mockResolvedValue("verein");
     await expect(createPledge(VALID_INPUT)).resolves.toEqual({
+      ok: true,
       pledgeId: "pledge-1"
     });
   });
@@ -207,6 +199,7 @@ describe("createPledge — Tier-Gate fuer Saison-Wetten (Audit #4)", () => {
       ]
     };
     await expect(createPledge(input)).resolves.toEqual({
+      ok: true,
       pledgeId: "pledge-1"
     });
   });
@@ -228,28 +221,34 @@ describe("createPledge — Daten-Coverage-Gate", () => {
     getTeamLicensePlanMock.mockResolvedValue("pro");
   });
 
-  it("results_only + goal_by_player → Fehler (Spieler-Wette geblockt)", async () => {
+  it("results_only + goal_by_player → ok:false (Spieler-Regel geblockt)", async () => {
     getTeamDataCoverageMock.mockResolvedValue("results_only");
-    await expect(createPledge(playerRuleInput)).rejects.toThrow(/Spieler-Wetten/i);
+    await expect(createPledge(playerRuleInput)).resolves.toEqual({
+      ok: false,
+      message: expect.stringMatching(/Spieler-Regeln/i)
+    });
   });
 
   it("results_only + goal_total → erlaubt", async () => {
     getTeamDataCoverageMock.mockResolvedValue("results_only");
-    await expect(createPledge(resultRuleInput)).resolves.toEqual({ pledgeId: "pledge-1" });
+    await expect(createPledge(resultRuleInput)).resolves.toEqual({ ok: true, pledgeId: "pledge-1" });
   });
 
   it("full + goal_by_player → erlaubt", async () => {
     getTeamDataCoverageMock.mockResolvedValue("full");
-    await expect(createPledge(playerRuleInput)).resolves.toEqual({ pledgeId: "pledge-1" });
+    await expect(createPledge(playerRuleInput)).resolves.toEqual({ ok: true, pledgeId: "pledge-1" });
   });
 
   it("null (unklassifiziert) + goal_by_player → erlaubt (Grandfather)", async () => {
     getTeamDataCoverageMock.mockResolvedValue(null);
-    await expect(createPledge(playerRuleInput)).resolves.toEqual({ pledgeId: "pledge-1" });
+    await expect(createPledge(playerRuleInput)).resolves.toEqual({ ok: true, pledgeId: "pledge-1" });
   });
 
   it("none → komplett geblockt (auch Ergebnis-Wette)", async () => {
     getTeamDataCoverageMock.mockResolvedValue("none");
-    await expect(createPledge(resultRuleInput)).rejects.toThrow(/keine Spieldaten/i);
+    await expect(createPledge(resultRuleInput)).resolves.toEqual({
+      ok: false,
+      message: expect.stringMatching(/keine Spieldaten/i)
+    });
   });
 });

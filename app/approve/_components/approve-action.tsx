@@ -39,8 +39,8 @@ export function ApproveAction({
     return (
       <Status
         status="confirmed"
-        heading="Charge bestätigt"
-        message="Charge bestätigt. Der Betrag erscheint auf der nächsten Monatsrechnung."
+        heading="Beitrag bestätigt"
+        message="Beitrag bestätigt. Der Betrag erscheint auf der nächsten Monatsrechnung."
       />
     );
   }
@@ -49,7 +49,7 @@ export function ApproveAction({
       <Status
         status="disputed"
         heading="Event bestritten"
-        message="Event bestritten. Die Charge wurde storniert — der Verein wird informiert."
+        message="Event bestritten. Der Beitrag wurde storniert — der Verein wird informiert."
       />
     );
   }
@@ -68,8 +68,8 @@ export function ApproveAction({
     >
       <p className="text-sm text-brand-night-navy/80 text-center mb-5">
         {isConfirm
-          ? "Möchtest du diese Charge bestätigen? Der Betrag erscheint dann auf der nächsten Monatsrechnung."
-          : "Möchtest du dieses gemeldete Ereignis bestreiten? Die zugehörige Charge wird storniert."}
+          ? "Möchtest du diesen Beitrag bestätigen? Der Betrag erscheint dann auf der nächsten Monatsrechnung."
+          : "Möchtest du dieses gemeldete Ereignis bestreiten? Der zugehörige Beitrag wird storniert."}
       </p>
       <button
         type="button"
@@ -79,7 +79,7 @@ export function ApproveAction({
           isConfirm ? "bg-emerald-600 hover:bg-emerald-700" : "bg-brand-alert-red hover:opacity-90"
         }`}
       >
-        {pending ? "Wird verarbeitet …" : isConfirm ? "Charge bestätigen" : "Event bestreiten"}
+        {pending ? "Wird verarbeitet …" : isConfirm ? "Beitrag bestätigen" : "Event bestreiten"}
       </button>
     </div>
   );
@@ -116,7 +116,7 @@ function Status({
       <p className="text-sm text-brand-night-navy/70 text-center">{message}</p>
       <div className="mt-6 flex justify-center gap-4 text-xs text-brand-night-navy/50">
         <Link href="/sponsor/inbox" className="hover:text-accent">
-          Zur Inbox
+          Alle Bestätigungen
         </Link>
         <Link href="/" className="hover:text-accent">
           Startseite

@@ -402,7 +402,7 @@ export default function LandingPage() {
               "Unlimited Sponsoren",
               "Mannschafts-Logo auf PDF-Rechnungen",
               'Custom Trigger-Texte (z.B. "Bizeps-Tor")',
-              "Saison-Wetten (Aufstieg, Klassenerhalt, …)",
+              "Saison-Ziele (Aufstieg, Klassenerhalt, …)",
               "30 Tage gratis · monatlich kündbar"
             ]}
           />
@@ -474,8 +474,8 @@ export default function LandingPage() {
               a="Nein. Beträge sind komplett frei wählbar, von 0,50 € bis 500 € pro Event. Familie nimmt oft 1–5 €/Tor, Unternehmen 25–100 €/Sieg. Im Pact-Setup siehst du eine Worst-Case-Hochrechnung, damit du nicht überraschend mehr zahlst als gedacht. Plus optionaler Monats-Cap."
             />
             <FaqItem
-              q="Wie funktionieren die Saison-Wetten?"
-              a={'Saison-Wetten sind Pacts, die nicht pro Spiel sondern erst am Saisons-Ende abrechnen: z.B. 200 € für Aufstieg, 100 € für Klassenerhalt, 50 € für Platz 1–5. KickPact liest die End-Tabelle automatisch; wenn das Ziel erreicht wurde, geht der volle Betrag an den Verein. Wenn nicht, zahlt der Sponsor nichts.'}
+              q="Wie funktionieren die Saison-Ziele?"
+              a={'Saison-Ziele sind Pacts, die nicht pro Spiel sondern erst am Saisons-Ende abrechnen: z.B. 200 € für Aufstieg, 100 € für Klassenerhalt, 50 € für Platz 1–5. KickPact liest die End-Tabelle automatisch; wenn das Ziel erreicht wurde, geht der volle Betrag an den Verein. Wenn nicht, zahlt der Sponsor nichts.'}
             />
             <FaqItem
               q="Funktioniert das auch für Junioren-Mannschaften?"

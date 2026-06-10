@@ -29,11 +29,11 @@ export const BASIC_RULE_CAP = PLAN_CAPS.basic.maxPledgeRulesPerSponsor ?? 3;
 
 /** Pro-only Features, die beim Wechsel auf Basic wegfallen (Headline-Liste). */
 export const BASIC_LOST_FEATURES = [
-  "Saison-Wetten",
+  "Saison-Ziele",
   "Eigene Trigger-Texte",
   "Vereins-Logo auf der PDF-Rechnung",
   "Vereins-Mail-Absender",
-  "Pledge-Discovery (öffentliches Profil)",
+  "Pact-Discovery (öffentliches Profil)",
   "CSV/Excel-Export",
   "Saison-Recap"
 ] as const;

@@ -19,7 +19,7 @@ export function FinanzenTrendChart({ data }: Props) {
   if (data.every((d) => d.totalCents === 0)) {
     return (
       <div className="rounded-2xl bg-white shadow-ios-card p-8 text-center text-sm text-brand-night-navy/60">
-        Noch keine monatlichen Charges. Sobald die ersten Pacts ausgelöst werden,
+        Noch keine monatlichen Beiträge. Sobald die ersten Pacts ausgelöst werden,
         erscheint hier der Trend.
       </div>
     );
@@ -52,7 +52,7 @@ export function FinanzenTrendChart({ data }: Props) {
                 border: "1px solid #e5e7eb",
                 fontSize: 12
               }}
-              formatter={(value) => [eur(Number(value) || 0), "Charges"]}
+              formatter={(value) => [eur(Number(value) || 0), "Beiträge"]}
             />
             <Bar dataKey="totalCents" fill="#01C457" radius={[6, 6, 0, 0]} />
           </BarChart>

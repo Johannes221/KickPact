@@ -24,10 +24,6 @@ import {
   findSponsorForUser,
   createSponsorProfile
 } from "@/lib/db/queries/sponsor-dashboard";
-import {
-  isClubMember,
-  getTeamMembershipRole
-} from "@/lib/db/queries/membership-requests";
 import { PLAN_CAPS } from "@/lib/stripe/pricing";
 import {
   assertWagerWindowOpen,
@@ -47,7 +43,18 @@ const MANUAL_TRIGGERS = new Set([
   "custom"
 ]);
 
-export async function createPledge(input: PledgeInput) {
+/**
+ * Ergebnis der Pledge-Erstellung. Fehler werden bewusst als `{ ok: false }`
+ * zurückgegeben statt geworfen: Next.js *redacted* aus Server-Actions geworfene
+ * Fehler in Production zur generischen „An error occurred in the Server
+ * Components render"-Meldung — die echte (deutsche) Ursache ginge verloren.
+ * Über den Rückgabewert erreicht die Klartext-Meldung den Client-Toast.
+ */
+export type CreatePledgeResult =
+  | { ok: true; pledgeId: string }
+  | { ok: false; message: string };
+
+export async function createPledge(input: PledgeInput): Promise<CreatePledgeResult> {
   const user = await requireUser();
   const parsed = pledgeInputSchema.parse(input);
 
@@ -71,17 +78,17 @@ export async function createPledge(input: PledgeInput) {
   // Einladung auflösen → teamId
   const invitation = await findInvitationByToken(parsed.invitationToken);
   if (!invitation) {
-    throw new Error("Einladung nicht gefunden oder abgelaufen.");
+    return { ok: false, message: "Einladung nicht gefunden oder abgelaufen." };
   }
   if (invitation.status === "revoked") {
-    throw new Error("Einladung wurde vom Verein zurückgezogen.");
+    return { ok: false, message: "Einladung wurde vom Verein zurückgezogen." };
   }
 
   // Sponsor-Pledges brauchen eine teamId — die neue invitations-Tabelle hat
   // sie als nullable (für team-member Invites), aber sponsor-Invites haben sie
   // immer gesetzt. Defensive Narrowing damit der TS-Compiler glücklich ist.
   if (!invitation.teamId) {
-    throw new Error("Einladung hat keine Mannschaft — falscher Token-Typ?");
+    return { ok: false, message: "Einladung hat keine Mannschaft — falscher Token-Typ?" };
   }
   const invitationTeamId: string = invitation.teamId;
 
@@ -89,28 +96,16 @@ export async function createPledge(input: PledgeInput) {
   // neuen Pledge anlegen, wenn der Verein im Read-Only-Modus ist.
   const clubId = await getClubIdForTeam(invitationTeamId);
   if (!clubId) {
-    throw new Error("Mannschaft zur Einladung nicht gefunden.");
-  }
-
-  // SECURITY (L6): Self-Dealing verhindern. Ein Nutzer, der zugleich Mitglied
-  // des Vereins (oder der Mannschaft) ist, darf nicht seine eigene Mannschaft
-  // sponsern — sonst ließen sich (kombiniert mit manuellen Events) Rechnungen
-  // an sich selbst fabrizieren. KickPact ist non-custodial, der direkte
-  // Plattformschaden ist begrenzt, aber es untergräbt die Vertrauenswürdigkeit
-  // der Rechnungen → wir blocken es.
-  const selfClub = await isClubMember(user.id, clubId);
-  const selfTeam = (await getTeamMembershipRole(invitationTeamId, user.id)) !== null;
-  if (selfClub || selfTeam) {
-    throw new Error(
-      "Du bist Mitglied dieser Mannschaft bzw. dieses Vereins und kannst sie daher nicht selbst sponsern."
-    );
+    return { ok: false, message: "Mannschaft zur Einladung nicht gefunden." };
   }
 
   const gate = await getSubscriptionGate(clubId);
   if (gate.isReadOnly) {
-    throw new Error(
-      "Diese Mannschaft ist aktuell pausiert. Sponsoring ist wieder möglich, sobald das Abo reaktiviert wurde."
-    );
+    return {
+      ok: false,
+      message:
+        "Diese Mannschaft ist aktuell pausiert. Sponsoring ist wieder möglich, sobald das Abo reaktiviert wurde."
+    };
   }
 
   // Daten-Coverage-Gate: fußball.de liefert für manche Mannschaften (C-/D-Jugend)
@@ -121,18 +116,22 @@ export async function createPledge(input: PledgeInput) {
   // Siehe lib/triggers/coverage.ts + project_spielbericht_coverage.
   const teamCoverage = await getTeamDataCoverage(invitationTeamId);
   if (teamCoverage === "none") {
-    throw new Error(
-      "Für diese Mannschaft liegen auf fußball.de keine Spieldaten vor – Sponsoring ist hier nicht möglich."
-    );
+    return {
+      ok: false,
+      message:
+        "Für diese Mannschaft liegen auf fußball.de keine Spieldaten vor – Sponsoring ist hier nicht möglich."
+    };
   }
   const blockedRule = parsed.rules.find(
     (r) => !coverageAllowsTrigger(teamCoverage, r.triggerType)
   );
   if (blockedRule) {
-    throw new Error(
-      "Spieler-Wetten (Tor von Spieler, Hattrick) sind für diese Mannschaft nicht verfügbar – " +
+    return {
+      ok: false,
+      message:
+        "Spieler-Regeln (Tor von Spieler, Hattrick) sind für diese Mannschaft nicht verfügbar – " +
         "fußball.de liefert hier nur das Ergebnis, keine Torschützen."
-    );
+    };
   }
 
   // Pricing v2: Cap-Check vor INSERT. Erst Sponsor-Cap (nur wenn neuer Sponsor),
@@ -157,10 +156,12 @@ export async function createPledge(input: PledgeInput) {
     }
   } catch (e) {
     if (e instanceof PlanCapExceededError) {
-      throw new Error(
-        `Limit erreicht: ${e.cap === "sponsors" ? "max. Sponsoren" : "max. Pact-Regeln"} ` +
+      return {
+        ok: false,
+        message:
+          `Limit erreicht: ${e.cap === "sponsors" ? "max. Sponsoren" : "max. Pact-Regeln"} ` +
           `auf dem ${e.plan}-Tier (${e.current}/${e.limit}). Bitte Verein auf Pro upgraden.`
-      );
+      };
     }
     throw e;
   }
@@ -174,7 +175,7 @@ export async function createPledge(input: PledgeInput) {
     // ohne Server-Gate koennten Basic-Sponsoren Saison-Wetten erstellen.
     const plan = await getTeamLicensePlan(invitationTeamId);
     if (plan === "basic") {
-      throw new SeasonWagerNotAllowedError(plan);
+      return { ok: false, message: new SeasonWagerNotAllowedError(plan).message };
     }
 
     const activeSeason = await getActiveSeason(now);
@@ -182,10 +183,12 @@ export async function createPledge(input: PledgeInput) {
       assertWagerWindowOpen(activeSeason, now);
     } catch (e) {
       if (e instanceof WagerWindowClosedError) {
-        throw new Error(
-          `Saison-Regeln sind für Saison ${e.seasonCode ?? "?"} nicht mehr buchbar ` +
+        return {
+          ok: false,
+          message:
+            `Saison-Regeln sind für Saison ${e.seasonCode ?? "?"} nicht mehr buchbar ` +
             `(Cutoff am 5. Spieltag). Wieder verfügbar zur nächsten Saison ab Juli.`
-        );
+        };
       }
       throw e;
     }
@@ -223,5 +226,5 @@ export async function createPledge(input: PledgeInput) {
 
   await markInvitationUsed(parsed.invitationToken, user.id);
 
-  return result;
+  return { ok: true, pledgeId: result.pledgeId };
 }
