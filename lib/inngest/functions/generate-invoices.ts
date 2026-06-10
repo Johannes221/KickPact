@@ -26,8 +26,11 @@ import { InvoicePdf } from "@/lib/invoicing/builder";
 import { renderGirocodeDataUrl } from "@/lib/invoicing/girocode";
 import {
   listConfirmedChargesByPeriod,
-  groupChargesBySponsorClub
+  groupChargesBySponsorClub,
+  type ChargeForBilling
 } from "@/lib/db/queries/charges";
+import { triggerLabel } from "@/lib/triggers/labels";
+import { formatSaisonLabel } from "@/lib/utils/saison";
 import { maskEmail } from "@/lib/utils/log-pii";
 import { notifyUsers } from "@/lib/notifications/deliver";
 
@@ -55,6 +58,37 @@ const TRIGGER_LABELS: Record<string, string> = {
 
 function eur(cents: number): string {
   return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+}
+
+/**
+ * Rechnungszeilen-Sicht auf eine Charge. Saison-Charges (matchDate=null) haben
+ * keine Partie — als Zeilen-Datum dient confirmedAt, als Kontext-Label die
+ * Saison (z.B. "Saison 2025/26 · Aufstieg").
+ */
+function billingItemView(it: ChargeForBilling): {
+  date: Date;
+  contextLabel: string;
+  triggerText: string;
+  description: string;
+} {
+  const triggerText = TRIGGER_LABELS[it.triggerType] ?? triggerLabel(it.triggerType);
+  if (it.matchDate == null) {
+    const date = it.confirmedAt ? new Date(it.confirmedAt) : new Date();
+    const contextLabel = formatSaisonLabel(it.saison);
+    return {
+      date,
+      contextLabel,
+      triggerText,
+      description: `${contextLabel} · ${triggerText}`
+    };
+  }
+  const date = new Date(it.matchDate);
+  return {
+    date,
+    contextLabel: `${it.heimName} ${it.ergebnisHeim ?? "—"}:${it.ergebnisGast ?? "—"} ${it.gastName}`,
+    triggerText,
+    description: `${date.toLocaleDateString("de-DE")} · ${it.heimName} vs ${it.gastName} · ${triggerText}`
+  };
 }
 
 function buildPeriodFromString(periodStr: string): BillingPeriod {
@@ -215,12 +249,15 @@ export const generateInvoices = inngest.createFunction(
                       }
                     : null
                 },
-                items: group.items.map((it) => ({
-                  matchDate: typeof it.matchDate === "string" ? new Date(it.matchDate) : it.matchDate,
-                  matchLabel: `${it.heimName} ${it.ergebnisHeim ?? "—"}:${it.ergebnisGast ?? "—"} ${it.gastName}`,
-                  triggerLabel: TRIGGER_LABELS[it.triggerType] ?? it.triggerType,
-                  amountCents: it.amountCents
-                }))
+                items: group.items.map((it) => {
+                  const view = billingItemView(it);
+                  return {
+                    matchDate: view.date,
+                    matchLabel: view.contextLabel,
+                    triggerLabel: view.triggerText,
+                    amountCents: it.amountCents
+                  };
+                })
               }
             })
           );
@@ -255,7 +292,7 @@ export const generateInvoices = inngest.createFunction(
               group.items.map((it) => ({
                 invoiceId: inv.id,
                 chargeId: it.chargeId,
-                description: `${new Date(it.matchDate).toLocaleDateString("de-DE")} · ${it.heimName} vs ${it.gastName} · ${TRIGGER_LABELS[it.triggerType] ?? it.triggerType}`,
+                description: billingItemView(it).description,
                 amountCents: it.amountCents
               }))
             );

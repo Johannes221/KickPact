@@ -33,9 +33,13 @@ export interface ChargeForBilling {
   clubId: string;
   triggerType: string;
   amountCents: number;
-  matchDate: Date | string;
-  heimName: string;
-  gastName: string;
+  /** Saison-Code ("2526" / "2025/26") — gesetzt bei Saison-Charges (matchId=null). */
+  saison: string | null;
+  confirmedAt: Date | string | null;
+  /** null bei Saison-Charges — die hängen an keiner Partie. */
+  matchDate: Date | string | null;
+  heimName: string | null;
+  gastName: string | null;
   ergebnisHeim: number | null;
   ergebnisGast: number | null;
 }
@@ -44,6 +48,10 @@ export interface ChargeForBilling {
  * Listet alle `confirmed` charges deren `confirmedAt` im angegebenen Zeitraum liegt.
  * Wird vom monatlichen Invoicing-Cron genutzt um pro (sponsor, club) eine Rechnung
  * zu erzeugen.
+ *
+ * Saison-Charges (evaluate-season) haben matchId=null — deshalb leftJoin auf
+ * matches und der Team/Club-Scope über pledges.teamId statt matches.teamId
+ * (vorher fielen Saison-Charges durch den innerJoin für immer aus jeder Rechnung).
  */
 export async function listConfirmedChargesByPeriod(opts: {
   periodStart: Date;
@@ -56,6 +64,8 @@ export async function listConfirmedChargesByPeriod(opts: {
       clubId: teams.clubId,
       triggerType: charges.triggerType,
       amountCents: charges.amountCents,
+      saison: charges.saison,
+      confirmedAt: charges.confirmedAt,
       matchDate: matches.datum,
       heimName: matches.heimName,
       gastName: matches.gastName,
@@ -64,8 +74,8 @@ export async function listConfirmedChargesByPeriod(opts: {
     })
     .from(charges)
     .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-    .innerJoin(matches, eq(charges.matchId, matches.id))
-    .innerJoin(teams, eq(matches.teamId, teams.id))
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .leftJoin(matches, eq(charges.matchId, matches.id))
     .where(
       and(
         eq(charges.status, "confirmed"),
