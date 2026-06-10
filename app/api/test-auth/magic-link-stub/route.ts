@@ -1,11 +1,12 @@
 /**
  * E2E-Test-Auth-Bypass.
  *
- * STRENG GUARD-ED:
+ * STRENG GUARD-ED (siehe ../_lib/guard.ts):
+ *  - Production-Builds: hart deaktiviert, außer `ALLOW_TEST_AUTH=true`
+ *    (Staging braucht das Flag, kickpact.com darf es NIE setzen — DEPLOYMENT.md).
  *  - Aktiv nur wenn `E2E_TEST_BYPASS_KEY` als Env-Var gesetzt ist.
  *  - Request muss Header `x-test-bypass: <KEY>` mit Konstant-Zeit-Compare matchen.
- *  - Fehlt die Env oder matched der Header nicht → 404 (NICHT 401 — wir wollen
- *    nicht verraten, dass die Route existiert).
+ *  - Sonst → 404 (NICHT 401 — wir wollen nicht verraten, dass die Route existiert).
  *
  * Was es macht:
  *  - POST { email, name? } → Sicherstellen dass User in `users` existiert,
@@ -23,11 +24,12 @@
  *  werden bevor er als Cookie gesetzt wird, sonst schlägt getSignedCookie() fehl.
  */
 import { NextResponse, type NextRequest } from "next/server";
-import { timingSafeEqual, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { createId } from "@paralleldrive/cuid2";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { users, sessions } from "@/lib/db/schema/auth";
+import { guardTestAuth } from "../_lib/guard";
 
 /**
  * Repliziert Better-Auth's makeSignature() aus better-auth/dist/crypto/index.mjs.
@@ -50,25 +52,9 @@ async function signCookieToken(token: string, secret: string): Promise<string> {
 // 7 Tage Session-Lifetime — gleicher Default wie Better-Auth.
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-function constantTimeMatch(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  try {
-    return timingSafeEqual(Buffer.from(a, "utf8"), Buffer.from(b, "utf8"));
-  } catch {
-    return false;
-  }
-}
-
-function notFound(): NextResponse {
-  return new NextResponse(null, { status: 404 });
-}
-
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const expected = process.env.E2E_TEST_BYPASS_KEY;
-  if (!expected) return notFound();
-
-  const provided = req.headers.get("x-test-bypass");
-  if (!provided || !constantTimeMatch(provided, expected)) return notFound();
+  const denied = guardTestAuth(req);
+  if (denied) return denied;
 
   let body: { email?: string; name?: string };
   try {

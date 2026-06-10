@@ -64,8 +64,24 @@ git push origin production
 | `SENTRY_ENVIRONMENT` | `staging` | `production` |
 | `NEXT_PUBLIC_SENTRY_ENVIRONMENT` | `staging` | `production` |
 | `BETTER_AUTH_URL` | `https://kickpact.schartl.dev` | `https://kickpact.com` |
+| `ALLOW_TEST_AUTH` | `true` | **NICHT setzen** |
+| `E2E_TEST_BYPASS_KEY` | gesetzt (Vaultwarden) | **NICHT setzen** |
 
 Alle anderen Secrets (DB, Stripe, Resend etc.) sind in **Vaultwarden** hinterlegt.
+
+### ⚠️ Test-Auth-Endpoints (`/api/test-auth/*`)
+
+Die Endpoints `/api/test-auth/magic-link-stub` und `/api/test-auth/cleanup`
+erlauben Playwright-E2E-Tests, Sessions für beliebige E-Mails zu erzeugen bzw.
+Test-Daten zu löschen. Sie sind doppelt gesichert:
+
+1. **Production-Gate:** In Production-Builds antworten sie 404, außer
+   `ALLOW_TEST_AUTH=true` ist gesetzt. Staging läuft als Production-Build und
+   braucht das Flag, damit E2E-Tests funktionieren.
+2. **Key-Check:** Header `x-test-bypass` muss `E2E_TEST_BYPASS_KEY` matchen.
+
+Auf **kickpact.com dürfen `ALLOW_TEST_AUTH` und `E2E_TEST_BYPASS_KEY` niemals
+gesetzt werden** — dann sind die Endpoints hart deaktiviert, unabhängig vom Key.
 
 ### SEO-Auswirkung von `NEXT_PUBLIC_SITE_ENV`
 
@@ -87,6 +103,8 @@ Alle anderen Secrets (DB, Stripe, Resend etc.) sind in **Vaultwarden** hinterleg
    - `BETTER_AUTH_URL=https://kickpact.com`
    - Neue DB-URL (Production-DB, separate Instanz)
    - Neue Stripe Live-Keys (`sk_live_...`)
+   - **`ALLOW_TEST_AUTH` und `E2E_TEST_BYPASS_KEY` LÖSCHEN** (von Staging
+     mitkopiert → würde die Test-Auth-Endpoints auf Production scharf schalten)
 4. **Auto-Deploy**: Webhook auf Branch `production` setzen
 5. **Cloudflare DNS**: `kickpact.com` → Coolify-IP (A-Record oder CNAME)
 6. **Sentry**: Production-Environment in kickpact.sentry.io prüfen
