@@ -37,7 +37,7 @@ import { type Coverage, requiresNamedScorers } from "@/lib/triggers/coverage";
  * "auto"   = KickPact erfasst das Ereignis automatisch aus den offiziellen
  *            Spieldaten und verbucht es (Proof of Trust).
  * "club"   = Der Verein meldet das Ereignis; KickPact kann es nicht automatisch
- *            prüfen → du bestätigst es in deiner Inbox, bevor es zählt.
+ *            prüfen → du bestätigst es (Glocke/E-Mail), bevor es zählt.
  * "season" = 1× am Saison-Ende.
  */
 type TriggerGroup = "auto" | "club" | "season";
@@ -190,14 +190,19 @@ export function PledgeBuilder({
     }
     startTransition(async () => {
       try {
-        const { pledgeId } = await createPledge(values);
+        const result = await createPledge(values);
+        if (!result.ok) {
+          // Klartext-Grund aus der Server-Action (Cap, Coverage, pausiert …).
+          toast.error(result.message);
+          return;
+        }
         track("pledge_created", {
           triggerCount: values.rules.length,
           monthlyCap: values.monthlyCapEur ?? 0,
           endsAtSaisonEnd: values.endsAtSaisonEnd ?? false
         });
         toast.success("Sponsoring ist live 🎉");
-        router.push(`/sponsor/pledge/${pledgeId}`);
+        router.push(`/sponsor/pledge/${result.pledgeId}`);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Fehler beim Speichern");
       }
@@ -266,8 +271,8 @@ export function PledgeBuilder({
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                 Für diese Mannschaft liefert die offizielle Datenquelle nur das{" "}
                 <strong>Spielergebnis</strong>, keine einzelnen Torschützen.
-                Spieler-Wetten („Tore von Spieler X", „Hattrick") sind daher hier
-                nicht verfügbar — Ergebnis-, Comeback- und Saison-Wetten kannst du
+                Spieler-Regeln („Tore von Spieler X", „Hattrick") sind daher hier
+                nicht verfügbar — Ergebnis-, Comeback- und Saison-Regeln kannst du
                 ganz normal anlegen.
               </div>
             )}
@@ -284,7 +289,7 @@ export function PledgeBuilder({
             <TriggerGroupBlock
               title="Vom Verein gemeldet"
               icon={<Handshake className="h-4 w-4" />}
-              note="Diese Ereignisse kann KickPact nicht automatisch prüfen. Der Verein meldet sie — du bestätigst sie in deiner Inbox, bevor ein Beitrag fällig wird."
+              note="Diese Ereignisse kann KickPact nicht automatisch prüfen. Der Verein meldet sie — du bestätigst sie, bevor ein Beitrag fällig wird."
               items={visibleLibrary.filter((t) => t.group === "club")}
               enabled={enabled}
               onToggle={toggleTrigger}
@@ -331,7 +336,7 @@ export function PledgeBuilder({
                 Wie viel pro Ereignis?
               </h2>
               <p className="mt-1 text-sm text-brand-night-navy/60">
-                Leg fest, was jedes Ereignis wert ist. Optional: ein Cap pro Wette —
+                Leg fest, was jedes Ereignis wert ist. Optional: ein Cap pro Regel —
                 begrenzt die Auszahlung pro Monat oder pro Saison (sinnvoll bei torreichen Teams).
               </p>
             </div>
@@ -833,7 +838,7 @@ function HowItWorks() {
             <Handshake className="h-4 w-4" aria-hidden />
           </span>
           <p className="text-sm text-brand-night-navy/80 leading-snug">
-            <strong className="text-brand-night-navy">Vom Verein gemeldet (Spezialwetten):</strong>{" "}
+            <strong className="text-brand-night-navy">Vom Verein gemeldet (Spezial-Events):</strong>{" "}
             Dinge wie Kopfball- oder Hackentore kann KickPact nicht automatisch prüfen. Der Verein
             meldet sie — und <strong className="text-brand-night-navy">du bestätigst sie</strong>,
             bevor ein Beitrag fällig wird.
@@ -844,7 +849,7 @@ function HowItWorks() {
             <Gauge className="h-4 w-4" aria-hidden />
           </span>
           <p className="text-sm text-brand-night-navy/80 leading-snug">
-            <strong className="text-brand-night-navy">Caps schützen dich:</strong> Pro Wette und
+            <strong className="text-brand-night-navy">Caps schützen dich:</strong> Pro Regel und
             zusätzlich pro Monat/Saison kannst du ein Limit setzen — so zahlst du nie mehr, als du
             möchtest, egal wie gut die Mannschaft läuft.
           </p>

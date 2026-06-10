@@ -24,6 +24,9 @@ export async function fillMagicLinkForm(page: Page, email: string) {
  *
  * Voraussetzungen:
  *  - `E2E_TEST_BYPASS_KEY` muss als Env-Var auf dem Server gesetzt sein.
+ *  - Auf Production-Builds (Staging!) muss der Server zusätzlich
+ *    `ALLOW_TEST_AUTH=true` gesetzt haben, sonst antwortet der Stub 404
+ *    (Security-Gate, siehe app/api/test-auth/_lib/guard.ts).
  *  - Der gleiche Key muss im Test-Runner als `E2E_TEST_BYPASS_KEY` verfügbar
  *    sein (über `playwright.config.ts` aus `.env.local` geladen).
  *

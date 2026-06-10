@@ -84,7 +84,7 @@ export default async function FinanzenPage({
       <div>
         <h1 className="font-display font-bold text-2xl md:text-3xl tracking-tight">Finanzen</h1>
         <p className="text-sm text-brand-night-navy/60 mt-1">
-          Übersicht aller bestätigten Charges auf diese Mannschaft.
+          Übersicht aller bestätigten Beiträge auf diese Mannschaft.
         </p>
       </div>
 
@@ -180,7 +180,7 @@ export default async function FinanzenPage({
 
       {totalCount === 0 && (
         <div className="rounded-2xl bg-white shadow-ios-card p-8 text-center text-sm text-brand-night-navy/60">
-          Noch keine bestätigten Charges. Sobald die ersten Pacts ausgelöst werden, erscheinen sie hier.
+          Noch keine bestätigten Beiträge. Sobald die ersten Pacts ausgelöst werden, erscheinen sie hier.
         </div>
       )}
     </div>

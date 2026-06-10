@@ -61,7 +61,7 @@ function ErrorCard({ message }: { message: string }) {
       <p className="text-sm text-brand-night-navy/70 text-center">{message}</p>
       <div className="mt-6 flex justify-center gap-4 text-xs text-brand-night-navy/50">
         <Link href="/sponsor/inbox" className="hover:text-accent">
-          Zur Inbox
+          Alle Bestätigungen
         </Link>
         <Link href="/" className="hover:text-accent">
           Startseite

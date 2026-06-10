@@ -45,7 +45,7 @@ const ALL_TABS: readonly Tab[] = [...PRIMARY_TABS, ...OVERFLOW_TABS];
 // separat durch.
 const SETTINGS_ITEMS: SettingsNavItem[] = [
   { label: "Bilanz", href: "/sponsor/bilanz", icon: "trending" },
-  { label: "Charges", href: "/sponsor/charges", icon: "chart" },
+  { label: "Beiträge", href: "/sponsor/charges", icon: "chart" },
   { label: "Rechnungen", href: "/sponsor/rechnungen", icon: "file" }
 ];
 

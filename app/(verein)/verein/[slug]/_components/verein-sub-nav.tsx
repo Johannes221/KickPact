@@ -33,7 +33,7 @@ const PRIMARY_TABS: readonly Tab[] = [
 // Sekundär → Zahnrad-Sheet (Desktop: hinten im Tab-Streifen).
 const OVERFLOW_TABS: readonly Tab[] = [
   { label: "Ereignisse", href: "/ereignisse", icon: Goal },
-  { label: "Charges", href: "/charges", icon: ChartColumnIncreasing },
+  { label: "Beiträge", href: "/charges", icon: ChartColumnIncreasing },
   { label: "Abo", href: "/abo", icon: Gem },
   { label: "Einstellungen", href: "/einstellungen", icon: Settings }
 ] as const;
