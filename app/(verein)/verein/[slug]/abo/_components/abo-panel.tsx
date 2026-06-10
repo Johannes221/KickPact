@@ -29,10 +29,18 @@ import { AboCycleToggle } from "./abo-cycle-toggle";
  */
 export async function AboPanel({
   clubId,
-  clubSlug
+  clubSlug,
+  nativeApp = false
 }: {
   clubId: string;
   clubSlug: string;
+  /**
+   * In der nativen iOS-App (Apple 3.1.1/3.1.3): KEINE Kauf-/Upgrade-/Preis-CTAs
+   * rendern. Nur der Status wird gezeigt; Buchung läuft ausschließlich im
+   * Browser. Serverseitig via {@link isNativeAppRequest} ermittelt → kein
+   * Flackern, kein Anti-Steering-Fenster.
+   */
+  nativeApp?: boolean;
 }) {
   const sub = await getSubscriptionForClub(clubId);
 
@@ -81,58 +89,83 @@ export async function AboPanel({
         </div>
       )}
 
-      {sub && impact && (
-        <TrialEndLossFraming
-          impact={impact}
-          clubSlug={clubSlug}
-          stripeReady={stripeReady}
-          currentStatus={sub.status}
-          currentCycle={currentCycle}
-        />
-      )}
+      {/* In der iOS-App: keine Kauf-/Upgrade-/Preis-Oberfläche (Apple 3.1.1/3.1.3).
+          Nur ein neutraler Hinweis, dass das Abo im Browser verwaltet wird. */}
+      {nativeApp ? (
+        <NativeManageNotice hasSub={!!sub} />
+      ) : (
+        <>
+          {sub && impact && (
+            <TrialEndLossFraming
+              impact={impact}
+              clubSlug={clubSlug}
+              stripeReady={stripeReady}
+              currentStatus={sub.status}
+              currentCycle={currentCycle}
+            />
+          )}
 
-      {!stripeReady && (
-        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 md:p-5">
-          <p className="text-sm text-amber-900">
-            <strong>Hinweis:</strong> Stripe ist noch nicht konfiguriert. Sobald
-            die Keys gesetzt sind, kannst du hier den Checkout starten. Bis
-            dahin ist der Trial unbeschränkt nutzbar.
-          </p>
-        </div>
-      )}
+          {!stripeReady && (
+            <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 md:p-5">
+              <p className="text-sm text-amber-900">
+                <strong>Hinweis:</strong> Stripe ist noch nicht konfiguriert.
+                Sobald die Keys gesetzt sind, kannst du hier den Checkout
+                starten. Bis dahin ist der Trial unbeschränkt nutzbar.
+              </p>
+            </div>
+          )}
 
-      {/* Upgrade-Pfade — nur sichtbar wenn nicht schon höchstes Tier */}
-      {sub && currentPlan !== "verein" && (
-        <UpgradePathsCard
-          currentPlan={currentPlan}
-          clubSlug={clubSlug}
-          stripeReady={stripeReady}
-          currentStatus={sub.status}
-          currentCycle={currentCycle}
-        />
-      )}
+          {/* Upgrade-Pfade — nur sichtbar wenn nicht schon höchstes Tier */}
+          {sub && currentPlan !== "verein" && (
+            <UpgradePathsCard
+              currentPlan={currentPlan}
+              clubSlug={clubSlug}
+              stripeReady={stripeReady}
+              currentStatus={sub.status}
+              currentCycle={currentCycle}
+            />
+          )}
 
-      {/* Plan-Wahl (für Erstbucher oder Wechsel) — inkl. Cycle-Toggle */}
-      <div>
-        <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy mb-1">
-          {sub ? "Plan wechseln" : "Plan wählen"}
-        </h3>
-        {sub ? (
-          <p className="mb-3 text-xs text-brand-night-navy/55 leading-relaxed">
-            Pro Mannschaft gibt es <strong>genau ein Abo</strong>. Eine neue
-            Auswahl <strong>wechselt</strong> deinen bestehenden Plan — es wird
-            kein zweites Abo angelegt und du zahlst nie doppelt.
-          </p>
-        ) : (
-          <div className="mb-3" />
-        )}
-        <AboCycleToggle
-          clubSlug={clubSlug}
-          stripeReady={stripeReady}
-          currentStatus={sub?.status ?? null}
-          initialCycle={currentCycle}
-        />
-      </div>
+          {/* Plan-Wahl (für Erstbucher oder Wechsel) — inkl. Cycle-Toggle */}
+          <div>
+            <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy mb-1">
+              {sub ? "Plan wechseln" : "Plan wählen"}
+            </h3>
+            {sub ? (
+              <p className="mb-3 text-xs text-brand-night-navy/55 leading-relaxed">
+                Pro Mannschaft gibt es <strong>genau ein Abo</strong>. Eine neue
+                Auswahl <strong>wechselt</strong> deinen bestehenden Plan — es
+                wird kein zweites Abo angelegt und du zahlst nie doppelt.
+              </p>
+            ) : (
+              <div className="mb-3" />
+            )}
+            <AboCycleToggle
+              clubSlug={clubSlug}
+              stripeReady={stripeReady}
+              currentStatus={sub?.status ?? null}
+              initialCycle={currentCycle}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * iOS-App-Variante: kein Checkout, keine Preise, kein „Upgrade"-Link (Apple
+ * Anti-Steering 3.1.3 verbietet auch das Verweisen auf externe Kaufwege). Nur
+ * der sachliche Hinweis, dass die Abo-Verwaltung im Browser liegt.
+ */
+function NativeManageNotice({ hasSub }: { hasSub: boolean }) {
+  return (
+    <div className="rounded-2xl border border-brand-night-navy/15 bg-brand-off-white p-4 md:p-5">
+      <p className="text-sm leading-relaxed text-brand-night-navy/80">
+        {hasSub
+          ? "Dein Abo verwaltest du im Browser. In der App siehst du nur den aktuellen Status — Plan-Wechsel, Zahlung und Kündigung laufen über die Web-Version."
+          : "Die Buchung eines Plans läuft im Browser. In der App ist das Abo nicht abschließbar — sobald es im Web aktiv ist, erscheint hier dein Status."}
+      </p>
     </div>
   );
 }

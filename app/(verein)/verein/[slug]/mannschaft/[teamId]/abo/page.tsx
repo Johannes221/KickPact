@@ -1,4 +1,5 @@
 import { assertTeamPageAccess } from "@/lib/auth/scope";
+import { isNativeAppRequest } from "@/lib/platform/native-server";
 import { AboPanel } from "../../../abo/_components/abo-panel";
 
 export const metadata = { title: "Abo · KickPact" };
@@ -18,5 +19,6 @@ export default async function TeamAboPage({
 }) {
   const { slug, teamId } = await params;
   const { club } = await assertTeamPageAccess(slug, teamId, "admin");
-  return <AboPanel clubId={club.id} clubSlug={slug} />;
+  const nativeApp = await isNativeAppRequest();
+  return <AboPanel clubId={club.id} clubSlug={slug} nativeApp={nativeApp} />;
 }

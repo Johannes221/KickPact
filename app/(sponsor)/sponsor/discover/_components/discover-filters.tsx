@@ -30,7 +30,11 @@ export function DiscoverFilters({
       <form
         className="flex-1"
         onSubmit={(e) => {
+          // Enter/„Suchen" auf Mobile löste vorher nur preventDefault aus → nichts
+          // passierte (Filter lief ausschließlich onBlur). Jetzt Query lesen + filtern.
           e.preventDefault();
+          const q = new FormData(e.currentTarget).get("q");
+          update({ q: typeof q === "string" ? q : "" });
         }}
         action={basePath}
         method="GET"

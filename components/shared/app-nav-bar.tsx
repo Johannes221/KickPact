@@ -155,7 +155,7 @@ export function AppNavBar({
             type="button"
             onClick={() => setSettingsOpen(true)}
             aria-label="Menü & Einstellungen"
-            className="relative -mr-1 grid h-9 w-9 shrink-0 place-items-center rounded-full text-accent transition-colors active:bg-brand-off-white"
+            className="relative -mr-1 grid h-11 w-11 shrink-0 place-items-center rounded-full text-accent transition-colors active:bg-brand-off-white"
           >
             <Settings2 className="h-[1.4rem] w-[1.4rem]" strokeWidth={2} aria-hidden />
             {settings.badge ? (

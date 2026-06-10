@@ -1,6 +1,8 @@
 import { ImageResponse } from "next/og";
 
-export const runtime = "edge";
+// Bewusst KEIN edge-Runtime: auf dem self-hosted Coolify-Node liefert die
+// Edge-ImageResponse 502 (kein Emoji-Font im Edge-Sandbox → Render-Crash bei
+// ⚽/🏆/⬆️). Node-Runtime + emoji-freies Layout rendern das OG-Bild zuverlässig.
 export const alt = "KickPact — Performance-Sponsoring für Amateurfußball";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -117,9 +119,18 @@ export default function Image() {
               marginBottom: 20
             }}
           >
-            <div style={{ fontSize: 72, lineHeight: 1 }}>⚽</div>
             <div
               style={{
+                width: 64,
+                height: 64,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #FF4500, #01C457)",
+                flexShrink: 0
+              }}
+            />
+            <div
+              style={{
+                display: "flex",
                 fontSize: 96,
                 fontWeight: 900,
                 color: "#F8F7F4",
@@ -127,7 +138,7 @@ export default function Image() {
                 lineHeight: 1
               }}
             >
-              Kick
+              <span>Kick</span>
               <span style={{ color: "#FF4500" }}>Pact</span>
             </div>
           </div>
@@ -200,10 +211,10 @@ export default function Image() {
           }}
         >
           {[
-            { emoji: "⚽", label: "Pro Tor", value: "5 €" },
-            { emoji: "🏆", label: "Pro Sieg", value: "50 €" },
-            { emoji: "⬆️", label: "Pro Aufstieg", value: "200 €" }
-          ].map(({ emoji, label, value }) => (
+            { dot: "#FF4500", label: "Pro Tor", value: "5 €" },
+            { dot: "#FF6A30", label: "Pro Sieg", value: "50 €" },
+            { dot: "#01C457", label: "Pro Aufstieg", value: "200 €" }
+          ].map(({ dot, label, value }) => (
             <div
               key={label}
               style={{
@@ -216,7 +227,15 @@ export default function Image() {
                 padding: "10px 18px"
               }}
             >
-              <span style={{ fontSize: 20 }}>{emoji}</span>
+              <span
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  background: dot,
+                  flexShrink: 0
+                }}
+              />
               <span style={{ fontSize: 14, color: "rgba(248,247,244,0.65)", fontWeight: 500 }}>
                 {label}
               </span>

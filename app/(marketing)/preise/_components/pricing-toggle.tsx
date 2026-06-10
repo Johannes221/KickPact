@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/analytics/track";
+import { useIsIOSApp } from "@/lib/platform/use-native";
 
 // ---------------------------------------------------------------------------
 // Comparison-Matrix-Daten (aus docs/pricing.md §5 abgeleitet, redaktionell
@@ -191,6 +192,21 @@ const MATRIX: MatrixGroup[] = [
 
 export function PricingToggle() {
   const [cycle, setCycle] = useState<BillingCycle>(DEFAULT_CYCLE);
+  const isIOS = useIsIOSApp();
+
+  // Apple Anti-Steering (3.1.3): In der iOS-App keine Preise/Pakete zeigen, die
+  // extern (Stripe) gekauft werden. Buchung läuft ausschließlich im Browser.
+  if (isIOS) {
+    return (
+      <div className="mx-auto max-w-md rounded-2xl border border-brand-night-navy/15 bg-brand-off-white p-5 text-center">
+        <p className="text-sm leading-relaxed text-brand-night-navy/75">
+          Preise &amp; Pakete siehst du im Browser. In der App ist die Buchung
+          nicht verfügbar — du kannst KickPact aber{" "}
+          <strong>30 Tage kostenlos testen</strong>.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>

@@ -557,6 +557,12 @@ export default function LandingPage() {
             System-Status &amp; Live-Demo →
           </Link>
           <nav className="flex flex-col md:flex-row gap-2 md:gap-4">
+            <Link href="/preise" className="hover:text-accent">
+              Preise
+            </Link>
+            <Link href="/hilfe" className="hover:text-accent">
+              Hilfe
+            </Link>
             <Link href="/impressum" className="hover:text-accent">
               Impressum
             </Link>
