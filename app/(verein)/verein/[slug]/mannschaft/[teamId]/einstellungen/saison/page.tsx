@@ -41,7 +41,7 @@ export default async function TeamEinstellungenSaisonPage({
       <div>
         <Link
           href={`${base}/einstellungen`}
-          className="text-sm text-brand-night-navy/60 hover:text-accent"
+          className="hidden md:inline-block text-sm text-brand-night-navy/60 hover:text-accent"
         >
           ← Einstellungen
         </Link>

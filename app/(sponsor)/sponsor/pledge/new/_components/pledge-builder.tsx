@@ -190,14 +190,19 @@ export function PledgeBuilder({
     }
     startTransition(async () => {
       try {
-        const { pledgeId } = await createPledge(values);
+        const result = await createPledge(values);
+        if (!result.ok) {
+          // Klartext-Grund aus der Server-Action (Cap, Coverage, pausiert …).
+          toast.error(result.message);
+          return;
+        }
         track("pledge_created", {
           triggerCount: values.rules.length,
           monthlyCap: values.monthlyCapEur ?? 0,
           endsAtSaisonEnd: values.endsAtSaisonEnd ?? false
         });
         toast.success("Sponsoring ist live 🎉");
-        router.push(`/sponsor/pledge/${pledgeId}`);
+        router.push(`/sponsor/pledge/${result.pledgeId}`);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Fehler beim Speichern");
       }

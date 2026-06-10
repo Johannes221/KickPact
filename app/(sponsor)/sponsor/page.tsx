@@ -7,6 +7,7 @@ import {
   Sparkles,
   Compass,
   HandCoins,
+  Handshake,
   Inbox,
   Send,
   ArrowRight,
@@ -87,6 +88,18 @@ export default async function SponsorDashboard() {
   );
   // Offene Anfragen (warten auf Antwort der Mannschaft).
   const openInquiryCount = inquiries.filter((i) => i.status === "pending").length;
+  // Angenommene Anfragen mit gültigem Token, aber noch ohne aktiven Pact →
+  // hier fehlt nur noch der „Sponsoring aktivieren"-Schritt des Sponsors.
+  const acceptedAwaitingPledge = inquiries.filter(
+    (i) => i.status === "accepted" && i.inviteToken && !i.hasActivePledge
+  );
+  const acceptedAwaitingCount = acceptedAwaitingPledge.length;
+  // Bei genau einer angenommenen Anfrage direkt in den Pledge-Builder springen,
+  // sonst auf die Mannschaften-Liste (dort steht je Team ein „Pact einrichten").
+  const setupPledgeHref =
+    acceptedAwaitingCount === 1 && acceptedAwaitingPledge[0].inviteToken
+      ? `/sponsor/pledge/new?invitation=${acceptedAwaitingPledge[0].inviteToken}`
+      : "/sponsor/mannschaften";
 
   const referralUrl = buildReferralShareUrl(
     process.env.NEXT_PUBLIC_BASE_URL ?? "https://kickpact.schartl.dev",
@@ -115,6 +128,8 @@ export default async function SponsorDashboard() {
         activePledgeCount={activePledgeCount}
         pendingCount={pendingCount}
         openInquiryCount={openInquiryCount}
+        acceptedAwaitingCount={acceptedAwaitingCount}
+        setupPledgeHref={setupPledgeHref}
       />
 
       <div className="grid gap-3 md:gap-4 md:grid-cols-2">
@@ -173,11 +188,17 @@ export default async function SponsorDashboard() {
 function NextSteps({
   activePledgeCount,
   pendingCount,
-  openInquiryCount
+  openInquiryCount,
+  acceptedAwaitingCount,
+  setupPledgeHref
 }: {
   activePledgeCount: number;
   pendingCount: number;
   openInquiryCount: number;
+  /** Angenommene Anfragen, bei denen nur noch der Pact einzurichten ist. */
+  acceptedAwaitingCount: number;
+  /** Ziel des „Pact einrichten"-Schritts (Token-Direktlink oder Mannschaften). */
+  setupPledgeHref: string;
 }) {
   type Step = {
     icon: LucideIcon;
@@ -199,6 +220,25 @@ function NextSteps({
     });
   }
 
+  // Angenommene Anfrage(n) ohne Pact: der konkrete nächste Schritt — der Verein
+  // hat zugesagt, jetzt fehlt nur noch das Einrichten. Ersetzt das frühere
+  // generische „Erste Mannschaft finden", sobald eine Mannschaft zugesagt hat.
+  if (acceptedAwaitingCount > 0) {
+    steps.push({
+      icon: Handshake,
+      label:
+        acceptedAwaitingCount === 1
+          ? "Pact für deine Mannschaft einrichten"
+          : `${acceptedAwaitingCount} Pacts einrichten`,
+      desc:
+        acceptedAwaitingCount === 1
+          ? "Eine Mannschaft hat deine Anfrage angenommen — richte jetzt dein Sponsoring ein."
+          : "Diese Mannschaften haben angenommen — richte jeweils dein Sponsoring ein.",
+      href: setupPledgeHref,
+      urgent: true
+    });
+  }
+
   if (openInquiryCount > 0) {
     steps.push({
       icon: Send,
@@ -208,16 +248,17 @@ function NextSteps({
     });
   }
 
+  // „Erste Mannschaft finden" nur, wenn es noch gar kein Engagement gibt
+  // (kein aktiver Pact, keine angenommene/offene Anfrage). Sonst „entdecken".
+  const hasEngagement =
+    activePledgeCount > 0 || acceptedAwaitingCount > 0 || openInquiryCount > 0;
+
   steps.push({
     icon: Compass,
-    label:
-      activePledgeCount === 0
-        ? "Erste Mannschaft finden"
-        : "Neue Mannschaft entdecken",
-    desc:
-      activePledgeCount === 0
-        ? "Lokale Vereine, die offen für Sponsoren sind — leg deinen ersten Pact an."
-        : "Lokale Vereine, die offen für Sponsoren sind.",
+    label: hasEngagement ? "Neue Mannschaft entdecken" : "Erste Mannschaft finden",
+    desc: hasEngagement
+      ? "Lokale Vereine, die offen für Sponsoren sind."
+      : "Lokale Vereine, die offen für Sponsoren sind — leg deinen ersten Pact an.",
     href: "/sponsor/discover"
   });
 
