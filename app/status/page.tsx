@@ -154,7 +154,7 @@ export default async function HomePage() {
           </div>
           <p className="mt-3 text-base md:text-lg text-neutral-600">
             Performance-basiertes Sponsoring im Amateurfußball. Plan 1–5 implementiert —
-            Auth, Onboarding, Match-Pipeline, Invoicing, Saison-Wetten + Sponsor-Discover live.
+            Auth, Onboarding, Match-Pipeline, Invoicing, Saison-Ziele + Sponsor-Discover live.
           </p>
           <p className="mt-1 text-sm text-neutral-400">
             Diese Seite ist ein Live-Status-Dashboard (Counts, Trigger-Engine-Demo).
@@ -268,7 +268,7 @@ export default async function HomePage() {
 
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
-                Output · {demo.charges.length} Charges generiert
+                Output · {demo.charges.length} Beiträge generiert
               </h3>
               <div className="mt-2 overflow-hidden rounded-lg border border-neutral-200">
                 <table className="min-w-full divide-y divide-neutral-200 text-sm">
@@ -340,7 +340,7 @@ export default async function HomePage() {
             </li>
             <li>
               <span className="font-mono text-xs text-accent">✓ Extra</span>{" "}
-              Saison-Wetten (DB + evaluate-season Cron + Pact-Setup + Trainer-Form)
+              Saison-Ziele (DB + evaluate-season Cron + Pact-Setup + Trainer-Form)
             </li>
             <li>
               <span className="font-mono text-xs text-accent">✓ Extra</span>{" "}

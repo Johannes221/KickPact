@@ -66,8 +66,8 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
     a: "Bis zum 5. Spieltag der laufenden Saison kannst du den Saison-Pass zum vollen Preis buchen. Danach gibt es nur noch Monatsabo, der nächste Saison-Pass startet zum 1. Juli für die kommende Saison. Kein Pro-Rated: simpel, fair, kein Last-Minute-Gaming."
   },
   {
-    q: "Kann ich Saison-Wetten später noch anlegen?",
-    a: "Saison-Wetten (Aufstieg, Klassenerhalt, Tabellenplatz …) sind nur bis zum 5. Spieltag buchbar, danach ist es Insider-Spiel, kein Sponsoring. Bestehende Wetten bleiben aktiv, neue erst wieder zur nächsten Saison ab Juli."
+    q: "Kann ich Saison-Ziele später noch anlegen?",
+    a: "Saison-Ziele (Aufstieg, Klassenerhalt, Tabellenplatz …) sind nur bis zum 5. Spieltag buchbar, danach ist es Insider-Spiel, kein Sponsoring. Bestehende Regeln bleiben aktiv, neue erst wieder zur nächsten Saison ab Juli."
   },
   {
     q: "Kann ich monatlich kündigen?",
@@ -79,7 +79,7 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Wirklich 0 % Provision auf Pacts?",
-    a: "Ja, in allen Tarifen. KickPact stellt die Plattform und wickelt Tracking, PDF-Rechnungen und Sponsor-Inbox ab, finanziert wird das über die Lizenzgebühr. Was Sponsoren per Pact versprechen, kommt 1:1 bei eurer Mannschaft an."
+    a: "Ja, in allen Tarifen. KickPact stellt die Plattform und wickelt Tracking, PDF-Rechnungen und Sponsor-Bestätigungen ab, finanziert wird das über die Lizenzgebühr. Was Sponsoren per Pact versprechen, kommt 1:1 bei eurer Mannschaft an."
   },
   {
     q: "Was ist mit der Umsatzsteuer?",
@@ -87,7 +87,7 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Was passiert wenn ich von Basic auf Pro upgrade?",
-    a: "Sofort: Sponsor- und Pact-Regelgrenzen fallen weg, Saison-Wetten + Custom-Trigger werden freigeschaltet, dein Vereins-Logo erscheint auf der nächsten PDF-Rechnung. Bestehende Pacts laufen unverändert weiter, beim Monatsabo wird pro-rated abgerechnet."
+    a: "Sofort: Sponsor- und Pact-Regelgrenzen fallen weg, Saison-Ziele + Custom-Trigger werden freigeschaltet, dein Vereins-Logo erscheint auf der nächsten PDF-Rechnung. Bestehende Pacts laufen unverändert weiter, beim Monatsabo wird pro-rated abgerechnet."
   },
   {
     q: "Was passiert bei einem Disput?",

@@ -68,13 +68,13 @@ export default async function PledgeDetailPage({
     <div className="mx-auto max-w-3xl">
       <div>
         {/* Back nur Desktop — auf Mobile übernimmt die native AppNavBar (Chevron
-            + „Wetten"). */}
+            + „Pacts"). */}
         <Link
           href="/sponsor/pledge"
           className="hidden md:inline-flex items-center gap-0.5 text-sm font-medium text-accent hover:text-accent-dark"
         >
           <ChevronLeft className="h-4 w-4" aria-hidden />
-          Wetten
+          Pacts
         </Link>
         <h1 className="mt-2 md:mt-3 font-display font-bold text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
           {pledge.teamName}

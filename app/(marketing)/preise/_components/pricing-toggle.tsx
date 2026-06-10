@@ -50,7 +50,7 @@ const MATRIX: MatrixGroup[] = [
         values: { basic: true, pro: true, verein: true }
       },
       {
-        label: "Saison-Wetten (6 Typen)",
+        label: "Saison-Ziele (6 Typen)",
         values: { basic: false, pro: true, verein: true }
       },
       {

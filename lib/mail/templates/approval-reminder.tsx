@@ -55,26 +55,26 @@ export function approvalReminderEmail(args: {
     subject: `${pendingCount} Event${pendingCount === 1 ? "" : "s"} zur Bestätigung bei KickPact`,
     text: `Hi ${greet},
 
-du hast ${pendingCount} ${pendingCount === 1 ? "Event" : "Events"} in deiner KickPact-Inbox, die der Verein gemeldet hat und auf deine Bestätigung warten:
+du hast ${pendingCount} ${pendingCount === 1 ? "Event" : "Events"} bei KickPact, die der Verein gemeldet hat und auf deine Bestätigung warten:
 
 ${listText}
 
 ${items.length > 5 ? `... und ${items.length - 5} weitere.\n` : ""}
 Du kannst Events direkt über die Links oben bestätigen oder anfechten — kein Login nötig.
-Oder öffne deine Inbox: ${inboxUrl}
+Oder öffne alle Bestätigungen: ${inboxUrl}
 
 — KickPact`,
     html: `<!doctype html>
 <html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;background:#F5F8F5;padding:40px 20px;">
   <table style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;">
     <tr><td>
-      <h1 style="font-size:24px;margin:0 0 8px;color:#1A1A2E;">KickPact-Inbox</h1>
+      <h1 style="font-size:24px;margin:0 0 8px;color:#1A1A2E;">Events bestätigen</h1>
       <p style="color:#525252;margin:0 0 16px;">Hi ${greet}, ${pendingCount} ${pendingCount === 1 ? "Event wartet" : "Events warten"} auf deine Bestätigung — du kannst direkt aus dieser Mail antworten:</p>
       <ul style="padding:0;margin:0;">${listHtml}</ul>
-      ${items.length > 5 ? `<p style="font-size:13px;color:#525252;margin-top:8px;">... und ${items.length - 5} weitere in deiner Inbox.</p>` : ""}
+      ${items.length > 5 ? `<p style="font-size:13px;color:#525252;margin-top:8px;">... und ${items.length - 5} weitere in der App.</p>` : ""}
       <p style="margin-top:20px;font-size:13px;color:#525252;">Alle Events auf einmal ansehen:</p>
-      <a href="${inboxUrl}" style="display:inline-block;background:#01C457;color:#fff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;">Inbox öffnen</a>
-      <p style="color:#a3a3a3;font-size:12px;margin-top:28px;">Bestätigte Beträge landen auf der nächsten Monats-Rechnung. Bestrittene Charges werden storniert.</p>
+      <a href="${inboxUrl}" style="display:inline-block;background:#01C457;color:#fff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;">Bestätigungen öffnen</a>
+      <p style="color:#a3a3a3;font-size:12px;margin-top:28px;">Bestätigte Beiträge landen auf der nächsten Monats-Rechnung. Bestrittene Beiträge werden storniert.</p>
     </td></tr>
   </table>
 </body></html>`
