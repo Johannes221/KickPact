@@ -47,7 +47,7 @@ describe("getCategoryLabelShort", () => {
   it("liefert kurze Labels fürs KPI-Grid", () => {
     expect(getCategoryLabelShort("auto")).toBe("Auto-Trigger");
     expect(getCategoryLabelShort("manual")).toBe("Manuelle Trigger");
-    expect(getCategoryLabelShort("season")).toBe("Saison-Wetten");
+    expect(getCategoryLabelShort("season")).toBe("Saison-Ziele");
   });
 });
 
@@ -55,7 +55,7 @@ describe("getCategoryLabelLong", () => {
   it("liefert ausführliche Labels für Erklär-/Filter-Kontexte", () => {
     expect(getCategoryLabelLong("auto")).toBe("Automatisch erfasst");
     expect(getCategoryLabelLong("manual")).toBe("Manuell (Bestätigung nötig)");
-    expect(getCategoryLabelLong("season")).toBe("Saison-Wetten");
+    expect(getCategoryLabelLong("season")).toBe("Saison-Ziele");
   });
 });
 

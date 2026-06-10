@@ -165,7 +165,7 @@ describe("createPledge — Tier-Gate fuer Saison-Wetten (Audit #4)", () => {
     getTeamLicensePlanMock.mockResolvedValue("basic");
     await expect(createPledge(VALID_INPUT)).resolves.toEqual({
       ok: false,
-      message: expect.stringMatching(/Saison-Wetten/i)
+      message: expect.stringMatching(/Saison-Ziele/i)
     });
   });
 
@@ -221,11 +221,11 @@ describe("createPledge — Daten-Coverage-Gate", () => {
     getTeamLicensePlanMock.mockResolvedValue("pro");
   });
 
-  it("results_only + goal_by_player → ok:false (Spieler-Wette geblockt)", async () => {
+  it("results_only + goal_by_player → ok:false (Spieler-Regel geblockt)", async () => {
     getTeamDataCoverageMock.mockResolvedValue("results_only");
     await expect(createPledge(playerRuleInput)).resolves.toEqual({
       ok: false,
-      message: expect.stringMatching(/Spieler-Wetten/i)
+      message: expect.stringMatching(/Spieler-Regeln/i)
     });
   });
 

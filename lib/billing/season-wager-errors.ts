@@ -9,7 +9,7 @@ export class SeasonWagerNotAllowedError extends Error {
   readonly plan: PlanKey;
   constructor(plan: PlanKey) {
     super(
-      `Saison-Wetten sind im ${plan}-Tier nicht verfügbar. ` +
+      `Saison-Ziele sind im ${plan}-Tier nicht verfügbar. ` +
         `Bitte Verein auf Pro oder Vereinslizenz upgraden.`
     );
     this.name = "SeasonWagerNotAllowedError";

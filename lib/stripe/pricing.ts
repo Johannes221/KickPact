@@ -64,7 +64,7 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     },
     features: [
       "Alle Auto-Trigger (10 Typen) + Manual-Trigger",
-      "Bis zu 5 Sponsoren, 3 Pledge-Rules pro Sponsor",
+      "Bis zu 5 Sponsoren, 3 Regeln pro Sponsor",
       "Automatische Spieldaten alle 6h",
       "Monatliche PDF-Rechnung",
       "Sponsor-Einladungslinks",
@@ -92,10 +92,10 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     },
     features: [
       "Alles aus Basic, plus:",
-      "∞ Sponsoren · ∞ Pledge-Rules · ∞ Historie",
-      "Saison-Wetten + Custom-Trigger-Texte",
+      "∞ Sponsoren · ∞ Regeln · ∞ Historie",
+      "Saison-Ziele + Custom-Trigger-Texte",
       "Vereins-Logo auf PDF · Vereins-Mail-Absender",
-      "Pledge-Discovery, Embed-Widget, Newsletter",
+      "Pact-Discovery, Embed-Widget, Newsletter",
       "CSV-Export, Sponsor-Stats, Saison-Recap-PDF"
     ],
     note: "Bei 22-Mann-Kader: unter 1 € pro Spieler/Monat.",

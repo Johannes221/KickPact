@@ -129,7 +129,7 @@ export async function createPledge(input: PledgeInput): Promise<CreatePledgeResu
     return {
       ok: false,
       message:
-        "Spieler-Wetten (Tor von Spieler, Hattrick) sind für diese Mannschaft nicht verfügbar – " +
+        "Spieler-Regeln (Tor von Spieler, Hattrick) sind für diese Mannschaft nicht verfügbar – " +
         "fußball.de liefert hier nur das Ergebnis, keine Torschützen."
     };
   }

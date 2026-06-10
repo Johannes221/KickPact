@@ -82,7 +82,7 @@ export const pledgeRuleInputSchema = z
       if (val.capEur !== undefined || val.capPeriod !== undefined) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Saison-Wetten können keinen Cap haben.",
+          message: "Saison-Regeln können keinen Cap haben.",
           path: ["capEur"]
         });
       }

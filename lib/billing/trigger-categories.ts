@@ -60,7 +60,7 @@ export function getCategoryLabelShort(category: TriggerCategory): string {
     case "manual":
       return "Manuelle Trigger";
     case "season":
-      return "Saison-Wetten";
+      return "Saison-Ziele";
   }
 }
 
@@ -75,7 +75,7 @@ export function getCategoryLabelLong(category: TriggerCategory): string {
     case "manual":
       return "Manuell (Bestätigung nötig)";
     case "season":
-      return "Saison-Wetten";
+      return "Saison-Ziele";
   }
 }
 
