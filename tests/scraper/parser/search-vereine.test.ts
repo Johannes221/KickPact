@@ -44,4 +44,22 @@ describe("searchVereine parser", () => {
       }
     }, 60_000);
   }
+
+  // Regression (2026-06-10): fussball.de-Volltextsuche liefert bei Gründungs-
+  // Jahreszahlen im Namen 0 Treffer ("FC Sportfreunde 1910 Dossenheim" → 0),
+  // ohne Jahr aber Treffer. Der User tippt den vollen offiziellen Namen →
+  // searchVereine MUSS bei 0 Treffern die Jahreszahl strippen und erneut suchen.
+  it("Jahreszahl-Fallback: 0 Treffer mit Gründungsjahr → Retry ohne Jahr findet den Verein", async () => {
+    const actual = await withMockedFetch(
+      [
+        // Erste Anfrage (URL enthält die Jahreszahl) → leere Trefferseite.
+        { matchUrl: /1910/, htmlPath: "negative/empty-search.html" },
+        // Retry ohne Jahr → echte Trefferliste.
+        { matchUrl: /fussball\.de\/suche/, htmlPath: "dossenheim/search.html" },
+      ],
+      async () => searchVereine("FC Sportfreunde 1910 Dossenheim"),
+    );
+    expect(actual.length).toBeGreaterThanOrEqual(1);
+    expect(actual[0]?.vereinId).toBeTruthy();
+  }, 60_000);
 });

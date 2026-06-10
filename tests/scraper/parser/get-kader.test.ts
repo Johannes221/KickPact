@@ -59,4 +59,22 @@ describe("getKader parser", () => {
       }
     }
   }
+
+  // Regression (2026-06-10): Amateur-Mannschaftsseiten haben keine Kader-Sektion.
+  // Früher matchte die .column-name-Fallback-Strategie dort Match-Bericht-Teaser
+  // ("Sprecakovic glänzt als dreifacher Torschütze") + Ergebnis-Zellen und gab
+  // Überschriften als "Spieler" zurück. Eine Seite ohne spielerprofil-Links MUSS
+  // jetzt einen LEEREN Kader liefern, nicht Müll.
+  it("liefert leeren Kader bei Seite ohne Spielerprofil-Links (kein column-name-Garbage)", async () => {
+    const result = await withMockedBrowser(
+      [
+        {
+          matchUrl: /fussball\.de\/mannschaft\//,
+          htmlPath: "negative/kader-headlines-only.html",
+        },
+      ],
+      async () => getKader("FAKETEAMID0000000000", "fake-team-slug", "2526"),
+    );
+    expect(result).toEqual([]);
+  }, 120_000);
 });

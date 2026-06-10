@@ -447,6 +447,26 @@ async function withPage<T>(fn: (page: Page) => Promise<T>): Promise<T> {
 }
 
 export async function searchVereine(suchbegriff: string): Promise<VereinHit[]> {
+  let results = await searchVereineRaw(suchbegriff);
+  // fussball.de-Volltextsuche verschluckt sich an Gründungs-Jahreszahlen im
+  // Vereinsnamen: "FC Sportfreunde 1910 Dossenheim" → 0 Treffer, "FC Sportfreunde
+  // Dossenheim" → 1. Der User tippt aber genau den vollen offiziellen Namen (=
+  // der bei uns gespeicherte Team-/Vereinsname). Fallback: stehende 2–4-stellige
+  // Zahlen-Tokens (1910/1946/08 …) strippen und erneut suchen. Greift nur bei 0
+  // Treffern → ändert nichts, wenn die Originalsuche schon liefert.
+  if (results.length === 0) {
+    const normalized = suchbegriff
+      .replace(/\b\d{2,4}\b/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (normalized && normalized !== suchbegriff) {
+      results = await searchVereineRaw(normalized);
+    }
+  }
+  return results;
+}
+
+async function searchVereineRaw(suchbegriff: string): Promise<VereinHit[]> {
   // fetch statt Playwright: die /suche/-Seite ist server-gerendert (die
   // Verein-Treffer stehen im HTML). Robust auf Prod (kein headless-Block).
   const url = `https://www.fussball.de/suche/-/text/${encodeURIComponent(
@@ -1085,17 +1105,11 @@ export async function getKader(
         players.push({ name: name, spielerId: id || undefined, href: href || undefined });
       });
 
-      // Strategy 2: .column-name cells in kader tables (fallback if links have no text)
-      if (players.length === 0) {
-        document.querySelectorAll('.column-name').forEach(function(cell) {
-          var name = (cell.textContent || "").replace(/\\s+/g, " ").trim();
-          if (name.length > 1 && !seen.has(name)) {
-            seen.add(name);
-            players.push({ name: name });
-          }
-        });
-      }
-
+      // Bewusst KEINE column-name-Fallback-Strategie: Amateur-Mannschaftsseiten
+      // haben gar keine Kader-Sektion (Probe 2026-06-10, FG Union Heidelberg:
+      // kein Kader-Tab, 0 spielerprofil-Links). column-name matcht dort nur
+      // Match-Bericht-Teaser/Ergebnis-Zellen = Ueberschriften als Spieler.
+      // Lieber leerer Kader (Pool kommt aus Match-Events) als gefilterter Muell.
       return players;
     })()`) as Array<KaderPlayer & { href?: string }>;
   });
