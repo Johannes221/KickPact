@@ -1,4 +1,4 @@
-import { and, eq, lte, gte } from "drizzle-orm";
+import { and, eq, lte, gte, or } from "drizzle-orm";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
 import {
@@ -37,121 +37,152 @@ export function parseSeasonBoundaries(saison: string): { start: Date; end: Date 
 }
 
 /**
+ * Saison-Wetten-Auswertung: verarbeitet alle (zur Saison gültigen) Pledges der
+ * Mannschaft mit Saison-Trigger-Regeln, vergleicht mit dem `season_results`-
+ * Datensatz und erzeugt eine Charge pro erfolgreichem Trigger. Saison-Trigger
+ * werden auto-confirmed (der Verein trägt das Ergebnis selbst ein) — es gibt
+ * für sie KEINEN Sponsor-Approval-/Inbox-Pfad; nur ein expliziter Rule-Flag
+ * `requiresApproval` erzwingt noch eine Bestätigung. Idempotent über
+ * `charges.unique(pledge_rule_id, saison)`.
+ */
+export interface EvaluateSeasonResult {
+  teamId: string;
+  saison: string;
+  chargesCreated: number;
+  chargesSkipped: number;
+  details: { ruleId: string; trigger: string; outcome: string }[];
+  skipped?: string;
+}
+
+/**
+ * Reine Auswertungs-Logik (ohne Inngest-`step`-Wrapper) — testbar gegen die
+ * Test-DB über den globalen `db` (zeigt unter Vitest auf DATABASE_URL_TEST).
+ * Idempotent über `charges.unique(pledge_rule_id, saison)`.
+ */
+export async function runEvaluateSeason(opts: {
+  teamId: string;
+  saison: string;
+}): Promise<EvaluateSeasonResult> {
+  const { teamId, saison } = opts;
+
+  const [result] = await db
+    .select()
+    .from(seasonResults)
+    .where(and(eq(seasonResults.teamId, teamId), eq(seasonResults.saison, saison)))
+    .limit(1);
+  if (!result) {
+    return { teamId, saison, chargesCreated: 0, chargesSkipped: 0, details: [], skipped: "no-result" };
+  }
+
+  // Audit 2026-05-24 Task 2.6: Pledge muss zur Saison gültig gewesen sein —
+  // vorher war `gte(pledges.endsAt, new Date(0))` tautologisch und Saison-
+  // Wetten feuerten auch für Pledges, die erst NACH Saison-Ende erstellt
+  // wurden (siehe cross-saison-pledges.test.ts:212-245).
+  const { start: seasonStart, end: seasonEnd } = parseSeasonBoundaries(saison);
+  const rows = await db
+    .select({
+      pledge: pledges,
+      rule: pledgeRules,
+      teamSaison: teams.saison
+    })
+    .from(pledgeRules)
+    .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .where(
+      and(
+        eq(pledges.teamId, teamId),
+        // FIX (Sommerpause-Charge-Lücke, Audit 2026-06-10): NICHT nur 'active'.
+        // Der Sommerpause-Cron (1.6.) pausiert ALLE Pledges (status='paused',
+        // sommerpause_paused=true), BEVOR der Verein das Saison-Ergebnis (Saison
+        // endet 30.6.) einträgt. Mit reinem `status='active'` verloren diese
+        // Pledges ihre End-of-Season-Charge dauerhaft. Sommerpause-pausierte
+        // Pledges (Flag=true) wieder einbeziehen; die Gültigkeit ist ohnehin
+        // über startsAt/endsAt gegen die Saison gegated.
+        or(eq(pledges.status, "active"), eq(pledges.sommerpausePaused, true)),
+        // Pledge musste zur Saison aktiv sein: startsAt <= Saison-Ende UND endsAt >= Saison-Start
+        lte(pledges.startsAt, seasonEnd),
+        gte(pledges.endsAt, seasonStart)
+      )
+    );
+
+  let chargesCreated = 0;
+  let chargesSkipped = 0;
+  const details: { ruleId: string; trigger: string; outcome: string }[] = [];
+
+  for (const r of rows) {
+    if (!isSeasonTrigger(r.rule.triggerType)) continue;
+
+    const triggerType = r.rule.triggerType as SeasonTriggerType;
+    const params = (r.rule.triggerParamsJson ?? {}) as Record<string, unknown>;
+
+    const hit = isTriggerHit(triggerType, params, result);
+    if (!hit) {
+      chargesSkipped += 1;
+      details.push({ ruleId: r.rule.id, trigger: triggerType, outcome: "missed" });
+      continue;
+    }
+
+    // FIX (cup_round-Dead-End, Audit 2026-06-10): season_cup_round wurde hier
+    // zwangs-`pending_approval` gesetzt, aber für Saison-Trigger existiert KEIN
+    // event_approvals-/Inbox-Pfad → die Charge hing ewig pending, wurde nie
+    // bestätigt + nie fakturiert. Wie season_custom (der Verein trägt
+    // cupRoundReached selbst ins Saison-Formular ein = bestätigt) → auto-confirm.
+    // Nur der explizite Rule-Flag kann noch eine Bestätigung verlangen.
+    const requiresApproval = r.rule.requiresApproval;
+
+    const insertResult = await db
+      .insert(charges)
+      .values({
+        pledgeId: r.pledge.id,
+        pledgeRuleId: r.rule.id,
+        matchId: null,
+        saison,
+        triggerType,
+        amountCents: r.rule.amountCents,
+        status: requiresApproval ? "pending_approval" : "confirmed",
+        confirmedAt: requiresApproval ? null : new Date()
+      })
+      .onConflictDoNothing()
+      .returning({ id: charges.id });
+
+    if (insertResult.length > 0) {
+      chargesCreated += 1;
+      details.push({
+        ruleId: r.rule.id,
+        trigger: triggerType,
+        outcome: requiresApproval ? "pending_approval" : "confirmed"
+      });
+    } else {
+      details.push({ ruleId: r.rule.id, trigger: triggerType, outcome: "duplicate" });
+    }
+  }
+
+  return { teamId, saison, chargesCreated, chargesSkipped, details };
+}
+
+/**
  * Saison-Wetten-Auswertung.
  *
  * Trigger: Event `season/result-set` mit `{teamId, saison}` payload.
- * Verarbeitet alle Pledges der Mannschaft, deren `pledge_rules` ein
- * Saison-Trigger sind, vergleicht mit dem `season_results`-Datensatz, und
- * erzeugt eine Charge pro erfolgreichem Trigger.
- *
- * Idempotent über `charges.unique(pledge_rule_id, saison)` — bei mehrfachen
- * Aufrufen werden keine Duplikate erzeugt.
- *
- * Manuelle Trigger (season_cup_round, season_custom) landen mit
- * status='pending_approval' damit der Sponsor sie bestätigt.
+ * Delegiert an {@link runEvaluateSeason}, gewrappt in einen Inngest-`step` für
+ * Durability/Memoization. Idempotent über `charges.unique(pledge_rule_id, saison)`.
  */
 export const evaluateSeason = inngest.createFunction(
   { id: "evaluate-season", name: "Evaluate Season-Wetten", concurrency: { limit: 2 } },
   [{ event: "season/result-set" }],
   async ({ event, step, logger }) => {
     const { teamId, saison } = event.data as { teamId: string; saison: string };
-
-    const [result] = await db
-      .select()
-      .from(seasonResults)
-      .where(and(eq(seasonResults.teamId, teamId), eq(seasonResults.saison, saison)))
-      .limit(1);
-    if (!result) {
-      logger.warn("evaluate-season: no result row found", { teamId, saison });
-      return { teamId, saison, chargesCreated: 0, skipped: "no-result" };
-    }
-
-    // Audit 2026-05-24 Task 2.6: Pledge muss zur Saison gültig gewesen sein —
-    // vorher war `gte(pledges.endsAt, new Date(0))` tautologisch und Saison-
-    // Wetten feuerten auch für Pledges, die erst NACH Saison-Ende erstellt
-    // wurden (siehe cross-saison-pledges.test.ts:212-245).
-    const { start: seasonStart, end: seasonEnd } = parseSeasonBoundaries(saison);
-    const rows = await db
-      .select({
-        pledge: pledges,
-        rule: pledgeRules,
-        teamSaison: teams.saison
-      })
-      .from(pledgeRules)
-      .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
-      .innerJoin(teams, eq(pledges.teamId, teams.id))
-      .where(
-        and(
-          eq(pledges.teamId, teamId),
-          eq(pledges.status, "active"),
-          // Pledge musste zur Saison aktiv sein: startsAt <= Saison-Ende UND endsAt >= Saison-Start
-          lte(pledges.startsAt, seasonEnd),
-          gte(pledges.endsAt, seasonStart)
-        )
-      );
-
-    let chargesCreated = 0;
-    let chargesSkipped = 0;
-    const details: { ruleId: string; trigger: string; outcome: string }[] = [];
-
-    for (const r of rows) {
-      if (!isSeasonTrigger(r.rule.triggerType)) continue;
-
-      const stepId = `season-charge-${r.rule.id}-${saison}`;
-      await step.run(stepId, async () => {
-        const triggerType = r.rule.triggerType as SeasonTriggerType;
-        const params = (r.rule.triggerParamsJson ?? {}) as Record<string, unknown>;
-
-        const hit = isTriggerHit(triggerType, params, result);
-        if (!hit) {
-          chargesSkipped += 1;
-          details.push({ ruleId: r.rule.id, trigger: triggerType, outcome: "missed" });
-          return;
-        }
-
-        // Audit 2026-05-24 Task 2.6: season_custom landete vorher mit
-        // pending_approval, aber ohne event_approvals-Row → Sponsor sah nie
-        // etwas in der Inbox, Charge blieb forever pending. Entscheidung:
-        // Verein setzt customNotes = Verein bestätigt selbst. Auto-confirmed.
-        const requiresApproval =
-          r.rule.requiresApproval || triggerType === "season_cup_round";
-
-        const insertResult = await db
-          .insert(charges)
-          .values({
-            pledgeId: r.pledge.id,
-            pledgeRuleId: r.rule.id,
-            matchId: null,
-            saison,
-            triggerType,
-            amountCents: r.rule.amountCents,
-            status: requiresApproval ? "pending_approval" : "confirmed",
-            confirmedAt: requiresApproval ? null : new Date()
-          })
-          .onConflictDoNothing()
-          .returning({ id: charges.id });
-
-        if (insertResult.length > 0) {
-          chargesCreated += 1;
-          details.push({
-            ruleId: r.rule.id,
-            trigger: triggerType,
-            outcome: requiresApproval ? "pending_approval" : "confirmed"
-          });
-        } else {
-          details.push({ ruleId: r.rule.id, trigger: triggerType, outcome: "duplicate" });
-        }
-      });
-    }
-
+    const res = await step.run("evaluate-season", () =>
+      runEvaluateSeason({ teamId, saison })
+    );
     logger.info("evaluate-season done", {
       teamId,
       saison,
-      chargesCreated,
-      chargesSkipped,
-      rules: rows.length
+      chargesCreated: res.chargesCreated,
+      chargesSkipped: res.chargesSkipped,
+      skipped: res.skipped
     });
-    return { teamId, saison, chargesCreated, chargesSkipped, details };
+    return res;
   }
 );
 
