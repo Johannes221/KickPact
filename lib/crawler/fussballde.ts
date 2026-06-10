@@ -3,6 +3,7 @@ import { chromium, type Page } from "playwright";
 import { fetch as undiciFetch } from "undici";
 import { parse as parseHtml, type HTMLElement } from "node-html-parser";
 import { saisonStartDate } from "@/lib/utils/saison";
+import { decodeObfuscatedScore } from "./score-font";
 import { isReadableName } from "@/lib/players/readable-name";
 import { isPlausibleLeague } from "@/lib/utils/league";
 
@@ -887,19 +888,24 @@ async function resolvePlayerName(playerUrl: string): Promise<string> {
 }
 
 /**
- * Liest den ANGEZEIGTEN Endstand aus dem `.result`-Element der Detailseite
- * (Format ": [H : G]", auch "[- : -]" wenn kein Ergebnis eingetragen ist).
+ * Liest die ANGEZEIGTE HALBZEIT aus dem `.result`-Element der Detailseite.
  *
- * Das ist die Quelle der Wahrheit für den Score — unabhängig davon, ob ein
- * Spielbericht mit Tor-Events existiert. Für Mannschaften ohne Torschützen-
- * Bericht („nur Ergebnis", z.B. C-/D-Jugend) gibt es 0 Tor-Events; die frühere
- * Score-aus-Events-Logik lieferte dort fälschlich 0:0. `null`, wenn kein
- * numerischer Stand vorliegt (Fallback auf Event-Zählung).
+ * fussball.de rendert dort `<span class="half-result">[H : G]</span>` — die
+ * eckige Klammer ist IMMER die Halbzeit, NIEMALS der Endstand ("[- : -]" wenn
+ * nicht eingetragen). Der Endstand daneben (`.end-result`) ist font-verschleiert
+ * und wird via `decodeObfuscatedScore` (score-font.ts) dekodiert.
+ *
+ * ACHTUNG Bug-Historie 2026-06-09/10: diese Klammer wurde als Endstand
+ * interpretiert ("parseDisplayedResult") — dadurch überschrieb der Crawler
+ * 63 Endstände mit Halbzeitständen. Nie wieder als Endstand lesen.
  */
-export function parseDisplayedResult(
+export function parseDisplayedHalftime(
   root: HTMLElement
 ): { heim: number; gast: number } | null {
-  const txt = nodeText(root.querySelector(".result")).replace(/\s+/g, " ");
+  // Gezielt .half-result; Fallback auf das ganze .result-Element (die Klammer
+  // kommt dort nur in der Halbzeit-Anzeige vor, der Endstand ist verschleiert).
+  const el = root.querySelector(".result .half-result") ?? root.querySelector(".result");
+  const txt = nodeText(el).replace(/\s+/g, " ");
   const m = txt.match(/\[\s*(\d+)\s*:\s*(\d+)\s*\]/);
   if (!m) return null;
   return { heim: parseInt(m[1], 10), gast: parseInt(m[2], 10) };
@@ -962,22 +968,31 @@ export async function getSpielDetails(
   }
 
   const goals = rawEvents.filter((e) => e.typ === "TOR");
-  // Endstand PRIMÄR aus dem angezeigten `.result` lesen (Wahrheit), nur als
-  // Fallback aus den Tor-Events zählen. So bekommen „nur Ergebnis"-Mannschaften
-  // (kein Spielbericht → 0 Events) ihren echten Score statt 0:0; voll berichtete
-  // Spiele bleiben identisch (`.result` == Event-Anzahl → kein Hash-Drift).
-  const displayedResult = parseDisplayedResult(root);
-  const ergebnisHeim = displayedResult
-    ? displayedResult.heim
+  // Endstand PRIMÄR aus dem dekodierten Anzeige-Score (`.end-result`,
+  // Obfuscation-Font) — der ist auch für „nur Ergebnis"-Mannschaften (kein
+  // Spielbericht → 0 Tor-Events) korrekt, wo die Event-Zählung 0:0 liefert.
+  // Fallback: Tor-Events zählen (bei vollem Spielbericht identisch → kein
+  // Hash-Drift). Die Klartext-Klammer "[H : G]" ist die HALBZEIT — sie als
+  // Endstand zu lesen war der Korruptions-Bug vom 2026-06-09/10.
+  const displayedEnd = await decodeObfuscatedScore(root);
+  const ergebnisHeim = displayedEnd
+    ? displayedEnd.heim
     : goals.filter((g) => g.side === "heim").length;
-  const ergebnisGast = displayedResult
-    ? displayedResult.gast
+  const ergebnisGast = displayedEnd
+    ? displayedEnd.gast
     : goals.filter((g) => g.side === "gast").length;
+  // Halbzeit PRIMÄR aus der angezeigten Klammer (offizieller HZ-Stand, auch
+  // ohne Spielbericht vorhanden); Fallback: Tor-Events mit Minute ≤ 45.
+  const displayedHalftime = parseDisplayedHalftime(root);
   const firstHalfGoals = goals.filter(
     (g) => g.minute !== null && g.minute <= 45
   );
-  const halbzeitHeim = firstHalfGoals.filter((g) => g.side === "heim").length;
-  const halbzeitGast = firstHalfGoals.filter((g) => g.side === "gast").length;
+  const halbzeitHeim =
+    displayedHalftime?.heim ??
+    firstHalfGoals.filter((g) => g.side === "heim").length;
+  const halbzeitGast =
+    displayedHalftime?.gast ??
+    firstHalfGoals.filter((g) => g.side === "gast").length;
 
   // Spielernamen auflösen (gecached, sequenziell mit kleinem Delay gegen
   // Rate-Limiting). Jede Profilseite ist ein einzelner leichter fetch.
@@ -1026,9 +1041,9 @@ export async function getSpielDetails(
     heim,
     gast,
     ergebnis: { heim: ergebnisHeim, gast: ergebnisGast },
-    // Halbzeit-Stand aus den Tor-Events (Minute ≤ 45). Wie zuvor immer als
-    // Objekt (auch 0:0) — NICHT null, sonst ändert sich der content-hash aller
-    // bestehenden Matches und löst unnötige Re-Evaluation aus.
+    // Halbzeit: angezeigte "[H : G]"-Klammer, sonst Tor-Events (Minute ≤ 45).
+    // Wie zuvor immer als Objekt (auch 0:0) — NICHT null, sonst ändert sich der
+    // content-hash aller bestehenden Matches und löst unnötige Re-Evaluation aus.
     halbzeit: { heim: halbzeitHeim, gast: halbzeitGast },
     events
   };
