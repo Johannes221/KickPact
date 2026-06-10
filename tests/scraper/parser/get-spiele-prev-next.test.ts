@@ -13,9 +13,18 @@
  * Live verification against the real site is out of scope here and tracked as
  * a manual / Phase-8 task (see getSpiele docblock).
  */
-import { describe, it, expect } from "vitest";
-import { withMockedBrowser } from "../../setup/playwright-mocks";
+import { describe, it, expect, vi } from "vitest";
+import { withMockedFetch } from "../../setup/fetch-mocks";
 import { getSpiele, type SpielListItem } from "../../../lib/crawler/fussballde";
+
+// getSpiele holt HTML über undici-fetch (NICHT Browser, NICHT globales fetch)
+// — der frühere withMockedBrowser-Mock war dafür ein No-Op und die Tests
+// trafen echtes Netz. Siehe tests/setup/fetch-mocks.ts.
+vi.mock("undici", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("undici")>();
+  const { mockedFetch } = await import("../../setup/fetch-mocks");
+  return { ...actual, fetch: mockedFetch };
+});
 
 const TEAM_ID = "0123456789ABCDEFGHIJ"; // 20-char id shape
 const SLUG = "sv-musterhausen";
@@ -47,12 +56,11 @@ const ROUTES = [
     matchUrl: /ajax\.team\.next\.games/,
     htmlPath: "synthetic/next-games.html"
   }
-  // main team page (Strategy 2) intentionally unrouted → mock serves 404 (empty)
 ];
 
 describe("getSpiele — prev + next extraction", () => {
   it("returns BOTH past and future matches", async () => {
-    const spiele = await withMockedBrowser(ROUTES, () =>
+    const spiele = await withMockedFetch(ROUTES, () =>
       getSpiele(TEAM_ID, SLUG, SAISON)
     );
 
@@ -63,7 +71,7 @@ describe("getSpiele — prev + next extraction", () => {
   }, 120_000);
 
   it("deduplicates by spielId across all strategies", async () => {
-    const spiele = await withMockedBrowser(ROUTES, () =>
+    const spiele = await withMockedFetch(ROUTES, () =>
       getSpiele(TEAM_ID, SLUG, SAISON)
     );
     const ids = spiele.map((s) => s.spielId);
@@ -71,7 +79,7 @@ describe("getSpiele — prev + next extraction", () => {
   }, 120_000);
 
   it("flags past matches as vergangen=true / status=finished", async () => {
-    const spiele = await withMockedBrowser(ROUTES, () =>
+    const spiele = await withMockedFetch(ROUTES, () =>
       getSpiele(TEAM_ID, SLUG, SAISON)
     );
     for (const id of PAST_IDS) {
@@ -83,7 +91,7 @@ describe("getSpiele — prev + next extraction", () => {
   }, 120_000);
 
   it("flags future matches as vergangen=false / status=scheduled", async () => {
-    const spiele = await withMockedBrowser(ROUTES, () =>
+    const spiele = await withMockedFetch(ROUTES, () =>
       getSpiele(TEAM_ID, SLUG, SAISON)
     );
     for (const id of FUTURE_IDS) {
@@ -99,7 +107,7 @@ describe("getSpiele — prev + next extraction", () => {
     // (fussball.de hat das Ergebnis noch nicht nachgeführt), darf NICHT per
     // Datum als "finished" gelten — sonst scrapt der Detail-Scrape 0 Tore und
     // ein 0:0-Phantom landet in der DB. Der Status kommt vom Endpoint.
-    const spiele = await withMockedBrowser(ROUTES, () =>
+    const spiele = await withMockedFetch(ROUTES, () =>
       getSpiele(TEAM_ID, SLUG, SAISON)
     );
     const m = spiele.find((s) => s.spielId === NEXT_BUT_PAST_DATE_ID) as SpielListItem;
@@ -108,7 +116,7 @@ describe("getSpiele — prev + next extraction", () => {
   }, 120_000);
 
   it("normalises datum to DD.MM.YYYY for every row", async () => {
-    const spiele = await withMockedBrowser(ROUTES, () =>
+    const spiele = await withMockedFetch(ROUTES, () =>
       getSpiele(TEAM_ID, SLUG, SAISON)
     );
     expect(spiele.length).toBeGreaterThan(0);
@@ -118,7 +126,7 @@ describe("getSpiele — prev + next extraction", () => {
   }, 120_000);
 
   it("sorts newest first (future before past)", async () => {
-    const spiele = await withMockedBrowser(ROUTES, () =>
+    const spiele = await withMockedFetch(ROUTES, () =>
       getSpiele(TEAM_ID, SLUG, SAISON)
     );
     // 2099 dates must come before 2024 dates

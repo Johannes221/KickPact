@@ -1,12 +1,21 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
-  withMockedBrowser,
   loadFixtureJson,
   fixtureExists,
   htmlFixtureExists,
 } from "../../setup/playwright-mocks";
+import { withMockedFetch } from "../../setup/fetch-mocks";
 import { searchVereine, type VereinHit } from "../../../lib/crawler/fussballde";
 import { FIXTURE_CLUBS } from "../../fixtures/scraper/config";
+
+// searchVereine holt HTML über undici-fetch (NICHT Browser, NICHT globales
+// fetch) — der frühere withMockedBrowser-Mock war dafür ein No-Op und der
+// Test traf still das echte fussball.de. Siehe tests/setup/fetch-mocks.ts.
+vi.mock("undici", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("undici")>();
+  const { mockedFetch } = await import("../../setup/fetch-mocks");
+  return { ...actual, fetch: mockedFetch };
+});
 
 describe("searchVereine parser", () => {
   for (const club of FIXTURE_CLUBS) {
@@ -18,7 +27,7 @@ describe("searchVereine parser", () => {
       }
 
       const expected = await loadFixtureJson<VereinHit[]>(jsonRel);
-      const actual = await withMockedBrowser(
+      const actual = await withMockedFetch(
         [{ matchUrl: /fussball\.de\/suche/, htmlPath: htmlRel }],
         async () => searchVereine(club.searchTerm),
       );
