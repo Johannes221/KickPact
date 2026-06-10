@@ -42,6 +42,15 @@ describe("evaluateTriggers — results_only (Score ohne Events)", () => {
       expect(c.requiresApproval).toBe(false); // offizieller Endstand → keine Freigabe
       expect(c.amountCents).toBe(500);
     });
+    // Regression (Audit 2026-06-09 Bug 1): ohne Diskriminator kollabierte der
+    // Partial-Unique-Index charges_unique_match_trigger_idx die 3 Charges auf
+    // 1. goalIndex = 1-basierte Tor-Nummer macht jede Charge index-eindeutig.
+    expect(charges.map((c) => c.goalIndex)).toEqual([1, 2, 3]);
+  });
+
+  it("win-Charge trägt KEINEN goalIndex-Diskriminator (0/undefined)", () => {
+    const [winCharge] = evaluateTriggers(resultsOnly, [rule({ triggerType: "win" })]);
+    expect(winCharge.goalIndex ?? 0).toBe(0);
   });
 
   it("win feuert (aus Score abgeleitet)", () => {

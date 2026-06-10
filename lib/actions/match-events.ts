@@ -4,6 +4,7 @@ import { eq, and, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
+import { isUniqueViolation } from "@/lib/db/errors";
 import {
   matches,
   matchEvents,
@@ -230,8 +231,9 @@ export async function addManualEvent(input: AddManualEventInput) {
           approvalCount++;
         }
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes("unique") || msg.includes("duplicate")) continue;
+        // Drizzle wrappt den Postgres-Fehler — Cause-Kette prüfen statt nur
+        // die Top-Level-Message ("Failed query: …").
+        if (isUniqueViolation(err)) continue;
         throw err;
       }
     }

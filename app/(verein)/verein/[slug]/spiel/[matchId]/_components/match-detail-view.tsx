@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth/session";
 import { resolveTeamAccess } from "@/lib/auth/scope";
 import { getMatchById, listMatchEvents, listMatchCharges } from "@/lib/db/queries/matches";
 import { detectTeamSide } from "@/lib/crawler/team-side";
-import { acronymTeamName } from "@/lib/utils/team-name";
+import { FitTeamName } from "@/components/shared/fit-team-name";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MatchEventsList } from "./match-events-list";
 import { ManualEventEditor } from "./manual-event-editor";
@@ -126,12 +126,10 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-4">
             {/* Heim */}
             <div className={`min-w-0 text-right ${isHeim ? "font-semibold" : ""}`}>
-              <div
+              <FitTeamName
+                name={match.heimName}
                 className="truncate text-base sm:text-lg font-bold tracking-tight text-brand-night-navy leading-snug"
-                title={match.heimName}
-              >
-                {acronymTeamName(match.heimName)}
-              </div>
+              />
               <div className="text-xs text-brand-night-navy/50 mt-1">
                 {isHeim ? "Heim · deine Mannschaft" : "Heim"}
               </div>
@@ -153,12 +151,10 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
 
             {/* Gast */}
             <div className={`min-w-0 text-left ${!isHeim ? "font-semibold" : ""}`}>
-              <div
+              <FitTeamName
+                name={match.gastName}
                 className="truncate text-base sm:text-lg font-bold tracking-tight text-brand-night-navy leading-snug"
-                title={match.gastName}
-              >
-                {acronymTeamName(match.gastName)}
-              </div>
+              />
               <div className="text-xs text-brand-night-navy/50 mt-1">
                 {!isHeim ? "Gast · deine Mannschaft" : "Gast"}
               </div>
