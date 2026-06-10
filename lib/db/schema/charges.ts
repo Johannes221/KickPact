@@ -36,6 +36,15 @@ export const charges = pgTable(
      * ("2025/26"). Garantiert Idempotenz bei evaluate-season-Re-Runs.
      */
     saison: text("saison"),
+    /**
+     * Diskriminator für event-lose Tor-Charges (results_only-Mannschaften:
+     * fussball.de liefert nur den Endstand, keine Tor-Events). 1-basierte
+     * Tor-Nummer; 0 = kein Diskriminator nötig (Outcome-Charges wie win/draw
+     * sowie alle event-gebundenen Charges). Ohne diese Spalte ließ
+     * charges_unique_match_trigger_idx nur EINE Tor-Charge pro Spiel zu —
+     * bei 3:1 entstand 1× statt 3× der Tor-Betrag (Audit 2026-06-09 Bug 1).
+     */
+    goalIndex: integer("goal_index").notNull().default(0),
     triggerType: triggerTypeEnum("trigger_type").notNull(),
     amountCents: integer("amount_cents").notNull(),
     status: chargeStatusEnum("status").notNull().default("confirmed"),
@@ -58,12 +67,19 @@ export const charges = pgTable(
   },
   (t) => ({
     pledgeStatusIdx: index("charges_pledge_status_idx").on(t.pledgeId, t.status),
+    // Beide Idempotenz-Indizes klammern stornierte Charges aus: der
+    // Match-Update-Pfad (invalidateChargesForMatch → Re-Evaluation) setzt
+    // Charges nur auf status='cancelled' — blieben sie im Index, blockierte
+    // die stornierte Zeile jeden Re-Insert nach einer fussball.de-Korrektur
+    // (z.B. Sieg-Charge nach 2:1→3:1 dauerhaft weg; Audit 2026-06-09 Bug 2).
     uniqueEvent: uniqueIndex("charges_unique_event_idx")
       .on(t.pledgeRuleId, t.matchEventId)
-      .where(sql`${t.matchEventId} IS NOT NULL`),
+      .where(sql`${t.matchEventId} IS NOT NULL AND ${t.status} <> 'cancelled'`),
     uniqueMatchTrigger: uniqueIndex("charges_unique_match_trigger_idx")
-      .on(t.pledgeRuleId, t.matchId, t.triggerType)
-      .where(sql`${t.matchEventId} IS NULL AND ${t.matchId} IS NOT NULL`),
+      .on(t.pledgeRuleId, t.matchId, t.triggerType, t.goalIndex)
+      .where(
+        sql`${t.matchEventId} IS NULL AND ${t.matchId} IS NOT NULL AND ${t.status} <> 'cancelled'`
+      ),
     // Saison-Charge: 1× pro pledge_rule + saison
     uniqueSeason: uniqueIndex("charges_unique_season_idx")
       .on(t.pledgeRuleId, t.saison)

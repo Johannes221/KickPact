@@ -34,6 +34,7 @@ import {
 } from "@/lib/db/schema";
 import { evaluateTriggers } from "@/lib/crawler/triggers";
 import { loadActivePledgeRulesForTeam } from "@/lib/db/queries/evaluation";
+import { isUniqueViolation } from "@/lib/db/errors";
 import {
   closeTestDb,
   getTestDb,
@@ -160,21 +161,6 @@ async function buildMatchInput(matchId: string) {
       source: e.source
     }))
   };
-}
-
-/**
- * Drizzle wraps the underlying PostgresError, so the "duplicate key"/"unique"
- * text lives on the wrapped `cause` (Postgres code 23505), not on the
- * top-level `.message` ("Failed query: ..."). Walk the cause chain to detect
- * a unique-constraint violation regardless of where it surfaced.
- */
-function isUniqueViolation(err: unknown): boolean {
-  let cur: unknown = err;
-  while (cur instanceof Error) {
-    if (/unique|duplicate/i.test(cur.message)) return true;
-    cur = cur.cause;
-  }
-  return false;
 }
 
 describe.skipIf(isIntegrationDbDisabled)("evaluate-match — end-to-end pipeline", () => {

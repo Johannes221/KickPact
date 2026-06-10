@@ -68,6 +68,13 @@ export interface ChargeProposal {
   triggerType: TriggerType;
   amountCents: number;
   requiresApproval: boolean;
+  /**
+   * 1-basierte Tor-Nummer für event-lose Tor-Charges (results_only).
+   * Unterscheidet die n „pro Tor"-Charges eines Spiels im Unique-Index
+   * charges_unique_match_trigger_idx — ohne Diskriminator kollabierten sie
+   * auf eine einzige Charge. Fehlt/0 bei allen anderen Charge-Arten.
+   */
+  goalIndex?: number;
 }
 
 /**
@@ -176,14 +183,15 @@ function goalTotal(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[] {
   // muss trotzdem feuern: ownScore-mal als anonyme Auto-Charge (matchEventId
   // null). Offizieller Endstand ist die Quelle → keine Sponsor-Freigabe nötig.
   const score = ownScore(match);
-  return Array.from({ length: score }, () => ({
+  return Array.from({ length: score }, (_, i) => ({
     pledgeId: rule.pledgeId,
     pledgeRuleId: rule.id,
     matchId: match.id,
     matchEventId: null,
     triggerType: rule.triggerType,
     amountCents: rule.amountCents,
-    requiresApproval: false
+    requiresApproval: false,
+    goalIndex: i + 1
   }));
 }
 

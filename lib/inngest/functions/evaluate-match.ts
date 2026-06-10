@@ -10,6 +10,7 @@ import {
   ruleCapWindow
 } from "@/lib/db/queries/evaluation";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
+import { isUniqueViolation } from "@/lib/db/errors";
 
 export const evaluateMatch = inngest.createFunction(
   { id: "evaluate-match", concurrency: { limit: 4 } },
@@ -89,8 +90,11 @@ export const evaluateMatch = inngest.createFunction(
     let cappedOrSkipped = 0;
     const matchDate = new Date(matchData.m.datum);
     for (const p of proposals) {
+      // Step-ID muss pro Proposal eindeutig sein: results_only-Tor-Charges
+      // teilen sich (rule, matchEventId=null) und unterscheiden sich nur im
+      // goalIndex.
       const wasInserted = await step.run(
-        `insert-charge-${p.pledgeRuleId}-${p.matchEventId ?? "match"}`,
+        `insert-charge-${p.pledgeRuleId}-${p.matchEventId ?? `match-${p.goalIndex ?? 0}`}`,
         async () => {
           // Audit 2026-05-25 B-1: Monthly-cap-check + insert in a single
           // transaction with SELECT … FOR UPDATE on the pledge row. Vorher
@@ -168,6 +172,7 @@ export const evaluateMatch = inngest.createFunction(
                 pledgeRuleId: p.pledgeRuleId,
                 matchId: p.matchId,
                 matchEventId: p.matchEventId,
+                goalIndex: p.goalIndex ?? 0,
                 triggerType: p.triggerType,
                 amountCents: p.amountCents,
                 status: p.requiresApproval ? "pending_approval" : "confirmed",
@@ -176,8 +181,10 @@ export const evaluateMatch = inngest.createFunction(
               return true;
             });
           } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            if (msg.includes("unique") || msg.includes("duplicate")) return false;
+            // Idempotenz: Unique-Kollision = Charge existiert schon → skip.
+            // isUniqueViolation läuft die Cause-Kette ab, weil Drizzle den
+            // Postgres-Fehler wrappt ("Failed query: …" auf Top-Level).
+            if (isUniqueViolation(err)) return false;
             throw err;
           }
         }
