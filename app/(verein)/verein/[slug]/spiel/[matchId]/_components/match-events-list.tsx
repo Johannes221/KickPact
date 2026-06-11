@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { MatchChargeRow } from "@/lib/db/queries/matches";
 import { TRIGGER_META } from "@/lib/triggers/labels";
+import { specialGoalSubtypeLabel } from "@/lib/triggers/special-goals";
 import { MatchEventIcon } from "@/components/shared/match-event-icon";
 import { EventRowActions } from "./event-row-actions";
 
@@ -18,13 +19,9 @@ function eventLabel(type: MatchEvent["type"], subtype: string | null): string {
   if (type === "tor") return "Tor";
   if (type === "auswechslung") return "Auswechslung";
   if (type === "karte") return subtype === "rot" ? "Rote Karte" : "Gelbe Karte";
-  if (type === "spezial") {
-    if (subtype === "kopfball") return "Kopfballtor";
-    if (subtype === "hackentor") return "Hackentor";
-    if (subtype === "elfmeter") return "Elfmeter";
-    if (subtype === "volley") return "Volley";
-    return subtype ?? "Spezial-Event";
-  }
+  // B3 (Audit 2026-06-11): Label aus der single source of truth — inkl.
+  // Lesbarkeits-Fallback für Alt-Subtypen aus Bestands-Events.
+  if (type === "spezial") return specialGoalSubtypeLabel(subtype);
   return type;
 }
 

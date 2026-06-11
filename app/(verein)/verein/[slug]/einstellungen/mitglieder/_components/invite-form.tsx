@@ -35,7 +35,7 @@ export interface InviteSubmit {
 }
 
 type InviteResult =
-  | { ok: true; inviteUrl: string }
+  | { ok: true; inviteUrl: string; mailSent?: boolean }
   | { ok: false; error: string };
 
 /**
@@ -94,7 +94,15 @@ export function InviteForm({
       }
       setLastInvite(res.inviteUrl);
       setEmail("");
-      toast.success("Einladung erzeugt. Link an die Person schicken.");
+      // B4 (Audit 2026-06-11): Einladung wird per Mail verschickt; wenn der
+      // Versand fehlschlägt, bleibt der Link gültig → Copy-Fallback anbieten.
+      if (res.mailSent === false) {
+        toast.error(
+          "Einladung erzeugt, aber die Mail konnte nicht gesendet werden — bitte den Link unten kopieren und manuell schicken."
+        );
+      } else {
+        toast.success("Einladung per E-Mail verschickt.");
+      }
     });
   }
 
@@ -170,7 +178,7 @@ export function InviteForm({
 
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-xs text-brand-night-navy/55">
-          Wir generieren einen Einladungs-Link mit Ablauf nach 30 Tagen.
+          Die Einladung geht per E-Mail an die Person — der Link ist 30 Tage gültig.
         </p>
         <Button type="submit" variant="accent" disabled={pending}>
           {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

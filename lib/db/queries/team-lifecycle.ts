@@ -70,7 +70,8 @@ export async function getTeamInClub(teamId: string, clubId: string) {
       name: teams.name,
       verifiedAt: teams.verifiedAt,
       isActive: teams.isActive,
-      saison: teams.saison
+      saison: teams.saison,
+      dataCoverage: teams.dataCoverage
     })
     .from(teams)
     .where(and(eq(teams.id, teamId), eq(teams.clubId, clubId)))
@@ -143,10 +144,15 @@ export async function getTeamNameById(teamId: string): Promise<string | null> {
   return team?.name ?? null;
 }
 
-/** Basis-Felder (id/name/clubId) einer Mannschaft per ID, ungescoped. */
+/** Basis-Felder (id/name/clubId/verifiedAt) einer Mannschaft per ID, ungescoped. */
 export async function getTeamBasicById(teamId: string) {
   const [team] = await db
-    .select({ id: teams.id, name: teams.name, clubId: teams.clubId })
+    .select({
+      id: teams.id,
+      name: teams.name,
+      clubId: teams.clubId,
+      verifiedAt: teams.verifiedAt
+    })
     .from(teams)
     .where(eq(teams.id, teamId))
     .limit(1);

@@ -367,6 +367,25 @@ export async function isClubMember(userId: string, clubId: string): Promise<bool
   return Boolean(m);
 }
 
+/**
+ * Aktuelle Club-Rolle eines Users (oder null). Pendant zu
+ * {@link getTeamMembershipRole} — gebraucht vom Self-Service-Austritt (B5),
+ * um den Letzter-Admin-Guard zu prüfen, ohne den Page-Guard zu bemühen.
+ */
+export async function getClubMembershipRole(
+  clubId: string,
+  userId: string
+): Promise<ClubRole | null> {
+  const [row] = await db
+    .select({ role: clubMemberships.role })
+    .from(clubMemberships)
+    .where(
+      and(eq(clubMemberships.clubId, clubId), eq(clubMemberships.userId, userId))
+    )
+    .limit(1);
+  return (row?.role as ClubRole | undefined) ?? null;
+}
+
 export async function countClubAdmins(clubId: string): Promise<number> {
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })

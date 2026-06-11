@@ -24,3 +24,28 @@ export type SpecialGoalSubtype = (typeof SPECIAL_GOAL_SUBTYPES)[number]["value"]
 /** value → Label, abgeleitet aus der Liste (eine Quelle). */
 export const SPECIAL_GOAL_SUBTYPE_LABELS: Record<string, string> =
   Object.fromEntries(SPECIAL_GOAL_SUBTYPES.map((s) => [s.value, s.label]));
+
+/**
+ * Nicht mehr wählbare Alt-Subtypen aus der früheren (hardcodeten) Melde-UI.
+ * Neue Events dürfen sie NICHT mehr verwenden (Server-Validierung in
+ * `lib/actions/match-events.ts`), aber Bestands-Events bleiben lesbar.
+ */
+export const LEGACY_SPECIAL_GOAL_SUBTYPE_LABELS: Record<string, string> = {
+  volley: "Volley",
+  fernschuss: "Fernschuss",
+  assist: "Vorlage (Assist)",
+  man_of_match: "Spieler des Spiels",
+  sonstiges: "Sonstiges Spezialtor"
+};
+
+/** Anzeige-Label mit Fallback für Alt-Subtypen und rohe Werte. */
+export function specialGoalSubtypeLabel(
+  subtype: string | null | undefined
+): string {
+  if (!subtype) return "Spezial-Event";
+  return (
+    SPECIAL_GOAL_SUBTYPE_LABELS[subtype] ??
+    LEGACY_SPECIAL_GOAL_SUBTYPE_LABELS[subtype] ??
+    subtype
+  );
+}

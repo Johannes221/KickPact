@@ -26,7 +26,7 @@ export default async function AbrechnungenPage({
   searchParams: Promise<SP>;
 }) {
   const { slug } = await params;
-  await assertVereinAdminOrRedirect(slug, "viewer");
+  const access = await assertVereinAdminOrRedirect(slug, "viewer");
   const club = await getClubBySlug(slug);
   if (!club) return null;
 
@@ -53,7 +53,9 @@ export default async function AbrechnungenPage({
   // Fetch one extra unpaginated count by re-using the legacy overload for the
   // open/total summary. Cheap on a single-club query and keeps the UX honest.
   const allInvoices = await listForClub(club.id);
-  const isAdmin = true; // assertVereinAdminOrRedirect already validated; refine later for trainer/viewer
+  // B7 (Audit 2026-06-11): „Als bezahlt markieren" nur für echte Club-Admins —
+  // Trainer/Viewer sehen die Tabelle read-only.
+  const isAdmin = access.role === "admin";
   const totalCents = allInvoices.reduce((sum, i) => sum + i.totalCents, 0);
   const openCents = allInvoices
     .filter((i) => i.status !== "paid")

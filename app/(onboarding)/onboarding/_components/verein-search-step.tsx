@@ -13,6 +13,7 @@ import {
   getMannschaftenAction,
   type MannschaftWithStatus
 } from "../verein/_actions/search";
+import type { LicensedVereinMatch } from "@/lib/db/queries/onboarding-collision";
 import { createDraftClub } from "../_actions/create-draft-club";
 
 /**
@@ -80,6 +81,8 @@ export function VereinSearchStep({ role }: Props) {
   const [searched, setSearched] = useState(false);
   const [chosenVerein, setChosenVerein] = useState<VereinHit | null>(null);
   const [teams, setTeams] = useState<MannschaftWithStatus[]>([]);
+  // Check A (Spec 2026-05-29 §4): Verein hat bereits eine aktive Vereinslizenz.
+  const [licensedVerein, setLicensedVerein] = useState<LicensedVereinMatch | null>(null);
   const [teamsLoading, setTeamsLoading] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<Set<string>>(new Set());
   const [pending, startTransition] = useTransition();
@@ -112,6 +115,7 @@ export function VereinSearchStep({ role }: Props) {
     setChosenVerein(v);
     setSelectedTeamIds(new Set());
     setTeams([]);
+    setLicensedVerein(null);
     setTeamsLoading(true);
     try {
       const res = await getMannschaftenAction({
@@ -125,6 +129,7 @@ export function VereinSearchStep({ role }: Props) {
         return;
       }
       setTeams(res.results);
+      setLicensedVerein(res.licensedVerein);
       if (res.results.length === 0) toast.info("Keine Mannschaften gefunden.");
       track("verein_onboarding_step1_completed");
     } catch (e) {
@@ -300,6 +305,35 @@ export function VereinSearchStep({ role }: Props) {
             </button>
           </div>
 
+          {/* Check A (Spec 2026-05-29 §4): der reale Verein ist bereits mit
+              Vereinslizenz auf KickPact → Hinweis + „Beitritt anfragen"-CTA.
+              Eigenständig anlegen bleibt trotzdem möglich (z.B. autarke
+              Mannschaft, die bewusst NICHT unter die Vereinslizenz will). */}
+          {licensedVerein && (
+            <div className="rounded-lg border border-sky-200 bg-sky-50 p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-lg" aria-hidden>💡</span>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-brand-night-navy">
+                    {licensedVerein.clubName} ist bereits mit Vereinslizenz auf KickPact
+                  </div>
+                  <p className="mt-1 text-xs text-brand-night-navy/70">
+                    Du kannst den Beitritt unter der bestehenden Vereinslizenz
+                    anfragen — dann verwaltet ihr eure Mannschaften gemeinsam und
+                    ohne zweite Lizenz. Alternativ legst du unten eine eigene
+                    Mannschaft an.
+                  </p>
+                  <Link
+                    href={`/onboarding/zugriff-anfragen?clubSlug=${encodeURIComponent(licensedVerein.clubSlug)}`}
+                    className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-sky-800 underline"
+                  >
+                    Beitritt anfragen →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div>
             <Label className="text-sm font-semibold text-brand-night-navy">
               {role === "mannschaft"
@@ -369,8 +403,19 @@ export function VereinSearchStep({ role }: Props) {
                                 von dir
                               </span>
                             )}
+                            {t.dataCoverage === "none" && (
+                              <span className="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-sky-800">
+                                Manuelle Meldung
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-brand-night-navy/40 mt-0.5">Saison {t.saison}</div>
+                          {t.dataCoverage === "none" && (
+                            <p className="mt-1 text-xs text-brand-night-navy/60">
+                              Keine automatischen Spieldaten für diese Altersklasse —
+                              Ereignisse werden manuell gemeldet.
+                            </p>
+                          )}
                         </div>
                       </label>
                     </li>

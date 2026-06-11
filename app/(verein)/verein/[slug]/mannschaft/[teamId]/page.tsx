@@ -12,8 +12,9 @@ import { listClubSeasonPledges } from "@/lib/db/queries/club-dashboard";
 import { computeTeamSeasonStats } from "@/lib/db/queries/team-dashboard";
 import {
   getFullTeamInClub,
-  getSeasonResultForTeam
+  resolveSeasonResultTarget
 } from "@/lib/db/queries/team-lifecycle";
+import { saisonLabel } from "@/lib/utils/saison";
 import { getClubById } from "@/lib/db/queries/club-admin";
 import { countPledgesForTeam } from "@/lib/db/queries/pledges";
 import { getTeamLicensePlanDirect } from "@/lib/db/queries/subscriptions";
@@ -51,11 +52,15 @@ export default async function TeamDetailPage({
     );
   }
 
-  const [matchRows, chargesSummary, seasonResult, seasonPledges, previousSeason] =
+  const [matchRows, chargesSummary, seasonTarget, seasonPledges, previousSeason] =
     await Promise.all([
       listMatchesForTeam(team.id, 30),
       getMatchChargesSummaryForTeam(team.id),
-      getSeasonResultForTeam(team.id, team.saison).then((r) => r ?? null),
+      // B8 (Audit 2026-06-11): welche Saison der Endstand-Block bedient,
+      // entscheidet der Resolver — nach dem Saison-Bump (Juli) gehört das
+      // offene Ergebnis zur VORSAISON („Saison-Endstand 25/26" statt
+      // „26/27 läuft noch").
+      resolveSeasonResultTarget(team.id, team.saison),
       listClubSeasonPledges(club.id).then((rows) => rows.filter((r) => r.teamId === team.id)),
       // „Letzte Saison"-Block: nur befüllt, solange die aktuelle Saison < 3
       // gespielte Spiele hat UND Vorsaison-Historie (Backfill) existiert.
@@ -78,11 +83,8 @@ export default async function TeamDetailPage({
   const hasSponsor = pledgeCount > 0;
   const teamBase = `/verein/${slug}/mannschaft/${team.id}`;
 
-  // Saison "2526" → lesbar "25/26".
-  const saisonLabel =
-    team.saison.length === 4
-      ? `${team.saison.slice(0, 2)}/${team.saison.slice(2)}`
-      : team.saison;
+  // Saison "2526" → lesbar "25/26" (B8: zentraler Helper statt Inline-Slice).
+  const saisonDisplay = saisonLabel(team.saison);
 
   // Verifikations-Scope: Einzel-Mannschaft (basic/pro) verifiziert die
   // MANNSCHAFT selbst (team.verifiedAt). Nur bei Vereinslizenz (plan='verein')
@@ -153,7 +155,7 @@ export default async function TeamDetailPage({
           als eine dezente Subtitle-Zeile. */}
       <PageHeader
         title={team.name}
-        subtitle={`${club.name} · Saison ${saisonLabel}`}
+        subtitle={`${club.name} · Saison ${saisonDisplay}`}
       />
 
       <TeamSetupChecklist
@@ -243,12 +245,14 @@ export default async function TeamDetailPage({
         </section>
       )}
 
-      {/* Saison-Endstand: read-only Block, Bearbeitung in Einstellungen/Saison */}
+      {/* Saison-Endstand: read-only Block, Bearbeitung in Einstellungen/Saison.
+          Spiegelt die Resolver-Saison (B8): im Juli die noch offene Vorsaison. */}
       <SeasonStatusBlock
         slug={slug}
         teamId={team.id}
-        saison={team.saison}
-        result={seasonResult}
+        saison={seasonTarget.saison}
+        isCurrentSeason={seasonTarget.saison === team.saison}
+        result={seasonTarget.result ?? null}
       />
 
       {/* Saison-Recap: teilbares Highlight-Bild der Saison (Phase 3 / R9) */}
@@ -315,8 +319,20 @@ export default async function TeamDetailPage({
         {matchRows.length === 0 ? (
           !isCrawling && (
             <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60">
-              Für diese Mannschaft wurden noch keine Spiele gefunden. Sobald die
-              Saison startet, erscheinen sie hier automatisch.
+              {team.dataCoverage === "none" ? (
+                // B1c (Audit 2026-06-11): keine Automatik versprechen, wenn es
+                // für diese Altersklasse keine automatischen Spieldaten gibt.
+                <>
+                  Für diese Altersklasse gibt es keine automatischen Spieldaten.
+                  Spiele und Ereignisse meldet ihr selbst — eure Sponsoren
+                  bestätigen sie anschließend.
+                </>
+              ) : (
+                <>
+                  Für diese Mannschaft wurden noch keine Spiele gefunden. Sobald
+                  die Saison startet, erscheinen sie hier automatisch.
+                </>
+              )}
             </div>
           )
         ) : (
@@ -491,26 +507,33 @@ function SeasonStatusBlock({
   slug,
   teamId,
   saison,
+  isCurrentSeason,
   result
 }: {
   slug: string;
   teamId: string;
+  /** Saison-Code aus resolveSeasonResultTarget — kann die Vorsaison sein. */
   saison: string;
+  /** false = Block bedient die noch offene VORSAISON (Juli-Fenster). */
+  isCurrentSeason: boolean;
   result: SeasonStatusResult | null;
 }) {
   const settingsHref = `/verein/${slug}/mannschaft/${teamId}/einstellungen/saison`;
+  const label = saisonLabel(saison);
 
   if (!result) {
     return (
       <section
-        aria-label={`Saison-Endstand ${saison}`}
+        aria-label={`Saison-Endstand ${label}`}
         className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-4 md:p-5"
       >
         <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
-          Saison-Endstand {saison}
+          Saison-Endstand {label}
         </h3>
         <p className="mt-1 text-xs md:text-sm text-brand-night-navy/70">
-          Saison läuft noch — Endstand wird am Saisonende automatisch übernommen.{" "}
+          {isCurrentSeason
+            ? "Saison läuft noch — Endstand wird am Saisonende automatisch übernommen."
+            : `Die Saison ${label} ist vorbei — der Endstand wird automatisch übernommen, sobald die Daten vorliegen.`}{" "}
           <Link href={settingsHref} className="text-accent hover:underline font-semibold">
             Manuell setzen
           </Link>
@@ -522,13 +545,13 @@ function SeasonStatusBlock({
 
   return (
     <section
-      aria-label={`Saison-Endstand ${saison}`}
+      aria-label={`Saison-Endstand ${label}`}
       className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5"
     >
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
-            Saison-Endstand {saison}
+            Saison-Endstand {label}
           </h3>
           <div className="mt-2 text-xs md:text-sm text-brand-night-navy/70 space-y-1">
             {result.finalPosition && (

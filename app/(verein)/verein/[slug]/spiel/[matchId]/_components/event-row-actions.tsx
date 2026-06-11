@@ -35,6 +35,7 @@ import {
   editMatchEventAction,
   deleteMatchEventAction
 } from "@/lib/actions/match-events-edit";
+import { SPECIAL_GOAL_SUBTYPES } from "@/lib/triggers/special-goals";
 
 /**
  * Plan 3 Teil 2 — Inline Edit/Delete-Actions für ein Match-Event.
@@ -53,16 +54,9 @@ const editSchema = z.object({
 type EditValues = z.infer<typeof editSchema>;
 
 const SUBTYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
-  spezial: [
-    { value: "kopfball", label: "Kopfballtor" },
-    { value: "hackentor", label: "Hackentor" },
-    { value: "volley", label: "Volley" },
-    { value: "fernschuss", label: "Fernschuss" },
-    { value: "elfmeter", label: "Elfmeter" },
-    { value: "freistoss", label: "Freistoß" },
-    { value: "assist", label: "Vorlage (Assist)" },
-    { value: "man_of_match", label: "Spieler des Spiels" }
-  ],
+  // B3 (Audit 2026-06-11): aus lib/triggers/special-goals.ts gespiegelt (single
+  // source of truth) — nur diese Subtypen können Sponsor-Pacts matchen.
+  spezial: SPECIAL_GOAL_SUBTYPES.map((s) => ({ value: s.value, label: s.label })),
   karte: [
     { value: "gelb", label: "Gelbe Karte" },
     { value: "rot", label: "Rote Karte" }

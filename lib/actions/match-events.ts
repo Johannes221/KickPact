@@ -26,6 +26,41 @@ import {
   loadActivePledgeRulesForTeam,
   getMonthlyChargedCents
 } from "@/lib/db/queries/evaluation";
+import { SPECIAL_GOAL_SUBTYPES } from "@/lib/triggers/special-goals";
+
+/** Erlaubte Karten-Subtypen (Melde-UI bietet genau diese an). */
+const KARTE_SUBTYPES = ["gelb", "rot"] as const;
+
+/**
+ * B3 (Audit 2026-06-11 / Phase 4): subtype gegen die single source of truth
+ * validieren — die Melde-UI spiegelt `SPECIAL_GOAL_SUBTYPES`, aber der Server
+ * muss es erzwingen, sonst entstehen Events, die kein Pact je matchen kann.
+ * Bestands-Events mit Alt-Subtypen (volley/fernschuss/…) bleiben unangetastet;
+ * nur die NEUANLAGE wird geprüft.
+ */
+function validateSubtype(
+  type: "tor" | "auswechslung" | "spezial" | "karte",
+  subtype: string | undefined
+): { ok: true } | { ok: false; message: string } {
+  if (type === "spezial") {
+    const allowed = SPECIAL_GOAL_SUBTYPES.map((s) => s.value);
+    if (!subtype || !(allowed as string[]).includes(subtype)) {
+      return {
+        ok: false,
+        message: `Unbekannter Spezialtor-Typ „${subtype ?? "—"}". Erlaubt sind: ${allowed.join(", ")}.`
+      };
+    }
+  }
+  if (type === "karte") {
+    if (!subtype || !(KARTE_SUBTYPES as readonly string[]).includes(subtype)) {
+      return {
+        ok: false,
+        message: `Unbekannter Karten-Typ „${subtype ?? "—"}". Erlaubt sind: gelb, rot.`
+      };
+    }
+  }
+  return { ok: true };
+}
 
 const inputSchema = z.object({
   matchId: z.string().min(1),
@@ -39,9 +74,18 @@ const inputSchema = z.object({
 
 export type AddManualEventInput = z.infer<typeof inputSchema>;
 
-export async function addManualEvent(input: AddManualEventInput) {
+export type AddManualEventResult =
+  | { ok: true; eventId: string; charges: number; approvals: number }
+  | { ok: false; message: string };
+
+export async function addManualEvent(
+  input: AddManualEventInput
+): Promise<AddManualEventResult> {
   const user = await requireUser();
   const parsed = inputSchema.parse(input);
+
+  const subtypeCheck = validateSubtype(parsed.type, parsed.subtype);
+  if (!subtypeCheck.ok) return subtypeCheck;
 
   // Match → Team → Club lookup für Tenant-Check
   const [target] = await db
@@ -277,5 +321,5 @@ export async function addManualEvent(input: AddManualEventInput) {
 
   revalidatePath(`/verein/${target.club.slug}/spiel/${parsed.matchId}`);
 
-  return result;
+  return { ok: true, ...result };
 }
