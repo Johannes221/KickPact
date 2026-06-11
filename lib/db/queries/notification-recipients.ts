@@ -59,6 +59,20 @@ export async function getActiveSponsorUserIdsForTeam(teamId: string): Promise<st
  * alle aktiven Sponsoren des Teams.
  */
 export async function getTeamNotificationRecipients(teamId: string): Promise<string[]> {
+  const { memberUserIds, sponsorUserIds } =
+    await getTeamNotificationRecipientsSplit(teamId);
+  return uniq([...memberUserIds, ...sponsorUserIds]);
+}
+
+/**
+ * Wie `getTeamNotificationRecipients`, aber getrennt nach Vereins-Seite
+ * (Team-Mitglieder + Club-Admins/Trainer) und aktiven Sponsoren — für
+ * unterschiedliche Deep-Links (A1: Sponsoren dürfen nicht auf die interne
+ * Vereins-Route gelinkt werden, deren Guard sie bounced).
+ */
+export async function getTeamNotificationRecipientsSplit(
+  teamId: string
+): Promise<{ memberUserIds: string[]; sponsorUserIds: string[] }> {
   const [teamRow] = await db
     .select({ clubId: teams.clubId })
     .from(teams)
@@ -85,9 +99,11 @@ export async function getTeamNotificationRecipients(teamId: string): Promise<str
 
   const sponsorUserIds = await getActiveSponsorUserIdsForTeam(teamId);
 
-  return uniq([
-    ...teamMembers.map((r) => r.userId),
-    ...clubStaff.map((r) => r.userId),
-    ...sponsorUserIds
-  ]);
+  return {
+    memberUserIds: uniq([
+      ...teamMembers.map((r) => r.userId),
+      ...clubStaff.map((r) => r.userId)
+    ]),
+    sponsorUserIds: uniq(sponsorUserIds)
+  };
 }

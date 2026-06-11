@@ -2,7 +2,8 @@ import { eq } from "drizzle-orm";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
 import { matches, teams, clubs, sentNotifications } from "@/lib/db/schema";
-import { getTeamNotificationRecipients } from "@/lib/db/queries/notification-recipients";
+import { getTeamNotificationRecipientsSplit } from "@/lib/db/queries/notification-recipients";
+import { buildMatchResultLinkGroups } from "@/lib/notifications/match-result-links";
 import { notifyUsers } from "@/lib/notifications/deliver";
 
 /**
@@ -48,7 +49,11 @@ export const notifyMatchResult = inngest.createFunction(
         .where(eq(matches.id, matchId))
         .limit(1);
       const [t] = await db
-        .select({ teamName: teams.name, clubSlug: clubs.slug })
+        .select({
+          teamName: teams.name,
+          clubSlug: clubs.slug,
+          publicSlug: teams.publicSlug
+        })
         .from(teams)
         .innerJoin(clubs, eq(teams.clubId, clubs.id))
         .where(eq(teams.id, teamId))
@@ -61,26 +66,47 @@ export const notifyMatchResult = inngest.createFunction(
     }
 
     const recipients = await step.run("recipients", () =>
-      getTeamNotificationRecipients(teamId)
+      getTeamNotificationRecipientsSplit(teamId)
     );
-    if (recipients.length === 0) return { skipped: "no-recipients" };
+    const totalRecipients =
+      recipients.memberUserIds.length + recipients.sponsorUserIds.length;
+    if (totalRecipients === 0) return { skipped: "no-recipients" };
 
     const score = `${loaded.m.ergebnisHeim}:${loaded.m.ergebnisGast}`;
-    const link = loaded.t?.clubSlug
-      ? `/verein/${loaded.t.clubSlug}/mannschaft/${teamId}`
-      : null;
+    // A1 (Audit 2026-06-11): Sponsoren deep-linken auf das öffentliche Profil
+    // /m/<publicSlug> (Fallback /sponsor) — die interne Vereins-Route bounced
+    // Nicht-Mitglieder. Vereins-Mitglieder behalten den internen Link.
+    const groups = buildMatchResultLinkGroups({
+      memberUserIds: recipients.memberUserIds,
+      sponsorUserIds: recipients.sponsorUserIds,
+      teamId,
+      clubSlug: loaded.t?.clubSlug ?? null,
+      publicSlug: loaded.t?.publicSlug ?? null
+    });
 
-    await step.run("notify", () =>
-      notifyUsers(recipients, {
-        type: "match_result",
-        title: "⚽ Neues Spielergebnis",
-        body: `${loaded.m.heimName} ${score} ${loaded.m.gastName}`,
-        link,
-        data: { matchId, teamId }
-      })
-    );
+    const payload = {
+      type: "match_result" as const,
+      title: "⚽ Neues Spielergebnis",
+      body: `${loaded.m.heimName} ${score} ${loaded.m.gastName}`,
+      data: { matchId, teamId }
+    };
 
-    logger.info("notify-match-result done", { matchId, recipients: recipients.length });
-    return { recipients: recipients.length };
+    await step.run("notify", async () => {
+      if (groups.members.userIds.length > 0) {
+        await notifyUsers(groups.members.userIds, {
+          ...payload,
+          link: groups.members.link
+        });
+      }
+      if (groups.sponsors.userIds.length > 0) {
+        await notifyUsers(groups.sponsors.userIds, {
+          ...payload,
+          link: groups.sponsors.link
+        });
+      }
+    });
+
+    logger.info("notify-match-result done", { matchId, recipients: totalRecipients });
+    return { recipients: totalRecipients };
   }
 );
