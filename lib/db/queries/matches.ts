@@ -190,6 +190,35 @@ export async function countFinishedMatchesSince(
   return row?.n ?? 0;
 }
 
+/**
+ * Entscheidet, ob für eine Mannschaft der Vorsaison-Backfill
+ * (`crawler/team.backfill`) angestoßen werden soll — am Ende des
+ * Onboarding-/Einzel-Team-Crawls (crawl-matches, Event crawler/team.crawl).
+ *
+ * Regel: < 3 gespielte Spiele in der AKTUELLEN Saison (Sommer-Onboarding /
+ * Saisonstart → Dashboard wäre leer) UND noch KEINE älteren finished-Rows
+ * (sonst lief der Backfill bereits bzw. Historie existiert schon — erneutes
+ * Senden wäre zwar idempotent, aber unnötige fussball.de-Last bei jedem
+ * On-Demand-Crawl).
+ */
+export async function shouldBackfillTeamHistory(teamId: string): Promise<boolean> {
+  const [t] = await db
+    .select({ saison: teams.saison })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  if (!t) return false;
+
+  const currentCount = await countFinishedMatchesSince(
+    teamId,
+    saisonStartDate(t.saison)
+  );
+  if (currentCount >= 3) return false;
+
+  const totalCount = await countFinishedMatchesSince(teamId, null);
+  return totalCount === currentCount;
+}
+
 /** Liefert Charges-Summe pro Match für eine Mannschaft (für die Match-Liste). */
 export async function getMatchChargesSummaryForTeam(
   teamId: string

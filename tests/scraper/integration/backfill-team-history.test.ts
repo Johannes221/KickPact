@@ -31,6 +31,7 @@ import {
   runBackfillForTeam,
   prevSaisonCodeLocal
 } from "@/lib/inngest/functions/backfill-team-history";
+import { shouldBackfillTeamHistory } from "@/lib/db/queries/matches";
 import type { VorsaisonSpiel } from "@/lib/crawler/vorsaison";
 
 // Crawler mocken: liefert das Capture-Fixture der angefragten Saison.
@@ -165,6 +166,64 @@ describe.skipIf(isIntegrationDbDisabled)("backfill-team-history integration", ()
     expect(row.heimName).toBe("Anderer Stand");
     expect(row.ergebnisHeim).toBe(9);
     expect(row.contentHash).toBe("echter-crawl-hash");
+  });
+
+  // ─── S3: Onboarding-Hook-Entscheidung (shouldBackfillTeamHistory) ─────────
+
+  /** Hilfsfunktion: n finished-Spiele in der aktuellen Saison (2526) seeden. */
+  async function seedFinishedMatches(teamId: string, n: number, opts?: { saisonStart?: string }) {
+    const db = await getTestDb();
+    const base = opts?.saisonStart ?? "2025-09";
+    for (let i = 0; i < n; i++) {
+      await db.insert(matches).values({
+        teamId,
+        fussballdeSpielId: `SEED${base.replace(/-/g, "")}${teamId.slice(-4)}${i}`,
+        datum: new Date(`${base}-0${i + 1}T12:00:00Z`),
+        heimName: "FC A",
+        gastName: "FC B",
+        ergebnisHeim: 1,
+        ergebnisGast: 0,
+        status: "finished"
+      });
+    }
+  }
+
+  it("frisch onboardetes Team ohne Spiele → Backfill JA", async () => {
+    const { teamIds } = await seedClubFromFixture("dossenheim");
+    await expect(shouldBackfillTeamHistory(teamIds.herren1!)).resolves.toBe(true);
+  });
+
+  it("Team mit 5 gespielten Spielen in der aktuellen Saison → Backfill NEIN", async () => {
+    const { teamIds } = await seedClubFromFixture("dossenheim");
+    await seedFinishedMatches(teamIds.herren1!, 5);
+    await expect(shouldBackfillTeamHistory(teamIds.herren1!)).resolves.toBe(false);
+  });
+
+  it("2 gespielte, keine Historie → Backfill JA; nur scheduled zählt nicht", async () => {
+    const { teamIds } = await seedClubFromFixture("dossenheim");
+    const teamId = teamIds.herren1!;
+    await seedFinishedMatches(teamId, 2);
+    const db = await getTestDb();
+    await db.insert(matches).values({
+      teamId,
+      fussballdeSpielId: "SCHEDULED_ONLY_1",
+      datum: new Date("2025-10-12T12:00:00Z"),
+      heimName: "FC A",
+      gastName: "FC B",
+      status: "scheduled"
+    });
+    await expect(shouldBackfillTeamHistory(teamId)).resolves.toBe(true);
+  });
+
+  it("Backfill lief bereits (Vorsaison-Rows vorhanden) → kein erneutes Anstoßen", async () => {
+    const { teamIds } = await seedClubFromFixture("dossenheim");
+    const teamId = teamIds.herren1!;
+    await runBackfillForTeam(teamId); // legt 2425er finished-Rows an
+    await expect(shouldBackfillTeamHistory(teamId)).resolves.toBe(false);
+  });
+
+  it("unbekanntes Team → Backfill NEIN", async () => {
+    await expect(shouldBackfillTeamHistory("gibt-es-nicht")).resolves.toBe(false);
   });
 
   it("überspringt unbekannte/inaktive Teams ohne Crawl", async () => {

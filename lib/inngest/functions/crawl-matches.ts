@@ -23,7 +23,10 @@ import {
 } from "@/lib/db/queries/crawler";
 import { classifyScrapedMatches } from "@/lib/crawler/coverage";
 import { invalidateChargesForMatch } from "@/lib/db/queries/charges";
-import { upsertScheduledMatch } from "@/lib/db/queries/matches";
+import {
+  upsertScheduledMatch,
+  shouldBackfillTeamHistory
+} from "@/lib/db/queries/matches";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { isCrawlerSommerpause } from "@/lib/utils/sommerpause";
 
@@ -306,6 +309,25 @@ export const crawlMatches = inngest.createFunction(
 
       // Team fertig gecrawlt → Banner kann ausgeblendet werden.
       await step.run(`crawl-done-${team.id}`, () => markCrawlCompleted(team.id));
+
+      // Onboarding-/Einzel-Team-Crawl: hat das Team in seiner aktuellen
+      // Saison < 3 gespielte Spiele (Sommer-Onboarding, Saisonstart) und noch
+      // keine Historie → Vorsaison-Backfill anstoßen, damit Dashboard +
+      // öffentliches Profil sofort „Letzte Saison" zeigen können. Der
+      // Backfill-Job emittiert selbst KEINE match/finished-Events (keine
+      // Charges/Pushes) — siehe backfill-team-history.ts.
+      if (requestedTeamId) {
+        const wantsBackfill = await step.run(`backfill-check-${team.id}`, () =>
+          shouldBackfillTeamHistory(team.id)
+        );
+        if (wantsBackfill) {
+          await step.sendEvent(`emit-backfill-${team.id}`, {
+            name: "crawler/team.backfill",
+            data: { teamId: team.id }
+          });
+          logger.info("vorsaison-backfill angestoßen", { teamId: team.id });
+        }
+      }
      } catch (err) {
         // Ein fehlerhaftes Team killt nicht den ganzen Lauf: Fehler festhalten
         // (Operator-Diagnose unter /admin/crawler) und mit dem nächsten Team
