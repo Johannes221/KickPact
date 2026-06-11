@@ -183,7 +183,7 @@ export default async function HomePage() {
             label="Inngest-Jobs"
             value="6 registriert"
             ok={true}
-            hint="crawl-matches · evaluate-match · approval-reminders · generate-invoices (monatlich) · season-end-reminders · evaluate-season"
+            hint="crawl-matches · evaluate-match · approval-reminders · generate-invoices (monatlich) · season-renewal-prompts · evaluate-season"
           />
         </div>
       </section>

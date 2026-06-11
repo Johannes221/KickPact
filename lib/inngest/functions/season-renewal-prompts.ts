@@ -10,42 +10,34 @@ import {
   findNextSeasonTeam
 } from "@/lib/db/queries/season-renewal";
 import { signSeasonRenewalToken } from "@/lib/auth/season-renewal-token";
+import { nextSaisonCode } from "@/lib/utils/saison";
 
 /**
- * Plan 3 Teil 2 — Saison-Renewal-Prompts.
+ * Plan 3 Teil 2 + Phase 3 / R7 — Saison-Renewal-Prompts.
  *
  * Cron: 0 9 * * * (täglich 09:00 UTC). Findet Pledges deren `endsAt` in
  * den nächsten 30 Tagen liegt und schickt dem Sponsor eine Renewal-Mail
- * mit zwei 1-Click-Buttons (verlängern / decline). Dedupe pro
- * (pledgeId, nextSaison) über `sent_notifications` mit
- * INSERT-ON-CONFLICT als atomares Gate.
+ * mit zwei 1-Click-Buttons (verlängern / decline; HMAC-Token-Link).
  *
- * Next-Season-Resolver: Wir leiten die Ziel-Saison aus dem aktuellen
- * Team-Saison-String ab (z.B. "2526" → "2627"). Das deckt den
- * Standard-DFB-Fall ab. Wenn das Format nicht parseable ist, skippen
- * wir (Logger).
+ * R7 — Staffelung: maximal DREI Mails pro Pact, in den Stages 30/14/3
+ * Tage vor `endsAt` (die alte season-end-reminders-Strecke mit kaputtem
+ * `?renew=`-CTA ist gelöscht; diese Funktion übernimmt die Staffelung).
+ * Dedupe pro Stage über `sent_notifications` mit dem Key
+ * `<pledgeId>:<nextSaison>:<stage>` als atomares INSERT-ON-CONFLICT-Gate.
+ * Bestands-Keys OHNE Stage-Suffix (vor R7 verschickt) zählen als
+ * gesendete 30er-Stage.
+ *
+ * Next-Season-Resolver: Ziel-Saison aus dem aktuellen Team-Saison-String
+ * (z.B. "2526" → "2627", lib/utils/saison). Nicht parseable → skip+log.
  *
  * Manual run: `pledges/season-renewal-test` Event.
  */
 
-function nextSaisonCode(current: string): string | null {
-  // Akzeptiere "2526" oder "2025/26"
-  const compact = current.replace("/", "");
-  if (compact.length === 4) {
-    const lo = Number(compact.slice(0, 2));
-    const hi = Number(compact.slice(2, 4));
-    if (Number.isNaN(lo) || Number.isNaN(hi)) return null;
-    const nextLo = (lo + 1).toString().padStart(2, "0");
-    const nextHi = (hi + 1).toString().padStart(2, "0");
-    return `${nextLo}${nextHi}`;
-  }
-  if (compact.length === 8) {
-    const lo = Number(compact.slice(0, 4));
-    const hi = Number(compact.slice(4, 8));
-    if (Number.isNaN(lo) || Number.isNaN(hi)) return null;
-    return `${lo + 1}${hi + 1}`;
-  }
-  return null;
+/** Stage anhand der verbleibenden Tage: ≤3 → "3", ≤14 → "14", sonst "30". */
+function renewalStage(daysLeft: number): "3" | "14" | "30" {
+  if (daysLeft <= 3) return "3";
+  if (daysLeft <= 14) return "14";
+  return "30";
 }
 
 export const seasonRenewalPrompts = inngest.createFunction(
@@ -99,8 +91,40 @@ export const seasonRenewalPrompts = inngest.createFunction(
           //   wird dann den Fehler dem User zeigen.
           await findNextSeasonTeam(c.teamId, nextSaison); // touch (no-op check)
 
-          // Dedupe-Gate
-          const dedupeKey = `${c.pledgeId}:${nextSaison}`;
+          // Stage aus den verbleibenden Tagen (Inngest serialisiert Dates
+          // über step-Boundaries als ISO-Strings — defensiv normalisieren).
+          const endsAtRawForStage = c.endsAt as unknown as Date | string;
+          const endsAtForStage =
+            endsAtRawForStage instanceof Date
+              ? endsAtRawForStage
+              : new Date(endsAtRawForStage);
+          const daysLeft = Math.ceil(
+            (endsAtForStage.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)
+          );
+          const stage = renewalStage(daysLeft);
+
+          // Abwärtskompatibilität: Bestands-Keys ohne Stage-Suffix stammen
+          // aus der Zeit vor R7 und gelten als gesendete 30er-Stage.
+          if (stage === "30") {
+            const legacyKey = `${c.pledgeId}:${nextSaison}`;
+            const [legacy] = await db
+              .select({ key: sentNotifications.key })
+              .from(sentNotifications)
+              .where(
+                and(
+                  eq(sentNotifications.kind, "season-renewal"),
+                  eq(sentNotifications.key, legacyKey)
+                )
+              )
+              .limit(1);
+            if (legacy) {
+              skipped += 1;
+              return;
+            }
+          }
+
+          // Dedupe-Gate (pro Stage)
+          const dedupeKey = `${c.pledgeId}:${nextSaison}:${stage}`;
           const gate = await db
             .insert(sentNotifications)
             .values({ kind: "season-renewal", key: dedupeKey })

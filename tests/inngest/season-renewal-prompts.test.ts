@@ -213,14 +213,14 @@ describe("seasonRenewalPrompts (cron)", () => {
     expect(mailArg.to).toBe(seed.sponsorEmail);
     expect(mailArg.subject).toContain("2627");
 
-    // Dedupe-Eintrag in sent_notifications
+    // Dedupe-Eintrag in sent_notifications — Default-Seed endet in 15 Tagen → Stage 30
     const [dedupe] = await db
       .select()
       .from(sentNotifications)
       .where(
         and(
           eq(sentNotifications.kind, "season-renewal"),
-          eq(sentNotifications.key, `${seed.pledgeId}:2627`)
+          eq(sentNotifications.key, `${seed.pledgeId}:2627:30`)
         )
       );
     expect(dedupe).toBeTruthy();
@@ -280,10 +280,76 @@ describe("seasonRenewalPrompts (cron)", () => {
       .where(
         and(
           eq(sentNotifications.kind, "season-renewal"),
-          eq(sentNotifications.key, `${seed.pledgeId}:2627`)
+          eq(sentNotifications.key, `${seed.pledgeId}:2627:30`)
         )
       );
     expect(dedupe.length).toBe(0);
+  });
+
+  // ─── Phase 3 / R7: Stages 30/14/3 Tage vor endsAt ───
+
+  it("Stage-Auswahl nach Tagen bis Ende: 20d→30er, 10d→14er, 2d→3er", async () => {
+    const s30 = await seedPledgeEligibleForRenewal({ endsAtOffsetDays: 20 });
+    const s14 = await seedPledgeEligibleForRenewal({ endsAtOffsetDays: 10 });
+    const s3 = await seedPledgeEligibleForRenewal({ endsAtOffsetDays: 2 });
+
+    const result = await runRenewalCron();
+    expect(result.sent).toBe(3);
+
+    const keys = (
+      await db
+        .select({ key: sentNotifications.key })
+        .from(sentNotifications)
+        .where(eq(sentNotifications.kind, "season-renewal"))
+    ).map((r) => r.key);
+    expect(keys).toContain(`${s30.pledgeId}:2627:30`);
+    expect(keys).toContain(`${s14.pledgeId}:2627:14`);
+    expect(keys).toContain(`${s3.pledgeId}:2627:3`);
+  });
+
+  it("Dedupe ist pro Stage: gesendete 30er-Stage blockt die 14er nicht", async () => {
+    const seed = await seedPledgeEligibleForRenewal({ endsAtOffsetDays: 10 });
+    // 30er-Stage wurde (vor 2 Wochen) bereits verschickt
+    await db.insert(sentNotifications).values({
+      kind: "season-renewal",
+      key: `${seed.pledgeId}:2627:30`
+    });
+
+    const result = await runRenewalCron();
+    expect(result.sent).toBe(1);
+    expect(resendSendMock).toHaveBeenCalledTimes(1);
+
+    // … aber die 14er ist jetzt dedupet
+    resendSendMock.mockClear();
+    const second = await runRenewalCron();
+    expect(second.sent).toBe(0);
+    expect(resendSendMock).not.toHaveBeenCalled();
+  });
+
+  it("Alt-Key ohne Stage-Suffix zählt als gesendete 30er-Stage (Abwärtskompatibilität)", async () => {
+    const seed = await seedPledgeEligibleForRenewal({ endsAtOffsetDays: 20 });
+    // Bestands-Key aus der Zeit vor den Stages
+    await db.insert(sentNotifications).values({
+      kind: "season-renewal",
+      key: `${seed.pledgeId}:2627`
+    });
+
+    const result = await runRenewalCron();
+    expect(result.sent).toBe(0);
+    expect(result.skipped).toBe(1);
+    expect(resendSendMock).not.toHaveBeenCalled();
+  });
+
+  it("Alt-Key blockt NUR die 30er-Stage — 14er geht trotzdem raus", async () => {
+    const seed = await seedPledgeEligibleForRenewal({ endsAtOffsetDays: 10 });
+    await db.insert(sentNotifications).values({
+      kind: "season-renewal",
+      key: `${seed.pledgeId}:2627`
+    });
+
+    const result = await runRenewalCron();
+    expect(result.sent).toBe(1);
+    expect(resendSendMock).toHaveBeenCalledTimes(1);
   });
 
   it("findPledgesEligibleForRenewal liefert konsistent zum Job", async () => {

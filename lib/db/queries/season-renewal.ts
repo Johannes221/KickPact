@@ -1,4 +1,4 @@
-import { and, eq, gt, gte, lte } from "drizzle-orm";
+import { and, eq, gt, gte, like, lte, or } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   pledges,
@@ -84,20 +84,25 @@ export async function findPledgesEligibleForRenewal(
 
 /**
  * Prüft ob für eine Pledge bereits eine Renewal-Mail für eine bestimmte
- * Ziel-Saison gesendet wurde (Dedupe-Helper für Inngest-Tests + den Job).
+ * Ziel-Saison gesendet wurde (Reporting-Helper). Phase 3 / R7: matcht sowohl
+ * Bestands-Keys (`<pledgeId>:<saison>`) als auch Stage-Keys
+ * (`<pledgeId>:<saison>:<stage>`).
  */
 export async function hasRenewalNotificationBeenSent(
   pledgeId: string,
   targetSaison: string
 ): Promise<boolean> {
-  const key = `${pledgeId}:${targetSaison}`;
+  const base = `${pledgeId}:${targetSaison}`;
   const [row] = await db
     .select({ key: sentNotifications.key })
     .from(sentNotifications)
     .where(
       and(
         eq(sentNotifications.kind, "season-renewal"),
-        eq(sentNotifications.key, key)
+        or(
+          eq(sentNotifications.key, base),
+          like(sentNotifications.key, `${base}:%`)
+        )
       )
     )
     .limit(1);
