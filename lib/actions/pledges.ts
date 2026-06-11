@@ -121,10 +121,20 @@ export async function setPledgeStatus(
         .update(pledges)
         .set({ status: "ended", endsAt: new Date() })
         .where(eq(pledges.id, pledgeId));
-    } else {
+    } else if (newStatus === "paused") {
+      // pausedAt stempeln: Spiele VOR der Pause werden weiter abgerechnet
+      // (siehe loadActivePledgeRulesForTeam), Spiele danach nicht.
       await db
         .update(pledges)
-        .set({ status: newStatus })
+        .set({ status: "paused", pausedAt: new Date() })
+        .where(eq(pledges.id, pledgeId));
+    } else {
+      // Reaktivieren: ALLE Pause-Marker zurücksetzen. Bliebe sommerpausePaused
+      // stehen, würde der nächste Sommerpause-Cron (filtert auf
+      // sommerpausePaused=false) diesen Pledge für immer überspringen.
+      await db
+        .update(pledges)
+        .set({ status: "active", sommerpausePaused: false, pausedAt: null })
         .where(eq(pledges.id, pledgeId));
     }
 

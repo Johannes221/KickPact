@@ -1,4 +1,4 @@
-import { and, count, countDistinct, desc, eq, isNull } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, inArray, isNull, lt } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   pledges,
@@ -10,6 +10,20 @@ import {
   charges
 } from "@/lib/db/schema";
 import type { PlanKey } from "@/lib/stripe/pricing";
+
+/**
+ * Beendet alle Pledges, deren endsAt verstrichen ist — auch PAUSIERTE
+ * (manuell oder Sommerpause): sonst bleibt ein pausierter Pledge nach
+ * Fenster-Ende ewig "paused" (unerreichbarer Zustand, Audit 2026-06-11).
+ * Wird vom täglichen end-pledges-Cron (lifecycle-cleanup) aufgerufen.
+ */
+export async function endExpiredPledges(now: Date): Promise<{ id: string }[]> {
+  return db
+    .update(pledges)
+    .set({ status: "ended" })
+    .where(and(inArray(pledges.status, ["active", "paused"]), lt(pledges.endsAt, now)))
+    .returning({ id: pledges.id });
+}
 
 /**
  * Zählt unterschiedliche aktive Sponsoren auf einem Team. Pausierte und

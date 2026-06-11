@@ -9,16 +9,18 @@
  *      der Sponsor bekam ewig Reminder-Mails, der Cap-Check zählte die
  *      pending-charges in den Monatscap rein.
  *
- *   2. end-pledges — pledges mit status='active' deren endsAt verstrichen
+ *   2. end-pledges — pledges (active ODER paused) deren endsAt verstrichen
  *      ist → status="ended". Spec v1 §6.9. Ohne diesen Cron blieben Pledges
  *      formal active, evaluate-match filterte sie zwar via endsAt-Check raus,
  *      aber die UI zeigte sie weiterhin als aktiv → Sponsor-Verwirrung.
+ *      (Audit 2026-06-11: paused-Pledges wurden nie beendet → ewig "Pausiert".)
  */
 
 import { and, eq, inArray, lt } from "drizzle-orm";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
-import { eventApprovals, charges, pledges } from "@/lib/db/schema";
+import { eventApprovals, charges } from "@/lib/db/schema";
+import { endExpiredPledges } from "@/lib/db/queries/pledges";
 
 export const expireApprovals = inngest.createFunction(
   { id: "expire-approvals", concurrency: { limit: 1 } },
@@ -91,13 +93,7 @@ export const endPledges = inngest.createFunction(
   async ({ step, logger }) => {
     const now = new Date();
 
-    const updated = await step.run("end-pledges", () =>
-      db
-        .update(pledges)
-        .set({ status: "ended" })
-        .where(and(eq(pledges.status, "active"), lt(pledges.endsAt, now)))
-        .returning({ id: pledges.id })
-    );
+    const updated = await step.run("end-pledges", () => endExpiredPledges(now));
 
     logger.info("end-pledges done", { ended: updated.length });
     return { ended: updated.length };
