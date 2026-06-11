@@ -121,6 +121,27 @@ export async function assertClubWriteAccess(
   return { ...ctx, gate };
 }
 
+/**
+ * Phase 3 / R8 — wie `assertClubWriteAccess`, lässt aber den Read-Only-Grund
+ * "paused" (Saison-Pass-Sommerpause) durch. Gezielt NUR für Aktionen, die in
+ * die Sommerpause fallen MÜSSEN — z.B. den Saison-Endstand eintragen (die
+ * Saison endet am 30.6., genau dann ist der Saison-Pass pausiert).
+ * past_due/cancelled/incomplete bleiben geblockt.
+ */
+export async function assertClubWriteAccessAllowPaused(
+  clubSlug: string,
+  minRole: Role = "trainer"
+): Promise<ClubWriteAccess> {
+  const ctx = await assertClubAccess(clubSlug, minRole);
+  const gate = await getSubscriptionGate(ctx.club.id);
+  if (gate.isReadOnly && gate.status !== "paused") {
+    throw new Error(
+      "Diese Mannschaft ist im Read-Only-Modus. Bitte Abo reaktivieren."
+    );
+  }
+  return { ...ctx, gate };
+}
+
 type TeamRole = "admin" | "viewer";
 
 const TEAM_RANK: Record<TeamRole, number> = { viewer: 1, admin: 2 };

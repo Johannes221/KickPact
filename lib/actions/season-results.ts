@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { seasonResults, teams, clubs } from "@/lib/db/schema";
-import { assertClubWriteAccess } from "@/lib/auth/scope";
+import { assertClubWriteAccessAllowPaused } from "@/lib/auth/scope";
 import { inngest } from "@/lib/inngest/client";
 
 const schema = z.object({
@@ -33,7 +33,9 @@ export async function setSeasonResult(input: z.infer<typeof schema>) {
     .where(eq(teams.id, parsed.teamId))
     .limit(1);
   if (!team) throw new Error("Mannschaft nicht gefunden");
-  await assertClubWriteAccess(team.clubSlug, "admin");
+  // R8: Saison-Endstand muss auch in der Saison-Pass-Sommerpause (paused)
+  // eintragbar sein — die Saison endet 30.6., genau dann wird eingetragen.
+  await assertClubWriteAccessAllowPaused(team.clubSlug, "admin");
 
   // upsert
   const existing = await db
