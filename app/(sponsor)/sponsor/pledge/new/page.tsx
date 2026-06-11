@@ -6,6 +6,8 @@ import { getClubIdForTeam } from "@/lib/db/queries/pledges";
 import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
 import { getTeamDataCoverage } from "@/lib/db/queries/crawler";
 import type { Coverage } from "@/lib/triggers/coverage";
+import { canCreateSeasonWagerPure } from "@/lib/billing/wager-window";
+import { getActiveSeason } from "@/lib/billing/wager-window-server";
 import { PledgeBuilder } from "./_components/pledge-builder";
 
 export const metadata = { title: "Sponsoring einrichten · KickPact" };
@@ -17,6 +19,12 @@ export default async function NewPledgePage({
 }) {
   await requireUser();
   const { invitation: invitationToken } = await searchParams;
+
+  // A7 (Audit 2026-06-11): Saison-Trigger-Window (Cutoff 5. Spieltag) schon in
+  // Step 2 kommunizieren statt erst am Wizard-Ende serverseitig abzulehnen.
+  // createPledge prüft weiterhin hart — das hier ist UX.
+  const now = new Date();
+  const seasonWindowOpen = canCreateSeasonWagerPure(await getActiveSeason(now), now);
 
   // Read-Only-Gate prüfen (best-effort): wenn wir den Token zu einer Mannschaft
   // auflösen können, holen wir das Gate und blocken UI-seitig direkt mit Banner.
@@ -64,7 +72,10 @@ export default async function NewPledgePage({
       <div className="mt-6 md:mt-10">
         {gateBanner ?? (
           <Suspense fallback={<div className="text-brand-night-navy/60">Lade…</div>}>
-            <PledgeBuilder dataCoverage={dataCoverage} />
+            <PledgeBuilder
+              dataCoverage={dataCoverage}
+              seasonWindowOpen={seasonWindowOpen}
+            />
           </Suspense>
         )}
       </div>

@@ -106,6 +106,7 @@ type WizardStep = 1 | 2 | 3 | 4;
 
 export function PledgeBuilder({
   dataCoverage = null,
+  seasonWindowOpen = true,
 }: {
   /**
    * Daten-Coverage der Mannschaft (siehe lib/triggers/coverage.ts). Bei nicht-
@@ -114,6 +115,12 @@ export function PledgeBuilder({
    * Das Server-Gate in createPledge ist die harte Linie; dies ist Komfort.
    */
   dataCoverage?: Coverage | null;
+  /**
+   * A7: Saison-Trigger-Window (Cutoff 5. Spieltag). Bei geschlossenem Fenster
+   * werden die Saison-Karten in Step 2 disabled — der Server-Check in
+   * createPledge bleibt die harte Linie.
+   */
+  seasonWindowOpen?: boolean;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -341,10 +348,15 @@ export function PledgeBuilder({
             <TriggerGroupBlock
               title="Pro Saison"
               icon={<Trophy className="h-4 w-4" />}
-              note="Feuern 1× am Saison-Ende."
+              note={
+                seasonWindowOpen
+                  ? "Feuern 1× am Saison-Ende."
+                  : "Saison-Ziele sind bis zum 5. Spieltag buchbar — wieder ab Saisonstart-Fenster."
+              }
               items={visibleLibrary.filter((t) => t.group === "season")}
               enabled={enabled}
               onToggle={toggleTrigger}
+              disabled={!seasonWindowOpen}
             />
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
@@ -911,6 +923,7 @@ function TriggerGroupBlock({
   enabled,
   onToggle,
   tone = "default",
+  disabled = false,
 }: {
   title: string;
   icon: React.ReactNode;
@@ -919,6 +932,8 @@ function TriggerGroupBlock({
   enabled: Set<string>;
   onToggle: (item: LibItem) => void;
   tone?: "default" | "club";
+  /** A7: ganze Gruppe nicht wählbar (z.B. Saison-Window geschlossen). */
+  disabled?: boolean;
 }) {
   return (
     <div>
@@ -933,7 +948,14 @@ function TriggerGroupBlock({
           {title}
         </h4>
       </div>
-      <p className="text-xs text-brand-night-navy/50 mb-3 leading-snug max-w-2xl">{note}</p>
+      <p
+        className={
+          "text-xs mb-3 leading-snug max-w-2xl " +
+          (disabled ? "text-amber-700 font-medium" : "text-brand-night-navy/50")
+        }
+      >
+        {note}
+      </p>
       <div className="grid gap-2.5 md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => (
           <TriggerToggle
@@ -941,6 +963,7 @@ function TriggerGroupBlock({
             item={item}
             enabled={enabled.has(item.key)}
             onToggle={() => onToggle(item)}
+            disabled={disabled}
           />
         ))}
       </div>
@@ -1004,19 +1027,24 @@ function TriggerToggle({
   item,
   enabled,
   onToggle,
+  disabled = false,
 }: {
   item: LibItem;
   enabled: boolean;
   onToggle: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onToggle}
       aria-pressed={enabled}
+      disabled={disabled}
       className={
         "text-left rounded-xl border p-3 transition-colors " +
-        (enabled
+        (disabled
+          ? "border-brand-neutral/30 bg-brand-off-white opacity-50 cursor-not-allowed"
+          : enabled
           ? "border-accent bg-accent/5"
           : "border-brand-neutral/40 bg-white hover:border-accent/40")
       }
