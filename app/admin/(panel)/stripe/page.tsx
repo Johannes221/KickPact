@@ -26,6 +26,15 @@ export default async function StripePage() {
         <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy mb-2">
           Past-Due Subscriptions ({pastDue.length})
         </h3>
+        {pastDue.length > 0 && (
+          <p className="mb-2 text-xs text-brand-night-navy/60">
+            Hinweis: Für read-only Vereine (past_due jenseits der Grace /
+            cancelled) werden Spiel-Auswertungen zurückgestellt
+            (Log: <code>match/evaluation-deferred</code>). Nach Reaktivierung
+            die betroffenen Mannschaften über „Spieldaten erneut einlesen"
+            re-scrapen, damit die zurückgestellten Charges entstehen.
+          </p>
+        )}
         <div className="rounded-2xl border border-brand-neutral/40 bg-white overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-brand-off-white text-xs uppercase tracking-wider text-brand-night-navy/60">

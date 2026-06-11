@@ -159,7 +159,26 @@ function ownGoals(match: MatchInput): MatchEventInput[] {
 }
 
 function goalTotal(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[] {
-  const events = ownGoals(match);
+  let events = ownGoals(match);
+
+  // Audit 2026-06-11 / B7: Phantom-Tor-Deckel. Es zählen maximal
+  // min(#Events, offizieller Score) Tore — mehr Events als der Endstand
+  // hergibt (z.B. manuelle Doppel-Einträge vor einer Score-Korrektur)
+  // erzeugen keine zusätzlichen Charges. Beim Deckeln haben gescrapte
+  // Events Vorrang (fussball.de ist die Wahrheit), danach Minute/ID als
+  // deterministischer Tiebreak.
+  const officialScore = ownScore(match);
+  if (events.length > officialScore) {
+    events = [...events]
+      .sort((a, b) => {
+        if (a.source !== b.source) return a.source === "scraped" ? -1 : 1;
+        if ((a.minute ?? 0) !== (b.minute ?? 0)) {
+          return (a.minute ?? 0) - (b.minute ?? 0);
+        }
+        return a.id.localeCompare(b.id);
+      })
+      .slice(0, officialScore);
+  }
 
   // Liegen Tor-Events vor (voller Spielbericht), zählt jedes Event einzeln — wie
   // bisher, inkl. der C1-Approval-Logik je Quelle. Unverändertes Verhalten.

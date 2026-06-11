@@ -1,4 +1,4 @@
-import { eq, sql, inArray, and } from "drizzle-orm";
+import { eq, sql, inArray, and, isNull } from "drizzle-orm";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
@@ -19,13 +19,17 @@ import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { getReplyToForClub } from "@/lib/mail/reply-to";
 import { invoiceSponsorEmail } from "@/lib/mail/templates/invoice-sponsor";
 import { invoiceClubEmail } from "@/lib/mail/templates/invoice-club";
-import { lastBillingPeriod, type BillingPeriod } from "@/lib/invoicing/period";
+import {
+  lastBillingPeriod,
+  billingPeriodFromString
+} from "@/lib/invoicing/period";
 import { nextInvoiceNumber } from "@/lib/invoicing/numbering";
 import { storePdf } from "@/lib/invoicing/storage";
 import { InvoicePdf } from "@/lib/invoicing/builder";
 import { renderGirocodeDataUrl } from "@/lib/invoicing/girocode";
 import {
   listConfirmedChargesByPeriod,
+  listChargesOfDraftInvoices,
   groupChargesBySponsorClub,
   type ChargeForBilling
 } from "@/lib/db/queries/charges";
@@ -91,23 +95,6 @@ function billingItemView(it: ChargeForBilling): {
   };
 }
 
-function buildPeriodFromString(periodStr: string): BillingPeriod {
-  // periodStr format: "YYYY-MM"
-  const [y, m] = periodStr.split("-").map(Number);
-  const startsAt = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0));
-  const endsAt = new Date(Date.UTC(y, m, 0, 23, 59, 59));
-  return {
-    year: y,
-    month: m,
-    label: new Date(y, m - 1, 1).toLocaleDateString("de-DE", {
-      month: "long",
-      year: "numeric"
-    }),
-    startsAt,
-    endsAt
-  };
-}
-
 /**
  * Generates monthly invoices for all confirmed charges of the previous month.
  *
@@ -125,7 +112,12 @@ export const generateInvoices = inngest.createFunction(
   [{ cron: "17 3 1 * *" }, { event: "invoices/manual-run" }],
   async ({ step, logger, event }) => {
     const overridePeriod = (event?.data as { period?: string } | undefined)?.period;
-    const period = overridePeriod ? buildPeriodFromString(overridePeriod) : lastBillingPeriod();
+    // B8 (Audit 2026-06-11): zentrale halb-offene Periode aus
+    // lib/invoicing/period.ts — vorher hatte die lokale Kopie hier ein
+    // inklusives 23:59:59-Ende (1s-Loch).
+    const period = overridePeriod
+      ? billingPeriodFromString(overridePeriod)
+      : lastBillingPeriod();
     const periodStr = `${period.year}-${String(period.month).padStart(2, "0")}`;
 
     logger.info("generate-invoices start", { period: periodStr });
@@ -135,7 +127,14 @@ export const generateInvoices = inngest.createFunction(
         periodStart: period.startsAt,
         periodEnd: period.endsAt
       });
-      return groupChargesBySponsorClub(rows);
+      // B6: liegengebliebene 'draft'-Rechnungen (Mail-Fehler in einem
+      // früheren Lauf) wieder einsammeln — deren Charges sind schon
+      // 'invoiced' und fehlen daher oben. Disjunkt per Status, Dedupe
+      // defensiv über chargeId.
+      const draftRows = await listChargesOfDraftInvoices(periodStr);
+      const seen = new Set(rows.map((r) => r.chargeId));
+      const merged = [...rows, ...draftRows.filter((r) => !seen.has(r.chargeId))];
+      return groupChargesBySponsorClub(merged);
     });
 
     if (grouped.length === 0) {
@@ -156,8 +155,15 @@ export const generateInvoices = inngest.createFunction(
       //   Step C: mail-admins  — Mail an Club-Admins (deterministische step-id)
       // Retry triggert dann nur den fehlgeschlagenen Step erneut.
       const stepId = `invoice-${group.sponsorId}-${group.clubId}-${periodStr}`;
-      try {
-        const result = await step.run(stepId, async () => {
+      // B6 (Audit 2026-06-11): Nur der CREATE-Step ist group-isoliert
+      // (try/catch → failures). Die Mail-Steps danach werfen bewusst aus dem
+      // Handler heraus — Inngest retried dann die Function und memoisierte
+      // Steps (create, bereits erfolgreiche Mails) werden übersprungen.
+      // Vorher verschluckte das per-Group-catch den Mail-Fehler → kein Retry,
+      // Rechnung stand auf 'sent', Sponsor bekam nie eine Mail.
+      const result = await (async () => {
+        try {
+          return await step.run(stepId, async () => {
           // Load sponsor + user + club for billing details
           const [spRow] = await db
             .select({ sponsor: sponsors, user: users })
@@ -271,6 +277,10 @@ export const generateInvoices = inngest.createFunction(
           //   (Das frühere team-level Gate `teams.verifiedAt` ist deaktiviert.)
           const verified = cl.verifiedAt !== null;
 
+          // B6 (Audit 2026-06-11): Invoice startet als 'draft' — 'sent' wird
+          // erst NACH erfolgreichem Mail-Versand gesetzt (mark-sent-Step
+          // unten). Vorher stand die Rechnung sofort auf 'sent', auch wenn
+          // die Mail nie rausging.
           const inserted = await db.transaction(async (tx) => {
             const [inv] = await tx
               .insert(invoices)
@@ -280,13 +290,13 @@ export const generateInvoices = inngest.createFunction(
                 period: periodStr,
                 totalCents: total,
                 pdfUrl: storageUrl,
-                status: verified ? "sent" : "withheld",
-                sentAt: verified ? new Date() : null
+                status: verified ? "draft" : "withheld",
+                sentAt: null
               })
               .onConflictDoNothing()
               .returning();
 
-            if (!inv) return null; // duplicate by UNIQUE constraint, skip
+            if (!inv) return null; // duplicate by UNIQUE constraint
 
             await tx.insert(invoiceItems).values(
               group.items.map((it) => ({
@@ -306,8 +316,40 @@ export const generateInvoices = inngest.createFunction(
             return inv;
           });
 
-          if (!inserted) {
-            return { skipped: true, reason: "duplicate-invoice" } as const;
+          // B6: Draft-Recovery. Ein liegengebliebener 'draft' (Mail schlug in
+          // einem früheren Run fehl, Items/Charges sind bereits verknüpft)
+          // wird im Re-Run aufgegriffen: Versand + sent-Markierung nachholen
+          // statt ihn als "duplicate" für immer liegen zu lassen.
+          let invoiceRow = inserted;
+          let recoveredDraft = false;
+          if (!invoiceRow) {
+            const [existing] = await db
+              .select()
+              .from(invoices)
+              .where(
+                and(
+                  eq(invoices.sponsorId, spRow.sponsor.id),
+                  eq(invoices.clubId, cl.id),
+                  eq(invoices.period, periodStr),
+                  isNull(invoices.reversalOfInvoiceId)
+                )
+              )
+              .limit(1);
+            if (existing && existing.status === "draft") {
+              invoiceRow = existing;
+              recoveredDraft = true;
+              // Der Re-Run hat eine neue Rechnungsnummer gezogen und die PDF
+              // frisch gerendert/gespeichert — Row darauf umbiegen, damit
+              // Mail-Anhang und pdfUrl konsistent sind. Die im Fehl-Run
+              // verbrauchte Nummer bleibt als Lücke im Zähler (bewusst:
+              // Nummern werden nie wiederverwendet).
+              await db
+                .update(invoices)
+                .set({ pdfUrl: storageUrl, totalCents: total })
+                .where(eq(invoices.id, existing.id));
+            } else {
+              return { skipped: true, reason: "duplicate-invoice" } as const;
+            }
           }
 
           // Sammle Mail-Metadaten — werden in separaten Steps unten versendet.
@@ -322,7 +364,8 @@ export const generateInvoices = inngest.createFunction(
 
           return {
             skipped: false as const,
-            invoiceId: inserted.id,
+            recoveredDraft,
+            invoiceId: invoiceRow.id,
             invoiceNumber,
             clubId: cl.id,
             clubVerified: verified,
@@ -336,14 +379,30 @@ export const generateInvoices = inngest.createFunction(
             itemCount: group.items.length,
             pdfBase64: pdfBuf.toString("base64")
           };
-        });
-
-        if (result.skipped) {
-          continue;
+          });
+        } catch (err) {
+          logger.error("invoice-group failed", {
+            sponsorId: group.sponsorId,
+            clubId: group.clubId,
+            error: String(err)
+          });
+          failures.push({
+            sponsorId: group.sponsorId,
+            clubId: group.clubId,
+            error: String(err)
+          });
+          return null;
         }
+      })();
 
+      if (!result || result.skipped) {
+        continue;
+      }
+
+      if (!result.recoveredDraft) {
         invoicesCreated += 1;
-        const pdfBuf = Buffer.from(result.pdfBase64, "base64");
+      }
+      const pdfBuf = Buffer.from(result.pdfBase64, "base64");
 
         // Phase E1 + Spec 2026-05-29 §3.2 Withhold-Gate: invoice exists
         // (status='withheld') but NO mails go out until the container-club is
@@ -419,6 +478,18 @@ export const generateInvoices = inngest.createFunction(
           mailsSent += result.adminEmails.length;
         }
 
+        // B6: erst NACH erfolgreichem Versand wird die Rechnung 'sent'.
+        // Guard auf status='draft' macht den Step idempotent (Re-Run /
+        // Inngest-Retry) und lässt withheld/paid unangetastet.
+        await step.run(`mark-sent-${result.invoiceId}`, async () => {
+          await db
+            .update(invoices)
+            .set({ status: "sent", sentAt: new Date() })
+            .where(
+              and(eq(invoices.id, result.invoiceId), eq(invoices.status, "draft"))
+            );
+        });
+
         // Step D: Push/In-App an Club-Admins (additiv zur E-Mail, best-effort,
         // eigener memoisierter Step → idempotent über Retries).
         try {
@@ -448,21 +519,9 @@ export const generateInvoices = inngest.createFunction(
               }
             );
           });
-        } catch (err) {
-          logger.error("invoice-push step error", {
-            invoiceId: result.invoiceId,
-            error: String(err)
-          });
-        }
       } catch (err) {
-        logger.error("invoice-group failed", {
-          sponsorId: group.sponsorId,
-          clubId: group.clubId,
-          error: String(err)
-        });
-        failures.push({
-          sponsorId: group.sponsorId,
-          clubId: group.clubId,
+        logger.error("invoice-push step error", {
+          invoiceId: result.invoiceId,
           error: String(err)
         });
       }

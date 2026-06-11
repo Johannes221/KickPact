@@ -126,12 +126,15 @@ export async function loadActivePledgeRulesForTeam(
  */
 /**
  * Liefert das Cap-Fenster `[start, end)` für eine Wette:
- *  - `month`  → Kalendermonat des Spieldatums.
+ *  - `month`  → Kalendermonat des Anker-Datums. Audit 2026-06-11 / B1:
+ *    Anker ist der ABRECHNUNGSmonat (Insert-/Confirm-Zeitpunkt), nicht das
+ *    Spieldatum — Caps und generate-invoices-Periode sind damit identisch
+ *    dimensioniert (beide über confirmedAt). evaluate-match übergibt `now`.
  *  - `season` → Pledge-Laufzeit `[startsAt, endsAt]` (end exklusiv via +1ms).
  */
 export function ruleCapWindow(
   capPeriod: "month" | "season",
-  matchDate: Date,
+  anchorDate: Date,
   pledgeStartsAt: Date,
   pledgeEndsAt: Date
 ): { start: Date; end: Date } {
@@ -139,8 +142,8 @@ export function ruleCapWindow(
     return { start: pledgeStartsAt, end: new Date(pledgeEndsAt.getTime() + 1) };
   }
   return {
-    start: new Date(matchDate.getFullYear(), matchDate.getMonth(), 1),
-    end: new Date(matchDate.getFullYear(), matchDate.getMonth() + 1, 1)
+    start: new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1),
+    end: new Date(anchorDate.getFullYear(), anchorDate.getMonth() + 1, 1)
   };
 }
 
@@ -179,11 +182,19 @@ export async function getMatch(matchId: string) {
  * (z.B. Sponsor bestätigt am 5. ein Approval aus dem 1.) den Cap des Vor-Monats
  * belasten, aber auf der Folge-Rechnung landen → Pledge mit monthlyCap=100€
  * konnte effektiv 200€ in einem Monat erzeugen.
+ *
+ * `exec` (Audit 2026-06-11 / B5): akzeptiert eine laufende Transaktion, damit
+ * der Cap-Check in addManualEvent die uncommitteten Inserts derselben tx
+ * sieht — zwei Proposals desselben Events zählten sich sonst nicht gegenseitig.
  */
-export async function getMonthlyChargedCents(pledgeId: string, asOf: Date): Promise<number> {
+export async function getMonthlyChargedCents(
+  pledgeId: string,
+  asOf: Date,
+  exec: Pick<typeof db, "select"> = db
+): Promise<number> {
   const monthStart = new Date(asOf.getFullYear(), asOf.getMonth(), 1);
   const monthEnd = new Date(asOf.getFullYear(), asOf.getMonth() + 1, 1);
-  const [row] = await db
+  const [row] = await exec
     .select({
       total: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int`
     })

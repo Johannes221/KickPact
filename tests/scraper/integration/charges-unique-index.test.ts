@@ -316,4 +316,62 @@ describe.skipIf(isIntegrationDbDisabled)("charges unique-index regressions", () 
     expect(rows.filter((c) => c.status === "pending_approval")).toHaveLength(1);
     expect(rows.filter((c) => c.status === "cancelled")).toHaveLength(1);
   });
+
+  it("B9 (Audit 2026-06-11): stornierte Saison-Charge blockiert die Re-Emission nicht", async () => {
+    const ids = await seedMatch({
+      ergebnisHeim: 1,
+      ergebnisGast: 0,
+      rules: [{ triggerType: "goal_total", amountCents: 500 }]
+    });
+    const db = await getTestDb();
+    const [rule] = await db
+      .select({ id: pledgeRules.id })
+      .from(pledgeRules)
+      .where(eq(pledgeRules.pledgeId, ids.pledgeId))
+      .limit(1);
+
+    // Saison-Charge wie evaluate-season sie schreibt — dann storniert
+    // (z.B. Dispute nach falscher Tabellen-Auswertung).
+    await db.insert(charges).values({
+      pledgeId: ids.pledgeId,
+      pledgeRuleId: rule.id,
+      matchId: null,
+      saison: "2526",
+      triggerType: "season_promotion",
+      amountCents: 5000,
+      status: "cancelled",
+      cancelledReason: "dispute",
+      cancelledAt: new Date()
+    });
+
+    // Re-Emission derselben (pledge_rule, saison)-Kombination muss durchgehen.
+    const inserted = await db
+      .insert(charges)
+      .values({
+        pledgeId: ids.pledgeId,
+        pledgeRuleId: rule.id,
+        matchId: null,
+        saison: "2526",
+        triggerType: "season_promotion",
+        amountCents: 5000,
+        status: "confirmed",
+        confirmedAt: new Date()
+      })
+      .returning({ id: charges.id });
+    expect(inserted).toHaveLength(1);
+
+    // Aber: zwei NICHT-stornierte Saison-Charges bleiben verboten (Idempotenz).
+    await expect(
+      db.insert(charges).values({
+        pledgeId: ids.pledgeId,
+        pledgeRuleId: rule.id,
+        matchId: null,
+        saison: "2526",
+        triggerType: "season_promotion",
+        amountCents: 5000,
+        status: "confirmed",
+        confirmedAt: new Date()
+      })
+    ).rejects.toSatisfy((err: unknown) => isUniqueViolation(err));
+  });
 });

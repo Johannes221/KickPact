@@ -1,7 +1,15 @@
-import { and, eq, gte, lt, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
-import { matches, matchEvents, teams, charges, pledges, clubs } from "@/lib/db/schema";
+import {
+  matches,
+  matchEvents,
+  teams,
+  charges,
+  pledges,
+  clubs,
+  eventApprovals
+} from "@/lib/db/schema";
 import { evaluateTriggers, type MatchInput } from "@/lib/crawler/triggers";
 import { detectTeamSide } from "@/lib/crawler/team-side";
 import {
@@ -34,14 +42,26 @@ export const evaluateMatch = inngest.createFunction(
       return { m, events, t, clubName: c?.name ?? null };
     });
 
-    // Read-Only-Gate: keine neuen Charges für pausierte Vereine.
+    // Read-Only-Gate (Audit 2026-06-11 / B3): blockt nur noch bei
+    // past_due/cancelled — NICHT bei paused. Die Saison-Pass-Sommerpause
+    // pausiert nur die LIZENZ-Abbuchung; die Saison läuft bis 30.6. und
+    // gespielte Spiele müssen weiter Charges erzeugen (vorher gingen alle
+    // Juni-Charges pausierter Vereine still verloren). past_due/cancelled
+    // wird als `match/evaluation-deferred` geloggt statt still verworfen —
+    // Forensik + Re-Emit nach Reaktivierung (Admin: Spieldaten erneut
+    // einlesen) bleiben möglich, weil das Match selbst unangetastet bleibt.
     const gate = await step.run("gate-check", () =>
       getSubscriptionGate(matchData.t.clubId)
     );
-    if (gate.isReadOnly) {
-      logger.info("skipped because club is read-only", {
+    const gateBlocks =
+      gate.isReadOnly &&
+      (gate.status === "past_due" || gate.status === "cancelled");
+    if (gateBlocks) {
+      logger.warn("match/evaluation-deferred — club read-only, charges not generated", {
         clubId: matchData.t.clubId,
-        teamId
+        teamId,
+        matchId,
+        gateStatus: gate.status
       });
       return { proposals: 0, inserted: 0, cappedOrSkipped: 0, skippedReadOnly: true };
     }
@@ -88,7 +108,15 @@ export const evaluateMatch = inngest.createFunction(
 
     let inserted = 0;
     let cappedOrSkipped = 0;
-    const matchDate = new Date(matchData.m.datum);
+    // Audit 2026-06-11 / B1: Cap-Anker = ABRECHNUNGSmonat (jetzt), nicht
+    // Spielmonat. Caps begrenzen, was auf einer Rechnung landet — die
+    // Rechnungsperiode selektiert über confirmedAt (= Insert-Zeitpunkt).
+    // Vorher: Fenster nach Spieldatum, Summe nach Confirm-Zeit → zwei spät
+    // gescrapte Vormonats-Spiele konnten 2× den Cap auf EINE Rechnung legen.
+    // Rest-Risiko (dokumentiert, nicht gelöst): pending_approval-Charges aus
+    // dem Vormonat, die erst im Folgemonat confirmed werden, belasten den
+    // Cap des Erstellungs-Monats, landen aber auf der Folgemonats-Rechnung.
+    const capAnchor = new Date();
     for (const p of proposals) {
       // Step-ID muss pro Proposal eindeutig sein: results_only-Tor-Charges
       // teilen sich (rule, matchEventId=null) und unterscheiden sich nur im
@@ -121,7 +149,7 @@ export const evaluateMatch = inngest.createFunction(
               if (ruleCap?.capCents != null && ruleCap.capPeriod) {
                 const { start, end } = ruleCapWindow(
                   ruleCap.capPeriod,
-                  matchDate,
+                  capAnchor,
                   pledgeRow.startsAt,
                   pledgeRow.endsAt
                 );
@@ -131,15 +159,19 @@ export const evaluateMatch = inngest.createFunction(
 
               if (pledgeRow.cap !== null) {
                 const monthStart = new Date(
-                  matchDate.getFullYear(),
-                  matchDate.getMonth(),
+                  capAnchor.getFullYear(),
+                  capAnchor.getMonth(),
                   1
                 );
                 const monthEnd = new Date(
-                  matchDate.getFullYear(),
-                  matchDate.getMonth() + 1,
+                  capAnchor.getFullYear(),
+                  capAnchor.getMonth() + 1,
                   1
                 );
+                // Datum als ISO-String binden: COALESCE(...) ist ein rohes
+                // SQL-Fragment ohne Spalten-Typ — postgres.js kann den
+                // Bind-Typ für ein Date nicht ableiten (vgl.
+                // getMonthlyChargedCents in lib/db/queries/evaluation.ts).
                 const [sumRow] = await tx
                   .select({
                     total: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int`
@@ -148,14 +180,8 @@ export const evaluateMatch = inngest.createFunction(
                   .where(
                     and(
                       eq(charges.pledgeId, p.pledgeId),
-                      gte(
-                        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt})`,
-                        monthStart
-                      ),
-                      lt(
-                        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt})`,
-                        monthEnd
-                      ),
+                      sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${monthStart.toISOString()}`,
+                      sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) < ${monthEnd.toISOString()}`,
                       inArray(charges.status, [
                         "confirmed",
                         "pending_approval",
@@ -178,6 +204,34 @@ export const evaluateMatch = inngest.createFunction(
                 status: p.requiresApproval ? "pending_approval" : "confirmed",
                 confirmedAt: p.requiresApproval ? null : new Date()
               });
+
+              // Audit 2026-06-11 / B4: pending_approval-Charges brauchen eine
+              // eventApprovals-Row, sonst kann der Sponsor nie bestätigen und
+              // expire-approvals storniert nach Ablauf. addManualEvent legt
+              // sie an — der Re-Eval-Pfad (z.B. nach invalidateChargesForMatch)
+              // tat das nicht: Charge wurde neu erzeugt, Approval-Row fehlte.
+              // Parität: expiresAt = pledges.endsAt (wie addManualEvent).
+              if (p.requiresApproval && p.matchEventId) {
+                const [existingApproval] = await tx
+                  .select({ id: eventApprovals.id })
+                  .from(eventApprovals)
+                  .where(
+                    and(
+                      eq(eventApprovals.matchEventId, p.matchEventId),
+                      eq(eventApprovals.pledgeRuleId, p.pledgeRuleId),
+                      eq(eventApprovals.status, "pending")
+                    )
+                  )
+                  .limit(1);
+                if (!existingApproval) {
+                  await tx.insert(eventApprovals).values({
+                    matchEventId: p.matchEventId,
+                    pledgeRuleId: p.pledgeRuleId,
+                    status: "pending",
+                    expiresAt: pledgeRow.endsAt
+                  });
+                }
+              }
               return true;
             });
           } catch (err) {

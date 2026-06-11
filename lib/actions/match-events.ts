@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, and, inArray, sql } from "drizzle-orm";
+import { eq, and, inArray, isNull, ne, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
@@ -128,6 +128,15 @@ export async function addManualEvent(input: AddManualEventInput) {
       return { eventId: created.id, charges: 0, approvals: 0 };
     }
 
+    // Audit 2026-06-11 / B7: Manuelle Tore auf NICHT-beendeten Spielen
+    // (scheduled/live/postponed) erzeugen keine Sofort-Proposals — es gibt
+    // noch keinen offiziellen Endstand als Gegenprobe (H3 greift erst bei
+    // finished). Das Event bleibt gespeichert; die Charges entstehen beim
+    // finished-Übergang über evaluate-match.
+    if (parsed.type === "tor" && target.match.status !== "finished") {
+      return { eventId: created.id, charges: 0, approvals: 0 };
+    }
+
     // Trigger-Engine inline für dieses einzelne Event
     // Wir bauen einen MatchInput mit NUR diesem Event, damit nur Rules dafür feuern
     const matchDate = target.match.datum instanceof Date
@@ -187,6 +196,29 @@ export async function addManualEvent(input: AddManualEventInput) {
       // Only consider proposals with matchEventId pointing to OUR new event
       if (p.matchEventId !== created.id) continue;
 
+      // Audit 2026-06-11 / B2: results_only-Doppel-Charge. Existieren für
+      // (pledgeRuleId, matchId) bereits ANONYME Auto-Charges (matchEventId
+      // IS NULL, nicht storniert), hat die Pipeline die Tor-GESAMTMENGE
+      // schon aus dem offiziellen Endstand abgerechnet — ein manuell
+      // nachgetragener Torschütze würde dasselbe Tor doppelt berechnen.
+      // Spieler-bezogene Rules (goal_by_player etc.) feuern weiter: für
+      // diese Nachträge sind die manuellen Events da.
+      if (p.triggerType === "goal_total" && p.matchId) {
+        const [anonCharge] = await tx
+          .select({ id: charges.id })
+          .from(charges)
+          .where(
+            and(
+              eq(charges.pledgeRuleId, p.pledgeRuleId),
+              eq(charges.matchId, p.matchId),
+              isNull(charges.matchEventId),
+              ne(charges.status, "cancelled")
+            )
+          )
+          .limit(1);
+        if (anonCharge) continue;
+      }
+
       // Monthly-cap check unter Lock — siehe pessimistic Select oben.
       // SECURITY (C3): Cap-Fenster über den ABRECHNUNGS-Monat (jetzt), nicht über
       // den Spieltag. Manuelle Charges sind approval-pflichtig (confirmedAt=null,
@@ -194,9 +226,11 @@ export async function addManualEvent(input: AddManualEventInput) {
       // Rechnungslauf — der Cap muss daher gegen denselben Monat geprüft werden.
       // Vorher: Cap gegen matchDate-Monat → rückdatiertes Event prüfte einen
       // alten Monat mit Cap-Headroom, wurde aber im aktuellen Monat abgerechnet.
+      // Audit 2026-06-11 / B5: Summe via tx, damit Inserts aus DIESER
+      // Transaktion (mehrere Proposals desselben Events) mitgezählt werden.
       const info = pledgeInfoMap.get(p.pledgeId);
       if (info?.cap !== null && info?.cap !== undefined) {
-        const alreadyCharged = await getMonthlyChargedCents(p.pledgeId, new Date());
+        const alreadyCharged = await getMonthlyChargedCents(p.pledgeId, new Date(), tx);
         if (alreadyCharged + p.amountCents > info.cap) continue;
       }
 

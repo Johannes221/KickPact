@@ -1,6 +1,16 @@
-import { and, eq, gte, inArray, lte, ne, notInArray, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lt, ne, notInArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { charges, pledges, matches, teams, eventApprovals, sponsors, users } from "@/lib/db/schema";
+import {
+  charges,
+  pledges,
+  matches,
+  teams,
+  eventApprovals,
+  sponsors,
+  users,
+  invoices
+} from "@/lib/db/schema";
+import { isNull } from "drizzle-orm";
 
 /**
  * SECURITY (H5): Sponsor-Kontakt + Eckdaten zu einer Charge (club-gescoped),
@@ -80,10 +90,51 @@ export async function listConfirmedChargesByPeriod(opts: {
       and(
         eq(charges.status, "confirmed"),
         gte(charges.confirmedAt, opts.periodStart),
-        lte(charges.confirmedAt, opts.periodEnd)
+        // B8 (Audit 2026-06-11): periodEnd ist EXKLUSIV (Beginn Folgemonat).
+        lt(charges.confirmedAt, opts.periodEnd)
       )
     );
   return rows;
+}
+
+/**
+ * B6 (Audit 2026-06-11): Charges, die bereits auf einer 'draft'-Rechnung der
+ * Periode hängen. Ein Draft entsteht, wenn der Rechnungslauf die Invoice
+ * anlegte, der Mail-Versand aber fehlschlug — die Charges sind dann schon
+ * 'invoiced' und fallen aus `listConfirmedChargesByPeriod` heraus. Ein
+ * Re-Run muss diese Gruppen trotzdem sehen, um Versand + sent-Markierung
+ * nachzuholen (Draft-Recovery in generate-invoices).
+ */
+export async function listChargesOfDraftInvoices(
+  period: string
+): Promise<ChargeForBilling[]> {
+  return db
+    .select({
+      chargeId: charges.id,
+      sponsorId: pledges.sponsorId,
+      clubId: teams.clubId,
+      triggerType: charges.triggerType,
+      amountCents: charges.amountCents,
+      saison: charges.saison,
+      confirmedAt: charges.confirmedAt,
+      matchDate: matches.datum,
+      heimName: matches.heimName,
+      gastName: matches.gastName,
+      ergebnisHeim: matches.ergebnisHeim,
+      ergebnisGast: matches.ergebnisGast
+    })
+    .from(charges)
+    .innerJoin(invoices, eq(charges.invoiceId, invoices.id))
+    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .leftJoin(matches, eq(charges.matchId, matches.id))
+    .where(
+      and(
+        eq(invoices.status, "draft"),
+        eq(invoices.period, period),
+        isNull(invoices.reversalOfInvoiceId)
+      )
+    );
 }
 
 /**
