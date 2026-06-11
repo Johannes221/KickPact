@@ -2,7 +2,12 @@ import Link from "next/link";
 import { Trophy, Medal, ArrowUp, ArrowDown, StickyNote } from "lucide-react";
 import { TriggerIcon } from "@/components/shared/trigger-icon";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
-import { listMatchesForTeam, getMatchChargesSummaryForTeam } from "@/lib/db/queries/matches";
+import {
+  listMatchesForTeam,
+  getMatchChargesSummaryForTeam,
+  getPreviousSeasonDisplay,
+  type PreviousSeasonDisplay
+} from "@/lib/db/queries/matches";
 import { listClubSeasonPledges } from "@/lib/db/queries/club-dashboard";
 import { computeTeamSeasonStats } from "@/lib/db/queries/team-dashboard";
 import {
@@ -46,12 +51,16 @@ export default async function TeamDetailPage({
     );
   }
 
-  const [matchRows, chargesSummary, seasonResult, seasonPledges] = await Promise.all([
-    listMatchesForTeam(team.id, 30),
-    getMatchChargesSummaryForTeam(team.id),
-    getSeasonResultForTeam(team.id, team.saison).then((r) => r ?? null),
-    listClubSeasonPledges(club.id).then((rows) => rows.filter((r) => r.teamId === team.id))
-  ]);
+  const [matchRows, chargesSummary, seasonResult, seasonPledges, previousSeason] =
+    await Promise.all([
+      listMatchesForTeam(team.id, 30),
+      getMatchChargesSummaryForTeam(team.id),
+      getSeasonResultForTeam(team.id, team.saison).then((r) => r ?? null),
+      listClubSeasonPledges(club.id).then((rows) => rows.filter((r) => r.teamId === team.id)),
+      // „Letzte Saison"-Block: nur befüllt, solange die aktuelle Saison < 3
+      // gespielte Spiele hat UND Vorsaison-Historie (Backfill) existiert.
+      getPreviousSeasonDisplay(team.id)
+    ]);
 
   // Saison-Stats aus echten Matches berechnen
   const { games, wins, draws, losses, goalsFor, goalsAgainst } =
@@ -345,7 +354,98 @@ export default async function TeamDetailPage({
           </ul>
         )}
       </section>
+
+      {/* Letzte Saison: Bilanz + letzte Ergebnisse der Vorsaison — nur solange
+          die aktuelle Saison noch (fast) leer ist. Klar als Vorsaison
+          beschriftet, damit es nicht wie aktuelle Spiele aussieht. */}
+      {previousSeason && (
+        <PreviousSeasonSection data={previousSeason} teamNames={teamNames} />
+      )}
     </div>
+  );
+}
+
+function PreviousSeasonSection({
+  data,
+  teamNames
+}: {
+  data: PreviousSeasonDisplay;
+  teamNames: string[];
+}) {
+  const { record } = data;
+  return (
+    <section aria-label={`Letzte Saison ${data.prevSaisonLabel}`}>
+      <div className="flex items-baseline justify-between gap-3 mb-3">
+        <h3 className="font-display font-bold text-xl tracking-tight text-brand-night-navy">
+          Letzte Saison ({data.prevSaisonLabel})
+        </h3>
+        <span className="text-xs text-brand-night-navy/50">
+          {record.spiele} Spiel{record.spiele === 1 ? "" : "e"}
+        </span>
+      </div>
+
+      {/* Bilanz-Zeile im Stil der Saison-Stats-Kacheln */}
+      <div className="grid grid-cols-3 gap-3 mb-3">
+        {[
+          { label: "Bilanz (S/U/N)", value: `${record.siege}/${record.unentschieden}/${record.niederlagen}` },
+          { label: "Tore", value: `${record.torePlus}:${record.toreMinus}` },
+          { label: "Spiele", value: record.spiele }
+        ].map((s) => (
+          <div key={s.label} className="rounded-xl bg-white shadow-ios-card p-3">
+            <div className="text-[0.65rem] uppercase tracking-widest font-semibold text-brand-night-navy/50">
+              {s.label}
+            </div>
+            <div className="font-display font-bold text-xl tracking-tight mt-1 text-brand-night-navy">
+              {s.value}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Letzte Ergebnisse — bewusst KEINE Links: historische Spiele haben
+          weder Events noch Sponsor-Beiträge, eine Detailseite bietet nichts. */}
+      <ul className="space-y-2">
+        {data.recentMatches.map((m) => {
+          const isHeim = detectTeamSide(teamNames, m.heimName) === "heim";
+          const gF = isHeim ? (m.ergebnisHeim ?? null) : (m.ergebnisGast ?? null);
+          const gA = isHeim ? (m.ergebnisGast ?? null) : (m.ergebnisHeim ?? null);
+          const resultColor =
+            gF === null
+              ? "border-brand-neutral/40"
+              : gF > (gA ?? 0)
+                ? "border-emerald-200"
+                : gF < (gA ?? 0)
+                  ? "border-rose-200"
+                  : "border-amber-200";
+          return (
+            <li
+              key={m.id}
+              className={`rounded-lg border bg-white p-3 md:p-4 ${resultColor}`}
+            >
+              <div className="hidden sm:block text-xs text-brand-night-navy/50 mb-1">
+                {m.datum.toLocaleDateString("de-DE", {
+                  weekday: "short",
+                  day: "2-digit",
+                  month: "short",
+                  year: "2-digit"
+                })}
+              </div>
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm font-semibold text-brand-night-navy">
+                <span className="min-w-0 truncate text-right" title={m.heimName}>
+                  {abbreviateTeamName(m.heimName)}
+                </span>
+                <span className="font-mono tabular-nums text-brand-night-navy/70 whitespace-nowrap">
+                  {m.ergebnisHeim ?? "—"}:{m.ergebnisGast ?? "—"}
+                </span>
+                <span className="min-w-0 truncate text-left" title={m.gastName}>
+                  {abbreviateTeamName(m.gastName)}
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

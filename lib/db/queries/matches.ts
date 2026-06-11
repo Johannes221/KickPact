@@ -1,4 +1,4 @@
-import { and, eq, ne, desc, gte, sql } from "drizzle-orm";
+import { and, eq, ne, desc, gte, lt, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { matches, matchEvents, teams, clubs, players } from "@/lib/db/schema";
 import {
@@ -72,6 +72,170 @@ export async function listMatchesForTeam(teamId: string, limit = 20) {
     .where(and(...conditions))
     .orderBy(desc(matches.datum))
     .limit(limit);
+}
+
+/**
+ * Datums-Fenster der VORSAISON einer Mannschaft: [1. Juli Vorjahr, 1. Juli
+ * Saisonstartjahr). Leitet sich rein aus `teams.saison` ab — die Historie
+ * liegt nach dem Saison-Bump (Phase-3-Architektur) auf derselben Team-Row
+ * und wird über dieses Fenster selektiert.
+ */
+function previousSeasonWindow(saison: string): { from: Date; to: Date } | null {
+  const start = saisonStartDate(saison);
+  if (!start) return null;
+  return {
+    from: new Date(start.getFullYear() - 1, 6, 1),
+    to: start
+  };
+}
+
+/**
+ * Vorsaison-Code einer Team-Saison: "2627" → "2526".
+ * TODO(nach Merge von Paket R): auf `prevSaisonCode` aus lib/utils/saison.ts
+ * umstellen (Paket R extrahiert die Saison-Code-Helfer dorthin).
+ */
+function prevSaisonOf(saison: string): string | null {
+  const m = saison.match(/^(\d{2})(\d{2})$/);
+  if (!m) return null;
+  const startYear = parseInt(m[1], 10);
+  if (startYear === 0) return null;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(startYear - 1)}${pad(startYear)}`;
+}
+
+/**
+ * GESPIELTE Spiele der VORSAISON einer Mannschaft (Backfill-Historie auf
+ * derselben Team-Row), neueste zuerst. Quelle für den „Letzte Saison"-Block
+ * auf Team-Dashboard und öffentlichem Profil.
+ */
+export async function listPreviousSeasonMatches(teamId: string, limit = 50) {
+  const [t] = await db
+    .select({ saison: teams.saison })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  if (!t) return [];
+  const window = previousSeasonWindow(t.saison);
+  if (!window) return [];
+
+  return db
+    .select()
+    .from(matches)
+    .where(
+      and(
+        eq(matches.teamId, teamId),
+        eq(matches.status, "finished"),
+        gte(matches.datum, window.from),
+        lt(matches.datum, window.to)
+      )
+    )
+    .orderBy(desc(matches.datum))
+    .limit(limit);
+}
+
+export interface PreviousSeasonRecord {
+  spiele: number;
+  siege: number;
+  unentschieden: number;
+  niederlagen: number;
+  torePlus: number;
+  toreMinus: number;
+}
+
+/**
+ * S/U/N-Bilanz + Tore der Vorsaison. Heim/Auswärts wird — wie in
+ * computeTeamSeasonStats/evaluate-match — über `detectTeamSide` mit Team- UND
+ * Vereinsnamen-Tokens bestimmt. `null`, wenn das Team nicht existiert oder
+ * keine Vorsaison-Spiele mit Ergebnis vorliegen.
+ */
+export async function getPreviousSeasonRecord(
+  teamId: string
+): Promise<PreviousSeasonRecord | null> {
+  const [team] = await db
+    .select({ name: teams.name, clubName: clubs.name })
+    .from(teams)
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  if (!team) return null;
+
+  const rows = await listPreviousSeasonMatches(teamId, 100);
+  const withResult = rows.filter(
+    (m) => m.ergebnisHeim !== null && m.ergebnisGast !== null
+  );
+  if (withResult.length === 0) return null;
+
+  const names = [team.name, team.clubName];
+  const record: PreviousSeasonRecord = {
+    spiele: withResult.length,
+    siege: 0,
+    unentschieden: 0,
+    niederlagen: 0,
+    torePlus: 0,
+    toreMinus: 0
+  };
+  for (const m of withResult) {
+    const isHeim = detectTeamSide(names, m.heimName) === "heim";
+    const gF = isHeim ? m.ergebnisHeim! : m.ergebnisGast!;
+    const gA = isHeim ? m.ergebnisGast! : m.ergebnisHeim!;
+    record.torePlus += gF;
+    record.toreMinus += gA;
+    if (gF > gA) record.siege++;
+    else if (gF < gA) record.niederlagen++;
+    else record.unentschieden++;
+  }
+  return record;
+}
+
+export interface PreviousSeasonDisplay {
+  /** Vorsaison-Code, z.B. "2526". */
+  prevSaison: string;
+  /** Lesbares Label, z.B. "25/26". */
+  prevSaisonLabel: string;
+  record: PreviousSeasonRecord;
+  /** Die letzten Spiele der Vorsaison (neueste zuerst). */
+  recentMatches: Awaited<ReturnType<typeof listPreviousSeasonMatches>>;
+}
+
+/**
+ * Komplettpaket für den „Letzte Saison"-Block. `null`, wenn der Block NICHT
+ * gezeigt werden soll:
+ *   - aktuelle Saison hat bereits >= 3 gespielte Spiele (dann trägt das
+ *     Dashboard sich selbst), oder
+ *   - es gibt keine Vorsaison-Spiele mit Ergebnis (nichts zu zeigen).
+ */
+export async function getPreviousSeasonDisplay(
+  teamId: string,
+  opts: { recentLimit?: number } = {}
+): Promise<PreviousSeasonDisplay | null> {
+  const [t] = await db
+    .select({ saison: teams.saison })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  if (!t) return null;
+
+  const currentFinished = await countFinishedMatchesSince(
+    teamId,
+    saisonStartDate(t.saison)
+  );
+  if (currentFinished >= 3) return null;
+
+  const prevSaison = prevSaisonOf(t.saison);
+  if (!prevSaison) return null;
+
+  const [record, recentMatches] = await Promise.all([
+    getPreviousSeasonRecord(teamId),
+    listPreviousSeasonMatches(teamId, opts.recentLimit ?? 5)
+  ]);
+  if (!record || recentMatches.length === 0) return null;
+
+  return {
+    prevSaison,
+    prevSaisonLabel: `${prevSaison.slice(0, 2)}/${prevSaison.slice(2)}`,
+    record,
+    recentMatches
+  };
 }
 
 /** Parse fussball.de "DD.MM.YYYY" (oder 2-stelliges Jahr) in einen UTC-Date. */
