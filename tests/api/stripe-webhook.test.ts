@@ -257,3 +257,48 @@ describe("stripe webhook — invoice.paid Guard (A4)", () => {
     expect(setStatusByCustomerMock).not.toHaveBeenCalled();
   });
 });
+
+describe("stripe webhook — invoice.payment_failed authoritative (Review-Befund)", () => {
+  function paymentFailedEvent(subId: string | null): Record<string, unknown> {
+    return {
+      id: "evt_pf",
+      type: "invoice.payment_failed",
+      data: {
+        object: {
+          id: "in_pf",
+          customer: "cus_1",
+          ...(subId
+            ? { parent: { subscription_details: { subscription: subId } } }
+            : {})
+        }
+      }
+    };
+  }
+
+  it("frische Subscription past_due → Status past_due", async () => {
+    constructEventMock.mockReturnValue(paymentFailedEvent("sub_1"));
+    subscriptionsRetrieveMock.mockResolvedValue({ ...BASE_SUB, status: "past_due" });
+
+    await POST(makeReq());
+
+    expect(setStatusByCustomerMock).toHaveBeenCalledWith("cus_1", "past_due");
+  });
+
+  it("stale payment_failed nach Kündigung → cancelled bleibt cancelled (kein Grace-Fenster)", async () => {
+    constructEventMock.mockReturnValue(paymentFailedEvent("sub_1"));
+    subscriptionsRetrieveMock.mockResolvedValue({ ...BASE_SUB, status: "canceled" });
+
+    await POST(makeReq());
+
+    expect(setStatusByCustomerMock).toHaveBeenCalledWith("cus_1", "cancelled");
+    expect(setStatusByCustomerMock).not.toHaveBeenCalledWith("cus_1", "past_due");
+  });
+
+  it("payment_failed ohne Subscription-Bezug → kein Status-Write", async () => {
+    constructEventMock.mockReturnValue(paymentFailedEvent(null));
+
+    await POST(makeReq());
+
+    expect(setStatusByCustomerMock).not.toHaveBeenCalled();
+  });
+});

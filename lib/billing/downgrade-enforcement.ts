@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, or } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   clubMemberships,
@@ -44,8 +44,18 @@ export async function enforceBasicDowngrade(
   let pausedPledges = 0;
   let deactivatedRules = 0;
 
+  // "Chargt noch": aktive Pledges UND Sommerpause-pausierte (Flag=true) —
+  // letztere bedienen weiterhin Spiele in ihrem Fenster (Phase-1-Semantik).
+  // Ein Downgrade im Juni muss auch sie deckeln (Review-Befund A7,
+  // 2026-06-11), sonst laufen Über-Cap-Charges bis 30.6. weiter und der
+  // Resume-Cron (1.8.) würde sie wieder aktivieren.
+  const stillCharging = or(
+    eq(pledges.status, "active"),
+    and(eq(pledges.status, "paused"), eq(pledges.sommerpausePaused, true))
+  );
+
   for (const team of clubTeams) {
-    // Aktive Pledges des Teams, deterministisch sortiert (älteste zuerst).
+    // Chargende Pledges des Teams, deterministisch sortiert (älteste zuerst).
     const activePledges = await db
       .select({
         id: pledges.id,
@@ -53,7 +63,7 @@ export async function enforceBasicDowngrade(
         createdAt: pledges.createdAt
       })
       .from(pledges)
-      .where(and(eq(pledges.teamId, team.id), eq(pledges.status, "active")))
+      .where(and(eq(pledges.teamId, team.id), stillCharging))
       .orderBy(asc(pledges.createdAt), asc(pledges.id));
 
     // Sponsoren nach ihrem frühesten Pledge ordnen — die ältesten bleiben.
@@ -71,12 +81,20 @@ export async function enforceBasicDowngrade(
         .map((p) => p.id);
       const paused = await db
         .update(pledges)
-        .set({ status: "paused", pausedAt: now })
+        .set({
+          status: "paused",
+          pausedAt: now,
+          // Flag löschen: Enforcement-Pausen darf der 1.8.-Resume-Cron
+          // NICHT wieder aufheben (der reaktiviert nur sommerpausePaused).
+          sommerpausePaused: false
+        })
         .where(
           and(
             inArray(pledges.id, pledgeIdsToPause),
-            // Idempotenz-Guard: nur aktive Pledges anfassen.
-            eq(pledges.status, "active")
+            // Idempotenz-Guard: nur noch-chargende Pledges anfassen —
+            // bereits enforcement-pausierte (Flag=false, pausedAt gesetzt)
+            // matchen nicht erneut.
+            stillCharging
           )
         )
         .returning({ id: pledges.id });
@@ -93,7 +111,7 @@ export async function enforceBasicDowngrade(
           and(
             eq(pledges.teamId, team.id),
             eq(pledges.sponsorId, sponsorId),
-            eq(pledges.status, "active"),
+            stillCharging,
             eq(pledgeRules.active, true),
             // Nur die aktuell gültige Regelversion zählt (H4-Semantik).
             isNull(pledgeRules.effectiveUntil)

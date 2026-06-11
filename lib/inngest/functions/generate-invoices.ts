@@ -336,6 +336,29 @@ export const generateInvoices = inngest.createFunction(
               )
               .limit(1);
             if (existing && existing.status === "draft") {
+              // Sicherheits-Guard (Review 2026-06-11): Recovery nur, wenn ALLE
+              // Charges der Gruppe bereits am Draft hängen. Sind seitdem neue
+              // Charges in derselben Periode confirmed worden (Manual-Run
+              // mitten im Monat), wären PDF/Total und invoiceItems inkonsistent
+              // — dann lieber skippen und loggen statt falsch fakturieren.
+              const groupChargeIds = group.items.map((i) => i.chargeId);
+              const linked = await db
+                .select({ id: charges.id })
+                .from(charges)
+                .where(
+                  and(
+                    inArray(charges.id, groupChargeIds),
+                    eq(charges.invoiceId, existing.id)
+                  )
+                );
+              if (linked.length !== groupChargeIds.length) {
+                console.warn("[generate-invoices] draft-recovery mismatch — skipping", {
+                  invoiceId: existing.id,
+                  linked: linked.length,
+                  group: groupChargeIds.length
+                });
+                return { skipped: true, reason: "draft-mismatch" } as const;
+              }
               invoiceRow = existing;
               recoveredDraft = true;
               // Der Re-Run hat eine neue Rechnungsnummer gezogen und die PDF

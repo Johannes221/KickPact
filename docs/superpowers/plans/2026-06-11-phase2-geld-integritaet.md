@@ -31,33 +31,33 @@
 ## Arbeitspakete
 
 ### Paket A — Stripe/Abo (Dateien: lib/actions/subscriptions.ts, app/api/stripe/webhook/route.ts, lib/db/queries/subscription-status.ts, lib/billing/season-pass.ts, lib/billing/plan-features.ts, lib/utils/base-url.ts NEU, lib/inngest/functions/expire-trials.ts)
-- [ ] A1: Plan-Wechsel via subscriptions.update statt Doppel-Checkout (Design 5) — Test: bestehendes Abo + Wechsel → kein checkout.sessions.create, stattdessen update mit neuer Price.
-- [ ] A2: payment_method_types raus (Design 6) — Test: create-Aufruf enthält den Key nicht.
-- [ ] A3: trial_end statt trial_period_days (Design 7) — Tests: Rest-Trial, abgelaufener Trial, kein Trial.
-- [ ] A4: Webhook-Marker nach Erfolg + authoritative Re-Fetch + invoice.paid-Guard (Design 4) — Tests: Handler-Fehler ⇒ Marker fehlt (Retry möglich); stale subscription.updated überschreibt nicht; invoice.paid auf gekündigte Sub reaktiviert nicht.
-- [ ] A5: past_due-Grace deterministisch — neue Spalte? NEIN: `pastDueSince`-Ableitung über Stripe-Status-Wechselzeitpunkt aus dem authoritative Fetch (`subscription.status==='past_due'` ⇒ beim Sync `pastDueSince` setzen, sonst nullen; Spalte existiert evtl. schon — prüfen, sonst Teil von Paket-B-Migration ABSTIMMEN: stattdessen ohne Schema: nutze Stripe `latest_invoice.due_date`… Implementierer entscheidet minimal-invasiv MIT Test).
-- [ ] A6: Saison-Pass keep_as_draft (Design 8) — Test auf Param.
-- [ ] A7: Basic-Downgrade-Enforcement (Design 9) — Tests: 7 Sponsoren → 2 neueste pausiert; Rules > 3 → effectiveUntil gesetzt; idempotent bei doppeltem Webhook.
-- [ ] A8: base-url-Helper + 3 Stellen (Design 14) — Test auf Fallback kickpact.com.
+- [x] A1: Plan-Wechsel via subscriptions.update statt Doppel-Checkout (Design 5) — Test: bestehendes Abo + Wechsel → kein checkout.sessions.create, stattdessen update mit neuer Price.
+- [x] A2: payment_method_types raus (Design 6) — Test: create-Aufruf enthält den Key nicht.
+- [x] A3: trial_end statt trial_period_days (Design 7) — Tests: Rest-Trial, abgelaufener Trial, kein Trial.
+- [x] A4: Webhook-Marker nach Erfolg + authoritative Re-Fetch + invoice.paid-Guard (Design 4) — Tests: Handler-Fehler ⇒ Marker fehlt (Retry möglich); stale subscription.updated überschreibt nicht; invoice.paid auf gekündigte Sub reaktiviert nicht.
+- [x] A5: past_due-Grace deterministisch — neue Spalte? NEIN: `pastDueSince`-Ableitung über Stripe-Status-Wechselzeitpunkt aus dem authoritative Fetch (`subscription.status==='past_due'` ⇒ beim Sync `pastDueSince` setzen, sonst nullen; Spalte existiert evtl. schon — prüfen, sonst Teil von Paket-B-Migration ABSTIMMEN: stattdessen ohne Schema: nutze Stripe `latest_invoice.due_date`… Implementierer entscheidet minimal-invasiv MIT Test).
+- [x] A6: Saison-Pass keep_as_draft (Design 8) — Test auf Param.
+- [x] A7: Basic-Downgrade-Enforcement (Design 9) — Tests: 7 Sponsoren → 2 neueste pausiert; Rules > 3 → effectiveUntil gesetzt; idempotent bei doppeltem Webhook.
+- [x] A8: base-url-Helper + 3 Stellen (Design 14) — Test auf Fallback kickpact.com.
 
 ### Paket B — Charge-Pipeline (Dateien: lib/inngest/functions/evaluate-match.ts, lib/inngest/functions/generate-invoices.ts, lib/actions/match-events.ts, lib/db/queries/evaluation.ts (nur Cap-Fenster), lib/invoicing/period.ts, lib/db/schema/charges.ts + Migration 0054)
-- [ ] B1: Cap-Anker Abrechnungsmonat (Design 1) — Tests: Mai-Spiel im Juni gescraped zählt in Juni-Fenster; 2 Mai-Spiele im Juni ⇒ Cap greift beim zweiten.
-- [ ] B2: results_only-Doppel-Charge (Design 2) — Tests beide Richtungen.
-- [ ] B3: Read-Only-Gate nur past_due/cancelled, paused chargt weiter (Design 3) — Tests.
-- [ ] B4: Approval-Row-Restauration: Charge-Insert mit requiresApproval+matchEventId stellt fehlende eventApprovals-Row her (Parität zu addManualEvent: expiresAt-Dauer übernehmen) — Test: Re-Eval nach Invalidate erzeugt Approval-Row.
-- [ ] B5: Cap-Check in addManualEvent in die tx (tx statt db) — Test: zwei Proposals desselben Events sehen einander.
-- [ ] B6: Rechnungsversand-Fehler nicht verschlucken: Mail-Step wirft (Inngest-Retry), invoiced-Status erst nach Mail-Erfolg — Tests mit gemocktem resend-Fail.
-- [ ] B7: goalTotal-Score-Deckel + keine Sofort-Proposals auf scheduled (Design 12) — Tests.
-- [ ] B8: Periode halb-offen (Design 13) — Test: Charge um 23:59:59.500 fällt in den Monat.
-- [ ] B9: Migration 0054 season-idx ohne cancelled (Design 15) — Test: cancelled-Saison-Charge blockiert Re-Emission nicht.
+- [x] B1: Cap-Anker Abrechnungsmonat (Design 1) — Tests: Mai-Spiel im Juni gescraped zählt in Juni-Fenster; 2 Mai-Spiele im Juni ⇒ Cap greift beim zweiten.
+- [x] B2: results_only-Doppel-Charge (Design 2) — Tests beide Richtungen.
+- [x] B3: Read-Only-Gate nur past_due/cancelled, paused chargt weiter (Design 3) — Tests.
+- [x] B4: Approval-Row-Restauration: Charge-Insert mit requiresApproval+matchEventId stellt fehlende eventApprovals-Row her (Parität zu addManualEvent: expiresAt-Dauer übernehmen) — Test: Re-Eval nach Invalidate erzeugt Approval-Row.
+- [x] B5: Cap-Check in addManualEvent in die tx (tx statt db) — Test: zwei Proposals desselben Events sehen einander.
+- [x] B6: Rechnungsversand-Fehler nicht verschlucken: Mail-Step wirft (Inngest-Retry), invoiced-Status erst nach Mail-Erfolg — Tests mit gemocktem resend-Fail.
+- [x] B7: goalTotal-Score-Deckel + keine Sofort-Proposals auf scheduled (Design 12) — Tests.
+- [x] B8: Periode halb-offen (Design 13) — Test: Charge um 23:59:59.500 fällt in den Monat.
+- [x] B9: Migration 0054 season-idx ohne cancelled (Design 15) — Test: cancelled-Saison-Charge blockiert Re-Emission nicht.
 
 ### Paket C — Trigger/Builder/Approvals (Dateien: lib/validations/pledge.ts, app/(sponsor)/sponsor/pledge/new/_actions/create-pledge.ts, lib/crawler/triggers.ts, lib/inngest/functions/evaluate-season.ts, lib/inngest/functions/lifecycle-cleanup.ts (Saison-Expiry), lib/actions/approvals.ts, lib/actions/season-charges.ts NEU, Sponsor-Inbox-UI, lib/actions/pledges.ts (MANUAL_TRIGGERS))
-- [ ] C1: Zod-Param-Validierung pro Trigger-Typ: goals_scored_min/goal_diff_min brauchen Schwellwert ≥1; goal_by_player braucht player_name; monthlyCapEur > 0 — UI-Fehler in Step der Regel + Server-Reject. Engine-Hardening: fehlender Schwellwert ⇒ Regel feuert NICHT (statt >=0).
-- [ ] C2: season_custom-Approval-Flow komplett (Design 10) — Tests: evaluate-season erzeugt pending; confirmSeasonCharge nur durch Sponsor; Expiry nach 21 Tagen.
-- [ ] C3: Hattrick/Comeback requiresApproval bei manueller Evidenz (Design 11) — Tests.
-- [ ] C4: confirmApproval-Row-Selektion: status-Filter pending_approval + ORDER BY createdAt DESC — Test mit cancelled+pending-Paar.
-- [ ] C5: Tote evaluateSeasonTriggers-Engine + zugehörige Tests entfernen (Verwechslungsgefahr; produktiv ist isTriggerHit).
-- [ ] C6: MANUAL_TRIGGERS-Duplikat konsolidieren (eine Quelle, z.B. lib/triggers/manual-triggers.ts, beide Importstellen).
+- [x] C1: Zod-Param-Validierung pro Trigger-Typ: goals_scored_min/goal_diff_min brauchen Schwellwert ≥1; goal_by_player braucht player_name; monthlyCapEur > 0 — UI-Fehler in Step der Regel + Server-Reject. Engine-Hardening: fehlender Schwellwert ⇒ Regel feuert NICHT (statt >=0).
+- [x] C2: season_custom-Approval-Flow komplett (Design 10) — Tests: evaluate-season erzeugt pending; confirmSeasonCharge nur durch Sponsor; Expiry nach 21 Tagen.
+- [x] C3: Hattrick/Comeback requiresApproval bei manueller Evidenz (Design 11) — Tests.
+- [x] C4: confirmApproval-Row-Selektion: status-Filter pending_approval + ORDER BY createdAt DESC — Test mit cancelled+pending-Paar.
+- [x] C5: Tote evaluateSeasonTriggers-Engine + zugehörige Tests entfernen (Verwechslungsgefahr; produktiv ist isTriggerHit).
+- [x] C6: MANUAL_TRIGGERS-Duplikat konsolidieren (eine Quelle, z.B. lib/triggers/manual-triggers.ts, beide Importstellen).
 
 ## Abschluss
-- [ ] Merge A+B+C, voller `npm test` + `npx tsc --noEmit`, adversarial-reviewer über Phasen-Diff, Fixes, Push auf main.
+- [x] Merge A+B+C (ein Branch, sequentiell statt parallele Worktrees), voller `npm test` (1096 passed) + `npx tsc --noEmit` (clean), Review über Phasen-Diff mit 5 gefixten Befunden (A6-Draft-Finalisierung beim Resume, A7-Sommerpause-Downgrade-Lücke, B6-Draft-Recovery-Guard, C1-Editor-Bypass, payment_failed-Ordering). Push auf main: ausstehend (Phase 6 / Abschluss).

@@ -28,6 +28,22 @@ export interface StripeSubscriptionPauseClient {
       }
     ): Promise<Stripe.Subscription | Pick<Stripe.Subscription, "id">>;
   };
+  /**
+   * Optional (Review-Befund A6, 2026-06-11): `keep_as_draft` hält während
+   * der Pause erzeugte Renewal-Invoices als Draft — Stripe finalisiert sie
+   * beim Resume NICHT automatisch. Ohne explizite Finalisierung bliebe die
+   * Sommer-Renewal unbezahlt liegen (das wäre derselbe Geldverlust wie bei
+   * `void`, nur recoverable). Der echte Stripe-Client erfüllt das Interface;
+   * Tests können es weglassen (dann wird das Finalisieren übersprungen).
+   */
+  invoices?: {
+    list(params: {
+      subscription: string;
+      status: "draft";
+      limit?: number;
+    }): Promise<{ data: Pick<Stripe.Invoice, "id">[] }>;
+    finalizeInvoice(id: string): Promise<Pick<Stripe.Invoice, "id">>;
+  };
 }
 
 import { nextAugustFirst } from "./season-pass-dates";
@@ -102,6 +118,22 @@ export async function resumeSeasonPassSubscriptions(
       await stripe.subscriptions.update(c.stripeSubscriptionId, {
         pause_collection: null
       });
+      // Review-Befund A6 (2026-06-11): während der Pause aufgelaufene
+      // keep_as_draft-Invoices explizit finalisieren — Stripe tut das beim
+      // Unpause nicht von selbst; die Sommer-Renewal bliebe sonst als
+      // Draft liegen und würde nie eingezogen.
+      if (stripe.invoices) {
+        const drafts = await stripe.invoices.list({
+          subscription: c.stripeSubscriptionId,
+          status: "draft",
+          limit: 100
+        });
+        for (const draft of drafts.data) {
+          if (draft.id) {
+            await stripe.invoices.finalizeInvoice(draft.id);
+          }
+        }
+      }
     }
     resumedClubIds.push(c.clubId);
   }

@@ -5,7 +5,7 @@ import { pledges, pledgeRules, sponsors } from "@/lib/db/schema";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
 import { requireUser } from "@/lib/auth/session";
 import { revalidatePath } from "next/cache";
-import { TRIGGER_TYPES, normalizeTriggerParams } from "@/lib/validations/pledge";
+import { TRIGGER_TYPES, normalizeTriggerParams, validateTriggerParams } from "@/lib/validations/pledge";
 import { getTeamLicensePlan, countPledgeRulesForSponsorOnTeam } from "@/lib/db/queries/pledges";
 import { getTeamDataCoverage } from "@/lib/db/queries/crawler";
 import { coverageAllowsTrigger } from "@/lib/triggers/coverage";
@@ -225,6 +225,10 @@ export async function updatePledgeRule(
     }
 
     if (input.params !== undefined) {
+      // C1 (Review 2026-06-11): Editor-Pfad validiert Pflicht-Params wie der
+      // Builder — sonst ließe sich z.B. der Schwellwert wieder leeren.
+      const paramError = validateTriggerParams(rule.triggerType, input.params);
+      if (paramError) return { error: paramError };
       patch.triggerParamsJson = normalizeTriggerParams(input.params);
     }
 
@@ -329,6 +333,12 @@ export async function addPledgeRule(
     if (!(TRIGGER_TYPES as readonly string[]).includes(input.triggerType)) {
       return { error: "Unbekannter Wett-Typ." };
     }
+
+    // C1 (Review 2026-06-11): Pflicht-Params auch im Editor-Pfad erzwingen —
+    // ohne Schwellwert/Spieler entstünde eine tote Regel (Engine-Hardening
+    // lässt sie nie feuern).
+    const paramError = validateTriggerParams(input.triggerType, input.params ?? {});
+    if (paramError) return { error: paramError };
 
     // Daten-Coverage-Gate (analog create-pledge): Spieler-Wetten nur bei `full`,
     // `none`-Mannschaften gar nicht. Bestehende Regeln bleiben (updatePledgeRule

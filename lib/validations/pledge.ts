@@ -96,50 +96,57 @@ export const pledgeRuleInputSchema = z
       });
     }
 
-    // Audit 2026-06-11 / C1: Pflicht-Params pro Trigger-Typ. Ohne Schwellwert
-    // feuerte goals_scored_min/goal_diff_min bei JEDEM Spiel (>= 0), ohne
-    // Spielernamen feuerte goal_by_player nie (toter Pact). Beide
-    // Schreibweisen lesen (Builder schreibt snake_case, Engine camelCase).
-    if (
-      val.triggerType === "goals_scored_min" ||
-      val.triggerType === "goal_diff_min"
-    ) {
-      const raw =
-        val.triggerType === "goals_scored_min"
-          ? (val.params.minGoals ?? val.params.min_goals)
-          : (val.params.minDiff ?? val.params.min_diff);
-      const threshold = typeof raw === "string" ? Number(raw) : raw;
-      if (
-        typeof threshold !== "number" ||
-        !Number.isFinite(threshold) ||
-        threshold < 1
-      ) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message:
-            val.triggerType === "goals_scored_min"
-              ? "Bitte Mindestanzahl Tore angeben (mindestens 1)."
-              : "Bitte Mindest-Tordifferenz angeben (mindestens 1).",
-          path: ["params"]
-        });
-      }
-    }
-    if (val.triggerType === "goal_by_player") {
-      const name = (val.params.playerName ?? val.params.player_name) as
-        | string
-        | undefined;
-      const id = (val.params.playerId ?? val.params.player_id) as
-        | string
-        | undefined;
-      if ((!name || !name.trim()) && (!id || !id.trim())) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Bitte einen Spieler auswählen oder Namen eingeben.",
-          path: ["params"]
-        });
-      }
+    // Audit 2026-06-11 / C1: Pflicht-Params pro Trigger-Typ (siehe
+    // validateTriggerParams) — Fehler erscheint im Builder-Step der Regel.
+    const paramError = validateTriggerParams(val.triggerType, val.params);
+    if (paramError) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: paramError,
+        path: ["params"]
+      });
     }
   });
+
+/**
+ * Audit 2026-06-11 / C1: Pflicht-Params pro Trigger-Typ. Ohne Schwellwert
+ * feuerte goals_scored_min/goal_diff_min bei JEDEM Spiel (>= 0), ohne
+ * Spielernamen feuerte goal_by_player nie (toter Pact). Beide Schreibweisen
+ * lesen (Builder schreibt snake_case, Engine camelCase). Wird vom Zod-Schema
+ * (Builder + createPledge) UND den Editor-Actions (addPledgeRule/
+ * updatePledgeRule in lib/actions/pledges.ts) benutzt — eine Quelle.
+ *
+ * @returns deutsche Fehlermeldung oder null wenn ok.
+ */
+export function validateTriggerParams(
+  triggerType: string,
+  params: Record<string, unknown>
+): string | null {
+  if (triggerType === "goals_scored_min" || triggerType === "goal_diff_min") {
+    const raw =
+      triggerType === "goals_scored_min"
+        ? (params.minGoals ?? params.min_goals)
+        : (params.minDiff ?? params.min_diff);
+    const threshold = typeof raw === "string" ? Number(raw) : raw;
+    if (
+      typeof threshold !== "number" ||
+      !Number.isFinite(threshold) ||
+      threshold < 1
+    ) {
+      return triggerType === "goals_scored_min"
+        ? "Bitte Mindestanzahl Tore angeben (mindestens 1)."
+        : "Bitte Mindest-Tordifferenz angeben (mindestens 1).";
+    }
+  }
+  if (triggerType === "goal_by_player") {
+    const name = (params.playerName ?? params.player_name) as string | undefined;
+    const id = (params.playerId ?? params.player_id) as string | undefined;
+    if ((!name || !name.trim()) && (!id || !id.trim())) {
+      return "Bitte einen Spieler auswählen oder Namen eingeben.";
+    }
+  }
+  return null;
+}
 
 export const pledgeInputSchema = z.object({
   invitationToken: z.string().min(1, "Einladungs-Token fehlt"),

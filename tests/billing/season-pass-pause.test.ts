@@ -15,7 +15,10 @@ import {
   isIntegrationDbDisabled,
   resetTestDb
 } from "../setup/integration-db";
-import { pauseSeasonPassSubscriptions } from "@/lib/billing/season-pass";
+import {
+  pauseSeasonPassSubscriptions,
+  resumeSeasonPassSubscriptions
+} from "@/lib/billing/season-pass";
 
 describe.skipIf(isIntegrationDbDisabled)("pauseSeasonPassSubscriptions (A6)", () => {
   beforeEach(async () => {
@@ -48,5 +51,36 @@ describe.skipIf(isIntegrationDbDisabled)("pauseSeasonPassSubscriptions (A6)", ()
     expect(update).toHaveBeenCalledWith("sub_sp", {
       pause_collection: { behavior: "keep_as_draft" }
     });
+  });
+
+  it("Resume finalisiert liegengebliebene Draft-Invoices (Review-Befund A6)", async () => {
+    const db = await getTestDb();
+    await db.insert(users).values({ id: "u_sp2", email: "sp2@example.com" });
+    await db.insert(clubs).values({ id: "c_sp2", slug: "sp2-fc", name: "SP2 FC" });
+    await db.insert(subscriptions).values({
+      clubId: "c_sp2",
+      stripeCustomerId: "cus_sp2",
+      stripeSubscriptionId: "sub_sp2",
+      status: "paused",
+      billingCycle: "season_end"
+    });
+
+    const update = vi.fn().mockResolvedValue({ id: "sub_sp2" });
+    const list = vi.fn().mockResolvedValue({ data: [{ id: "in_draft_1" }] });
+    const finalizeInvoice = vi.fn().mockResolvedValue({ id: "in_draft_1" });
+
+    const result = await resumeSeasonPassSubscriptions(
+      new Date("2026-08-01T02:00:00Z"),
+      { subscriptions: { update }, invoices: { list, finalizeInvoice } }
+    );
+
+    expect(result.resumed).toBe(1);
+    expect(update).toHaveBeenCalledWith("sub_sp2", { pause_collection: null });
+    expect(list).toHaveBeenCalledWith({
+      subscription: "sub_sp2",
+      status: "draft",
+      limit: 100
+    });
+    expect(finalizeInvoice).toHaveBeenCalledWith("in_draft_1");
   });
 });

@@ -185,6 +185,38 @@ describe.skipIf(isIntegrationDbDisabled)("enforceBasicDowngrade (A7)", () => {
     expect(resend.emails.send).not.toHaveBeenCalled();
   });
 
+  it("deckelt auch Sommerpause-pausierte Pledges (Juni-Downgrade, Review-Befund A7)", async () => {
+    const db = await getTestDb();
+    const { sponsorIds } = await seedClubWithSponsors({ sponsorCount: 6 });
+    // Sommerpause-Zustand: alle Pledges paused mit Flag (chargen weiter).
+    await db
+      .update(pledges)
+      .set({ status: "paused", sommerpausePaused: true });
+
+    const result = await enforceBasicDowngrade("c_dg");
+
+    expect(result.pausedPledges).toBe(1);
+    const rows = await db
+      .select({
+        sponsorId: pledges.sponsorId,
+        pausedAt: pledges.pausedAt,
+        sommerpausePaused: pledges.sommerpausePaused
+      })
+      .from(pledges)
+      .orderBy(asc(pledges.createdAt));
+    // Der neueste Sponsor ist enforcement-pausiert: pausedAt gesetzt UND
+    // Flag gelöscht — der 1.8.-Resume-Cron darf ihn nicht reaktivieren.
+    const enforced = rows[5];
+    expect(enforced.sponsorId).toBe(sponsorIds[5]);
+    expect(enforced.pausedAt).not.toBeNull();
+    expect(enforced.sommerpausePaused).toBe(false);
+    // Die 5 ältesten bleiben Sommerpause-pausiert (chargen weiter).
+    for (const row of rows.slice(0, 5)) {
+      expect(row.sommerpausePaused).toBe(true);
+      expect(row.pausedAt).toBeNull();
+    }
+  });
+
   it("informiert Club-Admins per Mail, wenn etwas pausiert wurde", async () => {
     await seedClubWithSponsors({ sponsorCount: 6 });
 

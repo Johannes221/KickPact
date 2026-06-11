@@ -190,7 +190,24 @@ export async function POST(req: NextRequest) {
         const customerId =
           typeof inv.customer === "string" ? inv.customer : inv.customer?.id;
         if (!customerId) break;
-        await setSubscriptionStatusByCustomer(customerId, "past_due");
+
+        // A4-Symmetrie (Review 2026-06-11): wie invoice.paid den frischen
+        // Stripe-Stand nehmen. Eine nachzüglerische payment_failed-Delivery
+        // nach customer.subscription.deleted setzte sonst cancelled →
+        // past_due zurück — und past_due hat 7 Tage Grace, in denen die
+        // Charge-Pipeline für den eigentlich gekündigten Club weiterläuft.
+        const failedSubId = extractInvoiceSubscriptionId(inv);
+        if (!failedSubId) {
+          console.info("[stripe-webhook] payment_failed without subscription — skipping", {
+            invoiceId: inv.id
+          });
+          break;
+        }
+        const failedFresh = await stripe.subscriptions.retrieve(failedSubId);
+        await setSubscriptionStatusByCustomer(
+          customerId,
+          mapStripeStatus(failedFresh.status)
+        );
         break;
       }
       case "customer.subscription.trial_will_end": {
