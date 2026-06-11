@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { chromium, type Page } from "playwright";
 import { fetch as undiciFetch } from "undici";
 import { parse as parseHtml, type HTMLElement } from "node-html-parser";
-import { saisonStartDate } from "@/lib/utils/saison";
+import { saisonStartDate, currentSaisonCode } from "@/lib/utils/saison";
 import { decodeObfuscatedScore } from "./score-font";
 import { isReadableName } from "@/lib/players/readable-name";
 import { isPlausibleLeague } from "@/lib/utils/league";
@@ -518,20 +518,6 @@ async function searchVereineRaw(suchbegriff: string): Promise<VereinHit[]> {
     });
   }
   return results;
-}
-
-/**
- * Leitet die aktuelle Saison aus dem Systemdatum ab.
- * Deutsche Amateur-Saisons laufen Aug → Jun:
- *   Mai 2026 → Saison 25/26 → "2526"
- *   Sep 2026 → Saison 26/27 → "2627"
- */
-function currentSaisonCode(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1; // 1-indexed
-  const startYear = month >= 7 ? year : year - 1;
-  return String(startYear).slice(-2) + String(startYear + 1).slice(-2);
 }
 
 /** Parst ein DD.MM.YYYY- oder DD.MM.YY-Datum zu einem Timestamp (ms) oder null. */
