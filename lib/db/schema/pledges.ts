@@ -72,6 +72,14 @@ export const pledges = pgTable(
      * so manually-paused pledges are never accidentally resumed.
      */
     sommerpausePaused: boolean("sommerpause_paused").notNull().default(false),
+    /**
+     * Zeitpunkt der letzten manuellen Pause durch den Sponsor (NULL = nicht
+     * manuell pausiert). Spiele mit datum < pausedAt werden weiter abgerechnet
+     * (analog H4c für ended) — eine Pause nach Abpfiff, vor dem Scrape, darf
+     * die Charge des bereits gespielten Spiels nicht unterdrücken.
+     * Sommerpause-Pausen setzen pausedAt NICHT (Erkennung via sommerpausePaused).
+     */
+    pausedAt: timestamp("paused_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({
