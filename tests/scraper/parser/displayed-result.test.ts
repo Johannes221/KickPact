@@ -87,6 +87,24 @@ describe("decodeObfuscatedScore", () => {
     });
   });
 
+  it("ignoriert verschachtelte Tags im Score-Span (icon-verified INNERHALB von .score-right)", async () => {
+    // Matchplan-Listen (ajax.team.matchplan) rendern das Verified-Icon IM
+    // Score-Span — die Bindestriche aus `class="icon-verified"` dürfen nicht
+    // als Score-Zeichen gelesen werden (Capture-Befund 2026-06-11: alle
+    // Vorsaison-Scores dekodierten zu null).
+    const root = parse(
+      '<div class="result"><span class="end-result">' +
+        '<span data-obfuscation="xzr9j2gg" class="score-left">&#xE65B;</span>' +
+        '<span class="colon">:</span>' +
+        '<span data-obfuscation="xzr9j2gg" class="score-right">&#xE65D;<span class="icon-verified"></span></span>' +
+        "</span></div>"
+    );
+    await expect(decodeObfuscatedScore(root, fixtureLoader)).resolves.toEqual({
+      heim: 2,
+      gast: 7
+    });
+  });
+
   it("null bei '-'-Platzhalter (Spiel ohne eingetragenes Ergebnis)", async () => {
     // 0xE656 → Glyphe "hyphen" im Fixture-Font.
     const root = parse(
