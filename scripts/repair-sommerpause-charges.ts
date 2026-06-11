@@ -97,7 +97,10 @@ async function main() {
     await inngest.send(
       batch.map((r) => ({
         name: "match/finished" as const,
-        data: { matchId: r.matchId, teamId: r.teamId }
+        // updated:true → notify-match-result überspringt das Event (kein
+        // wochenalter "Neues Spielergebnis"-Push); evaluate-match liest das
+        // Flag nicht und erzeugt die Charges trotzdem.
+        data: { matchId: r.matchId, teamId: r.teamId, updated: true }
       }))
     );
     console.log(`  ${Math.min(i + 50, candidates.length)}/${candidates.length}`);

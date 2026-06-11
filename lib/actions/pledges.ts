@@ -124,9 +124,13 @@ export async function setPledgeStatus(
     } else if (newStatus === "paused") {
       // pausedAt stempeln: Spiele VOR der Pause werden weiter abgerechnet
       // (siehe loadActivePledgeRulesForTeam), Spiele danach nicht.
+      // sommerpausePaused explizit clearen: eine MANUELLE Pause auf einem
+      // sommerpause-pausierten Pledge ist eine Sponsor-Entscheidung — der
+      // Resume-Cron (1.8.) darf sie nicht überschreiben und der Flag-Zweig
+      // der Evaluation darf pausedAt nicht aushebeln.
       await db
         .update(pledges)
-        .set({ status: "paused", pausedAt: new Date() })
+        .set({ status: "paused", pausedAt: new Date(), sommerpausePaused: false })
         .where(eq(pledges.id, pledgeId));
     } else {
       // Reaktivieren: ALLE Pause-Marker zurücksetzen. Bliebe sommerpausePaused

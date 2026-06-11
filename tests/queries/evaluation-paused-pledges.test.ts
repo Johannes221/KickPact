@@ -127,6 +127,26 @@ describe.skipIf(isIntegrationDbDisabled)(
       expect(rules).toHaveLength(0);
     });
 
+    it("respektiert pausedAt auch nach ended (Cron beendet manuell pausierten Pledge)", async () => {
+      // Review-Befund 1 (2026-06-11): Sponsor pausiert 1.5., endsAt läuft ab,
+      // end-pledges-Cron setzt ended → der ended-Zweig (H4c) darf Spiele NACH
+      // pausedAt trotzdem nicht abrechnen (z.B. via Re-Scrape/Repair-Script).
+      const teamId = await seedTeamWithPledge({
+        status: "ended",
+        pausedAt: new Date("2026-05-01T10:00:00Z")
+      });
+      const after = await loadActivePledgeRulesForTeam(
+        teamId,
+        new Date("2026-05-15T15:00:00Z")
+      );
+      expect(after).toHaveLength(0);
+      const before = await loadActivePledgeRulesForTeam(
+        teamId,
+        new Date("2026-04-20T15:00:00Z")
+      );
+      expect(before).toHaveLength(1);
+    });
+
     it("liefert KEINE Rules für Alt-Pausen ohne Marker (paused, kein Flag, kein pausedAt)", async () => {
       // Defensive: paused-Rows aus der Zeit vor pausedAt — ohne Marker können
       // wir den Pausen-Zeitpunkt nicht kennen → konservativ nicht abrechnen.

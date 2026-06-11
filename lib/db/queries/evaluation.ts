@@ -44,9 +44,13 @@ export async function loadActivePledgeRulesForTeam(
         // pauschal ausgeschlossen —
         //  - Sommerpause-Pausen (sommerpausePaused=true, Cron 1.6.) bedienen
         //    weiterhin alle Spiele im Pledge-Fenster: der Crawler sammelt bis
-        //    15.6. legitime Saison-Spiele (Relegation, Nachholspiele) ein, und
-        //    das Fenster endet ohnehin am 30.6. Sonst verlieren Vereine still
-        //    jede Juni-Charge (Hash unverändert → nie re-evaluiert).
+        //    15.6. legitime Saison-Spiele (Relegation, Nachholspiele) ein.
+        //    Sonst verlieren Vereine still jede Juni-Charge (Hash unverändert
+        //    → nie re-evaluiert). Standard-Pledges enden am 30.6.; bei
+        //    Mehrjahres-Pledges deckt das Fenster theoretisch auch Juli-Spiele
+        //    ab — die würde der active-Zweig nach dem 1.8.-Resume aber ohnehin
+        //    fenster-basiert abrechnen (asOf = Spieldatum), der Zweig ändert
+        //    also nur das Wann, nicht das Ob.
         //  - Manuelle Pausen bedienen Spiele VOR dem Pausen-Zeitpunkt
         //    (pausedAt), analog H4c: eine Pause nach Abpfiff, vor dem Scrape,
         //    darf die Charge des gespielten Spiels nicht unterdrücken.
@@ -61,6 +65,19 @@ export async function loadActivePledgeRulesForTeam(
               sql`${pledges.pausedAt} IS NOT NULL AND ${pledges.pausedAt} > ${asOf.toISOString()}`
             )
           )
+        ),
+        // REVIEW-BEFUND 1 (2026-06-11): pausedAt gilt STATUSUNABHÄNGIG. Wird
+        // ein manuell pausierter Pledge später beendet (täglicher end-pledges-
+        // Cron oder "Pact beenden"-Klick), darf der ended-Zweig (H4c) die vom
+        // Sponsor bewusst weggepausten Spiele (datum >= pausedAt) nicht
+        // nachträglich abrechenbar machen — Re-Evaluationen passieren real
+        // (Score-Korrekturen, manuelle Events, Repair-Scripts). Reaktivierung
+        // cleart pausedAt, aktive Pledges haben hier also immer NULL; der
+        // Sommerpause-Fall bedient via Flag weiterhin das ganze Fenster.
+        or(
+          sql`${pledges.pausedAt} IS NULL`,
+          sql`${pledges.pausedAt} > ${asOf.toISOString()}`,
+          eq(pledges.sommerpausePaused, true)
         ),
         // SECURITY (H4b): Alt-Style-Soft-Deletes (active=false OHNE effectiveUntil,
         // Migration 0040) feuern nicht. Neu gelöschte Regeln (active=false MIT
