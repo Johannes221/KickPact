@@ -34,6 +34,7 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { addManualEvent } from "@/lib/actions/match-events";
+import { SPECIAL_GOAL_SUBTYPES } from "@/lib/triggers/special-goals";
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -46,19 +47,13 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const SPEZIAL_SUBTYPES = [
-  { value: "kopfball", label: "Kopfballtor" },
-  { value: "hackentor", label: "Hackentor" },
-  { value: "volley", label: "Volley" },
-  { value: "fernschuss", label: "Fernschuss" },
-  { value: "elfmeter", label: "Elfmeter" },
-  { value: "freistoss", label: "Freistoß" },
-  { value: "eckentor", label: "Eckentor (direkt)" },
-  { value: "tor_mittellinie", label: "Tor hinter Mittellinie" },
-  { value: "assist", label: "Vorlage (Assist)" },
-  { value: "man_of_match", label: "Spieler des Spiels" },
-  { value: "sonstiges", label: "Sonstiges Spezialtor (Kommentar)" }
-];
+// B3 (Audit 2026-06-11): aus der single source of truth gespiegelt — nur diese
+// Subtypen können von Sponsor-Pacts gematcht werden (Server validiert identisch).
+const SPEZIAL_SUBTYPES = SPECIAL_GOAL_SUBTYPES.map((s) => ({
+  value: s.value,
+  label: s.label
+}));
+const DEFAULT_SPEZIAL_SUBTYPE = SPEZIAL_SUBTYPES[0].value;
 
 const KARTE_SUBTYPES = [
   { value: "gelb", label: "Gelbe Karte" },
@@ -74,7 +69,7 @@ export function ManualEventEditor({ matchId }: { matchId: string }) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       type: "spezial",
-      subtype: "kopfball",
+      subtype: DEFAULT_SPEZIAL_SUBTYPE,
       minute: 0,
       side: "heim",
       playerName: ""
@@ -94,6 +89,10 @@ export function ManualEventEditor({ matchId }: { matchId: string }) {
           side: values.side,
           playerName: values.playerName || undefined
         });
+        if (!res.ok) {
+          toast.error(res.message);
+          return;
+        }
         const chargesInfo =
           res.charges > 0
             ? `· ${res.charges} Charge${res.charges === 1 ? "" : "s"} erzeugt`
@@ -127,7 +126,7 @@ export function ManualEventEditor({ matchId }: { matchId: string }) {
           </DialogTitle>
           <DialogDescription>
             Kopfballtor, Karte oder anderes Spezial-Event nachpflegen. Sponsoren mit
-            passendem Pledge müssen bestätigen.
+            passendem Pact müssen bestätigen.
           </DialogDescription>
         </DialogHeader>
 
@@ -144,7 +143,7 @@ export function ManualEventEditor({ matchId }: { matchId: string }) {
                     onValueChange={(v) => {
                       field.onChange(v);
                       // Subtype-Default für neuen Type
-                      if (v === "spezial") form.setValue("subtype", "kopfball");
+                      if (v === "spezial") form.setValue("subtype", DEFAULT_SPEZIAL_SUBTYPE);
                       else if (v === "karte") form.setValue("subtype", "gelb");
                       else form.setValue("subtype", "");
                     }}
@@ -156,7 +155,7 @@ export function ManualEventEditor({ matchId }: { matchId: string }) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="spezial">🎭 Spezial (Kopfball, Volley, …)</SelectItem>
+                      <SelectItem value="spezial">🎭 Spezial (Kopfball, Hackentor, …)</SelectItem>
                       <SelectItem value="karte">🟨🟥 Karte</SelectItem>
                       <SelectItem value="tor">⚽ Reguläres Tor (falls vergessen)</SelectItem>
                     </SelectContent>

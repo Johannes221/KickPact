@@ -43,6 +43,12 @@ import {
 } from "../setup/integration-db";
 import { addManualEvent } from "@/lib/actions/match-events";
 
+/** B3-Folge: addManualEvent liefert jetzt eine {ok}-Union — hier narrowen. */
+function expectOk(r: Awaited<ReturnType<typeof addManualEvent>>) {
+  if (!r.ok) throw new Error(`addManualEvent unerwartet abgelehnt: ${r.message}`);
+  return r;
+}
+
 interface SeedResult {
   teamId: string;
   pledgeId: string;
@@ -164,13 +170,13 @@ describe.skipIf(isIntegrationDbDisabled)("addManualEvent Geld-Integrität", () =
       }
     ]);
 
-    const result = await addManualEvent({
+    const result = expectOk(await addManualEvent({
       matchId: seeded.matchId,
       minute: 12,
       type: "tor",
       side: "heim",
       playerName: "Max Müller"
-    });
+    }));
 
     expect(result.charges).toBe(0);
     const all = await db.select().from(charges);
@@ -181,13 +187,13 @@ describe.skipIf(isIntegrationDbDisabled)("addManualEvent Geld-Integrität", () =
     const db = await getTestDb();
     const seeded = await seedBase({ score: [2, 0] });
 
-    const result = await addManualEvent({
+    const result = expectOk(await addManualEvent({
       matchId: seeded.matchId,
       minute: 12,
       type: "tor",
       side: "heim",
       playerName: "Max Müller"
-    });
+    }));
 
     expect(result.charges).toBe(1);
     const all = await db.select().from(charges);
@@ -210,13 +216,13 @@ describe.skipIf(isIntegrationDbDisabled)("addManualEvent Geld-Integrität", () =
       confirmedAt: new Date()
     });
 
-    const result = await addManualEvent({
+    const result = expectOk(await addManualEvent({
       matchId: seeded.matchId,
       minute: 12,
       type: "tor",
       side: "heim",
       playerName: "Max Müller"
-    });
+    }));
 
     // goal_total unterdrückt, goal_by_player feuert.
     expect(result.charges).toBe(1);
@@ -234,13 +240,13 @@ describe.skipIf(isIntegrationDbDisabled)("addManualEvent Geld-Integrität", () =
       extraPlayerRule: "Max Müller"
     });
 
-    const result = await addManualEvent({
+    const result = expectOk(await addManualEvent({
       matchId: seeded.matchId,
       minute: 12,
       type: "tor",
       side: "heim",
       playerName: "Max Müller"
-    });
+    }));
 
     expect(result.charges).toBe(1);
     const all = await db.select().from(charges);
@@ -251,13 +257,13 @@ describe.skipIf(isIntegrationDbDisabled)("addManualEvent Geld-Integrität", () =
     const db = await getTestDb();
     const seeded = await seedBase({ matchStatus: "scheduled" });
 
-    const result = await addManualEvent({
+    const result = expectOk(await addManualEvent({
       matchId: seeded.matchId,
       minute: 12,
       type: "tor",
       side: "heim",
       playerName: "Max Müller"
-    });
+    }));
 
     expect(result.charges).toBe(0);
     expect(await db.select().from(charges)).toHaveLength(0);
