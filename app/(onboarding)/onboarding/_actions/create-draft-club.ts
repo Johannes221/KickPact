@@ -14,7 +14,7 @@ import {
   persistDraftClubAndTeams
 } from "@/lib/db/queries/onboarding-create";
 import { inngest } from "@/lib/inngest/client";
-import { TRIAL_DAYS } from "@/lib/stripe/pricing";
+import { computeTrialEndsAt } from "@/lib/billing/trial";
 
 // SECURITY (M2): Die fussball.de-Identifier werden serverseitig in Fetch-URL-
 // Pfade des Crawlers interpoliert (lib/crawler/fussballde.ts). Ohne Charset-
@@ -144,8 +144,9 @@ export async function createDraftClub(input: CreateDraftInput): Promise<CreateDr
   const consumed = await findConsumedTrialKeys(trialKeys);
   const trialEligible = consumed.length === 0;
 
-  const trialEnd = new Date();
-  trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
+  // Phase 3 / R5: Trial = max(now+30d, Saisonstart+30d) — Sommer-Onboardings
+  // bekommen 30 Tage IN der Saison statt 30 Tage Sommerpause.
+  const trialEnd = await computeTrialEndsAt(new Date());
 
   const result = await persistDraftClubAndTeams({
     userId: user.id,
