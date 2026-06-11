@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Zap, Handshake, Trophy, ShieldCheck, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -209,6 +209,48 @@ export function PledgeBuilder({
     });
   }
 
+  /**
+   * A2 (Audit 2026-06-11): Stiller Submit-Fail in Step 4. Validierungsfehler
+   * hängen oft an Feldern, deren Step gerade nicht gerendert ist (z.B. fehlender
+   * Spieler in Step 3) — `handleSubmit` tat dann sichtbar nichts. Der
+   * onInvalid-Handler zeigt den ersten konkreten Fehler als Toast und springt
+   * automatisch zum Step des fehlerhaften Felds.
+   */
+  function onInvalid(errors: FieldErrors<PledgeInput>) {
+    // 1) Fehler an einer konkreten Regel → Step 3 (Beträge/Parameter).
+    const rules = form.getValues("rules");
+    const ruleFields = ["amountEur", "capEur", "capPeriod", "params"] as const;
+    for (let i = 0; i < rules.length; i++) {
+      for (const key of ruleFields) {
+        const { error } = form.getFieldState(`rules.${i}.${key}`);
+        if (error?.message) {
+          const def = defForRule(rules[i]);
+          toast.error(def ? `${def.label}: ${error.message}` : error.message);
+          setStep(3);
+          return;
+        }
+      }
+    }
+    // 2) Root-Fehler am rules-Array (keine Regel gewählt) → Step 2 (Auswahl).
+    if (errors.rules) {
+      const rootMessage = errors.rules.message ?? errors.rules.root?.message;
+      toast.error(rootMessage ?? "Bitte wähle mindestens ein Ereignis aus.");
+      setStep(2);
+      return;
+    }
+    // 3) Step-4-Felder (Monats-Cap etc.) → bleiben/zurück auf Step 4.
+    if (errors.monthlyCapEur?.message) {
+      toast.error(errors.monthlyCapEur.message);
+      setStep(4);
+      return;
+    }
+    if (errors.invitationToken?.message) {
+      toast.error(errors.invitationToken.message);
+      return;
+    }
+    toast.error("Bitte prüfe deine Eingaben.");
+  }
+
   const watchedRules = form.watch("rules");
   const watchedMonthly = form.watch("monthlyCapEur");
   const worstCasePerSaison = estimateWorstCase(watchedRules);
@@ -224,7 +266,7 @@ export function PledgeBuilder({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-8">
         <StepIndicator currentStep={step} />
 
         {/* ── Step 1: Erklärung ── */}
