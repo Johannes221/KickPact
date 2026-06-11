@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   gateFromSubscription,
+  isCrawlBlockedByGate,
+  isChargeBlockedByGate,
   GRACE_PERIOD_DAYS,
   type SubscriptionRowForGate
 } from "@/lib/db/queries/subscription-status";
@@ -142,5 +144,96 @@ describe("gateFromSubscription", () => {
     );
     expect(gate.isReadOnly).toBe(false);
     expect(gate.daysUntilReadOnly).toBe(GRACE_PERIOD_DAYS - 3);
+  });
+
+  // --- Phase 3 / R6: trial_expired-Reason (abgelaufener, nie bezahlter Trial) ---
+
+  it("cancelled ohne stripeSubscriptionId → reason trial_expired (Trial nie bezahlt)", () => {
+    const gate = gateFromSubscription(
+      row({ status: "cancelled", stripeSubscriptionId: null, trialEndsAt: daysAgo(5) }),
+      NOW
+    );
+    expect(gate.status).toBe("cancelled");
+    expect(gate.isReadOnly).toBe(true);
+    expect(gate.reason).toBe("trial_expired");
+  });
+
+  it("cancelled MIT stripeSubscriptionId → reason null (echte Kündigung)", () => {
+    const gate = gateFromSubscription(
+      row({ status: "cancelled", stripeSubscriptionId: "sub_123" }),
+      NOW
+    );
+    expect(gate.reason).toBeNull();
+  });
+
+  it("trialing mit abgelaufenem trialEndsAt + nie bezahlt → reason trial_expired, aber nicht read-only", () => {
+    // Fenster zwischen Trial-Ablauf und dem täglichen expire-trials-Cron:
+    // Status steht noch auf trialing, lizenziert ist der Verein nicht mehr.
+    const gate = gateFromSubscription(
+      row({
+        status: "trialing",
+        trialEndsAt: daysAgo(1),
+        stripeSubscriptionId: null
+      }),
+      NOW
+    );
+    expect(gate.isReadOnly).toBe(false);
+    expect(gate.reason).toBe("trial_expired");
+  });
+
+  it("trialing mit laufendem Trial → reason null", () => {
+    const gate = gateFromSubscription(
+      row({
+        status: "trialing",
+        trialEndsAt: new Date(NOW.getTime() + 24 * 60 * 60 * 1000),
+        stripeSubscriptionId: null
+      }),
+      NOW
+    );
+    expect(gate.reason).toBeNull();
+  });
+
+  it("active → reason null", () => {
+    const gate = gateFromSubscription(row({ status: "active" }), NOW);
+    expect(gate.reason).toBeNull();
+  });
+});
+
+describe("isCrawlBlockedByGate / isChargeBlockedByGate", () => {
+  const trialExpiredGate = gateFromSubscription(
+    row({ status: "cancelled", stripeSubscriptionId: null, trialEndsAt: daysAgo(5) }),
+    NOW
+  );
+  const cancelledGate = gateFromSubscription(
+    row({ status: "cancelled", stripeSubscriptionId: "sub_x" }),
+    NOW
+  );
+  const pausedGate = gateFromSubscription(row({ status: "paused" }), NOW);
+  const activeGate = gateFromSubscription(row({ status: "active" }), NOW);
+  const pastDueGate = gateFromSubscription(
+    row({ status: "past_due", pastDueSince: daysAgo(GRACE_PERIOD_DAYS + 3) }),
+    NOW
+  );
+  const expiredTrialingGate = gateFromSubscription(
+    row({ status: "trialing", trialEndsAt: daysAgo(1), stripeSubscriptionId: null }),
+    NOW
+  );
+
+  it("Crawling: nur echt-cancelled wird geskippt — trial_expired/paused/past_due laufen weiter", () => {
+    expect(isCrawlBlockedByGate(cancelledGate)).toBe(true);
+    expect(isCrawlBlockedByGate(trialExpiredGate)).toBe(false);
+    expect(isCrawlBlockedByGate(pausedGate)).toBe(false);
+    expect(isCrawlBlockedByGate(pastDueGate)).toBe(false);
+    expect(isCrawlBlockedByGate(activeGate)).toBe(false);
+    expect(isCrawlBlockedByGate(expiredTrialingGate)).toBe(false);
+  });
+
+  it("Charges: past_due/cancelled UND abgelaufener Trial blocken, paused/active nicht", () => {
+    expect(isChargeBlockedByGate(cancelledGate)).toBe(true);
+    expect(isChargeBlockedByGate(trialExpiredGate)).toBe(true);
+    expect(isChargeBlockedByGate(pastDueGate)).toBe(true);
+    expect(isChargeBlockedByGate(expiredTrialingGate)).toBe(true);
+    expect(isChargeBlockedByGate(pausedGate)).toBe(false);
+    expect(isChargeBlockedByGate(activeGate)).toBe(false);
   });
 });

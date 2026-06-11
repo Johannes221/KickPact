@@ -24,7 +24,10 @@ import {
 import { classifyScrapedMatches } from "@/lib/crawler/coverage";
 import { invalidateChargesForMatch } from "@/lib/db/queries/charges";
 import { upsertScheduledMatch } from "@/lib/db/queries/matches";
-import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
+import {
+  getSubscriptionGate,
+  isCrawlBlockedByGate
+} from "@/lib/db/queries/subscription-status";
 import { isCrawlerSommerpause } from "@/lib/utils/sommerpause";
 
 export const crawlMatches = inngest.createFunction(
@@ -93,22 +96,20 @@ export const crawlMatches = inngest.createFunction(
       // Banner für die Dauer dieses Laufs (siehe lib/crawler/crawl-status.ts).
       await step.run(`crawl-start-${team.id}`, () => markCrawlStarted(team.id));
 
-      // Read-Only-Clubs überspringen — spart fussball.de-Calls für inaktive Vereine.
-      //
-      // Audit 2026-05-24 Phase 2 / Task 2.4: bewusst symmetrisch — wenn der
-      // Club read-only ist, läuft WEDER der initiale Crawl NOCH der
-      // Match-Update-Path. Damit kann ein Match-Update auf fussball.de
-      // (z.B. Korrektur eines Ergebnisses) keine alten Charges via
-      // invalidateChargesForMatch wegputzen, ohne dass die nachgelagerte
-      // evaluate-match-Pipeline neue Charges erzeugen würde (evaluate-match
-      // hat ein eigenes gate). Beim ersten Cron nach Reaktivierung läuft
-      // der Crawler komplett durch, Hash-Vergleich detected den Drift, und
-      // alles wird konsistent neu aufgebaut.
+      // Phase 3 / R6: NUR echt gekündigte Clubs (cancelled OHNE
+      // trial_expired-Reason) werden übersprungen. Abgelaufene Trials,
+      // paused (Sommerpause) und past_due crawlen weiter — die Daten fließen,
+      // die App bleibt lebendig und der Verein kann jederzeit konvertieren.
+      // Geld bleibt geschützt: evaluate-match hat sein eigenes Gate
+      // (isChargeBlockedByGate) und erzeugt für unlizenzierte Clubs keine
+      // Charges. Beim ersten Cron nach Reaktivierung eines cancelled-Clubs
+      // läuft der Crawler komplett durch, Hash-Vergleich detected den Drift,
+      // und alles wird konsistent neu aufgebaut.
       const gate = await step.run(`gate-${team.id}`, () =>
         getSubscriptionGate(team.clubId)
       );
-      if (gate.isReadOnly) {
-        logger.info("skipped because club is read-only", {
+      if (isCrawlBlockedByGate(gate)) {
+        logger.info("skipped because club is cancelled", {
           clubId: team.clubId,
           teamId: team.id
         });

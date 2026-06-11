@@ -17,6 +17,15 @@ export type SubscriptionGate = {
   daysUntilReadOnly: number | null;
   trialEndsAt: Date | null;
   pastDueSince: Date | null;
+  /**
+   * Phase 3 / R6: "trial_expired" = der Trial ist abgelaufen und es wurde NIE
+   * eine Stripe-Subscription gestartet (unlizenzierter Verein). Gesetzt sowohl
+   * für status=cancelled (expire-trials-Cron lief schon) als auch für
+   * status=trialing mit trialEndsAt in der Vergangenheit (Cron lief noch
+   * nicht). Crawling läuft für solche Clubs weiter (App bleibt lebendig,
+   * Conversion möglich), aber es entstehen keine neuen Charges.
+   */
+  reason: "trial_expired" | null;
 };
 
 /**
@@ -35,9 +44,21 @@ export type SubscriptionRowForGate = {
    * updatedAt-Proxy (mit dessen bekanntem Reset-Problem).
    */
   pastDueSince?: Date | null;
+  /**
+   * Phase 3 / R6: unterscheidet echte Kündigung (Stripe-Sub existierte) vom
+   * nie bezahlten, abgelaufenen Trial. Optional für ältere Aufrufer/Tests —
+   * dann wird kein trial_expired-Reason abgeleitet.
+   */
+  stripeSubscriptionId?: string | null;
 };
 
 export const GRACE_PERIOD_DAYS = 7;
+
+/** True, wenn der Trial abgelaufen ist und nie eine Stripe-Sub gestartet wurde. */
+function isTrialExpiredNeverPaid(sub: SubscriptionRowForGate, now: Date): boolean {
+  if (sub.stripeSubscriptionId) return false;
+  return !!sub.trialEndsAt && new Date(sub.trialEndsAt).getTime() < now.getTime();
+}
 
 /**
  * Pure-Function-Variante des Gates: erhält einen (gemockt-baren) Subscription-Row
@@ -57,17 +78,24 @@ export function gateFromSubscription(
       isReadOnly: false,
       daysUntilReadOnly: null,
       trialEndsAt: null,
-      pastDueSince: null
+      pastDueSince: null,
+      reason: null
     };
   }
 
   if (sub.status === "trialing" || sub.status === "active") {
+    // trialing mit abgelaufenem trialEndsAt + nie bezahlt: das Fenster zwischen
+    // Trial-Ablauf und dem täglichen expire-trials-Cron. isReadOnly bleibt
+    // false (UI-Verhalten unverändert), aber Geld-Pfade lesen den Reason.
+    const trialExpired =
+      sub.status === "trialing" && isTrialExpiredNeverPaid(sub, now);
     return {
       status: sub.status,
       isReadOnly: false,
       daysUntilReadOnly: null,
       trialEndsAt: sub.trialEndsAt ?? null,
-      pastDueSince: null
+      pastDueSince: null,
+      reason: trialExpired ? "trial_expired" : null
     };
   }
 
@@ -86,17 +114,22 @@ export function gateFromSubscription(
       isReadOnly,
       daysUntilReadOnly: isReadOnly ? null : GRACE_PERIOD_DAYS - daysOverdue,
       trialEndsAt: null,
-      pastDueSince: since ? new Date(since) : null
+      pastDueSince: since ? new Date(since) : null,
+      reason: null
     };
   }
 
   if (sub.status === "cancelled") {
+    // cancelled OHNE Stripe-Sub = expire-trials hat einen nie bezahlten Trial
+    // beendet (echte Kündigungen behalten ihre stripeSubscriptionId).
     return {
       status: "cancelled",
       isReadOnly: true,
       daysUntilReadOnly: null,
       trialEndsAt: null,
-      pastDueSince: null
+      pastDueSince: null,
+      reason:
+        !sub.stripeSubscriptionId && sub.trialEndsAt ? "trial_expired" : null
     };
   }
 
@@ -107,7 +140,8 @@ export function gateFromSubscription(
       isReadOnly: true,
       daysUntilReadOnly: null,
       trialEndsAt: null,
-      pastDueSince: null
+      pastDueSince: null,
+      reason: null
     };
   }
 
@@ -116,8 +150,43 @@ export function gateFromSubscription(
     isReadOnly: true,
     daysUntilReadOnly: null,
     trialEndsAt: null,
-    pastDueSince: null
+    pastDueSince: null,
+    reason: null
   };
+}
+
+/**
+ * Phase 3 / R6 — Crawl-Gate: NUR echt gekündigte Clubs werden nicht mehr
+ * gecrawlt. trial_expired (unlizenziert, aber konvertierbar), paused
+ * (Sommerpause) und past_due (Grace/Mahnlauf) crawlen weiter — die App
+ * bleibt lebendig, Charges blockt `isChargeBlockedByGate` separat.
+ */
+// Schmaler Strukturtyp: Inngest-step.run JSONifiziert Dates zu Strings —
+// die Gate-Entscheidungen brauchen nur die stabilen Felder.
+export type SubscriptionGateDecisionInput = Pick<
+  SubscriptionGate,
+  "status" | "isReadOnly" | "reason"
+>;
+
+export function isCrawlBlockedByGate(
+  gate: SubscriptionGateDecisionInput
+): boolean {
+  return gate.status === "cancelled" && gate.reason !== "trial_expired";
+}
+
+/**
+ * Phase 3 / R6 — Geld-Gate für evaluate-match: past_due (jenseits Grace) und
+ * cancelled blocken wie in Phase 2 (B3); ZUSÄTZLICH blockt ein abgelaufener,
+ * nie bezahlter Trial (auch wenn der Status noch trialing ist, weil der
+ * expire-trials-Cron noch nicht lief). paused chargt weiter (Saison bis 30.6.).
+ */
+export function isChargeBlockedByGate(
+  gate: SubscriptionGateDecisionInput
+): boolean {
+  if (gate.reason === "trial_expired") return true;
+  return (
+    gate.isReadOnly && (gate.status === "past_due" || gate.status === "cancelled")
+  );
 }
 
 /**

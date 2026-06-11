@@ -17,7 +17,10 @@ import {
   sumRuleChargedCents,
   ruleCapWindow
 } from "@/lib/db/queries/evaluation";
-import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
+import {
+  getSubscriptionGate,
+  isChargeBlockedByGate
+} from "@/lib/db/queries/subscription-status";
 import { isUniqueViolation } from "@/lib/db/errors";
 
 export const evaluateMatch = inngest.createFunction(
@@ -42,26 +45,27 @@ export const evaluateMatch = inngest.createFunction(
       return { m, events, t, clubName: c?.name ?? null };
     });
 
-    // Read-Only-Gate (Audit 2026-06-11 / B3): blockt nur noch bei
+    // Geld-Gate (Audit 2026-06-11 / B3 + Phase 3 / R6): blockt bei
     // past_due/cancelled — NICHT bei paused. Die Saison-Pass-Sommerpause
     // pausiert nur die LIZENZ-Abbuchung; die Saison läuft bis 30.6. und
     // gespielte Spiele müssen weiter Charges erzeugen (vorher gingen alle
-    // Juni-Charges pausierter Vereine still verloren). past_due/cancelled
-    // wird als `match/evaluation-deferred` geloggt statt still verworfen —
-    // Forensik + Re-Emit nach Reaktivierung (Admin: Spieldaten erneut
-    // einlesen) bleiben möglich, weil das Match selbst unangetastet bleibt.
+    // Juni-Charges pausierter Vereine still verloren). R6: ZUSÄTZLICH blockt
+    // ein abgelaufener, nie bezahlter Trial (gate.reason=trial_expired) —
+    // auch im Fenster, in dem expire-trials den Status noch nicht auf
+    // cancelled gedreht hat. Geblockte Matches werden als
+    // `match/evaluation-deferred` geloggt statt still verworfen — Forensik +
+    // Re-Emit nach Reaktivierung (Admin: Spieldaten erneut einlesen) bleiben
+    // möglich, weil das Match selbst unangetastet bleibt.
     const gate = await step.run("gate-check", () =>
       getSubscriptionGate(matchData.t.clubId)
     );
-    const gateBlocks =
-      gate.isReadOnly &&
-      (gate.status === "past_due" || gate.status === "cancelled");
-    if (gateBlocks) {
-      logger.warn("match/evaluation-deferred — club read-only, charges not generated", {
+    if (isChargeBlockedByGate(gate)) {
+      logger.warn("match/evaluation-deferred — club unlicensed, charges not generated", {
         clubId: matchData.t.clubId,
         teamId,
         matchId,
-        gateStatus: gate.status
+        gateStatus: gate.status,
+        gateReason: gate.reason
       });
       return { proposals: 0, inserted: 0, cappedOrSkipped: 0, skippedReadOnly: true };
     }

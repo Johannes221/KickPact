@@ -67,9 +67,11 @@ async function runEvaluateMatch(matchId: string, teamId: string) {
 
 interface SeedOpts {
   monthlyCapCents?: number | null;
-  subscriptionStatus?: "active" | "paused" | "past_due" | "cancelled";
+  subscriptionStatus?: "active" | "paused" | "past_due" | "cancelled" | "trialing";
   pastDueSince?: Date | null;
   ruleAmountCents?: number;
+  trialEndsAt?: Date | null;
+  stripeSubscriptionId?: string | null;
 }
 
 async function seedBase(opts: SeedOpts = {}) {
@@ -80,7 +82,9 @@ async function seedBase(opts: SeedOpts = {}) {
     clubId: "c_em",
     stripeCustomerId: "cus_em",
     status: opts.subscriptionStatus ?? "active",
-    pastDueSince: opts.pastDueSince ?? null
+    pastDueSince: opts.pastDueSince ?? null,
+    trialEndsAt: opts.trialEndsAt ?? null,
+    stripeSubscriptionId: opts.stripeSubscriptionId ?? null
   });
   const [team] = await db
     .insert(teams)
@@ -230,6 +234,40 @@ describe.skipIf(isIntegrationDbDisabled)("evaluate-match Geld-Integrität", () =
 
     expect(result.skippedReadOnly).toBe(true);
     expect(await db.select().from(charges)).toHaveLength(0);
+  });
+
+  // --- Phase 3 / R6: abgelaufener Trial (nie bezahlt) darf keine Charges erzeugen ---
+
+  it("R6: trialing mit abgelaufenem Trial (nie bezahlt) → keine Charges", async () => {
+    // Fenster zwischen Trial-Ablauf und expire-trials-Cron: Status noch
+    // trialing, aber der Verein ist unlizenziert.
+    const db = await getTestDb();
+    const { teamId } = await seedBase({
+      subscriptionStatus: "trialing",
+      trialEndsAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      stripeSubscriptionId: null
+    });
+    const m = await seedMayMatch(teamId, "te", 1);
+
+    const result = await runEvaluateMatch(m.matchId, teamId);
+
+    expect(result.skippedReadOnly).toBe(true);
+    expect(await db.select().from(charges)).toHaveLength(0);
+  });
+
+  it("R6: laufender Trial erzeugt weiterhin Charges", async () => {
+    const db = await getTestDb();
+    const { teamId } = await seedBase({
+      subscriptionStatus: "trialing",
+      trialEndsAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      stripeSubscriptionId: null
+    });
+    const m = await seedMayMatch(teamId, "tr", 1);
+
+    const result = await runEvaluateMatch(m.matchId, teamId);
+
+    expect(result.skippedReadOnly).toBeFalsy();
+    expect(await db.select().from(charges)).toHaveLength(1);
   });
 
   it("B4: Re-Eval nach Invalidate stellt fehlende eventApprovals-Row wieder her", async () => {
