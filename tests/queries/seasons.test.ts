@@ -64,8 +64,16 @@ describe("Migration 0055 — seasons-Seed", () => {
     const nextSeason = await getActiveSeasonForDate(new Date("2026-10-15T12:00:00Z"));
     expect(nextSeason?.code).toBe("2627");
 
-    // Frühbucher-Fenster Juli 2026: 2526 ist gerade vorbei (endsAt+30d-Nachlauf)
-    const summer = await getActiveSeasonForDate(new Date("2026-07-05T12:00:00Z"));
-    expect(summer?.code).toBe("2526");
+    // Review K1 (2026-06-11): Frühbucher-Fenster Juli/August muss die NEUE
+    // Saison liefern — 2526 (matchdayFiveAt 15.9.2025) würde das Saison-
+    // Wetten-Window (today <= matchdayFiveAt) für den gesamten Sommer sperren.
+    const earlyJuly = await getActiveSeasonForDate(new Date("2026-07-05T12:00:00Z"));
+    expect(earlyJuly?.code).toBe("2627");
+    const august = await getActiveSeasonForDate(new Date("2026-08-10T12:00:00Z"));
+    expect(august?.code).toBe("2627");
+
+    // Juni (Saison 25/26 läuft noch bis 30.6.) → weiterhin 2526.
+    const june = await getActiveSeasonForDate(new Date("2026-06-15T12:00:00Z"));
+    expect(june?.code).toBe("2526");
   });
 });
