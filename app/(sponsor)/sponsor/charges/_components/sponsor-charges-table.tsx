@@ -83,7 +83,7 @@ export function SponsorChargesTable({
               })}
             </div>
             {r.saison && (
-              <div className="text-[0.65rem] text-brand-night-navy/40">
+              <div className="text-[0.65rem] text-brand-night-navy/60">
                 Saison {r.saison}
               </div>
             )}
@@ -120,7 +120,7 @@ export function SponsorChargesTable({
       label: "Spiel",
       render: (r) => {
         if (!r.heimName || !r.gastName) {
-          return <span className="text-xs text-brand-night-navy/40">—</span>;
+          return <span className="text-xs text-brand-night-navy/60">—</span>;
         }
         const hasResult = r.ergebnisHeim !== null && r.ergebnisGast !== null;
         return (

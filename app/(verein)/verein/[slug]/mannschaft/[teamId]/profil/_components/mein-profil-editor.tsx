@@ -435,12 +435,9 @@ export function MeinProfilEditor({
                   Sponsoren.
                 </p>
               </div>
-              <Link
-                href={verifikationHref}
-                className="inline-flex shrink-0 items-center rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent-dark"
-              >
-                Mannschaft verifizieren →
-              </Link>
+              <Button asChild variant="accent" size="sm" className="shrink-0">
+                <Link href={verifikationHref}>Mannschaft verifizieren →</Link>
+              </Button>
             </div>
           )}
         </div>

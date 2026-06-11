@@ -305,7 +305,7 @@ function Tile({
       <div className="mt-1.5 font-display font-bold text-2xl md:text-3xl tracking-tight text-brand-night-navy">
         {value}
       </div>
-      {hint && <div className="text-xs text-brand-night-navy/40 mt-0.5">{hint}</div>}
+      {hint && <div className="text-xs text-brand-night-navy/60 mt-0.5">{hint}</div>}
     </div>
   );
 }

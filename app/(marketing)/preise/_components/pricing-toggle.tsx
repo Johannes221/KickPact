@@ -694,7 +694,7 @@ function MobileCell({ value, hint }: { value: Cell; hint?: string }): ReactNode 
   }
   if (value === false) {
     return (
-      <span className="inline-flex items-center gap-1 text-brand-night-navy/40">
+      <span className="inline-flex items-center gap-1 text-brand-night-navy/60">
         <X className="h-3.5 w-3.5" aria-hidden />
         <span>—</span>
       </span>

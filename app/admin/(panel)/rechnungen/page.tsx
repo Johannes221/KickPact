@@ -167,7 +167,7 @@ export default async function AdminRechnungenPage({
                     </td>
                     <td className="px-4 py-3 text-brand-night-navy/70">
                       {inv.sponsorName}
-                      <span className="text-brand-night-navy/40"> · {inv.sponsorEmail}</span>
+                      <span className="text-brand-night-navy/60"> · {inv.sponsorEmail}</span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`rounded-md px-2 py-1 text-xs font-semibold ${STATUS_PILL[inv.status]}`}>
@@ -194,7 +194,7 @@ export default async function AdminRechnungenPage({
                           PDF
                         </a>
                       ) : (
-                        <span className="text-brand-night-navy/40">—</span>
+                        <span className="text-brand-night-navy/60">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">

@@ -212,7 +212,7 @@ export function ChargesTable({
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 w-7 p-0 text-brand-night-navy/40 hover:text-red-600 hover:bg-red-50"
+              className="h-7 w-7 p-0 text-brand-night-navy/60 hover:text-red-600 hover:bg-red-50"
               title="Beitrag stornieren"
               disabled={pending}
               onClick={() => openCancel(r)}

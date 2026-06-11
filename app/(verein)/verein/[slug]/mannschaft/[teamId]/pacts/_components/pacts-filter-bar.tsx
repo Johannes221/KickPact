@@ -118,7 +118,7 @@ export function PactsFilterBar({ status, kind }: PactsFilterBarProps) {
           }
         >
           <div>
-            <div className="mb-2 text-[0.7rem] font-bold uppercase tracking-widest text-brand-night-navy/40">
+            <div className="mb-2 text-[0.7rem] font-bold uppercase tracking-widest text-brand-night-navy/60">
               Art
             </div>
             <SegmentedControl

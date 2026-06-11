@@ -39,7 +39,7 @@ export default async function NotificationsPage() {
   return (
     <main className="mx-auto max-w-3xl px-5 md:px-6 py-8 md:py-12 space-y-6 md:space-y-8">
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-brand-night-navy/40">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-brand-night-navy/60">
           <Link href="/konto" className="hover:text-accent">
             Mein Konto
           </Link>{" "}

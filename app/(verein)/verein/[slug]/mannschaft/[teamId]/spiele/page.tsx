@@ -267,7 +267,7 @@ export default async function SpielePage({
                       {abbreviateTeamName(m.heimName)}
                     </span>
                     {m.isScheduled ? (
-                      <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/40 whitespace-nowrap">
+                      <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/60 whitespace-nowrap">
                         vs
                       </span>
                     ) : (
@@ -283,7 +283,7 @@ export default async function SpielePage({
                     </span>
                   </span>
                   {m.isScheduled ? (
-                    <span className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/40">
+                    <span className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/60">
                       Kommend
                     </span>
                   ) : (

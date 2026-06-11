@@ -248,7 +248,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
                           <div className="text-xs text-brand-night-navy/50 mt-0.5">{r.playerName}</div>
                         )}
                         {r.teamName && (
-                          <div className="text-xs text-brand-night-navy/40 mt-0.5">{r.teamName}</div>
+                          <div className="text-xs text-brand-night-navy/60 mt-0.5">{r.teamName}</div>
                         )}
                       </Link>
                     ) : (
@@ -261,7 +261,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
                           <div className="text-xs text-brand-night-navy/50 mt-0.5">{r.playerName}</div>
                         )}
                         {r.teamName && (
-                          <div className="text-xs text-brand-night-navy/40 mt-0.5">{r.teamName}</div>
+                          <div className="text-xs text-brand-night-navy/60 mt-0.5">{r.teamName}</div>
                         )}
                       </>
                     )}
@@ -281,7 +281,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
                         )}
                       </Link>
                     ) : (
-                      <span className="text-brand-night-navy/40">—</span>
+                      <span className="text-brand-night-navy/60">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-brand-night-navy">

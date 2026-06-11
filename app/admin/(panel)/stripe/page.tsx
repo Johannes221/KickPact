@@ -84,7 +84,7 @@ export default async function StripePage() {
                         Stripe ↗
                       </a>
                     ) : (
-                      <span className="text-xs text-brand-night-navy/40">—</span>
+                      <span className="text-xs text-brand-night-navy/60">—</span>
                     )}
                   </td>
                 </tr>

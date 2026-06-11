@@ -80,7 +80,7 @@ export function SponsorInvoicesList({
             {row.clubName}
           </div>
           {row.sentAt && (
-            <div className="text-[0.65rem] text-brand-night-navy/40">
+            <div className="text-[0.65rem] text-brand-night-navy/60">
               Versendet {new Date(row.sentAt).toLocaleDateString("de-DE")}
             </div>
           )}

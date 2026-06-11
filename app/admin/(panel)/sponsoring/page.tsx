@@ -201,7 +201,7 @@ export default async function AdminSponsoringPage({
                     <Link href={`/admin/vereine/${c.clubSlug}`} className="hover:underline">
                       {c.clubName}
                     </Link>
-                    <span className="text-brand-night-navy/40"> · {c.teamName}</span>
+                    <span className="text-brand-night-navy/60"> · {c.teamName}</span>
                   </td>
                   <td className="px-4 py-3 text-brand-night-navy/70">{c.sponsorName}</td>
                   <td className="px-4 py-3 font-mono text-xs">{c.triggerType}</td>
@@ -210,7 +210,7 @@ export default async function AdminSponsoringPage({
                       {STATUS_LABELS[c.status]}
                     </span>
                     {c.cancelledReason && (
-                      <span className="ml-1 text-[0.7rem] text-brand-night-navy/40">{c.cancelledReason}</span>
+                      <span className="ml-1 text-[0.7rem] text-brand-night-navy/60">{c.cancelledReason}</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-right font-mono tabular-nums">{eur(c.amountCents)}</td>
@@ -218,7 +218,7 @@ export default async function AdminSponsoringPage({
                     {c.status !== "cancelled" && c.status !== "invoiced" ? (
                       <ChargeCancelButton chargeId={c.id} />
                     ) : (
-                      <span className="text-brand-night-navy/30 text-xs">—</span>
+                      <span className="text-brand-night-navy/60 text-xs">—</span>
                     )}
                   </td>
                 </tr>

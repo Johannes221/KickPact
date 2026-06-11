@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/ui/button";
 
 import { useEffect, useState } from "react";
 import { Bell, BellRing, Check, Loader2 } from "lucide-react";
@@ -89,11 +90,12 @@ export function PushEnableCard() {
             Zugriffs-Anfragen sowie neuen Rechnungen. Du steuerst unten genau,
             was du bekommst.
           </p>
-          <button
-            type="button"
+          <Button
+            variant="accent"
+            size="sm"
+            className="mt-3"
             onClick={activate}
             disabled={busy}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent/90 disabled:opacity-60"
           >
             {busy ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
@@ -101,7 +103,7 @@ export function PushEnableCard() {
               <BellRing className="h-4 w-4" aria-hidden />
             )}
             Benachrichtigungen aktivieren
-          </button>
+          </Button>
         </div>
       </div>
     </div>

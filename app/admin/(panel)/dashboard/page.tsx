@@ -194,7 +194,7 @@ export default async function AdminDashboardPage({
           <ul className="rounded-2xl border border-brand-neutral/40 bg-white divide-y divide-brand-neutral/20">
             {topClubs.map((c, i) => (
               <li key={c.clubId} className="px-4 md:px-5 py-3 flex items-center gap-4">
-                <span className="font-display font-black text-sm md:text-base text-brand-night-navy/30 tabular-nums w-6">
+                <span className="font-display font-black text-sm md:text-base text-brand-night-navy/60 tabular-nums w-6">
                   {i + 1}.
                 </span>
                 <div className="flex-1 min-w-0">

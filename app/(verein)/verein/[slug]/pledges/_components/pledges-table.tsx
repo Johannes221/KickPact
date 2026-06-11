@@ -46,7 +46,7 @@ function CapBar({
 }) {
   if (!cap || cap <= 0) {
     return (
-      <span className="text-xs text-brand-night-navy/40 font-mono tabular-nums">
+      <span className="text-xs text-brand-night-navy/60 font-mono tabular-nums">
         kein Cap
       </span>
     );

@@ -140,7 +140,7 @@ export default async function PublicTeamProfilePage({ params }: PageProps) {
         </div>
       </section>
 
-      <p className="mt-8 px-4 text-center text-xs text-brand-night-navy/40">
+      <p className="mt-8 px-4 text-center text-xs text-brand-night-navy/60">
         Performance-Sponsoring im Amateurfußball ·{" "}
         <a href="/" className="underline hover:text-accent-dark">
           KickPact

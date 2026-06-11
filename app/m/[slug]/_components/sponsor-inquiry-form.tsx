@@ -93,7 +93,7 @@ export function SponsorInquiryForm({
       </div>
       <div className="space-y-2">
         <Label htmlFor="lead-message" className="text-sm font-semibold">
-          Nachricht <span className="font-normal text-brand-night-navy/40">(optional)</span>
+          Nachricht <span className="font-normal text-brand-night-navy/60">(optional)</span>
         </Label>
         <Textarea
           id="lead-message"

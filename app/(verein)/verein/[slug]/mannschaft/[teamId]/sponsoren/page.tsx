@@ -127,7 +127,7 @@ export default async function TeamSponsorenPage({
                     <div className="font-mono tabular-nums font-semibold text-accent">
                       {eur(s.chargedCents)}
                     </div>
-                    <div className="text-[0.65rem] uppercase tracking-widest text-brand-night-navy/40">
+                    <div className="text-[0.65rem] uppercase tracking-widest text-brand-night-navy/60">
                       abgerechnet
                     </div>
                   </div>

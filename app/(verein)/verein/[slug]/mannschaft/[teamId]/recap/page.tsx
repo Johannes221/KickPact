@@ -1,4 +1,5 @@
 import { assertTeamPageAccess } from "@/lib/auth/scope";
+import { Button } from "@/components/ui/button";
 
 export const metadata = { title: "Saison-Recap · KickPact" };
 
@@ -40,13 +41,11 @@ export default async function RecapPage({
             className="block h-auto w-[300px]"
           />
         </div>
-        <a
-          href={src}
-          download="kickpact-saison-recap.png"
-          className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-accent-dark"
-        >
-          Bild herunterladen
-        </a>
+        <Button asChild variant="accent">
+          <a href={src} download="kickpact-saison-recap.png">
+            Bild herunterladen
+          </a>
+        </Button>
         <p className="text-xs text-brand-night-navy/50 text-center">
           Tipp: Auf dem Handy lange auf das Bild tippen → „Bild sichern" → direkt
           in deiner Story teilen.

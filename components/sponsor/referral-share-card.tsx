@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/ui/button";
 
 import { useState } from "react";
 import { Gift, Copy, Check, Share2 } from "lucide-react";
@@ -73,13 +74,9 @@ export function ReferralShareCard({ shareUrl }: { shareUrl: string }) {
               )}
             </button>
             {canNativeShare && (
-              <button
-                type="button"
-                onClick={handleShare}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-dark"
-              >
+              <Button variant="accent" size="sm" onClick={handleShare}>
                 <Share2 className="h-4 w-4" aria-hidden /> Teilen
-              </button>
+              </Button>
             )}
           </div>
         </div>

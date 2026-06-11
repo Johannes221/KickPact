@@ -175,7 +175,7 @@ export function StatusBar({ items }: { items: StatusItem[] }) {
         <button
           type="button"
           onClick={() => setCollapse(false)}
-          className="shrink-0 rounded-full p-1.5 text-brand-night-navy/40 transition-colors hover:bg-brand-off-white hover:text-brand-night-navy"
+          className="shrink-0 rounded-full p-1.5 text-brand-night-navy/60 transition-colors hover:bg-brand-off-white hover:text-brand-night-navy"
           aria-label="Aufklappen"
         >
           <ChevronDown className="h-4 w-4" aria-hidden />
@@ -198,14 +198,14 @@ export function StatusBar({ items }: { items: StatusItem[] }) {
       )}
     >
       <div className="flex items-center gap-2 px-3.5 pt-2.5">
-        <span className="text-[0.65rem] font-bold uppercase tracking-widest text-brand-night-navy/40">
+        <span className="text-[0.65rem] font-bold uppercase tracking-widest text-brand-night-navy/60">
           Hinweise
         </span>
         <span className="flex-1" />
         <button
           type="button"
           onClick={() => setCollapse(true)}
-          className="rounded-full p-1.5 text-brand-night-navy/40 transition-colors hover:bg-brand-off-white hover:text-brand-night-navy"
+          className="rounded-full p-1.5 text-brand-night-navy/60 transition-colors hover:bg-brand-off-white hover:text-brand-night-navy"
           aria-label="Einklappen"
         >
           <ChevronDown className="h-4 w-4 rotate-180" aria-hidden />
@@ -214,7 +214,7 @@ export function StatusBar({ items }: { items: StatusItem[] }) {
           <button
             type="button"
             onClick={dismiss}
-            className="rounded-full p-1.5 text-brand-night-navy/40 transition-colors hover:bg-brand-off-white hover:text-brand-night-navy"
+            className="rounded-full p-1.5 text-brand-night-navy/60 transition-colors hover:bg-brand-off-white hover:text-brand-night-navy"
             aria-label="Hinweise ausblenden"
           >
             <X className="h-4 w-4" aria-hidden />

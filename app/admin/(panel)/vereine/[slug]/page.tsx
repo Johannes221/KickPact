@@ -219,21 +219,21 @@ export default async function VereinDetailPage({
                     {t.isActive ? (
                       <span className="text-emerald-700">✓</span>
                     ) : (
-                      <span className="text-brand-night-navy/40">✗</span>
+                      <span className="text-brand-night-navy/60">✗</span>
                     )}
                   </td>
                   <td className="px-3 py-2">
                     {t.discoverable ? (
                       <span className="text-emerald-700">✓</span>
                     ) : (
-                      <span className="text-brand-night-navy/40">—</span>
+                      <span className="text-brand-night-navy/60">—</span>
                     )}
                   </td>
                   <td className="px-3 py-2">
                     {t.verifiedAt ? (
                       <span className="text-emerald-700">✓</span>
                     ) : (
-                      <span className="text-brand-night-navy/40">—</span>
+                      <span className="text-brand-night-navy/60">—</span>
                     )}
                   </td>
                   <td className="px-3 py-2">

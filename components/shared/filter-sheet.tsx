@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -68,13 +69,9 @@ export function FilterSheet({
         <div className="mt-4 space-y-5">{children}</div>
 
         <div className="mt-6 flex flex-col gap-2">
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="w-full rounded-xl bg-accent py-2.5 font-semibold text-white"
-          >
+          <Button variant="accent" className="w-full" onClick={() => setOpen(false)}>
             Fertig
-          </button>
+          </Button>
           {onReset ? (
             <button
               type="button"

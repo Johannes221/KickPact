@@ -354,7 +354,7 @@ export function SettingsSheet({
             <Link href="/agb" onClick={close} className="hover:text-accent-dark">
               AGB
             </Link>
-            <span className="w-full pt-0.5 text-brand-night-navy/40">
+            <span className="w-full pt-0.5 text-brand-night-navy/60">
               © {new Date().getFullYear()} KickPact
             </span>
           </div>

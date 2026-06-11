@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/session";
 import {
   Banknote,
@@ -54,12 +55,9 @@ export default async function SponsorDashboard() {
           Öffne den Einladungslink, den dir eine Mannschaft geschickt hat — oder entdecke
           Mannschaften, die nach Sponsoren suchen.
         </p>
-        <Link
-          href="/sponsor/discover"
-          className="inline-block rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-accent-dark"
-        >
-          Mannschaften entdecken →
-        </Link>
+        <Button asChild variant="accent">
+          <Link href="/sponsor/discover">Mannschaften entdecken →</Link>
+        </Button>
       </div>
     );
   }
@@ -116,7 +114,7 @@ export default async function SponsorDashboard() {
         subtitle={sponsorRow.displayName}
       />
       <div className="hidden md:block">
-        <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
+        <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/60 mb-1">
           Sponsor
         </p>
         <h1 className="text-2xl md:text-3xl font-bold text-brand-night-navy break-words">
@@ -350,13 +348,12 @@ function MyPactsSection({
           <p className="mt-1 text-xs text-brand-night-navy/60">
             Entdecke eine Mannschaft und richte deinen ersten Pact ein.
           </p>
-          <Link
-            href="/sponsor/discover"
-            className="mt-3 inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-dark"
-          >
-            Mannschaften entdecken
-            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-          </Link>
+          <Button asChild variant="accent" size="sm" className="mt-3">
+            <Link href="/sponsor/discover">
+              Mannschaften entdecken
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+            </Link>
+          </Button>
         </div>
       ) : (
         <ul className="space-y-2">

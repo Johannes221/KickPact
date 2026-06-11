@@ -147,7 +147,7 @@ export function EventRowActions({
         <button
           type="button"
           onClick={() => setEditOpen(true)}
-          className="grid h-8 w-8 place-items-center rounded-md text-brand-night-navy/40 hover:text-accent hover:bg-accent/10 transition-colors"
+          className="grid h-8 w-8 place-items-center rounded-md text-brand-night-navy/60 hover:text-accent hover:bg-accent/10 transition-colors"
           aria-label="Event bearbeiten"
           title="Bearbeiten"
         >
@@ -156,7 +156,7 @@ export function EventRowActions({
         <button
           type="button"
           onClick={() => setDeleteOpen(true)}
-          className="grid h-8 w-8 place-items-center rounded-md text-brand-night-navy/40 hover:text-brand-alert-red hover:bg-brand-alert-red/10 transition-colors"
+          className="grid h-8 w-8 place-items-center rounded-md text-brand-night-navy/60 hover:text-brand-alert-red hover:bg-brand-alert-red/10 transition-colors"
           aria-label="Event löschen"
           title="Löschen"
         >

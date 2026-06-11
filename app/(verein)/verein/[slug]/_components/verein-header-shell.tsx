@@ -62,7 +62,7 @@ export function VereinHeaderShell({
     <div className="mb-6 md:mb-10">
       <div className="flex items-start justify-between gap-4 mb-4">
         <div className="hidden md:block">
-          <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
+          <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/60 mb-1">
             Vereins-Dashboard
           </p>
           <h1 className="font-display font-bold text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy break-words">
