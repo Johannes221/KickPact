@@ -194,9 +194,9 @@ export default function LandingPage() {
             <StoryCard
               image={PHOTOS.teamGreen}
               imageAlt="TSV-Abtswind-Mannschaft jubelt in grünen Trikots"
-              kicker="Opa Heinz · Saison-Wette · Seine Wahl"
+              kicker="Opa Heinz · Saison-Ziel · Seine Wahl"
               headline="200 € wenn der Aufstieg klappt."
-              body="Heinz fiebert seit 40 Jahren mit. Er hat 200 € auf den Aufstieg gesetzt und 5 € pro Kopfballtor seines Enkels. Saisonende → Rechnung, Geld geht in die Mannschaftskasse."
+              body="Heinz fiebert seit 40 Jahren mit. Er hat 200 € auf den Aufstieg versprochen und 5 € pro Kopfballtor seines Enkels. Saisonende → Rechnung, Geld geht in die Mannschaftskasse."
             />
           </div>
           <p className="mt-6 md:mt-8 text-xs md:text-sm text-brand-night-navy/60 text-center max-w-2xl mx-auto">
