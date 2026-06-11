@@ -1,0 +1,1 @@
+ALTER TABLE "pledges" ADD COLUMN "cloned_from_pledge_id" text;

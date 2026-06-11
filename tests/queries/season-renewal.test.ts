@@ -322,6 +322,48 @@ describe("clonePledgeForNextSeason", () => {
     expect(result.pledgeId).not.toBe(seed.pledgeId);
   });
 
+  it("K3: zweiter Pact desselben Sponsors auf demselben Team wird eigenständig geklont", async () => {
+    // Review K3 (2026-06-11): kein Unique auf (sponsorId, teamId) — zwei
+    // Pacts desselben Sponsors sind legal. Die alte endsAt-Heuristik matchte
+    // B's Renewal auf A's Clone → B's Rules wurden nie geklont.
+    const seeded = await seedSponsorPledge({ endsAtOffsetDays: 10 });
+    const now = new Date();
+    const [pledgeB] = await db
+      .insert(pledges)
+      .values({
+        sponsorId: seeded.sponsorId,
+        teamId: seeded.teamId,
+        status: "active",
+        startsAt: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000),
+        endsAt: new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000),
+        monthlyCapCents: null
+      })
+      .returning({ id: pledges.id });
+    await db.insert(pledgeRules).values({
+      pledgeId: pledgeB.id,
+      triggerType: "clean_sheet",
+      amountCents: 700,
+      requiresApproval: false
+    });
+
+    const cloneA = await clonePledgeForNextSeason(seeded.pledgeId, "2627");
+    const cloneB = await clonePledgeForNextSeason(pledgeB.id, "2627");
+
+    expect(cloneB.pledgeId).not.toBe(cloneA.pledgeId);
+    expect(cloneB.pledgeRulesCount).toBe(1);
+
+    // Idempotenz bleibt: erneuter Clone von A liefert A's Clone.
+    const cloneA2 = await clonePledgeForNextSeason(seeded.pledgeId, "2627");
+    expect(cloneA2.pledgeId).toBe(cloneA.pledgeId);
+
+    // Provenance ist gesetzt.
+    const [rowA] = await db
+      .select({ from: pledges.clonedFromPledgeId })
+      .from(pledges)
+      .where(eq(pledges.id, cloneA.pledgeId));
+    expect(rowA.from).toBe(seeded.pledgeId);
+  });
+
   it("kopiert Rules inkl. capCents/capPeriod", async () => {
     const seed = await seedSponsorPledge({
       endsAtOffsetDays: 10,

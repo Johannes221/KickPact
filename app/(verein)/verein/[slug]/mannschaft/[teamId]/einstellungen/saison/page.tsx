@@ -2,8 +2,9 @@ import Link from "next/link";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import {
   getTeamInClub,
-  getSeasonResultForTeam
+  resolveSeasonResultTarget
 } from "@/lib/db/queries/team-lifecycle";
+import { saisonLabel } from "@/lib/utils/saison";
 import { SeasonResultForm } from "../../_components/season-result-form";
 
 export const metadata = { title: "Saison-Ergebnis · Einstellungen · KickPact" };
@@ -32,7 +33,12 @@ export default async function TeamEinstellungenSaisonPage({
     );
   }
 
-  const seasonResult = await getSeasonResultForTeam(team.id, team.saison);
+  // Review K2: Nach dem Saison-Bump (15.7.) gehört das abzuschließende
+  // Ergebnis zur Vorsaison — der Resolver entscheidet, welche Saison das
+  // Formular bedient (sonst landet der Juli-Eintrag auf der neuen Saison
+  // und die alten Saison-Pacts werden nie ausgewertet).
+  const target = await resolveSeasonResultTarget(team.id, team.saison);
+  const seasonResult = target.result;
 
   const base = `/verein/${slug}/mannschaft/${teamId}`;
 
@@ -49,7 +55,7 @@ export default async function TeamEinstellungenSaisonPage({
           Saison-Ergebnis manuell setzen
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">
-          {team.name} · Saison {team.saison}
+          {team.name} · Saison {saisonLabel(target.saison)}
         </p>
       </div>
 
@@ -62,7 +68,7 @@ export default async function TeamEinstellungenSaisonPage({
 
       <SeasonResultForm
         teamId={team.id}
-        saison={team.saison}
+        saison={target.saison}
         current={
           seasonResult
             ? {

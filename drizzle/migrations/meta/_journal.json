@@ -386,6 +386,13 @@
       "when": 1782420000000,
       "tag": "0055_seasons_seed",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1782430000000,
+      "tag": "0056_rapid_iron_fist",
+      "breakpoints": true
     }
   ]
 }

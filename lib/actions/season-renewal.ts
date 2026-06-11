@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db/client";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { pledges, sponsors, teams, clubs, users } from "@/lib/db/schema";
 import {
   verifySeasonRenewalToken,
@@ -70,21 +70,16 @@ export async function inspectSeasonRenewalToken(token: string): Promise<
 
   const nextTeam = await findNextSeasonTeam(row.teamId, payload.nextSaison);
 
-  let alreadyCloned = false;
-  if (nextTeam) {
-    // Exakt: gibt es bereits eine Pledge dieses Sponsors auf dem Ziel-Team?
-    const [existingClone] = await db
-      .select({ id: pledges.id })
-      .from(pledges)
-      .where(
-        and(
-          eq(pledges.sponsorId, row.sponsorId),
-          eq(pledges.teamId, nextTeam.id)
-        )
-      )
-      .limit(1);
-    alreadyCloned = !!existingClone;
-  }
+  // Review M1 (2026-06-11): alreadyCloned via Provenance (clonedFromPledgeId),
+  // NICHT via "existiert irgendeine Pledge (sponsor, team)" — nach dem
+  // Saison-Bump ist das Ziel dieselbe Team-Row und die nackte Existenzprüfung
+  // fand die ORIGINAL-Pledge → "bereits verlängert"-Anzeige ohne Verlängerung.
+  const [existingClone] = await db
+    .select({ id: pledges.id })
+    .from(pledges)
+    .where(eq(pledges.clonedFromPledgeId, payload.pledgeId))
+    .limit(1);
+  const alreadyCloned = !!existingClone;
 
   return {
     ok: true,
@@ -95,7 +90,11 @@ export async function inspectSeasonRenewalToken(token: string): Promise<
     teamName: row.teamName,
     clubName: row.clubName,
     endsAt: row.pledgeEndsAt instanceof Date ? row.pledgeEndsAt : new Date(row.pledgeEndsAt),
-    nextSeasonTeamExists: !!nextTeam,
+    // Review M2: Seit dem Same-Row-Fallback in clonePledgeForNextSeason ist
+    // die Verlängerung IMMER möglich, solange die Team-Row existiert — die
+    // UI darf den Renew-Button nicht mehr an eine dedizierte Next-Season-Row
+    // knüpfen (vor dem 15.7.-Bump existiert die nie).
+    nextSeasonTeamExists: true,
     alreadyCloned
   };
 }

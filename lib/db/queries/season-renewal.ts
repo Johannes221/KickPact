@@ -1,4 +1,4 @@
-import { and, eq, gt, gte, like, lte, or } from "drizzle-orm";
+import { and, eq, gte, like, lte, or } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   pledges,
@@ -225,18 +225,15 @@ export async function clonePledgeForNextSeason(
         ? original.endsAt
         : new Date(original.endsAt);
 
-    // Idempotenz: nur eine Pledge mit endsAt NACH dem Original zählt als
-    // Clone — die Original-Pledge selbst (gleiche Row nach dem Bump!) nicht.
+    // Idempotenz via Provenance (Review K3 2026-06-11): NUR eine Pledge, die
+    // nachweislich aus DIESER Original-Pledge geklont wurde, zählt als Clone.
+    // Die alte endsAt-Heuristik matchte bei zwei Pacts desselben Sponsors auf
+    // demselben Team (legal!) den Clone von Pact A auch für Pact B — B wurde
+    // dann nie verlängert, obwohl die UI "Verlängert!" zeigte.
     const [existingClone] = await tx
       .select({ id: pledges.id })
       .from(pledges)
-      .where(
-        and(
-          eq(pledges.sponsorId, original.sponsorId),
-          eq(pledges.teamId, targetTeam.id),
-          gt(pledges.endsAt, originalEndsAt)
-        )
-      )
+      .where(eq(pledges.clonedFromPledgeId, original.id))
       .limit(1);
     if (existingClone) {
       // Count rules for return-value
@@ -267,7 +264,8 @@ export async function clonePledgeForNextSeason(
         status: "active",
         startsAt,
         endsAt,
-        monthlyCapCents: original.monthlyCapCents
+        monthlyCapCents: original.monthlyCapCents,
+        clonedFromPledgeId: original.id
       })
       .returning({ id: pledges.id });
 

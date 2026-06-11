@@ -67,6 +67,14 @@ export const pledges = pgTable(
     endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
     monthlyCapCents: integer("monthly_cap_cents"),
     /**
+     * Herkunft bei Saison-Renewal: ID der Vorgänger-Pledge, aus der diese
+     * Pledge geklont wurde (Review K3 2026-06-11). Idempotenz-Anker für
+     * clonePledgeForNextSeason — die alte Heuristik „existiert eine Pledge
+     * (sponsor, team) mit endsAt > original.endsAt" verschluckte das Renewal
+     * des ZWEITEN Pacts desselben Sponsors auf demselben Team.
+     */
+    clonedFromPledgeId: text("cloned_from_pledge_id"),
+    /**
      * True when this pledge was auto-paused by the Sommerpause cron (June 1).
      * The resume cron (August 1) only un-pauses pledges with this flag set,
      * so manually-paused pledges are never accidentally resumed.

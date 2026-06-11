@@ -2,6 +2,7 @@ import { and, eq, sql, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { players, teams, seasonResults } from "@/lib/db/schema";
 import { matchEvents } from "@/lib/db/schema/matches";
+import { prevSaisonCode, saisonStartDate } from "@/lib/utils/saison";
 
 export type RosterPlayer = {
   id: string;
@@ -85,6 +86,41 @@ export async function getSeasonResultForTeam(teamId: string, saison: string) {
     .where(and(eq(seasonResults.teamId, teamId), eq(seasonResults.saison, saison)))
     .limit(1);
   return row;
+}
+
+export type SeasonResultRow = Awaited<ReturnType<typeof getSeasonResultForTeam>>;
+
+/**
+ * Welche Saison soll das Saison-Ergebnis-Formular bedienen? (Review K2 2026-06-11)
+ *
+ * Nach dem Saison-Bump (15.7.) zeigt `team.saison` bereits die NEUE Saison —
+ * das abzuschließende Ergebnis gehört aber zur VORSAISON. Würde das Formular
+ * stumpf an `team.saison` binden, schriebe ein Juli-Eintrag das Ergebnis auf
+ * die neue Saison; evaluate-season fände keine alten Saison-Pacts mehr (deren
+ * endsAt liegt vor dem neuen Saisonfenster) → 0 Charges, ohne Fehler.
+ *
+ * Regel: Fehlt das Ergebnis der aktuellen Saison UND das der Vorsaison, und
+ * die aktuelle Saison ist jung (zwischen Saisonstart und 1.10.), dann bedient
+ * das Formular die Vorsaison. Sonst die aktuelle Saison.
+ */
+export async function resolveSeasonResultTarget(
+  teamId: string,
+  teamSaison: string,
+  now: Date = new Date()
+): Promise<{ saison: string; result: SeasonResultRow | null }> {
+  const current = await getSeasonResultForTeam(teamId, teamSaison);
+  if (current) return { saison: teamSaison, result: current };
+
+  const prev = prevSaisonCode(teamSaison);
+  const seasonStart = saisonStartDate(teamSaison);
+  if (prev && seasonStart) {
+    const graceEnd = new Date(seasonStart.getFullYear(), 9, 1); // 1. Oktober
+    if (now >= seasonStart && now < graceEnd) {
+      const prevResult = await getSeasonResultForTeam(teamId, prev);
+      if (!prevResult) return { saison: prev, result: null };
+    }
+  }
+  return { saison: teamSaison, result: null };
 }
 
 /** Vollständige Team-Row, club-scoped (Team-Detail-Dashboard). undefined wenn fremd. */
