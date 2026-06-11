@@ -1,6 +1,17 @@
+import Link from "next/link";
 import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { getVereinDashboardKpis } from "@/lib/db/queries/club-reporting";
-import { TrendingUp, Users, HandCoins, Receipt, Share2 } from "lucide-react";
+import {
+  TrendingUp,
+  Users,
+  HandCoins,
+  Receipt,
+  Share2,
+  ArrowRight,
+  BadgeCheck,
+  Send,
+  type LucideIcon
+} from "lucide-react";
 import { DashboardTile } from "@/components/shared/dashboard-tile";
 import { PageHeader } from "@/components/shared/page-header";
 
@@ -27,7 +38,9 @@ export default async function VereinDashboard({
     activePledgeCount,
     weeklyChargeCents,
     monthlyChargeCents,
-    recentMatchCount
+    recentMatchCount,
+    sponsorCount,
+    verifiedAt
   } = await getVereinDashboardKpis(club.id, new Date());
 
   const teamCount = teamRows.length;
@@ -52,6 +65,15 @@ export default async function VereinDashboard({
           aktuell ist.
         </div>
       )}
+
+      <NextSteps
+        slug={slug}
+        verified={verifiedAt !== null}
+        teamCount={teamCount}
+        sponsorCount={sponsorCount}
+        activePledgeCount={activePledgeCount}
+      />
+
     <div className="grid gap-3 md:gap-4 md:grid-cols-2">
       <DashboardTile
         icon={TrendingUp}
@@ -107,5 +129,111 @@ export default async function VereinDashboard({
       />
     </div>
     </div>
+  );
+}
+
+/**
+ * „Nächste Schritte" — analog zur Sponsor-Startseite: dynamische, kontextuelle
+ * Handlungs-Vorschläge für den Verein. Nur sichtbar, solange mindestens ein
+ * Schritt relevant ist (Verifikation offen, keine Mannschaft, keine Sponsoren,
+ * noch kein aktiver Pact).
+ */
+function NextSteps({
+  slug,
+  verified,
+  teamCount,
+  sponsorCount,
+  activePledgeCount
+}: {
+  slug: string;
+  verified: boolean;
+  teamCount: number;
+  sponsorCount: number;
+  activePledgeCount: number;
+}) {
+  type Step = {
+    icon: LucideIcon;
+    label: string;
+    desc: string;
+    href: string;
+    urgent?: boolean;
+  };
+
+  const steps: Step[] = [];
+
+  if (!verified) {
+    steps.push({
+      icon: BadgeCheck,
+      label: "Verein verifizieren",
+      desc: "Kurz bestätigen, dass du für den Verein sprichst — erst danach gehen Rechnungen an Sponsoren raus.",
+      href: `/verein/${slug}/verifikation`,
+      urgent: true
+    });
+  }
+
+  if (teamCount === 0) {
+    steps.push({
+      icon: Users,
+      label: "Erste Mannschaft anlegen",
+      desc: "Verbinde eine Mannschaft — Spiele und Ereignisse laufen dann automatisch ein.",
+      href: `/verein/${slug}/mannschaften/neu`,
+      urgent: verified
+    });
+  } else if (sponsorCount === 0) {
+    steps.push({
+      icon: Send,
+      label: "Sponsoren einladen",
+      desc: "Teile deinen Einladungslink — Familie, Freunde, der Wirt um die Ecke. Sponsoren legen ihre Pacts selbst fest.",
+      href: `/verein/${slug}/sponsoren`
+    });
+  } else if (activePledgeCount === 0) {
+    steps.push({
+      icon: HandCoins,
+      label: "Noch kein aktiver Pact",
+      desc: "Deine Sponsoren haben noch keinen Pact eingerichtet — stups sie ruhig noch einmal an.",
+      href: `/verein/${slug}/sponsoren`
+    });
+  }
+
+  if (steps.length === 0) return null;
+
+  return (
+    <section className="rounded-2xl bg-ios-card shadow-ios-card p-4 md:p-5">
+      <h2 className="text-[0.65rem] font-semibold uppercase tracking-widest text-brand-night-navy/50 mb-3">
+        Nächste Schritte
+      </h2>
+      <ul className="space-y-2">
+        {steps.map((s) => (
+          <li key={s.label}>
+            <Link
+              href={s.href}
+              className="press group flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-brand-off-white/70"
+            >
+              <span
+                className={
+                  "grid h-10 w-10 shrink-0 place-items-center rounded-full " +
+                  (s.urgent ? "bg-accent text-white" : "bg-accent/10 text-accent-dark")
+                }
+                aria-hidden
+              >
+                <s.icon className="h-[1.15rem] w-[1.15rem]" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-sm text-brand-night-navy">
+                  {s.label}
+                </div>
+                <div className="text-xs text-brand-night-navy/60 leading-snug">
+                  {s.desc}
+                </div>
+              </div>
+              <ArrowRight
+                className="h-4 w-4 shrink-0 text-brand-night-navy/30 transition-transform group-hover:translate-x-0.5 group-hover:text-accent"
+                aria-hidden
+              />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

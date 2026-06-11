@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { Zap } from "lucide-react";
 import type { EreignisRow } from "@/lib/db/queries/club-dashboard";
+import { EmptyState } from "@/components/shared/empty-state";
 import { TriggerIcon } from "@/components/shared/trigger-icon";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 
@@ -103,9 +105,11 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60">
-        Noch keine Ereignisse. Sobald Sponsoren aktiv sind und Spiele stattfinden, erscheinen hier alle ausgelösten Ereignisse.
-      </div>
+      <EmptyState
+        icon={Zap}
+        title="Noch keine Ereignisse"
+        description="Sobald Sponsoren aktiv sind und Spiele stattfinden, erscheinen hier alle ausgelösten Ereignisse."
+      />
     );
   }
 

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Receipt } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 import { requireUser } from "@/lib/auth/session";
 import { getTeamPlayerPool } from "@/lib/db/queries/matches";
 import {
@@ -147,9 +148,11 @@ export default async function PledgeDetailPage({
         </div>
 
         {recentCharges.length === 0 ? (
-          <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-5 text-sm text-brand-night-navy/60">
-            Noch keine Beiträge. Sobald die Mannschaft spielt und Ereignisse zünden, erscheinen sie hier.
-          </div>
+          <EmptyState
+            icon={Receipt}
+            title="Noch keine Beiträge"
+            description="Sobald die Mannschaft spielt und Ereignisse zünden, erscheinen sie hier."
+          />
         ) : (
           <ul className="space-y-2">
             {recentCharges.map((c) => (

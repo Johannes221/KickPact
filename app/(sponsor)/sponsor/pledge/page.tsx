@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { Clock, ArrowRight } from "lucide-react";
+import { Clock, ArrowRight, Handshake } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import { listPledgesForSponsor } from "@/lib/db/queries/pledges";
 import { listInquiriesForSponsor } from "@/lib/db/queries/sponsor-discover";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata = { title: "Meine Pacts · KickPact" };
@@ -53,21 +54,16 @@ export default async function PledgeListPage() {
 
       <div className="mt-6 md:mt-10 space-y-3">
         {isEmpty ? (
-          <Card className="border-brand-neutral/40">
-            <CardContent className="p-8 text-center">
-              <p className="font-semibold text-brand-night-navy text-base">Noch keine Pacts.</p>
-              <p className="mt-1.5 text-sm text-brand-night-navy/60 max-w-md mx-auto">
-                Finde eine Mannschaft, die du unterstützen möchtest, und frag sie für ein
-                Sponsoring an. Sobald der Verein zustimmt, richtest du hier deinen Pact ein.
-              </p>
-              <Link
-                href="/sponsor/discover"
-                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-accent-dark"
-              >
-                Mannschaft finden &amp; anfragen →
-              </Link>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={Handshake}
+            title="Noch keine Pacts"
+            description="Finde eine Mannschaft, die du unterstützen möchtest, und frag sie für ein Sponsoring an. Sobald der Verein zustimmt, richtest du hier deinen Pact ein."
+            action={
+              <Button asChild>
+                <Link href="/sponsor/discover">Mannschaft finden &amp; anfragen →</Link>
+              </Button>
+            }
+          />
         ) : (
           <>
             {acceptedInquiries.map((q) =>
