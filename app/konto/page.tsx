@@ -14,6 +14,7 @@ import { DeletionBanner } from "./_components/deletion-banner";
 import { DataPrivacyActions } from "./_components/data-privacy-actions";
 import { AvatarUpload } from "./_components/avatar-upload";
 import { PrimaryRoleSelector } from "./_components/primary-role-selector";
+import { LeaveMembershipButton } from "./_components/leave-membership-button";
 import { LoginMethods } from "./_components/login-methods";
 import { configuredSocialProviders } from "@/lib/auth/server";
 
@@ -221,12 +222,16 @@ export default async function KontoPage() {
                   {c.role}
                 </span>
               </div>
-              <Link
-                href={`/verein/${c.slug}`}
-                className="shrink-0 text-xs font-semibold text-accent underline"
-              >
-                Öffnen →
-              </Link>
+              <div className="flex items-center gap-3 shrink-0">
+                {/* B5: Self-Service-Austritt (letzter Admin wird serverseitig geblockt) */}
+                <LeaveMembershipButton kind="club" id={c.clubId} name={c.name} />
+                <Link
+                  href={`/verein/${c.slug}`}
+                  className="text-xs font-semibold text-accent underline"
+                >
+                  Öffnen →
+                </Link>
+              </div>
             </li>
           ))}
           {identities.teamOnly.map((t) => (
@@ -241,12 +246,15 @@ export default async function KontoPage() {
                   {t.clubName} · {t.role}
                 </span>
               </div>
-              <Link
-                href={`/verein/${t.clubSlug}/mannschaft/${t.teamId}`}
-                className="shrink-0 text-xs font-semibold text-accent underline"
-              >
-                Öffnen →
-              </Link>
+              <div className="flex items-center gap-3 shrink-0">
+                <LeaveMembershipButton kind="team" id={t.teamId} name={t.teamName} />
+                <Link
+                  href={`/verein/${t.clubSlug}/mannschaft/${t.teamId}`}
+                  className="text-xs font-semibold text-accent underline"
+                >
+                  Öffnen →
+                </Link>
+              </div>
             </li>
           ))}
           {identities.sponsor && (
