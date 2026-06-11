@@ -354,3 +354,24 @@ export async function listInquiriesForSponsor(sponsorUserId: string) {
     .where(eq(sponsorInquiries.sponsorUserId, sponsorUserId))
     .orderBy(desc(sponsorInquiries.createdAt));
 }
+
+/**
+ * Alle öffentlich sichtbaren Team-Profile für die Sitemap: publicSlug gesetzt,
+ * discoverable + aktiv + verifiziert — exakt die Gates, die auch
+ * `getPublicTeamProfileBySlug` durchsetzt (sonst 404 ⇒ gehört nicht in die
+ * Sitemap).
+ */
+export async function listPublicTeamSlugs(): Promise<string[]> {
+  const rows = await db
+    .select({ slug: teams.publicSlug })
+    .from(teams)
+    .where(
+      and(
+        isNotNull(teams.publicSlug),
+        eq(teams.discoverable, true),
+        eq(teams.isActive, true),
+        isNotNull(teams.verifiedAt)
+      )
+    );
+  return rows.map((r) => r.slug).filter((s): s is string => !!s);
+}

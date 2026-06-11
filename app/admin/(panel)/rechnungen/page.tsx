@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listInvoicesForAdmin, type InvoiceStatus } from "@/lib/db/queries/invoice-admin";
 import { InvoiceTriggerButton } from "./_components/invoice-trigger-button";
 import { InvoiceRowActions } from "@/components/admin/invoice-row-actions";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Rechnungen · Admin · KickPact" };
 export const dynamic = "force-dynamic";
@@ -29,10 +30,6 @@ const FILTERS: Array<{ value: InvoiceStatus | "all"; label: string }> = [
   { value: "withheld", label: "Zurückgehalten" },
   { value: "draft", label: "Entwurf" }
 ];
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 function pdfHref(pdfUrl: string | null): string | null {
   if (!pdfUrl) return null;
@@ -167,7 +164,7 @@ export default async function AdminRechnungenPage({
                     </td>
                     <td className="px-4 py-3 text-brand-night-navy/70">
                       {inv.sponsorName}
-                      <span className="text-brand-night-navy/40"> · {inv.sponsorEmail}</span>
+                      <span className="text-brand-night-navy/60"> · {inv.sponsorEmail}</span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`rounded-md px-2 py-1 text-xs font-semibold ${STATUS_PILL[inv.status]}`}>
@@ -194,7 +191,7 @@ export default async function AdminRechnungenPage({
                           PDF
                         </a>
                       ) : (
-                        <span className="text-brand-night-navy/40">—</span>
+                        <span className="text-brand-night-navy/60">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">

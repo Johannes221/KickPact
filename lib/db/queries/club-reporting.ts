@@ -25,6 +25,7 @@ import {
 import { db } from "@/lib/db/client";
 import {
   charges,
+  clubs,
   pledges,
   pledgeRules,
   matches,
@@ -626,11 +627,16 @@ export interface VereinDashboardKpis {
   weeklyChargeCents: number;
   monthlyChargeCents: number;
   recentMatchCount: number;
+  /** Distinct Sponsoren mit mind. einem Pact (egal welcher Status) im Verein. */
+  sponsorCount: number;
+  /** `clubs.verified_at` — null = Verifikation ausstehend. */
+  verifiedAt: Date | null;
 }
 
 /**
  * KPI-Kacheln des Vereins-Dashboards (/verein/[slug]): aktive Mannschaften,
- * aktive Pledges, Charge-Summen (Woche/Monat), Spiele der letzten 7 Tage.
+ * aktive Pledges, Charge-Summen (Woche/Monat), Spiele der letzten 7 Tage,
+ * plus Sponsoren-Zahl + Verifikations-Status für die „Nächste Schritte"-Sektion.
  */
 export async function getVereinDashboardKpis(
   clubId: string,
@@ -639,7 +645,15 @@ export async function getVereinDashboardKpis(
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const [teamRows, activePledgeCount, weeklyChargeCents, monthlyChargeCents, recentMatchCount] =
+  const [
+    teamRows,
+    activePledgeCount,
+    weeklyChargeCents,
+    monthlyChargeCents,
+    recentMatchCount,
+    sponsorCount,
+    verifiedAt
+  ] =
     await Promise.all([
       db
         .select({ id: teams.id, name: teams.name })
@@ -670,8 +684,28 @@ export async function getVereinDashboardKpis(
         .from(matches)
         .innerJoin(teams, eq(matches.teamId, teams.id))
         .where(and(eq(teams.clubId, clubId), gte(matches.datum, weekStart)))
-        .then((r) => Number(r[0]?.n ?? 0))
+        .then((r) => Number(r[0]?.n ?? 0)),
+      db
+        .select({ n: sql<number>`count(distinct ${pledges.sponsorId})::int` })
+        .from(pledges)
+        .innerJoin(teams, eq(pledges.teamId, teams.id))
+        .where(eq(teams.clubId, clubId))
+        .then((r) => Number(r[0]?.n ?? 0)),
+      db
+        .select({ verifiedAt: clubs.verifiedAt })
+        .from(clubs)
+        .where(eq(clubs.id, clubId))
+        .limit(1)
+        .then((r) => r[0]?.verifiedAt ?? null)
     ]);
 
-  return { teamRows, activePledgeCount, weeklyChargeCents, monthlyChargeCents, recentMatchCount };
+  return {
+    teamRows,
+    activePledgeCount,
+    weeklyChargeCents,
+    monthlyChargeCents,
+    recentMatchCount,
+    sponsorCount,
+    verifiedAt
+  };
 }

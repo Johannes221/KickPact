@@ -88,7 +88,7 @@ export function ResultOverrideEditor({
         });
         const detail =
           res.invalidatedCharges > 0
-            ? ` · ${res.invalidatedCharges} Charge(s) zurückgesetzt`
+            ? ` · ${res.invalidatedCharges} Beitrag/Beiträge zurückgesetzt`
             : "";
         toast.success(`Ergebnis überschrieben${detail}`);
         setOpen(false);
@@ -115,11 +115,11 @@ export function ResultOverrideEditor({
           <DialogDescription className="space-y-2 pt-2">
             <span className="block">
               Setzt das Endergebnis und (optional) das Halbzeitergebnis neu.
-              Alle ergebnis-bezogenen Charges werden zurückgesetzt, eine
+              Alle ergebnis-bezogenen Beiträge werden zurückgesetzt, eine
               Neuauswertung läuft automatisch.
             </span>
             <span className="block text-xs text-brand-night-navy/60">
-              Bereits in Rechnung gestellte Charges bleiben unverändert.
+              Bereits in Rechnung gestellte Beiträge bleiben unverändert.
             </span>
           </DialogDescription>
         </DialogHeader>

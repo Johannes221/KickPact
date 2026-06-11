@@ -26,7 +26,8 @@ import {
 import {
   listChargesForClub,
   listPledgesForClub,
-  getSponsorOverviewForClub
+  getSponsorOverviewForClub,
+  getVereinDashboardKpis
 } from "@/lib/db/queries/club-reporting";
 
 describe.skipIf(isIntegrationDbDisabled)("club-reporting (integration)", () => {
@@ -166,6 +167,25 @@ describe.skipIf(isIntegrationDbDisabled)("club-reporting (integration)", () => {
     expect(ov).not.toBeNull();
     expect(ov!.totals.totalChargesLifetimeCents).toBe(0);
     expect(ov!.teams.length).toBe(0);
+  });
+
+  // ─── getVereinDashboardKpis ────────────────────────────────────────────────
+
+  it("getVereinDashboardKpis: liefert sponsorCount (distinct) + verifiedAt", async () => {
+    const kpis = await getVereinDashboardKpis("club_a", new Date());
+    // 2 Pledges von 2 verschiedenen Sponsoren → 2 distinct Sponsoren.
+    expect(kpis.sponsorCount).toBe(2);
+    // Seed setzt kein verified_at → null.
+    expect(kpis.verifiedAt).toBeNull();
+    expect(kpis.activePledgeCount).toBe(2);
+    expect(kpis.teamRows.length).toBe(2);
+  });
+
+  it("getVereinDashboardKpis: club ohne Teams/Pledges → 0/leer", async () => {
+    const kpis = await getVereinDashboardKpis("club_b", new Date());
+    expect(kpis.sponsorCount).toBe(0);
+    expect(kpis.teamRows.length).toBe(0);
+    expect(kpis.activePledgeCount).toBe(0);
   });
 });
 

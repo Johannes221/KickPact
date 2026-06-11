@@ -8,10 +8,7 @@ import { createStornoInvoice } from "@/lib/invoicing/storno";
 import { recordOperatorAction } from "@/lib/db/queries/operator-audit";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { invoiceReminderEmail } from "@/lib/mail/templates/invoice-reminder";
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
+import { eur } from "@/lib/utils/currency";
 
 const paidSchema = z.object({ invoiceId: z.string().min(1), paid: z.boolean() });
 

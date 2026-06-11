@@ -85,7 +85,7 @@ function MatchRow({
       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white text-brand-night-navy/60">
         {icon}
       </span>
-      <span className="text-[0.65rem] uppercase tracking-wide font-semibold text-brand-night-navy/40 w-14 shrink-0">
+      <span className="text-[0.65rem] uppercase tracking-wide font-semibold text-brand-night-navy/60 w-14 shrink-0">
         {label}
       </span>
       {match ? (
@@ -98,7 +98,7 @@ function MatchRow({
           </span>
         </div>
       ) : (
-        <span className="flex-1 text-xs text-brand-night-navy/40">{emptyText}</span>
+        <span className="flex-1 text-xs text-brand-night-navy/60">{emptyText}</span>
       )}
     </div>
   );

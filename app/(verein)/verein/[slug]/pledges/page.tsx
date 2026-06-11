@@ -11,6 +11,7 @@ import { FilterBar, type FilterDefinition } from "@/components/shared/filter-bar
 import { CsvExportButton } from "@/components/shared/csv-export-button";
 import { StatCard } from "@/components/shared/stat-card";
 import { PledgesTable } from "./_components/pledges-table";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Pacts · KickPact" };
 
@@ -113,7 +114,7 @@ export default async function PledgesPage({
           Pacts
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">
-          Alle Sponsor-Wetten (pro Pact-Regel) im Verein. Filter, Sortierung
+          Alle Sponsor-Pacts (pro Regel) im Verein. Filter, Sortierung
           und CSV-Export.
         </p>
       </div>
@@ -150,11 +151,4 @@ export default async function PledgesPage({
       />
     </div>
   );
-}
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR"
-  });
 }

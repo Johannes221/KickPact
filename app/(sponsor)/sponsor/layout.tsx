@@ -22,7 +22,7 @@ export default async function SponsorLayout({
         {/* Großes Dashboard-Heading nur Desktop — auf Mobile trägt die AppNavBar
             den Titel (kein doppeltes, Display-schweres Heading). */}
         <div className="mb-4 hidden md:block">
-          <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
+          <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/60 mb-1">
             Mein Bereich
           </p>
           <h1 className="font-display font-bold text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">

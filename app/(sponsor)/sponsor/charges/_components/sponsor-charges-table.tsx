@@ -9,6 +9,7 @@ import {
 import { triggerLabel, triggerEmoji } from "@/lib/triggers/labels";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { eur } from "@/lib/utils/currency";
 
 interface Row {
   id: string;
@@ -29,13 +30,6 @@ interface Row {
   clubId: string;
   clubName: string;
   clubSlug: string;
-}
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR"
-  });
 }
 
 function StatusPill({ status }: { status: string }) {
@@ -83,7 +77,7 @@ export function SponsorChargesTable({
               })}
             </div>
             {r.saison && (
-              <div className="text-[0.65rem] text-brand-night-navy/40">
+              <div className="text-[0.65rem] text-brand-night-navy/60">
                 Saison {r.saison}
               </div>
             )}
@@ -120,7 +114,7 @@ export function SponsorChargesTable({
       label: "Spiel",
       render: (r) => {
         if (!r.heimName || !r.gastName) {
-          return <span className="text-xs text-brand-night-navy/40">—</span>;
+          return <span className="text-xs text-brand-night-navy/60">—</span>;
         }
         const hasResult = r.ergebnisHeim !== null && r.ergebnisGast !== null;
         return (

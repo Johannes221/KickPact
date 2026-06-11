@@ -114,7 +114,7 @@ export default async function CrawlerPage() {
                         {ageLabel(t.lastCrawledAt)}
                       </span>
                       {t.lastCrawledAt && (
-                        <div className="text-[0.65rem] text-brand-night-navy/40 font-mono">
+                        <div className="text-[0.65rem] text-brand-night-navy/60 font-mono">
                           {t.lastCrawledAt.toLocaleString("de-DE")}
                         </div>
                       )}
@@ -135,13 +135,13 @@ export default async function CrawlerPage() {
                             {t.lastError}
                           </div>
                           {t.lastErrorAt && (
-                            <div className="text-[0.65rem] text-brand-night-navy/40 font-mono">
+                            <div className="text-[0.65rem] text-brand-night-navy/60 font-mono">
                               {t.lastErrorAt.toLocaleString("de-DE")}
                             </div>
                           )}
                         </div>
                       ) : (
-                        <span className="text-brand-night-navy/30 text-xs">—</span>
+                        <span className="text-brand-night-navy/60 text-xs">—</span>
                       )}
                     </td>
                     <td className="px-3 py-2 text-right">

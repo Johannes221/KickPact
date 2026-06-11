@@ -15,6 +15,7 @@ import {
 } from "./_components/bilanz-range-selector";
 import { BilanzMonthlyChart } from "./_components/bilanz-monthly-chart";
 import { PageHeader } from "@/components/shared/page-header";
+import { eur, eurNoSign } from "@/lib/utils/currency";
 
 export const metadata = { title: "Bilanz · KickPact" };
 
@@ -30,20 +31,6 @@ const PRESET_VALUES: readonly RangePreset[] = [
   "this-season",
   "all-time"
 ];
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR"
-  });
-}
-
-function eurNoSign(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-}
 
 function resolveRange(sp: SP): {
   range: DateRange;

@@ -116,7 +116,7 @@ function FamilieForm({ defaultValues }: { defaultValues: FamilieValues }) {
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Beschreibung <span className="text-brand-night-navy/40 font-normal">(optional)</span></FormLabel>
+                <FormLabel>Beschreibung <span className="text-brand-night-navy/60 font-normal">(optional)</span></FormLabel>
                 <FormControl>
                   <Input {...field} value={field.value ?? ""} placeholder="z.B. Papa von Tim · Onkel von Lisa · Freund von Max" />
                 </FormControl>
@@ -266,7 +266,7 @@ function BusinessForm({ defaultValues }: { defaultValues: BusinessValues }) {
               <FormItem>
                 <FormLabel>
                   Umsatzsteuer-ID{" "}
-                  <span className="text-brand-night-navy/40 font-normal">(optional)</span>
+                  <span className="text-brand-night-navy/60 font-normal">(optional)</span>
                 </FormLabel>
                 <FormControl>
                   <Input

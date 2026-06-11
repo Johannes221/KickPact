@@ -8,6 +8,7 @@
  */
 
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { eur } from "@/lib/utils/currency";
 
 export interface BilanzMonthlyPoint {
   month: string; // "YYYY-MM"
@@ -17,13 +18,6 @@ export interface BilanzMonthlyPoint {
 interface Props {
   data: BilanzMonthlyPoint[];
   title?: string;
-}
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR"
-  });
 }
 
 function monthLabel(yyyyMm: string): string {

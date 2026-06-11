@@ -65,7 +65,7 @@ export async function inspectSeasonRenewalToken(token: string): Promise<
     .limit(1);
 
   if (!row) {
-    return { ok: false, error: "Pledge nicht gefunden." };
+    return { ok: false, error: "Pact nicht gefunden." };
   }
 
   const nextTeam = await findNextSeasonTeam(row.teamId, payload.nextSaison);

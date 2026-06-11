@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Receipt } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 import { requireUser } from "@/lib/auth/session";
 import { getTeamPlayerPool } from "@/lib/db/queries/matches";
 import {
@@ -15,12 +16,9 @@ import { StatCard } from "@/components/shared/stat-card";
 import { PledgeStatusToggle } from "./_components/pledge-status-toggle";
 import { PledgeCapEditor } from "./_components/pledge-cap-editor";
 import { PledgeRulesEditor, type EditableRule } from "./_components/pledge-rules-editor";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Pact · KickPact" };
-
-function eur(cents: number) {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 export default async function PledgeDetailPage({
   params
@@ -156,9 +154,11 @@ export default async function PledgeDetailPage({
         </div>
 
         {recentCharges.length === 0 ? (
-          <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-5 text-sm text-brand-night-navy/60">
-            Noch keine Beiträge. Sobald die Mannschaft spielt und Ereignisse zünden, erscheinen sie hier.
-          </div>
+          <EmptyState
+            icon={Receipt}
+            title="Noch keine Beiträge"
+            description="Sobald die Mannschaft spielt und Ereignisse zünden, erscheinen sie hier."
+          />
         ) : (
           <ul className="space-y-2">
             {recentCharges.map((c) => (

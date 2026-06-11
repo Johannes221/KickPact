@@ -75,7 +75,7 @@ export default async function AuditLogPage({
                   {e.targetType ? (
                     <span>
                       {e.targetType}
-                      {e.targetId ? <span className="text-brand-night-navy/40"> · {e.targetId}</span> : null}
+                      {e.targetId ? <span className="text-brand-night-navy/60"> · {e.targetId}</span> : null}
                     </span>
                   ) : (
                     "—"

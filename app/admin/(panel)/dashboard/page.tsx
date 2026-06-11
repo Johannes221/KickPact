@@ -14,6 +14,7 @@ import {
   currentMonthStr
 } from "@/lib/db/queries/platform-stats";
 import { MrrChart } from "./_components/mrr-chart";
+import { eur } from "@/lib/utils/currency";
 
 function lastMonths(count: number): string[] {
   const out: string[] = [];
@@ -33,14 +34,6 @@ function monthLabel(m: string): string {
 
 export const metadata = { title: "Dashboard · Admin · KickPact" };
 export const dynamic = "force-dynamic";
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0
-  });
-}
 
 const TRIGGER_LABELS: Record<string, string> = {
   goal_total: "Tore (total)",
@@ -194,7 +187,7 @@ export default async function AdminDashboardPage({
           <ul className="rounded-2xl border border-brand-neutral/40 bg-white divide-y divide-brand-neutral/20">
             {topClubs.map((c, i) => (
               <li key={c.clubId} className="px-4 md:px-5 py-3 flex items-center gap-4">
-                <span className="font-display font-black text-sm md:text-base text-brand-night-navy/30 tabular-nums w-6">
+                <span className="font-display font-black text-sm md:text-base text-brand-night-navy/60 tabular-nums w-6">
                   {i + 1}.
                 </span>
                 <div className="flex-1 min-w-0">

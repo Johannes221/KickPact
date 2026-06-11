@@ -7,15 +7,12 @@ import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
 import { AvailableTriggers } from "./_components/available-triggers";
 import { PactsFilterBar } from "./_components/pacts-filter-bar";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Pacts · KickPact" };
 
 type FilterStatus = "all" | "active" | "paused" | "ended";
 type FilterKind = "all" | "auto" | "manual" | "season";
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 function statusBadge(s: string): { label: string; tone: BadgeProps["tone"] } {
   if (s === "active") return { label: "Aktiv", tone: "success" };

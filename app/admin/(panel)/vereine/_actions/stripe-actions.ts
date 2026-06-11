@@ -10,10 +10,7 @@ import {
   getClubWithSubscriptionBySlug,
   setSubscriptionTrialEnd
 } from "@/lib/db/queries/club-admin";
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
+import { eur } from "@/lib/utils/currency";
 
 const extendSchema = z.object({
   clubSlug: z.string().min(1),

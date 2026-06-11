@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { getTeamCrawlState } from "@/lib/db/queries/crawler";
 import { isTeamCrawling } from "@/lib/crawler/crawl-status";
 import { SpieleRefresh } from "./_components/spiele-refresh";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Spiele · KickPact" };
 
@@ -20,10 +21,6 @@ type ZeitFilter = "alle" | "kommend" | "gespielt";
 type OrtFilter = "alle" | "heim" | "auswaerts";
 type RundeFilter = "alle" | "hin" | "rueck";
 type ResultFilter = "alle" | "win" | "draw" | "loss";
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 function fmtDate(d: Date): string {
   return d.toLocaleDateString("de-DE", { weekday: "short", year: "2-digit", month: "2-digit", day: "2-digit" });
@@ -267,7 +264,7 @@ export default async function SpielePage({
                       {abbreviateTeamName(m.heimName)}
                     </span>
                     {m.isScheduled ? (
-                      <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/40 whitespace-nowrap">
+                      <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/60 whitespace-nowrap">
                         vs
                       </span>
                     ) : (
@@ -283,7 +280,7 @@ export default async function SpielePage({
                     </span>
                   </span>
                   {m.isScheduled ? (
-                    <span className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/40">
+                    <span className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/60">
                       Kommend
                     </span>
                   ) : (

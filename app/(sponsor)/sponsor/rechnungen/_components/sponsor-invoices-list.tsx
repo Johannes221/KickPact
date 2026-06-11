@@ -7,6 +7,7 @@ import { openInNewTab } from "@/lib/platform/files";
 import { DataTable, type DataTableColumn, type SortDirection } from "@/components/ui/data-table";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { invoiceDownloadUrl, markInvoicePaidBySponsor } from "@/lib/actions/invoices";
+import { eur } from "@/lib/utils/currency";
 
 interface Row {
   id: string;
@@ -20,10 +21,6 @@ interface Row {
   paidMarkedAt: Date | null;
   markedPaidBySponsorAt: Date | null;
   createdAt: Date;
-}
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 }
 
 type PayState =
@@ -80,7 +77,7 @@ export function SponsorInvoicesList({
             {row.clubName}
           </div>
           {row.sentAt && (
-            <div className="text-[0.65rem] text-brand-night-navy/40">
+            <div className="text-[0.65rem] text-brand-night-navy/60">
               Versendet {new Date(row.sentAt).toLocaleDateString("de-DE")}
             </div>
           )}

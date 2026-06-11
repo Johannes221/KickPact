@@ -19,7 +19,7 @@ export default async function KontoSupportPage() {
     <main className="mx-auto max-w-3xl px-5 md:px-6 py-8 md:py-12 space-y-6">
       <header className="flex items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/40 mb-1">
+          <p className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/60 mb-1">
             Hilfe &amp; Support
           </p>
           <h1 className="font-display font-bold text-2xl md:text-4xl tracking-tight text-brand-night-navy">

@@ -24,8 +24,9 @@
 
 import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { ALLOWED_PAGE_SIZES } from "@/lib/db/queries/_helpers/paginate";
@@ -251,11 +252,18 @@ export function DataTable<TRow>({
           </tbody>
         </table>
 
-        {showEmpty && (
-          <div className="px-3 md:px-4 py-10 text-center text-sm text-brand-night-navy/50">
-            {emptyState ?? "Keine Daten."}
-          </div>
-        )}
+        {showEmpty &&
+          (typeof emptyState === "string" || emptyState == null ? (
+            <EmptyState
+              icon={Inbox}
+              title={typeof emptyState === "string" ? emptyState : "Keine Daten."}
+              className="bg-transparent shadow-none py-10"
+            />
+          ) : (
+            <div className="px-3 md:px-4 py-10 text-center text-sm text-brand-night-navy/50">
+              {emptyState}
+            </div>
+          ))}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

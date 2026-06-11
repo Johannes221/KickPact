@@ -86,7 +86,7 @@ function InquiryRow({ inquiry }: { inquiry: Inquiry }) {
             <div className="text-xs text-brand-night-navy/50">{inquiry.sponsorEmail}</div>
           )}
         </div>
-        <div className="text-[0.65rem] text-brand-night-navy/40">
+        <div className="text-[0.65rem] text-brand-night-navy/60">
           {new Date(inquiry.createdAt).toLocaleDateString("de-DE")}
         </div>
       </div>

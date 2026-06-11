@@ -12,15 +12,10 @@ import { assertClubAccess } from "@/lib/auth/scope";
 import { listChargesForClub } from "@/lib/db/queries/club-reporting";
 import { triggerLabel } from "@/lib/triggers/labels";
 import { buildCsv, csvFilename, csvResponseHeaders } from "@/lib/exports/csv";
+import { eurCsv } from "@/lib/utils/currency";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function eur(cents: number): string {
-  // Excel-DE: Komma als Dezimaltrenner. Keine Tausenderpunkte, damit Excel
-  // den Wert als Zahl parst (Punkte würden je nach Excel-Setting collidieren).
-  return (cents / 100).toFixed(2).replace(".", ",");
-}
 
 function statusLabel(s: string): string {
   const map: Record<string, string> = {
@@ -81,7 +76,7 @@ export async function GET(req: NextRequest) {
       r.sponsorEmail,
       triggerLabel(r.triggerType),
       r.triggerType,
-      eur(r.amountCents),
+      eurCsv(r.amountCents),
       statusLabel(r.status),
       r.createdAt.toISOString(),
       r.confirmedAt ? r.confirmedAt.toISOString() : "",

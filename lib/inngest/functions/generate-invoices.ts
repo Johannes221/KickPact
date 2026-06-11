@@ -37,6 +37,7 @@ import { triggerLabel } from "@/lib/triggers/labels";
 import { formatSaisonLabel } from "@/lib/utils/saison";
 import { maskEmail } from "@/lib/utils/log-pii";
 import { notifyUsers } from "@/lib/notifications/deliver";
+import { eur } from "@/lib/utils/currency";
 
 /**
  * Lesbare Labels für Trigger-Typen — landen auf der PDF + in der DB-Description.
@@ -59,10 +60,6 @@ const TRIGGER_LABELS: Record<string, string> = {
   man_of_match: "Spieler des Spiels",
   custom: "Custom-Event"
 };
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 /**
  * Rechnungszeilen-Sicht auf eine Charge. Saison-Charges (matchDate=null) haben

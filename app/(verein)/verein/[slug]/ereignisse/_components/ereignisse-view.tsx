@@ -2,9 +2,12 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { Zap } from "lucide-react";
 import type { EreignisRow } from "@/lib/db/queries/club-dashboard";
+import { EmptyState } from "@/components/shared/empty-state";
 import { TriggerIcon } from "@/components/shared/trigger-icon";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
+import { eur } from "@/lib/utils/currency";
 
 const TRIGGER_LABELS: Record<string, { label: string; emoji: string }> = {
   goal_total:           { label: "Pro Tor",          emoji: "⚽" },
@@ -29,10 +32,6 @@ function triggerLabel(r: EreignisRow): string {
   const base = TRIGGER_LABELS[r.triggerType]?.label ?? r.triggerType;
   if (r.playerName) return `${base} · ${r.playerName}`;
   return base;
-}
-
-function eur(cents: number) {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 }
 
 type SortKey = "date" | "amount" | "type";
@@ -103,9 +102,11 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60">
-        Noch keine Ereignisse. Sobald Sponsoren aktiv sind und Spiele stattfinden, erscheinen hier alle ausgelösten Ereignisse.
-      </div>
+      <EmptyState
+        icon={Zap}
+        title="Noch keine Ereignisse"
+        description="Sobald Sponsoren aktiv sind und Spiele stattfinden, erscheinen hier alle ausgelösten Ereignisse."
+      />
     );
   }
 
@@ -244,7 +245,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
                           <div className="text-xs text-brand-night-navy/50 mt-0.5">{r.playerName}</div>
                         )}
                         {r.teamName && (
-                          <div className="text-xs text-brand-night-navy/40 mt-0.5">{r.teamName}</div>
+                          <div className="text-xs text-brand-night-navy/60 mt-0.5">{r.teamName}</div>
                         )}
                       </Link>
                     ) : (
@@ -257,7 +258,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
                           <div className="text-xs text-brand-night-navy/50 mt-0.5">{r.playerName}</div>
                         )}
                         {r.teamName && (
-                          <div className="text-xs text-brand-night-navy/40 mt-0.5">{r.teamName}</div>
+                          <div className="text-xs text-brand-night-navy/60 mt-0.5">{r.teamName}</div>
                         )}
                       </>
                     )}
@@ -277,7 +278,7 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
                         )}
                       </Link>
                     ) : (
-                      <span className="text-brand-night-navy/40">—</span>
+                      <span className="text-brand-night-navy/60">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-brand-night-navy">

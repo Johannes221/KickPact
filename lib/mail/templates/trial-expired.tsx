@@ -10,12 +10,12 @@ export function trialExpiredEmail(args: {
 
 dein KickPact-Trial für ${clubName} ist heute abgelaufen.
 
-Damit die Plattform weiter läuft und Sponsor-Charges erzeugt werden,
+Damit die Plattform weiter läuft und Sponsor-Beiträge erzeugt werden,
 wähle bitte einen Plan im Abo-Dashboard:
 ${aboUrl}
 
 Bis zum Plan-Abschluss ist die Mannschaft auf Read-Only — Crawler,
-Charge-Erzeugung und PDF-Versand pausieren.
+Beitrags-Erzeugung und PDF-Versand pausieren.
 
 Wenn ihr nicht weitermacht: alle Daten bleiben 90 Tage erhalten,
 ihr könnt jederzeit wieder einsteigen.
@@ -41,7 +41,7 @@ Bei Fragen einfach auf diese Mail antworten.
       </p>
       <ul style="margin: 0 0 24px; padding-left: 20px; color: #525252; line-height: 1.8; font-size: 14px;">
         <li>Crawler pausiert — keine neuen Spiel-Events</li>
-        <li>Charge-Erzeugung gestoppt — Sponsoren werden nicht belastet</li>
+        <li>Beitrags-Erzeugung gestoppt — Sponsoren werden nicht belastet</li>
         <li>PDF-Versand ausgesetzt</li>
       </ul>
 

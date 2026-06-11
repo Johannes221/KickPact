@@ -105,7 +105,7 @@ export function VereineTable({
         row.verifiedAt ? (
           <span className="text-emerald-700">✓</span>
         ) : (
-          <span className="text-brand-night-navy/40">—</span>
+          <span className="text-brand-night-navy/60">—</span>
         )
     },
     {

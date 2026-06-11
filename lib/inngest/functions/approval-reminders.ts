@@ -16,10 +16,7 @@ import { sponsorLabelSql } from "@/lib/db/queries/sponsor-label";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { approvalReminderEmail } from "@/lib/mail/templates/approval-reminder";
 import { signApprovalToken } from "@/lib/auth/approval-token";
-
-function eur(cents: number) {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
+import { eur } from "@/lib/utils/currency";
 
 function eventLabel(type: string, subtype: string | null): string {
   if (type === "tor") return "Tor";

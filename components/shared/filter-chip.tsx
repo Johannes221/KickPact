@@ -15,7 +15,7 @@ export function FilterRow({
 }) {
   return (
     <div className="flex items-center gap-2.5">
-      <span className="w-12 shrink-0 text-[0.6rem] font-bold uppercase tracking-widest text-brand-night-navy/40">
+      <span className="w-12 shrink-0 text-[0.6rem] font-bold uppercase tracking-widest text-brand-night-navy/60">
         {label}
       </span>
       <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 py-0.5 no-scrollbar">

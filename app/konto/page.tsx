@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { Bell, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { requireUser } from "@/lib/auth/session";
@@ -341,12 +342,9 @@ export default async function KontoPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Link
-            href="/konto/support"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent/90"
-          >
-            Meine Anfragen
-          </Link>
+          <Button asChild variant="accent" size="sm">
+            <Link href="/konto/support">Meine Anfragen</Link>
+          </Button>
           <Link
             href="/hilfe"
             className="inline-flex items-center gap-1.5 rounded-lg border border-brand-neutral/40 px-4 py-2 text-sm font-semibold text-brand-night-navy hover:bg-brand-off-white"

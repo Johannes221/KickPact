@@ -7,6 +7,7 @@ import { openInNewTab } from "@/lib/platform/files";
 import { DataTable, type DataTableColumn, type SortDirection } from "@/components/ui/data-table";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { markInvoicePaid, invoiceDownloadUrl } from "@/lib/actions/invoices";
+import { eur } from "@/lib/utils/currency";
 
 interface Row {
   id: string;
@@ -21,10 +22,6 @@ interface Row {
   sentAt: Date | null;
   paidMarkedAt: Date | null;
   createdAt: Date;
-}
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 }
 
 interface InvoicesTableProps {

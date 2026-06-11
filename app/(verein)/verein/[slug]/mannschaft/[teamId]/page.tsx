@@ -1,5 +1,15 @@
 import Link from "next/link";
-import { Trophy, Medal, ArrowUp, ArrowDown, StickyNote, Sparkles } from "lucide-react";
+import {
+  Trophy,
+  Medal,
+  ArrowUp,
+  ArrowDown,
+  StickyNote,
+  Sparkles,
+  CalendarDays
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/shared/empty-state";
 import { TriggerIcon } from "@/components/shared/trigger-icon";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import {
@@ -27,12 +37,9 @@ import { markCrawlStarted } from "@/lib/db/queries/crawler";
 import { TeamSetupChecklist } from "./_components/team-setup-checklist";
 import { CrawlAutoRefresh } from "./_components/crawl-auto-refresh";
 import { PageHeader } from "@/components/shared/page-header";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Mannschaft · KickPact" };
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 export default async function TeamDetailPage({
   params
@@ -194,7 +201,7 @@ export default async function TeamDetailPage({
       {seasonPledges.length > 0 && (
         <section>
           <h3 className="font-display font-bold text-xl tracking-tight text-brand-night-navy mb-3">
-            Saison-Wetten
+            Saison-Ziele
           </h3>
           <ul className="space-y-2">
             {seasonPledges.map((r) => {
@@ -318,22 +325,22 @@ export default async function TeamDetailPage({
 
         {matchRows.length === 0 ? (
           !isCrawling && (
-            <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60">
-              {team.dataCoverage === "none" ? (
-                // B1c (Audit 2026-06-11): keine Automatik versprechen, wenn es
-                // für diese Altersklasse keine automatischen Spieldaten gibt.
-                <>
-                  Für diese Altersklasse gibt es keine automatischen Spieldaten.
-                  Spiele und Ereignisse meldet ihr selbst — eure Sponsoren
-                  bestätigen sie anschließend.
-                </>
-              ) : (
-                <>
-                  Für diese Mannschaft wurden noch keine Spiele gefunden. Sobald
-                  die Saison startet, erscheinen sie hier automatisch.
-                </>
-              )}
-            </div>
+            <EmptyState
+              icon={CalendarDays}
+              title="Noch keine Spiele"
+              description={
+                team.dataCoverage === "none"
+                  ? // B1c (Audit 2026-06-11): keine Automatik versprechen, wenn es
+                    // für diese Altersklasse keine automatischen Spieldaten gibt.
+                    "Für diese Altersklasse gibt es keine automatischen Spieldaten. Spiele und Ereignisse meldet ihr selbst — eure Sponsoren bestätigen sie anschließend."
+                  : "Für diese Mannschaft wurden noch keine Spiele gefunden. Sobald die Saison startet, erscheinen sie hier automatisch."
+              }
+              action={
+                <Button asChild>
+                  <Link href={`${teamBase}/sponsoren`}>Sponsoren einladen</Link>
+                </Button>
+              }
+            />
           )
         ) : (
           <ul className="space-y-2">

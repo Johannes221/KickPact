@@ -104,7 +104,7 @@ export function EinstellungenForm({
               name="ort"
               render={({ field }) => (
                 <FormItem className="sm:col-span-2">
-                  <FormLabel>Ort / Region <span className="text-brand-night-navy/40 font-normal">(optional)</span></FormLabel>
+                  <FormLabel>Ort / Region <span className="text-brand-night-navy/60 font-normal">(optional)</span></FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="z.B. Musterstadt" />
                   </FormControl>
@@ -227,7 +227,7 @@ export function EinstellungenForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  IBAN <span className="text-brand-night-navy/40 font-normal">(optional)</span>
+                  IBAN <span className="text-brand-night-navy/60 font-normal">(optional)</span>
                 </FormLabel>
                 <FormControl>
                   <Input

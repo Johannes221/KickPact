@@ -105,7 +105,7 @@ export function EventRowActions({
         });
         const detail =
           res.invalidatedCharges > 0
-            ? ` · ${res.invalidatedCharges} Charge(s) für Re-Eval zurückgesetzt`
+            ? ` · ${res.invalidatedCharges} Beitrag/Beiträge für Re-Eval zurückgesetzt`
             : "";
         toast.success(`Event aktualisiert${detail}`);
         setEditOpen(false);
@@ -122,7 +122,7 @@ export function EventRowActions({
         const res = await deleteMatchEventAction({ matchEventId: eventId });
         const detail =
           res.invalidatedCharges > 0
-            ? ` · ${res.invalidatedCharges} Charge(s) cancelled`
+            ? ` · ${res.invalidatedCharges} Beitrag/Beiträge storniert`
             : "";
         toast.success(`Event gelöscht${detail}`);
         setDeleteOpen(false);
@@ -141,7 +141,7 @@ export function EventRowActions({
         <button
           type="button"
           onClick={() => setEditOpen(true)}
-          className="grid h-8 w-8 place-items-center rounded-md text-brand-night-navy/40 hover:text-accent hover:bg-accent/10 transition-colors"
+          className="grid h-8 w-8 place-items-center rounded-md text-brand-night-navy/60 hover:text-accent hover:bg-accent/10 transition-colors"
           aria-label="Event bearbeiten"
           title="Bearbeiten"
         >
@@ -150,7 +150,7 @@ export function EventRowActions({
         <button
           type="button"
           onClick={() => setDeleteOpen(true)}
-          className="grid h-8 w-8 place-items-center rounded-md text-brand-night-navy/40 hover:text-brand-alert-red hover:bg-brand-alert-red/10 transition-colors"
+          className="grid h-8 w-8 place-items-center rounded-md text-brand-night-navy/60 hover:text-brand-alert-red hover:bg-brand-alert-red/10 transition-colors"
           aria-label="Event löschen"
           title="Löschen"
         >
@@ -166,7 +166,7 @@ export function EventRowActions({
               Event bearbeiten
             </DialogTitle>
             <DialogDescription>
-              Änderungen setzen alle Charges aus diesem Event zurück. Eine
+              Änderungen setzen alle Beiträge aus diesem Event zurück. Eine
               Neuauswertung läuft automatisch.
             </DialogDescription>
           </DialogHeader>
@@ -290,10 +290,10 @@ export function EventRowActions({
             <DialogDescription className="space-y-2 pt-2">
               <span className="block">
                 Das Event wird unwiderruflich entfernt. Alle daraus entstandenen
-                Charges werden auf <strong>cancelled</strong> gesetzt.
+                Beiträge werden <strong>storniert</strong>.
               </span>
               <span className="block text-xs text-brand-night-navy/60">
-                Bereits in Rechnung gestellte Charges können nicht gelöscht werden —
+                Bereits in Rechnung gestellte Beiträge können nicht gelöscht werden —
                 in dem Fall bricht die Aktion ab.
               </span>
             </DialogDescription>

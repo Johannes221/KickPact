@@ -31,7 +31,8 @@ import { MagneticCard } from "@/components/landing/magnetic-card";
 import { MagneticCTA } from "@/components/landing/magnetic-cta";
 
 export const metadata = {
-  title: "Amateurfußball-Sponsoring, das mitfiebert",
+  // `absolute`: Marke vorne („KickPact – …") statt Layout-Template („… – KickPact").
+  title: { absolute: "KickPact – Amateurfußball-Sponsoring, das mitfiebert" },
   description:
     "Familie, Freunde und lokale Sponsoren setzen einen Betrag pro Tor, Sieg oder Aufstieg und füllen so die Mannschaftskasse. 100 % bleibt bei der Mannschaft.",
   keywords: [
@@ -42,9 +43,11 @@ export const metadata = {
     "Fußballverein Sponsor",
   ],
   openGraph: {
-    title: "Amateurfußball-Sponsoring, das mitfiebert",
+    title: "KickPact – Amateurfußball-Sponsoring, das mitfiebert",
     description:
       "Jedes Tor füllt die Mannschaftskasse. Familie, Freunde und lokale Sponsoren fiebern mit. 100 % bleibt bei der Mannschaft.",
+    // og:url der Landing — wird über metadataBase (Root-Layout) absolut aufgelöst.
+    url: "/",
   },
 };
 

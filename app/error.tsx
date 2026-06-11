@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { TriangleAlert } from "lucide-react";
 
 /**
@@ -50,7 +51,7 @@ export default function GlobalError({
         {error.digest && (
           <div className="mt-5 rounded-lg border border-brand-neutral/40 bg-white p-3">
             <div className="text-[0.65rem] font-bold uppercase tracking-widest text-brand-night-navy/50">
-              Error-Digest <span className="font-normal normal-case lowercase text-brand-night-navy/40">— für den Support-Screenshot</span>
+              Error-Digest <span className="font-normal normal-case lowercase text-brand-night-navy/60">— für den Support-Screenshot</span>
             </div>
             <code className="mt-1 block font-mono text-xs text-brand-night-navy break-all">
               {error.digest}
@@ -59,13 +60,9 @@ export default function GlobalError({
         )}
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={reset}
-            className="inline-flex h-11 items-center rounded-lg bg-accent px-4 text-sm font-bold text-white hover:bg-accent-dark transition-colors"
-          >
+          <Button variant="accent" onClick={reset}>
             Nochmal versuchen
-          </button>
+          </Button>
           <Link
             href="/"
             className="inline-flex h-11 items-center rounded-lg border border-brand-neutral/40 bg-white px-4 text-sm font-semibold text-brand-night-navy hover:bg-brand-off-white transition-colors"

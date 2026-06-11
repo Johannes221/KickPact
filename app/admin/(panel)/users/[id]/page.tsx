@@ -4,17 +4,10 @@ import { getUserDetail } from "@/lib/db/queries/platform-stats";
 import { UserProfileEdit } from "@/components/admin/user-profile-edit";
 import { UserAccountActions } from "@/components/admin/user-account-actions";
 import { UserClubMembershipActions } from "@/components/admin/user-club-membership-actions";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "User-Detail · Admin · KickPact" };
 export const dynamic = "force-dynamic";
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 2
-  });
-}
 
 export default async function UserDetailPage({
   params

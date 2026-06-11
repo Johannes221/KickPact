@@ -12,6 +12,7 @@ import {
 import { triggerEmoji, triggerLabel } from "@/lib/triggers/labels";
 import { CsvExportButton } from "@/components/shared/csv-export-button";
 import { SponsorChargesTable } from "./_components/sponsor-charges-table";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Sponsor · KickPact" };
 
@@ -96,7 +97,7 @@ export default async function SponsorDetailPage({
         <Tile
           label="Total Lifetime"
           value={eur(overview.totals.totalChargesLifetimeCents)}
-          hint="Alle Charges"
+          hint="Alle Beiträge"
         />
       </div>
 
@@ -258,7 +259,7 @@ export default async function SponsorDetailPage({
       <section>
         <div className="flex items-end justify-between mb-3 md:mb-4">
           <h3 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
-            Charges ({chargesResult.total})
+            Beiträge ({chargesResult.total})
           </h3>
           <CsvExportButton
             endpoint="/api/exports/charges"
@@ -281,13 +282,6 @@ export default async function SponsorDetailPage({
   );
 }
 
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR"
-  });
-}
-
 function Tile({
   label,
   value,
@@ -305,7 +299,7 @@ function Tile({
       <div className="mt-1.5 font-display font-bold text-2xl md:text-3xl tracking-tight text-brand-night-navy">
         {value}
       </div>
-      {hint && <div className="text-xs text-brand-night-navy/40 mt-0.5">{hint}</div>}
+      {hint && <div className="text-xs text-brand-night-navy/60 mt-0.5">{hint}</div>}
     </div>
   );
 }

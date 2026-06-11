@@ -25,13 +25,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cancelChargeAction } from "../_actions/cancel";
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR"
-  });
-}
+import { eur } from "@/lib/utils/currency";
 
 function fmtDate(d: Date | null): string {
   if (!d) return "—";
@@ -212,7 +206,7 @@ export function ChargesTable({
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 w-7 p-0 text-brand-night-navy/40 hover:text-red-600 hover:bg-red-50"
+              className="h-7 w-7 p-0 text-brand-night-navy/60 hover:text-red-600 hover:bg-red-50"
               title="Beitrag stornieren"
               disabled={pending}
               onClick={() => openCancel(r)}

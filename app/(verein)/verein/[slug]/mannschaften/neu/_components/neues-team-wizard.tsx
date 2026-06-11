@@ -170,7 +170,7 @@ export function NeuesTeamWizard({
                         <div className="font-semibold text-brand-night-navy">
                           {t.name}
                         </div>
-                        <div className="text-xs text-brand-night-navy/40 mt-0.5">
+                        <div className="text-xs text-brand-night-navy/60 mt-0.5">
                           Saison {t.saison}
                           {alreadyExists && (
                             <span className="ml-2 inline-flex items-center rounded-full bg-brand-neutral/40 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-brand-night-navy/60">

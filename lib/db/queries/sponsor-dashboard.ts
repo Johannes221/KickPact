@@ -204,3 +204,38 @@ export async function createSponsorProfile(values: typeof sponsors.$inferInsert)
   const [sponsor] = await db.insert(sponsors).values(values).returning();
   return sponsor;
 }
+
+export interface SponsoredTeamRow {
+  teamId: string;
+  teamName: string;
+  clubName: string;
+  league: string | null;
+  publicSlug: string | null;
+  activePledges: number;
+  totalPledges: number;
+}
+
+/**
+ * Alle Mannschaften, die ein Sponsor (mind. einmal) sponsert — mit Pact-Zahlen,
+ * sortiert nach aktiven Pacts. Treibt /sponsor/mannschaften.
+ */
+export async function listSponsoredTeamsForSponsor(
+  sponsorId: string
+): Promise<SponsoredTeamRow[]> {
+  return db
+    .select({
+      teamId: teams.id,
+      teamName: teams.name,
+      clubName: clubs.name,
+      league: teams.league,
+      publicSlug: teams.publicSlug,
+      activePledges: sql<number>`count(*) FILTER (WHERE ${pledges.status} = 'active')::int`,
+      totalPledges: sql<number>`count(*)::int`
+    })
+    .from(pledges)
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(eq(pledges.sponsorId, sponsorId))
+    .groupBy(teams.id, teams.name, clubs.name, teams.league, teams.publicSlug)
+    .orderBy(desc(sql`count(*) FILTER (WHERE ${pledges.status} = 'active')`));
+}

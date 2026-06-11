@@ -171,7 +171,7 @@ export default async function SupportInboxPage({
                       {t.subject}
                     </Link>
                     <div className="mt-1 flex items-center gap-1.5">
-                      <span className="font-mono text-[0.7rem] text-brand-night-navy/40">
+                      <span className="font-mono text-[0.7rem] text-brand-night-navy/60">
                         {ticketReference(t.id)}
                       </span>
                       <CategoryBadge category={t.category} />
@@ -180,10 +180,10 @@ export default async function SupportInboxPage({
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-brand-night-navy/70">
                     {t.name}
-                    <span className="block text-[0.7rem] text-brand-night-navy/40">{t.email}</span>
+                    <span className="block text-[0.7rem] text-brand-night-navy/60">{t.email}</span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-brand-night-navy/60">
-                    {t.assigneeEmail ?? <span className="text-brand-night-navy/30">—</span>}
+                    {t.assigneeEmail ?? <span className="text-brand-night-navy/60">—</span>}
                   </td>
                 </tr>
               );

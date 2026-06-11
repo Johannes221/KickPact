@@ -1,5 +1,6 @@
 import { Document, Page, Text, View, Image, StyleSheet, Font } from "@react-pdf/renderer";
 import path from "node:path";
+import { eur } from "@/lib/utils/currency";
 
 // Inter Font registrieren — lokale TTFs unter public/fonts/inter/
 // (Remote rsms.me liefert seit ~Mai 2026 HTTP 404 für /font-files/*.otf —
@@ -155,10 +156,6 @@ export interface InvoiceData {
    * Zahlungsaufforderung (Beträge sind negativ = Gutschrift).
    */
   stornoOfNumber?: string | null;
-}
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 }
 
 export function InvoicePdf({ data }: { data: InvoiceData }) {
