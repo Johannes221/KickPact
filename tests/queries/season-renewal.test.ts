@@ -254,14 +254,100 @@ describe("clonePledgeForNextSeason", () => {
     expect(clone.monthlyCapCents).toBe(5000);
   });
 
-  it("wirft wenn next-season-Team fehlt", async () => {
+  it("Pre-Bump-Klick (Juni): kein next-season-Team → klont auf dieselbe Team-Row mit korrektem Fenster", async () => {
     const seed = await seedSponsorPledge({
       endsAtOffsetDays: 10,
+      ruleCount: 2,
       withNextSeasonTeam: false
     });
-    await expect(
-      clonePledgeForNextSeason(seed.pledgeId, "2627")
-    ).rejects.toThrow(/keine Mannschaft/i);
+
+    const result = await clonePledgeForNextSeason(seed.pledgeId, "2627");
+
+    expect(result.pledgeId).not.toBe(seed.pledgeId);
+    expect(result.targetTeamId).toBe(seed.teamId); // dieselbe Row — sie WIRD nach dem Bump 2627
+    expect(result.targetSaison).toBe("2627");
+    expect(result.pledgeRulesCount).toBe(2);
+
+    const [original] = await db
+      .select()
+      .from(pledges)
+      .where(eq(pledges.id, seed.pledgeId));
+    const [clone] = await db
+      .select()
+      .from(pledges)
+      .where(eq(pledges.id, result.pledgeId));
+
+    // startsAt = altes endsAt + 1 Tag, endsAt = startsAt + 1 Jahr
+    expect(clone.startsAt.getTime()).toBe(
+      original.endsAt.getTime() + 24 * 60 * 60 * 1000
+    );
+    expect(clone.endsAt.getTime()).toBe(
+      clone.startsAt.getTime() + 365 * 24 * 60 * 60 * 1000
+    );
+    expect(clone.teamId).toBe(seed.teamId);
+    expect(clone.status).toBe("active");
+  });
+
+  it("Doppel-Klick auf dieselbe Row ist idempotent", async () => {
+    const seed = await seedSponsorPledge({
+      endsAtOffsetDays: 10,
+      ruleCount: 2,
+      withNextSeasonTeam: false
+    });
+
+    const first = await clonePledgeForNextSeason(seed.pledgeId, "2627");
+    const second = await clonePledgeForNextSeason(seed.pledgeId, "2627");
+    expect(second.pledgeId).toBe(first.pledgeId);
+    expect(second.pledgeRulesCount).toBe(2);
+
+    // Es gibt genau 2 Pledges (Original + 1 Clone), nicht 3
+    const all = await db
+      .select({ id: pledges.id })
+      .from(pledges)
+      .where(eq(pledges.teamId, seed.teamId));
+    expect(all.length).toBe(2);
+  });
+
+  it("Alt-Pledge auf derselben Row wird NICHT als Clone fehlinterpretiert", async () => {
+    // Post-Bump-Szenario: Ziel ist dieselbe Row, auf der die Original-Pledge
+    // hängt. Der Idempotenz-Check darf die ALTE Pledge (endsAt <= original.endsAt)
+    // nicht als existierenden Clone werten — sonst wäre Renewal ein No-Op.
+    const seed = await seedSponsorPledge({
+      endsAtOffsetDays: 10,
+      ruleCount: 1,
+      withNextSeasonTeam: false
+    });
+
+    const result = await clonePledgeForNextSeason(seed.pledgeId, "2627");
+    expect(result.pledgeId).not.toBe(seed.pledgeId);
+  });
+
+  it("kopiert Rules inkl. capCents/capPeriod", async () => {
+    const seed = await seedSponsorPledge({
+      endsAtOffsetDays: 10,
+      ruleCount: 0,
+      withNextSeasonTeam: true
+    });
+    await db.insert(pledgeRules).values({
+      pledgeId: seed.pledgeId,
+      triggerType: "goal_total",
+      amountCents: 500,
+      capCents: 2000,
+      capPeriod: "month",
+      requiresApproval: true
+    });
+
+    const result = await clonePledgeForNextSeason(seed.pledgeId, "2627");
+
+    const cloneRules = await db
+      .select()
+      .from(pledgeRules)
+      .where(eq(pledgeRules.pledgeId, result.pledgeId));
+    expect(cloneRules.length).toBe(1);
+    expect(cloneRules[0].capCents).toBe(2000);
+    expect(cloneRules[0].capPeriod).toBe("month");
+    expect(cloneRules[0].requiresApproval).toBe(true);
+    expect(cloneRules[0].amountCents).toBe(500);
   });
 
   it("ist idempotent — zweiter Call returnt selbe pledgeId", async () => {

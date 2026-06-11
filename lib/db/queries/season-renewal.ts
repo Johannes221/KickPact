@@ -1,4 +1,4 @@
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gt, gte, lte } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   pledges,
@@ -165,16 +165,20 @@ export interface ClonedPledge {
 /**
  * Kopiert eine Pledge + alle ihre Rules in die nächste Saison.
  *
- * Vorgehen:
+ * Vorgehen (Phase 3 / R3, Architektur „Saison-Bump statt Saison-Rows"):
  *   1. Lade die Original-Pledge und ihre PledgeRules.
- *   2. Finde das Ziel-Team über `findNextSeasonTeam`. Wenn keins
- *      existiert → throw (Caller fängt und zeigt user-friendly message).
- *   3. Wenn `nextSeasonBoundaries` gegeben → setze `startsAt` + `endsAt`
- *      darauf. Sonst: starte am alten endsAt+1s, ende +1 Jahr.
- *   4. Insert neue Pledge + alle Rules in einer Transaktion.
+ *   2. Ziel-Team über `findNextSeasonTeam`. Liefert das nichts (Pre-Bump-
+ *      Klick im Juni — die Row trägt noch die alte Saison), fällt das Ziel
+ *      auf die ORIGINAL-Team-Row zurück: sie WIRD nach dem Rollover-Bump
+ *      die nächste Saison.
+ *   3. `startsAt`/`endsAt` aus Options, sonst: alter endsAt+1 Tag, +1 Jahr.
+ *   4. Insert neue Pledge + alle Rules (inkl. capCents/capPeriod) in einer
+ *      Transaktion.
  *
- * Idempotenz: falls bereits eine Pledge für (sponsorId, teamId,
- * targetSaison) existiert, wird ihre ID zurückgegeben (kein Duplicate).
+ * Idempotenz: als existierender Clone zählt NUR eine Pledge des Sponsors
+ * auf dem Ziel-Team mit `endsAt > original.endsAt`. Nach dem Bump ist das
+ * Ziel dieselbe Row wie das Original — ein Check auf bloße Existenz würde
+ * die ALTE Pledge finden und das Renewal still verschlucken.
  */
 export async function clonePledgeForNextSeason(
   pledgeId: string,
@@ -194,21 +198,38 @@ export async function clonePledgeForNextSeason(
       .limit(1);
     if (!original) throw new Error("Pledge nicht gefunden.");
 
-    const targetTeam = await findNextSeasonTeam(original.teamId, nextSaison);
+    // Ziel-Team: dedizierte Next-Season-Row, sonst Fallback auf die
+    // Original-Row (Pre-Bump-Klick — der Saison-Rollover bumpt sie später).
+    let targetTeam = await findNextSeasonTeam(original.teamId, nextSaison);
     if (!targetTeam) {
-      throw new Error(
-        `Es gibt noch keine Mannschaft für die Saison ${nextSaison}. Bitte kontaktiere den Verein.`
-      );
+      const [sameRow] = await tx
+        .select({ id: teams.id, name: teams.name, saison: teams.saison })
+        .from(teams)
+        .where(eq(teams.id, original.teamId))
+        .limit(1);
+      if (!sameRow) {
+        throw new Error(
+          `Es gibt noch keine Mannschaft für die Saison ${nextSaison}. Bitte kontaktiere den Verein.`
+        );
+      }
+      targetTeam = sameRow;
     }
 
-    // Idempotenz: existiert bereits eine Pledge dieses Sponsors für das Ziel-Team?
+    const originalEndsAt =
+      original.endsAt instanceof Date
+        ? original.endsAt
+        : new Date(original.endsAt);
+
+    // Idempotenz: nur eine Pledge mit endsAt NACH dem Original zählt als
+    // Clone — die Original-Pledge selbst (gleiche Row nach dem Bump!) nicht.
     const [existingClone] = await tx
       .select({ id: pledges.id })
       .from(pledges)
       .where(
         and(
           eq(pledges.sponsorId, original.sponsorId),
-          eq(pledges.teamId, targetTeam.id)
+          eq(pledges.teamId, targetTeam.id),
+          gt(pledges.endsAt, originalEndsAt)
         )
       )
       .limit(1);
@@ -222,20 +243,13 @@ export async function clonePledgeForNextSeason(
         pledgeId: existingClone.id,
         pledgeRulesCount: rules.length,
         targetTeamId: targetTeam.id,
-        targetSaison: targetTeam.saison
+        targetSaison: nextSaison
       };
     }
 
     // Default-Datumsfenster: ab dem Tag NACH der alten Endung, 1 Jahr lang
     const startsAt =
-      options.startsAt ??
-      new Date(
-        (original.endsAt instanceof Date
-          ? original.endsAt
-          : new Date(original.endsAt)
-        ).getTime() +
-          24 * 60 * 60 * 1000
-      );
+      options.startsAt ?? new Date(originalEndsAt.getTime() + 24 * 60 * 60 * 1000);
     const endsAt =
       options.endsAt ??
       new Date(startsAt.getTime() + 365 * 24 * 60 * 60 * 1000);
@@ -267,6 +281,8 @@ export async function clonePledgeForNextSeason(
           triggerParamsJson: r.triggerParamsJson,
           amountCents: r.amountCents,
           perMatchCapCents: r.perMatchCapCents,
+          capCents: r.capCents,
+          capPeriod: r.capPeriod,
           requiresApproval: r.requiresApproval
         }))
       );
@@ -276,7 +292,7 @@ export async function clonePledgeForNextSeason(
       pledgeId: newPledge.id,
       pledgeRulesCount: originalRules.length,
       targetTeamId: targetTeam.id,
-      targetSaison: targetTeam.saison
+      targetSaison: nextSaison
     };
   });
 }
