@@ -70,7 +70,8 @@ export async function getTeamInClub(teamId: string, clubId: string) {
       name: teams.name,
       verifiedAt: teams.verifiedAt,
       isActive: teams.isActive,
-      saison: teams.saison
+      saison: teams.saison,
+      dataCoverage: teams.dataCoverage
     })
     .from(teams)
     .where(and(eq(teams.id, teamId), eq(teams.clubId, clubId)))

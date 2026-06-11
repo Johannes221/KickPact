@@ -369,8 +369,19 @@ export function VereinSearchStep({ role }: Props) {
                                 von dir
                               </span>
                             )}
+                            {t.dataCoverage === "none" && (
+                              <span className="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-sky-800">
+                                Manuelle Meldung
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-brand-night-navy/40 mt-0.5">Saison {t.saison}</div>
+                          {t.dataCoverage === "none" && (
+                            <p className="mt-1 text-xs text-brand-night-navy/60">
+                              Keine automatischen Spieldaten für diese Altersklasse —
+                              Ereignisse werden manuell gemeldet.
+                            </p>
+                          )}
                         </div>
                       </label>
                     </li>

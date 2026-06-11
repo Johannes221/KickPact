@@ -315,8 +315,20 @@ export default async function TeamDetailPage({
         {matchRows.length === 0 ? (
           !isCrawling && (
             <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60">
-              Für diese Mannschaft wurden noch keine Spiele gefunden. Sobald die
-              Saison startet, erscheinen sie hier automatisch.
+              {team.dataCoverage === "none" ? (
+                // B1c (Audit 2026-06-11): keine Automatik versprechen, wenn es
+                // für diese Altersklasse keine automatischen Spieldaten gibt.
+                <>
+                  Für diese Altersklasse gibt es keine automatischen Spieldaten.
+                  Spiele und Ereignisse meldet ihr selbst — eure Sponsoren
+                  bestätigen sie anschließend.
+                </>
+              ) : (
+                <>
+                  Für diese Mannschaft wurden noch keine Spiele gefunden. Sobald
+                  die Saison startet, erscheinen sie hier automatisch.
+                </>
+              )}
             </div>
           )
         ) : (

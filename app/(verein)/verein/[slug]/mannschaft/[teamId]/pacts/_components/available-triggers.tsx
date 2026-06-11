@@ -1,30 +1,83 @@
 import { ChevronDown } from "lucide-react";
 import { TriggerIcon } from "@/components/shared/trigger-icon";
 import { TRIGGER_META, type TriggerType } from "@/lib/triggers/labels";
+import { requiresNamedScorers, type Coverage } from "@/lib/triggers/coverage";
 
 const ALL_TYPES = Object.keys(TRIGGER_META) as TriggerType[];
 
-const GROUPS: Array<{
+/**
+ * B1b (Audit 2026-06-11): Gruppierung ist coverage-bewusst.
+ *
+ *  - `full`         → wie gehabt: auto / manuell / Saison.
+ *  - `results_only` → Torschützen-/Spieler-Trigger (goal_by_player, hattrick)
+ *                     wandern aus „automatisch erkannt" in eine eigene Gruppe
+ *                     „wird vom Verein gemeldet, Sponsor bestätigt".
+ *  - `none`         → es gibt KEINE automatischen Spieldaten: alle Trigger
+ *                     werden als manuell gemeldet gekennzeichnet.
+ *  - `null`         → unklassifizierter Bestand → wie `full` (Grandfather).
+ */
+function buildGroups(coverage: Coverage | null): Array<{
   title: string;
   hint: string;
   match: (t: TriggerType) => boolean;
-}> = [
-  {
-    title: "Pro Spiel · automatisch erkannt",
-    hint: "KickPact liest diese Ereignisse nach jedem Spiel automatisch aus.",
-    match: (t) => TRIGGER_META[t].scope === "match" && TRIGGER_META[t].auto
-  },
-  {
-    title: "Pro Spiel · manuell gemeldet",
-    hint: "Trainer/Admin meldet diese Ereignisse nach dem Spiel selbst.",
-    match: (t) => TRIGGER_META[t].scope === "match" && !TRIGGER_META[t].auto
-  },
-  {
-    title: "Pro Saison",
-    hint: "Einmal pro Saison — buchbar bis zum 5. Spieltag.",
-    match: (t) => TRIGGER_META[t].scope === "season"
+}> {
+  if (coverage === "none") {
+    return [
+      {
+        title: "Pro Spiel · manuell gemeldet",
+        hint: "Für diese Altersklasse gibt es keine automatischen Spieldaten — Trainer/Admin meldet die Ereignisse nach dem Spiel, der Sponsor bestätigt.",
+        match: (t) => TRIGGER_META[t].scope === "match"
+      },
+      {
+        title: "Pro Saison · manuell gemeldet",
+        hint: "Einmal pro Saison — buchbar bis zum 5. Spieltag. Das Saison-Ergebnis trägt der Verein ein.",
+        match: (t) => TRIGGER_META[t].scope === "season"
+      }
+    ];
   }
-];
+
+  const autoDetected = (t: TriggerType) =>
+    TRIGGER_META[t].auto &&
+    !(coverage === "results_only" && requiresNamedScorers(t));
+
+  const groups: Array<{
+    title: string;
+    hint: string;
+    match: (t: TriggerType) => boolean;
+  }> = [
+    {
+      title: "Pro Spiel · automatisch erkannt",
+      hint: "KickPact liest diese Ereignisse nach jedem Spiel automatisch aus.",
+      match: (t) => TRIGGER_META[t].scope === "match" && autoDetected(t)
+    }
+  ];
+
+  if (coverage === "results_only") {
+    groups.push({
+      title: "Pro Spiel · vom Verein gemeldet",
+      hint: "Für diese Altersklasse liefern die automatischen Spieldaten keine Torschützen — diese Ereignisse meldet der Verein, der Sponsor bestätigt.",
+      match: (t) =>
+        TRIGGER_META[t].scope === "match" &&
+        TRIGGER_META[t].auto &&
+        requiresNamedScorers(t)
+    });
+  }
+
+  groups.push(
+    {
+      title: "Pro Spiel · manuell gemeldet",
+      hint: "Trainer/Admin meldet diese Ereignisse nach dem Spiel selbst.",
+      match: (t) => TRIGGER_META[t].scope === "match" && !TRIGGER_META[t].auto
+    },
+    {
+      title: "Pro Saison",
+      hint: "Einmal pro Saison — buchbar bis zum 5. Spieltag.",
+      match: (t) => TRIGGER_META[t].scope === "season"
+    }
+  );
+
+  return groups;
+}
 
 /**
  * Transparenz-Sektion auf dem Pacts-Tab: zeigt — rein informativ — ALLE
@@ -32,7 +85,12 @@ const GROUPS: Array<{
  * Read-only, kein State; einklappbar via <details>, damit es die aktiven Pacts
  * nicht überlagert.
  */
-export function AvailableTriggers() {
+export function AvailableTriggers({
+  coverage = null
+}: {
+  coverage?: Coverage | null;
+}) {
+  const groups = buildGroups(coverage);
   return (
     <details className="group rounded-2xl bg-white shadow-ios-card">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
@@ -51,7 +109,13 @@ export function AvailableTriggers() {
       </summary>
 
       <div className="space-y-5 px-4 pb-4">
-        {GROUPS.map((g) => {
+        {coverage === "none" && (
+          <p className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-900">
+            Für diese Altersklasse gibt es keine automatischen Spieldaten —
+            alle Ereignisse werden vom Verein gemeldet und vom Sponsor bestätigt.
+          </p>
+        )}
+        {groups.map((g) => {
           const items = ALL_TYPES.filter(g.match);
           if (items.length === 0) return null;
           return (

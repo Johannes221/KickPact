@@ -9,7 +9,7 @@ import {
 import { getServerSession } from "@/lib/auth/session";
 import { checkTeamCollision } from "@/lib/db/queries/onboarding-collision";
 import { isClubMember } from "@/lib/db/queries/membership-requests";
-import { coverageFloorFromTeamName } from "@/lib/triggers/coverage";
+import { coverageFloorFromTeamName, type Coverage } from "@/lib/triggers/coverage";
 
 const searchSchema = z.object({
   query: z.string().min(2).max(80)
@@ -54,6 +54,14 @@ export interface MannschaftWithStatus {
   registeredTeamDbId: string | null;
   /** True, wenn die belegte Mannschaft dem aktuellen User gehört. */
   ownedByMe: boolean;
+  /**
+   * Daten-Coverage-Floor aus der Altersklasse (B1a, Audit 2026-06-11):
+   * `none`-Teams (E-/F-/G-Jugend, Bambini) werden NICHT mehr still gefiltert,
+   * sondern angezeigt + anlegbar — die UI erklärt, dass es für diese
+   * Altersklasse keine automatischen Spieldaten gibt und Ereignisse manuell
+   * gemeldet werden.
+   */
+  dataCoverage: Coverage;
 }
 
 /**
@@ -74,6 +82,7 @@ export async function getMannschaftenAction(input: {
     const enriched: MannschaftWithStatus[] = await Promise.all(
       results.map(async (m) => {
         const collision = await checkTeamCollision(m.teamId, m.saison);
+        const dataCoverage = coverageFloorFromTeamName(m.name);
         if (collision.kind === "actively-managed") {
           const ownedByMe = currentUserId
             ? await isClubMember(currentUserId, collision.clubId)
@@ -85,7 +94,8 @@ export async function getMannschaftenAction(input: {
             isLocked: !ownedByMe,
             registeredClubSlug: collision.clubSlug,
             registeredTeamDbId: collision.teamId,
-            ownedByMe
+            ownedByMe,
+            dataCoverage
           };
         }
         // none + scraped-unmanaged → frei wählbar.
@@ -94,7 +104,8 @@ export async function getMannschaftenAction(input: {
           isLocked: false,
           registeredClubSlug: null,
           registeredTeamDbId: null,
-          ownedByMe: false
+          ownedByMe: false,
+          dataCoverage
         };
       })
     );
@@ -112,15 +123,11 @@ export async function getMannschaftenAction(input: {
       return incoming.name.length > current.name.length;
     });
 
-    // Mannschaften, für die fußball.de strukturell KEINE Ergebnisse führt
-    // (E-/F-/G-Jugend, Bambini — „Fair-Play-Liga ohne Tabelle"), gar nicht erst
-    // zur Auswahl anbieten. Rein namensbasiert (kein Fetch). Siehe
-    // lib/triggers/coverage.ts + project_spielbericht_coverage.
-    const eligible = deduped.filter(
-      (m) => coverageFloorFromTeamName(m.name) !== "none"
-    );
-
-    return { ok: true as const, results: eligible };
+    // B1a (Audit 2026-06-11): Coverage-none-Mannschaften (E-/F-/G-Jugend,
+    // Bambini — strukturell keine Ergebnisse auf der Daten-Quelle) werden
+    // NICHT mehr still herausgefiltert. Sie bleiben anlegbar; die UI zeigt
+    // den „keine automatischen Spieldaten"-Hinweis (siehe `dataCoverage`).
+    return { ok: true as const, results: deduped };
   } catch (e) {
     return {
       ok: false as const,

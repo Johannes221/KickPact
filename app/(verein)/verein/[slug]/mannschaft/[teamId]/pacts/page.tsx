@@ -173,8 +173,10 @@ export default async function PactsPage({
         </>
       )}
 
-      {/* Transparenz: welche Wetten-Typen Sponsoren überhaupt wählen können. */}
-      <AvailableTriggers />
+      {/* Transparenz: welche Trigger-Typen Sponsoren überhaupt wählen können —
+          coverage-bewusst (B1b): bei results_only/none werden Spieler-Trigger
+          als „vom Verein gemeldet" gekennzeichnet. */}
+      <AvailableTriggers coverage={team.dataCoverage} />
     </div>
   );
 }
