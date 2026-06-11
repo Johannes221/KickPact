@@ -103,6 +103,10 @@ export function EventRowActions({
           subtype: values.subtype ? values.subtype : null,
           playerName: values.playerName ? values.playerName : null
         });
+        if (!res.ok) {
+          toast.error(res.message);
+          return;
+        }
         const detail =
           res.invalidatedCharges > 0
             ? ` · ${res.invalidatedCharges} Beitrag/Beiträge für Re-Eval zurückgesetzt`

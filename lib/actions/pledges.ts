@@ -340,16 +340,15 @@ export async function addPledgeRule(
     const paramError = validateTriggerParams(input.triggerType, input.params ?? {});
     if (paramError) return { error: paramError };
 
-    // Daten-Coverage-Gate (analog create-pledge): Spieler-Wetten nur bei `full`,
-    // `none`-Mannschaften gar nicht. Bestehende Regeln bleiben (updatePledgeRule
-    // gatet bewusst nicht) — nur das NEU-Anlegen wird geblockt.
+    // Daten-Coverage-Gate (analog create-pledge): Spieler-Regeln nur bei `full`.
+    // `none`-Mannschaften laufen seit Phase 4 komplett über manuelle Meldung +
+    // Sponsor-Bestätigung (kein Komplett-Block mehr). Bestehende Regeln bleiben
+    // (updatePledgeRule gatet bewusst nicht) — nur das NEU-Anlegen wird geblockt.
     const coverage = await getTeamDataCoverage(pledge.teamId);
     if (!coverageAllowsTrigger(coverage, input.triggerType)) {
       return {
         error:
-          coverage === "none"
-            ? "Für diese Mannschaft liegen auf fußball.de keine Spieldaten vor."
-            : "Spieler-Regeln (Tor von Spieler, Hattrick) sind für diese Mannschaft nicht verfügbar – fußball.de liefert nur das Ergebnis, keine Torschützen."
+          "Spieler-Regeln (Tor von Spieler, Hattrick) sind für diese Mannschaft nicht verfügbar – die automatischen Spieldaten liefern hier keine benannten Torschützen."
       };
     }
 

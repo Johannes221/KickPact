@@ -91,20 +91,25 @@ export const notifyMatchResult = inngest.createFunction(
       data: { matchId, teamId }
     };
 
-    await step.run("notify", async () => {
-      if (groups.members.userIds.length > 0) {
-        await notifyUsers(groups.members.userIds, {
+    // Review N5 (2026-06-12): getrennte Steps — schlägt der Sponsor-Versand
+    // fehl, retried Inngest nur diesen Step; Members bekämen sonst beim
+    // Retry des kombinierten Steps den Push doppelt.
+    if (groups.members.userIds.length > 0) {
+      await step.run("notify-members", () =>
+        notifyUsers(groups.members.userIds, {
           ...payload,
           link: groups.members.link
-        });
-      }
-      if (groups.sponsors.userIds.length > 0) {
-        await notifyUsers(groups.sponsors.userIds, {
+        })
+      );
+    }
+    if (groups.sponsors.userIds.length > 0) {
+      await step.run("notify-sponsors", () =>
+        notifyUsers(groups.sponsors.userIds, {
           ...payload,
           link: groups.sponsors.link
-        });
-      }
-    });
+        })
+      );
+    }
 
     logger.info("notify-match-result done", { matchId, recipients: totalRecipients });
     return { recipients: totalRecipients };

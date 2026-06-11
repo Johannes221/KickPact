@@ -95,11 +95,11 @@ export function ManualEventEditor({ matchId }: { matchId: string }) {
         }
         const chargesInfo =
           res.charges > 0
-            ? `· ${res.charges} Charge${res.charges === 1 ? "" : "s"} erzeugt`
+            ? `· ${res.charges} ${res.charges === 1 ? "Beitrag" : "Beiträge"} erzeugt`
             : "";
         const approvalsInfo =
           res.approvals > 0
-            ? `· ${res.approvals} Sponsor-Approval${res.approvals === 1 ? "" : "s"} ausstehend`
+            ? `· ${res.approvals} Sponsor-Bestätigung${res.approvals === 1 ? "" : "en"} ausstehend`
             : "";
         toast.success(`Event gespeichert ${chargesInfo} ${approvalsInfo}`.trim());
         setOpen(false);

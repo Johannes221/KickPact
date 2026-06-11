@@ -198,6 +198,7 @@ describe("editMatchEventAction", () => {
       minute: 45,
       playerName: "Tom"
     });
+    if (!result.ok) throw new Error(`unexpected: ${result.message}`);
     expect(result.invalidatedCharges).toBe(1);
     expect(result.matchId).toBe(seed.matchId);
 
@@ -219,6 +220,44 @@ describe("editMatchEventAction", () => {
     await expect(
       editMatchEventAction({ matchEventId: seed.eventId, minute: 1 })
     ).rejects.toThrow();
+  });
+
+  it("M1: Minuten-Korrektur an Legacy-Subtype-Event bleibt möglich (subtype unverändert)", async () => {
+    const seed = await seedWithUser("trainer");
+    // Bestands-Event mit Alt-Subtype, der nicht mehr in SPECIAL_GOAL_SUBTYPES ist.
+    await db
+      .update(matchEvents)
+      .set({ type: "spezial", subtype: "volley" })
+      .where(eq(matchEvents.id, seed.eventId));
+
+    const result = await editMatchEventAction({
+      matchEventId: seed.eventId,
+      minute: 77,
+      subtype: "volley" // Formular sendet den Bestand immer mit
+    });
+    if (!result.ok) throw new Error(`unexpected: ${result.message}`);
+    const [evt] = await db
+      .select()
+      .from(matchEvents)
+      .where(eq(matchEvents.id, seed.eventId));
+    expect(evt.minute).toBe(77);
+  });
+
+  it("M1: ÄNDERUNG auf unbekannten Subtype wird mit {ok:false,message} abgelehnt", async () => {
+    const seed = await seedWithUser("trainer");
+    await db
+      .update(matchEvents)
+      .set({ type: "spezial", subtype: "fallrueckzieher" })
+      .where(eq(matchEvents.id, seed.eventId));
+
+    const result = await editMatchEventAction({
+      matchEventId: seed.eventId,
+      subtype: "banana-kick"
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toMatch(/Unbekannter Spezialtor-Typ/);
+    }
   });
 });
 

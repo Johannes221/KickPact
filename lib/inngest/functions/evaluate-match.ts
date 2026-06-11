@@ -11,6 +11,10 @@ import {
   eventApprovals
 } from "@/lib/db/schema";
 import { evaluateTriggers, type MatchInput } from "@/lib/crawler/triggers";
+import {
+  applyCoverageApprovalPolicy,
+  type Coverage
+} from "@/lib/triggers/coverage";
 import { detectTeamSide } from "@/lib/crawler/team-side";
 import {
   loadActivePledgeRulesForTeam,
@@ -102,7 +106,15 @@ export const evaluateMatch = inngest.createFunction(
     );
     logger.info(`evaluate-match ${matchId}: ${rules.length} active rules`);
 
-    const proposals = evaluateTriggers(input, rules);
+    // Review K2 (Phase 4, 2026-06-12): coverage=none ⇒ ALLE Proposals
+    // approval-pflichtig — der Endstand stammt dort vom Vereins-Override,
+    // der Verein darf sich nicht selbst Geld bestätigen. Direkt-Charges
+    // (matchEventId null) erreichen den Sponsor über die generische
+    // Inbox-Sektion + 21d-Expiry.
+    const proposals = applyCoverageApprovalPolicy(
+      evaluateTriggers(input, rules),
+      matchData.t.dataCoverage as Coverage | null
+    );
 
     // Perioden-Cap pro Wette: ruleId → {capCents, capPeriod}. Enforcement DB-aware
     // unten in der Insert-Transaktion (analog Pledge-Monats-Cap).

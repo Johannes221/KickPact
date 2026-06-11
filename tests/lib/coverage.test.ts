@@ -5,7 +5,8 @@ import {
   coverageFloorFromTeamName,
   combineCoverage,
   requiresNamedScorers,
-  coverageAllowsTrigger
+  coverageAllowsTrigger,
+  applyCoverageApprovalPolicy
 } from "@/lib/triggers/coverage";
 import { classifyScrapedMatches } from "@/lib/crawler/coverage";
 
@@ -111,6 +112,24 @@ describe("coverageAllowsTrigger", () => {
     expect(coverageAllowsTrigger("none", "season_promotion")).toBe(true);
     expect(coverageAllowsTrigger("none", "goal_by_player")).toBe(false);
     expect(coverageAllowsTrigger("none", "hattrick")).toBe(false);
+  });
+});
+
+describe("applyCoverageApprovalPolicy", () => {
+  const proposals = [
+    { id: "a", requiresApproval: false },
+    { id: "b", requiresApproval: true }
+  ];
+  it("none → alles approval-pflichtig (Verein bestätigt sich nicht selbst)", () => {
+    const out = applyCoverageApprovalPolicy(proposals, "none");
+    expect(out.every((p) => p.requiresApproval)).toBe(true);
+  });
+  it("full/results_only/null → unverändert", () => {
+    for (const cov of ["full", "results_only", null] as const) {
+      const out = applyCoverageApprovalPolicy(proposals, cov);
+      expect(out[0].requiresApproval).toBe(false);
+      expect(out[1].requiresApproval).toBe(true);
+    }
   });
 });
 

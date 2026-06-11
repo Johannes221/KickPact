@@ -80,34 +80,48 @@ const editSchema = z.object({
 
 export type EditMatchEventInput = z.infer<typeof editSchema>;
 
+export type EditMatchEventResult =
+  | {
+      ok: true;
+      invalidatedCharges: number;
+      expiredApprovals: number;
+      matchId: string;
+    }
+  | { ok: false; message: string };
+
 export async function editMatchEventAction(
   input: EditMatchEventInput
-): Promise<{
-  invalidatedCharges: number;
-  expiredApprovals: number;
-  matchId: string;
-}> {
+): Promise<EditMatchEventResult> {
   const user = await requireUser();
-  const parsed = editSchema.parse(input);
+  const parsedResult = editSchema.safeParse(input);
+  if (!parsedResult.success) {
+    return { ok: false, message: "Ungültige Eingabe." };
+  }
+  const parsed = parsedResult.data;
 
   const scope = await loadMatchScope(parsed.matchEventId, "matchEvent");
-  if (!scope) throw new Error("Match-Event nicht gefunden.");
+  if (!scope) return { ok: false, message: "Match-Event nicht gefunden." };
 
   await assertClubWriteAccess(scope.clubSlug, "trainer");
 
-  // B3-Folge (Audit 2026-06-11): auch der EDIT-Pfad validiert den subtype
-  // gegen die single source of truth — sonst lässt sich die Neuanlage-
-  // Validierung per Edit umgehen (Event, das kein Pact je matchen kann).
+  // B3-Folge + Review M1 (Audit 2026-06-11): auch der EDIT-Pfad validiert den
+  // subtype — aber NUR wenn er sich gegenüber dem Bestand wirklich ändert.
+  // Sonst werden Legacy-Events (volley/fernschuss aus der Alt-Liste)
+  // uneditierbar: das Formular sendet den bestehenden subtype immer mit, und
+  // schon eine reine Minuten-Korrektur scheiterte an der Validierung.
+  // {ok,message} statt throw: Next.js redacted geworfene Server-Action-Fehler
+  // in Production (A8-Pattern).
   if (parsed.subtype !== undefined && parsed.subtype !== null) {
     const [eventRow] = await db
-      .select({ type: matchEvents.type })
+      .select({ type: matchEvents.type, subtype: matchEvents.subtype })
       .from(matchEvents)
       .where(eq(matchEvents.id, parsed.matchEventId))
       .limit(1);
+    const subtypeChanged = eventRow?.subtype !== parsed.subtype;
     const effectiveType = parsed.type ?? eventRow?.type;
-    if (effectiveType) {
+    if (subtypeChanged && effectiveType) {
       const check = validateSubtype(effectiveType, parsed.subtype);
-      if (!check.ok) throw new Error(check.message);
+      if (!check.ok) return { ok: false, message: check.message };
     }
   }
 
@@ -134,7 +148,7 @@ export async function editMatchEventAction(
     `/verein/${scope.clubSlug}/mannschaft/${scope.teamId}/spiele/${result.matchId}`
   );
 
-  return result;
+  return { ok: true, ...result };
 }
 
 // ───────────────────────── deleteMatchEventAction ──────────────────────────

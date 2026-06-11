@@ -556,9 +556,9 @@ export default function LandingPage() {
       {/* MINI-FOOTER */}
       <section className="mx-auto max-w-6xl px-5 md:px-6 py-6 md:py-10 text-xs md:text-sm text-brand-night-navy/60">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-          <Link href="/status" className="hover:text-accent">
-            System-Status &amp; Live-Demo →
-          </Link>
+          {/* /status ist seit Phase 4 token-gegated (interne Diagnose) —
+              kein öffentlicher Footer-Link mehr. */}
+          <span aria-hidden className="hidden md:block" />
           <nav className="flex flex-col md:flex-row gap-2 md:gap-4">
             <Link href="/preise" className="hover:text-accent">
               Preise

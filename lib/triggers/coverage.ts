@@ -138,3 +138,22 @@ export function coverageAllowsTrigger(
   }
   return true; // full
 }
+
+/**
+ * Review K2 (Phase 4, 2026-06-12): Bei `none`-Coverage gibt es KEINE
+ * automatische Ergebnis-Quelle — der Endstand stammt vom Vereins-Override,
+ * Events von manueller Meldung. Der Verein darf sich nicht selbst Geld
+ * bestätigen: ALLE Charge-Proposals werden approval-pflichtig. Direkt-Charges
+ * (matchEventId null, z.B. win/goal_total) landen über die generische
+ * Inbox-Sektion (listPendingDirectChargesForSponsor) beim Sponsor und
+ * verfallen unbeantwortet nach 21 Tagen (lifecycle-cleanup).
+ */
+export function applyCoverageApprovalPolicy<T extends { requiresApproval: boolean }>(
+  proposals: T[],
+  coverage: Coverage | null | undefined
+): T[] {
+  if (coverage !== "none") return proposals;
+  return proposals.map((p) =>
+    p.requiresApproval ? p : { ...p, requiresApproval: true }
+  );
+}

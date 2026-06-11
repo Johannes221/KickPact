@@ -113,18 +113,14 @@ export async function createPledge(input: PledgeInput): Promise<CreatePledgeResu
 
   // Daten-Coverage-Gate: fußball.de liefert für manche Mannschaften (C-/D-Jugend)
   // nur das Ergebnis ohne Torschützen, für andere (E-Jugend abwärts) gar keine
-  // Daten. Spieler-Wetten (goal_by_player, hattrick) brauchen benannte Torschützen
-  // → nur bei `full`. `none`-Mannschaften sind komplett nicht bespielbar. Server-
-  // seitig autoritativ (der UI-Filter im Builder ist nur Komfort).
+  // Daten. Spieler-Regeln (goal_by_player, hattrick) brauchen benannte Torschützen
+  // → nur bei `full`. Review K1 (Phase 4, 2026-06-12): `none`-Mannschaften sind
+  // NICHT mehr komplett geblockt — sie sind seit B1a onboardbar; alle Ereignisse
+  // laufen über manuelle Meldung + Sponsor-Bestätigung (evaluate-match erzwingt
+  // pending_approval bei coverage=none). Server-seitig autoritativ (der
+  // UI-Filter im Builder ist nur Komfort).
   // Siehe lib/triggers/coverage.ts + project_spielbericht_coverage.
   const teamCoverage = await getTeamDataCoverage(invitationTeamId);
-  if (teamCoverage === "none") {
-    return {
-      ok: false,
-      message:
-        "Für diese Mannschaft liegen auf fußball.de keine Spieldaten vor – Sponsoring ist hier nicht möglich."
-    };
-  }
   const blockedRule = parsed.rules.find(
     (r) => !coverageAllowsTrigger(teamCoverage, r.triggerType)
   );
@@ -133,7 +129,7 @@ export async function createPledge(input: PledgeInput): Promise<CreatePledgeResu
       ok: false,
       message:
         "Spieler-Regeln (Tor von Spieler, Hattrick) sind für diese Mannschaft nicht verfügbar – " +
-        "fußball.de liefert hier nur das Ergebnis, keine Torschützen."
+        "die automatischen Spieldaten liefern hier keine benannten Torschützen."
     };
   }
 
