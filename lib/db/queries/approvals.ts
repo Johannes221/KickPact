@@ -1,4 +1,4 @@
-import { and, eq, count, desc } from "drizzle-orm";
+import { and, eq, count, desc, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   eventApprovals,
@@ -86,7 +86,78 @@ export async function countPendingForSponsor(userId: string): Promise<number> {
     .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
     .where(and(eq(eventApprovals.status, "pending"), eq(sponsors.userId, userId)));
-  return row?.c ?? 0;
+  const approvals = row?.c ?? 0;
+  // C2 (Audit 2026-06-11): direkte Charges (Saison/Outcome ohne Event) zählen
+  // im „Nächste Schritte"-Badge mit — sonst übersieht der Sponsor sie 21 Tage
+  // lang bis zum Auto-Expiry.
+  const direct = await db
+    .select({ c: count() })
+    .from(charges)
+    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .where(
+      and(
+        eq(charges.status, "pending_approval"),
+        isNull(charges.matchEventId),
+        eq(sponsors.userId, userId)
+      )
+    );
+  return approvals + (direct[0]?.c ?? 0);
+}
+
+/**
+ * C2/C3 (Audit 2026-06-11): pending Charges OHNE matchEvent — Saison-Charges
+ * (season_custom) + Outcome-Charges mit manueller Tor-Evidenz (hattrick/
+ * comeback_win). Bestätigung läuft direkt auf der Charge
+ * (lib/actions/season-charges.ts); diese Liste speist die Sponsor-Inbox.
+ */
+export interface PendingDirectChargeRow {
+  chargeId: string;
+  triggerType: string;
+  amountCents: number;
+  saison: string | null;
+  createdAt: Date;
+  teamName: string;
+  clubName: string;
+  matchDatum: Date | null;
+  heimName: string | null;
+  gastName: string | null;
+  ergebnisHeim: number | null;
+  ergebnisGast: number | null;
+}
+
+export async function listPendingDirectChargesForSponsor(
+  userId: string
+): Promise<PendingDirectChargeRow[]> {
+  return db
+    .select({
+      chargeId: charges.id,
+      triggerType: charges.triggerType,
+      amountCents: charges.amountCents,
+      saison: charges.saison,
+      createdAt: charges.createdAt,
+      teamName: teams.name,
+      clubName: clubs.name,
+      matchDatum: matches.datum,
+      heimName: matches.heimName,
+      gastName: matches.gastName,
+      ergebnisHeim: matches.ergebnisHeim,
+      ergebnisGast: matches.ergebnisGast
+    })
+    .from(charges)
+    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .leftJoin(matches, eq(charges.matchId, matches.id))
+    .where(
+      and(
+        eq(charges.status, "pending_approval"),
+        isNull(charges.matchEventId),
+        eq(sponsors.userId, userId)
+      )
+    )
+    .orderBy(desc(charges.createdAt));
 }
 
 /**

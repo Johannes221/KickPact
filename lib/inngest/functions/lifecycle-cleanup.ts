@@ -16,11 +16,19 @@
  *      (Audit 2026-06-11: paused-Pledges wurden nie beendet → ewig "Pausiert".)
  */
 
-import { and, eq, inArray, lt } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt } from "drizzle-orm";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
 import { eventApprovals, charges } from "@/lib/db/schema";
 import { endExpiredPledges } from "@/lib/db/queries/pledges";
+
+/**
+ * C2 (Audit 2026-06-11): Direkte Charges (ohne matchEvent — Saison-Charges
+ * wie season_custom, Outcome-Charges mit manueller Evidenz) haben keine
+ * eventApprovals-Row mit expiresAt. Für sie gilt eine feste Frist: nach
+ * 21 Tagen pending wird storniert (Analogon zum Approval-Expiry).
+ */
+export const DIRECT_CHARGE_APPROVAL_DAYS = 21;
 
 export const expireApprovals = inngest.createFunction(
   { id: "expire-approvals", concurrency: { limit: 1 } },
@@ -45,9 +53,38 @@ export const expireApprovals = inngest.createFunction(
         )
     );
 
+    // C2: Direkte Charges (matchEventId NULL) ohne Approval-Row — nach
+    // 21 Tagen pending stornieren. Läuft unabhängig vom Event-Approval-Teil.
+    const directCutoff = new Date(
+      now.getTime() - DIRECT_CHARGE_APPROVAL_DAYS * 24 * 60 * 60 * 1000
+    );
+    const expiredDirect = await step.run("expire-direct-charges", () =>
+      db
+        .update(charges)
+        .set({
+          status: "cancelled",
+          cancelledReason: "approval_expired",
+          cancelledAt: now
+        })
+        .where(
+          and(
+            eq(charges.status, "pending_approval"),
+            isNull(charges.matchEventId),
+            lt(charges.createdAt, directCutoff)
+          )
+        )
+        .returning({ id: charges.id })
+    );
+
     if (expired.length === 0) {
-      logger.info("expire-approvals: nothing to expire");
-      return { expiredApprovals: 0, cancelledCharges: 0 };
+      logger.info("expire-approvals: nothing to expire", {
+        cancelledDirectCharges: expiredDirect.length
+      });
+      return {
+        expiredApprovals: 0,
+        cancelledCharges: 0,
+        cancelledDirectCharges: expiredDirect.length
+      };
     }
 
     const result = await step.run("expire-and-cancel", async () => {
@@ -81,9 +118,14 @@ export const expireApprovals = inngest.createFunction(
 
     logger.info("expire-approvals done", {
       expiredApprovals: expired.length,
-      cancelledCharges: result.cancelled
+      cancelledCharges: result.cancelled,
+      cancelledDirectCharges: expiredDirect.length
     });
-    return { expiredApprovals: expired.length, cancelledCharges: result.cancelled };
+    return {
+      expiredApprovals: expired.length,
+      cancelledCharges: result.cancelled,
+      cancelledDirectCharges: expiredDirect.length
+    };
   }
 );
 

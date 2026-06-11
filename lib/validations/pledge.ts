@@ -95,12 +95,61 @@ export const pledgeRuleInputSchema = z
         path: ["capPeriod"]
       });
     }
+
+    // Audit 2026-06-11 / C1: Pflicht-Params pro Trigger-Typ. Ohne Schwellwert
+    // feuerte goals_scored_min/goal_diff_min bei JEDEM Spiel (>= 0), ohne
+    // Spielernamen feuerte goal_by_player nie (toter Pact). Beide
+    // Schreibweisen lesen (Builder schreibt snake_case, Engine camelCase).
+    if (
+      val.triggerType === "goals_scored_min" ||
+      val.triggerType === "goal_diff_min"
+    ) {
+      const raw =
+        val.triggerType === "goals_scored_min"
+          ? (val.params.minGoals ?? val.params.min_goals)
+          : (val.params.minDiff ?? val.params.min_diff);
+      const threshold = typeof raw === "string" ? Number(raw) : raw;
+      if (
+        typeof threshold !== "number" ||
+        !Number.isFinite(threshold) ||
+        threshold < 1
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            val.triggerType === "goals_scored_min"
+              ? "Bitte Mindestanzahl Tore angeben (mindestens 1)."
+              : "Bitte Mindest-Tordifferenz angeben (mindestens 1).",
+          path: ["params"]
+        });
+      }
+    }
+    if (val.triggerType === "goal_by_player") {
+      const name = (val.params.playerName ?? val.params.player_name) as
+        | string
+        | undefined;
+      const id = (val.params.playerId ?? val.params.player_id) as
+        | string
+        | undefined;
+      if ((!name || !name.trim()) && (!id || !id.trim())) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Bitte einen Spieler auswählen oder Namen eingeben.",
+          path: ["params"]
+        });
+      }
+    }
   });
 
 export const pledgeInputSchema = z.object({
   invitationToken: z.string().min(1, "Einladungs-Token fehlt"),
   rules: z.array(pledgeRuleInputSchema).min(1, "Mindestens eine Regel"),
-  monthlyCapEur: z.number().optional(),
+  // C1 (Audit 2026-06-11): muss > 0 sein — monthlyCapEur=0 hieß vorher
+  // "Cap 0 €" und blockte still jede Charge des Pacts.
+  monthlyCapEur: z
+    .number()
+    .positive("Das Monatslimit muss größer als 0 € sein.")
+    .optional(),
   endsAtSaisonEnd: z.boolean().default(true)
 });
 

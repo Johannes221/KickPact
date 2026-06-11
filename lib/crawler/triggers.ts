@@ -39,7 +39,8 @@ export type TriggerType =
   | "man_of_match"
   | "custom"
   // Season-scoped triggers — evaluated once at the end of a season via
-  // `evaluateSeasonTriggers`, never inside `evaluateTriggers`.
+  // `isTriggerHit` (lib/inngest/functions/evaluate-season.ts), never inside
+  // `evaluateTriggers`.
   | "season_promotion"
   | "season_no_relegation"
   | "season_table_position"
@@ -122,19 +123,29 @@ function evaluateRule(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[
     case "clean_sheet":
       return outcome(match, rule, isCleanSheet);
     case "comeback_win":
-      return outcome(match, rule, isComebackWin);
+      // C3 (Audit 2026-06-11): manuelle Tor-Evidenz ⇒ Sponsor-Approval.
+      return outcome(match, rule, isComebackWin, {
+        requiresApproval: hasManualGoalEvidence(match, false)
+      });
     case "hattrick":
-      return outcome(match, rule, isHattrick);
+      return outcome(match, rule, isHattrick, {
+        requiresApproval: hasManualGoalEvidence(match, true)
+      });
     case "goal_diff_min":
       return outcome(match, rule, (m) => {
         // Defensiv beide Schreibweisen lesen, falls eine Row noch nicht durch
         // Migration 0039 auf camelCase normalisiert wurde.
-        const minDiff = Number(rule.triggerParams.minDiff ?? rule.triggerParams.min_diff ?? 0);
+        // C1 (Audit 2026-06-11): fehlender/ungültiger Schwellwert ⇒ Regel
+        // feuert NICHT. Vorher Default 0 ⇒ feuerte bei jedem Sieg.
+        const minDiff = Number(rule.triggerParams.minDiff ?? rule.triggerParams.min_diff);
+        if (!Number.isFinite(minDiff) || minDiff < 1) return false;
         return isWin(m) && ownScore(m) - opponentScore(m) >= minDiff;
       });
     case "goals_scored_min":
       return outcome(match, rule, (m) => {
-        const minGoals = Number(rule.triggerParams.minGoals ?? rule.triggerParams.min_goals ?? 0);
+        // C1: fehlender Schwellwert ⇒ feuert NICHT (vorher >= 0 ⇒ immer).
+        const minGoals = Number(rule.triggerParams.minGoals ?? rule.triggerParams.min_goals);
+        if (!Number.isFinite(minGoals) || minGoals < 1) return false;
         return ownScore(m) >= minGoals;
       });
     case "special_goal":
@@ -268,7 +279,8 @@ function isCleanSheet(m: MatchInput): boolean {
 function outcome(
   match: MatchInput,
   rule: PledgeRuleInput,
-  predicate: (m: MatchInput) => boolean
+  predicate: (m: MatchInput) => boolean,
+  opts: { requiresApproval?: boolean } = {}
 ): ChargeProposal[] {
   if (!predicate(match)) return [];
   return [
@@ -279,9 +291,26 @@ function outcome(
       matchEventId: null,
       triggerType: rule.triggerType,
       amountCents: rule.amountCents,
-      requiresApproval: false
+      requiresApproval: opts.requiresApproval ?? false
     }
   ];
+}
+
+/**
+ * Audit 2026-06-11 / C3: Liegt mindestens ein BEITRAGENDES manuelles Tor-Event
+ * vor, ist die Evidenz für hattrick/comeback_win nicht mehr rein gescrapte —
+ * ein Verein könnte sich den Outcome über fingierte manuelle Tore zusammen-
+ * bauen. Solche Proposals brauchen Sponsor-Bestätigung (Auto-Confirm bleibt
+ * für rein gescrapte Evidenz). `ownOnly`: Hattrick zählt nur eigene Tore;
+ * Comeback hängt an der Chronologie BEIDER Seiten.
+ */
+function hasManualGoalEvidence(m: MatchInput, ownOnly: boolean): boolean {
+  return m.events.some(
+    (e) =>
+      e.type === "tor" &&
+      e.source === "manual" &&
+      (!ownOnly || e.side === m.teamSide)
+  );
 }
 
 function ownHalftime(m: MatchInput): number | null {
@@ -376,104 +405,9 @@ function manualEvents(
 }
 
 // ---------------------------------------------------------------------------
-// Season-scope triggers
+// Season-scope triggers: produktiv ist ausschließlich `isTriggerHit` in
+// lib/inngest/functions/evaluate-season.ts. Die frühere Parallel-Engine
+// `evaluateSeasonTriggers` (nie von Produktiv-Code aufgerufen, mit teils
+// ABWEICHENDER Semantik — z.B. season_no_relegation ohne evaluatedAt-Guard)
+// wurde im Audit 2026-06-11 / C5 wegen Verwechslungsgefahr entfernt.
 // ---------------------------------------------------------------------------
-
-/**
- * Snapshot of a team's end-of-season status, used to evaluate season-scoped
- * triggers (`season_promotion`, `season_champion`, etc.). Built by the
- * scraper from the final table + cup-result pages once a saison is over.
- */
-export interface SeasonInput {
-  teamId: string;
-  saison: string;
-  finalPosition: number;
-  totalTeams: number;
-  promoted: boolean;
-  relegated: boolean;
-  champion: boolean;
-  /** Furthest cup round reached, or `null` if the team did not enter / was eliminated before recorded round. */
-  cupRound: string | null;
-}
-
-/**
- * ChargeProposal variant for season-scoped triggers. `matchId` and
- * `matchEventId` are always `null`; an additional `saison` identifies the
- * season the charge belongs to.
- */
-export interface SeasonChargeProposal {
-  pledgeId: string;
-  pledgeRuleId: string;
-  matchId: null;
-  matchEventId: null;
-  triggerType: TriggerType;
-  amountCents: number;
-  requiresApproval: boolean;
-  saison: string;
-}
-
-/**
- * Pure function. Given a team's end-of-season snapshot and the active
- * pledge-rules (season-scoped only), returns ChargeProposals to emit.
- *
- * Each season-rule fires at most once per `SeasonInput`. Non-season trigger
- * types are silently skipped — callers can pass a mixed rule list.
- *
- * `season_custom` is treated as approval-required (verein-defined milestones
- * the sponsor must confirm).
- */
-export function evaluateSeasonTriggers(
-  input: SeasonInput,
-  rules: PledgeRuleInput[]
-): SeasonChargeProposal[] {
-  const out: SeasonChargeProposal[] = [];
-  for (const r of rules) {
-    let fires = false;
-    switch (r.triggerType) {
-      case "season_promotion":
-        fires = input.promoted;
-        break;
-      case "season_no_relegation":
-        fires = !input.relegated;
-        break;
-      case "season_table_position": {
-        const maxPosition = Number(
-          (r.triggerParams as { maxPosition?: number; max_position?: number }).maxPosition ??
-            (r.triggerParams as { max_position?: number }).max_position ??
-            0
-        );
-        fires = maxPosition > 0 && input.finalPosition <= maxPosition;
-        break;
-      }
-      case "season_champion":
-        fires = input.champion;
-        break;
-      case "season_cup_round": {
-        const target =
-          (r.triggerParams as { round?: string }).round ?? null;
-        fires = target !== null && input.cupRound === target;
-        break;
-      }
-      case "season_custom":
-        // verein-declared milestone — always emit and require sponsor approval
-        fires = true;
-        break;
-      default:
-        // not a season-scope trigger — skip silently
-        continue;
-    }
-    if (fires) {
-      out.push({
-        pledgeId: r.pledgeId,
-        pledgeRuleId: r.id,
-        matchId: null,
-        matchEventId: null,
-        triggerType: r.triggerType,
-        amountCents: r.amountCents,
-        requiresApproval: r.triggerType === "season_custom",
-        saison: input.saison
-      });
-    }
-  }
-  return out;
-}

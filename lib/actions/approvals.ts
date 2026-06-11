@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
@@ -23,20 +23,24 @@ export async function confirmApproval(approvalId: string) {
   }
 
   // Audit 2026-05-24 Task 2.3: defense-in-depth gegen Charge-Wiederbelebung.
-  // invalidateChargesForMatch expired Approvals normalerweise mit, aber falls
-  // ein Race-Fenster offen war (Sponsor klickt aus cached UI), blockt der
-  // Charge-Status-Check hier ein "Bestätigen" eines bereits cancelled Charges.
+  // C4 (Audit 2026-06-11): explizit die NEUESTE pending_approval-Charge
+  // selektieren. Nach Invalidate+Re-Eval liegen für (rule, event) zwei
+  // Charges (cancelled + neu pending) — der frühere ungeordnete `LIMIT 1`
+  // konnte die stornierte treffen und blockierte dann die legitime
+  // Bestätigung der neuen Charge für immer.
   const [chargeRow] = await db
     .select({ status: charges.status })
     .from(charges)
     .where(
       and(
         eq(charges.pledgeRuleId, row.pledgeRuleId),
-        eq(charges.matchEventId, row.matchEventId)
+        eq(charges.matchEventId, row.matchEventId),
+        eq(charges.status, "pending_approval")
       )
     )
+    .orderBy(desc(charges.createdAt))
     .limit(1);
-  if (chargeRow?.status === "cancelled") {
+  if (!chargeRow) {
     throw new Error(
       "Das Ereignis wurde inzwischen vom Spielbericht widerrufen und kann nicht mehr bestätigt werden."
     );
@@ -152,17 +156,21 @@ export async function confirmApprovalByToken(
     return { ok: false, error: `Approval ist bereits ${row.approval.status}.` };
   }
 
+  // C4 (Audit 2026-06-11): siehe confirmApproval — neueste pending-Charge
+  // selektieren statt ungeordnetem LIMIT 1 (cancelled+pending-Paar).
   const [chargeRow] = await db
     .select({ status: charges.status })
     .from(charges)
     .where(
       and(
         eq(charges.pledgeRuleId, row.pledgeRuleId),
-        eq(charges.matchEventId, row.matchEventId)
+        eq(charges.matchEventId, row.matchEventId),
+        eq(charges.status, "pending_approval")
       )
     )
+    .orderBy(desc(charges.createdAt))
     .limit(1);
-  if (chargeRow?.status === "cancelled") {
+  if (!chargeRow) {
     return {
       ok: false,
       error:

@@ -14,18 +14,7 @@ import { PLAN_CAPS } from "@/lib/stripe/pricing";
 import { assertWagerWindowOpen, WagerWindowClosedError } from "@/lib/billing/wager-window";
 import { getActiveSeason } from "@/lib/billing/wager-window-server";
 
-/**
- * Manuelle Trigger brauchen Sponsor-Bestätigung (charges = pending_approval).
- * Spiegelbild der Liste in create-pledge.ts.
- */
-const MANUAL_TRIGGERS = new Set<string>([
-  "special_goal",
-  "yellow_card",
-  "red_card",
-  "assist",
-  "man_of_match",
-  "custom"
-]);
+import { MANUAL_TRIGGERS } from "@/lib/triggers/manual-triggers";
 
 type CapPeriod = "month" | "season";
 

@@ -46,7 +46,11 @@ vi.mock("@/lib/auth/session", () => ({
 }));
 
 vi.mock("@/lib/validations/pledge", () => ({
-  pledgeInputSchema: { parse: (v: unknown) => v },
+  pledgeInputSchema: {
+    parse: (v: unknown) => v,
+    // C1 (Audit 2026-06-11): createPledge nutzt safeParse statt parse.
+    safeParse: (v: unknown) => ({ success: true, data: v })
+  },
   normalizeTriggerParams: (p: unknown) => p ?? {}
 }));
 

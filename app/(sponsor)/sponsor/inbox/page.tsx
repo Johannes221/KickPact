@@ -1,6 +1,10 @@
 import { requireUser } from "@/lib/auth/session";
-import { listPendingForSponsor } from "@/lib/db/queries/approvals";
+import {
+  listPendingForSponsor,
+  listPendingDirectChargesForSponsor
+} from "@/lib/db/queries/approvals";
 import { ApprovalRow } from "./_components/approval-row";
+import { DirectChargeRow } from "./_components/direct-charge-row";
 import { PageHeader } from "@/components/shared/page-header";
 
 // Hieß früher „Inbox" (eigener Bottom-Tab). Der Tab ist weg — erreichbar bleibt
@@ -11,7 +15,14 @@ export const metadata = { title: "Bestätigungen · KickPact" };
 
 export default async function SponsorInboxPage() {
   const user = await requireUser();
-  const pending = await listPendingForSponsor(user.id);
+  const [pending, directCharges] = await Promise.all([
+    listPendingForSponsor(user.id),
+    // C2/C3 (Audit 2026-06-11): Charges ohne Spiel-Event (Saison-Ziele,
+    // Hattrick/Comeback mit manueller Evidenz) — Bestätigung direkt auf
+    // der Charge.
+    listPendingDirectChargesForSponsor(user.id)
+  ]);
+  const total = pending.length + directCharges.length;
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -20,9 +31,9 @@ export default async function SponsorInboxPage() {
           className="md:hidden"
           title="Bestätigungen"
           subtitle={
-            pending.length === 0
+            total === 0
               ? "Keine ausstehenden Events."
-              : `${pending.length} ${pending.length === 1 ? "Event" : "Events"} zur Bestätigung.`
+              : `${total} ${total === 1 ? "Anfrage" : "Anfragen"} zur Bestätigung.`
           }
         />
         <div className="hidden md:block">
@@ -30,14 +41,14 @@ export default async function SponsorInboxPage() {
             Bestätigungen
           </h1>
           <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
-            {pending.length === 0
+            {total === 0
               ? "Keine ausstehenden Events."
-              : `${pending.length} ${pending.length === 1 ? "Event" : "Events"} zur Bestätigung.`}
+              : `${total} ${total === 1 ? "Anfrage" : "Anfragen"} zur Bestätigung.`}
           </p>
         </div>
       </div>
 
-      {pending.length === 0 ? (
+      {total === 0 ? (
         <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 md:p-8 text-center">
           <div className="text-3xl md:text-4xl mb-2 md:mb-3">🎉</div>
           <p className="text-sm md:text-base text-brand-night-navy/70">
@@ -45,10 +56,26 @@ export default async function SponsorInboxPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {pending.map((p) => (
-            <ApprovalRow key={p.approvalId} data={p} />
-          ))}
+        <div className="space-y-6">
+          {pending.length > 0 && (
+            <div className="space-y-3">
+              {pending.map((p) => (
+                <ApprovalRow key={p.approvalId} data={p} />
+              ))}
+            </div>
+          )}
+          {directCharges.length > 0 && (
+            <section>
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-brand-night-navy/50">
+                Saison-Ziele & Spiel-Erfolge
+              </h2>
+              <div className="space-y-3">
+                {directCharges.map((c) => (
+                  <DirectChargeRow key={c.chargeId} data={c} />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
     </div>

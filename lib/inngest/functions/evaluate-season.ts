@@ -1,4 +1,4 @@
-import { and, eq, lte, gte, or } from "drizzle-orm";
+import { and, eq, lte, gte, or, inArray, isNull } from "drizzle-orm";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
 import {
@@ -6,10 +6,16 @@ import {
   pledges,
   pledgeRules,
   teams,
-  seasonResults
+  seasonResults,
+  sponsors,
+  users
 } from "@/lib/db/schema";
 import { isSeasonTrigger, type SeasonTriggerType } from "@/lib/db/schema/pledges";
 import { cupRoundRank } from "@/lib/triggers/cup-rounds";
+import { resend, MAIL_FROM } from "@/lib/mail/client";
+import { getBaseUrl } from "@/lib/utils/base-url";
+import { triggerLabel } from "@/lib/triggers/labels";
+import { formatSaisonLabel } from "@/lib/utils/saison";
 
 /**
  * Parsed eine saison-String wie "2526" oder "2025/26" in Datums-Grenzen.
@@ -123,12 +129,17 @@ export async function runEvaluateSeason(opts: {
     }
 
     // FIX (cup_round-Dead-End, Audit 2026-06-10): season_cup_round wurde hier
-    // zwangs-`pending_approval` gesetzt, aber für Saison-Trigger existiert KEIN
-    // event_approvals-/Inbox-Pfad → die Charge hing ewig pending, wurde nie
-    // bestätigt + nie fakturiert. Wie season_custom (der Verein trägt
-    // cupRoundReached selbst ins Saison-Formular ein = bestätigt) → auto-confirm.
-    // Nur der explizite Rule-Flag kann noch eine Bestätigung verlangen.
-    const requiresApproval = r.rule.requiresApproval;
+    // zwangs-`pending_approval` gesetzt, aber für Saison-Trigger existierte
+    // damals KEIN Approval-Pfad → auto-confirm (Verein trägt das Ergebnis
+    // selbst ein, Tabellen-/Pokaldaten sind objektiv prüfbar).
+    //
+    // C2 (Audit 2026-06-11): season_custom ist die Ausnahme — das Custom-Ziel
+    // ist eine reine VEREINS-Behauptung (customNotes), der Sponsor muss
+    // bestätigen. Den Approval-Pfad gibt es jetzt: Bestätigung direkt auf der
+    // Charge (lib/actions/season-charges.ts) + Sponsor-Inbox + 21d-Expiry im
+    // expire-approvals-Cron.
+    const requiresApproval =
+      r.rule.requiresApproval || triggerType === "season_custom";
 
     const insertResult = await db
       .insert(charges)
@@ -175,6 +186,20 @@ export const evaluateSeason = inngest.createFunction(
     const res = await step.run("evaluate-season", () =>
       runEvaluateSeason({ teamId, saison })
     );
+
+    // C2 (Audit 2026-06-11): pending Saison-Charges (season_custom) brauchen
+    // eine aktive Sponsor-Bestätigung — Mail mit Link auf die Inbox, sonst
+    // läuft still der 21d-Expiry. Nur für in DIESEM Run erzeugte pendings.
+    const pendingRuleIds = res.details
+      .filter((d) => d.outcome === "pending_approval")
+      .map((d) => d.ruleId);
+    if (pendingRuleIds.length > 0) {
+      const mailed = await step.run("notify-pending-sponsors", () =>
+        notifyPendingSeasonCharges({ saison, ruleIds: pendingRuleIds })
+      );
+      logger.info("evaluate-season pending-mails", { mailed });
+    }
+
     logger.info("evaluate-season done", {
       teamId,
       saison,
@@ -185,6 +210,84 @@ export const evaluateSeason = inngest.createFunction(
     return res;
   }
 );
+
+/**
+ * Mailt Sponsoren über frisch erzeugte pending Saison-Charges (C2).
+ * Eine Mail pro Sponsor, gebündelt über alle seine betroffenen Regeln.
+ */
+async function notifyPendingSeasonCharges(opts: {
+  saison: string;
+  ruleIds: string[];
+}): Promise<number> {
+  const rows = await db
+    .select({
+      chargeId: charges.id,
+      amountCents: charges.amountCents,
+      triggerType: charges.triggerType,
+      sponsorEmail: users.email,
+      sponsorName: sponsors.displayName,
+      teamName: teams.name
+    })
+    .from(charges)
+    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .innerJoin(users, eq(sponsors.userId, users.id))
+    .where(
+      and(
+        inArray(charges.pledgeRuleId, opts.ruleIds),
+        eq(charges.saison, opts.saison),
+        eq(charges.status, "pending_approval"),
+        isNull(charges.matchEventId)
+      )
+    );
+
+  const bySponsor = new Map<string, typeof rows>();
+  for (const row of rows) {
+    if (!row.sponsorEmail) continue;
+    const list = bySponsor.get(row.sponsorEmail) ?? [];
+    list.push(row);
+    bySponsor.set(row.sponsorEmail, list);
+  }
+
+  const inboxUrl = `${getBaseUrl()}/sponsor/inbox`;
+  let mailed = 0;
+  for (const [email, items] of bySponsor) {
+    const lines = items.map(
+      (i) =>
+        `• ${i.teamName}: ${triggerLabel(i.triggerType)} — ${(i.amountCents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" })}`
+    );
+    const send = await resend.emails.send({
+      from: MAIL_FROM,
+      to: email,
+      subject: `Saison-Ziel erreicht? Bitte bestätigen (${formatSaisonLabel(opts.saison)})`,
+      text: [
+        `Hallo ${items[0].sponsorName},`,
+        "",
+        `der Verein hat für die ${formatSaisonLabel(opts.saison)} ein Saison-Ziel als erreicht gemeldet:`,
+        "",
+        ...lines,
+        "",
+        `Bitte bestätige oder lehne den Beitrag innerhalb von 21 Tagen ab: ${inboxUrl}`,
+        "",
+        "Euer KickPact-Team"
+      ].join("\n"),
+      headers: {
+        "Idempotency-Key": `season-pending-${opts.saison}-${items
+          .map((i) => i.chargeId)
+          .sort()
+          .join("-")}`
+      }
+    });
+    if (send.error) {
+      // Mail-Fehler nicht fatal — der Inbox-Eintrag + Badge bleiben sichtbar.
+      console.error("[evaluate-season] pending-mail failed", send.error);
+    } else {
+      mailed += 1;
+    }
+  }
+  return mailed;
+}
 
 /**
  * Prüft ob ein Saison-Trigger gemäß dem End-Ergebnis hit ist.

@@ -33,15 +33,7 @@ import { getActiveSeason } from "@/lib/billing/wager-window-server";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
 import { SeasonWagerNotAllowedError } from "@/lib/billing/season-wager-errors";
 import { deriveSponsorDisplayName } from "@/lib/db/queries/sponsor-label";
-
-const MANUAL_TRIGGERS = new Set([
-  "special_goal",
-  "yellow_card",
-  "red_card",
-  "assist",
-  "man_of_match",
-  "custom"
-]);
+import { MANUAL_TRIGGERS } from "@/lib/triggers/manual-triggers";
 
 /**
  * Ergebnis der Pledge-Erstellung. Fehler werden bewusst als `{ ok: false }`
@@ -56,7 +48,18 @@ export type CreatePledgeResult =
 
 export async function createPledge(input: PledgeInput): Promise<CreatePledgeResult> {
   const user = await requireUser();
-  const parsed = pledgeInputSchema.parse(input);
+  // C1 (Audit 2026-06-11): safeParse statt parse — geworfene ZodErrors werden
+  // von Next.js in Production redacted; über den Rückgabewert erreicht die
+  // konkrete Validierungs-Meldung (z.B. fehlender Schwellwert) den Client.
+  const parsedResult = pledgeInputSchema.safeParse(input);
+  if (!parsedResult.success) {
+    const first = parsedResult.error.issues[0];
+    return {
+      ok: false,
+      message: first?.message ?? "Ungültige Pact-Daten — bitte Eingaben prüfen."
+    };
+  }
+  const parsed = parsedResult.data;
 
   // Sponsor-Profil holen
   const sponsor = await findSponsorForUser(user.id);

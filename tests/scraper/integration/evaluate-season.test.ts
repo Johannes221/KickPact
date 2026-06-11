@@ -97,7 +97,7 @@ describe.skipIf(isIntegrationDbDisabled)("evaluate-season", () => {
     expect(chargesCreated).toBe(0);
   });
 
-  it("season_custom: auto-confirmed (kein Sponsor-Approval-Pfad für Saison-Trigger)", async () => {
+  it("season_custom: pending_approval (Sponsor bestätigt direkt auf der Charge, C2)", async () => {
     const db = await getTestDb();
     const { teamIds } = await seedClubFromFixture("dossenheim");
     await seedSponsorWithPledge({
@@ -117,10 +117,11 @@ describe.skipIf(isIntegrationDbDisabled)("evaluate-season", () => {
     const { chargesCreated } = await runEvaluateSeason({ teamId: teamIds.herren1!, saison: "2425" });
     expect(chargesCreated).toBe(1);
     const [row] = await db.select().from(charges);
-    // Der Verein trägt die Custom-Notes selbst ein = bestätigt; es gibt keinen
-    // event_approvals-/Inbox-Pfad für Saison-Trigger → auto-confirmed.
-    expect(row?.status).toBe("confirmed");
-    expect(row?.confirmedAt).not.toBeNull();
+    // C2 (Audit 2026-06-11): Das Custom-Ziel ist eine reine Vereins-Behauptung
+    // (customNotes) → Sponsor muss bestätigen (confirmSeasonCharge), sonst
+    // storniert der 21d-Expiry. Objektive Saison-Trigger bleiben auto-confirm.
+    expect(row?.status).toBe("pending_approval");
+    expect(row?.confirmedAt).toBeNull();
   });
 
   // Regression (Audit 2026-06-10): season_cup_round landete vorher als
@@ -209,11 +210,4 @@ describe.skipIf(isIntegrationDbDisabled)("evaluate-season", () => {
     expect(chargesCreated).toBe(0);
   });
 
-  it.skip("requires phase 4 merge: full evaluateSeasonTriggers entry point", async () => {
-    // Phase 4 will expose runEvaluateSeason(payload) — until then, the local
-    // helper above mirrors its core loop. Once available, replace the local
-    // call sites here with the real entry point so we test the actual code
-    // path, not a clone of it.
-    expect(true).toBe(true);
-  });
 });
