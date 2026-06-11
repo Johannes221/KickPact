@@ -10,6 +10,7 @@ import {
   refreshTeamMemberInvitation
 } from "@/lib/db/queries/invitations";
 import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
+import { sendTeamEinladungMail } from "@/lib/mail/send-team-einladung";
 
 const inviteSchema = z.object({
   clubSlug: z.string().min(1),
@@ -29,7 +30,7 @@ export interface InviteTeamMemberInput {
 }
 
 export type InviteTeamMemberResult =
-  | { ok: true; token: string; inviteUrl: string }
+  | { ok: true; token: string; inviteUrl: string; mailSent: boolean }
   | { ok: false; error: string };
 
 export async function inviteTeamMemberAction(
@@ -44,12 +45,14 @@ export async function inviteTeamMemberAction(
   const { club } = await assertClubAccess(parsed.data.clubSlug, "admin");
 
   let teamIdForInvite: string | undefined;
+  let teamName: string | null = null;
   if (parsed.data.teamId) {
     const team = await getTeamInClub(parsed.data.teamId, club.id);
     if (!team) {
       return { ok: false, error: "Mannschaft nicht gefunden oder nicht zu diesem Verein gehörend." };
     }
     teamIdForInvite = team.id;
+    teamName = team.name;
   }
 
   const invite = await createTeamMemberInvitation({
@@ -63,8 +66,18 @@ export async function inviteTeamMemberAction(
   const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
   const inviteUrl = `${base}/team-einladung/${invite.token}`;
 
+  // B4 (Audit 2026-06-11): Einladung per Mail verschicken. Ein Mail-Fehler ist
+  // nicht fatal — der Link bleibt gültig, die UI bietet den Copy-Fallback an.
+  const mailSent = await sendTeamEinladungMail({
+    to: parsed.data.email,
+    clubName: club.name,
+    teamName,
+    role: parsed.data.role,
+    inviteUrl
+  });
+
   revalidatePath(`/verein/${club.slug}/einstellungen/mitglieder`);
-  return { ok: true, token: invite.token, inviteUrl };
+  return { ok: true, token: invite.token, inviteUrl, mailSent };
 }
 
 const idSchema = z.object({

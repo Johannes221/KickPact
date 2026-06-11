@@ -10,6 +10,9 @@ import {
   revokeTeamInvitationForTeam,
   refreshTeamInvitationForTeam
 } from "@/lib/db/queries/invitations";
+import { getTeamBasicById } from "@/lib/db/queries/team-lifecycle";
+import { getClubById } from "@/lib/db/queries/club-admin";
+import { sendTeamEinladungMail } from "@/lib/mail/send-team-einladung";
 
 const NO_PERMISSION = "Keine Berechtigung für diese Mannschaft.";
 
@@ -34,7 +37,7 @@ export interface TeamInviteInput {
 }
 
 export type TeamInviteResult =
-  | { ok: true; token: string; inviteUrl: string }
+  | { ok: true; token: string; inviteUrl: string; mailSent: boolean }
   | { ok: false; error: string };
 
 export async function inviteTeamMemberAction(
@@ -62,8 +65,21 @@ export async function inviteTeamMemberAction(
 
   const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
   const inviteUrl = `${base}/team-einladung/${invite.token}`;
+
+  // B4 (Audit 2026-06-11): Einladung per Mail verschicken (Fehler nicht fatal,
+  // Copy-Link bleibt als Fallback). Team-/Vereinsname nur fürs Mail-Copy.
+  const team = await getTeamBasicById(teamId);
+  const club = team ? await getClubById(team.clubId) : undefined;
+  const mailSent = await sendTeamEinladungMail({
+    to: email,
+    clubName: club?.name ?? "KickPact",
+    teamName: team?.name ?? null,
+    role,
+    inviteUrl
+  });
+
   revalidatePath(mitgliederPath(clubSlug, teamId));
-  return { ok: true, token: invite.token, inviteUrl };
+  return { ok: true, token: invite.token, inviteUrl, mailSent };
 }
 
 const idSchema = z.object({
