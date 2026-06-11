@@ -22,8 +22,10 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const profile = await getPublicTeamProfileBySlug(slug);
-  if (!profile) return { title: "Profil nicht gefunden – KickPact" };
-  const title = `${profile.displayName} – Sponsoring | KickPact`;
+  // Kein eigener Brand-Suffix — das Layout-Template (`%s – KickPact`) hängt
+  // die Marke an. Vorher entstand „… | KickPact – KickPact".
+  if (!profile) return { title: "Profil nicht gefunden" };
+  const title = `${profile.displayName} – Sponsoring`;
   const description =
     profile.tagline ??
     `Unterstütze ${profile.displayName} (${profile.clubName}) mit performance-basiertem Sponsoring auf KickPact.`;
@@ -89,7 +91,7 @@ export default async function PublicTeamProfilePage({ params }: PageProps) {
         />
       )}
 
-      <GalleryStrip images={profile.gallery} />
+      <GalleryStrip images={profile.gallery} teamName={profile.displayName} />
 
       {(profile.tagline || profile.goals) && (
         <section className="px-4 pt-5">

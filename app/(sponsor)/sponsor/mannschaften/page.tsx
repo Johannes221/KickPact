@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { eq, sql, desc } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
-import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
+import {
+  findSponsorForUser,
+  listSponsoredTeamsForSponsor
+} from "@/lib/db/queries/sponsor-dashboard";
 import { listInquiriesForSponsor } from "@/lib/db/queries/sponsor-discover";
-import { db } from "@/lib/db/client";
-import { pledges, teams, clubs } from "@/lib/db/schema";
 import { PageHeader } from "@/components/shared/page-header";
 import { ChevronRight, Users, ArrowRight } from "lucide-react";
 
@@ -14,24 +14,7 @@ export default async function SponsorMannschaftenPage() {
   const user = await requireUser();
   const sponsor = await findSponsorForUser(user.id);
 
-  const rows = sponsor
-    ? await db
-        .select({
-          teamId: teams.id,
-          teamName: teams.name,
-          clubName: clubs.name,
-          league: teams.league,
-          publicSlug: teams.publicSlug,
-          activePledges: sql<number>`count(*) FILTER (WHERE ${pledges.status} = 'active')::int`,
-          totalPledges: sql<number>`count(*)::int`
-        })
-        .from(pledges)
-        .innerJoin(teams, eq(pledges.teamId, teams.id))
-        .innerJoin(clubs, eq(teams.clubId, clubs.id))
-        .where(eq(pledges.sponsorId, sponsor.id))
-        .groupBy(teams.id, teams.name, clubs.name, teams.league, teams.publicSlug)
-        .orderBy(desc(sql`count(*) FILTER (WHERE ${pledges.status} = 'active')`))
-    : [];
+  const rows = sponsor ? await listSponsoredTeamsForSponsor(sponsor.id) : [];
 
   // Angenommene Anfragen, bei denen nur noch der Pact einzurichten ist: Verein
   // hat zugesagt (gültiger Token), aber noch kein aktiver Pledge. Teams, die

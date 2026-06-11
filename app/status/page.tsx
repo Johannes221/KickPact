@@ -5,6 +5,7 @@ import {
   type ChargeProposal
 } from "@/lib/crawler/triggers";
 import { getStatusTableCounts } from "@/lib/db/queries/system-status";
+import { functions as inngestFunctions } from "@/lib/inngest/functions";
 
 export const revalidate = 30;
 export const dynamic = "force-dynamic";
@@ -137,7 +138,25 @@ function chargeLabel(c: ChargeProposal, match: MatchInput): string {
   return `Match-Level: ${c.triggerType}`;
 }
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  // Gate: Tabellen-Counts + Trigger-Interna sind nicht für die Öffentlichkeit.
+  // Nur mit gültigem ?token=<STATUS_PAGE_TOKEN> gibt es das volle Dashboard;
+  // ohne (oder wenn die Env fehlt) nur eine Minimal-Antwort für Healthchecks.
+  const sp = await searchParams;
+  const token = typeof sp.token === "string" ? sp.token : undefined;
+  const expected = process.env.STATUS_PAGE_TOKEN;
+  if (!expected || token !== expected) {
+    return (
+      <main className="min-h-screen bg-neutral-50 grid place-items-center">
+        <p className="font-mono text-sm text-neutral-500">ok</p>
+      </main>
+    );
+  }
+
   const dbResult = await getStatusTableCounts();
   const demo = runDemo();
 
@@ -181,9 +200,9 @@ export default async function HomePage() {
           />
           <StatusCard
             label="Inngest-Jobs"
-            value="6 registriert"
+            value={`${inngestFunctions.length} registriert`}
             ok={true}
-            hint="crawl-matches · evaluate-match · approval-reminders · generate-invoices (monatlich) · season-renewal-prompts · evaluate-season"
+            hint="alle Functions aus lib/inngest/functions (Crawler, Auswertung, Invoicing, Reminder, Saison)"
           />
         </div>
       </section>

@@ -1,10 +1,13 @@
 import type { MetadataRoute } from "next";
 import { getAllArticles } from "@/lib/help-center/articles";
+import { listPublicTeamSlugs } from "@/lib/db/queries/sponsor-discover";
 
 /**
  * Dynamische sitemap.xml via Next.js App Router.
  *
- * Statische öffentliche Routen + alle publizierten Help-Center-Artikel.
+ * Statische öffentliche Routen + alle publizierten Help-Center-Artikel +
+ * öffentliche Team-Profile (/m/<slug>, nur discoverable+verifiziert) +
+ * /mannschaften (Discovery).
  * Private Routen (Dashboard, Admin, Auth) werden bewusst ausgelassen.
  * /status ist intern — nicht in der Sitemap.
  *
@@ -13,12 +16,15 @@ import { getAllArticles } from "@/lib/help-center/articles";
  *   Production: https://kickpact.com
  *
  * robots.ts blockt Indexierung auf Staging — die Sitemap ist dort technisch
- * ausgeliefert, wird von Google aber ignoriert.
+ * ausgeliefert, wird von Google aber ignoriert. Die dynamischen Team-Profile
+ * kommen zusätzlich env-gesteuert nur in Production in die Sitemap (kein
+ * Leaken von Staging-Testdaten).
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = (
     process.env.NEXT_PUBLIC_BASE_URL ?? "https://kickpact.com"
   ).replace(/\/$/, "");
+  const isProduction = baseUrl === "https://kickpact.com";
 
   const now = new Date();
 
@@ -33,6 +39,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/preise`,
       lastModified: now,
       changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/mannschaften`,
+      lastModified: now,
+      changeFrequency: "daily",
       priority: 0.8,
     },
     {
@@ -72,5 +84,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...articleRoutes];
+  // Öffentliche Team-Profile — nur in Production (Staging-Testdaten gehören
+  // nicht in eine Sitemap, auch wenn robots.ts dort ohnehin blockt).
+  let teamRoutes: MetadataRoute.Sitemap = [];
+  if (isProduction) {
+    const slugs = await listPublicTeamSlugs();
+    teamRoutes = slugs.map((slug) => ({
+      url: `${baseUrl}/m/${slug}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
+  }
+
+  return [...staticRoutes, ...articleRoutes, ...teamRoutes];
 }
