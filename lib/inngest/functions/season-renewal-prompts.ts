@@ -167,14 +167,31 @@ export const seasonRenewalPrompts = inngest.createFunction(
           });
 
           const replyTo = await getReplyToForClub(c.clubId);
-          const result = await resend.emails.send({
-            from: MAIL_FROM,
-            to: c.sponsorEmail,
-            replyTo,
-            subject: mail.subject,
-            text: mail.text,
-            html: mail.html
-          });
+          let result;
+          try {
+            result = await resend.emails.send({
+              from: MAIL_FROM,
+              to: c.sponsorEmail,
+              replyTo,
+              subject: mail.subject,
+              text: mail.text,
+              html: mail.html
+            });
+          } catch (err) {
+            // Review M4 (2026-06-11): Bei GEWORFENEM Send-Fehler (Netz) muss
+            // das Dedupe-Gate freigeräumt werden, BEVOR der Fehler propagiert —
+            // sonst konfliktet der Inngest-Step-Retry am Gate und die Mail
+            // dieser Stage ist für immer verloren.
+            await db
+              .delete(sentNotifications)
+              .where(
+                and(
+                  eq(sentNotifications.kind, "season-renewal"),
+                  eq(sentNotifications.key, dedupeKey)
+                )
+              );
+            throw err;
+          }
           if (result.error) {
             logger.error("season-renewal mail failed", {
               pledgeId: c.pledgeId,

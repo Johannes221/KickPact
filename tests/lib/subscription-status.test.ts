@@ -236,4 +236,10 @@ describe("isCrawlBlockedByGate / isChargeBlockedByGate", () => {
     expect(isChargeBlockedByGate(pausedGate)).toBe(false);
     expect(isChargeBlockedByGate(activeGate)).toBe(false);
   });
+
+  it("M3: incomplete (Re-Onboarder ohne Trial, nie ausgecheckt) blockt Charges, aber nicht das Crawling", () => {
+    const incompleteGate = gateFromSubscription(row({ status: "incomplete" }), NOW);
+    expect(isChargeBlockedByGate(incompleteGate)).toBe(true);
+    expect(isCrawlBlockedByGate(incompleteGate)).toBe(false);
+  });
 });

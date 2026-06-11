@@ -184,6 +184,10 @@ export function isChargeBlockedByGate(
   gate: SubscriptionGateDecisionInput
 ): boolean {
   if (gate.reason === "trial_expired") return true;
+  // Review M3 (2026-06-11): "incomplete" = Re-Onboarder ohne Trial-Anspruch,
+  // der nie ausgecheckt hat — nie lizenziert, also keine neuen Beiträge.
+  // (Gecrawlt wird er weiter: konvertierbar, App bleibt lebendig.)
+  if (gate.status === "incomplete") return true;
   return (
     gate.isReadOnly && (gate.status === "past_due" || gate.status === "cancelled")
   );

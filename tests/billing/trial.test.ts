@@ -55,4 +55,11 @@ describe("computeTrialEndsAt", () => {
     const result = await computeTrialEndsAt(now);
     expect(result.getTime()).toBe(now.getTime() + 30 * DAY);
   });
+
+  it("(d) Review N4: Onboarding am 1.6. sieht den 1.8.-Saisonstart (70d-Horizont, keine Klippe)", async () => {
+    await seedSeasons();
+    const now = new Date("2026-06-01T10:00:00Z");
+    const result = await computeTrialEndsAt(now);
+    expect(result.toISOString()).toBe("2026-08-31T00:00:00.000Z");
+  });
 });

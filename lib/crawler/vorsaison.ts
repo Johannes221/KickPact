@@ -184,8 +184,18 @@ export async function parseVorsaisonSpiele(
       tr.classList.contains("row-headline") ||
       tr.classList.contains("row-competition")
     ) {
+      // Review N3 (2026-06-11): Eine UNPARSEBARE row-headline (sie leitet
+      // immer einen neuen Datums-Block ein) resettet das Carry-over — sonst
+      // bekommt das folgende Spiel still den Spieltag der vorigen Zeile.
+      // row-competition-Zeilen tragen dagegen teils KEIN Datum (z.B. reine
+      // Wettbewerbs-Beschriftung) und verlassen sich auf die Headline davor
+      // → dort nur überschreiben, wenn wirklich ein Datum drinsteht.
       const datum = normalizeDatum(tr.text);
-      if (datum) currentDatum = datum;
+      if (datum) {
+        currentDatum = datum;
+      } else if (tr.classList.contains("row-headline")) {
+        currentDatum = null;
+      }
       continue;
     }
 
