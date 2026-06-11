@@ -107,6 +107,16 @@ export const clubs = pgTable(
     } | null>(),
     iban: text("iban"),
     logoUrl: text("logo_url"),
+    /**
+     * Spec 2026-05-26 §1.9 (Phase 5): Multi-Zahlwege auf der Rechnung.
+     * KickPact bleibt non-custodial — der Verein hinterlegt seine eigenen
+     * Pay-Links, der PDF-Renderer zeigt sie konditional (Default Girocode).
+     */
+    paypalHandle: text("paypal_handle"),
+    stripePaymentLink: text("stripe_payment_link"),
+    /** Öffentliches Vereinsprofil /v/[slug] (Phase 5): Beschreibung + Hero. */
+    descriptionMd: text("description_md"),
+    heroUrl: text("hero_url"),
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
     // Onboarding-State (siehe Enums oben). Default "completed", damit bestehende
     // Clubs und ältere Code-Pfade out-of-the-box korrekt sind.
@@ -244,10 +254,22 @@ export const teams = pgTable(
      */
     crawlLastError: text("crawl_last_error"),
     crawlLastErrorAt: timestamp("crawl_last_error_at", { withTimezone: true }),
+    /**
+     * Spec 2026-05-26 §1.4/1.5 (Phase 5): Lizenz-Beziehung. NULL = autark/
+     * co-owned (Lizenz beim Team-Trainer), gesetzt = unter Vereinslizenz
+     * dieses Clubs (Vorstand zahlt zentral, T's Stripe-Sub läuft aus).
+     * `teams.clubId` (namentliche Zugehörigkeit) bleibt davon unberührt.
+     */
+    licensedUnderClubId: text("licensed_under_club_id").references(() => clubs.id, {
+      onDelete: "set null"
+    }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({
     clubSaisonIdx: index("teams_club_saison_idx").on(t.clubId, t.saison),
+    licensedUnderIdx: index("teams_licensed_under_club_idx")
+      .on(t.licensedUnderClubId)
+      .where(sql`${t.licensedUnderClubId} IS NOT NULL`),
     fussballdeIdx: uniqueIndex("teams_fussballde_idx")
       .on(t.fussballdeTeamId, t.saison)
       .where(sql`${t.fussballdeTeamId} IS NOT NULL`),

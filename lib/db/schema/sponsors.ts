@@ -8,6 +8,13 @@ import { users } from "./auth";
 
 export const sponsorTypeEnum = pgEnum("sponsor_type", ["familie", "business"]);
 
+/**
+ * Abrechnungs-Rhythmus pro Sponsor (Spec 2026-05-26 §1.2):
+ * - `monthly`    — Rechnung am Monats-1. (Default, heutiges Verhalten)
+ * - `season_end` — alle Beiträge sammeln sich, EINE Rechnung am Saisonende (30.06.)
+ */
+export type SponsorBillingCycle = "monthly" | "season_end";
+
 export const sponsors = pgTable(
   "sponsors",
   {
@@ -29,9 +36,36 @@ export const sponsors = pgTable(
       country: string;
     } | null>(),
     businessTaxId: text("business_tax_id"),
+    /** Spec §1.2: monthly (Default) oder season_end. Wechsel jederzeit erlaubt. */
+    billingCycle: text("billing_cycle")
+      .$type<SponsorBillingCycle>()
+      .notNull()
+      .default("monthly"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({
     userIdx: index("sponsors_user_idx").on(t.userId)
+  })
+);
+
+/**
+ * Historie der Cycle-Wechsel (Spec §1.2): Der Cycle eines Beitrags wird durch
+ * den SPIELZEITPUNKT des Events bestimmt, nicht durch den Erzeugungs-Zeitpunkt —
+ * rückwirkende Approvals gehören dem Cycle, der zum Spielzeitpunkt galt.
+ * Lookup: jüngste Row mit validFrom <= matchDate.
+ */
+export const sponsorBillingCycleHistory = pgTable(
+  "sponsor_billing_cycle_history",
+  {
+    id: text("id").primaryKey().$defaultFn(() => createId()),
+    sponsorId: text("sponsor_id")
+      .notNull()
+      .references(() => sponsors.id, { onDelete: "cascade" }),
+    cycle: text("cycle").$type<SponsorBillingCycle>().notNull(),
+    validFrom: timestamp("valid_from", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+  },
+  (t) => ({
+    lookupIdx: index("sponsor_cycle_history_lookup_idx").on(t.sponsorId, t.validFrom)
   })
 );

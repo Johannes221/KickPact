@@ -14,3 +14,4 @@ export * from "./system";
 export * from "./support";
 export * from "./team-images";
 export * from "./notifications";
+export * from "./license-transfers";

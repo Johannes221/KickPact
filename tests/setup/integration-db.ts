@@ -49,6 +49,8 @@ export async function resetTestDb(): Promise<void> {
   // operation fails loud if a new table is added without being considered here.
   await db.execute(/* sql */ `
     TRUNCATE
+      sponsor_billing_cycle_history,
+      team_license_transfer_requests,
       device_tokens,
       notifications,
       notification_settings,

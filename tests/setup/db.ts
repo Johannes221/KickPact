@@ -29,7 +29,9 @@ import {
   processedStripeEvents,
   operatorAuditLog,
   supportTickets,
-  supportTicketReplies
+  supportTicketReplies,
+  sponsorBillingCycleHistory,
+  teamLicenseTransferRequests
 } from "@/lib/db/schema";
 
 /**
@@ -73,7 +75,9 @@ export async function resetTestDb() {
   await db.delete(pledges);
   await db.delete(sponsorInquiries);
   await db.delete(sponsorInvitations);
+  await db.delete(sponsorBillingCycleHistory);
   await db.delete(sponsors);
+  await db.delete(teamLicenseTransferRequests);
   await db.delete(teamLicenses);
   await db.delete(subscriptions);
   await db.delete(players);

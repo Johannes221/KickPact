@@ -47,6 +47,14 @@ export const charges = pgTable(
     goalIndex: integer("goal_index").notNull().default(0),
     triggerType: triggerTypeEnum("trigger_type").notNull(),
     amountCents: integer("amount_cents").notNull(),
+    /**
+     * Spec 2026-05-26 §1.2: Snapshot des Sponsor-Billing-Cycles zum
+     * SPIELZEITPUNKT (Lookup via sponsor_billing_cycle_history). monthly-
+     * Charges landen auf der Monatsrechnung, season_end-Charges sammeln sich
+     * bis zur Saisonende-Rechnung (30.06.). Snapshot statt Live-Lookup, damit
+     * spätere Cycle-Wechsel vergangene Beiträge nicht umsortieren.
+     */
+    billingCycleSnapshot: text("billing_cycle_snapshot").notNull().default("monthly"),
     status: chargeStatusEnum("status").notNull().default("confirmed"),
     /**
      * Reason this charge was cancelled (e.g. "match_updated"). Set by the
