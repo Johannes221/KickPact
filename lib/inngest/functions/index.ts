@@ -1,4 +1,5 @@
 import { crawlMatches } from "./crawl-matches";
+import { backfillTeamHistory } from "./backfill-team-history";
 import { evaluateMatch } from "./evaluate-match";
 import { approvalReminders } from "./approval-reminders";
 import { generateInvoices } from "./generate-invoices";
@@ -24,6 +25,7 @@ import { notifySponsorLead } from "./notify-sponsor-lead";
 
 export const functions = [
   crawlMatches,
+  backfillTeamHistory,
   evaluateMatch,
   approvalReminders,
   generateInvoices,

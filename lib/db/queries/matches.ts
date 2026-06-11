@@ -139,6 +139,57 @@ export async function upsertScheduledMatch(args: {
   return { matchId: row.id, inserted: true };
 }
 
+/**
+ * Persistiert ein VORSAISON-Spiel aus dem Backfill-Pfad (lib/crawler/
+ * vorsaison.ts) als fertige `finished`-Row MIT Ergebnis, aber OHNE Events,
+ * OHNE contentHash und OHNE dass der Caller `match/finished` emittiert —
+ * historische Spiele dürfen weder Charges noch Pushes auslösen (die
+ * Pipeline wird bewusst komplett umgangen, siehe backfill-team-history).
+ *
+ * Idempotent über das UNIQUE auf fussballdeSpielId: existiert die Row schon
+ * (egal in welchem Status — der reguläre Crawl-Pfad ist autoritativ), wird
+ * NICHTS angefasst (`ON CONFLICT DO NOTHING`).
+ */
+export async function insertBackfilledFinishedMatch(args: {
+  teamId: string;
+  fussballdeSpielId: string;
+  datum: string; // DD.MM.YYYY
+  heimName: string;
+  gastName: string;
+  ergebnisHeim: number;
+  ergebnisGast: number;
+}): Promise<{ inserted: boolean }> {
+  const rows = await db
+    .insert(matches)
+    .values({
+      teamId: args.teamId,
+      fussballdeSpielId: args.fussballdeSpielId,
+      datum: parseDatumDdMmYyyy(args.datum),
+      heimName: args.heimName,
+      gastName: args.gastName,
+      ergebnisHeim: args.ergebnisHeim,
+      ergebnisGast: args.ergebnisGast,
+      status: "finished"
+    })
+    .onConflictDoNothing({ target: matches.fussballdeSpielId })
+    .returning({ id: matches.id });
+  return { inserted: rows.length > 0 };
+}
+
+/** Anzahl GESPIELTER Spiele einer Mannschaft ab einem Stichtag (Saison-Fenster). */
+export async function countFinishedMatchesSince(
+  teamId: string,
+  since: Date | null
+): Promise<number> {
+  const conditions = [eq(matches.teamId, teamId), eq(matches.status, "finished")];
+  if (since) conditions.push(gte(matches.datum, since));
+  const [row] = await db
+    .select({ n: sql<number>`COUNT(*)::int` })
+    .from(matches)
+    .where(and(...conditions));
+  return row?.n ?? 0;
+}
+
 /** Liefert Charges-Summe pro Match für eine Mannschaft (für die Match-Liste). */
 export async function getMatchChargesSummaryForTeam(
   teamId: string
