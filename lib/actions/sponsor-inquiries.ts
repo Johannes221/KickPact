@@ -27,18 +27,41 @@ const inquirySchema = z.object({
 });
 
 /**
+ * A8 (Audit 2026-06-11): Fehler als `{ ok: false, message }` statt Throw —
+ * Next.js redacted aus Server-Actions geworfene Errors in Production zur
+ * generischen Meldung; über den Rückgabewert erreicht der deutsche Klartext
+ * (Rate-Limit, Duplikat, …) den Client-Toast. Pattern: create-pledge.ts.
+ */
+export type InquiryActionResult = { ok: true } | { ok: false; message: string };
+
+/**
  * Sponsor stellt eine Anfrage an eine discoverable Mannschaft.
  * Sendet zusätzlich eine Mail an alle Club-Admins.
  */
-export async function createSponsorInquiry(input: { teamId: string; message?: string }) {
+export async function createSponsorInquiry(input: {
+  teamId: string;
+  message?: string;
+}): Promise<InquiryActionResult> {
   const user = await requireUser();
-  const parsed = inquirySchema.parse(input);
+  const parsedResult = inquirySchema.safeParse(input);
+  if (!parsedResult.success) {
+    return {
+      ok: false,
+      message:
+        parsedResult.error.issues[0]?.message ??
+        "Ungültige Anfrage — bitte Eingaben prüfen."
+    };
+  }
+  const parsed = parsedResult.data;
 
   // SECURITY (M5): Rate-Limit pro Sponsor-User — verhindert Anfrage-Fanout
   // (eine pending pro Team, aber sonst unbegrenzt viele Teams → Mail-Flut an
   // viele Club-Admins). 20 Anfragen / Stunde / User.
   if (!(await rateLimit(`inquiry:${user.id}`, { limit: 20, windowMs: 60 * 60_000 }))) {
-    throw new Error("Zu viele Anfragen in kurzer Zeit. Bitte später erneut versuchen.");
+    return {
+      ok: false,
+      message: "Zu viele Anfragen in kurzer Zeit. Bitte später erneut versuchen."
+    };
   }
 
   // Verify team is actually discoverable
@@ -48,17 +71,22 @@ export async function createSponsorInquiry(input: { teamId: string; message?: st
     .innerJoin(clubs, eq(teams.clubId, clubs.id))
     .where(eq(teams.id, parsed.teamId))
     .limit(1);
-  if (!teamRow) throw new Error("Mannschaft nicht gefunden");
+  if (!teamRow) return { ok: false, message: "Mannschaft nicht gefunden." };
   if (!teamRow.team.discoverable) {
-    throw new Error("Diese Mannschaft akzeptiert aktuell keine direkten Anfragen");
+    return {
+      ok: false,
+      message: "Diese Mannschaft akzeptiert aktuell keine direkten Anfragen."
+    };
   }
 
   // Read-Only-Verein darf keine neuen Anfragen annehmen.
   const gate = await getSubscriptionGate(teamRow.club.id);
   if (gate.isReadOnly) {
-    throw new Error(
-      "Diese Mannschaft ist aktuell pausiert. Sponsoring ist wieder möglich, sobald das Abo reaktiviert wurde."
-    );
+    return {
+      ok: false,
+      message:
+        "Diese Mannschaft ist aktuell pausiert. Sponsoring ist wieder möglich, sobald das Abo reaktiviert wurde."
+    };
   }
 
   // Prevent duplicate pending inquiry
@@ -74,7 +102,10 @@ export async function createSponsorInquiry(input: { teamId: string; message?: st
     )
     .limit(1);
   if (existing) {
-    throw new Error("Du hast bereits eine offene Anfrage für diese Mannschaft");
+    return {
+      ok: false,
+      message: "Du hast bereits eine offene Anfrage für diese Mannschaft."
+    };
   }
 
   await db.insert(sponsorInquiries).values({
@@ -151,6 +182,7 @@ ${parsed.message ? `<blockquote style="border-left:3px solid #01C457;padding:8px
   revalidatePath("/sponsor/discover");
   revalidatePath(`/verein/${teamRow.club.slug}/sponsoren`);
   revalidatePath(`/verein/${teamRow.club.slug}/mannschaft/${parsed.teamId}/sponsoren`);
+  return { ok: true };
 }
 
 const respondSchema = z.object({
@@ -167,9 +199,18 @@ export async function respondToInquiry(input: {
   inquiryId: string;
   accept: boolean;
   responseMessage?: string;
-}) {
+}): Promise<InquiryActionResult> {
   const user = await requireUser();
-  const parsed = respondSchema.parse(input);
+  const parsedResult = respondSchema.safeParse(input);
+  if (!parsedResult.success) {
+    return {
+      ok: false,
+      message:
+        parsedResult.error.issues[0]?.message ??
+        "Ungültige Antwort — bitte Eingaben prüfen."
+    };
+  }
+  const parsed = parsedResult.data;
 
   const [row] = await db
     .select({
@@ -185,7 +226,7 @@ export async function respondToInquiry(input: {
     .innerJoin(users, eq(sponsorInquiries.sponsorUserId, users.id))
     .where(eq(sponsorInquiries.id, parsed.inquiryId))
     .limit(1);
-  if (!row) throw new Error("Anfrage nicht gefunden");
+  if (!row) return { ok: false, message: "Anfrage nicht gefunden." };
 
   // Team-aware Autorisierung: Club-Admin (vereinsgeführt) ODER direkter
   // Team-Admin (team-only geführte Mannschaft) darf antworten. assertClub-
@@ -193,11 +234,14 @@ export async function respondToInquiry(input: {
   // Verein der Mannschaft) fälschlich abgewiesen.
   const access = await resolveTeamAccess(user.id, row.team.id, "admin");
   if (!access.granted) {
-    throw new Error("Du bist nicht berechtigt, diese Anfrage zu beantworten.");
+    return {
+      ok: false,
+      message: "Du bist nicht berechtigt, diese Anfrage zu beantworten."
+    };
   }
 
   if (row.inquiry.status !== "pending") {
-    throw new Error("Diese Anfrage wurde bereits beantwortet");
+    return { ok: false, message: "Diese Anfrage wurde bereits beantwortet." };
   }
 
   // Annehmen erzeugt eine Einladung (= neues Sponsoring) → im Read-Only-Modus
@@ -205,9 +249,10 @@ export async function respondToInquiry(input: {
   if (parsed.accept) {
     const gate = await getSubscriptionGate(row.club.id);
     if (gate.isReadOnly) {
-      throw new Error(
-        "Diese Mannschaft ist im Read-Only-Modus. Bitte Abo reaktivieren."
-      );
+      return {
+        ok: false,
+        message: "Diese Mannschaft ist im Read-Only-Modus. Bitte Abo reaktivieren."
+      };
     }
   }
 
@@ -292,6 +337,7 @@ ${parsed.responseMessage ? `<blockquote style="border-left:3px solid #ccc;paddin
   revalidatePath(`/verein/${row.club.slug}/sponsoren`);
   revalidatePath(`/verein/${row.club.slug}/mannschaft/${row.team.id}/sponsoren`);
   revalidatePath("/sponsor/discover");
+  return { ok: true };
 }
 
 /**

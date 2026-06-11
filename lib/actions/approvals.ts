@@ -14,12 +14,26 @@ const disputeSchema = z.object({
   reason: z.string().max(500).optional()
 });
 
-export async function confirmApproval(approvalId: string) {
+/**
+ * A8 (Audit 2026-06-11): Fehler als `{ ok: false, message }` statt Throw —
+ * Next.js redacted aus Server-Actions geworfene Errors in Production zur
+ * generischen Meldung; über den Rückgabewert erreicht der deutsche Klartext
+ * den Client-Toast. Pattern: create-pledge.ts.
+ */
+export type ApprovalActionResult =
+  | { ok: true }
+  | { ok: false; message: string };
+
+export async function confirmApproval(
+  approvalId: string
+): Promise<ApprovalActionResult> {
   const user = await requireUser();
   const row = await getApprovalForUpdate(approvalId, user.id);
-  if (!row) throw new Error("Approval nicht gefunden oder nicht autorisiert.");
+  if (!row) {
+    return { ok: false, message: "Approval nicht gefunden oder nicht autorisiert." };
+  }
   if (row.approval.status !== "pending") {
-    throw new Error(`Approval ist bereits ${row.approval.status}.`);
+    return { ok: false, message: `Approval ist bereits ${row.approval.status}.` };
   }
 
   // Audit 2026-05-24 Task 2.3: defense-in-depth gegen Charge-Wiederbelebung.
@@ -41,9 +55,11 @@ export async function confirmApproval(approvalId: string) {
     .orderBy(desc(charges.createdAt))
     .limit(1);
   if (!chargeRow) {
-    throw new Error(
-      "Das Ereignis wurde inzwischen vom Spielbericht widerrufen und kann nicht mehr bestätigt werden."
-    );
+    return {
+      ok: false,
+      message:
+        "Das Ereignis wurde inzwischen vom Spielbericht widerrufen und kann nicht mehr bestätigt werden."
+    };
   }
 
   await db.transaction(async (tx) => {
@@ -67,16 +83,30 @@ export async function confirmApproval(approvalId: string) {
 
   revalidatePath("/sponsor/inbox");
   revalidatePath("/sponsor");
-  return { ok: true as const };
+  return { ok: true };
 }
 
-export async function disputeApproval(input: { approvalId: string; reason?: string }) {
+export async function disputeApproval(input: {
+  approvalId: string;
+  reason?: string;
+}): Promise<ApprovalActionResult> {
   const user = await requireUser();
-  const parsed = disputeSchema.parse(input);
+  const parsedResult = disputeSchema.safeParse(input);
+  if (!parsedResult.success) {
+    return {
+      ok: false,
+      message:
+        parsedResult.error.issues[0]?.message ??
+        "Ungültige Eingabe — bitte prüfen."
+    };
+  }
+  const parsed = parsedResult.data;
   const row = await getApprovalForUpdate(parsed.approvalId, user.id);
-  if (!row) throw new Error("Approval nicht gefunden oder nicht autorisiert.");
+  if (!row) {
+    return { ok: false, message: "Approval nicht gefunden oder nicht autorisiert." };
+  }
   if (row.approval.status !== "pending") {
-    throw new Error(`Approval ist bereits ${row.approval.status}.`);
+    return { ok: false, message: `Approval ist bereits ${row.approval.status}.` };
   }
 
   await db.transaction(async (tx) => {
@@ -103,7 +133,7 @@ export async function disputeApproval(input: { approvalId: string; reason?: stri
 
   revalidatePath("/sponsor/inbox");
   revalidatePath("/sponsor");
-  return { ok: true as const };
+  return { ok: true };
 }
 
 // ---------------------------------------------------------------------------

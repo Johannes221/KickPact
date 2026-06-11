@@ -131,6 +131,7 @@ export async function listPledgesForSponsor(sponsorId: string) {
     .select({
       id: pledges.id,
       status: pledges.status,
+      sommerpausePaused: pledges.sommerpausePaused,
       startsAt: pledges.startsAt,
       endsAt: pledges.endsAt,
       monthlyCapCents: pledges.monthlyCapCents,
@@ -153,6 +154,7 @@ export async function getPledgeDetailForSponsorView(pledgeId: string) {
     .select({
       id: pledges.id,
       status: pledges.status,
+      sommerpausePaused: pledges.sommerpausePaused,
       startsAt: pledges.startsAt,
       endsAt: pledges.endsAt,
       monthlyCapCents: pledges.monthlyCapCents,

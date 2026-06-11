@@ -15,10 +15,13 @@ import { setPledgeStatus } from "@/lib/actions/pledges";
 
 export function PledgeStatusToggle({
   pledgeId,
-  currentStatus
+  currentStatus,
+  sommerpausePaused = false
 }: {
   pledgeId: string;
   currentStatus: string;
+  /** A3: automatische Sommerpause (1.6.–1.8.) — erklärender Hinweis statt generischem „Pausiert". */
+  sommerpausePaused?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const [showEndDialog, setShowEndDialog] = useState(false);
@@ -26,6 +29,7 @@ export function PledgeStatusToggle({
   if (currentStatus === "ended") return null;
 
   const isPaused = currentStatus === "paused";
+  const isSommerpause = isPaused && sommerpausePaused;
 
   function toggle() {
     startTransition(async () => {
@@ -46,6 +50,12 @@ export function PledgeStatusToggle({
 
   return (
     <>
+      {isSommerpause && (
+        <p className="mb-2 rounded-xl bg-sky-50 border border-sky-200 px-3 py-2 text-xs text-sky-900">
+          ☀️ <strong>Sommerpause:</strong> Automatische Pause bis 1.8. — Spiele
+          bis zum Saisonende zählen weiterhin. Du musst nichts tun.
+        </p>
+      )}
       <div className="flex items-center gap-2 flex-wrap justify-end">
         <Button
           variant={isPaused ? "accent" : "outline"}

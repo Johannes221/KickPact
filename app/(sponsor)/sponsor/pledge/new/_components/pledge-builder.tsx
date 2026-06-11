@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Zap, Handshake, Trophy, ShieldCheck, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -106,6 +106,7 @@ type WizardStep = 1 | 2 | 3 | 4;
 
 export function PledgeBuilder({
   dataCoverage = null,
+  seasonWindowOpen = true,
 }: {
   /**
    * Daten-Coverage der Mannschaft (siehe lib/triggers/coverage.ts). Bei nicht-
@@ -114,6 +115,12 @@ export function PledgeBuilder({
    * Das Server-Gate in createPledge ist die harte Linie; dies ist Komfort.
    */
   dataCoverage?: Coverage | null;
+  /**
+   * A7: Saison-Trigger-Window (Cutoff 5. Spieltag). Bei geschlossenem Fenster
+   * werden die Saison-Karten in Step 2 disabled — der Server-Check in
+   * createPledge bleibt die harte Linie.
+   */
+  seasonWindowOpen?: boolean;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -209,6 +216,48 @@ export function PledgeBuilder({
     });
   }
 
+  /**
+   * A2 (Audit 2026-06-11): Stiller Submit-Fail in Step 4. Validierungsfehler
+   * hängen oft an Feldern, deren Step gerade nicht gerendert ist (z.B. fehlender
+   * Spieler in Step 3) — `handleSubmit` tat dann sichtbar nichts. Der
+   * onInvalid-Handler zeigt den ersten konkreten Fehler als Toast und springt
+   * automatisch zum Step des fehlerhaften Felds.
+   */
+  function onInvalid(errors: FieldErrors<PledgeInput>) {
+    // 1) Fehler an einer konkreten Regel → Step 3 (Beträge/Parameter).
+    const rules = form.getValues("rules");
+    const ruleFields = ["amountEur", "capEur", "capPeriod", "params"] as const;
+    for (let i = 0; i < rules.length; i++) {
+      for (const key of ruleFields) {
+        const { error } = form.getFieldState(`rules.${i}.${key}`);
+        if (error?.message) {
+          const def = defForRule(rules[i]);
+          toast.error(def ? `${def.label}: ${error.message}` : error.message);
+          setStep(3);
+          return;
+        }
+      }
+    }
+    // 2) Root-Fehler am rules-Array (keine Regel gewählt) → Step 2 (Auswahl).
+    if (errors.rules) {
+      const rootMessage = errors.rules.message ?? errors.rules.root?.message;
+      toast.error(rootMessage ?? "Bitte wähle mindestens ein Ereignis aus.");
+      setStep(2);
+      return;
+    }
+    // 3) Step-4-Felder (Monats-Cap etc.) → bleiben/zurück auf Step 4.
+    if (errors.monthlyCapEur?.message) {
+      toast.error(errors.monthlyCapEur.message);
+      setStep(4);
+      return;
+    }
+    if (errors.invitationToken?.message) {
+      toast.error(errors.invitationToken.message);
+      return;
+    }
+    toast.error("Bitte prüfe deine Eingaben.");
+  }
+
   const watchedRules = form.watch("rules");
   const watchedMonthly = form.watch("monthlyCapEur");
   const worstCasePerSaison = estimateWorstCase(watchedRules);
@@ -224,7 +273,7 @@ export function PledgeBuilder({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-8">
         <StepIndicator currentStep={step} />
 
         {/* ── Step 1: Erklärung ── */}
@@ -299,10 +348,15 @@ export function PledgeBuilder({
             <TriggerGroupBlock
               title="Pro Saison"
               icon={<Trophy className="h-4 w-4" />}
-              note="Feuern 1× am Saison-Ende."
+              note={
+                seasonWindowOpen
+                  ? "Feuern 1× am Saison-Ende."
+                  : "Saison-Ziele sind bis zum 5. Spieltag buchbar — wieder ab Saisonstart-Fenster."
+              }
               items={visibleLibrary.filter((t) => t.group === "season")}
               enabled={enabled}
               onToggle={toggleTrigger}
+              disabled={!seasonWindowOpen}
             />
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
@@ -869,6 +923,7 @@ function TriggerGroupBlock({
   enabled,
   onToggle,
   tone = "default",
+  disabled = false,
 }: {
   title: string;
   icon: React.ReactNode;
@@ -877,6 +932,8 @@ function TriggerGroupBlock({
   enabled: Set<string>;
   onToggle: (item: LibItem) => void;
   tone?: "default" | "club";
+  /** A7: ganze Gruppe nicht wählbar (z.B. Saison-Window geschlossen). */
+  disabled?: boolean;
 }) {
   return (
     <div>
@@ -891,7 +948,14 @@ function TriggerGroupBlock({
           {title}
         </h4>
       </div>
-      <p className="text-xs text-brand-night-navy/50 mb-3 leading-snug max-w-2xl">{note}</p>
+      <p
+        className={
+          "text-xs mb-3 leading-snug max-w-2xl " +
+          (disabled ? "text-amber-700 font-medium" : "text-brand-night-navy/50")
+        }
+      >
+        {note}
+      </p>
       <div className="grid gap-2.5 md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => (
           <TriggerToggle
@@ -899,6 +963,7 @@ function TriggerGroupBlock({
             item={item}
             enabled={enabled.has(item.key)}
             onToggle={() => onToggle(item)}
+            disabled={disabled}
           />
         ))}
       </div>
@@ -962,19 +1027,24 @@ function TriggerToggle({
   item,
   enabled,
   onToggle,
+  disabled = false,
 }: {
   item: LibItem;
   enabled: boolean;
   onToggle: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onToggle}
       aria-pressed={enabled}
+      disabled={disabled}
       className={
         "text-left rounded-xl border p-3 transition-colors " +
-        (enabled
+        (disabled
+          ? "border-brand-neutral/30 bg-brand-off-white opacity-50 cursor-not-allowed"
+          : enabled
           ? "border-accent bg-accent/5"
           : "border-brand-neutral/40 bg-white hover:border-accent/40")
       }

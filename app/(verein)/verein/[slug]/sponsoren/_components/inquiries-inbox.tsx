@@ -47,19 +47,20 @@ function InquiryRow({ inquiry }: { inquiry: Inquiry }) {
 
   async function handleSubmit(accept: boolean) {
     startTransition(async () => {
-      try {
-        await respondToInquiry({
-          inquiryId: inquiry.id,
-          accept,
-          responseMessage: response.trim() || undefined
-        });
-        setDone(accept ? "accepted" : "rejected");
-        toast.success(
-          accept ? "Anfrage angenommen — Einladung verschickt." : "Anfrage abgelehnt."
-        );
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Fehler");
+      // A8: Action liefert {ok,message} statt zu werfen — Klartext in den Toast.
+      const res = await respondToInquiry({
+        inquiryId: inquiry.id,
+        accept,
+        responseMessage: response.trim() || undefined
+      });
+      if (!res.ok) {
+        toast.error(res.message);
+        return;
       }
+      setDone(accept ? "accepted" : "rejected");
+      toast.success(
+        accept ? "Anfrage angenommen — Einladung verschickt." : "Anfrage abgelehnt."
+      );
     });
   }
 

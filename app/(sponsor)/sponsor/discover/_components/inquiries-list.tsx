@@ -1,7 +1,10 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { createSponsorInquiry } from "@/lib/actions/sponsor-inquiries";
 
 interface Inquiry {
   id: string;
@@ -83,11 +86,54 @@ function AcceptedCta({ inquiry }: { inquiry: Inquiry }) {
       </Link>
     );
   }
-  // Angenommen, aber Einladung abgelaufen/zurückgezogen.
+  // Angenommen, aber Einladung abgelaufen/zurückgezogen → erneut anfragen
+  // statt Sackgasse (A5).
+  return <ReInquireButton teamId={inquiry.teamId} />;
+}
+
+/**
+ * A5: Löst den bestehenden Inquiry-Flow erneut aus, wenn die angenommene
+ * Einladung abgelaufen ist. Fehler (z.B. Rate-Limit) kommen als
+ * {ok:false,message} aus der Action und landen im Toast (A8).
+ */
+function ReInquireButton({ teamId }: { teamId: string }) {
+  const [pending, startTransition] = useTransition();
+  const [sent, setSent] = useState(false);
+
+  if (sent) {
+    return (
+      <p className="mt-3 inline-flex items-center gap-1 rounded-lg bg-emerald-100 px-3 py-2 text-xs font-semibold text-emerald-700">
+        ✓ Anfrage gesendet — die Mannschaft meldet sich per Mail.
+      </p>
+    );
+  }
+
+  function handleClick() {
+    startTransition(async () => {
+      const res = await createSponsorInquiry({ teamId });
+      if (!res.ok) {
+        toast.error(res.message);
+        return;
+      }
+      setSent(true);
+      toast.success("Anfrage versendet!");
+    });
+  }
+
   return (
-    <p className="mt-3 text-xs text-brand-night-navy/50">
-      Einladung abgelaufen — frag die Mannschaft nach einem neuen Link.
-    </p>
+    <div className="mt-3">
+      <p className="text-xs text-brand-night-navy/50">
+        Die Einladung ist abgelaufen — frag die Mannschaft einfach erneut an.
+      </p>
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={pending}
+        className="mt-2 inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-brand-night-navy hover:bg-accent/90 transition-colors disabled:opacity-60"
+      >
+        {pending ? "Sende…" : "Erneut anfragen"}
+      </button>
+    </div>
   );
 }
 
