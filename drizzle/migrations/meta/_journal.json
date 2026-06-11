@@ -379,6 +379,13 @@
       "when": 1782400100000,
       "tag": "0054_geld_integritaet_phase2",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1782400200000,
+      "tag": "0055_seasons_seed",
+      "breakpoints": true
     }
   ]
 }
