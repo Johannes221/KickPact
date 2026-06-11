@@ -9,6 +9,7 @@ import {
   getChargeSponsorContactForClub
 } from "@/lib/db/queries/charges";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
+import { triggerLabel } from "@/lib/triggers/labels";
 
 const schema = z.object({
   clubSlug: z.string().min(1),
@@ -47,7 +48,7 @@ export async function cancelChargeAction(
     return {
       ok: false,
       error:
-        "Charge konnte nicht storniert werden — bereits abgerechnet, storniert oder nicht gefunden."
+        "Beitrag konnte nicht storniert werden — bereits abgerechnet, storniert oder nicht gefunden."
     };
   }
 
@@ -58,12 +59,12 @@ export async function cancelChargeAction(
       await resend.emails.send({
         from: MAIL_FROM,
         to: contact.sponsorEmail,
-        subject: "KickPact: Eine Charge wurde storniert",
+        subject: "KickPact: Ein Beitrag wurde storniert",
         text:
           `Hi,\n\n` +
-          `der Verein hat eine deiner Charges (${euro} €, „${contact.triggerType}") storniert.\n` +
+          `der Verein hat einen deiner Beiträge (${euro} €, „${triggerLabel(contact.triggerType)}") storniert.\n` +
           `Grund: ${cleanReason}\n\n` +
-          `Sie erscheint damit nicht auf der nächsten Monatsrechnung. Falls das ` +
+          `Er erscheint damit nicht auf der nächsten Monatsrechnung. Falls das ` +
           `unerwartet ist, wende dich bitte direkt an den Verein.\n\n` +
           `KickPact`,
         headers: {

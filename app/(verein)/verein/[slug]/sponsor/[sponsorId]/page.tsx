@@ -96,7 +96,7 @@ export default async function SponsorDetailPage({
         <Tile
           label="Total Lifetime"
           value={eur(overview.totals.totalChargesLifetimeCents)}
-          hint="Alle Charges"
+          hint="Alle Beiträge"
         />
       </div>
 
@@ -258,7 +258,7 @@ export default async function SponsorDetailPage({
       <section>
         <div className="flex items-end justify-between mb-3 md:mb-4">
           <h3 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
-            Charges ({chargesResult.total})
+            Beiträge ({chargesResult.total})
           </h3>
           <CsvExportButton
             endpoint="/api/exports/charges"

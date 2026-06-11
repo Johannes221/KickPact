@@ -46,7 +46,7 @@ export const CONTEXT_LABEL: Record<SupportContextType, string> = {
   none: "—",
   match: "⚽ Spiel",
   invoice: "🧾 Rechnung",
-  pledge: "🤝 Pledge",
+  pledge: "🤝 Pact",
   team: "👥 Mannschaft",
   page: "📄 Seite"
 };

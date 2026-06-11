@@ -98,10 +98,10 @@ export async function setPledgeStatus(
 ): Promise<{ error?: string }> {
   try {
     const pledge = await loadOwnedPledge(pledgeId);
-    if (!pledge) return { error: "Pledge nicht gefunden oder kein Zugriff." };
+    if (!pledge) return { error: "Pact nicht gefunden oder kein Zugriff." };
 
     if (pledge.status === "ended") {
-      return { error: "Beendete Pledges können nicht mehr geändert werden." };
+      return { error: "Beendete Pacts können nicht mehr geändert werden." };
     }
 
     // When ending, also record endsAt = now so the timeline is accurate.
@@ -150,9 +150,9 @@ export async function updatePledgeCap(
 ): Promise<{ error?: string }> {
   try {
     const pledge = await loadOwnedPledge(pledgeId);
-    if (!pledge) return { error: "Pledge nicht gefunden oder kein Zugriff." };
+    if (!pledge) return { error: "Pact nicht gefunden oder kein Zugriff." };
     if (pledge.status === "ended") {
-      return { error: "Beendete Pledges können nicht mehr geändert werden." };
+      return { error: "Beendete Pacts können nicht mehr geändert werden." };
     }
     if (
       monthlyCapCents !== null &&

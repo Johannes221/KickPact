@@ -237,7 +237,7 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
       ) : (
         match.status === "finished" && (
           <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-5 text-sm text-brand-night-navy/60">
-            <strong>Keine Charges für dieses Spiel.</strong> Entweder sind noch keine Pledges aktiv oder
+            <strong>Keine Beiträge für dieses Spiel.</strong> Entweder sind noch keine Pacts aktiv oder
             dieses Spiel hat keinen Trigger ausgelöst.
           </div>
         )

@@ -79,7 +79,7 @@ export function VereinSubNav({ slug, clubName }: { slug: string; clubName: strin
 
   const settingsItems: SettingsNavItem[] = [
     { label: "Ereignisse", href: `${base}/ereignisse`, icon: "goal" },
-    { label: "Charges", href: `${base}/charges`, icon: "chart" },
+    { label: "Beiträge", href: `${base}/charges`, icon: "chart" },
     { label: "Abo", href: `${base}/abo`, icon: "gem" },
     { label: "Einstellungen", href: `${base}/einstellungen`, icon: "settings" }
   ];

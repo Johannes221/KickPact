@@ -139,7 +139,7 @@ export function SponsorChargesTable({
       totalPages={totalPages}
       sort={sort}
       dir={dir}
-      emptyState="Noch keine Charges für diesen Sponsor."
+      emptyState="Noch keine Beiträge für diesen Sponsor."
     />
   );
 }

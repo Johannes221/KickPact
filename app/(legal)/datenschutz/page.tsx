@@ -173,7 +173,7 @@ export default function DatenschutzPage() {
         5. Verarbeitung öffentlicher DFB-Spielerdaten
       </h2>
       <p className="mt-2">
-        Damit Sponsor-Wetten („Pact pro Tor", „Pact pro Hattrick" etc.)
+        Damit Sponsor-Pacts („Pact pro Tor", „Pact pro Hattrick" etc.)
         korrekt ausgewertet werden können, ruft KickPact öffentlich zugängliche
         Spielergebnisse, Spielereignisse (Tore, Karten, Auswechslungen) und
         Spielernamen von{" "}

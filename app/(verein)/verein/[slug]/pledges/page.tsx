@@ -113,7 +113,7 @@ export default async function PledgesPage({
           Pacts
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">
-          Alle Sponsor-Wetten (pro Pact-Regel) im Verein. Filter, Sortierung
+          Alle Sponsor-Pacts (pro Regel) im Verein. Filter, Sortierung
           und CSV-Export.
         </p>
       </div>

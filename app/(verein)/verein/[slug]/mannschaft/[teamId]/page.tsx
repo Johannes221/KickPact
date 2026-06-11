@@ -192,7 +192,7 @@ export default async function TeamDetailPage({
       {seasonPledges.length > 0 && (
         <section>
           <h3 className="font-display font-bold text-xl tracking-tight text-brand-night-navy mb-3">
-            Saison-Wetten
+            Saison-Ziele
           </h3>
           <ul className="space-y-2">
             {seasonPledges.map((r) => {
