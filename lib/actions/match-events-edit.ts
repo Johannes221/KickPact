@@ -5,8 +5,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
 import { matches, teams, clubs } from "@/lib/db/schema";
+import { matchEvents } from "@/lib/db/schema/matches";
 import { requireUser } from "@/lib/auth/session";
 import { assertClubWriteAccess } from "@/lib/auth/scope";
+import { validateSubtype } from "@/lib/validations/match-events";
 import {
   updateMatchEvent,
   deleteMatchEvent,
@@ -92,6 +94,22 @@ export async function editMatchEventAction(
   if (!scope) throw new Error("Match-Event nicht gefunden.");
 
   await assertClubWriteAccess(scope.clubSlug, "trainer");
+
+  // B3-Folge (Audit 2026-06-11): auch der EDIT-Pfad validiert den subtype
+  // gegen die single source of truth — sonst lässt sich die Neuanlage-
+  // Validierung per Edit umgehen (Event, das kein Pact je matchen kann).
+  if (parsed.subtype !== undefined && parsed.subtype !== null) {
+    const [eventRow] = await db
+      .select({ type: matchEvents.type })
+      .from(matchEvents)
+      .where(eq(matchEvents.id, parsed.matchEventId))
+      .limit(1);
+    const effectiveType = parsed.type ?? eventRow?.type;
+    if (effectiveType) {
+      const check = validateSubtype(effectiveType, parsed.subtype);
+      if (!check.ok) throw new Error(check.message);
+    }
+  }
 
   const result = await updateMatchEvent(
     parsed.matchEventId,

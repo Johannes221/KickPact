@@ -13,11 +13,13 @@
 import type { TriggerType } from "./labels";
 
 /**
- * - `full`         — benannte Torschützen vorhanden → alle Wett-Typen.
- * - `results_only` — nur Endstand → Ergebnis-/Comeback-/Saison-Wetten + manuelle
- *                    Events, KEINE Auto-Spieler-Wetten.
- * - `none`         — keine Ergebnisse → Mannschaft nicht bespielbar (im Onboarding
- *                    ausgeblendet).
+ * - `full`         — benannte Torschützen vorhanden → alle Regel-Typen.
+ * - `results_only` — nur Endstand → Ergebnis-/Comeback-/Saison-Regeln + manuelle
+ *                    Events, KEINE Auto-Spieler-Regeln.
+ * - `none`         — keine automatischen Ergebnisse → ALLES läuft manuell
+ *                    (Verein meldet Spiele/Ereignisse + Endstand-Override,
+ *                    Sponsor bestätigt). Seit Audit 2026-06-11 / Phase 4 im
+ *                    Onboarding anlegbar; Trigger-Gating wie results_only.
  */
 export type Coverage = "full" | "results_only" | "none";
 
@@ -119,17 +121,20 @@ export function requiresNamedScorers(type: string): boolean {
 /**
  * Darf für eine Mannschaft mit gegebener Coverage ein Trigger dieses Typs
  * angelegt/ausgewertet werden?
- * - `null`         → unklassifizierter Bestand → wie `full` behandeln (Grandfather).
- * - `none`         → Mannschaft nicht bespielbar → nichts.
- * - `results_only` → alles außer {@link NAMED_SCORER_TRIGGERS}.
- * - `full`         → alles.
+ * - `null`               → unklassifizierter Bestand → wie `full` (Grandfather).
+ * - `none`/`results_only` → alles außer {@link NAMED_SCORER_TRIGGERS} — bei
+ *   `none` läuft schlicht ALLES über manuelle Meldung + Sponsor-Approval
+ *   (ein Komplett-Block machte die seit Phase 4 onboardbaren Jugend-Teams
+ *   unsponserbar — toter Zustand).
+ * - `full`               → alles.
  */
 export function coverageAllowsTrigger(
   coverage: Coverage | null | undefined,
   type: string
 ): boolean {
   if (coverage == null) return true; // unklassifiziert → großzügig (Bestand schonen)
-  if (coverage === "none") return false;
-  if (coverage === "results_only") return !requiresNamedScorers(type);
+  if (coverage === "none" || coverage === "results_only") {
+    return !requiresNamedScorers(type);
+  }
   return true; // full
 }

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics/track";
+import { saisonLabel } from "@/lib/utils/saison";
 import {
   searchVereineAction,
   getMannschaftenAction,
@@ -367,7 +368,7 @@ export function VereinSearchStep({ role }: Props) {
                                 bereits registriert
                               </span>
                             </div>
-                            <div className="text-xs text-brand-night-navy/40 mt-0.5">Saison {t.saison}</div>
+                            <div className="text-xs text-brand-night-navy/40 mt-0.5">Saison {saisonLabel(t.saison)}</div>
                           </div>
                           <span className="text-amber-700 text-sm font-semibold whitespace-nowrap">
                             Zugriff anfragen →
@@ -409,7 +410,7 @@ export function VereinSearchStep({ role }: Props) {
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-brand-night-navy/40 mt-0.5">Saison {t.saison}</div>
+                          <div className="text-xs text-brand-night-navy/40 mt-0.5">Saison {saisonLabel(t.saison)}</div>
                           {t.dataCoverage === "none" && (
                             <p className="mt-1 text-xs text-brand-night-navy/60">
                               Keine automatischen Spieldaten für diese Altersklasse —

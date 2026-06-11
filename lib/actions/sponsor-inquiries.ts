@@ -296,14 +296,14 @@ export async function respondToInquiry(input: {
 
 ${row.team.name} (${row.club.name}) hat deine Anfrage angenommen!
 
-${parsed.responseMessage ? `Nachricht der Mannschaft: "${parsed.responseMessage}"\n\n` : ""}Lege jetzt deinen Pledge an:
+${parsed.responseMessage ? `Nachricht der Mannschaft: "${parsed.responseMessage}"\n\n` : ""}Lege jetzt deinen Pact an:
 ${inviteUrl}
 
 — KickPact`,
         html: `<p>Hi ${row.sponsorName ?? ""},</p>
 <p><strong>${row.team.name}</strong> (${row.club.name}) hat deine Anfrage angenommen!</p>
 ${parsed.responseMessage ? `<blockquote style="border-left:3px solid #01C457;padding:8px 12px;color:#525252">${parsed.responseMessage}</blockquote>` : ""}
-<p><a href="${inviteUrl}" style="background:#01C457;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Jetzt Pledge anlegen →</a></p>
+<p><a href="${inviteUrl}" style="background:#01C457;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Jetzt Pact anlegen →</a></p>
 <p style="color:#999;font-size:12px;margin-top:24px">— KickPact</p>`
       });
     } catch (err) {

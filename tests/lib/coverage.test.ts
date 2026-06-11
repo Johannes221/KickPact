@@ -100,10 +100,17 @@ describe("coverageAllowsTrigger", () => {
     expect(coverageAllowsTrigger("results_only", "season_promotion")).toBe(true);
     expect(coverageAllowsTrigger("results_only", "special_goal")).toBe(true);
   });
-  it("none → nichts erlaubt", () => {
-    expect(coverageAllowsTrigger("none", "goal_total")).toBe(false);
-    expect(coverageAllowsTrigger("none", "win")).toBe(false);
+  it("none → wie results_only: manuell meldbare Trigger erlaubt, Auto-Spieler-Trigger nicht", () => {
+    // Audit 2026-06-11 / Phase 4 B1a-Folge: none-Teams (E-Jugend etc.) sind
+    // jetzt onboardbar — der Verein meldet Spiele/Ereignisse manuell (inkl.
+    // Endstand via Result-Override), Sponsoren bestätigen. Ein Komplett-Block
+    // würde jede Pact-Erstellung verhindern (toter Zustand).
+    expect(coverageAllowsTrigger("none", "goal_total")).toBe(true);
+    expect(coverageAllowsTrigger("none", "win")).toBe(true);
+    expect(coverageAllowsTrigger("none", "special_goal")).toBe(true);
+    expect(coverageAllowsTrigger("none", "season_promotion")).toBe(true);
     expect(coverageAllowsTrigger("none", "goal_by_player")).toBe(false);
+    expect(coverageAllowsTrigger("none", "hattrick")).toBe(false);
   });
 });
 

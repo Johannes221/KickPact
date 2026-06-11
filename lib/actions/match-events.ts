@@ -26,41 +26,11 @@ import {
   loadActivePledgeRulesForTeam,
   getMonthlyChargedCents
 } from "@/lib/db/queries/evaluation";
-import { SPECIAL_GOAL_SUBTYPES } from "@/lib/triggers/special-goals";
+import { validateSubtype } from "@/lib/validations/match-events";
 
-/** Erlaubte Karten-Subtypen (Melde-UI bietet genau diese an). */
-const KARTE_SUBTYPES = ["gelb", "rot"] as const;
-
-/**
- * B3 (Audit 2026-06-11 / Phase 4): subtype gegen die single source of truth
- * validieren — die Melde-UI spiegelt `SPECIAL_GOAL_SUBTYPES`, aber der Server
- * muss es erzwingen, sonst entstehen Events, die kein Pact je matchen kann.
- * Bestands-Events mit Alt-Subtypen (volley/fernschuss/…) bleiben unangetastet;
- * nur die NEUANLAGE wird geprüft.
- */
-function validateSubtype(
-  type: "tor" | "auswechslung" | "spezial" | "karte",
-  subtype: string | undefined
-): { ok: true } | { ok: false; message: string } {
-  if (type === "spezial") {
-    const allowed = SPECIAL_GOAL_SUBTYPES.map((s) => s.value);
-    if (!subtype || !(allowed as string[]).includes(subtype)) {
-      return {
-        ok: false,
-        message: `Unbekannter Spezialtor-Typ „${subtype ?? "—"}". Erlaubt sind: ${allowed.join(", ")}.`
-      };
-    }
-  }
-  if (type === "karte") {
-    if (!subtype || !(KARTE_SUBTYPES as readonly string[]).includes(subtype)) {
-      return {
-        ok: false,
-        message: `Unbekannter Karten-Typ „${subtype ?? "—"}". Erlaubt sind: gelb, rot.`
-      };
-    }
-  }
-  return { ok: true };
-}
+// B3 (Audit 2026-06-11 / Phase 4): geteilte Subtype-Validierung liegt in
+// lib/validations/match-events.ts — "use server"-Module dürfen nur async
+// Funktionen exportieren, der Edit-Pfad braucht den Validator aber auch.
 
 const inputSchema = z.object({
   matchId: z.string().min(1),
