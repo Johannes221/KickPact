@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, inArray, sql } from "drizzle-orm";
+import { and, eq, gte, lte, inArray, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   pledges,
@@ -38,9 +38,30 @@ export async function loadActivePledgeRulesForTeam(
         // "jetzt" gesetzt → bereits gespielte, noch nicht ausgewertete Spiele
         // werden weiter abgerechnet, künftige nicht. Vorher unterdrückte ein
         // status='active'-Filter diese legitimen Charges, sobald der Sponsor
-        // nach Anpfiff (vor dem Scrape) die Wette beendete. "paused"
-        // (Sommerpause) bleibt korrekt ausgeschlossen.
-        inArray(pledges.status, ["active", "ended"]),
+        // nach Anpfiff (vor dem Scrape) die Wette beendete.
+        //
+        // AUDIT 2026-06-11 (Sommerpause-Charge-Lücke): "paused" ist NICHT
+        // pauschal ausgeschlossen —
+        //  - Sommerpause-Pausen (sommerpausePaused=true, Cron 1.6.) bedienen
+        //    weiterhin alle Spiele im Pledge-Fenster: der Crawler sammelt bis
+        //    15.6. legitime Saison-Spiele (Relegation, Nachholspiele) ein, und
+        //    das Fenster endet ohnehin am 30.6. Sonst verlieren Vereine still
+        //    jede Juni-Charge (Hash unverändert → nie re-evaluiert).
+        //  - Manuelle Pausen bedienen Spiele VOR dem Pausen-Zeitpunkt
+        //    (pausedAt), analog H4c: eine Pause nach Abpfiff, vor dem Scrape,
+        //    darf die Charge des gespielten Spiels nicht unterdrücken.
+        //  - Alt-Pausen ohne Marker (kein Flag, pausedAt NULL) bleiben
+        //    konservativ ausgeschlossen.
+        or(
+          inArray(pledges.status, ["active", "ended"]),
+          and(
+            eq(pledges.status, "paused"),
+            or(
+              eq(pledges.sommerpausePaused, true),
+              sql`${pledges.pausedAt} IS NOT NULL AND ${pledges.pausedAt} > ${asOf.toISOString()}`
+            )
+          )
+        ),
         // SECURITY (H4b): Alt-Style-Soft-Deletes (active=false OHNE effectiveUntil,
         // Migration 0040) feuern nicht. Neu gelöschte Regeln (active=false MIT
         // effectiveUntil=Löschzeitpunkt, siehe deletePledgeRule) bleiben aber für
