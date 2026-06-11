@@ -24,7 +24,7 @@ export default async function MannschaftenPage({
   if (teamRows.length === 0) {
     return (
       <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60">
-        Noch keine Mannschaft angelegt. → <Link href={`/verein/${slug}/einstellungen`} className="text-accent font-semibold">Mannschaft hinzufügen</Link>
+        Noch keine Mannschaft angelegt. → <Link href={`/verein/${slug}/mannschaften/neu`} className="text-accent font-semibold">Mannschaft hinzufügen</Link>
       </div>
     );
   }
