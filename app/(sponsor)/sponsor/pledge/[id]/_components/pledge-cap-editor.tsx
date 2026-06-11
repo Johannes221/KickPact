@@ -6,10 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updatePledgeCap } from "@/lib/actions/pledges";
-
-function eurDisplay(cents: number) {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
+import { eur } from "@/lib/utils/currency";
 
 export function PledgeCapEditor({
   pledgeId,
@@ -30,7 +27,7 @@ export function PledgeCapEditor({
   if (isEnded) {
     return (
       <div className="font-display font-bold text-xl tracking-tight text-brand-night-navy">
-        {currentCapCents ? eurDisplay(currentCapCents) : "ohne Cap"}
+        {currentCapCents ? eur(currentCapCents) : "ohne Cap"}
       </div>
     );
   }
@@ -109,7 +106,7 @@ export function PledgeCapEditor({
   return (
     <div className="flex items-center gap-1.5 group">
       <div className="font-display font-bold text-xl tracking-tight text-brand-night-navy">
-        {currentCapCents ? eurDisplay(currentCapCents) : "ohne Cap"}
+        {currentCapCents ? eur(currentCapCents) : "ohne Cap"}
       </div>
       <Button
         size="sm"

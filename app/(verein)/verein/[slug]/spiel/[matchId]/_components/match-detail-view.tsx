@@ -11,10 +11,7 @@ import { ManualEventEditor } from "./manual-event-editor";
 import { ResultOverrideEditor } from "./result-override-editor";
 import { AdminNoteDisplay } from "./admin-note-display";
 import { ReportProblemButton } from "@/components/support/report-problem-button";
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
+import { eur } from "@/lib/utils/currency";
 
 /** "2526" → "25/26"; lässt bereits formatierte oder unbekannte Werte unangetastet. */
 function formatSaison(saison: string): string {

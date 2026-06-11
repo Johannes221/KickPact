@@ -5,6 +5,7 @@ import {
   type ChargeStatus
 } from "@/lib/db/queries/sponsoring-admin";
 import { ChargeCancelButton } from "@/components/admin/charge-cancel-button";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Sponsoring · Admin · KickPact" };
 export const dynamic = "force-dynamic";
@@ -33,9 +34,6 @@ const FILTERS: Array<{ value: ChargeStatus | "all"; label: string }> = [
   { value: "cancelled", label: "Storniert" }
 ];
 
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 function fmt(d: Date): string {
   return new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" });
 }

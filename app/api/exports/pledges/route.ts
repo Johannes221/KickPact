@@ -10,14 +10,10 @@ import { assertClubAccess } from "@/lib/auth/scope";
 import { listPledgesForClub } from "@/lib/db/queries/club-reporting";
 import { triggerLabel } from "@/lib/triggers/labels";
 import { buildCsv, csvFilename, csvResponseHeaders } from "@/lib/exports/csv";
+import { eurCsv } from "@/lib/utils/currency";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function eur(cents: number | null | undefined): string {
-  if (cents === null || cents === undefined) return "";
-  return (cents / 100).toFixed(2).replace(".", ",");
-}
 
 function statusLabel(s: string): string {
   const map: Record<string, string> = {
@@ -80,14 +76,14 @@ export async function GET(req: NextRequest) {
         r.teamName,
         triggerLabel(r.triggerType),
         r.triggerType,
-        eur(r.amountCents),
-        eur(r.perMatchCapCents),
-        eur(r.monthlyCapCents),
+        eurCsv(r.amountCents),
+        eurCsv(r.perMatchCapCents),
+        eurCsv(r.monthlyCapCents),
         statusLabel(r.status),
         r.startsAt.toISOString().slice(0, 10),
         r.endsAt.toISOString().slice(0, 10),
-        eur(r.monthChargedCents),
-        eur(r.lifetimeChargedCents),
+        eurCsv(r.monthChargedCents),
+        eurCsv(r.lifetimeChargedCents),
         capPct === null ? "" : String(capPct),
         r.pledgeId,
         r.ruleId

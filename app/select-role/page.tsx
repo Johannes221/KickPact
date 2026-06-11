@@ -6,6 +6,7 @@ import { isPlatformAdminUser } from "@/lib/auth/admin";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { listMyPendingRequests } from "@/lib/db/queries/membership-requests";
 import { pickDashboardDestination } from "@/lib/auth/identity-routing";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Rolle wählen · KickPact" };
 
@@ -14,10 +15,6 @@ const ROLE_LABEL: Record<"admin" | "trainer" | "viewer", string> = {
   trainer: "Trainer",
   viewer: "Viewer"
 };
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 export default async function SelectRolePage() {
   const user = await requireUser();

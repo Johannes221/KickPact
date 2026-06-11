@@ -16,12 +16,9 @@ import { StatCard } from "@/components/shared/stat-card";
 import { PledgeStatusToggle } from "./_components/pledge-status-toggle";
 import { PledgeCapEditor } from "./_components/pledge-cap-editor";
 import { PledgeRulesEditor, type EditableRule } from "./_components/pledge-rules-editor";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Pact · KickPact" };
-
-function eur(cents: number) {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 export default async function PledgeDetailPage({
   params

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listInvoicesForAdmin, type InvoiceStatus } from "@/lib/db/queries/invoice-admin";
 import { InvoiceTriggerButton } from "./_components/invoice-trigger-button";
 import { InvoiceRowActions } from "@/components/admin/invoice-row-actions";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Rechnungen · Admin · KickPact" };
 export const dynamic = "force-dynamic";
@@ -29,10 +30,6 @@ const FILTERS: Array<{ value: InvoiceStatus | "all"; label: string }> = [
   { value: "withheld", label: "Zurückgehalten" },
   { value: "draft", label: "Entwurf" }
 ];
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 function pdfHref(pdfUrl: string | null): string | null {
   if (!pdfUrl) return null;

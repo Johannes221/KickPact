@@ -1,6 +1,7 @@
 "use client";
 
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { eur } from "@/lib/utils/currency";
 
 interface MonthBucket {
   monthLabel: string;
@@ -9,10 +10,6 @@ interface MonthBucket {
 
 interface Props {
   data: MonthBucket[];
-}
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 }
 
 export function FinanzenTrendChart({ data }: Props) {

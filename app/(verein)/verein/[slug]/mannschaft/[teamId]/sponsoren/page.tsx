@@ -10,12 +10,9 @@ import { listInvitationsForTeam } from "@/lib/db/queries/invitations";
 import { listSponsorsForTeam } from "@/lib/db/queries/team-dashboard";
 import { SponsorInviteCard } from "./_components/sponsor-invite-card";
 import { InquiriesInbox } from "../../../sponsoren/_components/inquiries-inbox";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Sponsoren · KickPact" };
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 export default async function TeamSponsorenPage({
   params

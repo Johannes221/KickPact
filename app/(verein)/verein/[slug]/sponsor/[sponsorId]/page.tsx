@@ -12,6 +12,7 @@ import {
 import { triggerEmoji, triggerLabel } from "@/lib/triggers/labels";
 import { CsvExportButton } from "@/components/shared/csv-export-button";
 import { SponsorChargesTable } from "./_components/sponsor-charges-table";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Sponsor · KickPact" };
 
@@ -279,13 +280,6 @@ export default async function SponsorDetailPage({
       </section>
     </div>
   );
-}
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR"
-  });
 }
 
 function Tile({

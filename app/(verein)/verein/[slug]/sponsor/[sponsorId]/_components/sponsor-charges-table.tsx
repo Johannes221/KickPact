@@ -9,13 +9,7 @@ import {
 import { triggerEmoji, triggerLabel } from "@/lib/triggers/labels";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import type { ClubChargeRow } from "@/lib/db/queries/club-reporting";
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR"
-  });
-}
+import { eur } from "@/lib/utils/currency";
 
 function fmtDate(d: Date | null): string {
   if (!d) return "—";

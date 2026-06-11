@@ -9,14 +9,7 @@ import {
 import { triggerEmoji, triggerLabel } from "@/lib/triggers/labels";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import type { ClubPledgeReportRow } from "@/lib/db/queries/club-reporting";
-
-function eur(cents: number | null | undefined): string {
-  if (cents === null || cents === undefined) return "—";
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR"
-  });
-}
+import { eurOrDash } from "@/lib/utils/currency";
 
 function fmtDate(d: Date): string {
   return d.toLocaleDateString("de-DE", {
@@ -62,13 +55,13 @@ function CapBar({
     <div className="min-w-[6rem]">
       <div className="flex items-center justify-between text-[0.65rem] tabular-nums text-brand-night-navy/60">
         <span>{pct}%</span>
-        <span>{eur(used)}</span>
+        <span>{eurOrDash(used)}</span>
       </div>
       <div className="mt-0.5 h-1.5 w-full rounded-full bg-brand-neutral/30 overflow-hidden">
         <div
           className={"h-full " + tone}
           style={{ width: `${pct}%` }}
-          aria-label={`${pct}% von ${eur(cap)} verbraucht`}
+          aria-label={`${pct}% von ${eurOrDash(cap)} verbraucht`}
         />
       </div>
     </div>
@@ -152,7 +145,7 @@ export function PledgesTable({
       sortable: true,
       align: "right",
       render: (r) => (
-        <span className="font-mono tabular-nums">{eur(r.amountCents)}</span>
+        <span className="font-mono tabular-nums">{eurOrDash(r.amountCents)}</span>
       )
     },
     {
@@ -161,7 +154,7 @@ export function PledgesTable({
       align: "right",
       render: (r) => (
         <span className="font-mono tabular-nums text-brand-night-navy/70">
-          {eur(r.monthlyCapCents)}
+          {eurOrDash(r.monthlyCapCents)}
         </span>
       )
     },

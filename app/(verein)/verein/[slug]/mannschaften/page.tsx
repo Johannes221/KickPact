@@ -3,12 +3,9 @@ import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { listClubTeamsWithStatus } from "@/lib/db/queries/club-admin";
 import { getClubTeamStats } from "@/lib/db/queries/club-reporting";
 import { TeamCrest } from "@/components/shared/team-crest";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Mannschaften · KickPact" };
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 export default async function MannschaftenPage({
   params

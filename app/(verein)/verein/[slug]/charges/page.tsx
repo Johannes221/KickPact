@@ -11,6 +11,7 @@ import { FilterBar, type FilterDefinition } from "@/components/shared/filter-bar
 import { CsvExportButton } from "@/components/shared/csv-export-button";
 import { StatCard } from "@/components/shared/stat-card";
 import { ChargesTable } from "./_components/charges-table";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Beiträge · KickPact" };
 
@@ -159,11 +160,4 @@ export default async function ChargesPage({
       />
     </div>
   );
-}
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR"
-  });
 }

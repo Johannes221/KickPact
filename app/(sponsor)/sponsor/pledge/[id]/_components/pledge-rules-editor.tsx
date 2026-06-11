@@ -18,6 +18,7 @@ import {
   addPledgeRule
 } from "@/lib/actions/pledges";
 import { requiresNamedScorers } from "@/lib/triggers/coverage";
+import { eur } from "@/lib/utils/currency";
 
 export type EditableRule = {
   id: string;
@@ -29,10 +30,6 @@ export type EditableRule = {
 };
 
 type CapPeriod = "month" | "season";
-
-function eur(cents: number) {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 /** Param-Felder je nach Trigger-Typ. Schreibt snake_case (Engine normalisiert beim Speichern). */
 function ParamFields({

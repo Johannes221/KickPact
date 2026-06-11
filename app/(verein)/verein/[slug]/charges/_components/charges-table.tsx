@@ -25,13 +25,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cancelChargeAction } from "../_actions/cancel";
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR"
-  });
-}
+import { eur } from "@/lib/utils/currency";
 
 function fmtDate(d: Date | null): string {
   if (!d) return "—";

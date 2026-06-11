@@ -7,6 +7,7 @@ import type { EreignisRow } from "@/lib/db/queries/club-dashboard";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TriggerIcon } from "@/components/shared/trigger-icon";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
+import { eur } from "@/lib/utils/currency";
 
 const TRIGGER_LABELS: Record<string, { label: string; emoji: string }> = {
   goal_total:           { label: "Pro Tor",          emoji: "⚽" },
@@ -31,10 +32,6 @@ function triggerLabel(r: EreignisRow): string {
   const base = TRIGGER_LABELS[r.triggerType]?.label ?? r.triggerType;
   if (r.playerName) return `${base} · ${r.playerName}`;
   return base;
-}
-
-function eur(cents: number) {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 }
 
 type SortKey = "date" | "amount" | "type";

@@ -14,12 +14,9 @@ import {
 } from "lucide-react";
 import { DashboardTile } from "@/components/shared/dashboard-tile";
 import { PageHeader } from "@/components/shared/page-header";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Dashboard · KickPact" };
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 export default async function VereinDashboard({
   params,

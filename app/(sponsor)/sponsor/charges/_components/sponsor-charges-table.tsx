@@ -9,6 +9,7 @@ import {
 import { triggerLabel, triggerEmoji } from "@/lib/triggers/labels";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { eur } from "@/lib/utils/currency";
 
 interface Row {
   id: string;
@@ -29,13 +30,6 @@ interface Row {
   clubId: string;
   clubName: string;
   clubSlug: string;
-}
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR"
-  });
 }
 
 function StatusPill({ status }: { status: string }) {

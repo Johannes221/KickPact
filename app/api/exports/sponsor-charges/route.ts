@@ -12,15 +12,10 @@ import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import { listChargesForSponsor } from "@/lib/db/queries/sponsor-reporting";
 import { triggerLabel } from "@/lib/triggers/labels";
 import { buildCsv, csvResponseHeaders } from "@/lib/exports/csv";
+import { eurCsv } from "@/lib/utils/currency";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function eur(cents: number | null | undefined): string {
-  if (cents === null || cents === undefined) return "";
-  // Excel-DE-friendly: Komma als Dezimaltrenner, keine Tausenderpunkte.
-  return (cents / 100).toFixed(2).replace(".", ",");
-}
 
 function statusLabel(s: string): string {
   const map: Record<string, string> = {
@@ -106,7 +101,7 @@ export async function GET(req: NextRequest) {
         r.saison ?? "",
         triggerLabel(r.triggerType),
         r.triggerType,
-        eur(r.amountCents),
+        eurCsv(r.amountCents),
         statusLabel(r.status),
         r.createdAt.toISOString(),
         r.confirmedAt ? r.confirmedAt.toISOString() : "",

@@ -29,12 +29,9 @@ import { SponsoredMatches } from "./_components/sponsored-matches";
 import { ReferralShareCard } from "@/components/sponsor/referral-share-card";
 import { buildReferralShareUrl } from "@/lib/referral/link";
 import { PageHeader } from "@/components/shared/page-header";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Sponsor · KickPact" };
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 export default async function SponsorDashboard() {
   const user = await requireUser();

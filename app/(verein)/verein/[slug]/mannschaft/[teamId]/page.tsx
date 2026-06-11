@@ -36,12 +36,9 @@ import { markCrawlStarted } from "@/lib/db/queries/crawler";
 import { TeamSetupChecklist } from "./_components/team-setup-checklist";
 import { CrawlAutoRefresh } from "./_components/crawl-auto-refresh";
 import { PageHeader } from "@/components/shared/page-header";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Mannschaft · KickPact" };
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 export default async function TeamDetailPage({
   params

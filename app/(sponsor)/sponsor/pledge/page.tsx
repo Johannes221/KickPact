@@ -8,12 +8,9 @@ import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Meine Pacts · KickPact" };
-
-function eur(cents: number) {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
 
 export default async function PledgeListPage() {
   const user = await requireUser();

@@ -14,6 +14,7 @@ import {
   currentMonthStr
 } from "@/lib/db/queries/platform-stats";
 import { MrrChart } from "./_components/mrr-chart";
+import { eur } from "@/lib/utils/currency";
 
 function lastMonths(count: number): string[] {
   const out: string[] = [];
@@ -33,14 +34,6 @@ function monthLabel(m: string): string {
 
 export const metadata = { title: "Dashboard · Admin · KickPact" };
 export const dynamic = "force-dynamic";
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0
-  });
-}
 
 const TRIGGER_LABELS: Record<string, string> = {
   goal_total: "Tore (total)",

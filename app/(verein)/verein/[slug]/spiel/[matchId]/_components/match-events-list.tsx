@@ -3,6 +3,7 @@ import type { MatchChargeRow } from "@/lib/db/queries/matches";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { MatchEventIcon } from "@/components/shared/match-event-icon";
 import { EventRowActions } from "./event-row-actions";
+import { eur } from "@/lib/utils/currency";
 
 type MatchEvent = {
   id: string;
@@ -26,10 +27,6 @@ function eventLabel(type: MatchEvent["type"], subtype: string | null): string {
     return subtype ?? "Spezial-Event";
   }
   return type;
-}
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 }
 
 export function MatchEventsList({

@@ -8,6 +8,7 @@ import {
 import { parsePaginationFromSearchParams } from "@/lib/db/queries/_helpers/paginate";
 import { SponsorInvoicesList } from "./_components/sponsor-invoices-list";
 import { PageHeader } from "@/components/shared/page-header";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Rechnungen · KickPact" };
 
@@ -115,8 +116,4 @@ export default async function RechnungenPage({
       )}
     </div>
   );
-}
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 }

@@ -6,17 +6,10 @@ import { ClubEditForm } from "@/components/admin/club-edit-form";
 import { TeamRowActions } from "@/components/admin/team-row-actions";
 import { StripeClubActions } from "@/components/admin/stripe-club-actions";
 import { isStripeConfigured } from "@/lib/stripe/client";
+import { eur } from "@/lib/utils/currency";
 
 export const metadata = { title: "Verein-Detail · Admin · KickPact" };
 export const dynamic = "force-dynamic";
-
-function eur(cents: number): string {
-  return (cents / 100).toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 2
-  });
-}
 
 const STATUS_LABEL: Record<string, string> = {
   trialing: "Trial",
