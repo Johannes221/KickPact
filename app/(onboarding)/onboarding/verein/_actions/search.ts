@@ -7,7 +7,11 @@ import {
   dedupeMannschaften,
 } from "@/lib/crawler/fussballde";
 import { getServerSession } from "@/lib/auth/session";
-import { checkTeamCollision } from "@/lib/db/queries/onboarding-collision";
+import {
+  checkTeamCollision,
+  findLicensedVereinByFussballdeId,
+  type LicensedVereinMatch
+} from "@/lib/db/queries/onboarding-collision";
 import { isClubMember } from "@/lib/db/queries/membership-requests";
 import { coverageFloorFromTeamName, type Coverage } from "@/lib/triggers/coverage";
 
@@ -76,6 +80,13 @@ export async function getMannschaftenAction(input: {
   try {
     const results = await getMannschaften(input.vereinId, input.slug, input.vereinName);
 
+    // Check A (Spec 2026-05-29 §4, verdrahtet im Audit 2026-06-11 / B2): hat
+    // der REALE Verein bereits eine aktive Vereinslizenz auf KickPact, zeigt
+    // die UI die Hinweis-Karte „bereits mit Vereinslizenz" + CTA „Beitritt
+    // anfragen" (bestehende Membership-Request-Infrastruktur).
+    const licensedVerein: LicensedVereinMatch | null =
+      await findLicensedVereinByFussballdeId(input.vereinId);
+
     const session = await getServerSession();
     const currentUserId = session?.user?.id ?? null;
 
@@ -127,7 +138,7 @@ export async function getMannschaftenAction(input: {
     // Bambini — strukturell keine Ergebnisse auf der Daten-Quelle) werden
     // NICHT mehr still herausgefiltert. Sie bleiben anlegbar; die UI zeigt
     // den „keine automatischen Spieldaten"-Hinweis (siehe `dataCoverage`).
-    return { ok: true as const, results: deduped };
+    return { ok: true as const, results: deduped, licensedVerein };
   } catch (e) {
     return {
       ok: false as const,

@@ -27,6 +27,8 @@ vi.mock("@/lib/crawler/fussballde", () => ({
   dedupeMannschaften: <T,>(teams: T[]) => teams
 }));
 
+import { users, clubs, teams } from "@/lib/db/schema";
+import { subscriptions, teamLicenses } from "@/lib/db/schema/billing";
 import {
   closeTestDb,
   getTestDb,
@@ -81,4 +83,67 @@ describe.skipIf(isIntegrationDbDisabled)("getMannschaftenAction", () => {
     expect(byId.get("T_EJUGEND")?.isLocked).toBe(false);
   });
 
+  it("B2: liefert licensedVerein-Flag, wenn der reale Verein bereits eine aktive Vereinslizenz hat", async () => {
+    const db = await getTestDb();
+    await db.insert(users).values({ id: "u_lic", email: "lic@example.com" });
+    await db.insert(clubs).values({
+      id: "c_lic",
+      slug: "lizenz-sv",
+      name: "Lizenz SV",
+      fussballdeVereinId: "V_LIC",
+      onboardingStatus: "completed"
+    });
+    const [team] = await db
+      .insert(teams)
+      .values({
+        clubId: "c_lic",
+        name: "1. Herren",
+        saison: "2526",
+        fussballdeTeamId: "T_LIC_1",
+        fussballdeSlug: "lizenz-sv-1",
+        isActive: true
+      })
+      .returning();
+    await db.insert(subscriptions).values({ clubId: "c_lic", status: "active" });
+    await db.insert(teamLicenses).values({
+      subscriptionClubId: "c_lic",
+      teamId: team.id,
+      plan: "verein",
+      status: "active"
+    });
+
+    getMannschaftenMock.mockResolvedValue([
+      crawledTeam("2. Herren - Lizenz SV", "T_LIC_2")
+    ]);
+
+    const res = await getMannschaftenAction({
+      vereinId: "V_LIC",
+      slug: "lizenz-sv",
+      vereinName: "Lizenz SV"
+    });
+
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.licensedVerein).toEqual({
+      clubId: "c_lic",
+      clubSlug: "lizenz-sv",
+      clubName: "Lizenz SV"
+    });
+  });
+
+  it("B2 Gegenrichtung: ohne Vereinslizenz bleibt licensedVerein null", async () => {
+    getMannschaftenMock.mockResolvedValue([
+      crawledTeam("Herren - Test FC", "T_HERREN")
+    ]);
+
+    const res = await getMannschaftenAction({
+      vereinId: "V_OHNE",
+      slug: "test-fc",
+      vereinName: "Test FC"
+    });
+
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.licensedVerein).toBeNull();
+  });
 });
