@@ -248,11 +248,18 @@ describe("createPledge — Daten-Coverage-Gate", () => {
     await expect(createPledge(playerRuleInput)).resolves.toEqual({ ok: true, pledgeId: "pledge-1" });
   });
 
-  it("none → komplett geblockt (auch Ergebnis-Wette)", async () => {
+  it("none → Ergebnis-Regeln erlaubt (manueller Flow), Spieler-Regeln geblockt (Review K1, Phase 4)", async () => {
+    // Seit Phase 4 sind none-Teams onboardbar: alles läuft über manuelle
+    // Meldung + Sponsor-Bestätigung (applyCoverageApprovalPolicy erzwingt
+    // pending_approval in evaluate-match). Nur Auto-Spieler-Regeln bleiben zu.
     getTeamDataCoverageMock.mockResolvedValue("none");
     await expect(createPledge(resultRuleInput)).resolves.toEqual({
+      ok: true,
+      pledgeId: "pledge-1"
+    });
+    await expect(createPledge(playerRuleInput)).resolves.toEqual({
       ok: false,
-      message: expect.stringMatching(/keine Spieldaten/i)
+      message: expect.stringMatching(/Spieler-Regeln/i)
     });
   });
 });
