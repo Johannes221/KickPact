@@ -16,26 +16,11 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { confirmApproval, disputeApproval } from "@/lib/actions/approvals";
 import { triggerLabel } from "@/lib/triggers/labels";
+import { matchEventLabel } from "@/lib/triggers/event-labels";
 import { toast } from "sonner";
 
 function eur(cents: number) {
   return (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
-}
-
-function eventLabel(type: string, subtype: string | null): string {
-  if (type === "tor") return "Tor";
-  if (type === "karte") return subtype === "rot" ? "Rote Karte" : "Gelbe Karte";
-  if (type === "spezial") {
-    if (subtype === "kopfball") return "Kopfballtor";
-    if (subtype === "hackentor") return "Hackentor";
-    if (subtype === "volley") return "Volley";
-    if (subtype === "elfmeter") return "Elfmeter-Tor";
-    if (subtype === "freistoss") return "Freistoß-Tor";
-    if (subtype === "assist") return "Vorlage";
-    if (subtype === "man_of_match") return "Spieler des Spiels";
-    return subtype ?? "Spezial-Event";
-  }
-  return type;
 }
 
 export interface ApprovalRowData {
@@ -109,7 +94,7 @@ export function ApprovalRow({ data }: { data: ApprovalRowData }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-display font-bold text-lg tracking-tight text-brand-night-navy">
-            {eventLabel(data.eventType, data.eventSubtype)}
+            {matchEventLabel(data.eventType, data.eventSubtype)}
             {data.minute !== null && (
               <span className="text-brand-night-navy/40 ml-2 font-mono text-sm">
                 {data.minute}&apos;
