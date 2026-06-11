@@ -3,6 +3,7 @@ import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { listClubTeamsWithStatus } from "@/lib/db/queries/club-admin";
 import { getClubTeamStats } from "@/lib/db/queries/club-reporting";
 import { TeamCrest } from "@/components/shared/team-crest";
+import { saisonLabel } from "@/lib/utils/saison";
 
 export const metadata = { title: "Mannschaften · KickPact" };
 
@@ -100,7 +101,7 @@ export default async function MannschaftenPage({
                         </span>
                       )}
                     </div>
-                    <p className="mt-0.5 text-xs text-brand-night-navy/50">Saison {t.saison}</p>
+                    <p className="mt-0.5 text-xs text-brand-night-navy/50">Saison {saisonLabel(t.saison)}</p>
                   </div>
                   <span className="text-brand-night-navy/30 shrink-0" aria-hidden>→</span>
                 </div>
