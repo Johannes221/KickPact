@@ -29,6 +29,12 @@ export type SubscriptionRowForGate = {
   trialEndsAt: Date | null;
   createdAt: Date;
   updatedAt: Date | null;
+  /**
+   * Audit 2026-06-11 / A5: expliziter past_due-Anker. Optional, damit ältere
+   * Aufrufer/Tests ohne die Spalte weiter funktionieren — dann greift der
+   * updatedAt-Proxy (mit dessen bekanntem Reset-Problem).
+   */
+  pastDueSince?: Date | null;
 };
 
 export const GRACE_PERIOD_DAYS = 7;
@@ -66,8 +72,11 @@ export function gateFromSubscription(
   }
 
   if (sub.status === "past_due") {
-    // Wir kennen den genauen Past-Due-Start nicht direkt, nehmen updatedAt als Proxy.
-    const since = sub.updatedAt ?? sub.createdAt;
+    // A5: pastDueSince ist der deterministische Anker (wird beim Status-
+    // wechsel → past_due gesetzt und von Folge-Syncs NICHT verschoben).
+    // Fallback updatedAt nur für Alt-Rows, die vor Migration 0054 in
+    // past_due gingen.
+    const since = sub.pastDueSince ?? sub.updatedAt ?? sub.createdAt;
     const daysOverdue = since
       ? Math.floor((now.getTime() - new Date(since).getTime()) / (1000 * 60 * 60 * 24))
       : 0;

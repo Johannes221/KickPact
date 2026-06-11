@@ -3,8 +3,11 @@ import type Stripe from "stripe";
 import { getStripe, getStripeWebhookSecret, isStripeConfigured } from "@/lib/stripe/client";
 import { trackServer } from "@/lib/analytics/track-server";
 import { priceIdToPlanCycle } from "@/lib/stripe/pricing";
+import { getBaseUrl } from "@/lib/utils/base-url";
+import { enforceBasicDowngrade } from "@/lib/billing/downgrade-enforcement";
 import {
   markStripeEventProcessed,
+  hasStripeEventBeenProcessed,
   getSubscriptionCustomerId,
   syncSubscriptionForClub,
   setTeamLicensesPlanForSubscription,
@@ -27,6 +30,19 @@ export const dynamic = "force-dynamic";
  *
  * Wichtig: signature-Verifikation mit STRIPE_WEBHOOK_SECRET — kein
  * unauthenticated Write in die DB.
+ *
+ * Audit 2026-06-11 / Phase 2 / A4 — Verlust- & Ordering-Schutz:
+ * 1. Der processed-Marker wird erst NACH erfolgreichem Handling geschrieben.
+ *    Vorher stand er am Anfang — ein Handler-Fehler (DB-Hickup) ließ den
+ *    Event als "verarbeitet" zurück und der Stripe-Retry wurde dedupliziert
+ *    → Statusänderung für immer verloren.
+ * 2. customer.subscription.*-Events nehmen nicht das Event-Payload als
+ *    Wahrheit, sondern fetchen die Subscription frisch von Stripe
+ *    (authoritative sync) — reordered Deliveries können keinen alten Stand
+ *    über einen neuen schreiben. Das macht die Handler zugleich idempotent,
+ *    sodass das kleine Race-Fenster zwischen has-Check und Marker harmlos ist.
+ * 3. invoice.paid reaktiviert nur, wenn die frisch gefetchte Subscription
+ *    wirklich active/trialing ist.
  */
 export async function POST(req: NextRequest) {
   if (!isStripeConfigured()) {
@@ -48,13 +64,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid-signature" }, { status: 400 });
   }
 
-  // Audit 2026-05-24 Phase 3 / Task 3.1: Idempotency-Gate.
-  // Stripe schickt bei Retries denselben Event nochmal, plus bei reorderten
-  // Events kann ein älteres `subscription.updated` ein neueres überschreiben.
-  // INSERT … ON CONFLICT DO NOTHING + RETURNING ist atomar: nur der erste
-  // Webhook für event.id bekommt die Row zurück und verarbeitet.
-  const isNewEvent = await markStripeEventProcessed(event.id, event.type);
-  if (!isNewEvent) {
+  // Dedup-Lesepfad (A4): bereits erfolgreich verarbeitete Events überspringen.
+  if (await hasStripeEventBeenProcessed(event.id)) {
     console.info("[stripe-webhook] duplicate event, skipping", { eventId: event.id });
     return NextResponse.json({ received: true, deduplicated: true });
   }
@@ -63,7 +74,12 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case "customer.subscription.created":
       case "customer.subscription.updated": {
-        const sub = event.data.object as Stripe.Subscription;
+        const eventSub = event.data.object as Stripe.Subscription;
+
+        // A4: authoritative Re-Fetch — der frische Stripe-Stand gewinnt,
+        // nicht das (möglicherweise reordered/stale) Event-Payload.
+        const sub = await stripe.subscriptions.retrieve(eventSub.id);
+
         const clubId = (sub.metadata?.clubId as string) ?? null;
         if (!clubId) {
           console.warn("[stripe-webhook] subscription without clubId metadata", sub.id);
@@ -85,10 +101,6 @@ export async function POST(req: NextRequest) {
 
         // Pricing-v2-Audit #3 (2026-05-24): plan + billing_cycle aus dem
         // gebuchten Stripe-Price reverse-mappen und in die DB spiegeln.
-        // Vorher blieb subscriptions.billing_cycle auf 'monthly' (DB-Default)
-        // → Sommerpause-Cron fand 0 Saison-Pass-Subscriptions → Stripe
-        // buchte im Juni/Juli weiter, obwohl Marketing "2 Monate geschenkt"
-        // verspricht.
         const firstItem = sub.items?.data?.[0];
         const priceId =
           typeof firstItem?.price?.id === "string" ? firstItem.price.id : null;
@@ -129,17 +141,23 @@ export async function POST(req: NextRequest) {
         // ist's i.d.R. ohnehin nur eine Row.
         if (planCycle) {
           await setTeamLicensesPlanForSubscription(clubId, planCycle.plan);
+
+          // Audit 2026-06-11 / Phase 2 / A7: Downgrade auf Basic stellt die
+          // Basic-Caps wieder her (>5 Sponsoren pausieren, >3 Regeln
+          // deaktivieren). Idempotent — läuft bei jedem Basic-Sync, ändert
+          // aber nur Über-Cap-Bestände.
+          if (planCycle.plan === "basic") {
+            await enforceBasicDowngrade(clubId);
+          }
         }
 
         // Conversion-Event: nur bei Erst-Erzeugung, nicht bei jedem Update
         // (sonst zählen wir Plan-Wechsel/Trial-Ende doppelt). Fire-and-forget,
         // damit Plausible-Outage niemals den Webhook scheitern lässt.
         if (event.type === "customer.subscription.created") {
-          const baseUrl =
-            process.env.NEXT_PUBLIC_BASE_URL ?? "https://kickpact.de";
           await trackServer(
             "stripe_subscription_created",
-            `${baseUrl}/server/subscription`,
+            `${getBaseUrl()}/server/subscription`,
             {
               plan: planCycle?.plan ?? "unknown",
               cycle: planCycle?.cycle ?? "unknown",
@@ -189,12 +207,37 @@ export async function POST(req: NextRequest) {
         const customerId =
           typeof inv.customer === "string" ? inv.customer : inv.customer?.id;
         if (!customerId) break;
-        await setSubscriptionStatusByCustomer(customerId, "active");
-        // Auch teamLicenses auf active setzen — vorher blieb status dauerhaft
-        // auf 'trialing' auch nach erfolgreichem Checkout.
-        const paidClubId = await getClubIdByCustomer(customerId);
-        if (paidClubId) {
-          await setTeamLicensesStatusForClubTeams(paidClubId, "active");
+
+        // A4-Guard: Reaktivierung nur, wenn die zugehörige Subscription laut
+        // frischem Stripe-Fetch wirklich active/trialing ist. Vorher konnte
+        // eine nachzüglerische Rest-Invoice einer GEKÜNDIGTEN Subscription
+        // den Club wieder auf active setzen.
+        const subId = extractInvoiceSubscriptionId(inv);
+        if (!subId) {
+          console.info("[stripe-webhook] invoice.paid without subscription — skipping", {
+            invoiceId: inv.id
+          });
+          break;
+        }
+        const freshSub = await stripe.subscriptions.retrieve(subId);
+        const freshStatus = mapStripeStatus(freshSub.status);
+        if (freshStatus !== "active" && freshStatus !== "trialing") {
+          console.info("[stripe-webhook] invoice.paid on non-active subscription — not reactivating", {
+            invoiceId: inv.id,
+            subId,
+            freshStatus
+          });
+          break;
+        }
+
+        await setSubscriptionStatusByCustomer(customerId, freshStatus);
+        if (freshStatus === "active") {
+          // Auch teamLicenses auf active setzen — vorher blieb status dauerhaft
+          // auf 'trialing' auch nach erfolgreichem Checkout.
+          const paidClubId = await getClubIdByCustomer(customerId);
+          if (paidClubId) {
+            await setTeamLicensesStatusForClubTeams(paidClubId, "active");
+          }
         }
         break;
       }
@@ -202,6 +245,10 @@ export async function POST(req: NextRequest) {
         // Unhandled event type — return 200 so Stripe doesn't retry forever
         break;
     }
+
+    // A4: Marker erst NACH erfolgreichem Handling — bei einem Fehler oben
+    // bleibt der Event unmarkiert und der Stripe-Retry holt ihn nach.
+    await markStripeEventProcessed(event.id, event.type);
     return NextResponse.json({ received: true });
   } catch (err) {
     console.error("[stripe-webhook] handler error", err);
@@ -214,6 +261,23 @@ function getCustomerId(
 ): string | null {
   if (typeof customer === "string") return customer;
   return customer?.id ?? null;
+}
+
+/**
+ * Subscription-ID einer Invoice. Seit Stripe-API 2025 liegt sie unter
+ * `invoice.parent.subscription_details.subscription`; ältere Payloads haben
+ * sie top-level als `subscription`.
+ */
+function extractInvoiceSubscriptionId(inv: Stripe.Invoice): string | null {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const parentSub = (inv as any).parent?.subscription_details?.subscription;
+  if (typeof parentSub === "string") return parentSub;
+  if (parentSub && typeof parentSub.id === "string") return parentSub.id;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const legacy = (inv as any).subscription;
+  if (typeof legacy === "string") return legacy;
+  if (legacy && typeof legacy.id === "string") return legacy.id;
+  return null;
 }
 
 /**

@@ -8,7 +8,10 @@ import { subscriptions, teamLicenses } from "@/lib/db/schema";
  * Saison-Pass-Lifecycle.
  *
  * Pause: 1.6. — alle `billing_cycle = 'season_end'` Subscriptions mit Status
- * `active` werden auf `paused` gesetzt + Stripe `pause_collection={behavior:'void'}`.
+ * `active` werden auf `paused` gesetzt + Stripe
+ * `pause_collection={behavior:'keep_as_draft'}` (Audit 2026-06-11 / A6:
+ * `void` ließ Renewal-Invoices mit Sommer-Anniversary ersatzlos verfallen —
+ * `keep_as_draft` hält sie als Draft und finalisiert beim Resume).
  *
  * Resume: 1.8. — Pausen werden aufgehoben.
  *
@@ -21,7 +24,7 @@ export interface StripeSubscriptionPauseClient {
     update(
       id: string,
       params: {
-        pause_collection?: { behavior: "void" } | null;
+        pause_collection?: { behavior: "keep_as_draft" } | null;
       }
     ): Promise<Stripe.Subscription | Pick<Stripe.Subscription, "id">>;
   };
@@ -55,7 +58,7 @@ export async function pauseSeasonPassSubscriptions(
   for (const c of candidates) {
     if (c.stripeSubscriptionId) {
       await stripe.subscriptions.update(c.stripeSubscriptionId, {
-        pause_collection: { behavior: "void" }
+        pause_collection: { behavior: "keep_as_draft" }
       });
     }
     pausedClubIds.push(c.clubId);

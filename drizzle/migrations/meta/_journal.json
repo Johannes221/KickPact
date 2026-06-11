@@ -372,6 +372,13 @@
       "when": 1782400000000,
       "tag": "0053_ambitious_impossible_man",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1782400100000,
+      "tag": "0054_geld_integritaet_phase2",
+      "breakpoints": true
     }
   ]
 }

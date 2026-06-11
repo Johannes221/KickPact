@@ -10,12 +10,18 @@ import { getStripe, isStripeConfigured } from "@/lib/stripe/client";
 import {
   getStripePriceId,
   normalizeBillingCycle,
-  TRIAL_DAYS,
   type PlanKey,
   type BillingCycle
 } from "@/lib/stripe/pricing";
+import { getBaseUrl } from "@/lib/utils/base-url";
 
-const baseUrl = process.env.BETTER_AUTH_URL ?? "https://kickpact.schartl.dev";
+/**
+ * Stripe-Checkout akzeptiert `subscription_data.trial_end` nur, wenn es
+ * mindestens 48h in der Zukunft liegt. Kürzere Rest-Trials verfallen beim
+ * Checkout (der Verein zahlt dann ab sofort) — bewusster Trade-off statt
+ * trial_period_days-Reset auf volle 30 Tage (Audit 2026-06-11 / A3).
+ */
+const STRIPE_MIN_TRIAL_MS = 48 * 60 * 60 * 1000;
 
 /**
  * Startet einen Stripe-Checkout-Flow für den gewählten Plan. Returnt eine
@@ -66,6 +72,38 @@ export async function createCheckoutSession(opts: {
     );
   }
 
+  const baseUrl = getBaseUrl();
+
+  // Audit 2026-06-11 / Phase 2 / A1: Plan-Wechsel bei LAUFENDER Subscription
+  // läuft über stripe.subscriptions.update (Items-Swap + Proration), NICHT
+  // über ein zweites Checkout. Vorher entstand pro Plan-Wechsel ein zweites,
+  // paralleles Abo — der Verein zahlte doppelt. Checkout bleibt nur für
+  // Erst-Abo und Re-Subscribe nach Kündigung (cancelled/incomplete).
+  const hasLiveStripeSubscription =
+    !!existing?.stripeSubscriptionId &&
+    existing.status !== "cancelled" &&
+    existing.status !== "incomplete";
+
+  if (hasLiveStripeSubscription && existing?.stripeSubscriptionId) {
+    const stripeSub = await stripe.subscriptions.retrieve(
+      existing.stripeSubscriptionId
+    );
+    const itemId = stripeSub.items?.data?.[0]?.id;
+    if (!itemId) {
+      throw new Error(
+        "Bestehendes Stripe-Abo hat kein Subscription-Item — bitte Support kontaktieren."
+      );
+    }
+    await stripe.subscriptions.update(existing.stripeSubscriptionId, {
+      items: [{ id: itemId, price: priceId }],
+      proration_behavior: "create_prorations",
+      metadata: { clubId: club.id, plan: opts.plan, cycle }
+    });
+    // Kein Stripe-Redirect nötig: Webhook (customer.subscription.updated)
+    // spiegelt Plan/Cycle in die DB; wir leiten zurück auf die Abo-Seite.
+    return { url: `${baseUrl}/verein/${club.slug}/abo?plan_changed=1` };
+  }
+
   let customerId = existing?.stripeCustomerId ?? null;
   const isPlaceholder =
     typeof customerId === "string" && customerId.startsWith("placeholder_");
@@ -101,22 +139,34 @@ export async function createCheckoutSession(opts: {
   // Trial nur wenn echter App-Trial noch läuft: status='trialing' UND noch
   // kein Stripe-Abo (stripeSubscriptionId IS NULL). Nach Trial-Ende (cancelled,
   // past_due etc.) kein zweiter kostenloser Trial.
+  //
+  // Audit 2026-06-11 / Phase 2 / A3: trial_end = restliche App-Trial-Zeit
+  // (subscriptions.trialEndsAt) statt trial_period_days=30. Vorher startete
+  // der Stripe-Trial beim Checkout neu — wer an Tag 25 Zahlungsdaten
+  // hinterlegte, bekam 55 Tage gratis statt 30.
+  const trialEndsAtMs = existing?.trialEndsAt
+    ? new Date(existing.trialEndsAt).getTime()
+    : null;
   const isAppTrial =
     existing?.status === "trialing" &&
-    !existing?.stripeSubscriptionId;
+    !existing?.stripeSubscriptionId &&
+    trialEndsAtMs !== null &&
+    trialEndsAtMs - Date.now() >= STRIPE_MIN_TRIAL_MS;
 
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
-    // Explizite Methoden-Liste statt Stripe-Auto-Auswahl: ohne dies zeigt der
-    // Checkout ALLE im Dashboard aktivierten Methoden — u.a. Klarna/Sofort, die
-    // das wiederkehrende Abo-Modell NICHT unterstützen (Nutzer wählt sie → Fehler).
-    // card + sepa_debit + paypal sind recurring-tauglich und decken DE-Amateur-
-    // fußball ab. (SEPA/PayPal müssen im Stripe-Dashboard aktiviert sein.)
-    payment_method_types: ["card", "sepa_debit", "paypal"],
+    // Audit 2026-06-11 / Phase 2 / A2: KEINE payment_method_types-Liste —
+    // Dynamic Payment Methods (Stripe-Dashboard) steuert das Angebot. Die
+    // frühere Hardcoding-Liste ["card","sepa_debit","paypal"] hat jede
+    // Dashboard-Konfiguration (z.B. Link, neue Methoden) stillschweigend
+    // ausgesperrt. Recurring-untaugliche Methoden filtert Stripe im
+    // subscription-Mode selbst heraus.
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: {
-      ...(isAppTrial ? { trial_period_days: TRIAL_DAYS } : {}),
+      ...(isAppTrial && trialEndsAtMs
+        ? { trial_end: Math.floor(trialEndsAtMs / 1000) }
+        : {}),
       metadata: { clubId: club.id, plan: opts.plan, cycle }
     },
     success_url: `${baseUrl}/verein/${club.slug}?subscribed=1`,
@@ -154,7 +204,7 @@ export async function createCustomerPortalSession(clubSlug: string): Promise<{ u
 
   const session = await stripe.billingPortal.sessions.create({
     customer: sub.stripeCustomerId,
-    return_url: `${baseUrl}/verein/${club.slug}`
+    return_url: `${getBaseUrl()}/verein/${club.slug}`
   });
   return { url: session.url };
 }

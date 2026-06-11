@@ -1,5 +1,5 @@
 import "server-only";
-import { eq, inArray, desc } from "drizzle-orm";
+import { eq, inArray, desc, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   subscriptions,
@@ -20,10 +20,22 @@ export type SubscriptionRow = typeof subscriptions.$inferSelect;
  */
 
 /**
- * Idempotency-Gate: schreibt den Stripe-Event atomar (INSERT … ON CONFLICT DO
- * NOTHING + RETURNING). `true`, wenn der Event NEU ist (= soll verarbeitet
- * werden), `false` bei einem Duplikat (Retry / reordered Delivery).
+ * Idempotency-Lesepfad (Audit 2026-06-11 / A4): Wurde dieser Stripe-Event
+ * schon erfolgreich verarbeitet? Der Webhook prüft das am Anfang und
+ * persistiert den Marker erst NACH erfolgreichem Handling — ein Handler-
+ * Fehler lässt den Event unmarkiert, damit der Stripe-Retry ihn nachholt.
  */
+export async function hasStripeEventBeenProcessed(
+  eventId: string
+): Promise<boolean> {
+  const [row] = await db
+    .select({ eventId: processedStripeEvents.eventId })
+    .from(processedStripeEvents)
+    .where(eq(processedStripeEvents.eventId, eventId))
+    .limit(1);
+  return !!row;
+}
+
 export async function markStripeEventProcessed(
   eventId: string,
   eventType: string
@@ -34,6 +46,16 @@ export async function markStripeEventProcessed(
     .onConflictDoNothing()
     .returning({ eventId: processedStripeEvents.eventId });
   return inserted.length > 0;
+}
+
+/**
+ * past_due-Anker (Audit 2026-06-11 / A5): beim Wechsel auf past_due bleibt der
+ * ERSTE Zeitpunkt stehen (COALESCE), jeder andere Status nullt den Anker.
+ */
+function pastDueSincePatch(status: SubscriptionStatus) {
+  return status === "past_due"
+    ? sql`COALESCE(${subscriptions.pastDueSince}, now())`
+    : null;
 }
 
 /**
@@ -75,6 +97,7 @@ export async function syncSubscriptionForClub(
       trialEndsAt: patch.trialEndsAt,
       currentPeriodEnd: patch.currentPeriodEnd,
       pausedUntil: patch.pausedUntil,
+      pastDueSince: pastDueSincePatch(patch.status),
       updatedAt: new Date()
     })
     .where(eq(subscriptions.clubId, clubId));
@@ -95,7 +118,7 @@ export async function setTeamLicensesPlanForSubscription(
 export async function cancelSubscriptionForClub(clubId: string): Promise<void> {
   await db
     .update(subscriptions)
-    .set({ status: "cancelled", updatedAt: new Date() })
+    .set({ status: "cancelled", pastDueSince: null, updatedAt: new Date() })
     .where(eq(subscriptions.clubId, clubId));
 }
 
@@ -122,7 +145,7 @@ export async function setSubscriptionStatusByCustomer(
 ): Promise<void> {
   await db
     .update(subscriptions)
-    .set({ status, updatedAt: new Date() })
+    .set({ status, pastDueSince: pastDueSincePatch(status), updatedAt: new Date() })
     .where(eq(subscriptions.stripeCustomerId, customerId));
 }
 

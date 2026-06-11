@@ -117,4 +117,30 @@ describe("gateFromSubscription", () => {
     );
     expect(gate.pastDueSince).toEqual(updated);
   });
+
+  // --- Audit 2026-06-11 / Phase 2 / A5: deterministischer past_due-Anker ---
+
+  it("expliziter pastDueSince-Anker gewinnt über updatedAt (Webhook-Sync resettet Grace nicht)", () => {
+    // updatedAt wurde gerade durch einen Webhook-Sync gebumpt — der Anker
+    // liegt aber 10 Tage zurück → read-only, kein Grace-Reset.
+    const gate = gateFromSubscription(
+      row({
+        status: "past_due",
+        updatedAt: NOW,
+        pastDueSince: daysAgo(GRACE_PERIOD_DAYS + 3)
+      }),
+      NOW
+    );
+    expect(gate.isReadOnly).toBe(true);
+    expect(gate.pastDueSince).toEqual(daysAgo(GRACE_PERIOD_DAYS + 3));
+  });
+
+  it("pastDueSince innerhalb Grace → noch kein read-only, korrektes Restfenster", () => {
+    const gate = gateFromSubscription(
+      row({ status: "past_due", updatedAt: NOW, pastDueSince: daysAgo(3) }),
+      NOW
+    );
+    expect(gate.isReadOnly).toBe(false);
+    expect(gate.daysUntilReadOnly).toBe(GRACE_PERIOD_DAYS - 3);
+  });
 });

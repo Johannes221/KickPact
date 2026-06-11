@@ -80,10 +80,13 @@ export const charges = pgTable(
       .where(
         sql`${t.matchEventId} IS NULL AND ${t.matchId} IS NOT NULL AND ${t.status} <> 'cancelled'`
       ),
-    // Saison-Charge: 1× pro pledge_rule + saison
+    // Saison-Charge: 1× pro pledge_rule + saison. Stornierte Charges sind
+    // ausgenommen (Audit 2026-06-11 / B9) — analog zu den beiden Match-Indizes
+    // oben: eine cancelled-Saison-Charge darf die Re-Emission nach einer
+    // Korrektur (z.B. Dispute → Re-Eval) nicht dauerhaft blockieren.
     uniqueSeason: uniqueIndex("charges_unique_season_idx")
       .on(t.pledgeRuleId, t.saison)
-      .where(sql`${t.saison} IS NOT NULL`)
+      .where(sql`${t.saison} IS NOT NULL AND ${t.status} <> 'cancelled'`)
   })
 );
 

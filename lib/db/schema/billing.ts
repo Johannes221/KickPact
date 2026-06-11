@@ -66,6 +66,13 @@ export const subscriptions = pgTable("subscriptions", {
   currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
   // Pricing v2: Während Sommerpause (Saison-Pass) bis zu welchem Datum pausiert.
   pausedUntil: timestamp("paused_until", { withTimezone: true }),
+  /**
+   * Audit 2026-06-11 / Phase 2 / A5: Beginn der aktuellen past_due-Phase.
+   * Wird beim Statuswechsel → past_due gesetzt (COALESCE: erster Wert bleibt),
+   * bei jedem anderen Status genullt. Vorher leitete das Read-Only-Gate die
+   * 7-Tage-Grace aus `updatedAt` ab — jeder Webhook-Sync resettete das Fenster.
+   */
+  pastDueSince: timestamp("past_due_since", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
 });

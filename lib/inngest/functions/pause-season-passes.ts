@@ -6,7 +6,7 @@ import { pauseSeasonPassSubscriptions } from "@/lib/billing/season-pass";
  * Sommerpause-Start: 1. Juni, 02:00 UTC.
  *
  * Setzt alle Saison-Pass-Subscriptions (`billing_cycle = 'season_end'`) auf `paused`,
- * triggert Stripe `pause_collection={behavior:'void'}`, spiegelt `team_licenses.status`.
+ * triggert Stripe `pause_collection={behavior:'keep_as_draft'}`, spiegelt `team_licenses.status`.
  */
 export const pauseSeasonPasses = inngest.createFunction(
   { id: "pause-season-passes", name: "Sommerpause: Saison-Pass pausieren (1.6.)", concurrency: { limit: 1, key: "season-pass-lifecycle" } },

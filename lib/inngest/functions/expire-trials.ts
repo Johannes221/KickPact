@@ -19,7 +19,7 @@ import { subscriptions, clubs, clubMemberships, users } from "@/lib/db/schema";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { trialExpiredEmail } from "@/lib/mail/templates/trial-expired";
 
-const baseUrl = process.env.BETTER_AUTH_URL ?? "https://kickpact.schartl.dev";
+import { getBaseUrl } from "@/lib/utils/base-url";
 
 export const expireTrials = inngest.createFunction(
   { id: "expire-trials", concurrency: { limit: 1 } },
@@ -74,7 +74,7 @@ export const expireTrials = inngest.createFunction(
       if (adminEmails.length === 0) continue;
 
       await step.run(`mail-${sub.clubId}`, async () => {
-        const aboUrl = `${baseUrl}/verein/${sub.clubSlug}/abo`;
+        const aboUrl = `${getBaseUrl()}/verein/${sub.clubSlug}/abo`;
         const { subject, html, text } = trialExpiredEmail({
           clubName: sub.clubName,
           aboUrl
