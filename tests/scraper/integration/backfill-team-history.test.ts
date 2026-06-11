@@ -27,10 +27,8 @@ import {
 import { seedClubFromFixture } from "../../fixtures/scraper/seed-from-fixtures";
 import { JSON_ROOT } from "../../fixtures/scraper/config";
 import { inngest } from "@/lib/inngest/client";
-import {
-  runBackfillForTeam,
-  prevSaisonCodeLocal
-} from "@/lib/inngest/functions/backfill-team-history";
+import { runBackfillForTeam } from "@/lib/inngest/functions/backfill-team-history";
+import { prevSaisonCode } from "@/lib/utils/saison";
 import { shouldBackfillTeamHistory } from "@/lib/db/queries/matches";
 import type { VorsaisonSpiel } from "@/lib/crawler/vorsaison";
 
@@ -66,19 +64,21 @@ async function loadFixtureSpiele(saison: string): Promise<VorsaisonSpiel[]> {
   }).spiele;
 }
 
-describe("prevSaisonCodeLocal", () => {
+describe("prevSaisonCode", () => {
   it("2627 → 2526 (Plan-Beispiel)", () => {
-    expect(prevSaisonCodeLocal("2627")).toBe("2526");
+    expect(prevSaisonCode("2627")).toBe("2526");
   });
   it("2526 → 2425", () => {
-    expect(prevSaisonCodeLocal("2526")).toBe("2425");
+    expect(prevSaisonCode("2526")).toBe("2425");
   });
   it("Jahrhundert-Padding: 1011 → 0910", () => {
-    expect(prevSaisonCodeLocal("1011")).toBe("0910");
+    expect(prevSaisonCode("1011")).toBe("0910");
   });
-  it("null bei ungültigem Code", () => {
-    expect(prevSaisonCodeLocal("25/26")).toBeNull();
-    expect(prevSaisonCodeLocal("")).toBeNull();
+  it("toleriert Slash-Format (DB führt beide), null bei echtem Müll", () => {
+    // lib/utils/saison.ts normalisiert "25/26" bewusst → Vorgänger "2425".
+    expect(prevSaisonCode("25/26")).toBe("2425");
+    expect(prevSaisonCode("")).toBeNull();
+    expect(prevSaisonCode("abc")).toBeNull();
   });
 });
 

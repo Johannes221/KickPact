@@ -20,22 +20,7 @@ import { inngest } from "@/lib/inngest/client";
 import { getVorsaisonSpiele } from "@/lib/crawler/vorsaison";
 import { getActiveTeamById } from "@/lib/db/queries/crawler";
 import { insertBackfilledFinishedMatch } from "@/lib/db/queries/matches";
-
-/**
- * Vorsaison-Code: "2627" → "2526". Rein arithmetisch (kein Datum nötig).
- *
- * TODO(nach Merge von Paket R): auf `prevSaisonCode` aus lib/utils/saison.ts
- * umstellen — Paket R extrahiert die Saison-Code-Helfer dorthin; bis dahin
- * lokale Minimal-Variante, um keinen Merge-Konflikt zu provozieren.
- */
-export function prevSaisonCodeLocal(saison: string): string | null {
-  const m = saison.match(/^(\d{2})(\d{2})$/);
-  if (!m) return null;
-  const startYear = parseInt(m[1], 10);
-  if (startYear === 0) return null; // "0001" → kein 20-1
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(startYear - 1)}${pad(startYear)}`;
-}
+import { prevSaisonCode } from "@/lib/utils/saison";
 
 export type BackfillResult = {
   teamId: string;
@@ -63,7 +48,7 @@ export async function runBackfillForTeam(teamId: string): Promise<BackfillResult
     };
   }
 
-  const prevSaison = prevSaisonCodeLocal(team.saison);
+  const prevSaison = prevSaisonCode(team.saison);
   if (!prevSaison) {
     return {
       teamId,
