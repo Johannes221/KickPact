@@ -86,9 +86,14 @@ export default async function PledgeDetailPage({
         <StatCard
           label="Status"
           value={
-            <Badge tone={(PLEDGE_STATUS[pledge.status] ?? { tone: "neutral" as const }).tone}>
-              {(PLEDGE_STATUS[pledge.status] ?? { label: pledge.status }).label}
-            </Badge>
+            pledge.status === "paused" && pledge.sommerpausePaused ? (
+              // A3: automatische Sommerpause klar benennen statt generisch „Pausiert".
+              <Badge tone="info">Sommerpause</Badge>
+            ) : (
+              <Badge tone={(PLEDGE_STATUS[pledge.status] ?? { tone: "neutral" as const }).tone}>
+                {(PLEDGE_STATUS[pledge.status] ?? { label: pledge.status }).label}
+              </Badge>
+            )
           }
         />
         <StatCard
@@ -112,8 +117,12 @@ export default async function PledgeDetailPage({
         </Card>
       </div>
 
-      <div className="mt-4 flex justify-end">
-        <PledgeStatusToggle pledgeId={pledge.id} currentStatus={pledge.status} />
+      <div className="mt-4 flex flex-col items-end">
+        <PledgeStatusToggle
+          pledgeId={pledge.id}
+          currentStatus={pledge.status}
+          sommerpausePaused={pledge.sommerpausePaused}
+        />
       </div>
 
       <div className="mt-8 md:mt-12 flex items-baseline justify-between gap-3">

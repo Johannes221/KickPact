@@ -316,6 +316,7 @@ function MyPactsSection({
   pacts: Array<{
     id: string;
     status: string;
+    sommerpausePaused: boolean;
     teamName: string;
     clubName: string;
     monthlyCapCents: number | null;
@@ -377,8 +378,17 @@ function MyPactsSection({
                       : ""}
                   </div>
                 </div>
-                <PactStatusBadge status={p.status} />
+                <PactStatusBadge
+                  status={p.status}
+                  sommerpausePaused={p.sommerpausePaused}
+                />
               </Link>
+              {p.status === "paused" && p.sommerpausePaused && (
+                <p className="mt-1 px-3 text-xs text-sky-800">
+                  ☀️ Automatische Pause bis 1.8. — Spiele bis zum Saisonende
+                  zählen weiterhin. Du musst nichts tun.
+                </p>
+              )}
             </li>
           ))}
           {rest > 0 && (
@@ -392,13 +402,23 @@ function MyPactsSection({
   );
 }
 
-function PactStatusBadge({ status }: { status: string }) {
+function PactStatusBadge({
+  status,
+  sommerpausePaused = false
+}: {
+  status: string;
+  sommerpausePaused?: boolean;
+}) {
   const map: Record<string, { label: string; cls: string }> = {
     active: { label: "Aktiv", cls: "bg-emerald-100 text-emerald-800" },
     paused: { label: "Pausiert", cls: "bg-amber-100 text-amber-800" },
     ended: { label: "Beendet", cls: "bg-neutral-100 text-neutral-600" }
   };
-  const entry = map[status] ?? { label: status, cls: "bg-neutral-100 text-neutral-600" };
+  // A3: automatische Sommerpause klar benennen statt generisch „Pausiert".
+  const entry =
+    status === "paused" && sommerpausePaused
+      ? { label: "Sommerpause", cls: "bg-sky-100 text-sky-800" }
+      : (map[status] ?? { label: status, cls: "bg-neutral-100 text-neutral-600" });
   return (
     <span
       className={

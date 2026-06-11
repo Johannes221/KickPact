@@ -124,7 +124,7 @@ export default async function PledgeListPage() {
                     <div className="font-semibold text-brand-night-navy">{p.teamName}</div>
                     <div className="text-xs text-brand-night-navy/50 mt-0.5">{p.clubName}</div>
                   </div>
-                  <StatusBadge status={p.status} />
+                  <StatusBadge status={p.status} sommerpausePaused={p.sommerpausePaused} />
                 </div>
                 <div className="mt-3 flex gap-4 text-xs text-brand-night-navy/60">
                   <span>
@@ -135,6 +135,12 @@ export default async function PledgeListPage() {
                     <span>Cap: {eur(p.monthlyCapCents)} / Monat</span>
                   )}
                 </div>
+                {p.status === "paused" && p.sommerpausePaused && (
+                  <p className="mt-2 text-xs text-sky-800 bg-sky-50 rounded-lg px-2.5 py-1.5">
+                    ☀️ Automatische Pause bis 1.8. — Spiele bis zum Saisonende
+                    zählen weiterhin. Du musst nichts tun.
+                  </p>
+                )}
               </Link>
             ))}
 
@@ -178,7 +184,17 @@ export default async function PledgeListPage() {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({
+  status,
+  sommerpausePaused = false
+}: {
+  status: string;
+  sommerpausePaused?: boolean;
+}) {
+  // A3: automatische Sommerpause klar benennen statt generisch „Pausiert".
+  if (status === "paused" && sommerpausePaused) {
+    return <Badge tone="info">Sommerpause</Badge>;
+  }
   const map: Record<string, { label: string; tone: BadgeProps["tone"] }> = {
     active: { label: "Aktiv", tone: "success" },
     paused: { label: "Pausiert", tone: "warning" },
