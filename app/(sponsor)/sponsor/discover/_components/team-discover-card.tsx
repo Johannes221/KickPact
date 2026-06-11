@@ -35,7 +35,16 @@ export function TeamDiscoverCard({
   async function handleSubmit() {
     setPending(true);
     try {
-      await createSponsorInquiry({ teamId: team.teamId, message: message || undefined });
+      // A8: Action liefert {ok,message} statt zu werfen — Klartext (Rate-Limit,
+      // Duplikat, …) landet im Toast.
+      const res = await createSponsorInquiry({
+        teamId: team.teamId,
+        message: message || undefined
+      });
+      if (!res.ok) {
+        toast.error(res.message);
+        return;
+      }
       setState("pending");
       setOpen(false);
       toast.success("Anfrage versendet!");

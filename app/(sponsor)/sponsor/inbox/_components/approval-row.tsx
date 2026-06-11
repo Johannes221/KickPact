@@ -49,27 +49,31 @@ export function ApprovalRow({ data }: { data: ApprovalRowData }) {
 
   function handleConfirm() {
     startTransition(async () => {
-      try {
-        await confirmApproval(data.approvalId);
-        toast.success(`${eur(data.amountCents)} bestätigt`);
-        router.refresh();
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Fehler");
+      // A8: Actions liefern {ok,message} statt zu werfen — Klartext in den Toast.
+      const res = await confirmApproval(data.approvalId);
+      if (!res.ok) {
+        toast.error(res.message);
+        return;
       }
+      toast.success(`${eur(data.amountCents)} bestätigt`);
+      router.refresh();
     });
   }
 
   function handleDispute() {
     startTransition(async () => {
-      try {
-        await disputeApproval({ approvalId: data.approvalId, reason: reason || undefined });
-        toast.success("Bestritten — kein Beitrag");
-        setDisputeOpen(false);
-        setReason("");
-        router.refresh();
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Fehler");
+      const res = await disputeApproval({
+        approvalId: data.approvalId,
+        reason: reason || undefined
+      });
+      if (!res.ok) {
+        toast.error(res.message);
+        return;
       }
+      toast.success("Bestritten — kein Beitrag");
+      setDisputeOpen(false);
+      setReason("");
+      router.refresh();
     });
   }
 

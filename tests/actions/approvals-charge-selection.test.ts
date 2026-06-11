@@ -161,9 +161,19 @@ describe.skipIf(isIntegrationDbDisabled)("confirmApproval Charge-Selektion (C4)"
     expect(rows.filter((c) => c.status === "cancelled")).toHaveLength(1);
   });
 
-  it("nur cancelled-Charge (kein pending) → Bestätigen wird abgelehnt", async () => {
+  it("nur cancelled-Charge (kein pending) → ok:false mit Klartext-Message (A8: kein Throw)", async () => {
     const { approvalId } = await seedPair({ withPendingCharge: false });
 
-    await expect(confirmApproval(approvalId)).rejects.toThrow(/widerrufen/i);
+    const result = await confirmApproval(approvalId);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.message).toMatch(/widerrufen/i);
+  });
+
+  it("unbekanntes Approval → ok:false mit Message (A8: kein Throw)", async () => {
+    await seedPair({ withPendingCharge: true });
+
+    const result = await confirmApproval("does-not-exist");
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.message).toMatch(/nicht gefunden/i);
   });
 });
