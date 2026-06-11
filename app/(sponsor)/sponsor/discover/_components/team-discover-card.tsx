@@ -55,6 +55,11 @@ export function TeamDiscoverCard({
     }
   }
 
+  // A5: Anfragen erlaubt, wenn noch keine Anfrage läuft ODER eine angenommene
+  // Einladung abgelaufen/zurückgezogen ist (sonst weiche Sackgasse).
+  const canInquire =
+    state === "none" || (state === "accepted" && !team.pledgeInviteToken);
+
   // Liga nur zeigen, wenn plausibel — alte Crawls speicherten teils den
   // Wochentag ("So") als Liga; bis zum nächsten Crawl ausblenden.
   const league = isPlausibleLeague(team.league) ? team.league : null;
@@ -169,10 +174,15 @@ export function TeamDiscoverCard({
                 Jetzt sponsern →
               </Link>
             ) : (
-              // Angenommen, aber Einladung abgelaufen/zurückgezogen.
-              <span className="flex-1 rounded-lg bg-success-muted px-3 py-2 text-center text-xs font-semibold text-success-dark">
-                ✓ Angenommen
-              </span>
+              // Angenommen, aber Einladung abgelaufen/zurückgezogen → erneut
+              // anfragen statt Sackgasse (A5).
+              <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="flex-1 rounded-lg bg-accent px-3 py-2 text-center text-xs font-semibold text-brand-night-navy hover:bg-accent/90 transition-colors"
+              >
+                Erneut anfragen
+              </button>
             )
           ) : state === "pending" ? (
             <button
@@ -222,7 +232,7 @@ export function TeamDiscoverCard({
               </p>
             )}
 
-            {state !== "none" ? (
+            {!canInquire ? (
               <div className="mt-6 rounded-2xl border border-success/30 bg-success-muted p-4 text-sm text-success-dark">
                 ✓ Deine Anfrage wurde versendet. Die Mannschaft meldet sich per Mail.
               </div>
