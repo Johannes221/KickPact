@@ -15,6 +15,7 @@ import { expireTrials } from "./expire-trials";
 import { cleanupSessions } from "./cleanup-sessions";
 import { anonymizeAccounts } from "./anonymize-accounts";
 import { seasonRenewalPrompts } from "./season-renewal-prompts";
+import { seasonRollover } from "./season-rollover";
 import { supportSlaReminders } from "./support-sla-reminders";
 import { autoPauseUnverified } from "./auto-pause-unverified";
 import { notifyMatchResult } from "./notify-match-result";
@@ -41,6 +42,7 @@ export const functions = [
   cleanupSessions,
   anonymizeAccounts,
   seasonRenewalPrompts,
+  seasonRollover,
   supportSlaReminders,
   autoPauseUnverified,
   notifyMatchResult,
