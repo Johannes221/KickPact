@@ -1,5 +1,5 @@
 import {
-  pgTable, text, timestamp, integer, boolean, jsonb, pgEnum, index
+  pgTable, text, timestamp, integer, boolean, jsonb, pgEnum, index, uniqueIndex
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
@@ -92,7 +92,14 @@ export const pledges = pgTable(
   },
   (t) => ({
     sponsorIdx: index("pledges_sponsor_idx").on(t.sponsorId),
-    teamIdx: index("pledges_team_idx").on(t.teamId)
+    teamIdx: index("pledges_team_idx").on(t.teamId),
+    // Review-Auflage 1 (2026-06-12): Race-Schutz für das Renewal — zwei
+    // parallele confirmSeasonRenewal-Requests (Mail-Link in zwei Tabs)
+    // passieren sonst beide den SELECT-Idempotenz-Check und erzeugen zwei
+    // aktive Clones inkl. Rules → doppelte Beiträge die ganze Saison.
+    clonedFromUniqueIdx: uniqueIndex("pledges_cloned_from_unique_idx")
+      .on(t.clonedFromPledgeId)
+      .where(sql`${t.clonedFromPledgeId} IS NOT NULL`)
   })
 );
 

@@ -364,6 +364,28 @@ describe("clonePledgeForNextSeason", () => {
     expect(rowA.from).toBe(seeded.pledgeId);
   });
 
+  it("Auflage 1: Unique-Index verhindert zwei Clones derselben Original-Pledge (Race-Schutz)", async () => {
+    const seeded = await seedSponsorPledge({ endsAtOffsetDays: 10 });
+    const clone = await clonePledgeForNextSeason(seeded.pledgeId, "2627");
+
+    // Direkter Insert simuliert den parallelen Race-Verlierer: der partielle
+    // Unique-Index auf cloned_from_pledge_id muss ihn abweisen.
+    await expect(
+      db.insert(pledges).values({
+        sponsorId: seeded.sponsorId,
+        teamId: seeded.teamId,
+        status: "active",
+        startsAt: new Date(),
+        endsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        clonedFromPledgeId: seeded.pledgeId
+      })
+    ).rejects.toThrow();
+
+    // Der Clone-Aufruf selbst bleibt idempotent.
+    const again = await clonePledgeForNextSeason(seeded.pledgeId, "2627");
+    expect(again.pledgeId).toBe(clone.pledgeId);
+  });
+
   it("kopiert Rules inkl. capCents/capPeriod", async () => {
     const seed = await seedSponsorPledge({
       endsAtOffsetDays: 10,

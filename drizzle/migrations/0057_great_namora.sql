@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "pledges_cloned_from_unique_idx" ON "pledges" USING btree ("cloned_from_pledge_id") WHERE "pledges"."cloned_from_pledge_id" IS NOT NULL;

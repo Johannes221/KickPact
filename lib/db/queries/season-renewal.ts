@@ -10,6 +10,7 @@ import {
   sentNotifications
 } from "@/lib/db/schema";
 import { sponsorLabelSql } from "./sponsor-label";
+import { isUniqueViolation } from "@/lib/db/errors";
 
 /**
  * Plan 3 Teil 2 — Saison-Renewal Queries.
@@ -194,6 +195,41 @@ export async function clonePledgeForNextSeason(
     /** Enddatum der neuen Pledge. Default: startsAt + 1 Jahr. */
     endsAt?: Date;
   } = {}
+): Promise<ClonedPledge> {
+  try {
+    return await runCloneTransaction(pledgeId, nextSaison, options);
+  } catch (err) {
+    // Review-Auflage 1 (2026-06-12): Zwei parallele Renewal-Requests können
+    // beide den SELECT-Idempotenz-Check passieren; der Unique-Index
+    // pledges_cloned_from_unique_idx lässt nur einen Insert durch — der
+    // Verlierer liefert den Clone des Gewinners (idempotentes Ergebnis).
+    if (isUniqueViolation(err)) {
+      const [existing] = await db
+        .select({ id: pledges.id, teamId: pledges.teamId })
+        .from(pledges)
+        .where(eq(pledges.clonedFromPledgeId, pledgeId))
+        .limit(1);
+      if (existing) {
+        const rules = await db
+          .select({ id: pledgeRules.id })
+          .from(pledgeRules)
+          .where(eq(pledgeRules.pledgeId, existing.id));
+        return {
+          pledgeId: existing.id,
+          pledgeRulesCount: rules.length,
+          targetTeamId: existing.teamId,
+          targetSaison: nextSaison
+        };
+      }
+    }
+    throw err;
+  }
+}
+
+async function runCloneTransaction(
+  pledgeId: string,
+  nextSaison: string,
+  options: { startsAt?: Date; endsAt?: Date }
 ): Promise<ClonedPledge> {
   return db.transaction(async (tx) => {
     const [original] = await tx
