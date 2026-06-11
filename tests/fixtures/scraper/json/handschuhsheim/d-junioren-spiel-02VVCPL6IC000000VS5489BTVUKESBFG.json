@@ -3,12 +3,12 @@
   "heim": "TSV Handschuhsheim",
   "gast": "VfB 1914 Leimen",
   "ergebnis": {
-    "heim": 0,
-    "gast": 0
+    "heim": 2,
+    "gast": 6
   },
   "halbzeit": {
-    "heim": 0,
-    "gast": 0
+    "heim": 1,
+    "gast": 3
   },
   "events": []
 }

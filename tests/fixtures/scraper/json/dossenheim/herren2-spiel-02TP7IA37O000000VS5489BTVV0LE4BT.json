@@ -1,0 +1,146 @@
+{
+  "spielId": "02TP7IA37O000000VS5489BTVV0LE4BT",
+  "heim": "FC Sportfreunde 1910 Dossenheim 2",
+  "gast": "SpG ASC Neuenheim 3/ DJK Handschuhsheim 1",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "0273RONGQ4000000VS541L4GVT1G5MGB",
+        "name": "Marian Seidl (DJK Rot-Weiß Handschuhsheim) Spieler"
+      },
+      "raus": {
+        "id": "02ULHDDJQS000000VS5489C2VSPCU72P",
+        "name": "Joseph Cornick"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "0305EL7ISC000000VS5489C1VT52O25E",
+        "name": "Stephen Andrew Scharfenberg III"
+      },
+      "raus": {
+        "id": "028AKSQVOO000000VS5489B6VTSKHL86",
+        "name": "Hamza Abdullah"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAUJU2K000000VV0AG85VVUH1CIQU",
+        "name": "Max Späth"
+      },
+      "raus": {
+        "id": "01I8HUBA4S000000VV0AG80NVTFSKJQA",
+        "name": "Karim Meddeb"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 56,
+      "side": "gast",
+      "rein": {
+        "id": "02JGD33EK8000000VUM1DNPBVU3TMB8R",
+        "name": "Batuhan Albayrak (DJK Rot-Weiß Handschuhsheim) Spieler"
+      },
+      "raus": {
+        "id": "012EFPUFJG000000VV0AG811VT0ERRLN",
+        "name": "Sarwar Mustafa"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 56,
+      "side": "heim",
+      "rein": {
+        "id": "01TSHTCMP8000000VS541L4FVT6BSJ0N",
+        "name": "Alexander Wingelstern (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "02FCONB7OK000000VUM1DNOTVSIG8NIT",
+        "name": "Paul Kauczor (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 56,
+      "side": "gast",
+      "spielerId": "00Q5QIHKM8000000VV0AG85VVV05E0NJ",
+      "spielerName": "Leo Tappe"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 62,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAVVUN8000000VV0AG85VVUH1CIQU",
+        "name": "Kerim Keskin"
+      },
+      "raus": {
+        "id": "02G211G8JC000000VUM1DNO6VVE4M9HV",
+        "name": "Furkan Keskin (DJK Rot-Weiß Handschuhsheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 66,
+      "side": "gast",
+      "spielerId": "00NKAVVUN8000000VV0AG85VVUH1CIQU",
+      "spielerName": "Kerim Keskin"
+    },
+    {
+      "typ": "TOR",
+      "minute": 78,
+      "side": "heim",
+      "spielerId": "00NKAUJU2K000000VV0AG85VVUH1CIQU",
+      "spielerName": "Max Späth"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 82,
+      "side": "gast",
+      "rein": {
+        "id": "01NL60ICOK000000VS541L4KVTFTL3VO",
+        "name": "Jona Grosser (DJK Rot-Weiß Handschuhsheim) Spieler"
+      },
+      "raus": {
+        "id": "00NKAVVUN8000000VV0AG85VVUH1CIQU",
+        "name": "Kerim Keskin"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 87,
+      "side": "heim",
+      "spielerId": "0305EL7ISC000000VS5489C1VT52O25E",
+      "spielerName": "Stephen Andrew Scharfenberg III"
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "gast",
+      "spielerId": "016KLQSGF4000000VV0AG811VVE4JO18",
+      "spielerName": "Vito Aberham"
+    }
+  ]
+}

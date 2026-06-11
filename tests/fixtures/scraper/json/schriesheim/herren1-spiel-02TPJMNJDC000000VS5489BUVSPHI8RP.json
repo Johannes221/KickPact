@@ -1,0 +1,160 @@
+{
+  "spielId": "02TPJMNJDC000000VS5489BUVSPHI8RP",
+  "heim": "FV Leutershausen",
+  "gast": "SV Schriesheim",
+  "ergebnis": {
+    "heim": 1,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 18,
+      "side": "gast",
+      "spielerId": "01RC57JK08000000VS548984VS0BET8D",
+      "spielerName": "Nidal Abbas"
+    },
+    {
+      "typ": "TOR",
+      "minute": 47,
+      "side": "heim",
+      "spielerId": "01B21IV438000000VV0AG811VVP7672N",
+      "spielerName": "Lars Thomas"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 54,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAUJU1K000000VV0AG85VVUH1CIQU",
+        "name": "Maurice Körbel"
+      },
+      "raus": {
+        "id": "00NKB0G29C000000VV0AG85VVUH1CIQU",
+        "name": "Steffen Mechler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 63,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAUJH48000000VV0AG85VVUH1CIQU",
+        "name": "Fabian Braun"
+      },
+      "raus": {
+        "id": "01RHK6F2DC000000VS541L4GVVU8CVVT",
+        "name": "Alexander Jeremic (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 63,
+      "side": "gast",
+      "rein": {
+        "id": "01V5E87Q6C000000VS541L4JVVN72IEO",
+        "name": "Nick Dellbrügge (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "01RC57JK08000000VS548984VS0BET8D",
+        "name": "Nidal Abbas"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 68,
+      "side": "gast",
+      "spielerId": "00NKB059E8000000VV0AG85VVUH1CIQU",
+      "spielerName": "Simon Plewa"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 72,
+      "side": "heim",
+      "rein": {
+        "id": "023NLM968C000000VS541L4GVT98S9T0",
+        "name": "Lukas Kirsch (FV Leutershausen) Spieler"
+      },
+      "raus": {
+        "id": "01IAC78L8K000000VV0AG80NVUIG5TR1",
+        "name": "Jan-Arne Kiehne"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 76,
+      "side": "heim",
+      "rein": {
+        "id": "02TNNDRCCS000000VUM1D57DVS19EAQ7",
+        "name": "Gianluca Plantera (FV Leutershausen) Spieler"
+      },
+      "raus": {
+        "id": "01A8T7IITS000000VV0AG811VUFSQOJA",
+        "name": "Eric Behrendt"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 76,
+      "side": "heim",
+      "rein": {
+        "id": "02G4EC746S000000VUM1DNP7VVS4S1RN",
+        "name": "Nando Lenz (FV Leutershausen) Spieler"
+      },
+      "raus": {
+        "id": "00NKB19PG4000000VV0AG85VVUH1CIQU",
+        "name": "Moritz Böhler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 78,
+      "side": "gast",
+      "spielerId": "023RDFK0VC000000VS54898FVUD9HD9D",
+      "spielerName": "Ruben Simon Schwertner"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 80,
+      "side": "gast",
+      "rein": {
+        "id": "00NKATUNF8000000VV0AG85VVUH1CIQU",
+        "name": "Jan Höfer"
+      },
+      "raus": {
+        "id": "022PKAHRV8000000VS541L4IVT85DN1N",
+        "name": "Lennart Petzoldt (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 85,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAVD3JO000000VV0AG85VVUH1CIQU",
+        "name": "Daniel Gramlich"
+      },
+      "raus": {
+        "id": "021NVFOU98000000VS541L4GVS1ICQNS",
+        "name": "Sven Richard Richter (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 85,
+      "side": "heim",
+      "rein": {
+        "id": "02G4DAGHLS000000VUM1DNP7VVS4S1RN",
+        "name": "Dominik Rieger (FV Leutershausen) Spieler"
+      },
+      "raus": {
+        "id": "00NKB0RRN4000000VV0AG85VVUH1CIQU",
+        "name": "Marc Gellert"
+      }
+    }
+  ]
+}

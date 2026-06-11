@@ -1,0 +1,156 @@
+{
+  "spielId": "02TPICGD5S000000VS5489BUVSPHI8RP",
+  "heim": "SSV Vogelstang 2",
+  "gast": "SV Schriesheim 2",
+  "ergebnis": {
+    "heim": 1,
+    "gast": 5
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 39,
+      "side": "heim",
+      "rein": {
+        "id": "0306DGC2KG000000VS5489C2VSNIS8GP",
+        "name": "Vasile Mihai"
+      },
+      "raus": {
+        "id": "02BN2U92U4000000VS5489B5VU8L8AAQ",
+        "name": "Antony Sösser"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "02HD8L4FPS000000VS5489B5VVA6KOKB",
+        "name": "Alessandro Heidenreich"
+      },
+      "raus": {
+        "id": "019P67VGUK000000VV0AG811VTVPDPA3",
+        "name": "Oliver Brian Ndongmo"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "01HO4KRQ08000000VV0AG811VULQLSU4",
+        "name": "Simon Fernando Renard"
+      },
+      "raus": {
+        "id": "01CJB1SL18000000VV0AG80NVS4LJG62",
+        "name": "Samuel Rudolf"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "01HQARAV0K000000VV0AG80NVSPKCFQ1",
+        "name": "Finn Knies"
+      },
+      "raus": {
+        "id": "00NKAVDAM0000000VV0AG85VVUH1CIQU",
+        "name": "Dennis Pagonas"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast"
+    },
+    {
+      "typ": "TOR",
+      "minute": 55,
+      "side": "gast",
+      "spielerId": "00S6LTKTDS000000VV0AG80NVTI1GQJD",
+      "spielerName": "Adriano Oliveira Dos Santos"
+    },
+    {
+      "typ": "TOR",
+      "minute": 56,
+      "side": "gast",
+      "spielerId": "00S6LTKTDS000000VV0AG80NVTI1GQJD",
+      "spielerName": "Adriano Oliveira Dos Santos"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 59,
+      "side": "gast",
+      "rein": {
+        "id": "02PSAU2M88000000VS5489B8VS8PL525",
+        "name": "Nico Joel Hebbel"
+      },
+      "raus": {
+        "id": "00S6LTKTDS000000VV0AG80NVTI1GQJD",
+        "name": "Adriano Oliveira Dos Santos"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "gast",
+      "rein": {
+        "id": "01IAC77U4K000000VV0AG811VV3U2VDU",
+        "name": "Leif-Erik Kiehne"
+      },
+      "raus": {
+        "id": "01I8G0LIN0000000VV0AG80NVTFSKJQA",
+        "name": "Nicolas Röger"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 78,
+      "side": "gast",
+      "spielerId": "02U5OCSOMS000000VS5489C1VUJOJJDL",
+      "spielerName": "Kim-Patrick Michael Hebbel"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 79,
+      "side": "heim",
+      "rein": {
+        "id": "02F4E9DMR0000000VUM1DNPMVTA46ILC",
+        "name": "Hendrik Przybilla (SSV Vogelstang) Spieler"
+      },
+      "raus": {
+        "id": "02JDPN1OGK000000VUM1DNORVS5NB6V1",
+        "name": "Demian Schimmer (SSV Vogelstang) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 81,
+      "side": "heim"
+    },
+    {
+      "typ": "TOR",
+      "minute": 81,
+      "side": "gast",
+      "spielerId": "02CAPE2CG0000000VUM1DNPTVSCSLFVG",
+      "spielerName": "Simon Manuel Ammann (SV Schriesheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "gast",
+      "spielerId": "02CAPE2CG0000000VUM1DNPTVSCSLFVG",
+      "spielerName": "Simon Manuel Ammann (SV Schriesheim) Spieler"
+    }
+  ]
+}

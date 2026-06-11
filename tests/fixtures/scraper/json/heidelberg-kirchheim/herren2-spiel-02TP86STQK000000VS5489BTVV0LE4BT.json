@@ -1,0 +1,162 @@
+{
+  "spielId": "02TP86STQK000000VS5489BTVV0LE4BT",
+  "heim": "Heidelberger SC",
+  "gast": "SG HD-Kirchheim 2",
+  "ergebnis": {
+    "heim": 6,
+    "gast": 2
+  },
+  "halbzeit": {
+    "heim": 4,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 15,
+      "side": "heim",
+      "spielerId": "00SIIF3U7K000000VV0AG80NVSKE5IQ4",
+      "spielerName": "Cyprian Fischer"
+    },
+    {
+      "typ": "TOR",
+      "minute": 19,
+      "side": "gast",
+      "spielerId": "02IKUGH1PC000000VS5489B5VT8KI14O",
+      "spielerName": "Carlos Alfredo Ocanto Dávila"
+    },
+    {
+      "typ": "TOR",
+      "minute": 28,
+      "side": "heim",
+      "spielerId": "025A4J4V3G000000VS541L4JVVCNFPDC",
+      "spielerName": "Philipp Hörmann (Heidelberger SC) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 33,
+      "side": "heim",
+      "spielerId": "00R9QN8PKS000000VV0AG85VVUJPKL05",
+      "spielerName": "Jeremias Reisert"
+    },
+    {
+      "typ": "TOR",
+      "minute": 42,
+      "side": "heim",
+      "spielerId": "01VM24H6C0000000VS541L4IVV3JJ4O5",
+      "spielerName": "Hendrik Fantini (Heidelberger SC) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 61,
+      "side": "heim",
+      "rein": {
+        "id": "01P2NV0BUS000000VV0AG80NVUEP8L8Q",
+        "name": "David Jehle"
+      },
+      "raus": {
+        "id": "00SIIF3U7K000000VV0AG80NVSKE5IQ4",
+        "name": "Cyprian Fischer"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 61,
+      "side": "heim",
+      "rein": {
+        "id": "01OMOIQ6SC000000VV0AG811VTG9NS6S",
+        "name": "Marius Uhing"
+      },
+      "raus": {
+        "id": "01V7QUKOI4000000VS541L4GVSDVDSB7",
+        "name": "Salvador Meyer Reinozo (Heidelberger SC) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 61,
+      "side": "heim",
+      "rein": {
+        "id": "00MC6Q3AIK000000VV0AG85VVSMHI0R7",
+        "name": "Malte Kippenhahn"
+      },
+      "raus": {
+        "id": "00R9QN8PKS000000VV0AG85VVUJPKL05",
+        "name": "Jeremias Reisert"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 61,
+      "side": "gast",
+      "rein": {
+        "id": "02JNJISEAS000000VUM1DNP9VVICVIFE",
+        "name": "Fabio Fontana (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "00NKB1AV24000000VV0AG85VVUH1CIQU",
+        "name": "Niklas Schmitt"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 67,
+      "side": "gast",
+      "rein": {
+        "id": "02QI8DH5G4000000VUM1D50KVS64VIIP",
+        "name": "Ben Cosmo Wagner (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "02IKUGH1PC000000VS5489B5VT8KI14O",
+        "name": "Carlos Alfredo Ocanto Dávila"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 75,
+      "side": "heim",
+      "spielerId": "01OMOIQ6SC000000VV0AG811VTG9NS6S",
+      "spielerName": "Marius Uhing"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 81,
+      "side": "heim",
+      "rein": {
+        "id": "0288IIPL4G000000VS541L4JVT0TU094",
+        "name": "Levi Gudehus (Heidelberger SC) Spieler"
+      },
+      "raus": {
+        "id": "025A4J4V3G000000VS541L4JVVCNFPDC",
+        "name": "Philipp Hörmann (Heidelberger SC) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 81,
+      "side": "heim",
+      "rein": {
+        "id": "026MKJJUQG000000VS541L4HVS1HD5CH",
+        "name": "Robert Kincses (Heidelberger SC) Spieler"
+      },
+      "raus": {
+        "id": "01VM24H6C0000000VS541L4IVV3JJ4O5",
+        "name": "Hendrik Fantini (Heidelberger SC) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 86,
+      "side": "heim",
+      "spielerId": "01P2NV0BUS000000VV0AG80NVUEP8L8Q",
+      "spielerName": "David Jehle"
+    },
+    {
+      "typ": "TOR",
+      "minute": 87,
+      "side": "gast",
+      "spielerId": "02K1P0PT1S000000VUM1DNOPVTQMMI2D",
+      "spielerName": "Kevin Kalabic (SG HD-Kirchheim) Spieler"
+    }
+  ]
+}

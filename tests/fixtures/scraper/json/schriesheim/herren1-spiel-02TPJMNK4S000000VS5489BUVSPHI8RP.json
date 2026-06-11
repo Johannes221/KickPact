@@ -1,0 +1,141 @@
+{
+  "spielId": "02TPJMNK4S000000VS5489BUVSPHI8RP",
+  "heim": "SV Schriesheim",
+  "gast": "TSV Amicitia Viernheim 2",
+  "ergebnis": {
+    "heim": 4,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 2,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 10,
+      "side": "gast",
+      "spielerId": "00NKAU5058000000VV0AG85VVUH1CIQU",
+      "spielerName": "Timo Endres"
+    },
+    {
+      "typ": "TOR",
+      "minute": 16,
+      "side": "heim",
+      "spielerId": "021NVFOU98000000VS541L4GVS1ICQNS",
+      "spielerName": "Sven Richard Richter (SV Schriesheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 35,
+      "side": "heim",
+      "spielerId": "023RDFK0VC000000VS54898FVUD9HD9D",
+      "spielerName": "Ruben Simon Schwertner"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 61,
+      "side": "gast",
+      "rein": {
+        "id": "01975ISNAK000000VV0AG811VVU9SV1S",
+        "name": "Debakong Tchoumba Tchana"
+      },
+      "raus": {
+        "id": "026QNMIUR0000000VS541L4FVT853OQP",
+        "name": "Nico Pretschker (TSV Amicitia Viernheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 61,
+      "side": "heim",
+      "spielerId": "02NH9PFJK8000000VUM1DNRAVVG52THP",
+      "spielerName": "Jaylen Follo (SV Schriesheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 68,
+      "side": "gast",
+      "rein": {
+        "id": "01Q0LKUE88000000VS541L4HVV1LF48K",
+        "name": "Sinan Bajrami (TSV Amicitia Viernheim) Spieler"
+      },
+      "raus": {
+        "id": "02R7TF0TRK000000VUM1D55FVSHJBMFR",
+        "name": "Lukas Bleier (TSV Amicitia Viernheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "heim",
+      "rein": {
+        "id": "01V5E87Q6C000000VS541L4JVVN72IEO",
+        "name": "Nick Dellbrügge (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "016P8UUHUG000000VV0AG80NVS7R7KB6",
+        "name": "Donat Tahiri"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 73,
+      "side": "heim",
+      "rein": {
+        "id": "00NKB0G29C000000VV0AG85VVUH1CIQU",
+        "name": "Steffen Mechler"
+      },
+      "raus": {
+        "id": "00NKB1BBI0000000VV0AG85VVUH1CIQU",
+        "name": "Julian Zschippig"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 77,
+      "side": "heim",
+      "rein": {
+        "id": "01PNMABVRG000000VS541L4KVV7VC7M8",
+        "name": "Sebastian Bock (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "022PKAHRV8000000VS541L4IVT85DN1N",
+        "name": "Lennart Petzoldt (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 80,
+      "side": "heim",
+      "spielerId": "00NKB059E8000000VV0AG85VVUH1CIQU",
+      "spielerName": "Simon Plewa"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 81,
+      "side": "heim",
+      "rein": {
+        "id": "00NKATUNF8000000VV0AG85VVUH1CIQU",
+        "name": "Jan Höfer"
+      },
+      "raus": {
+        "id": "00V3A75228000000VV0AG80NVVS3NJQC",
+        "name": "Jean-Luc Batt"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 85,
+      "side": "heim",
+      "rein": {
+        "id": "00NKB047AG000000VV0AG85VVUH1CIQU",
+        "name": "Nabil Djallouli"
+      },
+      "raus": {
+        "id": "023RDFK0VC000000VS54898FVUD9HD9D",
+        "name": "Ruben Simon Schwertner"
+      }
+    }
+  ]
+}

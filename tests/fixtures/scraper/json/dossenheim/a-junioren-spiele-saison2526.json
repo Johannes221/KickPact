@@ -1,162 +1,158 @@
 [
   {
-    "spielId": "02V4O3F6QO000000VS5489BUVSJ2DN3Q",
-    "slug": "vfb-rauenberg-jsg-dossenheim-handschuhsheim-wieblingen",
-    "datum": "20.05.26",
-    "heim": "VfB Rauenberg",
-    "gast": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
+    "spielId": "02V4O3F620000000VS5489BUVSJ2DN3Q",
+    "slug": "jsg-dossenheim-handschuhsheim-wieblingen-tsg-rohrbach",
+    "datum": "27.06.2026",
+    "heim": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
+    "gast": "TSG Rohrbach",
+    "ergebnis": "",
+    "vergangen": false,
+    "status": "scheduled",
+    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-tsg-rohrbach/-/spiel/02V4O3F620000000VS5489BUVSJ2DN3Q",
+    "league": null
+  },
+  {
+    "spielId": "02V4O3F63O000000VS5489BUVSJ2DN3Q",
+    "slug": "jsg-mauer-lobbach-meckesheim-moenchszell-jsg-dossenheim-handschuhsheim-wieblingen",
+    "datum": "20.06.2026",
+    "heim": "JSG Mauer/Lobbach/Meckesheim-Mönchszell",
+    "gast": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
+    "ergebnis": "",
+    "vergangen": false,
+    "status": "scheduled",
+    "url": "https://www.fussball.de/spiel/jsg-mauer-lobbach-meckesheim-moenchszell-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F63O000000VS5489BUVSJ2DN3Q",
+    "league": null
+  },
+  {
+    "spielId": "02V4O3F6BC000000VS5489BUVSJ2DN3Q",
+    "slug": "jsg-stleon-rot-jsg-dossenheim-handschuhsheim-wieblingen",
+    "datum": "17.06.2026",
+    "heim": "JSG St.Leon-Rot",
+    "gast": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
+    "ergebnis": "",
+    "vergangen": false,
+    "status": "scheduled",
+    "url": "https://www.fussball.de/spiel/jsg-stleon-rot-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F6BC000000VS5489BUVSJ2DN3Q",
+    "league": null
+  },
+  {
+    "spielId": "02V4O3F6L8000000VS5489BUVSJ2DN3Q",
+    "slug": "jsg-dossenheim-handschuhsheim-wieblingen-fc-1986-sandhausen",
+    "datum": "10.06.2026",
+    "heim": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
+    "gast": "FC 1986 Sandhausen",
+    "ergebnis": "",
+    "vergangen": false,
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-fc-1986-sandhausen/-/spiel/02V4O3F6L8000000VS5489BUVSJ2DN3Q",
+    "league": null
+  },
+  {
+    "spielId": "02V4O3F76S000000VS5489BUVSJ2DN3Q",
+    "slug": "jsg-dossenheim-handschuhsheim-wieblingen-vfb-1914-leimen",
+    "datum": "07.06.2026",
+    "heim": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
+    "gast": "VfB 1914 Leimen",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/vfb-rauenberg-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F6QO000000VS5489BUVSJ2DN3Q"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-vfb-1914-leimen/-/spiel/02V4O3F76S000000VS5489BUVSJ2DN3Q",
+    "league": null
+  },
+  {
+    "spielId": "02V4O3F6QO000000VS5489BUVSJ2DN3Q",
+    "slug": "vfb-rauenberg-jsg-dossenheim-handschuhsheim-wieblingen",
+    "datum": "20.05.2026",
+    "heim": "VfB Rauenberg",
+    "gast": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
+    "ergebnis": "",
+    "vergangen": true,
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/vfb-rauenberg-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F6QO000000VS5489BUVSJ2DN3Q",
+    "league": null
   },
   {
     "spielId": "02U52J4H48000000VS5489BTVV378D77",
     "slug": "eberbacher-sc-jsg-dossenheim-handschuhsheim-wieblingen",
-    "datum": "14.05.26",
+    "datum": "14.05.2026",
     "heim": "Eberbacher SC",
-    "gast": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
+    "gast": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/eberbacher-sc-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02U52J4H48000000VS5489BTVV378D77"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/eberbacher-sc-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02U52J4H48000000VS5489BTVV378D77",
+    "league": null
   },
   {
     "spielId": "02V4O3F7AK000000VS5489BUVSJ2DN3Q",
     "slug": "eberbacher-sc-jsg-dossenheim-handschuhsheim-wieblingen",
-    "datum": "09.05.26",
+    "datum": "09.05.2026",
     "heim": "Eberbacher SC",
-    "gast": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
+    "gast": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/eberbacher-sc-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F7AK000000VS5489BUVSJ2DN3Q"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/eberbacher-sc-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F7AK000000VS5489BUVSJ2DN3Q",
+    "league": null
   },
   {
     "spielId": "02V4O3F4LG000000VS5489BUVSJ2DN3Q",
     "slug": "tsg-rohrbach-jsg-dossenheim-handschuhsheim-wieblingen",
-    "datum": "18.04.26",
+    "datum": "18.04.2026",
     "heim": "TSG Rohrbach",
-    "gast": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
+    "gast": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/tsg-rohrbach-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F4LG000000VS5489BUVSJ2DN3Q"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/tsg-rohrbach-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F4LG000000VS5489BUVSJ2DN3Q",
+    "league": null
   },
   {
     "spielId": "02U52J7LUK000000VS5489BTVV378D77",
     "slug": "jsg-mauer-lobbach-meckesheim-moenchszell-jsg-dossenheim-handschuhsheim-wieblingen",
-    "datum": "15.04.26",
-    "heim": "JSG Mauer/​Lobbach/​Meckesheim-Mönchszell",
-    "gast": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
+    "datum": "15.04.2026",
+    "heim": "JSG Mauer/Lobbach/Meckesheim-Mönchszell",
+    "gast": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-mauer-lobbach-meckesheim-moenchszell-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02U52J7LUK000000VS5489BTVV378D77"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/jsg-mauer-lobbach-meckesheim-moenchszell-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02U52J7LUK000000VS5489BTVV378D77",
+    "league": null
   },
   {
     "spielId": "02V4O3F4MO000000VS5489BUVSJ2DN3Q",
     "slug": "jsg-dossenheim-handschuhsheim-wieblingen-jsg-mauer-lobbach-meckesheim-moenchszell",
-    "datum": "28.03.26",
-    "heim": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
-    "gast": "JSG Mauer/​Lobbach/​Meckesheim-Mönchszell",
+    "datum": "28.03.2026",
+    "heim": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
+    "gast": "JSG Mauer/Lobbach/Meckesheim-Mönchszell",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-jsg-mauer-lobbach-meckesheim-moenchszell/-/spiel/02V4O3F4MO000000VS5489BUVSJ2DN3Q"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-jsg-mauer-lobbach-meckesheim-moenchszell/-/spiel/02V4O3F4MO000000VS5489BUVSJ2DN3Q",
+    "league": null
   },
   {
     "spielId": "02V4O3F4T4000000VS5489BUVSJ2DN3Q",
     "slug": "jsg-dossenheim-handschuhsheim-wieblingen-jsg-stleon-rot",
-    "datum": "21.03.26",
-    "heim": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
+    "datum": "21.03.2026",
+    "heim": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
     "gast": "JSG St.Leon-Rot",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-jsg-stleon-rot/-/spiel/02V4O3F4T4000000VS5489BUVSJ2DN3Q"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-jsg-stleon-rot/-/spiel/02V4O3F4T4000000VS5489BUVSJ2DN3Q",
+    "league": null
   },
   {
     "spielId": "02V4O3F558000000VS5489BUVSJ2DN3Q",
     "slug": "fc-1986-sandhausen-jsg-dossenheim-handschuhsheim-wieblingen",
-    "datum": "14.03.26",
+    "datum": "14.03.2026",
     "heim": "FC 1986 Sandhausen",
-    "gast": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
+    "gast": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-1986-sandhausen-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F558000000VS5489BUVSJ2DN3Q"
-  },
-  {
-    "spielId": "02V4O3F5IS000000VS5489BUVSJ2DN3Q",
-    "slug": "vfb-1914-leimen-jsg-dossenheim-handschuhsheim-wieblingen",
-    "datum": "11.03.26",
-    "heim": "VfB 1914 Leimen",
-    "gast": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/vfb-1914-leimen-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F5IS000000VS5489BUVSJ2DN3Q"
-  },
-  {
-    "spielId": "02V4O3F59C000000VS5489BUVSJ2DN3Q",
-    "slug": "jsg-dossenheim-handschuhsheim-wieblingen-vfb-rauenberg",
-    "datum": "07.03.26",
-    "heim": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
-    "gast": "VfB Rauenberg",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-vfb-rauenberg/-/spiel/02V4O3F59C000000VS5489BUVSJ2DN3Q"
-  },
-  {
-    "spielId": "02U52FAAN8000000VS5489BTVV378D77",
-    "slug": "jsg-muehlhausen-angelbachtal-rettigheim-jsg-dossenheim-handschuhsheim-wieblingen",
-    "datum": "12.11.2025",
-    "heim": "Mi, 12.11.25 | 19:30",
-    "gast": "Pokalspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-muehlhausen-angelbachtal-rettigheim-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02U52FAAN8000000VS5489BTVV378D77"
-  },
-  {
-    "spielId": "02U0B10FNK000000VS5489BTVUFLAKGJ",
-    "slug": "jsg-dossenheim-handschuhsheim-wieblingen-jsg-neckarsteinach-dilsberg-neckargemuend",
-    "datum": "25.10.2025",
-    "heim": "Sa, 25.10.25 | 17:00",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-jsg-neckarsteinach-dilsberg-neckargemuend/-/spiel/02U0B10FNK000000VS5489BTVUFLAKGJ"
-  },
-  {
-    "spielId": "02U0B10FR0000000VS5489BTVUFLAKGJ",
-    "slug": "jsg-dossenheim-handschuhsheim-wieblingen-fc-1986-sandhausen",
-    "datum": "18.10.2025",
-    "heim": "Sa, 18.10.25 | 15:00",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-fc-1986-sandhausen/-/spiel/02U0B10FR0000000VS5489BTVUFLAKGJ"
-  },
-  {
-    "spielId": "02U52F6TMG000000VS5489BTVV378D77",
-    "slug": "tsg-rohrbach-jsg-dossenheim-handschuhsheim-wieblingen",
-    "datum": "15.10.2025",
-    "heim": "Mi, 15.10.25 | 19:30",
-    "gast": "Pokalspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/tsg-rohrbach-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02U52F6TMG000000VS5489BTVV378D77"
-  },
-  {
-    "spielId": "02U52EQQCK000000VS5489BTVV378D77",
-    "slug": "fc-1986-sandhausen-jsg-dossenheim-handschuhsheim-wieblingen",
-    "datum": "24.09.2025",
-    "heim": "Mi, 24.09.25 | 19:00",
-    "gast": "Pokalspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-1986-sandhausen-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02U52EQQCK000000VS5489BTVV378D77"
-  },
-  {
-    "spielId": "02TNI9GEI4000000VS5489BUVSSD35NB",
-    "slug": "jsg-dossenheim-handschuhsheim-wieblingen-jsg-sv-rohrhof-asv-feudenheim",
-    "datum": "26.07.2025",
-    "heim": "Sa, 26.07.25 | 13:00",
-    "gast": "Freundschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-jsg-sv-rohrhof-asv-feudenheim/-/spiel/02TNI9GEI4000000VS5489BUVSSD35NB"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/fc-1986-sandhausen-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F558000000VS5489BUVSJ2DN3Q",
+    "league": null
   }
 ]

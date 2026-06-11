@@ -1,0 +1,130 @@
+{
+  "spielId": "0313NEHF64000000VS5489BUVSBBVPEU",
+  "heim": "JSG Dossenheim/ Handschuhsheim",
+  "gast": "SV Sandhausen",
+  "ergebnis": {
+    "heim": 0,
+    "gast": 14
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 7
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 3,
+      "side": "gast",
+      "spielerId": "02BF2ELF0S000000VS5489B5VSPG8N2A",
+      "spielerName": "Aris Ibrahimi"
+    },
+    {
+      "typ": "TOR",
+      "minute": 16,
+      "side": "gast",
+      "spielerId": "02BF2ELF0S000000VS5489B5VSPG8N2A",
+      "spielerName": "Aris Ibrahimi"
+    },
+    {
+      "typ": "TOR",
+      "minute": 20,
+      "side": "gast",
+      "spielerId": "02BF2ELF0S000000VS5489B5VSPG8N2A",
+      "spielerName": "Aris Ibrahimi"
+    },
+    {
+      "typ": "TOR",
+      "minute": 25,
+      "side": "gast",
+      "spielerId": "0303ULUIIC000000VUM1D53NVU8V4DIB",
+      "spielerName": "Jonas Schrödersecker (SV Sandhausen) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 30,
+      "side": "gast",
+      "spielerId": "02BF2ELF0S000000VS5489B5VSPG8N2A",
+      "spielerName": "Aris Ibrahimi"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 35,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 35,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 35,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 35,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 35,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 35,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 35,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 35,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 35,
+      "side": "gast"
+    },
+    {
+      "typ": "TOR",
+      "minute": 35,
+      "side": "gast",
+      "spielerId": "02BF2ELF0S000000VS5489B5VSPG8N2A",
+      "spielerName": "Aris Ibrahimi"
+    },
+    {
+      "typ": "TOR",
+      "minute": 40,
+      "side": "gast",
+      "spielerId": "028HEHT9QK000000VS5489B5VS0HM3DV",
+      "spielerName": "David Bilusic"
+    },
+    {
+      "typ": "TOR",
+      "minute": 62,
+      "side": "gast",
+      "spielerId": "02BNQVOL30000000VS5489B5VU8L8AAQ",
+      "spielerName": "Paul Elsasser"
+    },
+    {
+      "typ": "TOR",
+      "minute": 65,
+      "side": "gast",
+      "spielerId": "02N5FPI91S000000VUM1DNQAVV9QUTQU",
+      "spielerName": "Ron-Christian Beraki-Brüstle (SV Sandhausen) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 70,
+      "side": "gast",
+      "spielerId": "02N5FPI91S000000VUM1DNQAVV9QUTQU",
+      "spielerName": "Ron-Christian Beraki-Brüstle (SV Sandhausen) Spieler"
+    }
+  ]
+}

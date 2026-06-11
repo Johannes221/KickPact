@@ -23,19 +23,6 @@
       "minute": 62,
       "side": "heim",
       "rein": {
-        "id": "02O3BRIQ78000000VUM1DNP9VVAVQIDD",
-        "name": "Janick Boger (FC Sportfr. Dossenheim) Spieler"
-      },
-      "raus": {
-        "id": "01GQ6H6DGC000000VV0AG80NVVDQRLBA",
-        "name": "Lars Schätzle"
-      }
-    },
-    {
-      "typ": "AUSWECHSLUNG",
-      "minute": 62,
-      "side": "heim",
-      "rein": {
         "id": "01UQTU76AO000000VS541L4HVS9ULU1H",
         "name": "Jonas Schober (FC Sportfr. Dossenheim) Spieler"
       },
@@ -46,15 +33,15 @@
     },
     {
       "typ": "AUSWECHSLUNG",
-      "minute": 69,
-      "side": "gast",
+      "minute": 62,
+      "side": "heim",
       "rein": {
-        "id": "00V3APRIDC000000VV0AG80NVVS3NJQC",
-        "name": "Benjamin Marx"
+        "id": "02O3BRIQ78000000VUM1DNP9VVAVQIDD",
+        "name": "Janick Boger (FC Sportfr. Dossenheim) Spieler"
       },
       "raus": {
-        "id": "01BADO8220000000VV0AG811VVM42SHD",
-        "name": "Jakob Schaller"
+        "id": "01GQ6H6DGC000000VV0AG80NVVDQRLBA",
+        "name": "Lars Schätzle"
       }
     },
     {
@@ -68,6 +55,19 @@
       "raus": {
         "id": "01ITN9G590000000VV0AG811VV0CBE3E",
         "name": "Abd Al Qayum Yaya"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "gast",
+      "rein": {
+        "id": "00V3APRIDC000000VV0AG80NVVS3NJQC",
+        "name": "Benjamin Marx"
+      },
+      "raus": {
+        "id": "01BADO8220000000VV0AG811VVM42SHD",
+        "name": "Jakob Schaller"
       }
     },
     {
@@ -114,7 +114,7 @@
       "minute": 85,
       "side": "heim",
       "spielerId": "02HNKEVTBG000000VUM1DNOGVTIIQK2E",
-      "spielerName": "Dennis Schnepf (FC Sportfr. Dossenheim) Spieler"
+      "spielerName": "Dennis Schnepf (FSG Riedrode) Spieler"
     },
     {
       "typ": "AUSWECHSLUNG",

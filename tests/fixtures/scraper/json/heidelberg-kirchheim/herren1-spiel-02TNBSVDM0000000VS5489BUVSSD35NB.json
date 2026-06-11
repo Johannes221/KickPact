@@ -35,14 +35,40 @@
     {
       "typ": "AUSWECHSLUNG",
       "minute": 60,
-      "side": "heim",
+      "side": "gast",
       "rein": {
-        "id": "02TMUAJI90000000VUM1D57DVUL92E27",
-        "name": "Benjamin Thurnher (FC Astoria Walldorf) Spieler"
+        "id": "026I2PJI3O000000VS541L4KVSEAAADN",
+        "name": "Luis Kietzmann (SG HD-Kirchheim) Spieler"
       },
       "raus": {
-        "id": "01EMGLCGGC000000VV0AG80NVVIPF5HD",
-        "name": "Gabriele Carlo Gianetta"
+        "id": "022834EFSO000000VS541L4HVUKTV0RV",
+        "name": "Marius Klein (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "gast",
+      "rein": {
+        "id": "01I3JKCT74000000VV0AG811VVSBGVMJ",
+        "name": "Timo Hartmann"
+      },
+      "raus": {
+        "id": "02J5C0TONK000000VUM1DNOIVUPC128C",
+        "name": "David Kiefer (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "heim",
+      "rein": {
+        "id": "02V372O340000000VUM1D582VVGEVFF7",
+        "name": "Tom Gebauer (FC Astoria Walldorf) Spieler"
+      },
+      "raus": {
+        "id": "02IQK1106G000000VUM1DNOPVS9NSHQP",
+        "name": "Bennet Schieber (FC Astoria Walldorf) Spieler"
       }
     },
     {
@@ -63,38 +89,12 @@
       "minute": 60,
       "side": "heim",
       "rein": {
-        "id": "02V372O340000000VUM1D582VVGEVFF7",
-        "name": "Tom Gebauer (FC Astoria Walldorf) Spieler"
+        "id": "02TMUAJI90000000VUM1D57DVUL92E27",
+        "name": "Benjamin Thurnher (FC Astoria Walldorf) Spieler"
       },
       "raus": {
-        "id": "02IQK1106G000000VUM1DNOPVS9NSHQP",
-        "name": "Bennet Schieber (FC Astoria Walldorf) Spieler"
-      }
-    },
-    {
-      "typ": "AUSWECHSLUNG",
-      "minute": 60,
-      "side": "gast",
-      "rein": {
-        "id": "01I3JKCT74000000VV0AG811VVSBGVMJ",
-        "name": "Timo Hartmann"
-      },
-      "raus": {
-        "id": "02J5C0TONK000000VUM1DNOIVUPC128C",
-        "name": "David Kiefer (SG HD-Kirchheim) Spieler"
-      }
-    },
-    {
-      "typ": "AUSWECHSLUNG",
-      "minute": 60,
-      "side": "gast",
-      "rein": {
-        "id": "026I2PJI3O000000VS541L4KVSEAAADN",
-        "name": "Luis Kietzmann (SG HD-Kirchheim) Spieler"
-      },
-      "raus": {
-        "id": "022834EFSO000000VS541L4HVUKTV0RV",
-        "name": "Marius Klein (SG HD-Kirchheim) Spieler"
+        "id": "01EMGLCGGC000000VV0AG80NVVIPF5HD",
+        "name": "Gabriele Carlo Gianetta"
       }
     },
     {

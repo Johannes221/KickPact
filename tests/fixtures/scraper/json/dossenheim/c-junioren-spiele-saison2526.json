@@ -1,202 +1,134 @@
 [
   {
-    "spielId": "02TS7VGR3G000000VS5489BTVTHCTAHT",
-    "slug": "tsg-1862-09-weinheim-2-jsg-dossenheim-handschuhsheim",
-    "datum": "16.05.26",
-    "heim": "TSG 1862/​09 Weinheim 2",
-    "gast": "JSG Dossenheim/​ Handschuhsheim",
+    "spielId": "02TS7VGQ6G000000VS5489BTVTHCTAHT",
+    "slug": "spvgg-wallstadt-jsg-dossenheim-handschuhsheim",
+    "datum": "13.06.2026",
+    "heim": "Spvgg Wallstadt",
+    "gast": "JSG Dossenheim/ Handschuhsheim",
+    "ergebnis": "",
+    "vergangen": false,
+    "status": "scheduled",
+    "url": "https://www.fussball.de/spiel/spvgg-wallstadt-jsg-dossenheim-handschuhsheim/-/spiel/02TS7VGQ6G000000VS5489BTVTHCTAHT",
+    "league": null
+  },
+  {
+    "spielId": "0313NEHF64000000VS5489BUVSBBVPEU",
+    "slug": "jsg-dossenheim-handschuhsheim-sv-sandhausen",
+    "datum": "09.06.2026",
+    "heim": "JSG Dossenheim/ Handschuhsheim",
+    "gast": "SV Sandhausen",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/tsg-1862-09-weinheim-2-jsg-dossenheim-handschuhsheim/-/spiel/02TS7VGR3G000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-sv-sandhausen/-/spiel/0313NEHF64000000VS5489BUVSBBVPEU",
+    "league": null
+  },
+  {
+    "spielId": "02TS7VGQVC000000VS5489BTVTHCTAHT",
+    "slug": "jsg-dossenheim-handschuhsheim-vfb-eppingen",
+    "datum": "06.06.2026",
+    "heim": "JSG Dossenheim/ Handschuhsheim",
+    "gast": "VFB Eppingen",
+    "ergebnis": "",
+    "vergangen": true,
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-vfb-eppingen/-/spiel/02TS7VGQVC000000VS5489BTVTHCTAHT",
+    "league": null
+  },
+  {
+    "spielId": "02TS7VGR3G000000VS5489BTVTHCTAHT",
+    "slug": "tsg-1862-09-weinheim-2-jsg-dossenheim-handschuhsheim",
+    "datum": "16.05.2026",
+    "heim": "TSG 1862/09 Weinheim 2",
+    "gast": "JSG Dossenheim/ Handschuhsheim",
+    "ergebnis": "",
+    "vergangen": true,
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/tsg-1862-09-weinheim-2-jsg-dossenheim-handschuhsheim/-/spiel/02TS7VGR3G000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "030IQBI2VK000000VS5489BUVVJ7KPKB",
     "slug": "fv-sprendlingen-fs-jsg-dossenheim-handschuhsheim",
-    "datum": "10.05.26",
+    "datum": "10.05.2026",
     "heim": "FV Sprendlingen (FS)",
-    "gast": "JSG Dossenheim/​ Handschuhsheim",
+    "gast": "JSG Dossenheim/ Handschuhsheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fv-sprendlingen-fs-jsg-dossenheim-handschuhsheim/-/spiel/030IQBI2VK000000VS5489BUVVJ7KPKB"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/fv-sprendlingen-fs-jsg-dossenheim-handschuhsheim/-/spiel/030IQBI2VK000000VS5489BUVVJ7KPKB",
+    "league": null
   },
   {
     "spielId": "02TS7VGS28000000VS5489BTVTHCTAHT",
     "slug": "jsg-dossenheim-handschuhsheim-tsg-hoffenheim-juniorinnen",
-    "datum": "02.05.26",
-    "heim": "JSG Dossenheim/​ Handschuhsheim",
+    "datum": "02.05.2026",
+    "heim": "JSG Dossenheim/ Handschuhsheim",
     "gast": "TSG Hoffenheim (Juniorinnen)",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-tsg-hoffenheim-juniorinnen/-/spiel/02TS7VGS28000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-tsg-hoffenheim-juniorinnen/-/spiel/02TS7VGS28000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "02TS7VGSF4000000VS5489BTVTHCTAHT",
     "slug": "vfb-wiesloch-jsg-dossenheim-handschuhsheim",
-    "datum": "25.04.26",
+    "datum": "25.04.2026",
     "heim": "VfB Wiesloch",
-    "gast": "JSG Dossenheim/​ Handschuhsheim",
+    "gast": "JSG Dossenheim/ Handschuhsheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/vfb-wiesloch-jsg-dossenheim-handschuhsheim/-/spiel/02TS7VGSF4000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/vfb-wiesloch-jsg-dossenheim-handschuhsheim/-/spiel/02TS7VGSF4000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "02TS7VGT5K000000VS5489BTVTHCTAHT",
     "slug": "vfl-kurpfalz-neckarau-jsg-dossenheim-handschuhsheim",
-    "datum": "18.04.26",
+    "datum": "18.04.2026",
     "heim": "VfL Kurpfalz Neckarau",
-    "gast": "JSG Dossenheim/​ Handschuhsheim",
+    "gast": "JSG Dossenheim/ Handschuhsheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/vfl-kurpfalz-neckarau-jsg-dossenheim-handschuhsheim/-/spiel/02TS7VGT5K000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/vfl-kurpfalz-neckarau-jsg-dossenheim-handschuhsheim/-/spiel/02TS7VGT5K000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "02TS7VGTEK000000VS5489BTVTHCTAHT",
     "slug": "sv-98-schwetzingen-jsg-dossenheim-handschuhsheim",
-    "datum": "11.04.26",
+    "datum": "11.04.2026",
     "heim": "SV 98 Schwetzingen",
-    "gast": "JSG Dossenheim/​ Handschuhsheim",
+    "gast": "JSG Dossenheim/ Handschuhsheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sv-98-schwetzingen-jsg-dossenheim-handschuhsheim/-/spiel/02TS7VGTEK000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sv-98-schwetzingen-jsg-dossenheim-handschuhsheim/-/spiel/02TS7VGTEK000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "02TS7VGUGK000000VS5489BTVTHCTAHT",
     "slug": "jsg-dossenheim-handschuhsheim-vfl-muehlbach",
-    "datum": "28.03.26",
-    "heim": "JSG Dossenheim/​ Handschuhsheim",
+    "datum": "28.03.2026",
+    "heim": "JSG Dossenheim/ Handschuhsheim",
     "gast": "VfL Mühlbach",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-vfl-muehlbach/-/spiel/02TS7VGUGK000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-vfl-muehlbach/-/spiel/02TS7VGUGK000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "02TS7VH0HK000000VS5489BTVTHCTAHT",
     "slug": "jsg-dossenheim-handschuhsheim-eberbacher-sc",
-    "datum": "26.03.26",
-    "heim": "JSG Dossenheim/​ Handschuhsheim",
+    "datum": "26.03.2026",
+    "heim": "JSG Dossenheim/ Handschuhsheim",
     "gast": "Eberbacher SC",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-eberbacher-sc/-/spiel/02TS7VH0HK000000VS5489BTVTHCTAHT"
-  },
-  {
-    "spielId": "02TS7VGULO000000VS5489BTVTHCTAHT",
-    "slug": "sg-hd-kirchheim-2-jsg-dossenheim-handschuhsheim",
-    "datum": "21.03.26",
-    "heim": "SG HD-Kirchheim 2",
-    "gast": "JSG Dossenheim/​ Handschuhsheim",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-2-jsg-dossenheim-handschuhsheim/-/spiel/02TS7VGULO000000VS5489BTVTHCTAHT"
-  },
-  {
-    "spielId": "02TS7VGV9K000000VS5489BTVTHCTAHT",
-    "slug": "jsg-dossenheim-handschuhsheim-asc-neuenheim",
-    "datum": "14.03.26",
-    "heim": "JSG Dossenheim/​ Handschuhsheim",
-    "gast": "ASC Neuenheim",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-asc-neuenheim/-/spiel/02TS7VGV9K000000VS5489BTVTHCTAHT"
-  },
-  {
-    "spielId": "02TM0JOJKC000000VS5489BUVUPJS9JR",
-    "slug": "jsg-dossenheim-handschuhsheim-jfv-buerstadt-ii",
-    "datum": "09.08.2025",
-    "heim": "Sa, 09.08.25 | 10:00",
-    "gast": "Freundschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-jfv-buerstadt-ii/-/spiel/02TM0JOJKC000000VS5489BUVUPJS9JR"
-  },
-  {
-    "spielId": "02TQAL7JU8000000VS5489BUVSPHI8RP",
-    "slug": "tsv-neckarau-2-flex-jsg-dossenheim-handschuhsheim",
-    "datum": "19.07.2025",
-    "heim": "Sa, 19.07.25 | 13:00",
-    "gast": "Freundschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/tsv-neckarau-2-flex-jsg-dossenheim-handschuhsheim/-/spiel/02TQAL7JU8000000VS5489BUVSPHI8RP"
-  },
-  {
-    "spielId": "02QI6G53K4000000VS5489B3VTGJG8NI",
-    "slug": "fc-sportfr-dossenheim-sg-hd-kirchheim-3",
-    "datum": "10.05.2025",
-    "heim": "Sa, 10.05.25 | 14:30",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfr-dossenheim-sg-hd-kirchheim-3/-/spiel/02QI6G53K4000000VS5489B3VTGJG8NI"
-  },
-  {
-    "spielId": "02QI6G54CC000000VS5489B3VTGJG8NI",
-    "slug": "fc-sportfr-dossenheim-jsg-st-ilgen-leimen-2",
-    "datum": "26.04.2025",
-    "heim": "Sa, 26.04.25 | 14:30",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfr-dossenheim-jsg-st-ilgen-leimen-2/-/spiel/02QI6G54CC000000VS5489B3VTGJG8NI"
-  },
-  {
-    "spielId": "02QI6G55JK000000VS5489B3VTGJG8NI",
-    "slug": "fc-sportfr-dossenheim-jsg-neckargemuend-dilsberg",
-    "datum": "05.04.2025",
-    "heim": "Sa, 05.04.25 | 14:30",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfr-dossenheim-jsg-neckargemuend-dilsberg/-/spiel/02QI6G55JK000000VS5489B3VTGJG8NI"
-  },
-  {
-    "spielId": "02QI6G4VA4000000VS5489B3VTGJG8NI",
-    "slug": "jsg-st-ilgen-leimen-2-fc-sportfr-dossenheim",
-    "datum": "19.10.2024",
-    "heim": "Sa, 19.10.24 | 12:00",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-st-ilgen-leimen-2-fc-sportfr-dossenheim/-/spiel/02QI6G4VA4000000VS5489B3VTGJG8NI"
-  },
-  {
-    "spielId": "02QI6G4VU8000000VS5489B3VTGJG8NI",
-    "slug": "fc-sportfr-dossenheim-jsg-leimbachtal",
-    "datum": "12.10.2024",
-    "heim": "Sa, 12.10.24 | 14:30",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfr-dossenheim-jsg-leimbachtal/-/spiel/02QI6G4VU8000000VS5489B3VTGJG8NI"
-  },
-  {
-    "spielId": "02QI6G5178000000VS5489B3VTGJG8NI",
-    "slug": "fc-sportfr-dossenheim-tsv-wieblingen",
-    "datum": "01.10.2024",
-    "heim": "Di, 01.10.24 | 17:30",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfr-dossenheim-tsv-wieblingen/-/spiel/02QI6G5178000000VS5489B3VTGJG8NI"
-  },
-  {
-    "spielId": "02QI6G51P0000000VS5489B3VTGJG8NI",
-    "slug": "tsg-rohrbach-2-fc-sportfr-dossenheim",
-    "datum": "14.09.2024",
-    "heim": "Sa, 14.09.24 | 14:45",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/tsg-rohrbach-2-fc-sportfr-dossenheim/-/spiel/02QI6G51P0000000VS5489B3VTGJG8NI"
-  },
-  {
-    "spielId": "02MKOSD1DS000000VS5489B4VVE2H2MO",
-    "slug": "fc-sportfr-dossenheim-jsg-stleon-rot",
-    "datum": "08.06.2024",
-    "heim": "Sa, 08.06.24 | 16:00",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfr-dossenheim-jsg-stleon-rot/-/spiel/02MKOSD1DS000000VS5489B4VVE2H2MO"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-eberbacher-sc/-/spiel/02TS7VH0HK000000VS5489BTVTHCTAHT",
+    "league": null
   }
 ]

@@ -1,0 +1,168 @@
+{
+  "spielId": "02VUT1RVFK000000VS5489BTVUKESBFG",
+  "heim": "SV Schriesheim",
+  "gast": "JSG Hohensachsen/ Rippenweier (Flex)",
+  "ergebnis": {
+    "heim": 4,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 2,
+      "side": "heim",
+      "spielerId": "02JU8K114K000000VUM1DNP9VV3KDD1T",
+      "spielerName": "Paul Kare Fleischmann (SV Schriesheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 25,
+      "side": "gast",
+      "rein": {
+        "id": "022FUSDJV0000000VS54898FVV7PKODQ",
+        "name": "Max Guido Wildi"
+      },
+      "raus": {
+        "id": "02LPADVS6S000000VS5489B6VSJPNOBI",
+        "name": "Rafael Sander"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 32,
+      "side": "heim",
+      "rein": {
+        "id": "028J2EUVQC000000VS541L4GVVARFBPK",
+        "name": "Mika Kühnle (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "0205J1JKQO000000VS54898FVURH594E",
+        "name": "Timo Kunkel"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 34,
+      "side": "gast",
+      "rein": {
+        "id": "01SSM7ODRK000000VS54898GVVEOU2UO",
+        "name": "Jonathan Weigold"
+      },
+      "raus": {
+        "id": "02HUO5DVPO000000VUM1DNPBVUTL25D3",
+        "name": "Benet Körting (SG Hohensachsen) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 45,
+      "side": "gast",
+      "rein": {
+        "id": "02JFDS4V6G000000VUM1DNOUVSV30FUU",
+        "name": "Valentin Berens von Rautenfeld (SG Hohensachsen) Spieler"
+      },
+      "raus": {
+        "id": "022FUSDJV0000000VS54898FVV7PKODQ",
+        "name": "Max Guido Wildi"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "01REANNDL4000000VS548984VSPMUE7U",
+        "name": "HannesMatteo Tyedmers"
+      },
+      "raus": {
+        "id": "02JU8K114K000000VUM1DNP9VV3KDD1T",
+        "name": "Paul Kare Fleischmann (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "01NTM43K8S000000VV0AG80NVU504LH5",
+        "name": "Ben-Joel Vogel"
+      },
+      "raus": {
+        "id": "01NTM4BFIK000000VV0AG811VV8V4M4T",
+        "name": "Jona Aurélien Vierhuff"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "023RDJL9OO000000VS54898FVUD9HD9D",
+        "name": "Rasmus Marten Hermann"
+      },
+      "raus": {
+        "id": "01MENU61LG000000VV0AG80NVS213ORG",
+        "name": "Tim Carstensen"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "02TBBCT2CS000000VS5489C2VSJNJVM9",
+        "name": "Jonathan Soza Putschky"
+      },
+      "raus": {
+        "id": "021CJOLVGG000000VS54898FVUNUE92U",
+        "name": "Lasse von Schrader"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 57,
+      "side": "gast",
+      "spielerId": "030ADA2FKK000000VUM1D59RVVC3DUHR",
+      "spielerName": "Oskar Clemens Duffner (SG Hohensachsen) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 73,
+      "side": "gast",
+      "spielerId": "020O8H804K000000VS54898GVVDK4EPE",
+      "spielerName": "David Frevel"
+    },
+    {
+      "typ": "TOR",
+      "minute": 76,
+      "side": "gast",
+      "spielerId": "020O8G0VBK000000VS54898FVUQUF0EF",
+      "spielerName": "Lukas Baumann"
+    },
+    {
+      "typ": "TOR",
+      "minute": 77,
+      "side": "heim",
+      "spielerId": "023RDFK0VC000000VS54898FVUD9HD9D",
+      "spielerName": "Ruben Simon Schwertner"
+    },
+    {
+      "typ": "TOR",
+      "minute": 80,
+      "side": "heim",
+      "spielerId": "023RDFK0VC000000VS54898FVUD9HD9D",
+      "spielerName": "Ruben Simon Schwertner"
+    },
+    {
+      "typ": "TOR",
+      "minute": 85,
+      "side": "heim",
+      "spielerId": "01NTM43K8S000000VV0AG80NVU504LH5",
+      "spielerName": "Ben-Joel Vogel"
+    }
+  ]
+}

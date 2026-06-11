@@ -1,0 +1,158 @@
+{
+  "spielId": "02TNNQ7USO000000VS5489BUVSSD35NB",
+  "heim": "SV 98 Schwetzingen",
+  "gast": "FC Sportfreunde 1910 Dossenheim",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 7
+  },
+  "halbzeit": {
+    "heim": 2,
+    "gast": 4
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 15,
+      "side": "gast",
+      "spielerId": "02C856303G000000VUM1DNQVVVUOO4SS",
+      "spielerName": "Oskar Bähr (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 18,
+      "side": "gast",
+      "spielerId": "02C856303G000000VUM1DNQVVVUOO4SS",
+      "spielerName": "Oskar Bähr (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 35,
+      "side": "heim",
+      "spielerId": "02C7KOL8I8000000VUM1DNP3VUSDK48M",
+      "spielerName": "Max Lauer (SC Olympia Neulußheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 36,
+      "side": "gast",
+      "spielerId": "02HNKEVTBG000000VUM1DNOGVTIIQK2E",
+      "spielerName": "Dennis Schnepf (FSG Riedrode) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 40,
+      "side": "heim",
+      "spielerId": "02MM2C8H08000000VUM1DNO5VSUI5PTF",
+      "spielerName": "Tim Schulat (SV 98 Schwetzingen) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 45,
+      "side": "gast",
+      "spielerId": "00NKAVJ954000000VV0AG85VVUH1CIQU",
+      "spielerName": "Christopher Eppler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "02UHM8DJ84000000VS5489C1VTPGOJ3A",
+        "name": "Hordii Kirian"
+      },
+      "raus": {
+        "id": "02FG82Q3MO000000VUM1DNP5VU5PVP3B",
+        "name": "Julian Lubaczewski (SV 98 Schwetzingen) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim"
+    },
+    {
+      "typ": "TOR",
+      "minute": 55,
+      "side": "gast",
+      "spielerId": "02O3BRIQ78000000VUM1DNP9VVAVQIDD",
+      "spielerName": "Janick Boger (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAS1SDS000000VV0AG85VVUH1CIQU",
+        "name": "Christoph Jüllich"
+      },
+      "raus": {
+        "id": "02O3BRIQ78000000VUM1DNP9VVAVQIDD",
+        "name": "Janick Boger (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "gast",
+      "rein": {
+        "id": "023NJ2VT0K000000VS541L4IVS5UUR4Q",
+        "name": "Fynn Zetzsche (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "01UQTU76AO000000VS541L4HVS9ULU1H",
+        "name": "Jonas Schober (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 61,
+      "side": "heim",
+      "rein": {
+        "id": "01NTP4PTO8000000VV0AG811VV8V4M4T",
+        "name": "Kajally Njie"
+      },
+      "raus": {
+        "id": "024PFFDCUG000000VS541L4IVSRIKUR6",
+        "name": "Paul Ahrens (SV 98 Schwetzingen) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 65,
+      "side": "gast",
+      "spielerId": "02C856303G000000VUM1DNQVVVUOO4SS",
+      "spielerName": "Oskar Bähr (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 75,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 75,
+      "side": "gast",
+      "rein": {
+        "id": "028AKSQVOO000000VS5489B6VTSKHL86",
+        "name": "Hamza Abdullah"
+      },
+      "raus": {
+        "id": "02C856303G000000VUM1DNQVVVUOO4SS",
+        "name": "Oskar Bähr (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 81,
+      "side": "gast",
+      "spielerId": "02HNKEVTBG000000VUM1DNOGVTIIQK2E",
+      "spielerName": "Dennis Schnepf (FSG Riedrode) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 82,
+      "side": "heim"
+    }
+  ]
+}

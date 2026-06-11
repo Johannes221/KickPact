@@ -1,0 +1,136 @@
+{
+  "spielId": "02TP86SUES000000VS5489BTVV0LE4BT",
+  "heim": "SG HD-Kirchheim 2",
+  "gast": "FT Kirchheim",
+  "ergebnis": {
+    "heim": 4,
+    "gast": 4
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 30,
+      "side": "gast",
+      "spielerId": "01I0O9A708000000VV0AG80NVSPT982R",
+      "spielerName": "Dennis Fedosov"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "01TN2U9CQ4000000VS54898FVS758D56",
+        "name": "Daniele Lombardo"
+      },
+      "raus": {
+        "id": "00NKB19G2C000000VV0AG85VVUH1CIQU",
+        "name": "Julian Emmerich"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 49,
+      "side": "gast",
+      "spielerId": "02LOHHMTDS000000VUM1DNONVUKGUNLN",
+      "spielerName": "Farzad Hamidi (FT Kirchheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 55,
+      "side": "heim",
+      "rein": {
+        "id": "01T8TJH010000000VS54898GVUUJAPN3",
+        "name": "Onur Yilmaz"
+      },
+      "raus": {
+        "id": "02LR8RG474000000VUM1DNOGVUEV72HC",
+        "name": "Tim Steinmann (FV Nußloch) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 55,
+      "side": "heim",
+      "spielerId": "02IKUGH1PC000000VS5489B5VT8KI14O",
+      "spielerName": "Carlos Alfredo Ocanto Dávila"
+    },
+    {
+      "typ": "TOR",
+      "minute": 58,
+      "side": "heim",
+      "spielerId": "028S5S3V70000000VS541L4KVT82IE4D",
+      "spielerName": "David Peipp (SG Oftersheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "gast",
+      "rein": {
+        "id": "030IO1FSOS000000VS5489C2VU5OAA4S",
+        "name": "Mohamed Eid Marei"
+      },
+      "raus": {
+        "id": "01I0O9A708000000VV0AG80NVSPT982R",
+        "name": "Dennis Fedosov"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 75,
+      "side": "gast",
+      "rein": {
+        "id": "00NKATNA2K000000VV0AG85VVUH1CIQU",
+        "name": "Sergej Bender"
+      },
+      "raus": {
+        "id": "02LOHHMTDS000000VUM1DNONVUKGUNLN",
+        "name": "Farzad Hamidi (FT Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 78,
+      "side": "gast",
+      "rein": {
+        "id": "02QG9M19M0000000VS5489B8VT7SR0C6",
+        "name": "Ulrich Tounssi Loudjom"
+      },
+      "raus": {
+        "id": "02G1VRVTAC000000VUM1DNRQVV3UGIAP",
+        "name": "Noah-Emin Isikdemir (FT Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 78,
+      "side": "heim",
+      "spielerId": "01TN2U9CQ4000000VS54898FVS758D56",
+      "spielerName": "Daniele Lombardo"
+    },
+    {
+      "typ": "TOR",
+      "minute": 81,
+      "side": "heim",
+      "spielerId": "00NKB01UFC000000VV0AG85VVUH1CIQU",
+      "spielerName": "Jonas Emmerich"
+    },
+    {
+      "typ": "TOR",
+      "minute": 87,
+      "side": "gast",
+      "spielerId": "02QG9M19M0000000VS5489B8VT7SR0C6",
+      "spielerName": "Ulrich Tounssi Loudjom"
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "gast",
+      "spielerId": "02TI898SUC000000VUM1D51EVSK54F49",
+      "spielerName": "Fabian Bosbach (FT Kirchheim) Spieler"
+    }
+  ]
+}

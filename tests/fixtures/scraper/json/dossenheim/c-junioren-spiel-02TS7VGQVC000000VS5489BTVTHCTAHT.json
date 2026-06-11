@@ -1,0 +1,46 @@
+{
+  "spielId": "02TS7VGQVC000000VS5489BTVTHCTAHT",
+  "heim": "JSG Dossenheim/ Handschuhsheim",
+  "gast": "VFB Eppingen",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 20,
+      "side": "gast",
+      "spielerId": "02C492OTGO000000VS5489B5VVQASLMA",
+      "spielerName": "Bertug Sakar"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 35,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 35,
+      "side": "gast"
+    },
+    {
+      "typ": "TOR",
+      "minute": 53,
+      "side": "gast",
+      "spielerId": "01TSSEQH4S000000VS541L4FVT6BSJ0N",
+      "spielerName": "Marlon Hönig (VfB Eppingen) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 65,
+      "side": "gast",
+      "spielerId": "02BKHV3EL4000000VS5489B5VUU48LMS",
+      "spielerName": "Simon Gäbert"
+    }
+  ]
+}

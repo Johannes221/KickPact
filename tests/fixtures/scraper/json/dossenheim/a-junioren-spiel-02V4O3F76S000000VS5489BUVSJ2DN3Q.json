@@ -1,0 +1,178 @@
+{
+  "spielId": "02V4O3F76S000000VS5489BUVSJ2DN3Q",
+  "heim": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
+  "gast": "VfB 1914 Leimen",
+  "ergebnis": {
+    "heim": 6,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 2,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 18,
+      "side": "gast",
+      "rein": {
+        "id": "02N3TAJ09G000000VUM1DNOQVSJC153E",
+        "name": "Duc Gia Huy Pham (VfB 1914 Leimen) Spieler"
+      },
+      "raus": {
+        "id": "01T2EJS4C8000000VS54898FVU4EUVAV",
+        "name": "Nils Heinzerling"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 23,
+      "side": "gast",
+      "rein": {
+        "id": "0212V4O9P0000000VS54898FVS2RDMCJ",
+        "name": "Leon Kolb"
+      },
+      "raus": {
+        "id": "02NA869G80000000VUM1DNPUVUOKH4O7",
+        "name": "Sidy Karim Sagna (VfB 1914 Leimen) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 42,
+      "side": "heim",
+      "spielerId": "01SNI0M8SC000000VS548984VTF3AS78",
+      "spielerName": "Julian Klimm"
+    },
+    {
+      "typ": "TOR",
+      "minute": 45,
+      "side": "heim",
+      "spielerId": "02JAQJEB80000000VUM1DNPKVUKO667D",
+      "spielerName": "Jan Gnutzmann (TSV Handschuhsheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "02K8T5OSN4000000VUM1DNO6VS8EC5SJ",
+        "name": "Fatlind Ahmetxhekaj (VfB 1914 Leimen) Spieler"
+      },
+      "raus": {
+        "id": "02HRQ38STK000000VUM1DNPIVTBOE0VE",
+        "name": "Tobias Taube (VfB 1914 Leimen) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 57,
+      "side": "heim",
+      "rein": {
+        "id": "02119QQFQO000000VS54898FVS2RDMCJ",
+        "name": "Karl Bruno Kaeß"
+      },
+      "raus": {
+        "id": "01TB4UAJ8C000000VS54898GVUUJAPN3",
+        "name": "Levi Baur"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 59,
+      "side": "gast",
+      "rein": {
+        "id": "02I58VVVFK000000VUM1DNPAVTI6NKVU",
+        "name": "Markus Koriakos (VfB 1914 Leimen) Spieler"
+      },
+      "raus": {
+        "id": "02JE3VJ8N8000000VUM1DNR4VSGLGJKE",
+        "name": "Diogo Santos Rosa (VfB 1914 Leimen) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 64,
+      "side": "heim",
+      "rein": {
+        "id": "028AKSQVOO000000VS5489B6VTSKHL86",
+        "name": "Hamza Abdullah"
+      },
+      "raus": {
+        "id": "0281UFCHVG000000VS5489B6VTSKHL86",
+        "name": "Emil Otto"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 64,
+      "side": "heim",
+      "rein": {
+        "id": "02LL6A88RS000000VUM1DNP0VTAP65OO",
+        "name": "Hannes Konstantin Otto (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "01SNI0M8SC000000VS548984VTF3AS78",
+        "name": "Julian Klimm"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 67,
+      "side": "heim",
+      "spielerId": "02LL6A88RS000000VUM1DNP0VTAP65OO",
+      "spielerName": "Hannes Konstantin Otto (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 68,
+      "side": "heim",
+      "spielerId": "028AKSQVOO000000VS5489B6VTSKHL86",
+      "spielerName": "Hamza Abdullah"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 72,
+      "side": "gast",
+      "rein": {
+        "id": "02JGJT6KCS000000VUM1DNRBVT3DRBD9",
+        "name": "Deshawn Steidel (VfB 1914 Leimen) Spieler"
+      },
+      "raus": {
+        "id": "020C18S9PO000000VS54898FVSFVUC2A",
+        "name": "Lennard Joshua Ilmer"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 74,
+      "side": "heim",
+      "spielerId": "02PEG3INTC000000VUM1D55JVUMFP7DL",
+      "spielerName": "Rafael Ferreira Lopes (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 75,
+      "side": "gast",
+      "spielerId": "02T9QTGJM4000000VUM1D550VUSS46HJ",
+      "spielerName": "Till Finnley Müller (VfB 1914 Leimen) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 86,
+      "side": "heim",
+      "spielerId": "02LL6A88RS000000VUM1DNP0VTAP65OO",
+      "spielerName": "Hannes Konstantin Otto (FC Sportfr. Dossenheim) Spieler"
+    }
+  ]
+}

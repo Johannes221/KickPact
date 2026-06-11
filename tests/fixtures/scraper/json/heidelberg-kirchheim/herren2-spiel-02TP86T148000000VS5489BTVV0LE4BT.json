@@ -1,6 +1,6 @@
 {
   "spielId": "02TP86T148000000VS5489BTVV0LE4BT",
-  "heim": "SpG Dilsberg 1/​Bammental 2",
+  "heim": "SpG Dilsberg 1/Bammental 2",
   "gast": "SG HD-Kirchheim 2",
   "ergebnis": {
     "heim": 3,
@@ -78,7 +78,7 @@
       "side": "gast",
       "rein": {
         "id": "028S5S3V70000000VS541L4KVT82IE4D",
-        "name": "David Peipp (SG HD-Kirchheim) Spieler"
+        "name": "David Peipp (SG Oftersheim) Spieler"
       },
       "raus": {
         "id": "00NKB01UFC000000VV0AG85VVUH1CIQU",
@@ -95,7 +95,7 @@
       },
       "raus": {
         "id": "02LR8RG474000000VUM1DNOGVUEV72HC",
-        "name": "Tim Steinmann (SG HD-Kirchheim) Spieler"
+        "name": "Tim Steinmann (FV Nußloch) Spieler"
       }
     },
     {

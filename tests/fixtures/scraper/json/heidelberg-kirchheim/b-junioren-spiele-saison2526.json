@@ -2,191 +2,121 @@
   {
     "spielId": "02TRK3RNH0000000VS5489BTVTHCTAHT",
     "slug": "fc-noettingen-sg-hd-kirchheim",
-    "datum": "13.05.26",
+    "datum": "13.05.2026",
     "heim": "FC Nöttingen",
     "gast": "SG HD-Kirchheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-noettingen-sg-hd-kirchheim/-/spiel/02TRK3RNH0000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/fc-noettingen-sg-hd-kirchheim/-/spiel/02TRK3RNH0000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "02TRK3RNQK000000VS5489BTVTHCTAHT",
     "slug": "sg-hd-kirchheim-fc-germ-friedrichstal",
-    "datum": "09.05.26",
+    "datum": "09.05.2026",
     "heim": "SG HD-Kirchheim",
     "gast": "FC Germ. Friedrichstal",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-fc-germ-friedrichstal/-/spiel/02TRK3RNQK000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-fc-germ-friedrichstal/-/spiel/02TRK3RNQK000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "02TRK3RO5O000000VS5489BTVTHCTAHT",
     "slug": "sg-hd-kirchheim-tsv-05-reichenbach",
-    "datum": "02.05.26",
+    "datum": "02.05.2026",
     "heim": "SG HD-Kirchheim",
     "gast": "TSV 05 Reichenbach",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-tsv-05-reichenbach/-/spiel/02TRK3RO5O000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-tsv-05-reichenbach/-/spiel/02TRK3RO5O000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "02TRK3ROEC000000VS5489BTVTHCTAHT",
     "slug": "1cfr-pforzheim-sg-hd-kirchheim",
-    "datum": "25.04.26",
+    "datum": "25.04.2026",
     "heim": "1.CfR Pforzheim",
     "gast": "SG HD-Kirchheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/1cfr-pforzheim-sg-hd-kirchheim/-/spiel/02TRK3ROEC000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/1cfr-pforzheim-sg-hd-kirchheim/-/spiel/02TRK3ROEC000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "02TRK3ROUO000000VS5489BTVTHCTAHT",
     "slug": "sg-hd-kirchheim-spvgg-durlach-aue",
-    "datum": "18.04.26",
+    "datum": "18.04.2026",
     "heim": "SG HD-Kirchheim",
     "gast": "SpVgg Durlach-Aue",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-spvgg-durlach-aue/-/spiel/02TRK3ROUO000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-spvgg-durlach-aue/-/spiel/02TRK3ROUO000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "02TRK3RP40000000VS5489BTVTHCTAHT",
     "slug": "tsg-1862-09-weinheim-sg-hd-kirchheim",
-    "datum": "11.04.26",
-    "heim": "TSG 1862/​09 Weinheim",
+    "datum": "11.04.2026",
+    "heim": "TSG 1862/09 Weinheim",
     "gast": "SG HD-Kirchheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/tsg-1862-09-weinheim-sg-hd-kirchheim/-/spiel/02TRK3RP40000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/tsg-1862-09-weinheim-sg-hd-kirchheim/-/spiel/02TRK3RP40000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "02TRK3RPNS000000VS5489BTVTHCTAHT",
     "slug": "sg-hd-kirchheim-sv-98-schwetzingen",
-    "datum": "28.03.26",
+    "datum": "28.03.2026",
     "heim": "SG HD-Kirchheim",
     "gast": "SV 98 Schwetzingen",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-sv-98-schwetzingen/-/spiel/02TRK3RPNS000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-sv-98-schwetzingen/-/spiel/02TRK3RPNS000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "02TRK3RPQ0000000VS5489BTVTHCTAHT",
     "slug": "fv-mosbach-sg-hd-kirchheim",
-    "datum": "21.03.26",
+    "datum": "21.03.2026",
     "heim": "FV Mosbach",
     "gast": "SG HD-Kirchheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fv-mosbach-sg-hd-kirchheim/-/spiel/02TRK3RPQ0000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/fv-mosbach-sg-hd-kirchheim/-/spiel/02TRK3RPQ0000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "02TRK3RQH8000000VS5489BTVTHCTAHT",
     "slug": "sv-waldhof-mannheim-2-sg-hd-kirchheim",
-    "datum": "18.03.26",
+    "datum": "18.03.2026",
     "heim": "SV Waldhof-Mannheim 2",
     "gast": "SG HD-Kirchheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sv-waldhof-mannheim-2-sg-hd-kirchheim/-/spiel/02TRK3RQH8000000VS5489BTVTHCTAHT"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sv-waldhof-mannheim-2-sg-hd-kirchheim/-/spiel/02TRK3RQH8000000VS5489BTVTHCTAHT",
+    "league": null
   },
   {
     "spielId": "02TRK3RQ94000000VS5489BTVTHCTAHT",
     "slug": "sg-hd-kirchheim-spvgg-neckarelz",
-    "datum": "14.03.26",
+    "datum": "14.03.2026",
     "heim": "SG HD-Kirchheim",
     "gast": "SpVgg Neckarelz",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-spvgg-neckarelz/-/spiel/02TRK3RQ94000000VS5489BTVTHCTAHT"
-  },
-  {
-    "spielId": "02TRK3RLQ0000000VS5489BTVTHCTAHT",
-    "slug": "spvgg-durlach-aue-sg-hd-kirchheim",
-    "datum": "25.10.2025",
-    "heim": "Sa, 25.10.25 | 16:00",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/spvgg-durlach-aue-sg-hd-kirchheim/-/spiel/02TRK3RLQ0000000VS5489BTVTHCTAHT"
-  },
-  {
-    "spielId": "02TNUPFUNK000000VS5489BTVV0LE4BT",
-    "slug": "jsg-gemmingen-stebbach-sg-hd-kirchheim",
-    "datum": "07.10.2025",
-    "heim": "Di, 07.10.25 | 18:30",
-    "gast": "Pokalspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-gemmingen-stebbach-sg-hd-kirchheim/-/spiel/02TNUPFUNK000000VS5489BTVV0LE4BT"
-  },
-  {
-    "spielId": "02TRK3RMD8000000VS5489BTVTHCTAHT",
-    "slug": "sg-hd-kirchheim-fv-mosbach",
-    "datum": "04.10.2025",
-    "heim": "Sa, 04.10.25 | 14:00",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-fv-mosbach/-/spiel/02TRK3RMD8000000VS5489BTVTHCTAHT"
-  },
-  {
-    "spielId": "02U81ES250000000VS5489BUVT5HDAB3",
-    "slug": "fc-speyer-09-ii-sg-hd-kirchheim",
-    "datum": "30.08.2025",
-    "heim": "Sa, 30.08.25 | 17:00",
-    "gast": "Freundschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-speyer-09-ii-sg-hd-kirchheim/-/spiel/02U81ES250000000VS5489BUVT5HDAB3"
-  },
-  {
-    "spielId": "02TSCB9AF0000000VS5489BUVVJ8R9DS",
-    "slug": "wormatia-worms-sg-hd-kirchheim",
-    "datum": "26.07.2025",
-    "heim": "Sa, 26.07.25 | 11:00",
-    "gast": "Freundschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/wormatia-worms-sg-hd-kirchheim/-/spiel/02TSCB9AF0000000VS5489BUVVJ8R9DS"
-  },
-  {
-    "spielId": "02SQKAA6HO000000VS5489B4VTF03LPG",
-    "slug": "sg-hd-kirchheim-sg-oftersheim",
-    "datum": "12.04.2025",
-    "heim": "Sa, 12.04.25 | 15:00",
-    "gast": "Freundschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-sg-oftersheim/-/spiel/02SQKAA6HO000000VS5489B4VTF03LPG"
-  },
-  {
-    "spielId": "02Q3O0IV9K000000VS5489B3VUHDH0E9",
-    "slug": "sg-hd-kirchheim-fc-germ-friedrichstal",
-    "datum": "05.10.2024",
-    "heim": "Sa, 05.10.24 | 14:00",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-fc-germ-friedrichstal/-/spiel/02Q3O0IV9K000000VS5489B3VUHDH0E9"
-  },
-  {
-    "spielId": "02QBQ1DF2O000000VS5489B3VUF34HMH",
-    "slug": "spvgg-durlach-aue-sg-hd-kirchheim",
-    "datum": "18.09.2024",
-    "heim": "Mi, 18.09.24 | 19:00",
-    "gast": "Pokalspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/spvgg-durlach-aue-sg-hd-kirchheim/-/spiel/02QBQ1DF2O000000VS5489B3VUF34HMH"
-  },
-  {
-    "spielId": "02Q0HG075G000000VS5489B4VVE5FNTJ",
-    "slug": "sg-hd-kirchheim-spfr-schwaebisch-hall-i",
-    "datum": "17.08.2024",
-    "heim": "Sa, 17.08.24 | 15:00",
-    "gast": "Freundschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-spfr-schwaebisch-hall-i/-/spiel/02Q0HG075G000000VS5489B4VVE5FNTJ"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-spvgg-neckarelz/-/spiel/02TRK3RQ94000000VS5489BTVTHCTAHT",
+    "league": null
   }
 ]

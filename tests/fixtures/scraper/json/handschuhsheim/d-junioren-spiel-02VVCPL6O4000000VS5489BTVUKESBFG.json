@@ -3,12 +3,12 @@
   "heim": "FC Astoria Walldorf 2",
   "gast": "TSV Handschuhsheim",
   "ergebnis": {
-    "heim": 0,
-    "gast": 0
+    "heim": 2,
+    "gast": 1
   },
   "halbzeit": {
-    "heim": 0,
-    "gast": 0
+    "heim": 1,
+    "gast": 1
   },
   "events": []
 }

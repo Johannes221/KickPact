@@ -1,7 +1,7 @@
 {
   "spielId": "02TNBSVFIC000000VS5489BUVSSD35NB",
   "heim": "SG HD-Kirchheim",
-  "gast": "GU-Türk. SV Pforzheim",
+  "gast": "GU-Türk. SV Pforzheim zg.",
   "ergebnis": {
     "heim": 0,
     "gast": 1
@@ -63,7 +63,7 @@
       "side": "heim",
       "rein": {
         "id": "02LR8RG474000000VUM1DNOGVUEV72HC",
-        "name": "Tim Steinmann (SG HD-Kirchheim) Spieler"
+        "name": "Tim Steinmann (FV Nußloch) Spieler"
       },
       "raus": {
         "id": "028CATL4Q0000000VS541L4KVT4E998U",

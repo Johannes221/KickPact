@@ -43,7 +43,7 @@
       "side": "heim",
       "rein": {
         "id": "02HNKEVTBG000000VUM1DNOGVTIIQK2E",
-        "name": "Dennis Schnepf (FC Sportfr. Dossenheim) Spieler"
+        "name": "Dennis Schnepf (FSG Riedrode) Spieler"
       },
       "raus": {
         "id": "02O3BRIQ78000000VUM1DNP9VVAVQIDD",
@@ -73,19 +73,6 @@
     {
       "typ": "AUSWECHSLUNG",
       "minute": 71,
-      "side": "gast",
-      "rein": {
-        "id": "02HFSTQV14000000VUM1DNP3VTIN6SCI",
-        "name": "Henry Leuzinger (ASC Neuenheim) Spieler"
-      },
-      "raus": {
-        "id": "02NJ2767F0000000VUM1DNO5VUB0GVAF",
-        "name": "Petar Draganjac (ASC Neuenheim) Spieler"
-      }
-    },
-    {
-      "typ": "AUSWECHSLUNG",
-      "minute": 71,
       "side": "heim",
       "rein": {
         "id": "00RE77O9GK000000VV0AG80NVVGDRLAO",
@@ -98,11 +85,24 @@
     },
     {
       "typ": "AUSWECHSLUNG",
+      "minute": 71,
+      "side": "gast",
+      "rein": {
+        "id": "02HFSTQV14000000VUM1DNP3VTIN6SCI",
+        "name": "Henry Leuzinger (ASC Neuenheim) Spieler"
+      },
+      "raus": {
+        "id": "02NJ2767F0000000VUM1DNO5VUB0GVAF",
+        "name": "Petar Draganjac (ASC Neuenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
       "minute": 76,
       "side": "gast",
       "rein": {
         "id": "02GAVF7668000000VUM1DNPRVVFQQ8NC",
-        "name": "Esrom Negusse (ASC Neuenheim) Spieler"
+        "name": "Esrom Negusse (FV Nußloch) Spieler"
       },
       "raus": {
         "id": "01403QLRTS000000VV0AG811VTNAA3BL",
@@ -132,19 +132,6 @@
     {
       "typ": "AUSWECHSLUNG",
       "minute": 82,
-      "side": "gast",
-      "rein": {
-        "id": "02J5J9MH40000000VS5489B5VS688D5H",
-        "name": "Tiago Bianchessi Cetolo"
-      },
-      "raus": {
-        "id": "028TEFR8DG000000VS541L4FVSPMHCES",
-        "name": "Max Stadler (ASC Neuenheim) Spieler"
-      }
-    },
-    {
-      "typ": "AUSWECHSLUNG",
-      "minute": 82,
       "side": "heim",
       "rein": {
         "id": "013GASR4G8000000VV0AG811VVO0U6BQ",
@@ -153,6 +140,19 @@
       "raus": {
         "id": "02CCL14IM0000000VUM1DNQ5VU0QM86P",
         "name": "Nicolas Nimmrich Amoros (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 82,
+      "side": "gast",
+      "rein": {
+        "id": "02J5J9MH40000000VS5489B5VS688D5H",
+        "name": "Tiago Bianchessi Cetolo"
+      },
+      "raus": {
+        "id": "028TEFR8DG000000VS541L4FVSPMHCES",
+        "name": "Max Stadler (ASC Neuenheim) Spieler"
       }
     }
   ]

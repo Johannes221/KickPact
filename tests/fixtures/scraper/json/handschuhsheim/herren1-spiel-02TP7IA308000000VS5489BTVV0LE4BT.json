@@ -1,0 +1,114 @@
+{
+  "spielId": "02TP7IA308000000VS5489BTVV0LE4BT",
+  "heim": "SV Moosbrunn",
+  "gast": "TSV Handschuhsheim",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 2,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 2,
+      "side": "gast",
+      "spielerId": "022FC666GG000000VS541L4KVVCMIN1C",
+      "spielerName": "Lukas Hemberger (TSV Handschuhsheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 17,
+      "side": "heim",
+      "spielerId": "00NKAVV6NO000000VV0AG85VVUH1CIQU",
+      "spielerName": "Ricardo Belfiore"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 45,
+      "side": "gast",
+      "rein": {
+        "id": "02JB4HKPMC000000VUM1DNPKVUKO667D",
+        "name": "Moritz Emil Glätzer (TSV Handschuhsheim) Spieler"
+      },
+      "raus": {
+        "id": "018UFRSII0000000VV0AG80NVU058VDB",
+        "name": "Frederik Huppertz"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 45,
+      "side": "heim",
+      "spielerId": "02BQN0Q4L0000000VUM1DNP9VSMNJ2O4",
+      "spielerName": "Paul Gärtner (SV Moosbrunn) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "0135VPM62G000000VV0AG811VUA84E68",
+        "name": "Jannik Franz"
+      },
+      "raus": {
+        "id": "01LNSHKO7O000000VV0AG811VVF4PM4J",
+        "name": "Elias Mühlbach"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "heim",
+      "rein": {
+        "id": "01LMKP0ALK000000VS541L4IVUEBSBVH",
+        "name": "David Holmes (SV Moosbrunn) Spieler"
+      },
+      "raus": {
+        "id": "00NKAVKCF4000000VV0AG85VVUH1CIQU",
+        "name": "Nico Belfiore"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "heim",
+      "rein": {
+        "id": "013BQ2NCK8000000VV0AG811VVLII0JJ",
+        "name": "Simon Zwickl"
+      },
+      "raus": {
+        "id": "00NKAVV6NO000000VV0AG85VVUH1CIQU",
+        "name": "Ricardo Belfiore"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 78,
+      "side": "heim",
+      "rein": {
+        "id": "00NKB1H44G000000VV0AG85VVUH1CIQU",
+        "name": "Fabian Seib"
+      },
+      "raus": {
+        "id": "02BQN0Q4L0000000VUM1DNP9VSMNJ2O4",
+        "name": "Paul Gärtner (SV Moosbrunn) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 78,
+      "side": "heim",
+      "rein": {
+        "id": "00PUSE9D0O000000VV0AG83KVVCG0OBK",
+        "name": "Armen Ananyan"
+      },
+      "raus": {
+        "id": "00OJ40VK78000000VV0AG83KVUU2SGKK",
+        "name": "Lutz Gärtner"
+      }
+    }
+  ]
+}

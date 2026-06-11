@@ -1,192 +1,134 @@
 [
   {
+    "spielId": "02VUT1RV24000000VS5489BTVUKESBFG",
+    "slug": "sv-schriesheim-skv-sandhofen-2",
+    "datum": "13.06.2026",
+    "heim": "SV Schriesheim",
+    "gast": "SKV Sandhofen 2",
+    "ergebnis": "",
+    "vergangen": false,
+    "status": "scheduled",
+    "url": "https://www.fussball.de/spiel/sv-schriesheim-skv-sandhofen-2/-/spiel/02VUT1RV24000000VS5489BTVUKESBFG",
+    "league": null
+  },
+  {
+    "spielId": "02VUT1RVFK000000VS5489BTVUKESBFG",
+    "slug": "sv-schriesheim-jsg-hohensachsen-rippenweier",
+    "datum": "08.06.2026",
+    "heim": "SV Schriesheim",
+    "gast": "JSG Hohensachsen/ Rippenweier (Flex)",
+    "ergebnis": "",
+    "vergangen": true,
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sv-schriesheim-jsg-hohensachsen-rippenweier/-/spiel/02VUT1RVFK000000VS5489BTVUKESBFG",
+    "league": null
+  },
+  {
+    "spielId": "02VUT1RVBK000000VS5489BTVUKESBFG",
+    "slug": "jsg-sv-rohrhof-asv-feudenheim-sv-schriesheim",
+    "datum": "06.06.2026",
+    "heim": "JSG SV Rohrhof / ASV Feudenheim",
+    "gast": "SV Schriesheim",
+    "ergebnis": "",
+    "vergangen": true,
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/jsg-sv-rohrhof-asv-feudenheim-sv-schriesheim/-/spiel/02VUT1RVBK000000VS5489BTVUKESBFG",
+    "league": null
+  },
+  {
     "spielId": "02VUT1RVKO000000VS5489BTVUKESBFG",
     "slug": "mfc-08-lindenhof-sv-schriesheim",
-    "datum": "09.05.26",
+    "datum": "09.05.2026",
     "heim": "MFC 08 Lindenhof (Flex)",
     "gast": "SV Schriesheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/mfc-08-lindenhof-sv-schriesheim/-/spiel/02VUT1RVKO000000VS5489BTVUKESBFG"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/mfc-08-lindenhof-sv-schriesheim/-/spiel/02VUT1RVKO000000VS5489BTVUKESBFG",
+    "league": null
   },
   {
     "spielId": "02VUT1RVV4000000VS5489BTVUKESBFG",
     "slug": "sv-schriesheim-spvgg-06-ketsch",
-    "datum": "02.05.26",
+    "datum": "02.05.2026",
     "heim": "SV Schriesheim",
     "gast": "Spvgg 06 Ketsch",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sv-schriesheim-spvgg-06-ketsch/-/spiel/02VUT1RVV4000000VS5489BTVUKESBFG"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sv-schriesheim-spvgg-06-ketsch/-/spiel/02VUT1RVV4000000VS5489BTVUKESBFG",
+    "league": null
   },
   {
     "spielId": "02VUT1S0HO000000VS5489BTVUKESBFG",
     "slug": "sc-olympia-neulussheim-sv-schriesheim",
-    "datum": "18.04.26",
+    "datum": "18.04.2026",
     "heim": "SC Olympia Neulußheim (Flex)",
     "gast": "SV Schriesheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sc-olympia-neulussheim-sv-schriesheim/-/spiel/02VUT1S0HO000000VS5489BTVUKESBFG"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sc-olympia-neulussheim-sv-schriesheim/-/spiel/02VUT1S0HO000000VS5489BTVUKESBFG",
+    "league": null
   },
   {
     "spielId": "02VUT1S0RG000000VS5489BTVUKESBFG",
     "slug": "sv-schriesheim-vfr-mannheim-2",
-    "datum": "11.04.26",
+    "datum": "11.04.2026",
     "heim": "SV Schriesheim",
     "gast": "VfR Mannheim 2",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sv-schriesheim-vfr-mannheim-2/-/spiel/02VUT1S0RG000000VS5489BTVUKESBFG"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sv-schriesheim-vfr-mannheim-2/-/spiel/02VUT1S0RG000000VS5489BTVUKESBFG",
+    "league": null
   },
   {
     "spielId": "02VUT1S1B4000000VS5489BTVUKESBFG",
     "slug": "sc-kaefertal-sv-schriesheim",
-    "datum": "28.03.26",
+    "datum": "28.03.2026",
     "heim": "SC Käfertal",
     "gast": "SV Schriesheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sc-kaefertal-sv-schriesheim/-/spiel/02VUT1S1B4000000VS5489BTVUKESBFG"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sc-kaefertal-sv-schriesheim/-/spiel/02VUT1S1B4000000VS5489BTVUKESBFG",
+    "league": null
   },
   {
     "spielId": "02VUT1S1I0000000VS5489BTVUKESBFG",
     "slug": "sv-schriesheim-sc-08-reilingen",
-    "datum": "21.03.26",
+    "datum": "21.03.2026",
     "heim": "SV Schriesheim",
     "gast": "SC 08 Reilingen",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sv-schriesheim-sc-08-reilingen/-/spiel/02VUT1S1I0000000VS5489BTVUKESBFG"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sv-schriesheim-sc-08-reilingen/-/spiel/02VUT1S1I0000000VS5489BTVUKESBFG",
+    "league": null
   },
   {
     "spielId": "02VUT1S1S4000000VS5489BTVUKESBFG",
     "slug": "djk-feudenheim-2-flex-sv-schriesheim",
-    "datum": "14.03.26",
+    "datum": "14.03.2026",
     "heim": "DJK Feudenheim 2 (Flex)",
     "gast": "SV Schriesheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/djk-feudenheim-2-flex-sv-schriesheim/-/spiel/02VUT1S1S4000000VS5489BTVUKESBFG"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/djk-feudenheim-2-flex-sv-schriesheim/-/spiel/02VUT1S1S4000000VS5489BTVUKESBFG",
+    "league": null
   },
   {
     "spielId": "02VUT1S28C000000VS5489BTVUKESBFG",
     "slug": "sv-schriesheim-sg-oftersheim",
-    "datum": "07.03.26",
+    "datum": "07.03.2026",
     "heim": "SV Schriesheim",
     "gast": "SG Oftersheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sv-schriesheim-sg-oftersheim/-/spiel/02VUT1S28C000000VS5489BTVUKESBFG"
-  },
-  {
-    "spielId": "0301U2P7OK000000VS5489BTVTLR7B3N",
-    "slug": "jsg-dossenheim-handschuhsheim-wieblingen-sv-schriesheim",
-    "datum": "28.02.26",
-    "heim": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
-    "gast": "SV Schriesheim",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-sv-schriesheim/-/spiel/0301U2P7OK000000VS5489BTVTLR7B3N"
-  },
-  {
-    "spielId": "02VG426M4K000000VS5489BUVVUFGBQS",
-    "slug": "sv-schriesheim-tv-lampertheim",
-    "datum": "14.02.26",
-    "heim": "SV Schriesheim",
-    "gast": "TV Lampertheim",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sv-schriesheim-tv-lampertheim/-/spiel/02VG426M4K000000VS5489BUVVUFGBQS"
-  },
-  {
-    "spielId": "02U4QHQ0PK000000VS5489BUVS8CK5KT",
-    "slug": "sv-schriesheim-asv-feudenheim",
-    "datum": "29.11.2025",
-    "heim": "Sa, 29.11.25 | 19:00",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sv-schriesheim-asv-feudenheim/-/spiel/02U4QHQ0PK000000VS5489BUVS8CK5KT"
-  },
-  {
-    "spielId": "02U4QHQ0UC000000VS5489BUVS8CK5KT",
-    "slug": "jsg-hohensachsen-rippenweier-sv-schriesheim",
-    "datum": "26.11.2025",
-    "heim": "Mi, 26.11.25 | 19:00",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-hohensachsen-rippenweier-sv-schriesheim/-/spiel/02U4QHQ0UC000000VS5489BUVS8CK5KT"
-  },
-  {
-    "spielId": "02U4QHQ13O000000VS5489BUVS8CK5KT",
-    "slug": "sv-schriesheim-djk-feudenheim-2-flex",
-    "datum": "15.11.2025",
-    "heim": "Sa, 15.11.25 | 15:20",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sv-schriesheim-djk-feudenheim-2-flex/-/spiel/02U4QHQ13O000000VS5489BUVS8CK5KT"
-  },
-  {
-    "spielId": "02U2H2THGK000000VS5489BUVS8CK5KT",
-    "slug": "sv-schriesheim-tsg-eintracht-plankstadt",
-    "datum": "13.09.2025",
-    "heim": "Sa, 13.09.25 | 17:00",
-    "gast": "Pokalspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sv-schriesheim-tsg-eintracht-plankstadt/-/spiel/02U2H2THGK000000VS5489BUVS8CK5KT"
-  },
-  {
-    "spielId": "02SB04J3UC000000VS5489B4VTBO2A01",
-    "slug": "jsg-noerdliche-bergstrasse-sv-schriesheim",
-    "datum": "17.05.2025",
-    "heim": "Sa, 17.05.25 | 18:30",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/jsg-noerdliche-bergstrasse-sv-schriesheim/-/spiel/02SB04J3UC000000VS5489B4VTBO2A01"
-  },
-  {
-    "spielId": "02SB04J43S000000VS5489B4VTBO2A01",
-    "slug": "sv-schriesheim-vfl-kurpfalz-neckarau",
-    "datum": "10.05.2025",
-    "heim": "Sa, 10.05.25 | 18:30",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sv-schriesheim-vfl-kurpfalz-neckarau/-/spiel/02SB04J43S000000VS5489B4VTBO2A01"
-  },
-  {
-    "spielId": "02QBRUOLQ8000000VS5489B4VVSGJS16",
-    "slug": "sv-schriesheim-skv-sandhofen",
-    "datum": "16.11.2024",
-    "heim": "Sa, 16.11.24 | 19:30",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sv-schriesheim-skv-sandhofen/-/spiel/02QBRUOLQ8000000VS5489B4VVSGJS16"
-  },
-  {
-    "spielId": "02QBRUOLUK000000VS5489B4VVSGJS16",
-    "slug": "spvgg-03-ilvesheim-sv-schriesheim",
-    "datum": "09.11.2024",
-    "heim": "Sa, 09.11.24 | 18:30",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/spvgg-03-ilvesheim-sv-schriesheim/-/spiel/02QBRUOLUK000000VS5489B4VVSGJS16"
-  },
-  {
-    "spielId": "02QBRUOMBC000000VS5489B4VVSGJS16",
-    "slug": "sv-schriesheim-tsg-91-09-luetzelsachsen-2",
-    "datum": "19.10.2024",
-    "heim": "Sa, 19.10.24 | 18:30",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sv-schriesheim-tsg-91-09-luetzelsachsen-2/-/spiel/02QBRUOMBC000000VS5489B4VVSGJS16"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sv-schriesheim-sg-oftersheim/-/spiel/02VUT1S28C000000VS5489BTVUKESBFG",
+    "league": null
   }
 ]

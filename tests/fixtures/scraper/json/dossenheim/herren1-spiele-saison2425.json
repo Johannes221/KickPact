@@ -1,202 +1,122 @@
 [
   {
+    "spielId": "02TNNQ7USO000000VS5489BUVSSD35NB",
+    "slug": "sv-98-schwetzingen-fc-sportfreunde-1910-dossenheim",
+    "datum": "31.05.2026",
+    "heim": "SV 98 Schwetzingen",
+    "gast": "FC Sportfreunde 1910 Dossenheim",
+    "ergebnis": "",
+    "vergangen": true,
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sv-98-schwetzingen-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ7USO000000VS5489BUVSSD35NB",
+    "league": null
+  },
+  {
+    "spielId": "02TNNQ7VKK000000VS5489BUVSSD35NB",
+    "slug": "fc-sportfreunde-1910-dossenheim-fv-1918-bruehl",
+    "datum": "23.05.2026",
+    "heim": "FC Sportfreunde 1910 Dossenheim",
+    "gast": "FV 1918 Brühl",
+    "ergebnis": "",
+    "vergangen": true,
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-fv-1918-bruehl/-/spiel/02TNNQ7VKK000000VS5489BUVSSD35NB",
+    "league": null
+  },
+  {
     "spielId": "02TNNQ80HC000000VS5489BUVSSD35NB",
     "slug": "fc-sportfreunde-1910-dossenheim-asc-neuenheim",
-    "datum": "17.05.26",
+    "datum": "17.05.2026",
     "heim": "FC Sportfreunde 1910 Dossenheim",
     "gast": "ASC Neuenheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-asc-neuenheim/-/spiel/02TNNQ80HC000000VS5489BUVSSD35NB"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-asc-neuenheim/-/spiel/02TNNQ80HC000000VS5489BUVSSD35NB",
+    "league": null
   },
   {
     "spielId": "02TNNQ819G000000VS5489BUVSSD35NB",
     "slug": "fc-victoria-bammental-fc-sportfreunde-1910-dossenheim",
-    "datum": "09.05.26",
+    "datum": "09.05.2026",
     "heim": "FC Victoria Bammental",
     "gast": "FC Sportfreunde 1910 Dossenheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-victoria-bammental-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ819G000000VS5489BUVSSD35NB"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/fc-victoria-bammental-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ819G000000VS5489BUVSSD35NB",
+    "league": null
   },
   {
     "spielId": "02TNNQ82D4000000VS5489BUVSSD35NB",
     "slug": "fc-sportfreunde-1910-dossenheim-fk-srbija-mannheim",
-    "datum": "03.05.26",
+    "datum": "03.05.2026",
     "heim": "FC Sportfreunde 1910 Dossenheim",
     "gast": "FK Srbija Mannheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-fk-srbija-mannheim/-/spiel/02TNNQ82D4000000VS5489BUVSSD35NB"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-fk-srbija-mannheim/-/spiel/02TNNQ82D4000000VS5489BUVSSD35NB",
+    "league": null
   },
   {
     "spielId": "02TNNQ830K000000VS5489BUVSSD35NB",
     "slug": "sg-kirchardt-fc-sportfreunde-1910-dossenheim",
-    "datum": "26.04.26",
+    "datum": "26.04.2026",
     "heim": "SG Kirchardt",
     "gast": "FC Sportfreunde 1910 Dossenheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sg-kirchardt-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ830K000000VS5489BUVSSD35NB"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/sg-kirchardt-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ830K000000VS5489BUVSSD35NB",
+    "league": null
   },
   {
     "spielId": "02TNNQ84D0000000VS5489BUVSSD35NB",
     "slug": "fc-sportfreunde-1910-dossenheim-spvgg-06-ketsch",
-    "datum": "19.04.26",
+    "datum": "19.04.2026",
     "heim": "FC Sportfreunde 1910 Dossenheim",
     "gast": "Spvgg 06 Ketsch",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-spvgg-06-ketsch/-/spiel/02TNNQ84D0000000VS5489BUVSSD35NB"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-spvgg-06-ketsch/-/spiel/02TNNQ84D0000000VS5489BUVSSD35NB",
+    "league": null
   },
   {
     "spielId": "02TNNQ84PO000000VS5489BUVSSD35NB",
     "slug": "tuerkspor-eppingen-fc-sportfreunde-1910-dossenheim",
-    "datum": "12.04.26",
+    "datum": "12.04.2026",
     "heim": "Türkspor Eppingen",
     "gast": "FC Sportfreunde 1910 Dossenheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/tuerkspor-eppingen-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ84PO000000VS5489BUVSSD35NB"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/tuerkspor-eppingen-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ84PO000000VS5489BUVSSD35NB",
+    "league": null
   },
   {
     "spielId": "02TNNQ86FK000000VS5489BUVSSD35NB",
     "slug": "fc-sportfreunde-1910-dossenheim-sc-rot-weiss-rheinau",
-    "datum": "06.04.26",
+    "datum": "06.04.2026",
     "heim": "FC Sportfreunde 1910 Dossenheim",
     "gast": "SC Rot-Weiß Rheinau",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-sc-rot-weiss-rheinau/-/spiel/02TNNQ86FK000000VS5489BUVSSD35NB"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-sc-rot-weiss-rheinau/-/spiel/02TNNQ86FK000000VS5489BUVSSD35NB",
+    "league": null
   },
   {
     "spielId": "02TNNQ86MG000000VS5489BUVSSD35NB",
     "slug": "fv-nussloch-fc-sportfreunde-1910-dossenheim",
-    "datum": "01.04.26",
+    "datum": "01.04.2026",
     "heim": "FV Nußloch",
     "gast": "FC Sportfreunde 1910 Dossenheim",
     "ergebnis": "",
     "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fv-nussloch-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ86MG000000VS5489BUVSSD35NB"
-  },
-  {
-    "spielId": "02TNNQ87QK000000VS5489BUVSSD35NB",
-    "slug": "fc-sportfreunde-1910-dossenheim-vfb-st-leon",
-    "datum": "29.03.26",
-    "heim": "FC Sportfreunde 1910 Dossenheim",
-    "gast": "VfB St. Leon",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-vfb-st-leon/-/spiel/02TNNQ87QK000000VS5489BUVSSD35NB"
-  },
-  {
-    "spielId": "02TNNQ88P4000000VS5489BUVSSD35NB",
-    "slug": "sg-sv-lobbach-fc-sportfreunde-1910-dossenheim",
-    "datum": "21.03.26",
-    "heim": "SG-SV Lobbach",
-    "gast": "FC Sportfreunde 1910 Dossenheim",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/sg-sv-lobbach-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ88P4000000VS5489BUVSSD35NB"
-  },
-  {
-    "spielId": "02Q438G7UK000000VS5489B4VTH92TNV",
-    "slug": "fc-sportfreunde-1910-dossenheim-tsv-pfaffengrund",
-    "datum": "01.06.2025",
-    "heim": "So, 01.06.25 | 15:00",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-tsv-pfaffengrund/-/spiel/02Q438G7UK000000VS5489B4VTH92TNV"
-  },
-  {
-    "spielId": "02Q438GBQ0000000VS5489B4VTH92TNV",
-    "slug": "fc-sportfreunde-1910-dossenheim-vfl-heiligkreuzsteinach",
-    "datum": "17.04.2025",
-    "heim": "Do, 17.04.25 | 19:30",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-vfl-heiligkreuzsteinach/-/spiel/02Q438GBQ0000000VS5489B4VTH92TNV"
-  },
-  {
-    "spielId": "02Q438GGRO000000VS5489B4VTH92TNV",
-    "slug": "vfb-rauenberg-fc-sportfreunde-1910-dossenheim",
-    "datum": "16.03.2025",
-    "heim": "So, 16.03.25 | 15:00",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/vfb-rauenberg-fc-sportfreunde-1910-dossenheim/-/spiel/02Q438GGRO000000VS5489B4VTH92TNV"
-  },
-  {
-    "spielId": "02S3RCN5CC000000VS5489B3VSPCSFP5",
-    "slug": "fc-sportfreunde-1910-dossenheim-tsv-rheinhausen",
-    "datum": "13.02.2025",
-    "heim": "Do, 13.02.25 | 19:30",
-    "gast": "Freundschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-tsv-rheinhausen/-/spiel/02S3RCN5CC000000VS5489B3VSPCSFP5"
-  },
-  {
-    "spielId": "02Q438GIK4000000VS5489B4VTH92TNV",
-    "slug": "asc-neuenheim-2-fc-sportfreunde-1910-dossenheim",
-    "datum": "22.11.2024",
-    "heim": "Fr, 22.11.24 | 20:00",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/asc-neuenheim-2-fc-sportfreunde-1910-dossenheim/-/spiel/02Q438GIK4000000VS5489B4VTH92TNV"
-  },
-  {
-    "spielId": "02Q438G27C000000VS5489B4VTH92TNV",
-    "slug": "fc-sportfreunde-1910-dossenheim-spvgg-baiertal",
-    "datum": "27.10.2024",
-    "heim": "So, 27.10.24 | 14:30",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-spvgg-baiertal/-/spiel/02Q438G27C000000VS5489B4VTH92TNV"
-  },
-  {
-    "spielId": "02Q438G544000000VS5489B4VTH92TNV",
-    "slug": "fc-sportfreunde-1910-dossenheim-tb-rohrbach",
-    "datum": "18.10.2024",
-    "heim": "Fr, 18.10.24 | 19:30",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-tb-rohrbach/-/spiel/02Q438G544000000VS5489B4VTH92TNV"
-  },
-  {
-    "spielId": "02Q438G2VC000000VS5489B4VTH92TNV",
-    "slug": "fc-sportfreunde-1910-dossenheim-sg-hd-kirchheim-2",
-    "datum": "13.10.2024",
-    "heim": "So, 13.10.24 | 15:00",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-sg-hd-kirchheim-2/-/spiel/02Q438G2VC000000VS5489B4VTH92TNV"
-  },
-  {
-    "spielId": "02Q438G39O000000VS5489B4VTH92TNV",
-    "slug": "vfl-heiligkreuzsteinach-fc-sportfreunde-1910-dossenheim",
-    "datum": "06.10.2024",
-    "heim": "So, 06.10.24 | 15:00",
-    "gast": "Meisterschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/vfl-heiligkreuzsteinach-fc-sportfreunde-1910-dossenheim/-/spiel/02Q438G39O000000VS5489B4VTH92TNV"
-  },
-  {
-    "spielId": "02Q5FFB0L0000000VS5489B3VUHDH0E9",
-    "slug": "fc-sportfreunde-1910-dossenheim-sc-rot-weiss-rheinau",
-    "datum": "18.07.2024",
-    "heim": "Do, 18.07.24 | 19:00",
-    "gast": "Freundschaftsspiel",
-    "ergebnis": "",
-    "vergangen": true,
-    "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-sc-rot-weiss-rheinau/-/spiel/02Q5FFB0L0000000VS5489B3VUHDH0E9"
+    "status": "finished",
+    "url": "https://www.fussball.de/spiel/fv-nussloch-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ86MG000000VS5489BUVSSD35NB",
+    "league": null
   }
 ]

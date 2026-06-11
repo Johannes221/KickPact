@@ -28,53 +28,14 @@
     {
       "typ": "AUSWECHSLUNG",
       "minute": 46,
-      "side": "heim",
-      "rein": {
-        "id": "02PHBUU1AK000000VUM1D52EVVDOKAUJ",
-        "name": "Joanis-Luca Papadopoulos (FV 03 Ladenburg) Spieler"
-      },
-      "raus": {
-        "id": "01FGKA5A3O000000VV0AG811VSN9B03H",
-        "name": "David Krusenbaum"
-      }
-    },
-    {
-      "typ": "AUSWECHSLUNG",
-      "minute": 46,
-      "side": "heim",
-      "rein": {
-        "id": "01LVABTIS8000000VV0AG80NVTMPTR0P",
-        "name": "Adriano Galli"
-      },
-      "raus": {
-        "id": "00O3B246FC000000VV0AG83KVTGT8G00",
-        "name": "Eliah Hesse"
-      }
-    },
-    {
-      "typ": "AUSWECHSLUNG",
-      "minute": 46,
       "side": "gast",
       "rein": {
-        "id": "00S6LTKTDS000000VV0AG80NVTI1GQJD",
-        "name": "Adriano Oliveira Dos Santos"
+        "id": "02OP2KOI80000000VUM1DNQEVT09UPFA",
+        "name": "Manuel Reitberger (SV Schriesheim) Spieler"
       },
       "raus": {
-        "id": "02CAPE2CG0000000VUM1DNPTVSCSLFVG",
-        "name": "Simon Manuel Ammann (SV Schriesheim) Spieler"
-      }
-    },
-    {
-      "typ": "AUSWECHSLUNG",
-      "minute": 46,
-      "side": "gast",
-      "rein": {
-        "id": "01NTM43K8S000000VV0AG80NVU504LH5",
-        "name": "Ben-Joel Vogel"
-      },
-      "raus": {
-        "id": "01LV7SE7QK000000VS541L4RVUTNOG27",
-        "name": "Sascha Harbarth (SV Schriesheim) Spieler"
+        "id": "00NKAVD3JO000000VV0AG85VVUH1CIQU",
+        "name": "Daniel Gramlich"
       }
     },
     {
@@ -95,12 +56,51 @@
       "minute": 46,
       "side": "gast",
       "rein": {
-        "id": "02OP2KOI80000000VUM1DNQEVT09UPFA",
-        "name": "Manuel Reitberger (SV Schriesheim) Spieler"
+        "id": "00S6LTKTDS000000VV0AG80NVTI1GQJD",
+        "name": "Adriano Oliveira Dos Santos"
       },
       "raus": {
-        "id": "00NKAVD3JO000000VV0AG85VVUH1CIQU",
-        "name": "Daniel Gramlich"
+        "id": "02CAPE2CG0000000VUM1DNPTVSCSLFVG",
+        "name": "Simon Manuel Ammann (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "01LVABTIS8000000VV0AG80NVTMPTR0P",
+        "name": "Adriano Galli"
+      },
+      "raus": {
+        "id": "00O3B246FC000000VV0AG83KVTGT8G00",
+        "name": "Eliah Hesse"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "01NTM43K8S000000VV0AG80NVU504LH5",
+        "name": "Ben-Joel Vogel"
+      },
+      "raus": {
+        "id": "01LV7SE7QK000000VS541L4RVUTNOG27",
+        "name": "Sascha Harbarth (SV Schriesheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim",
+      "rein": {
+        "id": "02PHBUU1AK000000VUM1D52EVVDOKAUJ",
+        "name": "Joanis-Luca Papadopoulos (SV Enosis Mannheim) Spieler"
+      },
+      "raus": {
+        "id": "01FGKA5A3O000000VV0AG811VSN9B03H",
+        "name": "David Krusenbaum"
       }
     },
     {
@@ -108,7 +108,7 @@
       "minute": 55,
       "side": "heim",
       "spielerId": "02PHBUU1AK000000VUM1D52EVVDOKAUJ",
-      "spielerName": "Joanis-Luca Papadopoulos (FV 03 Ladenburg) Spieler"
+      "spielerName": "Joanis-Luca Papadopoulos (SV Enosis Mannheim) Spieler"
     },
     {
       "typ": "TOR",
@@ -122,7 +122,7 @@
       "minute": 59,
       "side": "heim",
       "spielerId": "02PHBUU1AK000000VUM1D52EVVDOKAUJ",
-      "spielerName": "Joanis-Luca Papadopoulos (FV 03 Ladenburg) Spieler"
+      "spielerName": "Joanis-Luca Papadopoulos (SV Enosis Mannheim) Spieler"
     },
     {
       "typ": "AUSWECHSLUNG",

@@ -1,0 +1,114 @@
+{
+  "spielId": "02TP75SD88000000VS5489BTVV0LE4BT",
+  "heim": "FC Sportfreunde 1910 Dossenheim 3",
+  "gast": "SpG Bammental 3 / Dilsberg 2",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 5
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 4
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 29,
+      "side": "gast",
+      "spielerId": "02Q7DGGVD0000000VUM1D504VTERLB7C",
+      "spielerName": "Niklas Weber (FC Victoria Bammental) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 35,
+      "side": "gast",
+      "spielerId": "02CBQK885K000000VUM1DNPGVSS3TFBK",
+      "spielerName": "Sebastian Dosch (FC Victoria Bammental) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 40,
+      "side": "gast",
+      "spielerId": "02MF5611RC000000VUM1DNPTVV9B912M",
+      "spielerName": "Michael Alekseew (FC Victoria Bammental) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 44,
+      "side": "gast",
+      "spielerId": "02J7I5I80C000000VUM1DNORVTH5RBQH",
+      "spielerName": "Marlon Schuckert (FC Victoria Bammental) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 69,
+      "side": "heim"
+    },
+    {
+      "typ": "TOR",
+      "minute": 73,
+      "side": "gast",
+      "spielerId": "02J7I5I80C000000VUM1DNORVTH5RBQH",
+      "spielerName": "Marlon Schuckert (FC Victoria Bammental) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 75,
+      "side": "heim"
+    },
+    {
+      "typ": "TOR",
+      "minute": 82,
+      "side": "heim",
+      "spielerId": "02Q8UQOPKC000000VUM1D565VUTNCQJ1",
+      "spielerName": "Eliah Beckenbach (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 84,
+      "side": "heim",
+      "spielerId": "02U5426FBS000000VUM1D56EVSQLE0P9",
+      "spielerName": "Timon Heckmann (FC Sportfr. Dossenheim) Spieler"
+    }
+  ]
+}

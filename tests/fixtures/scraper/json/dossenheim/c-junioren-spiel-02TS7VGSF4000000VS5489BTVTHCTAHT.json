@@ -1,14 +1,14 @@
 {
   "spielId": "02TS7VGSF4000000VS5489BTVTHCTAHT",
   "heim": "VfB Wiesloch",
-  "gast": "JSG Dossenheim/​ Handschuhsheim",
+  "gast": "JSG Dossenheim/ Handschuhsheim",
   "ergebnis": {
-    "heim": 0,
+    "heim": 1,
     "gast": 3
   },
   "halbzeit": {
     "heim": 0,
-    "gast": 2
+    "gast": 1
   },
   "events": [
     {

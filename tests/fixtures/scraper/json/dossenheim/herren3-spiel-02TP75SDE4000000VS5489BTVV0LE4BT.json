@@ -1,0 +1,140 @@
+{
+  "spielId": "02TP75SDE4000000VS5489BTVV0LE4BT",
+  "heim": "1.FC Wiesloch 2",
+  "gast": "FC Sportfreunde 1910 Dossenheim 3",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "00NQC0Q1K8000000VV0AG83KVV2165A2",
+        "name": "Julien Heckmann"
+      },
+      "raus": {
+        "id": "00RRNIAQJO000000VV0AG80NVUADMLIO",
+        "name": "Tim Seefried"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 9,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAVTT9S000000VV0AG85VVUH1CIQU",
+        "name": "Celal Cetin"
+      },
+      "raus": {
+        "id": "026OE9D5EG000000VS541L4FVSQVDVCA",
+        "name": "Sahan Dogan (1.FC Wiesloch) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 19,
+      "side": "heim",
+      "rein": {
+        "id": "02EV6C9J44000000VUM1DNOQVU00MUAK",
+        "name": "Irmak Dogan (1.FC Wiesloch) Spieler"
+      },
+      "raus": {
+        "id": "00NKB0AHJ0000000VV0AG85VVUH1CIQU",
+        "name": "Hakan-Ahmet Bilgin"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 21,
+      "side": "gast",
+      "rein": {
+        "id": "00UHA7AMVO000000VV0AG811VTN498IG",
+        "name": "Vincent Weishuhn"
+      },
+      "raus": {
+        "id": "02Q46V82VS000000VUM1D52LVS6UO569",
+        "name": "Alejandro Acuna de Castro (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 34,
+      "side": "heim",
+      "rein": {
+        "id": "0166JHT7GS000000VV0AG811VSH5J770",
+        "name": "Mehmet Emin Misir"
+      },
+      "raus": {
+        "id": "01CUJ5FML0000000VV0AG80NVSVU9NL9",
+        "name": "Görkem Polat"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 39,
+      "side": "heim",
+      "rein": {
+        "id": "010R0O4K0C000000VV0AG80NVVAUSR9K",
+        "name": "Eliot Mavraj"
+      },
+      "raus": {
+        "id": "02FQDF0PRS000000VS5489B5VSF61720",
+        "name": "Edon Osmani"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 51,
+      "side": "heim",
+      "spielerId": "00OSFEJHN0000000VV0AG83KVT283J6L",
+      "spielerName": "Eren Atas"
+    },
+    {
+      "typ": "TOR",
+      "minute": 53,
+      "side": "gast",
+      "spielerId": "025E3EB0UC000000VS541L4IVU1IJGC0",
+      "spielerName": "Tim Brückner (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 58,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAMM0IG000000VV0AG85VVUH1CIQU",
+        "name": "Yasin Sarica"
+      },
+      "raus": {
+        "id": "00NKAUQKFK000000VV0AG85VVUH1CIQU",
+        "name": "Onurkan Ermis"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 69,
+      "side": "heim",
+      "spielerId": "00NKAMM0IG000000VV0AG85VVUH1CIQU",
+      "spielerName": "Yasin Sarica"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 85,
+      "side": "gast",
+      "rein": {
+        "id": "00R9QJA588000000VV0AG85VVUJPKL05",
+        "name": "Robin Dursun"
+      },
+      "raus": {
+        "id": "025E3EB0UC000000VS541L4IVU1IJGC0",
+        "name": "Tim Brückner (FC Sportfr. Dossenheim) Spieler"
+      }
+    }
+  ]
+}

@@ -23,7 +23,9 @@ export const FIXTURE_CLUBS: readonly FixtureClub[] = [
       { key: "herren3", searchName: "Herren 3", saisons: ["2526", "2425"] },
       { key: "a-junioren", searchName: "A-Junioren", saisons: ["2526"] },
       { key: "c-junioren", searchName: "C-Junioren", saisons: ["2526"] },
-      { key: "damen", searchName: "Damen", saisons: ["2526"] },
+      // "Damen" entfernt (2026-06-10): fussball.de listet für Dossenheim kein
+      // Damen-Team mehr — Capture fand nie eines, die Parser-Tests skippten
+      // dadurch dauerhaft. Bei Wiederanmeldung des Teams hier re-aktivieren.
     ],
   },
   {

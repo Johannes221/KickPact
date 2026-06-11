@@ -1,0 +1,146 @@
+{
+  "spielId": "02TNBSVEAC000000VS5489BUVSSD35NB",
+  "heim": "SG HD-Kirchheim",
+  "gast": "TSV 05 Reichenbach",
+  "ergebnis": {
+    "heim": 1,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 64,
+      "side": "heim",
+      "rein": {
+        "id": "028CATL4Q0000000VS541L4KVT4E998U",
+        "name": "David Zimmermann (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "02C4INP318000000VUM1DNP9VSMNJ2O4",
+        "name": "Malik Mikona (SG HD-Kirchheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 71,
+      "side": "heim",
+      "spielerId": "01POF9CV8C000000VS541L4QVSB85PDH",
+      "spielerName": "Marc Haffa (SG HD-Kirchheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 73,
+      "side": "gast",
+      "spielerId": "01U4C6MEKS000000VS541L4GVVQNMF4G",
+      "spielerName": "Antonio Nigliazzo (TSV 05 Reichenbach) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 74,
+      "side": "heim",
+      "rein": {
+        "id": "02LR8RG474000000VUM1DNOGVUEV72HC",
+        "name": "Tim Steinmann (FV Nußloch) Spieler"
+      },
+      "raus": {
+        "id": "01I3JKCT74000000VV0AG811VVSBGVMJ",
+        "name": "Timo Hartmann"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 75,
+      "side": "gast",
+      "rein": {
+        "id": "01HISQM0NK000000VV0AG811VVNRKVU8",
+        "name": "Rafael Mielke"
+      },
+      "raus": {
+        "id": "00NKB011UO000000VV0AG85VVUH1CIQU",
+        "name": "Kevin Esswein"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 75,
+      "side": "gast",
+      "rein": {
+        "id": "02RE23RS3C000000VUM1D55JVUKNOR0E",
+        "name": "Julius Weiß (TSV 05 Reichenbach) Spieler"
+      },
+      "raus": {
+        "id": "02PHRMT5LS000000VUM1D537VVL4NTRN",
+        "name": "Leon Schales (TSV 05 Reichenbach) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 81,
+      "side": "gast",
+      "rein": {
+        "id": "01A6ML14P8000000VV0AG811VV0EIA42",
+        "name": "Henrik Bediako"
+      },
+      "raus": {
+        "id": "0138JDJ0L4000000VV0AG811VUTA5CSU",
+        "name": "Nick Huditz"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 83,
+      "side": "gast",
+      "rein": {
+        "id": "027LRDIQAS000000VS541L4HVSA1NFSA",
+        "name": "Nico Ruppenstein (TSV 05 Reichenbach) Spieler"
+      },
+      "raus": {
+        "id": "01HISQM0NK000000VV0AG811VVNRKVU8",
+        "name": "Rafael Mielke"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 86,
+      "side": "heim",
+      "rein": {
+        "id": "01VC9OTT5G000000VS541L4HVTCDVBA2",
+        "name": "Nick Johann (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "01F7LAQM3G000000VV0AG80NVSK6GLRA",
+        "name": "Mehmet Celik"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 90,
+      "side": "heim",
+      "rein": {
+        "id": "02IKUGH1PC000000VS5489B5VT8KI14O",
+        "name": "Carlos Alfredo Ocanto Dávila"
+      },
+      "raus": {
+        "id": "01LI1TKP1C000000VV0AG811VU3U5OGP",
+        "name": "Fabian Heller"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 90,
+      "side": "heim",
+      "rein": {
+        "id": "02K1P0PT1S000000VUM1DNOPVTQMMI2D",
+        "name": "Kevin Kalabic (SG HD-Kirchheim) Spieler"
+      },
+      "raus": {
+        "id": "023HMQ1R04000000VS541L4GVTGJVDM2",
+        "name": "Sinisa Sprecakovic (SG HD-Kirchheim) Spieler"
+      }
+    }
+  ]
+}

@@ -75,6 +75,22 @@ export async function withRetry<T>(
 }
 
 /**
+ * Beobachter für erfolgreiche fetchHtml-Antworten. AUSSCHLIESSLICH für die
+ * Fixture-Capture-Pipeline (scripts/fixtures/capture-fixtures.ts): die schreibt
+ * damit exakt die HTML-Seiten weg, die ein Live-Lauf tatsächlich holt — ohne
+ * die Pagination-Logik (paginateTeamGames) im Script zu duplizieren. Im
+ * Produktionsbetrieb immer null; der Hook feuert nur nach bestandenem
+ * Block-/Captcha-Check und darf das Crawl-Verhalten nicht beeinflussen.
+ */
+let fetchHtmlObserver: ((url: string, html: string) => void) | null = null;
+
+export function setFetchHtmlObserver(
+  fn: ((url: string, html: string) => void) | null
+): void {
+  fetchHtmlObserver = fn;
+}
+
+/**
  * Holt eine fussball.de-Seite per plain HTTP (fetch) + HTML-Parser statt
  * headless-Browser. fussball.de liefert die relevanten Inhalte (Spiel-Liste,
  * Spiel-Detail inkl. Tor-Events, Kader) server-gerendert aus — ein echter
@@ -123,6 +139,7 @@ async function fetchHtml(url: string): Promise<HTMLElement> {
       ) {
         throw new Error("Captcha/Sicherheitsabfrage-Seite erkannt");
       }
+      fetchHtmlObserver?.(url, html);
       return parseHtml(html);
     },
     { maxAttempts: 3, baseDelayMs: 800 }

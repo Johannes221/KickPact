@@ -1,0 +1,89 @@
+{
+  "spielId": "02TP7IA2OK000000VS5489BTVV0LE4BT",
+  "heim": "VfB Rauenberg 2",
+  "gast": "FC Sportfreunde 1910 Dossenheim 2",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 5
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 2
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 17,
+      "side": "gast",
+      "spielerId": "01U2R7OTIO000000VS541L4HVVIJUR1A",
+      "spielerName": "Peter Bender (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 21,
+      "side": "gast"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 36,
+      "side": "gast"
+    },
+    {
+      "typ": "TOR",
+      "minute": 39,
+      "side": "gast",
+      "spielerId": "00NKAUJU2K000000VV0AG85VVUH1CIQU",
+      "spielerName": "Max Späth"
+    },
+    {
+      "typ": "TOR",
+      "minute": 46,
+      "side": "heim",
+      "spielerId": "01OHAG43DO000000VS541L4RVS9T579N",
+      "spielerName": "Berkin Özdemir (VfB Rauenberg) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast"
+    },
+    {
+      "typ": "TOR",
+      "minute": 57,
+      "side": "gast",
+      "spielerId": "01U2R7OTIO000000VS541L4HVVIJUR1A",
+      "spielerName": "Peter Bender (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 59,
+      "side": "heim"
+    },
+    {
+      "typ": "TOR",
+      "minute": 70,
+      "side": "heim",
+      "spielerId": "00NKASRDES000000VV0AG85VVUH1CIQU",
+      "spielerName": "Sebastian Brock"
+    },
+    {
+      "typ": "TOR",
+      "minute": 83,
+      "side": "gast",
+      "spielerId": "01U2R7OTIO000000VS541L4HVVIJUR1A",
+      "spielerName": "Peter Bender (FC Sportfr. Dossenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 83,
+      "side": "gast",
+      "spielerId": "00NKAUJU2K000000VV0AG85VVUH1CIQU",
+      "spielerName": "Max Späth"
+    }
+  ]
+}

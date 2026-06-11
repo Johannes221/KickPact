@@ -1,0 +1,146 @@
+{
+  "spielId": "02TNNQ7VKK000000VS5489BUVSSD35NB",
+  "heim": "FC Sportfreunde 1910 Dossenheim",
+  "gast": "FV 1918 Brühl",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 0
+  },
+  "halbzeit": {
+    "heim": 1,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 38,
+      "side": "heim",
+      "spielerId": "01GQ6H6DGC000000VV0AG80NVVDQRLBA",
+      "spielerName": "Lars Schätzle"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "00R9QGIPH0000000VV0AG85VVUJPKL05",
+        "name": "Max Denefleh"
+      },
+      "raus": {
+        "id": "01V7D2HV6S000000VS541L4GVUAKBKGO",
+        "name": "Tobias Can (FV Brühl) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "00NP56FHOG000000VV0AG85VVTQNFIIH",
+        "name": "Milot Berisha"
+      },
+      "raus": {
+        "id": "020SPGLSOO000000VS54898FVULK579T",
+        "name": "Lambert Max Djouendjeu Kougang"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 46,
+      "side": "gast",
+      "rein": {
+        "id": "01VIH48C14000000VS541L4SVTVUBAGO",
+        "name": "Jonas Can (FV Brühl) Spieler"
+      },
+      "raus": {
+        "id": "02PNBH624O000000VUM1D521VVTC3CI7",
+        "name": "Janis Burosch (FV Brühl) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 74,
+      "side": "gast",
+      "rein": {
+        "id": "01EIKMNURS000000VV0AG811VTUSV75D",
+        "name": "Jan Hilke"
+      },
+      "raus": {
+        "id": "01EG2B28A4000000VV0AG811VTUSV75D",
+        "name": "Matteo Mitsch"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 74,
+      "side": "heim",
+      "rein": {
+        "id": "00NKAS1SDS000000VV0AG85VVUH1CIQU",
+        "name": "Christoph Jüllich"
+      },
+      "raus": {
+        "id": "00NKAVJ954000000VV0AG85VVUH1CIQU",
+        "name": "Christopher Eppler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 79,
+      "side": "heim",
+      "rein": {
+        "id": "00RE77O9GK000000VV0AG80NVVGDRLAO",
+        "name": "Edin Muharemovic"
+      },
+      "raus": {
+        "id": "02HNKEVTBG000000VUM1DNOGVTIIQK2E",
+        "name": "Dennis Schnepf (FSG Riedrode) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 85,
+      "side": "heim",
+      "rein": {
+        "id": "013GASR4G8000000VV0AG811VVO0U6BQ",
+        "name": "Maximilian Wolf"
+      },
+      "raus": {
+        "id": "01GQ6H6DGC000000VV0AG80NVVDQRLBA",
+        "name": "Lars Schätzle"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 89,
+      "side": "heim",
+      "rein": {
+        "id": "01UQTU76AO000000VS541L4HVS9ULU1H",
+        "name": "Jonas Schober (FC Sportfr. Dossenheim) Spieler"
+      },
+      "raus": {
+        "id": "02C856303G000000VUM1DNQVVVUOO4SS",
+        "name": "Oskar Bähr (FC Sportfr. Dossenheim) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "heim",
+      "spielerId": "00RE77O9GK000000VV0AG80NVVGDRLAO",
+      "spielerName": "Edin Muharemovic"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 90,
+      "side": "heim",
+      "rein": {
+        "id": "00Q5QGH4GG000000VV0AG85VVV05E0NJ",
+        "name": "Mats Scheurer"
+      },
+      "raus": {
+        "id": "00NKB0DP7O000000VV0AG85VVUH1CIQU",
+        "name": "Johannes Wachsmuth"
+      }
+    }
+  ]
+}

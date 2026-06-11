@@ -9,11 +9,17 @@ import {
   type FixtureClub,
 } from "../../tests/fixtures/scraper/config";
 import {
+  parseAjaxTeamGamesUrl,
+  parseSpielePageFileName,
+  spielePageFileName,
+} from "../../tests/fixtures/scraper/spiele-pages";
+import {
   searchVereine,
   getMannschaften,
   getSpiele,
   getKader,
   getSpielDetails,
+  setFetchHtmlObserver,
   type VereinHit,
   type MannschaftHit,
   type SpielListItem,
@@ -28,6 +34,19 @@ const USER_AGENT =
 
 async function sleep(min: number, jitter = 200) {
   await new Promise((r) => setTimeout(r, min + Math.random() * jitter));
+}
+
+/**
+ * Captcha/Sicherheitsabfrage heißt: fussball.de blockt diese IP. Weiterlaufen
+ * würde nur weiter hämmern und die Sperre verlängern — sofort hart abbrechen,
+ * später (andere IP / Wartezeit) erneut starten. Capture ist resumefähig
+ * (alles bereits Geschriebene gilt beim nächsten Lauf als cached).
+ */
+function abortOnCaptcha(err: unknown): void {
+  if (err instanceof Error && /Captcha/i.test(err.message)) {
+    console.error(`\n!! Captcha/Block erkannt — Capture abgebrochen: ${err.message}`);
+    process.exit(2);
+  }
 }
 
 async function writeHtml(relPath: string, html: string): Promise<void> {
@@ -96,6 +115,7 @@ async function captureSearch(
     console.log(`  search: hit ${match.name} (id=${match.vereinId})`);
     return match;
   } catch (err) {
+    abortOnCaptcha(err);
     console.warn(`  ! search failed for ${club.searchTerm}:`, (err as Error).message);
     return null;
   }
@@ -175,6 +195,46 @@ function matchTeam(
   return fuzzy ?? null;
 }
 
+/** Vorhandene Pagination-HTML-Dateien eines Team/Saison-Paars (Dateinamen). */
+async function listSpielePageFiles(
+  clubKey: string,
+  teamKey: string,
+  saison: string,
+): Promise<string[]> {
+  try {
+    const files = await fs.readdir(path.join(HTML_ROOT, clubKey));
+    return files.filter((f) => {
+      const p = parseSpielePageFileName(f);
+      return p !== null && p.teamKey === teamKey && p.saison === saison;
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function readCachedSpiele(jsonRel: string): Promise<SpielListItem[] | null> {
+  try {
+    return JSON.parse(
+      await fs.readFile(path.join(JSON_ROOT, jsonRel), "utf-8"),
+    ) as SpielListItem[];
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Captured Spiele-Liste UND die HTML-Seiten, aus denen sie entstand.
+ *
+ * getSpiele paginiert über vier AJAX-Strategien (prev/next × ohne/mit saison,
+ * je mit index-Seiten) — ein einzelnes HTML pro Team/Saison kann den Lauf
+ * nicht reproduzieren. Deshalb Option (a): der fetchHtml-Observer schreibt
+ * JEDEN AJAX-Request des Live-Laufs als eigene Datei (Namensschema in
+ * tests/fixtures/scraper/spiele-pages.ts), und das erwartete JSON wird aus
+ * DEMSELBEN Lauf regeneriert. Ein Fixture-Replay (get-spiele.test.ts) fragt
+ * dann deterministisch exakt dieselbe URL-Sequenz ab — nicht gecapturte
+ * Seiten beantwortet der Test-Mock mit 404, was die Pagination an derselben
+ * Stelle abbrechen lässt wie im Live-Lauf.
+ */
 async function captureSpiele(
   club: FixtureClub,
   team: MannschaftHit,
@@ -182,50 +242,156 @@ async function captureSpiele(
   saison: string,
 ): Promise<SpielListItem[]> {
   const jsonRel = `${club.key}/${teamKey}-spiele-saison${saison}.json`;
+  const cached = await readCachedSpiele(jsonRel);
+  const cachedPages = await listSpielePageFiles(club.key, teamKey, saison);
 
-  if (!FORCE && (await exists(jsonRel, JSON_ROOT))) {
+  if (!FORCE && cached !== null && cachedPages.length > 0) {
     console.log(`    spiele ${teamKey} saison${saison}: cached`);
-    return JSON.parse(
-      await fs.readFile(path.join(JSON_ROOT, jsonRel), "utf-8"),
-    ) as SpielListItem[];
+    return cached;
   }
 
+  // HTML-Seiten des Live-Laufs einsammeln (relPath → HTML). Erst nach
+  // erfolgreichem Lauf schreiben, damit ein Abbruch keinen halben Satz
+  // inkonsistenter Seiten hinterlässt.
+  const pages = new Map<string, string>();
+  setFetchHtmlObserver((url, html) => {
+    const parsed = parseAjaxTeamGamesUrl(url);
+    if (!parsed || parsed.teamId !== team.teamId) return;
+    pages.set(
+      `${club.key}/${spielePageFileName(teamKey, saison, parsed)}`,
+      html,
+    );
+  });
+
+  let spiele: SpielListItem[];
   try {
-    const spiele = await getSpiele(team.teamId, team.slug, saison);
-    await writeJson(jsonRel, spiele);
-    await sleep(800);
-    console.log(`    spiele ${teamKey} saison${saison}: ${spiele.length}`);
-    return spiele;
+    spiele = await getSpiele(team.teamId, team.slug, saison);
   } catch (err) {
+    abortOnCaptcha(err);
     console.warn(
       `    ! spiele failed ${teamKey} saison${saison}:`,
       (err as Error).message,
     );
+    return cached ?? [];
+  } finally {
+    setFetchHtmlObserver(null);
+  }
+
+  // 0 Spiele trotz vorhandener (nicht-leerer) JSON-Fixture deutet auf einen
+  // stillen Block/Leer-Parse hin — gutes Fixture nicht mit Müll überschreiben.
+  if (spiele.length === 0 && cached !== null && cached.length > 0) {
+    console.warn(
+      `    ! spiele ${teamKey} saison${saison}: Live-Lauf lieferte 0 Spiele, behalte bestehende Fixture (${cached.length})`,
+    );
+    return cached;
+  }
+
+  // Alte Seiten-Dateien entfernen (Seitenzahl kann schrumpfen), dann den
+  // frischen, in sich konsistenten Satz schreiben: HTML-Seiten + erwartetes
+  // JSON aus demselben Lauf.
+  for (const stale of cachedPages) {
+    await fs.unlink(path.join(HTML_ROOT, club.key, stale)).catch(() => {});
+  }
+  for (const [relPath, html] of pages) {
+    await writeHtml(relPath, html);
+  }
+  await writeJson(jsonRel, spiele);
+  await sleep(800);
+  console.log(
+    `    spiele ${teamKey} saison${saison}: ${spiele.length} (${pages.size} HTML-Seiten)`,
+  );
+  return spiele;
+}
+
+/** spielIds, zu denen bereits eine Detail-JSON-Fixture des Teams existiert. */
+async function listExistingDetailIds(
+  clubKey: string,
+  teamKey: string,
+): Promise<string[]> {
+  try {
+    const files = await fs.readdir(path.join(JSON_ROOT, clubKey));
+    return files
+      .filter((f) => f.startsWith(`${teamKey}-spiel-`) && f.endsWith(".json"))
+      .map((f) => f.replace(`${teamKey}-spiel-`, "").replace(".json", ""));
+  } catch {
     return [];
   }
 }
 
+/**
+ * Captured pro Spiel die Detailseite als HTML-Fixture + das geparste JSON aus
+ * demselben Lauf. Ein HTML pro Spiel reicht: nur der Detailseiten-Fetch wird
+ * gemockt gebraucht; Spielerprofil- und Score-Font-Fetches haben Fallbacks
+ * (siehe get-spiel-details.test.ts). Zielmenge: bestehende Detail-Fixtures des
+ * Teams (damit JSONs aus früheren Captures ihr HTML-Gegenstück bekommen) plus
+ * die 5 neuesten Spiele der frischen Liste.
+ */
 async function captureSpielDetails(
   club: FixtureClub,
   team: MannschaftHit,
   teamKey: string,
   spiele: SpielListItem[],
 ): Promise<void> {
-  const sample = spiele.slice(0, 5);
-  for (const spiel of sample) {
-    const jsonRel = `${club.key}/${teamKey}-spiel-${spiel.spielId}.json`;
-    if (!FORCE && (await exists(jsonRel, JSON_ROOT))) {
-      console.log(`    detail ${spiel.spielId}: cached`);
+  const targetIds = [
+    ...new Set([
+      ...(await listExistingDetailIds(club.key, teamKey)),
+      ...spiele.slice(0, 5).map((s) => s.spielId),
+    ]),
+  ];
+  for (const spielId of targetIds) {
+    const jsonRel = `${club.key}/${teamKey}-spiel-${spielId}.json`;
+    const htmlRel = `${club.key}/${teamKey}-spiel-${spielId}.html`;
+    if (
+      !FORCE &&
+      (await exists(jsonRel, JSON_ROOT)) &&
+      (await exists(htmlRel, HTML_ROOT))
+    ) {
+      console.log(`    detail ${spielId}: cached`);
       continue;
     }
     try {
-      const details = await getSpielDetails(spiel.spielId, team.slug);
+      // Detailseiten-HTML aus dem Live-Lauf abgreifen; Spielerprofil-Fetches
+      // desselben Laufs matchen das Muster nicht und werden ignoriert.
+      const detailUrlRe = new RegExp(`/spiel/[^/]*/-/spiel/${spielId}$`);
+      let detailHtml: string | null = null;
+      setFetchHtmlObserver((url, html) => {
+        if (detailUrlRe.test(url)) detailHtml = html;
+      });
+      const details = await getSpielDetails(spielId, team.slug).finally(() =>
+        setFetchHtmlObserver(null),
+      );
+      if (detailHtml === null) {
+        console.warn(`    ! detail ${spielId}: kein Detailseiten-HTML beobachtet`);
+        continue;
+      }
+
+      // Drift-Hinweis: Event-Anzahl gegenüber der alten Fixture verändert
+      // (fussball.de-Nachtrag/Korrektur) — JSON wird trotzdem regeneriert,
+      // damit expected (JSON) und actual (Parse des HTML) konsistent sind.
+      try {
+        const old = JSON.parse(
+          await fs.readFile(path.join(JSON_ROOT, jsonRel), "utf-8"),
+        ) as { events?: unknown[] };
+        if (
+          Array.isArray(old.events) &&
+          old.events.length !== details.events.length
+        ) {
+          console.warn(
+            `    ~ detail ${spielId}: events ${old.events.length} → ${details.events.length} (Fixture regeneriert)`,
+          );
+        }
+      } catch {
+        // keine alte Fixture — nichts zu vergleichen
+      }
+
+      await writeHtml(htmlRel, detailHtml);
       await writeJson(jsonRel, details);
       await sleep(800);
-      console.log(`    detail ${spiel.spielId}: ${details.events.length} events`);
+      console.log(`    detail ${spielId}: ${details.events.length} events`);
     } catch (err) {
+      abortOnCaptcha(err);
       console.warn(
-        `    ! detail failed ${spiel.spielId}:`,
+        `    ! detail failed ${spielId}:`,
         (err as Error).message,
       );
     }
@@ -254,6 +420,7 @@ async function captureKader(
     console.log(`    kader ${teamKey} saison${saison}: ${kader.length}`);
     return kader;
   } catch (err) {
+    abortOnCaptcha(err);
     console.warn(
       `    ! kader failed ${teamKey} saison${saison}:`,
       (err as Error).message,
@@ -293,6 +460,7 @@ async function captureMannschaften(
     console.log(`  mannschaften: ${mannschaften.length} found`);
     return mannschaften;
   } catch (err) {
+    abortOnCaptcha(err);
     console.warn(`  ! mannschaften failed for ${club.key}:`, (err as Error).message);
     return [];
   }

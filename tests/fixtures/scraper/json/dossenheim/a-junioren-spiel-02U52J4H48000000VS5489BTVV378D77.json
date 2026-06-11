@@ -1,13 +1,13 @@
 {
   "spielId": "02U52J4H48000000VS5489BTVV378D77",
   "heim": "Eberbacher SC",
-  "gast": "JSG Dossenheim/​Handschuhsheim/​ Wieblingen",
+  "gast": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
   "ergebnis": {
-    "heim": 0,
+    "heim": 1,
     "gast": 2
   },
   "halbzeit": {
-    "heim": 0,
+    "heim": 1,
     "gast": 0
   },
   "events": [

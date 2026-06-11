@@ -1,0 +1,29 @@
+{
+  "spielId": "02VVCPL6U8000000VS5489BTVUKESBFG",
+  "heim": "TSV Handschuhsheim",
+  "gast": "TSG Rohrbach 2",
+  "ergebnis": {
+    "heim": 5,
+    "gast": 2
+  },
+  "halbzeit": {
+    "heim": 2,
+    "gast": 1
+  },
+  "events": [
+    {
+      "typ": "TOR",
+      "minute": 9,
+      "side": "heim",
+      "spielerId": "02FJ0E5K2G000000VS5489B5VSJBUS4H",
+      "spielerName": "Vincent Speth"
+    },
+    {
+      "typ": "TOR",
+      "minute": 20,
+      "side": "heim",
+      "spielerId": "02FJ0E5K2G000000VS5489B5VSJBUS4H",
+      "spielerName": "Vincent Speth"
+    }
+  ]
+}

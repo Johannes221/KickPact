@@ -3,11 +3,11 @@
   "heim": "TSV Handschuhsheim",
   "gast": "VfB St. Leon",
   "ergebnis": {
-    "heim": 1,
-    "gast": 0
+    "heim": 8,
+    "gast": 4
   },
   "halbzeit": {
-    "heim": 1,
+    "heim": 4,
     "gast": 0
   },
   "events": [

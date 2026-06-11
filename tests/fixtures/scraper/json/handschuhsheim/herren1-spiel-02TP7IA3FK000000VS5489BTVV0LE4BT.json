@@ -1,0 +1,114 @@
+{
+  "spielId": "02TP7IA3FK000000VS5489BTVV0LE4BT",
+  "heim": "TSV Handschuhsheim",
+  "gast": "SpG Mühlhausen 3/Rettigheim 2",
+  "ergebnis": {
+    "heim": 2,
+    "gast": 1
+  },
+  "halbzeit": {
+    "heim": 0,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 26,
+      "side": "heim",
+      "rein": {
+        "id": "01I5U5OBDG000000VV0AG811VU318EI7",
+        "name": "Philipp Schäffner"
+      },
+      "raus": {
+        "id": "02FR6FQB38000000VUM1DNQ2VV6R8OI0",
+        "name": "Nils Erny (TSV Handschuhsheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 50,
+      "side": "heim",
+      "rein": {
+        "id": "00S2P76G0C000000VV0AG811VV3LNNFJ",
+        "name": "Philipp Gassert"
+      },
+      "raus": {
+        "id": "00MQSM58O8000000VV0AG85VVTE7DTLB",
+        "name": "Pablo Klauß"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 50,
+      "side": "gast",
+      "spielerId": "00NKAQC3H0000000VV0AG85VVUH1CIQU",
+      "spielerName": "Nikolai Barabas"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 53,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAQKGL4000000VV0AG85VVUH1CIQU",
+        "name": "Nikolas Fuchs"
+      },
+      "raus": {
+        "id": "00NKATT5CC000000VV0AG85VVUH1CIQU",
+        "name": "Johannes Vogel"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 53,
+      "side": "gast",
+      "rein": {
+        "id": "00NKAVH068000000VV0AG85VVUH1CIQU",
+        "name": "Fabian Vierlinger"
+      },
+      "raus": {
+        "id": "00NKATQAR0000000VV0AG85VVUH1CIQU",
+        "name": "Dino Mario Franke"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 60,
+      "side": "gast",
+      "rein": {
+        "id": "00NKB0S5H8000000VV0AG85VVUH1CIQU",
+        "name": "Florian Glagla"
+      },
+      "raus": {
+        "id": "02L89I6D1G000000VUM1DNOOVVOL3UO9",
+        "name": "Niklas Albuszies (1.FC Mühlhausen) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 65,
+      "side": "heim",
+      "spielerId": "00MQSQ49T4000000VV0AG85VVTE7DTLB",
+      "spielerName": "Manuel Mastel"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 70,
+      "side": "heim",
+      "rein": {
+        "id": "024Q0A3K3O000000VS54898FVS18NMMJ",
+        "name": "Leonard Batista"
+      },
+      "raus": {
+        "id": "018UFRSII0000000VV0AG80NVU058VDB",
+        "name": "Frederik Huppertz"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 72,
+      "side": "heim",
+      "spielerId": "01TB4UAJ8C000000VS54898GVUUJAPN3",
+      "spielerName": "Levi Baur"
+    }
+  ]
+}

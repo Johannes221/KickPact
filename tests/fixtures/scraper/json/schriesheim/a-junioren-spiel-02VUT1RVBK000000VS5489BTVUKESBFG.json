@@ -1,0 +1,154 @@
+{
+  "spielId": "02VUT1RVBK000000VS5489BTVUKESBFG",
+  "heim": "JSG SV Rohrhof / ASV Feudenheim",
+  "gast": "SV Schriesheim",
+  "ergebnis": {
+    "heim": 5,
+    "gast": 3
+  },
+  "halbzeit": {
+    "heim": 3,
+    "gast": 0
+  },
+  "events": [
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "028J2EUVQC000000VS541L4GVVARFBPK",
+        "name": "Mika Kühnle (SV Schriesheim) Spieler"
+      },
+      "raus": {
+        "id": "02TBBCT2CS000000VS5489C2VSJNJVM9",
+        "name": "Jonathan Soza Putschky"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "gast",
+      "rein": {
+        "id": "01REANNDL4000000VS548984VSPMUE7U",
+        "name": "HannesMatteo Tyedmers"
+      },
+      "raus": {
+        "id": "01NTM4BFIK000000VV0AG811VV8V4M4T",
+        "name": "Jona Aurélien Vierhuff"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "02PCRQK2FO000000VS5489B8VTQ514JP",
+        "name": "Nazif Salifou"
+      },
+      "raus": {
+        "id": "02LHNP1PMO000000VUM1DNQBVSKRB0OG",
+        "name": "Batuhan Erol (ASV Feudenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "02SMIB8G9O000000VUM1D57FVV9Q62K6",
+        "name": "Keane Nagel (ASV Feudenheim) Spieler"
+      },
+      "raus": {
+        "id": "02N39SMA88000000VUM1DNP9VUP58595",
+        "name": "Niklas Zizikowski (ASV Feudenheim) Spieler"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim"
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "02SEFJNG5G000000VUM1D53EVV1D6IOV",
+        "name": "Jaden Dietrich (ASV Feudenheim) Spieler"
+      },
+      "raus": {
+        "id": "01SJKN71R0000000VS548984VTF3AS78",
+        "name": "David Rettich"
+      }
+    },
+    {
+      "typ": "AUSWECHSLUNG",
+      "minute": 0,
+      "side": "heim",
+      "rein": {
+        "id": "02030S54DS000000VS54898GVVORTB5G",
+        "name": "Julian Göppinger"
+      },
+      "raus": {
+        "id": "02IEUHSN60000000VUM1DNQSVU2DNS1F",
+        "name": "Nicolai Ackermann (FC Germania Friedrichsfeld) Spieler"
+      }
+    },
+    {
+      "typ": "TOR",
+      "minute": 32,
+      "side": "heim",
+      "spielerId": "030SEHJ158000000VUM1D51BVTUFTBA8",
+      "spielerName": "Mehmet Yücel (ASV Feudenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 33,
+      "side": "heim",
+      "spielerId": "030SEHJ158000000VUM1D51BVTUFTBA8",
+      "spielerName": "Mehmet Yücel (ASV Feudenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 39,
+      "side": "heim",
+      "spielerId": "01SJKN71R0000000VS548984VTF3AS78",
+      "spielerName": "David Rettich"
+    },
+    {
+      "typ": "TOR",
+      "minute": 53,
+      "side": "gast",
+      "spielerId": "01REANNDL4000000VS548984VSPMUE7U",
+      "spielerName": "HannesMatteo Tyedmers"
+    },
+    {
+      "typ": "TOR",
+      "minute": 55,
+      "side": "heim",
+      "spielerId": "01SJKN71R0000000VS548984VTF3AS78",
+      "spielerName": "David Rettich"
+    },
+    {
+      "typ": "TOR",
+      "minute": 76,
+      "side": "heim",
+      "spielerId": "030SEHJ158000000VUM1D51BVTUFTBA8",
+      "spielerName": "Mehmet Yücel (ASV Feudenheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 88,
+      "side": "gast",
+      "spielerId": "02OF2NCG5S000000VUM1DNP1VS3QM7C6",
+      "spielerName": "Lennart Knies (SV Schriesheim) Spieler"
+    },
+    {
+      "typ": "TOR",
+      "minute": 90,
+      "side": "gast",
+      "spielerId": "01REANNDL4000000VS548984VSPMUE7U",
+      "spielerName": "HannesMatteo Tyedmers"
+    }
+  ]
+}
