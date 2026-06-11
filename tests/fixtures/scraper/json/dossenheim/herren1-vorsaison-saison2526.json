@@ -1,0 +1,358 @@
+{
+  "teamId": "011MIAE8VG000000VTVG0001VTR8C1K7",
+  "saison": "2526",
+  "spiele": [
+    {
+      "spielId": "02TH893FD8000000VS5489BUVS7GO5S8",
+      "datum": "13.07.2025",
+      "heimName": "TSV Rheinhausen",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02TO895K5K000000VS5489BUVSSD35NB",
+      "datum": "15.07.2025",
+      "heimName": "FC Olympia Kirrlach",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TLKUHBK0000000VS5489BUVUPJS9JR",
+      "datum": "20.07.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "TSG 1862/09 Weinheim",
+      "ergebnisHeim": 5,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02TLVL6TU0000000VS5489BUVUPJS9JR",
+      "datum": "24.07.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "TSG 1862/09 Weinheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02TS5K8T4K000000VS5489BTVTHCTAHT",
+      "datum": "27.07.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "ASV Eppelheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02TSGVEFTS000000VS5489BTVTHCTAHT",
+      "datum": "31.07.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "SG Oftersheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ7UN4000000VS5489BUVSSD35NB",
+      "datum": "10.08.2025",
+      "heimName": "VfR Mannheim 2",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 6,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ7T4G000000VS5489BUVSSD35NB",
+      "datum": "17.08.2025",
+      "heimName": "ASV Eppelheim",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 4,
+      "ergebnisGast": 4
+    },
+    {
+      "spielId": "02TNNQ7S1K000000VS5489BUVSSD35NB",
+      "datum": "24.08.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "VfB Gartenstadt",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 4
+    },
+    {
+      "spielId": "02TNNQ7RKC000000VS5489BUVSSD35NB",
+      "datum": "27.08.2025",
+      "heimName": "FC Türkspor Mannheim",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02TNNQ7QP8000000VS5489BUVSSD35NB",
+      "datum": "31.08.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "SG-SV Lobbach",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02TNNQ7Q64000000VS5489BUVSSD35NB",
+      "datum": "07.09.2025",
+      "heimName": "VfB St. Leon",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ7PGG000000VS5489BUVSSD35NB",
+      "datum": "12.09.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "FV Nußloch",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02TNNQ7PCC000000VS5489BUVSSD35NB",
+      "datum": "18.09.2025",
+      "heimName": "SC Rot-Weiß Rheinau",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 3
+    },
+    {
+      "spielId": "02TNNQ7TEG000000VS5489BUVSSD35NB",
+      "datum": "24.09.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "TSV Amicitia Viernheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ7OFC000000VS5489BUVSSD35NB",
+      "datum": "28.09.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "Türkspor Eppingen",
+      "ergebnisHeim": 4,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02TNNQ7O8C000000VS5489BUVSSD35NB",
+      "datum": "05.10.2025",
+      "heimName": "Spvgg 06 Ketsch",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ7NGO000000VS5489BUVSSD35NB",
+      "datum": "12.10.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "SG Kirchardt",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ7N74000000VS5489BUVSSD35NB",
+      "datum": "19.10.2025",
+      "heimName": "FK Srbija Mannheim",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 4,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ7MLG000000VS5489BUVSSD35NB",
+      "datum": "26.10.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "FC Victoria Bammental",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02TNNQ7MAO000000VS5489BUVSSD35NB",
+      "datum": "02.11.2025",
+      "heimName": "ASC Neuenheim",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 5,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ7LSS000000VS5489BUVSSD35NB",
+      "datum": "09.11.2025",
+      "heimName": "FV 1918 Brühl",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 6,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02TNNQ7LG8000000VS5489BUVSSD35NB",
+      "datum": "16.11.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "SV 98 Schwetzingen",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02TNNQ8F4G000000VS5489BUVSSD35NB",
+      "datum": "23.11.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "VfR Mannheim 2",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02TNNQ8D24000000VS5489BUVSSD35NB",
+      "datum": "30.11.2025",
+      "heimName": "TSV Amicitia Viernheim",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 5,
+      "ergebnisGast": 3
+    },
+    {
+      "spielId": "02V9H52RA4000000VS5489BTVTAM0PAN",
+      "datum": "01.02.2026",
+      "heimName": "FC Fürth",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02VS4CDV4G000000VS5489BUVUB1P7A6",
+      "datum": "08.02.2026",
+      "heimName": "DJK/FC Ziegelhausen-Peterstal",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02VR7APBT0000000VS5489BUVVAD1OGL",
+      "datum": "12.02.2026",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "SG Unter-Abtsteinach",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02V5EEFFBK000000VS5489BUVUFBBC64",
+      "datum": "22.02.2026",
+      "heimName": "TSV Amicitia Viernheim",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ8CIK000000VS5489BUVSSD35NB",
+      "datum": "04.03.2026",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "ASV Eppelheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ8ASO000000VS5489BUVSSD35NB",
+      "datum": "08.03.2026",
+      "heimName": "VfB Gartenstadt",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ8A60000000VS5489BUVSSD35NB",
+      "datum": "15.03.2026",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "FC Türkspor Mannheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02TNNQ88P4000000VS5489BUVSSD35NB",
+      "datum": "21.03.2026",
+      "heimName": "SG-SV Lobbach",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02TNNQ87QK000000VS5489BUVSSD35NB",
+      "datum": "29.03.2026",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "VfB St. Leon",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ86MG000000VS5489BUVSSD35NB",
+      "datum": "01.04.2026",
+      "heimName": "FV Nußloch",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ86FK000000VS5489BUVSSD35NB",
+      "datum": "06.04.2026",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "SC Rot-Weiß Rheinau",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 5
+    },
+    {
+      "spielId": "02TNNQ84PO000000VS5489BUVSSD35NB",
+      "datum": "12.04.2026",
+      "heimName": "Türkspor Eppingen",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02TNNQ84D0000000VS5489BUVSSD35NB",
+      "datum": "19.04.2026",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "Spvgg 06 Ketsch",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ830K000000VS5489BUVSSD35NB",
+      "datum": "26.04.2026",
+      "heimName": "SG Kirchardt",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02TNNQ82D4000000VS5489BUVSSD35NB",
+      "datum": "03.05.2026",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "FK Srbija Mannheim",
+      "ergebnisHeim": 4,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02TNNQ819G000000VS5489BUVSSD35NB",
+      "datum": "09.05.2026",
+      "heimName": "FC Victoria Bammental",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 5,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02TNNQ80HC000000VS5489BUVSSD35NB",
+      "datum": "17.05.2026",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "ASC Neuenheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02TNNQ7VKK000000VS5489BUVSSD35NB",
+      "datum": "23.05.2026",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "FV 1918 Brühl",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02TNNQ7USO000000VS5489BUVSSD35NB",
+      "datum": "31.05.2026",
+      "heimName": "SV 98 Schwetzingen",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 7
+    }
+  ]
+}

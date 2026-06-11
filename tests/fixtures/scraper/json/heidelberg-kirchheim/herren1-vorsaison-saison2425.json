@@ -1,0 +1,334 @@
+{
+  "teamId": "011MIB1CUC000000VTVG0001VTR8C1K7",
+  "saison": "2425",
+  "spiele": [
+    {
+      "spielId": "02Q2OJ56SG000000VS5489B3VVLDQQH4",
+      "datum": "10.07.2024",
+      "heimName": "SV Südwest Ludwigshafen",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q0RBUUF4000000VS5489B3VU5PPGUO",
+      "datum": "13.07.2024",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "SpVgg FC 07 Heidelsheim",
+      "ergebnisHeim": 5,
+      "ergebnisGast": 3
+    },
+    {
+      "spielId": "02Q0RCJ9R4000000VS5489B3VU5PPGUO",
+      "datum": "14.07.2024",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "TSV Handschuhsheim",
+      "ergebnisHeim": 7,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q0PR8CAS000000VS5489B3VU5PPGUO",
+      "datum": "21.07.2024",
+      "heimName": "FK Srbija Mannheim",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q0JUJOBG000000VS5489B4VVE5FNTJ",
+      "datum": "04.08.2024",
+      "heimName": "SG Horrenberg",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02QB523LC0000000VS5489B3VUF34HMH",
+      "datum": "11.08.2024",
+      "heimName": "Türkspor Neckarsulm",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 3
+    },
+    {
+      "spielId": "02Q2SEE5LK000000VS5489B3VVLDQQH4",
+      "datum": "17.08.2024",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "TS Mosbach",
+      "ergebnisHeim": 7,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q2SEE5G4000000VS5489B3VVLDQQH4",
+      "datum": "25.08.2024",
+      "heimName": "VfB St. Leon",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q2SEE4FC000000VS5489B3VVLDQQH4",
+      "datum": "31.08.2024",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "FV Fortuna Heddesheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02Q2SEE47S000000VS5489B3VVLDQQH4",
+      "datum": "08.09.2024",
+      "heimName": "VfB Bretten",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 3
+    },
+    {
+      "spielId": "02Q2SEE3BO000000VS5489B3VVLDQQH4",
+      "datum": "13.09.2024",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "SV Spielberg",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02Q2SEE338000000VS5489B3VVLDQQH4",
+      "datum": "21.09.2024",
+      "heimName": "TSG 1862/09 Weinheim",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 4,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q2SEE2AC000000VS5489B3VVLDQQH4",
+      "datum": "28.09.2024",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "SV Waldhof Mannheim 2",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q2SEE20G000000VS5489B3VVLDQQH4",
+      "datum": "03.10.2024",
+      "heimName": "VfB Eppingen",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q2SEE1D0000000VS5489B3VVLDQQH4",
+      "datum": "08.10.2024",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "1.FC Mühlhausen",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q2SEE10K000000VS5489B3VVLDQQH4",
+      "datum": "11.10.2024",
+      "heimName": "ASC Neuenheim",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02Q2SEE0GS000000VS5489B3VVLDQQH4",
+      "datum": "19.10.2024",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "FC-Astoria Walldorf 2",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 5
+    },
+    {
+      "spielId": "02Q2SEE05G000000VS5489B3VVLDQQH4",
+      "datum": "26.10.2024",
+      "heimName": "GU-Türk. SV Pforzheim",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02Q2SEDVPC000000VS5489B3VVLDQQH4",
+      "datum": "03.11.2024",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "1.FC Bruchsal 1899 e.V.",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q2SEDVFG000000VS5489B3VVLDQQH4",
+      "datum": "09.11.2024",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "FC Victoria Bammental",
+      "ergebnisHeim": 5,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q2SEDVE8000000VS5489B3VVLDQQH4",
+      "datum": "16.11.2024",
+      "heimName": "Karlsruher SC U23",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q2SEEHLC000000VS5489B3VVLDQQH4",
+      "datum": "24.11.2024",
+      "heimName": "TS Mosbach",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02RRQFTH5G000000VS5489B4VTO17VOS",
+      "datum": "01.02.2025",
+      "heimName": "SV Unter-Flockenbach",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 6,
+      "ergebnisGast": 3
+    },
+    {
+      "spielId": "02RV7MBIUO000000VS5489B4VTJDJCVP",
+      "datum": "08.02.2025",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "VfR Mannheim 2",
+      "ergebnisHeim": 4,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02RV7MI8DS000000VS5489B4VTJDJCVP",
+      "datum": "16.02.2025",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "FK Srbija Mannheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 3
+    },
+    {
+      "spielId": "02SCRN3ME4000000VS5489B3VSRJVFP8",
+      "datum": "25.02.2025",
+      "heimName": "SG-SV Lobbach",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 7
+    },
+    {
+      "spielId": "02RV7N1B1C000000VS5489B4VTJDJCVP",
+      "datum": "01.03.2025",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "DJK/FC Ziegelhausen-Peterstal",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q2SEEHD8000000VS5489B3VVLDQQH4",
+      "datum": "08.03.2025",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "VfB St. Leon",
+      "ergebnisHeim": 4,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q2SEEFLK000000VS5489B3VVLDQQH4",
+      "datum": "15.03.2025",
+      "heimName": "FV Fortuna Heddesheim",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q2SEEFAO000000VS5489B3VVLDQQH4",
+      "datum": "22.03.2025",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "VfB Bretten",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q2SEEDS8000000VS5489B3VVLDQQH4",
+      "datum": "29.03.2025",
+      "heimName": "SV Spielberg",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q2SEEDES000000VS5489B3VVLDQQH4",
+      "datum": "01.04.2025",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "TSG 1862/09 Weinheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02Q2SEEC7O000000VS5489B3VVLDQQH4",
+      "datum": "06.04.2025",
+      "heimName": "SV Waldhof Mannheim 2",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q2SEEBKC000000VS5489B3VVLDQQH4",
+      "datum": "12.04.2025",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "VfB Eppingen",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q2SEEAH4000000VS5489B3VVLDQQH4",
+      "datum": "19.04.2025",
+      "heimName": "1.FC Mühlhausen",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q2SEE9US000000VS5489B3VVLDQQH4",
+      "datum": "27.04.2025",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "ASC Neuenheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q2SEE90S000000VS5489B3VVLDQQH4",
+      "datum": "03.05.2025",
+      "heimName": "FC-Astoria Walldorf 2",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 4,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q2SEE8DC000000VS5489B3VVLDQQH4",
+      "datum": "10.05.2025",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "GU-Türk. SV Pforzheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 5
+    },
+    {
+      "spielId": "02Q2SEE7JS000000VS5489B3VVLDQQH4",
+      "datum": "17.05.2025",
+      "heimName": "1.FC Bruchsal 1899 e.V.",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q2SEE6US000000VS5489B3VVLDQQH4",
+      "datum": "25.05.2025",
+      "heimName": "FC Victoria Bammental",
+      "gastName": "SG HD-Kirchheim",
+      "ergebnisHeim": 5,
+      "ergebnisGast": 3
+    },
+    {
+      "spielId": "02Q2SEE6S8000000VS5489B3VVLDQQH4",
+      "datum": "03.06.2025",
+      "heimName": "SG HD-Kirchheim",
+      "gastName": "Karlsruher SC U23",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 2
+    }
+  ]
+}

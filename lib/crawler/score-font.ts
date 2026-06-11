@@ -92,7 +92,11 @@ function extractScoreText(span: HTMLElement): {
   puaCodepoints: number[];
   plainText: string;
 } {
-  const raw = span.innerHTML;
+  // Verschachtelte Tags entfernen, BEVOR Zeichen gescannt werden: die
+  // Matchplan-Listen rendern `<span class="icon-verified"></span>` INNERHALB
+  // des Score-Spans — die Bindestriche des Klassennamens würden sonst als
+  // Score-Zeichen ("-") gelesen und jede Dekodierung scheitern lassen.
+  const raw = span.innerHTML.replace(/<[^>]*>/g, "");
   const puaCodepoints: number[] = [];
   let plain = "";
 
@@ -144,6 +148,34 @@ async function decodeSide(
 }
 
 /**
+ * Dekodiert ein `.score-left`/`.score-right`-Span-PAAR zu einem numerischen
+ * Ergebnis. Generische Basis für alle font-verschleierten Score-Darstellungen
+ * auf fussball.de — die Detailseite (`.result .end-result`, siehe
+ * {@link decodeObfuscatedScore}) und die Spielplan-Listen
+ * (`ajax.team.matchplan`, siehe lib/crawler/vorsaison.ts) nutzen exakt
+ * dasselbe Markup-Muster (PUA-Codepoints + `data-obfuscation`-Font-ID).
+ *
+ * `null`, wenn das Ergebnis nicht SICHER dekodierbar ist: fehlende Spans,
+ * "-"-Platzhalter (kein Ergebnis eingetragen), Font nicht ladbar, unbekannte
+ * Glyphen. Niemals raten.
+ */
+export async function decodeScoreSpanPair(
+  left: HTMLElement | null,
+  right: HTMLElement | null,
+  loadFont: ScoreFontLoader = defaultLoader
+): Promise<{ heim: number; gast: number } | null> {
+  if (!left || !right) return null;
+
+  const [heimStr, gastStr] = await Promise.all([
+    decodeSide(left, loadFont),
+    decodeSide(right, loadFont)
+  ]);
+  if (!heimStr || !gastStr) return null;
+  if (!/^\d+$/.test(heimStr) || !/^\d+$/.test(gastStr)) return null;
+  return { heim: parseInt(heimStr, 10), gast: parseInt(gastStr, 10) };
+}
+
+/**
  * Dekodiert den angezeigten ENDSTAND aus dem `.result .end-result`-Block.
  *
  * `null`, wenn kein Endstand vorliegt oder er nicht sicher dekodierbar ist:
@@ -155,15 +187,9 @@ export async function decodeObfuscatedScore(
   root: HTMLElement,
   loadFont: ScoreFontLoader = defaultLoader
 ): Promise<{ heim: number; gast: number } | null> {
-  const left = root.querySelector(".result .end-result .score-left");
-  const right = root.querySelector(".result .end-result .score-right");
-  if (!left || !right) return null;
-
-  const [heimStr, gastStr] = await Promise.all([
-    decodeSide(left, loadFont),
-    decodeSide(right, loadFont)
-  ]);
-  if (!heimStr || !gastStr) return null;
-  if (!/^\d+$/.test(heimStr) || !/^\d+$/.test(gastStr)) return null;
-  return { heim: parseInt(heimStr, 10), gast: parseInt(gastStr, 10) };
+  return decodeScoreSpanPair(
+    root.querySelector(".result .end-result .score-left"),
+    root.querySelector(".result .end-result .score-right"),
+    loadFont
+  );
 }

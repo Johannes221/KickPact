@@ -1,8 +1,9 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { matches, pledges, charges, sponsors, users } from "@/lib/db/schema";
+import { matches, pledges, charges, sponsors, users, teams } from "@/lib/db/schema";
 import { sponsorLabelSql } from "./sponsor-label";
 import { detectTeamSide } from "@/lib/crawler/team-side";
+import { saisonStartDate } from "@/lib/utils/saison";
 
 export interface TeamSponsorRow {
   sponsorId: string;
@@ -61,11 +62,25 @@ export interface TeamSeasonStats {
 }
 
 /** Bilanz/Tore aus abgeschlossenen Matches. Heim/Auswärts robust über
- *  Team- + Vereinsname (vgl. ursprüngliche Inline-Logik der Dashboard-Seite). */
+ *  Team- + Vereinsname (vgl. ursprüngliche Inline-Logik der Dashboard-Seite).
+ *
+ *  Aufs AKTUELLE Saison-Fenster beschränkt (datum >= saisonStartDate der
+ *  Team-Row, analog Display-Gate in listMatchesForTeam): der Vorsaison-
+ *  Backfill (backfill-team-history) legt finished-Rows mit Ergebnis aus der
+ *  Vorsaison auf derselben Team-Row an — ohne Fenster würden Dashboard-Stats
+ *  und öffentliches Profil Vorsaison + aktuelle Saison zusammenzählen. */
 export async function computeTeamSeasonStats(
   teamId: string, teamName: string, clubName: string
 ): Promise<TeamSeasonStats> {
-  const rows = await db.select().from(matches).where(eq(matches.teamId, teamId));
+  const [t] = await db
+    .select({ saison: teams.saison })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  const fromDate = t ? saisonStartDate(t.saison) : null;
+  const conditions = [eq(matches.teamId, teamId)];
+  if (fromDate) conditions.push(gte(matches.datum, fromDate));
+  const rows = await db.select().from(matches).where(and(...conditions));
   const finished = rows.filter((m) => m.status === "finished" && m.ergebnisHeim !== null);
   const names = [teamName, clubName];
   let wins = 0, draws = 0, losses = 0, goalsFor = 0, goalsAgainst = 0;

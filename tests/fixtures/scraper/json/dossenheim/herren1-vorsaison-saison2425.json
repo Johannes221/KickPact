@@ -1,0 +1,302 @@
+{
+  "teamId": "011MIAE8VG000000VTVG0001VTR8C1K7",
+  "saison": "2425",
+  "spiele": [
+    {
+      "spielId": "02Q5FFB0L0000000VS5489B3VUHDH0E9",
+      "datum": "18.07.2024",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "SC Rot-Weiß Rheinau",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02PRVSFAK0000000VS5489B4VVTKJJ35",
+      "datum": "20.07.2024",
+      "heimName": "SC Bobenheim-Roxheim",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 3
+    },
+    {
+      "spielId": "02Q9PEVFP0000000VS5489B3VUF34HMH",
+      "datum": "01.08.2024",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "SG Oftersheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q981LJP4000000VS5489B3VTFGI39E",
+      "datum": "04.08.2024",
+      "heimName": "SC 1910 Käfertal",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 6
+    },
+    {
+      "spielId": "02Q438G7F0000000VS5489B4VTH92TNV",
+      "datum": "20.08.2024",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "ASC Neuenheim 2",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 3
+    },
+    {
+      "spielId": "02Q438G6LS000000VS5489B4VTH92TNV",
+      "datum": "25.08.2024",
+      "heimName": "Eberbacher SC",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02Q438G6B8000000VS5489B4VTH92TNV",
+      "datum": "01.09.2024",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "VfB Rauenberg",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02Q438G614000000VS5489B4VTH92TNV",
+      "datum": "08.09.2024",
+      "heimName": "FT Kirchheim",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q438G3Q0000000VS5489B4VTH92TNV",
+      "datum": "11.09.2024",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "FC Frauenweiler",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02Q438G4MS000000VS5489B4VTH92TNV",
+      "datum": "19.09.2024",
+      "heimName": "Heidelberger SC",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q438G39O000000VS5489B4VTH92TNV",
+      "datum": "06.10.2024",
+      "heimName": "VFL Heiligkreuzsteinach",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 6
+    },
+    {
+      "spielId": "02Q438G2VC000000VS5489B4VTH92TNV",
+      "datum": "13.10.2024",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "SG HD-Kirchheim 2",
+      "ergebnisHeim": 4,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q438G544000000VS5489B4VTH92TNV",
+      "datum": "18.10.2024",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "TB Rohrbach",
+      "ergebnisHeim": 4,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q438G2MO000000VS5489B4VTH92TNV",
+      "datum": "23.10.2024",
+      "heimName": "FC Rot",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 3
+    },
+    {
+      "spielId": "02Q438G27C000000VS5489B4VTH92TNV",
+      "datum": "27.10.2024",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "SpVgg Baiertal",
+      "ergebnisHeim": 4,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q438G1U8000000VS5489B4VTH92TNV",
+      "datum": "03.11.2024",
+      "heimName": "VfB Leimen",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02Q438G1IK000000VS5489B4VTH92TNV",
+      "datum": "10.11.2024",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "SG Dielheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q438G170000000VS5489B4VTH92TNV",
+      "datum": "17.11.2024",
+      "heimName": "TSV Pfaffengrund",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 4
+    },
+    {
+      "spielId": "02Q438GIK4000000VS5489B4VTH92TNV",
+      "datum": "22.11.2024",
+      "heimName": "ASC Neuenheim 2",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 5
+    },
+    {
+      "spielId": "02Q438GEFS000000VS5489B4VTH92TNV",
+      "datum": "01.12.2024",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "Heidelberger SC",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02S3RCHG10000000VS5489B3VSPCSFP5",
+      "datum": "09.02.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "SG Tairnbach",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02S3RCN5CC000000VS5489B3VSPCSFP5",
+      "datum": "13.02.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "TSV Rheinhausen",
+      "ergebnisHeim": 7,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02S3RDF4K0000000VS5489B3VSPCSFP5",
+      "datum": "20.02.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "VfL Kurpfalz Neckarau",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02SB58R20K000000VS5489B3VSRJVFP8",
+      "datum": "26.02.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "TSV Amicitia Viernheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02SDFSU4RK000000VS5489B4VTBO2A01",
+      "datum": "02.03.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "SC Rot-Weiß Rheinau",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 3
+    },
+    {
+      "spielId": "02Q438GHDG000000VS5489B4VTH92TNV",
+      "datum": "09.03.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "Eberbacher SC",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q438GGRO000000VS5489B4VTH92TNV",
+      "datum": "16.03.2025",
+      "heimName": "VfB Rauenberg",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 5
+    },
+    {
+      "spielId": "02Q438GGA8000000VS5489B4VTH92TNV",
+      "datum": "23.03.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "FT Kirchheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q438GF68000000VS5489B4VTH92TNV",
+      "datum": "30.03.2025",
+      "heimName": "TB Rohrbach",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 1,
+      "ergebnisGast": 4
+    },
+    {
+      "spielId": "02Q438GCS4000000VS5489B4VTH92TNV",
+      "datum": "13.04.2025",
+      "heimName": "FC Frauenweiler",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q438GBQ0000000VS5489B4VTH92TNV",
+      "datum": "17.04.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "VFL Heiligkreuzsteinach",
+      "ergebnisHeim": 5,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q438GB90000000VS5489B4VTH92TNV",
+      "datum": "25.04.2025",
+      "heimName": "SG HD-Kirchheim 2",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 2,
+      "ergebnisGast": 2
+    },
+    {
+      "spielId": "02Q438GAQS000000VS5489B4VTH92TNV",
+      "datum": "04.05.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "FC Rot",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q438G9SO000000VS5489B4VTH92TNV",
+      "datum": "08.05.2025",
+      "heimName": "SpVgg Baiertal",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 1
+    },
+    {
+      "spielId": "02Q438G9AO000000VS5489B4VTH92TNV",
+      "datum": "18.05.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "VfB Leimen",
+      "ergebnisHeim": 0,
+      "ergebnisGast": 3
+    },
+    {
+      "spielId": "02Q438G8JS000000VS5489B4VTH92TNV",
+      "datum": "24.05.2025",
+      "heimName": "SG Dielheim",
+      "gastName": "FC Sportfreunde 1910 Dossenheim",
+      "ergebnisHeim": 3,
+      "ergebnisGast": 0
+    },
+    {
+      "spielId": "02Q438G7UK000000VS5489B4VTH92TNV",
+      "datum": "01.06.2025",
+      "heimName": "FC Sportfreunde 1910 Dossenheim",
+      "gastName": "TSV Pfaffengrund",
+      "ergebnisHeim": 10,
+      "ergebnisGast": 2
+    }
+  ]
+}

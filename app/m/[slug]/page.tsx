@@ -2,6 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublicTeamProfileBySlug } from "@/lib/db/queries/sponsor-discover";
 import { getPublicTeamInsights } from "@/lib/db/queries/team-public-insights";
+import {
+  getPreviousSeasonDisplay,
+  type PreviousSeasonDisplay
+} from "@/lib/db/queries/matches";
+import { detectTeamSide } from "@/lib/crawler/team-side";
+import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { ProfileHero } from "./_components/profile-hero";
 import { InsightsStrip } from "./_components/insights-strip";
 import { GalleryStrip } from "./_components/gallery-strip";
@@ -53,6 +59,12 @@ export default async function PublicTeamProfilePage({ params }: PageProps) {
         profile.clubName
       )
     : null;
+  // „Letzte Saison": Vorsaison-Historie (Backfill), solange die aktuelle
+  // Saison < 3 gespielte Spiele hat. Wie die Insights nur sichtbar, wenn die
+  // Mannschaft Performance-Daten öffentlich zeigt (showInsights).
+  const previousSeason = profile.showInsights
+    ? await getPreviousSeasonDisplay(profile.teamId)
+    : null;
   const verified = !!(profile.teamVerifiedAt || profile.clubVerifiedAt);
 
   return (
@@ -69,6 +81,13 @@ export default async function PublicTeamProfilePage({ params }: PageProps) {
       />
 
       {insights && <InsightsStrip insights={insights} />}
+
+      {previousSeason && (
+        <PreviousSeasonSection
+          data={previousSeason}
+          teamNames={[profile.teamName, profile.clubName]}
+        />
+      )}
 
       <GalleryStrip images={profile.gallery} />
 
@@ -128,5 +147,65 @@ export default async function PublicTeamProfilePage({ params }: PageProps) {
         </a>
       </p>
     </main>
+  );
+}
+
+/**
+ * „Letzte Saison"-Block fürs öffentliche Profil: S/U/N-Bilanz + die letzten
+ * Ergebnisse der Vorsaison. Klar als Vorsaison beschriftet, damit die
+ * historischen Spiele nicht wie aktuelle aussehen. Server-rendered, mobil.
+ */
+function PreviousSeasonSection({
+  data,
+  teamNames
+}: {
+  data: PreviousSeasonDisplay;
+  teamNames: string[];
+}) {
+  const { record } = data;
+  return (
+    <section className="px-4 pt-5" aria-label={`Letzte Saison ${data.prevSaisonLabel}`}>
+      <div className="mb-2 text-[10px] font-extrabold uppercase tracking-wider text-accent">
+        Letzte Saison ({data.prevSaisonLabel})
+      </div>
+      <div className="rounded-2xl border border-brand-night-navy/10 bg-white p-4">
+        <p className="text-sm font-semibold text-brand-night-navy">
+          {record.spiele} Spiele · {record.siege} S / {record.unentschieden} U /{" "}
+          {record.niederlagen} N · Tore {record.torePlus}:{record.toreMinus}
+        </p>
+        <ul className="mt-3 space-y-1.5">
+          {data.recentMatches.map((m) => {
+            const isHeim = detectTeamSide(teamNames, m.heimName) === "heim";
+            const gF = isHeim ? (m.ergebnisHeim ?? null) : (m.ergebnisGast ?? null);
+            const gA = isHeim ? (m.ergebnisGast ?? null) : (m.ergebnisHeim ?? null);
+            const dot =
+              gF === null
+                ? "bg-neutral-300"
+                : gF > (gA ?? 0)
+                  ? "bg-emerald-500"
+                  : gF < (gA ?? 0)
+                    ? "bg-rose-400"
+                    : "bg-amber-400";
+            return (
+              <li
+                key={m.id}
+                className="grid grid-cols-[auto_1fr_auto_1fr] items-center gap-2 text-xs text-brand-night-navy/80"
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${dot}`} aria-hidden />
+                <span className="min-w-0 truncate text-right" title={m.heimName}>
+                  {abbreviateTeamName(m.heimName)}
+                </span>
+                <span className="font-mono tabular-nums font-semibold text-brand-night-navy">
+                  {m.ergebnisHeim ?? "—"}:{m.ergebnisGast ?? "—"}
+                </span>
+                <span className="min-w-0 truncate" title={m.gastName}>
+                  {abbreviateTeamName(m.gastName)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </section>
   );
 }
