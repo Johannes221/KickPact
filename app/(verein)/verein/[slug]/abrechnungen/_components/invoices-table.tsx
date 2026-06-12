@@ -8,6 +8,7 @@ import { DataTable, type DataTableColumn, type SortDirection } from "@/component
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { markInvoicePaid, invoiceDownloadUrl } from "@/lib/actions/invoices";
 import { eur } from "@/lib/utils/currency";
+import { ReminderDialog, type ReminderPayload } from "./reminder-dialog";
 
 interface Row {
   id: string;
@@ -22,6 +23,11 @@ interface Row {
   sentAt: Date | null;
   paidMarkedAt: Date | null;
   createdAt: Date;
+  /**
+   * Server-seitig gebaute Zahlungserinnerungs-Vorlage (nur für offene,
+   * versendete Rechnungen — sonst null). Siehe lib/invoicing/reminder-text.ts.
+   */
+  reminder: ReminderPayload | null;
 }
 
 interface InvoicesTableProps {
@@ -124,6 +130,7 @@ export function InvoicesTable({
               PDF
             </Button>
           )}
+          {row.reminder && <ReminderDialog reminder={row.reminder} />}
           {canMarkPaid && row.status !== "paid" && (
             <Button
               size="sm"
