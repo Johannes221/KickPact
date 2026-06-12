@@ -6,6 +6,7 @@ import {
   invoices,
   invoiceItems,
   charges,
+  pledges,
   sponsors,
   clubs,
   clubMemberships,
@@ -13,6 +14,7 @@ import {
   teams,
   teamLicenses
 } from "@/lib/db/schema";
+import { billingClubForTeam } from "@/lib/billing/billing-club";
 import { highestPlanFrom } from "@/lib/mail/reply-to-pure";
 import type { PlanKey } from "@/lib/stripe/pricing";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
@@ -177,25 +179,42 @@ export const generateInvoices = inngest.createFunction(
             return { skipped: true, reason: "sponsor-or-club-missing" } as const;
           }
 
-          const invoiceNumber = await nextInvoiceNumber(cl.id, period.year);
+          // Paket B (Spec §1.5): Absender-/Branding-Auflösung. Steht das Team
+          // der Gruppe unter Vereinslizenz (teams.licensedUnderClubId), kommen
+          // Absender, IBAN, Withhold-Gate-verifiedAt, Reply-To, Admin-Mails
+          // und Nummernkreis vom Lizenz-VEREIN — sofort ab Annahme, auch wenn
+          // T's eigenes Abo noch bis Periodenende läuft. Die Gruppe ist per
+          // (sponsorId, container-clubId) geschnitten, alle Charges hängen an
+          // Teams desselben Containers → ein Team-Lookup über die erste Charge
+          // genügt. invoices.clubId bleibt der Container (Datenverknüpfung).
+          const [teamRef] = await db
+            .select({ teamId: pledges.teamId })
+            .from(charges)
+            .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+            .where(eq(charges.id, group.items[0].chargeId))
+            .limit(1);
+          const billingClub =
+            (teamRef ? await billingClubForTeam(teamRef.teamId) : undefined) ?? cl;
 
-          // Pricing v2: höchstes Tier aller Teams des Clubs → steuert PDF-Footer.
+          const invoiceNumber = await nextInvoiceNumber(billingClub.id, period.year);
+
+          // Pricing v2: höchstes Tier aller Teams des Absender-Clubs → PDF-Footer.
           const planRows = await db
             .select({ plan: teamLicenses.plan })
             .from(teamLicenses)
             .innerJoin(teams, eq(teamLicenses.teamId, teams.id))
-            .where(eq(teams.clubId, cl.id));
+            .where(eq(teams.clubId, billingClub.id));
           const clubPlan: PlanKey =
             planRows.length > 0
               ? highestPlanFrom(planRows.map((r) => r.plan as PlanKey))
               : "basic";
 
           const subtotal = group.items.reduce((s, i) => s + i.amountCents, 0);
-          const ust = cl.isSmallBusiness ? 0 : Math.round(subtotal * 0.19);
+          const ust = billingClub.isSmallBusiness ? 0 : Math.round(subtotal * 0.19);
           const total = subtotal + ust;
 
           // Render PDF to Buffer (Node-side, react-pdf)
-          const clubAddress = (cl.addressJson as {
+          const clubAddress = (billingClub.addressJson as {
             street?: string;
             zip?: string;
             city?: string;
@@ -212,8 +231,8 @@ export const generateInvoices = inngest.createFunction(
           // react-pdf <Image> can embed it. Returns null when IBAN missing
           // → builder simply omits the QR side of the pay-box.
           const girocodeDataUrl = await renderGirocodeDataUrl({
-            beneficiaryName: cl.name,
-            iban: cl.iban ?? null,
+            beneficiaryName: billingClub.name,
+            iban: billingClub.iban ?? null,
             amountCents: total,
             remittance: invoiceNumber
           });
@@ -227,16 +246,16 @@ export const generateInvoices = inngest.createFunction(
                 plan: clubPlan,
                 girocodeDataUrl,
                 club: {
-                  name: cl.name,
+                  name: billingClub.name,
                   address: {
                     street: clubAddress.street ?? "",
                     zip: clubAddress.zip ?? "",
                     city: clubAddress.city ?? "",
                     country: clubAddress.country
                   },
-                  iban: cl.iban ?? null,
-                  taxId: cl.taxId ?? null,
-                  isSmallBusiness: cl.isSmallBusiness
+                  iban: billingClub.iban ?? null,
+                  taxId: billingClub.taxId ?? null,
+                  isSmallBusiness: billingClub.isSmallBusiness
                 },
                 sponsor: {
                   displayName: spRow.sponsor.displayName,
@@ -269,10 +288,11 @@ export const generateInvoices = inngest.createFunction(
 
           // Phase E1 + Spec 2026-05-29 §3.2 Withhold-Gate:
           //   `clubs.verifiedAt` ist das einzige Verifizierungs-Gate. Ist der
-          //   Container-Verein nicht verifiziert → Rechnung + PDF werden erstellt,
-          //   aber status='withheld'. Bei Club-Approval wird re-evaluiert.
+          //   ABSENDER-Verein (billingClub: licensedUnder ?? Container) nicht
+          //   verifiziert → Rechnung + PDF werden erstellt, aber
+          //   status='withheld'. Bei Club-Approval wird re-evaluiert.
           //   (Das frühere team-level Gate `teams.verifiedAt` ist deaktiviert.)
-          const verified = cl.verifiedAt !== null;
+          const verified = billingClub.verifiedAt !== null;
 
           // B6 (Audit 2026-06-11): Invoice startet als 'draft' — 'sent' wird
           // erst NACH erfolgreichem Mail-Versand gesetzt (mark-sent-Step
@@ -374,26 +394,29 @@ export const generateInvoices = inngest.createFunction(
 
           // Sammle Mail-Metadaten — werden in separaten Steps unten versendet.
           // pdfBuf als base64 durch Inngest-Step-Boundary serialisierbar.
+          // Admin-Mails + Reply-To folgen ebenfalls dem Absender-Club: unter
+          // Vereinslizenz informiert die Rechnung den VORSTAND (Geld fließt
+          // zum Verein, Spec §1.5-Trade-off), nicht den Container-Trainer.
           const adminRows = await db
             .select({ email: users.email, name: users.name })
             .from(clubMemberships)
             .innerJoin(users, eq(clubMemberships.userId, users.id))
-            .where(eq(clubMemberships.clubId, cl.id));
+            .where(eq(clubMemberships.clubId, billingClub.id));
           const adminEmails = adminRows.filter((a) => a.email).map((a) => a.email);
-          const replyTo = await getReplyToForClub(cl.id);
+          const replyTo = await getReplyToForClub(billingClub.id);
 
           return {
             skipped: false as const,
             recoveredDraft,
             invoiceId: invoiceRow.id,
             invoiceNumber,
-            clubId: cl.id,
+            clubId: billingClub.id,
             clubVerified: verified,
             sponsorEmail: spRow.user.email,
             sponsorName: spRow.sponsor.displayName,
             adminEmails,
             adminName: adminRows[0]?.name ?? null,
-            clubName: cl.name,
+            clubName: billingClub.name,
             replyTo: replyTo ?? null,
             totalEur: eur(total),
             itemCount: group.items.length,
