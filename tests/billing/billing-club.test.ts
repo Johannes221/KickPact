@@ -208,8 +208,11 @@ describe.skipIf(isIntegrationDbDisabled)("billingClubForTeam", () => {
       const [inv] = await tdb.select().from(invoices);
       // Withhold-Gate folgt Y.verifiedAt (X ist NICHT verifiziert) → versendet.
       expect(inv.status).toBe("sent");
-      // Datenverknüpfung bleibt am Container (minimal-invasiv).
-      expect(inv.clubId).toBe("club_x");
+      // Review M1 (2026-06-12): Die Rechnung gehört dem BILLING-Club —
+      // damit finden Verifizierungs-Release und die Abrechnungs-Seite des
+      // Vereins die Rechnung (vorher: Gate auf Y, Release suchte unter X →
+      // withheld für immer).
+      expect(inv.clubId).toBe("club_y");
 
       // Nummernkreis läuft auf dem Lizenz-Verein Y.
       const counters = await tdb.select().from(invoiceCounters);
