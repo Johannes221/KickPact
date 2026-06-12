@@ -26,6 +26,7 @@ import {
 } from "@/lib/db/queries/team-lifecycle";
 import { saisonLabel } from "@/lib/utils/saison";
 import { getClubById } from "@/lib/db/queries/club-admin";
+import { getPendingTransferRequestForTeam } from "@/lib/db/queries/license-transfers";
 import { countPledgesForTeam } from "@/lib/db/queries/pledges";
 import { getTeamLicensePlanDirect } from "@/lib/db/queries/subscriptions";
 import { TRIGGER_META } from "@/lib/triggers/labels";
@@ -47,7 +48,7 @@ export default async function TeamDetailPage({
   params: Promise<{ slug: string; teamId: string }>;
 }) {
   const { slug, teamId } = await params;
-  const { club } = await assertTeamPageAccess(slug, teamId, "viewer");
+  const { club, user } = await assertTeamPageAccess(slug, teamId, "viewer");
 
   const team = await getFullTeamInClub(teamId, club.id);
 
@@ -58,6 +59,9 @@ export default async function TeamDetailPage({
       </div>
     );
   }
+
+  // Paket B (Spec §1.5): Banner für offene Lizenz-Transfer-Anfrage.
+  const pendingTransfer = await getPendingTransferRequestForTeam(team.id);
 
   const [matchRows, chargesSummary, seasonTarget, seasonPledges, previousSeason] =
     await Promise.all([
@@ -164,6 +168,29 @@ export default async function TeamDetailPage({
         title={team.name}
         subtitle={`${club.name} · Saison ${saisonDisplay}`}
       />
+
+      {/* Paket B (Spec §1.5): offene Lizenz-Transfer-Anfrage eines Vereins */}
+      {pendingTransfer && (
+        <div className="rounded-2xl border border-accent/30 bg-accent/5 p-4 md:p-5">
+          <p className="text-sm font-semibold text-brand-night-navy">
+            {pendingTransfer.toClubName} möchte deine Mannschaft unter die
+            Vereinslizenz nehmen.
+          </p>
+          {pendingTransfer.fromUserId === user.id ? (
+            <p className="mt-1 text-sm text-brand-night-navy/70">
+              Du entscheidest: Annehmen, Co-Verwaltung oder Ablehnen —{" "}
+              <Link href="/konto" className="font-semibold text-accent">
+                jetzt in „Mein Konto" entscheiden →
+              </Link>
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-brand-night-navy/70">
+              Der Lizenz-Inhaber der Mannschaft wurde benachrichtigt und
+              entscheidet über die Anfrage.
+            </p>
+          )}
+        </div>
+      )}
 
       <TeamSetupChecklist
         items={checklistItems}

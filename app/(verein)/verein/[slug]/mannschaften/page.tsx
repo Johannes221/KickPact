@@ -2,9 +2,11 @@ import Link from "next/link";
 import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { listClubTeamsWithStatus } from "@/lib/db/queries/club-admin";
 import { getClubTeamStats } from "@/lib/db/queries/club-reporting";
+import { listLicenseTransferCandidatesForClub } from "@/lib/db/queries/license-transfers";
 import { TeamCrest } from "@/components/shared/team-crest";
 import { saisonLabel } from "@/lib/utils/saison";
 import { eur } from "@/lib/utils/currency";
+import { RequestLicenseTransferButton } from "./_components/request-license-transfer-button";
 
 export const metadata = { title: "Mannschaften · KickPact" };
 
@@ -14,15 +16,73 @@ export default async function MannschaftenPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { club } = await assertVereinAdminOrRedirect(slug, "viewer");
+  const { club, role } = await assertVereinAdminOrRedirect(slug, "viewer");
 
   // Load all active teams
   const teamRows = await listClubTeamsWithStatus(club.id);
 
+  // Paket B (Spec §1.5): bereits existierende autarke Mannschaften desselben
+  // realen Vereins (eigener Container, eigene Lizenz) — der Vorstand kann
+  // anfragen, sie unter die Vereinslizenz zu nehmen.
+  const transferCandidates = await listLicenseTransferCandidatesForClub(club.id);
+  const candidatesSection = transferCandidates.length > 0 && (
+    <section className="space-y-3">
+      <div>
+        <h3 className="font-display font-bold text-lg tracking-tight text-brand-night-navy">
+          Bestehende Mannschaften eures Vereins
+        </h3>
+        <p className="text-sm text-brand-night-navy/60">
+          Diese Mannschaften laufen bereits eigenständig auf KickPact. Fragt
+          den Lizenz-Inhaber an, um sie unter eure Vereinslizenz zu nehmen.
+        </p>
+      </div>
+      <ul className="space-y-3">
+        {transferCandidates.map((c) => (
+          <li
+            key={c.teamId}
+            className="flex flex-wrap items-center gap-3 rounded-2xl border border-brand-neutral/40 bg-white p-4"
+          >
+            <div className="flex-1 min-w-0">
+              <div className="font-display font-bold text-base text-brand-night-navy truncate">
+                {c.teamName}
+              </div>
+              <p className="text-xs text-brand-night-navy/50">
+                Saison {saisonLabel(c.saison)} · eigenständige Lizenz
+              </p>
+            </div>
+            {c.requestStatus === "pending" ? (
+              <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-widest text-amber-700">
+                Anfrage läuft
+              </span>
+            ) : (
+              <>
+                {c.requestStatus === "rejected" && (
+                  <span className="inline-flex items-center rounded-full bg-brand-neutral/30 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-widest text-brand-night-navy/60">
+                    Abgelehnt
+                  </span>
+                )}
+                {role === "admin" && (
+                  <RequestLicenseTransferButton
+                    clubSlug={slug}
+                    teamId={c.teamId}
+                    teamName={c.teamName}
+                  />
+                )}
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+
   if (teamRows.length === 0) {
     return (
-      <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60">
-        Noch keine Mannschaft angelegt. → <Link href={`/verein/${slug}/mannschaften/neu`} className="text-accent font-semibold">Mannschaft hinzufügen</Link>
+      <div className="space-y-6">
+        <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-6 text-sm text-brand-night-navy/60">
+          Noch keine Mannschaft angelegt. → <Link href={`/verein/${slug}/mannschaften/neu`} className="text-accent font-semibold">Mannschaft hinzufügen</Link>
+        </div>
+        {candidatesSection}
       </div>
     );
   }
@@ -134,6 +194,8 @@ export default async function MannschaftenPage({
           );
         })}
       </ul>
+
+      {candidatesSection}
     </div>
   );
 }
