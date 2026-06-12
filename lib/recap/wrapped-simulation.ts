@@ -5,12 +5,14 @@
  * `simulateRulesOverMatches(matches, rules)` mit Result
  * `{ totalCents, perRule, monthsCovered, matchCount }`.
  *
- * TODO(nach Merge von W3): auf `simulateRulesOverMatches` aus
- * lib/simulation/pact-simulation.ts umstellen — diese Datei behält dann nur
- * die Typ-Weiterleitung. Bis dahin rechnet hier eine bewusst minimale eigene
- * Implementierung, die ausschließlich `goal_total` unterstützt (Tore × Betrag,
- * keine Caps). Das reicht für den Wrapped-Fallback-Slide
- * „Mit einem 1-€-pro-Tor-Pact wären das X € gewesen".
+ * ENTSCHEIDUNG nach W3-Merge (2026-06-12): Diese Mini-Implementierung bleibt
+ * bewusst eigenständig statt auf lib/simulation/pact-simulation.ts umzusteigen.
+ * Der einzige Wrapped-Anwendungsfall ist EINE ungecappte goal_total-Regel
+ * („Mit einem 1-€-pro-Tor-Pact wären das X € gewesen") — dafür liefert
+ * Tore × Betrag exakt dasselbe Ergebnis wie der volle Engine-Durchlauf,
+ * ohne dass die Wrapped-Query volle MatchInput-Objekte (Events etc.)
+ * konstruieren muss. Wer hier künftig MEHR Regel-Typen simulieren will,
+ * MUSS auf lib/simulation/pact-simulation.ts wechseln.
  */
 
 export interface WrappedSimMatchInput {
