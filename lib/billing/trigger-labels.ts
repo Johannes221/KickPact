@@ -29,6 +29,10 @@ export function getTriggerLabel(
     }
     case "win":
       return "Sieg";
+    case "home_win":
+      return "Heimsieg";
+    case "away_win":
+      return "Auswärtssieg";
     case "loss":
       return "Niederlage";
     case "draw":

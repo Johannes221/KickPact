@@ -1,6 +1,8 @@
 import {
   Goal,
   Trophy,
+  Home,
+  Bus,
   Frown,
   Handshake,
   Shield,
@@ -31,6 +33,8 @@ const ICON_BY_TRIGGER: Record<string, LucideIcon> = {
   goal_total: Goal,
   goal_by_player: Goal,
   win: Trophy,
+  home_win: Home,
+  away_win: Bus,
   loss: Frown,
   draw: Handshake,
   clean_sheet: Shield,

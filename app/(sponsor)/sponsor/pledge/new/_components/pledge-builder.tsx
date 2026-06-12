@@ -59,6 +59,8 @@ const TRIGGER_LIBRARY: LibItem[] = [
   // ── Automatisch von KickPact erfasst (pro Spiel) ──
   { key: "goal_total", type: "goal_total", label: "Pro Tor", emoji: "⚽", description: "Für jedes Tor der eigenen Mannschaft", defaultEur: 5, group: "auto" },
   { key: "win", type: "win", label: "Pro Sieg", emoji: "🏆", description: "Einmal pro gewonnenem Spiel", defaultEur: 10, group: "auto" },
+  { key: "home_win", type: "home_win", label: "Pro Heimsieg", emoji: "🏠", description: "Einmal pro Sieg vor eigenem Publikum", defaultEur: 10, group: "auto" },
+  { key: "away_win", type: "away_win", label: "Pro Auswärtssieg", emoji: "🚌", description: "Auswärtssiege kannst du höher bewerten 💪", defaultEur: 15, group: "auto" },
   { key: "clean_sheet", type: "clean_sheet", label: "Pro Zu-Null-Sieg", emoji: "🛡️", description: "Gewonnen + 0 Gegentore", defaultEur: 5, group: "auto" },
   { key: "comeback_win", type: "comeback_win", label: "Pro Comeback-Sieg", emoji: "🔥", description: "Irgendwann hinten gelegen, am Ende gewonnen", defaultEur: 20, group: "auto" },
   { key: "hattrick", type: "hattrick", label: "Pro Hattrick", emoji: "🎯", description: "1 Spieler ≥3 Tore in einem Spiel", defaultEur: 25, group: "auto" },
@@ -1111,6 +1113,10 @@ function estimateWorstCase(
           return total + Math.min(r.amountEur * AVG_GOALS_PER_GAME, cap) * SAISON_GAMES;
         case "win":
           return total + r.amountEur * SAISON_GAMES * WIN_RATE;
+        case "home_win":
+        case "away_win":
+          // Halbe Saison Heim-, halbe Auswärtsspiele.
+          return total + r.amountEur * (SAISON_GAMES / 2) * WIN_RATE;
         case "clean_sheet":
           return total + r.amountEur * SAISON_GAMES * CLEAN_SHEET_RATE;
         case "comeback_win":

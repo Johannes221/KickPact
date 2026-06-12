@@ -16,6 +16,8 @@ export const TRIGGER_TYPES = [
   // pro Spiel — automatisch
   "goal_total",
   "win",
+  "home_win",
+  "away_win",
   "clean_sheet",
   "comeback_win",
   "hattrick",

@@ -88,6 +88,8 @@ export const TRIGGER_TYPES_BY_CATEGORY: Record<TriggerCategory, TriggerType[]> =
   auto: [
     "goal_total",
     "win",
+    "home_win",
+    "away_win",
     "clean_sheet",
     "comeback_win",
     "hattrick",

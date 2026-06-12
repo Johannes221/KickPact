@@ -49,6 +49,8 @@ const TRIGGER_LABELS: Record<string, string> = {
   goal_total: "pro Tor",
   goal_by_player: "Tor von Spieler",
   win: "pro Sieg",
+  home_win: "pro Heimsieg",
+  away_win: "pro Auswärtssieg",
   comeback_win: "pro Comeback",
   hattrick: "pro Hattrick",
   clean_sheet: "pro Zu-Null",

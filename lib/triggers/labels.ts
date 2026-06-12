@@ -16,6 +16,8 @@ export type TriggerType =
   | "hattrick"
   | "goal_diff_min"
   | "goals_scored_min"
+  | "home_win"
+  | "away_win"
   // per-match manual
   | "special_goal"
   | "yellow_card"
@@ -51,6 +53,8 @@ export const TRIGGER_META: Record<TriggerType, TriggerMeta> = {
   hattrick: { label: "Pro Hattrick", emoji: "🎯", scope: "match", auto: true },
   goal_diff_min: { label: "Hoher Sieg", emoji: "📈", scope: "match", auto: true },
   goals_scored_min: { label: "Viele Tore", emoji: "🚀", scope: "match", auto: true },
+  home_win: { label: "Pro Heimsieg", emoji: "🏠", scope: "match", auto: true },
+  away_win: { label: "Pro Auswärtssieg", emoji: "🚌", scope: "match", auto: true },
   special_goal: { label: "Spezial-Tor", emoji: "🎭", scope: "match", auto: false },
   yellow_card: { label: "Gelbe Karte", emoji: "🟨", scope: "match", auto: false },
   red_card: { label: "Rote Karte", emoji: "🟥", scope: "match", auto: false },
