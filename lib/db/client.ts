@@ -28,6 +28,22 @@ function resolveDbUrl(): string {
   return process.env.DATABASE_URL;
 }
 
-const queryClient = postgres(resolveDbUrl(), { prepare: false });
+/**
+ * Test-Runtime: Vitest isoliert Module pro Test-FILE — auch im singleFork
+ * bekommt jede Datei eine frische Instanz dieses Moduls und damit einen
+ * eigenen Pool, der nie explizit geschlossen wird. Mit postgres-js-Defaults
+ * (max=10, idle_timeout=0 ⇒ nie schließen) akkumulieren ~160 Test-Dateien
+ * Verbindungen bis "sorry, too many clients already". Daher im Test: kleiner
+ * Pool + aggressives idle_timeout, damit Verbindungen zwischen den Dateien
+ * zurückgegeben werden.
+ */
+const isTestRuntime =
+  process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+const queryClient = postgres(
+  resolveDbUrl(),
+  isTestRuntime
+    ? { prepare: false, max: 2, idle_timeout: 5, max_lifetime: 60 }
+    : { prepare: false }
+);
 export const db = drizzle(queryClient, { schema: { ...schema, ...relations } });
 export type DB = typeof db;
