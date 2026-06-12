@@ -12,15 +12,22 @@ import type { PledgeRuleInput, TriggerType } from "@/lib/crawler/triggers";
 /**
  * Lädt pro-Spiel Pledge-Rules für die `evaluate-match` Pipeline.
  * Filtert Saison-Trigger explizit raus — die laufen über `evaluate-season`.
+ *
+ * `sponsorId` (Paket A.2, Spec §1.2) hängt pro Rule dran, damit die
+ * Insert-Pfade den Billing-Cycle-Snapshot OHNE N+1 auflösen können
+ * (ein `resolveCycleAt`-Lookup pro Sponsor, nicht pro Proposal).
  */
+export type PledgeRuleWithSponsor = PledgeRuleInput & { sponsorId: string };
+
 export async function loadActivePledgeRulesForTeam(
   teamId: string,
   asOf: Date
-): Promise<PledgeRuleInput[]> {
+): Promise<PledgeRuleWithSponsor[]> {
   const rows = await db
     .select({
       ruleId: pledgeRules.id,
       pledgeId: pledgeRules.pledgeId,
+      sponsorId: pledges.sponsorId,
       triggerType: pledgeRules.triggerType,
       triggerParams: pledgeRules.triggerParamsJson,
       amountCents: pledgeRules.amountCents,
@@ -104,6 +111,7 @@ export async function loadActivePledgeRulesForTeam(
     .map((r) => ({
       id: r.ruleId,
       pledgeId: r.pledgeId,
+      sponsorId: r.sponsorId,
       // Safe cast: oben filtern wir die Saison-Trigger raus, alles was übrig
       // bleibt sind die TriggerType der match-pipeline.
       triggerType: r.triggerType as TriggerType,

@@ -21,6 +21,7 @@ import {
   sumRuleChargedCents,
   ruleCapWindow
 } from "@/lib/db/queries/evaluation";
+import { resolveCyclesAt } from "@/lib/db/queries/billing-cycle";
 import {
   getSubscriptionGate,
   isChargeBlockedByGate
@@ -105,6 +106,17 @@ export const evaluateMatch = inngest.createFunction(
       loadActivePledgeRulesForTeam(teamId, new Date(matchData.m.datum))
     );
     logger.info(`evaluate-match ${matchId}: ${rules.length} active rules`);
+
+    // Paket A.2 (Spec §1.2): Billing-Cycle-Snapshot zum SPIELdatum. EIN
+    // Lookup pro Sponsor (nicht pro Proposal); Map pledgeId→sponsorId aus
+    // den geladenen Rules, Cycle-Resolution als eigener memoisierter Step.
+    const sponsorByPledge = new Map(rules.map((r) => [r.pledgeId, r.sponsorId]));
+    const cycleBySponsor = await step.run("resolve-billing-cycles", () =>
+      resolveCyclesAt(
+        rules.map((r) => r.sponsorId),
+        new Date(matchData.m.datum)
+      )
+    );
 
     // Review K2 (Phase 4, 2026-06-12): coverage=none ⇒ ALLE Proposals
     // approval-pflichtig — der Endstand stammt dort vom Vereins-Override,
@@ -217,6 +229,10 @@ export const evaluateMatch = inngest.createFunction(
                 goalIndex: p.goalIndex ?? 0,
                 triggerType: p.triggerType,
                 amountCents: p.amountCents,
+                // Spec §1.2: Cycle zum Spielzeitpunkt einfrieren (s.o.).
+                billingCycleSnapshot:
+                  cycleBySponsor[sponsorByPledge.get(p.pledgeId) ?? ""] ??
+                  "monthly",
                 status: p.requiresApproval ? "pending_approval" : "confirmed",
                 confirmedAt: p.requiresApproval ? null : new Date()
               });

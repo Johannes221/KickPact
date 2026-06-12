@@ -11,6 +11,8 @@ import {
   users
 } from "@/lib/db/schema";
 import { isSeasonTrigger, type SeasonTriggerType } from "@/lib/db/schema/pledges";
+import type { SponsorBillingCycle } from "@/lib/db/schema/sponsors";
+import { resolveCycleAt } from "@/lib/db/queries/billing-cycle";
 import { cupRoundRank } from "@/lib/triggers/cup-rounds";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { getBaseUrl } from "@/lib/utils/base-url";
@@ -115,6 +117,18 @@ export async function runEvaluateSeason(opts: {
   let chargesSkipped = 0;
   const details: { ruleId: string; trigger: string; outcome: string }[] = [];
 
+  // Paket A.2 (Spec §1.2): Billing-Cycle-Snapshot zum SAISONENDE (30.6.) —
+  // Saison-Charges fallen erst am Saisonende an, ihr Abrechnungs-Zeitpunkt
+  // ist das Saisonende. EIN Lookup pro Sponsor (Cache über alle Rules).
+  const cycleCache = new Map<string, SponsorBillingCycle>();
+  async function cycleForSponsor(sponsorId: string): Promise<SponsorBillingCycle> {
+    const cached = cycleCache.get(sponsorId);
+    if (cached) return cached;
+    const cycle = await resolveCycleAt(sponsorId, seasonEnd);
+    cycleCache.set(sponsorId, cycle);
+    return cycle;
+  }
+
   for (const r of rows) {
     if (!isSeasonTrigger(r.rule.triggerType)) continue;
 
@@ -150,6 +164,8 @@ export async function runEvaluateSeason(opts: {
         saison,
         triggerType,
         amountCents: r.rule.amountCents,
+        // Spec §1.2: Cycle zum Saisonende einfrieren (s.o.).
+        billingCycleSnapshot: await cycleForSponsor(r.pledge.sponsorId),
         status: requiresApproval ? "pending_approval" : "confirmed",
         confirmedAt: requiresApproval ? null : new Date()
       })

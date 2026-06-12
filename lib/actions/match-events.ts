@@ -26,6 +26,7 @@ import {
   loadActivePledgeRulesForTeam,
   getMonthlyChargedCents
 } from "@/lib/db/queries/evaluation";
+import { resolveCyclesAt } from "@/lib/db/queries/billing-cycle";
 import { validateSubtype } from "@/lib/validations/match-events";
 
 // B3 (Audit 2026-06-11 / Phase 4): geteilte Subtype-Validierung liegt in
@@ -182,6 +183,14 @@ export async function addManualEvent(
 
     const proposals = evaluateTriggers(singleEventInput, rules);
 
+    // Paket A.2 (Spec §1.2): Billing-Cycle-Snapshot zum SPIELdatum des
+    // Matches — EIN Lookup pro Sponsor (Map pledgeId→sponsorId aus den Rules).
+    const sponsorByPledge = new Map(rules.map((r) => [r.pledgeId, r.sponsorId]));
+    const cycleBySponsor = await resolveCyclesAt(
+      rules.map((r) => r.sponsorId),
+      matchDate
+    );
+
     // Audit 2026-05-25 (Phase 5): Approval-Expiry aus pledges.endsAt ableiten +
     // pessimistic FOR UPDATE Lock auf jeden Pledge gegen Monthly-Cap-Races
     // (parallel zu evaluate-match.ts B-1-Fix). Sortierte IDs gegen Deadlocks
@@ -258,6 +267,9 @@ export async function addManualEvent(
             matchEventId: p.matchEventId,
             triggerType: p.triggerType,
             amountCents: p.amountCents,
+            // Spec §1.2: Cycle zum Spielzeitpunkt einfrieren (s.o.).
+            billingCycleSnapshot:
+              cycleBySponsor[sponsorByPledge.get(p.pledgeId) ?? ""] ?? "monthly",
             status: p.requiresApproval ? "pending_approval" : "confirmed",
             confirmedAt: p.requiresApproval ? null : new Date()
           })
