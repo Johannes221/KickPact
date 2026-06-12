@@ -49,6 +49,25 @@ describe("Invoice email — sponsor variant", () => {
     const { html } = invoiceSponsorEmail(SPONSOR_FIXTURE);
     expect(html.replace(/\s+/g, " ")).toMatchSnapshot();
   });
+
+  it("pay-links: listet PayPal + Stripe in text und html, wenn vorhanden", () => {
+    const { html, text } = invoiceSponsorEmail({
+      ...SPONSOR_FIXTURE,
+      paypalHandle: "fcdossenheim",
+      stripePaymentLink: "https://buy.stripe.com/test_abc123"
+    });
+    expect(text).toContain("PayPal: https://paypal.me/fcdossenheim");
+    expect(text).toContain("Online zahlen: https://buy.stripe.com/test_abc123");
+    expect(html).toContain("https://paypal.me/fcdossenheim");
+    expect(html).toContain("https://buy.stripe.com/test_abc123");
+  });
+
+  it("pay-links: ohne Links keine PayPal/Stripe-Erwähnung", () => {
+    const { html, text } = invoiceSponsorEmail(SPONSOR_FIXTURE);
+    expect(text).not.toContain("PayPal");
+    expect(html).not.toContain("PayPal");
+    expect(text).not.toContain("buy.stripe.com");
+  });
 });
 
 describe("Invoice email — club copy", () => {

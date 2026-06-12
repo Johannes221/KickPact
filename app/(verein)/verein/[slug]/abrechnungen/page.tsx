@@ -6,6 +6,10 @@ import {
   type ClubInvoiceSortKey
 } from "@/lib/db/queries/invoices";
 import { parsePaginationFromSearchParams } from "@/lib/db/queries/_helpers/paginate";
+import {
+  buildReminderText,
+  invoiceNumberFromPdfUrl
+} from "@/lib/invoicing/reminder-text";
 import { StatCard } from "@/components/shared/stat-card";
 import { InvoicesTable } from "./_components/invoices-table";
 
@@ -56,6 +60,31 @@ export default async function AbrechnungenPage({
   // B7 (Audit 2026-06-11): „Als bezahlt markieren" nur für echte Club-Admins —
   // Trainer/Viewer sehen die Tabelle read-only.
   const isAdmin = access.role === "admin";
+
+  // Zahlungserinnerungs-Vorlage (Phase 5 Paket C): pro offener, versendeter
+  // Rechnung server-seitig den fertigen Text bauen — der Client zeigt ihn nur
+  // an (Kopieren / mailto). KickPact versendet nichts (keine Auto-Mahnungen).
+  const now = Date.now();
+  const rowsWithReminder = result.rows.map((row) => {
+    if (row.status !== "sent") return { ...row, reminder: null };
+    const dueSinceDays = row.sentAt
+      ? Math.floor((now - row.sentAt.getTime()) / 86_400_000)
+      : 0;
+    const { subject, body } = buildReminderText({
+      sponsorName: row.sponsorDisplayName,
+      invoiceNumber: invoiceNumberFromPdfUrl(row.pdfUrl) ?? `Periode ${row.period}`,
+      amountEur: eur(row.totalCents),
+      dueSinceDays,
+      clubName: club.name,
+      paymentOptions: {
+        iban: club.iban,
+        paypalHandle: club.paypalHandle,
+        stripePaymentLink: club.stripePaymentLink
+      }
+    });
+    return { ...row, reminder: { subject, body, sponsorEmail: row.sponsorEmail } };
+  });
+
   const totalCents = allInvoices.reduce((sum, i) => sum + i.totalCents, 0);
   const openCents = allInvoices
     .filter((i) => i.status !== "paid")
@@ -91,7 +120,7 @@ export default async function AbrechnungenPage({
         </div>
       ) : (
         <InvoicesTable
-          invoices={result.rows}
+          invoices={rowsWithReminder}
           canMarkPaid={isAdmin}
           page={result.page}
           pageSize={result.pageSize}

@@ -164,6 +164,72 @@ describe("Invoice PDF — InvoicePdf component", () => {
     expect(text).not.toContain("Mit Banking-App scannen");
   }, 30_000);
 
+  it("pay-links: renders PayPal + Stripe lines when club has them", async () => {
+    const buffer = await renderToBuffer(
+      <InvoicePdf
+        data={{
+          ...INVOICE_FIXTURE,
+          club: {
+            ...INVOICE_FIXTURE.club,
+            paypalHandle: "fcdossenheim",
+            stripePaymentLink: "https://buy.stripe.com/test_abc123"
+          }
+        }}
+      />
+    );
+    const text = (await extractText(buffer)).replace(/-\s+/g, "").replace(/\s+/g, " ");
+    expect(text).toContain("PayPal: paypal.me/fcdossenheim");
+    expect(text).toContain("Online zahlen:");
+    expect(text.replace(/ /g, "")).toContain("https://buy.stripe.com/test_abc123");
+    // Girocode/IBAN bleibt Default und prominent
+    expect(text).toContain("Verwendungszweck: 2026-05-001");
+  }, 30_000);
+
+  it("pay-links: omitted when club has none (fixture unchanged)", async () => {
+    const buffer = await renderToBuffer(<InvoicePdf data={INVOICE_FIXTURE} />);
+    const text = (await extractText(buffer)).replace(/\s+/g, " ");
+    expect(text).not.toContain("PayPal");
+    expect(text).not.toContain("Online zahlen");
+  }, 30_000);
+
+  it("pay-links: shown even when IBAN missing (eigener Zahlwege-Block)", async () => {
+    const buffer = await renderToBuffer(
+      <InvoicePdf
+        data={{
+          ...INVOICE_FIXTURE,
+          club: {
+            ...INVOICE_FIXTURE.club,
+            iban: null,
+            paypalHandle: "fcdossenheim",
+            stripePaymentLink: null
+          }
+        }}
+      />
+    );
+    const text = (await extractText(buffer)).replace(/-\s+/g, "").replace(/\s+/g, " ");
+    expect(text).toContain("PayPal: paypal.me/fcdossenheim");
+    expect(text).not.toContain("Verwendungszweck");
+  }, 30_000);
+
+  it("pay-links: NOT rendered on Storno (keine Zahlungsaufforderung)", async () => {
+    const buffer = await renderToBuffer(
+      <InvoicePdf
+        data={{
+          ...INVOICE_FIXTURE,
+          stornoOfNumber: "2026-04-007",
+          club: {
+            ...INVOICE_FIXTURE.club,
+            paypalHandle: "fcdossenheim",
+            stripePaymentLink: "https://buy.stripe.com/test_abc123"
+          }
+        }}
+      />
+    );
+    const text = (await extractText(buffer)).replace(/\s+/g, " ");
+    expect(text).not.toContain("PayPal");
+    expect(text).not.toContain("Online zahlen");
+  }, 30_000);
+
   it("non-small-business: shows USt-Zwischensumme + 19 % USt row", async () => {
     const buffer = await renderToBuffer(
       <InvoicePdf

@@ -1,8 +1,14 @@
+import Link from "next/link";
 import { isPlausibleLeague } from "@/lib/utils/league";
 
 interface HeroProps {
   displayName: string;
   clubName: string;
+  /**
+   * Slug fürs öffentliche Vereinsprofil /v/[slug] — wenn gesetzt (Verein
+   * verifiziert), wird der Vereinsname verlinkt.
+   */
+  clubSlug?: string | null;
   league: string | null;
   clubOrt: string | null;
   saison: string;
@@ -18,6 +24,7 @@ interface HeroProps {
 export function ProfileHero({
   displayName,
   clubName,
+  clubSlug,
   league,
   clubOrt,
   saison,
@@ -26,7 +33,7 @@ export function ProfileHero({
   logoUrl
 }: HeroProps) {
   // Liga nur zeigen, wenn plausibel (alte Crawls speicherten teils "So").
-  const meta = [clubName, isPlausibleLeague(league) ? league : null, clubOrt]
+  const metaRest = [isPlausibleLeague(league) ? league : null, clubOrt]
     .filter(Boolean)
     .join(" · ");
   return (
@@ -63,7 +70,17 @@ export function ProfileHero({
           {displayName}
         </h1>
         <p className="text-xs text-brand-neutral">
-          {meta}
+          {clubSlug ? (
+            <Link
+              href={`/v/${clubSlug}`}
+              className="underline decoration-white/30 underline-offset-2 hover:text-white"
+            >
+              {clubName}
+            </Link>
+          ) : (
+            clubName
+          )}
+          {metaRest ? ` · ${metaRest}` : null}
           {verified && (
             <>
               {" "}
