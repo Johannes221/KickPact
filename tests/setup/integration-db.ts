@@ -28,7 +28,16 @@ let migrationsApplied = false;
 
 export async function getTestDb(): Promise<PostgresJsDatabase<typeof schema>> {
   if (!dbInstance) {
-    connection = postgres(TEST_URL, { max: 5, onnotice: () => {} });
+    // max klein + idle_timeout: Vitest-Modul-Isolation instanziiert dieses
+    // Modul pro Test-DATEI neu; ohne idle_timeout schließen die Pools nie und
+    // akkumulieren über ~170 Dateien bis "too many clients" (gleiches Muster
+    // wie lib/db/client.ts im Test-Zweig).
+    connection = postgres(TEST_URL, {
+      max: 2,
+      idle_timeout: 5,
+      max_lifetime: 60,
+      onnotice: () => {}
+    });
     dbInstance = drizzle(connection, { schema });
   }
   if (!migrationsApplied) {
