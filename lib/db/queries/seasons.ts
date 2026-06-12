@@ -1,6 +1,7 @@
 import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { seasons } from "@/lib/db/schema/seasons";
+import { teams } from "@/lib/db/schema/clubs";
 
 export type SeasonRow = typeof seasons.$inferSelect;
 
@@ -46,4 +47,17 @@ export async function getSeasonByCode(code: string): Promise<SeasonRow | null> {
     .where(eq(seasons.code, code))
     .limit(1);
   return rows[0] ?? null;
+}
+
+/**
+ * Saison-Code (`teams.saison`, z.B. "2627") einer Mannschaft — Quelle für das
+ * team-bezogene Saison-Wetten-Fenster (W1.2). `null` bei unbekanntem Team.
+ */
+export async function getTeamSaison(teamId: string): Promise<string | null> {
+  const rows = await db
+    .select({ saison: teams.saison })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  return rows[0]?.saison ?? null;
 }
