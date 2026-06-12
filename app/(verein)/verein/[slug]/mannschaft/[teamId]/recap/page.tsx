@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { Button } from "@/components/ui/button";
 
@@ -46,6 +47,12 @@ export default async function RecapPage({
             Bild herunterladen
           </a>
         </Button>
+        <Link
+          href={`/verein/${slug}/mannschaft/${teamId}/wrapped`}
+          className="text-sm font-semibold text-accent hover:underline"
+        >
+          Zur Story-Version ✨
+        </Link>
         <p className="text-xs text-brand-night-navy/50 text-center">
           Tipp: Auf dem Handy lange auf das Bild tippen → „Bild sichern" → direkt
           in deiner Story teilen.

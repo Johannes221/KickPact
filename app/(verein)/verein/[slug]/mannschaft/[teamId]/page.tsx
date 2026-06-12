@@ -27,6 +27,7 @@ import {
 } from "@/lib/db/queries/team-lifecycle";
 import { saisonLabel } from "@/lib/utils/saison";
 import { getClubById } from "@/lib/db/queries/club-admin";
+import { getWrappedEntryInfo } from "@/lib/db/queries/wrapped";
 import { getPendingTransferRequestForTeam } from "@/lib/db/queries/license-transfers";
 import { countPledgesForTeam } from "@/lib/db/queries/pledges";
 import { getTeamLicensePlanDirect } from "@/lib/db/queries/subscriptions";
@@ -64,7 +65,15 @@ export default async function TeamDetailPage({
   // Paket B (Spec §1.5): Banner für offene Lizenz-Transfer-Anfrage.
   const pendingTransfer = await getPendingTransferRequestForTeam(team.id);
 
-  const [matchRows, chargesSummary, seasonTarget, seasonPledges, previousSeason, prognose] =
+  const [
+    matchRows,
+    chargesSummary,
+    seasonTarget,
+    seasonPledges,
+    previousSeason,
+    prognose,
+    wrappedEntry
+  ] =
     await Promise.all([
       listMatchesForTeam(team.id, 30),
       getMatchChargesSummaryForTeam(team.id),
@@ -78,7 +87,9 @@ export default async function TeamDetailPage({
       // gespielte Spiele hat UND Vorsaison-Historie (Backfill) existiert.
       getPreviousSeasonDisplay(team.id),
       // W3: „Prognose"-Karte (Rückblick aktiver Pacts + Hochrechnung).
-      getTeamPrognose(team.id)
+      getTeamPrognose(team.id),
+      // Wrapped-Karte (W4): Vorsaison >= 3 Spiele UND aktuelle Saison < 5.
+      getWrappedEntryInfo(team.id)
     ]);
 
   // Saison-Stats aus echten Matches berechnen
@@ -331,6 +342,37 @@ export default async function TeamDetailPage({
         isCurrentSeason={seasonTarget.saison === team.saison}
         result={seasonTarget.result ?? null}
       />
+
+      {/* Saison-Wrapped (W4): Story-Rückblick der Vorsaison — nur solange die
+          neue Saison noch jung ist (<5 Spiele) und Vorsaison-Daten existieren. */}
+      {wrappedEntry && (
+        <section
+          aria-label="Saison-Wrapped"
+          className="rounded-2xl bg-brand-night-navy p-4 md:p-5 shadow-ios-card"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-[#A3E635]">
+                <Sparkles className="h-[1.15rem] w-[1.15rem]" aria-hidden />
+              </span>
+              <div className="min-w-0">
+                <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-white">
+                  ✨ Euer Saison-Rückblick {saisonLabel(wrappedEntry.prevSaison)} ist da
+                </h3>
+                <p className="text-xs md:text-sm text-white/70">
+                  Tore, Comebacks, Knipser — eure Saison als durchswipebare Story.
+                </p>
+              </div>
+            </div>
+            <Link
+              href={`${teamBase}/wrapped`}
+              className="text-xs md:text-sm font-semibold text-[#A3E635] hover:underline shrink-0"
+            >
+              Story ansehen →
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* Saison-Recap: teilbares Highlight-Bild der Saison (Phase 3 / R9) */}
       <section
