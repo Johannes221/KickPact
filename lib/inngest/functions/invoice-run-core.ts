@@ -7,7 +7,6 @@ import {
   invoices,
   invoiceItems,
   charges,
-  pledges,
   sponsors,
   clubs,
   clubMemberships,
@@ -15,7 +14,6 @@ import {
   teams,
   teamLicenses
 } from "@/lib/db/schema";
-import { billingClubForTeam } from "@/lib/billing/billing-club";
 import { highestPlanFrom } from "@/lib/mail/reply-to-pure";
 import type { PlanKey } from "@/lib/stripe/pricing";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
@@ -166,22 +164,15 @@ export async function runInvoiceGroups(opts: {
           return { skipped: true, reason: "sponsor-or-club-missing" } as const;
         }
 
-        // Paket B (Spec §1.5): Absender-/Branding-Auflösung. Steht das Team
-        // der Gruppe unter Vereinslizenz (teams.licensedUnderClubId), kommen
-        // Absender, IBAN, Withhold-Gate-verifiedAt, Reply-To, Admin-Mails
-        // und Nummernkreis vom Lizenz-VEREIN — sofort ab Annahme, auch wenn
-        // T's eigenes Abo noch bis Periodenende läuft. Die Gruppe ist per
-        // (sponsorId, container-clubId) geschnitten, alle Charges hängen an
-        // Teams desselben Containers → ein Team-Lookup über die erste Charge
-        // genügt. invoices.clubId bleibt der Container (Datenverknüpfung).
-        const [teamRef] = await db
-          .select({ teamId: pledges.teamId })
-          .from(charges)
-          .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-          .where(eq(charges.id, group.items[0].chargeId))
-          .limit(1);
-        const billingClub =
-          (teamRef ? await billingClubForTeam(teamRef.teamId) : undefined) ?? cl;
+        // Paket B (Spec §1.5) + Review M1/M2 (2026-06-12): `group.clubId` ist
+        // bereits der BILLING-Club (licensedUnderClubId ?? clubId — aufgelöst
+        // in den Charge-Selektoren, lib/db/queries/charges.ts). Damit laufen
+        // Gruppierung, Branding, Withhold-Gate, Nummernkreis UND die
+        // invoices.clubId-Zuordnung einheitlich über den Absender-Verein:
+        // das Verifizierungs-Release (releaseWithheldInvoicesForClub) und die
+        // Abrechnungs-Seite des Vereins finden die Rechnung, und gemischte
+        // Gruppen (Container mit teil-transferierten Teams) sind unmöglich.
+        const billingClub = cl;
 
         const invoiceNumber = await nextInvoiceNumber(billingClub.id, invoiceYear);
 
@@ -294,7 +285,9 @@ export async function runInvoiceGroups(opts: {
             .insert(invoices)
             .values({
               sponsorId: spRow.sponsor.id,
-              clubId: cl.id,
+              // M1/N5: Rechnung gehört dem BILLING-Club (= cl, s.o.) — Gate,
+              // Release, Abrechnungs-Seite und Push-Link sind damit konsistent.
+              clubId: billingClub.id,
               period: periodStr,
               totalCents: total,
               pdfUrl: storageUrl,
@@ -316,10 +309,25 @@ export async function runInvoiceGroups(opts: {
           );
 
           const chargeIds = group.items.map((i) => i.chargeId);
-          await tx
+          // Review N2 (2026-06-12): status-Guard — falls eine Charge zwischen
+          // Selektion und Insert von einem anderen Lauf gegriffen wurde
+          // (Cycle-Flip im Fenster zweier Crons), wird sie nicht ein zweites
+          // Mal auf eine Rechnung gezogen. Mismatch → Abbruch der Gruppe.
+          const flipped = await tx
             .update(charges)
             .set({ status: "invoiced", invoiceId: inv.id })
-            .where(inArray(charges.id, chargeIds));
+            .where(
+              and(
+                inArray(charges.id, chargeIds),
+                eq(charges.status, "confirmed")
+              )
+            )
+            .returning({ id: charges.id });
+          if (flipped.length !== chargeIds.length) {
+            throw new Error(
+              `invoice-run: charge-status-mismatch (${flipped.length}/${chargeIds.length}) — Gruppe abgebrochen, tx rollt zurück`
+            );
+          }
 
           return inv;
         });

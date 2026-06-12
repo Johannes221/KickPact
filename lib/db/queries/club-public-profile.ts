@@ -94,14 +94,20 @@ export async function getPublicClubProfileBySlug(
   };
 }
 
-/** Storage-Key des Hero-Bilds (für den Bild-Route-Handler), oder null. */
-export async function getClubHeroKey(clubId: string): Promise<string | null> {
+/**
+ * Storage-Key + Verifikations-Status fürs Hero-Bild (Bild-Route-Handler).
+ * Review N3 (2026-06-12): der Handler braucht verifiedAt, um das
+ * /v/[slug]-Gate auch auf der Bild-Route durchzusetzen.
+ */
+export async function getClubHeroInfo(
+  clubId: string
+): Promise<{ heroUrl: string | null; verifiedAt: Date | null } | null> {
   const [row] = await db
-    .select({ heroUrl: clubs.heroUrl })
+    .select({ heroUrl: clubs.heroUrl, verifiedAt: clubs.verifiedAt })
     .from(clubs)
     .where(eq(clubs.id, clubId))
     .limit(1);
-  return row?.heroUrl ?? null;
+  return row ?? null;
 }
 
 /**

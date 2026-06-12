@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/session";
-import { getClubHeroKey } from "@/lib/db/queries/club-public-profile";
+import { getClubHeroInfo } from "@/lib/db/queries/club-public-profile";
+import { getClubMembershipRole } from "@/lib/db/queries/membership-requests";
 import { getDocumentSignedUrl, readLocalDocument } from "@/lib/storage/documents";
 import { uploadClubHero } from "@/lib/actions/club-profile";
 import { rejectOversizedUpload } from "@/lib/storage/upload-guard";
@@ -40,8 +41,26 @@ export async function GET(
 ) {
   const { clubId } = await params;
 
-  const key = await getClubHeroKey(clubId);
-  if (!key || !isOwnClubKey(key, clubId)) {
+  // Review N3 (2026-06-12): Das /v/[slug]-404-Gate (unverifiziert = nie
+  // öffentlich) darf nicht über die Bild-Route umgehbar sein. Unverifizierte
+  // Vereine liefern das Hero nur an eingeloggte Mitglieder (Editor-Vorschau
+  // in den Einstellungen).
+  const heroInfo = await getClubHeroInfo(clubId);
+  if (!heroInfo?.heroUrl) {
+    return NextResponse.json({ error: "not-found" }, { status: 404 });
+  }
+  if (!heroInfo.verifiedAt) {
+    const session = await getServerSession();
+    const role = session
+      ? await getClubMembershipRole(session.user.id, clubId)
+      : null;
+    if (!role) {
+      return NextResponse.json({ error: "not-found" }, { status: 404 });
+    }
+  }
+
+  const key = heroInfo.heroUrl;
+  if (!isOwnClubKey(key, clubId)) {
     return NextResponse.json({ error: "not-found" }, { status: 404 });
   }
 

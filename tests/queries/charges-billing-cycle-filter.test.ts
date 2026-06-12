@@ -120,5 +120,29 @@ describe.skipIf(isIntegrationDbDisabled)(
       const rows = await listConfirmedChargesByPeriod(PERIOD);
       expect(rows).toHaveLength(2);
     });
+
+    it("K1: Gesammeltes ÄLTER als die Periode strandet nicht (Okt-Charge, Wechsel im Mai)", async () => {
+      // Review K1 (2026-06-12): Sponsor sammelte ab Oktober (season_end),
+      // wechselte im Mai zurück auf monthly. Die Okt-Charge liegt VOR dem
+      // Mai-Fenster — mit unterer Fenstergrenze hätte sie kein Cron je
+      // selektiert (Saison-Cron schließt monthly-Sponsoren aus).
+      await seed({ sponsorCycle: "monthly", chargeSnapshots: ["season_end"] });
+      const tdb = await getTestDb();
+      await tdb.insert(charges).values({
+        id: "ch_f_old",
+        pledgeId: "pl_f",
+        pledgeRuleId: "pr_f",
+        matchId: null,
+        saison: null,
+        goalIndex: 99,
+        triggerType: "goal_total",
+        amountCents: 500,
+        billingCycleSnapshot: "season_end",
+        status: "confirmed",
+        confirmedAt: new Date(Date.UTC(2025, 9, 12)) // Oktober 2025
+      });
+      const rows = await listConfirmedChargesByPeriod(PERIOD);
+      expect(rows.map((r) => r.chargeId).sort()).toEqual(["ch_f_0", "ch_f_old"]);
+    });
   }
 );

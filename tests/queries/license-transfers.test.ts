@@ -38,7 +38,8 @@ import {
   listLicenseTransferCandidatesForClub,
   listPendingTransferRequestsForUser,
   markLicenseTransferDecision,
-  attachTeamLicenseToVereinLicense
+  attachTeamLicenseToVereinLicense,
+  setTeamLicensedUnder
 } from "@/lib/db/queries/license-transfers";
 import { getTeamLicensePlan } from "@/lib/db/queries/pledges";
 import { isUniqueViolation } from "@/lib/db/errors";
@@ -289,6 +290,10 @@ describe.skipIf(isIntegrationDbDisabled)("license-transfers query layer", () => 
         decidedByUserId: "u_trainer",
         effectiveAt: new Date(Date.now() - 1000)
       });
+      // Review M5: Der Due-Guard verlangt, dass das Team AKTUELL auf den
+      // Ziel-Verein gebrandet ist — im echten Flow setzt respondLicenseTransfer
+      // das (setTeamLicensedUnder) direkt nach dem Status-Claim.
+      await setTeamLicensedUnder("team_t1", "club_y");
 
       const due = await listDueAcceptedLicenseTransfers(new Date());
       expect(due.map((d) => d.teamId)).toEqual(["team_t1"]);
@@ -298,6 +303,23 @@ describe.skipIf(isIntegrationDbDisabled)("license-transfers query layer", () => 
       await tdb
         .update(teamLicenseTransferRequests)
         .set({ effectiveAt: new Date(Date.now() + 86_400_000) })
+        .where(eq(teamLicenseTransferRequests.id, req.id));
+      expect(await listDueAcceptedLicenseTransfers(new Date())).toHaveLength(0);
+
+      // Review M5: Team inzwischen anders gebrandet (autark/Verein B) →
+      // der alte Request darf die Lizenz nicht Tag für Tag zurückreanimieren.
+      await tdb
+        .update(teamLicenseTransferRequests)
+        .set({ effectiveAt: new Date(Date.now() - 1000) })
+        .where(eq(teamLicenseTransferRequests.id, req.id));
+      await setTeamLicensedUnder("team_t1", null);
+      expect(await listDueAcceptedLicenseTransfers(new Date())).toHaveLength(0);
+
+      // Review M5: uralte Requests (>90 Tage) fallen aus dem Fenster.
+      await setTeamLicensedUnder("team_t1", "club_y");
+      await tdb
+        .update(teamLicenseTransferRequests)
+        .set({ effectiveAt: new Date(Date.now() - 120 * 86_400_000) })
         .where(eq(teamLicenseTransferRequests.id, req.id));
       expect(await listDueAcceptedLicenseTransfers(new Date())).toHaveLength(0);
     });

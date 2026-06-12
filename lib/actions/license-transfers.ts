@@ -159,38 +159,36 @@ export async function respondLicenseTransfer(input: {
   let effectiveAt: Date | null = null;
   let resultMessage = "";
 
-  if (decision === "accept_license") {
-    // (a) Branding wechselt SOFORT (Spec §1.5: Rechnung trägt ab Annahme-Tag
-    //     den Vereins-Absender). Idempotent bei Retry.
-    await setTeamLicensedUnder(row.request.teamId, row.request.toClubId);
+  // Review M4 (2026-06-12): Nur lebende Abos können bis Periodenende laufen —
+  // canceled/incomplete-Subs behandelt Stripe-update mit einem Fehler, deshalb
+  // werden sie wie "kein Abo" behandelt (Lizenzwechsel sofort).
+  const CANCELABLE_SUB_STATUSES = new Set(["active", "trialing", "past_due", "paused"]);
+  let cancelableStripeSubId: string | null = null;
 
-    // (b) effectiveAt = current_period_end von T's Stripe-Abo. Ohne Stripe-Abo
-    //     (z.B. Trial) wechselt die Lizenz sofort (effectiveAt = now).
-    // (c) T's Abo läuft bis Periodenende und endet dann automatisch.
+  if (decision === "accept_license") {
+    // (b zuerst, READ-ONLY) effectiveAt = current_period_end von T's Stripe-
+    // Abo. Ohne lebendes Stripe-Abo (Trial/cancelled) wechselt die Lizenz
+    // sofort (effectiveAt = now).
     effectiveAt = new Date();
     const sub = await getSubscriptionForClub(row.teamClubId);
-    if (sub?.stripeSubscriptionId && isStripeConfigured()) {
+    if (
+      sub?.stripeSubscriptionId &&
+      CANCELABLE_SUB_STATUSES.has(sub.status) &&
+      isStripeConfigured()
+    ) {
       const stripe = getStripe();
       const stripeSub = await stripe.subscriptions.retrieve(sub.stripeSubscriptionId);
       effectiveAt = extractCurrentPeriodEnd(stripeSub) ?? new Date();
-      await stripe.subscriptions.update(sub.stripeSubscriptionId, {
-        cancel_at_period_end: true
-      });
+      cancelableStripeSubId = sub.stripeSubscriptionId;
     }
-    resultMessage =
-      "Angenommen. Dein Abo läuft bis zum Periodenende weiter und endet dann automatisch; das Rechnungs-Branding wechselt sofort.";
-  } else if (decision === "accept_co_owned") {
-    await grantCoOwnerMembership({
-      userId: row.request.requestedByUserId,
-      teamId: row.request.teamId,
-      invitedByUserId: user.id
-    });
-    resultMessage = "Co-Verwaltung eingerichtet — deine Lizenz bleibt bei dir.";
-  } else {
-    resultMessage = "Anfrage abgelehnt.";
   }
 
-  // (d) Status-Flip mit pending-Race-Guard (Doppelklick / paralleler Decide).
+  // Review M3 (2026-06-12): Status ZUERST atomar claimen (pending-Guard),
+  // DANN Seiteneffekte. Vorher liefen setTeamLicensedUnder + Stripe-Cancel
+  // vor dem Guard — zwei parallele Decides (accept vs. co_owned) konnten
+  // beide Seiteneffekte ausführen, nur einer gewann den Status: Team auf den
+  // Verein gebrandet UND Abo gekündigt, aber Request='co_owned' → der
+  // Flip-Cron greift nie, das Team verliert die Lizenz ersatzlos.
   const statusByDecision = {
     accept_license: "accepted",
     accept_co_owned: "co_owned",
@@ -206,6 +204,43 @@ export async function respondLicenseTransfer(input: {
   });
   if (!updated) {
     return { ok: false, message: "Diese Anfrage wurde bereits entschieden." };
+  }
+
+  if (decision === "accept_license") {
+    // (a) Branding wechselt SOFORT (Spec §1.5: Rechnung trägt ab Annahme-Tag
+    //     den Vereins-Absender). Idempotent bei Retry.
+    await setTeamLicensedUnder(row.request.teamId, row.request.toClubId);
+
+    // (c) T's Abo läuft bis Periodenende und endet dann automatisch.
+    //     Fehler hier ist nicht fatal (Status + Branding stehen schon) —
+    //     laut loggen, der Betreiber kann den Cancel im Stripe-Dashboard
+    //     nachziehen.
+    resultMessage =
+      "Angenommen. Dein Abo läuft bis zum Periodenende weiter und endet dann automatisch; das Rechnungs-Branding wechselt sofort.";
+    if (cancelableStripeSubId) {
+      try {
+        const stripe = getStripe();
+        await stripe.subscriptions.update(cancelableStripeSubId, {
+          cancel_at_period_end: true
+        });
+      } catch (err) {
+        console.error(
+          "[license-transfer] cancel_at_period_end fehlgeschlagen — manuell im Stripe-Dashboard nachziehen",
+          { requestId: row.request.id, stripeSubId: cancelableStripeSubId, err }
+        );
+        resultMessage =
+          "Angenommen — das Rechnungs-Branding wechselt sofort. Hinweis: Dein Abo konnte nicht automatisch zum Periodenende gekündigt werden, wir kümmern uns darum.";
+      }
+    }
+  } else if (decision === "accept_co_owned") {
+    await grantCoOwnerMembership({
+      userId: row.request.requestedByUserId,
+      teamId: row.request.teamId,
+      invitedByUserId: user.id
+    });
+    resultMessage = "Co-Verwaltung eingerichtet — deine Lizenz bleibt bei dir.";
+  } else {
+    resultMessage = "Anfrage abgelehnt.";
   }
 
   // Bei sofortiger Fälligkeit (kein Stripe-Abo): Flip-Cron direkt anstoßen,

@@ -7,7 +7,7 @@
  * wechseln. Alle DB-Zugriffe für Request/Decide/Cron-Flip liegen hier —
  * Server-Actions und Inngest-Functions greifen NIE direkt auf die Tabellen.
  */
-import { and, asc, desc, eq, inArray, isNull, lte, ne } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, lte, ne } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/lib/db/client";
 import {
@@ -312,8 +312,19 @@ export async function setTeamLicensedUnder(teamId: string, clubId: string | null
     .where(eq(teams.id, teamId));
 }
 
-/** Accepted-Requests, deren Lizenz-Flip fällig ist (effectiveAt <= now). */
+/**
+ * Accepted-Requests, deren Lizenz-Flip fällig ist (effectiveAt <= now).
+ *
+ * Review M5 (2026-06-12) — zwei Guards gegen Dauer-Reanimation:
+ *  1. Nur Requests, deren Team AKTUELL noch auf den Ziel-Verein gebrandet
+ *     ist (teams.licensedUnderClubId = toClubId). Wird das Team später
+ *     wieder autark oder zu Verein B transferiert, darf der alte Request
+ *     die Lizenz nicht Tag für Tag zurück an Verein A hängen.
+ *  2. Zeitfenster: effectiveAt maximal 90 Tage zurück — ein uralter Request
+ *     ist entweder längst applied (Anker im Cron) oder bewusst obsolet.
+ */
 export async function listDueAcceptedLicenseTransfers(now: Date) {
+  const windowStart = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
   return db
     .select({
       id: teamLicenseTransferRequests.id,
@@ -322,10 +333,13 @@ export async function listDueAcceptedLicenseTransfers(now: Date) {
       effectiveAt: teamLicenseTransferRequests.effectiveAt
     })
     .from(teamLicenseTransferRequests)
+    .innerJoin(teams, eq(teamLicenseTransferRequests.teamId, teams.id))
     .where(
       and(
         eq(teamLicenseTransferRequests.status, "accepted"),
-        lte(teamLicenseTransferRequests.effectiveAt, now)
+        lte(teamLicenseTransferRequests.effectiveAt, now),
+        gte(teamLicenseTransferRequests.effectiveAt, windowStart),
+        eq(teams.licensedUnderClubId, teamLicenseTransferRequests.toClubId)
       )
     )
     .orderBy(asc(teamLicenseTransferRequests.effectiveAt));

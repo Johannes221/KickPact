@@ -47,16 +47,29 @@ export type StripeLinkResult =
 
 /**
  * Validiert einen Stripe Payment Link. Muss mit https://buy.stripe.com/
- * beginnen (verhindert Phishing-Links auf der Rechnung). Leere Eingabe ist
- * gültig (= Feld löschen) und liefert `url: null`.
+ * beginnen (verhindert Phishing-Links auf der Rechnung).
+ *
+ * Review M6 (2026-06-12): Der Pfad ist auf eine strikte Zeichenklasse
+ * begrenzt — der Wert wird unescaped in `href="…"` der Rechnungs-Mail
+ * interpoliert; mit `"` `<` `>` im Pfad konnte ein Club-Admin aus dem
+ * Attribut ausbrechen und beliebiges HTML in die offizielle Mail an den
+ * Sponsor injizieren.
+ *
+ * Leere Eingabe ist gültig (= Feld löschen) und liefert `url: null`.
  */
+const STRIPE_LINK_RE = /^https:\/\/buy\.stripe\.com\/[A-Za-z0-9/_-]+$/;
+
 export function validateStripePaymentLink(input: string): StripeLinkResult {
   const v = input.trim();
   if (!v) return { ok: true, url: null };
-  if (!v.startsWith(STRIPE_LINK_PREFIX) || v.length <= STRIPE_LINK_PREFIX.length) {
+  if (
+    !v.startsWith(STRIPE_LINK_PREFIX) ||
+    v.length <= STRIPE_LINK_PREFIX.length ||
+    !STRIPE_LINK_RE.test(v)
+  ) {
     return {
       ok: false,
-      message: `Stripe-Link ungültig — er muss mit ${STRIPE_LINK_PREFIX} beginnen.`
+      message: `Stripe-Link ungültig — er muss mit ${STRIPE_LINK_PREFIX} beginnen und darf nur Buchstaben/Ziffern enthalten.`
     };
   }
   return { ok: true, url: v };

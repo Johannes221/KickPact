@@ -64,13 +64,26 @@ export interface ChargeForBilling {
  * (vorher fielen Saison-Charges durch den innerJoin für immer aus jeder Rechnung).
  *
  * Paket A.3 (Spec 2026-05-26 §1.2) — Billing-Cycle-Filter:
- *  - snapshot='monthly' → normal monatlich fakturieren (Bestand, Default).
+ *  - snapshot='monthly' → normal monatlich fakturieren (Bestand, Default),
+ *    gefenstert auf die Abrechnungs-Periode.
  *  - snapshot='season_end' nur, wenn der Sponsor AKTUELL 'monthly' ist
  *    (Spec-Wechsel-Regel „season_end→monthly: bisher gesammelte Charges
- *    werden mit der ersten Monatsrechnung beglichen"). Steht der Sponsor
- *    weiter auf season_end, sammeln sich die Charges bis zum
- *    Saisonende-Rechnungslauf (generate-season-end-invoices).
+ *    werden mit der ersten Monatsrechnung beglichen"). Review K1
+ *    (2026-06-12): dieser Zweig hat bewusst KEINE untere Fenstergrenze —
+ *    Gesammeltes kann Monate alt sein (Okt-Charge, Wechsel im Mai). Mit
+ *    unterer Grenze strandeten alle Charges, die älter als die laufende
+ *    Periode waren, für immer (kein Cron hätte sie je selektiert).
+ *    Steht der Sponsor weiter auf season_end, sammeln sich die Charges bis
+ *    zum Saisonende-Rechnungslauf (generate-season-end-invoices).
+ *
+ * Review M2 (2026-06-12): `clubId` ist der BILLING-Club
+ * (licensedUnderClubId ?? clubId) — Gruppierung, Rechnungs-Zuordnung und
+ * Branding laufen einheitlich über den Absender-Verein. Sonst mischte eine
+ * (sponsor, container)-Gruppe Teams mit unterschiedlichem Lizenz-Status und
+ * das Branding der ganzen Rechnung hing an der Zeilen-Reihenfolge.
  */
+const billingClubIdExpr = sql<string>`COALESCE(${teams.licensedUnderClubId}, ${teams.clubId})`;
+
 export async function listConfirmedChargesByPeriod(opts: {
   periodStart: Date;
   periodEnd: Date;
@@ -79,7 +92,7 @@ export async function listConfirmedChargesByPeriod(opts: {
     .select({
       chargeId: charges.id,
       sponsorId: pledges.sponsorId,
-      clubId: teams.clubId,
+      clubId: billingClubIdExpr,
       triggerType: charges.triggerType,
       amountCents: charges.amountCents,
       saison: charges.saison,
@@ -98,14 +111,18 @@ export async function listConfirmedChargesByPeriod(opts: {
     .where(
       and(
         eq(charges.status, "confirmed"),
-        gte(charges.confirmedAt, opts.periodStart),
-        // B8 (Audit 2026-06-11): periodEnd ist EXKLUSIV (Beginn Folgemonat).
-        lt(charges.confirmedAt, opts.periodEnd),
         or(
-          eq(charges.billingCycleSnapshot, "monthly"),
+          and(
+            eq(charges.billingCycleSnapshot, "monthly"),
+            gte(charges.confirmedAt, opts.periodStart),
+            // B8 (Audit 2026-06-11): periodEnd ist EXKLUSIV (Beginn Folgemonat).
+            lt(charges.confirmedAt, opts.periodEnd)
+          ),
+          // K1: Gesammeltes ohne untere Fenstergrenze (siehe JSDoc).
           and(
             eq(charges.billingCycleSnapshot, "season_end"),
-            eq(sponsors.billingCycle, "monthly")
+            eq(sponsors.billingCycle, "monthly"),
+            lt(charges.confirmedAt, opts.periodEnd)
           )
         )
       )
@@ -130,7 +147,7 @@ export async function listSeasonEndChargesForWindow(opts: {
     .select({
       chargeId: charges.id,
       sponsorId: pledges.sponsorId,
-      clubId: teams.clubId,
+      clubId: billingClubIdExpr,
       triggerType: charges.triggerType,
       amountCents: charges.amountCents,
       saison: charges.saison,
@@ -175,7 +192,7 @@ export async function listChargesOfDraftInvoices(
     .select({
       chargeId: charges.id,
       sponsorId: pledges.sponsorId,
-      clubId: teams.clubId,
+      clubId: billingClubIdExpr,
       triggerType: charges.triggerType,
       amountCents: charges.amountCents,
       saison: charges.saison,
