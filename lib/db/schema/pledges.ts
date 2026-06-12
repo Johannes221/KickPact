@@ -33,7 +33,13 @@ export const triggerTypeEnum = pgEnum("trigger_type", [
   "season_table_position",
   "season_champion",
   "season_cup_round",
-  "season_custom"
+  "season_custom",
+  // Heim-/Auswärtssieg (W2, Migration 0059). Logisch Per-Spiel-Auto-Trigger;
+  // stehen hier am ENDE, weil `ALTER TYPE … ADD VALUE` ohne BEFORE/AFTER ans
+  // Enum-Ende anfügt und die Array-Reihenfolge der DB-Reihenfolge entsprechen
+  // soll (drizzle-kit-Diff-Stabilität).
+  "home_win",
+  "away_win"
 ]);
 
 /**
