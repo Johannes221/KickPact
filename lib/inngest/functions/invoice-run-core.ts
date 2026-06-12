@@ -242,7 +242,11 @@ export async function runInvoiceGroups(opts: {
                 },
                 iban: billingClub.iban ?? null,
                 taxId: billingClub.taxId ?? null,
-                isSmallBusiness: billingClub.isSmallBusiness
+                isSmallBusiness: billingClub.isSmallBusiness,
+                // Spec §1.9 (Paket C): Zusatz-Zahlwege auf der PDF —
+                // konditional, Girocode bleibt Default.
+                paypalHandle: billingClub.paypalHandle ?? null,
+                stripePaymentLink: billingClub.stripePaymentLink ?? null
               },
               sponsor: {
                 displayName: spRow.sponsor.displayName,
@@ -407,6 +411,10 @@ export async function runInvoiceGroups(opts: {
           replyTo: replyTo ?? null,
           totalEur: eur(total),
           itemCount: group.items.length,
+          // Spec §1.9: Zusatz-Zahlwege für die Rechnungs-Mail (Template
+          // rendert sie konditional).
+          paypalHandle: billingClub.paypalHandle ?? null,
+          stripePaymentLink: billingClub.stripePaymentLink ?? null,
           pdfBase64: pdfBuf.toString("base64")
         };
         });
@@ -456,7 +464,9 @@ export async function runInvoiceGroups(opts: {
           period: periodLabel,
           totalEur: result.totalEur,
           invoiceNumber: result.invoiceNumber,
-          itemCount: result.itemCount
+          itemCount: result.itemCount,
+          paypalHandle: result.paypalHandle,
+          stripePaymentLink: result.stripePaymentLink
         };
         const sponsorMail =
           mailKind === "season_end"
