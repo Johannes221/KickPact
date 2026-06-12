@@ -32,6 +32,10 @@ export type TriggerType =
   | "hattrick"
   | "goal_diff_min"
   | "goals_scored_min"
+  // W2 (Saison-Features 2026-06-12): Sieg nach Spielort — eigene Typen mit
+  // eigenen Beträgen (Auswärtssiege dürfen mehr zählen).
+  | "home_win"
+  | "away_win"
   | "special_goal"
   | "yellow_card"
   | "red_card"
@@ -116,6 +120,14 @@ function evaluateRule(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[
       return goalByPlayer(match, rule);
     case "win":
       return outcome(match, rule, isWin);
+    case "home_win":
+      // W2: Sieg UND Heimspiel. requiresApproval wie `win` (Outcome aus dem
+      // offiziellen Endstand, kein Approval — Coverage-Policy K2 greift
+      // downstream in evaluate-match).
+      return outcome(match, rule, (m) => isWin(m) && m.teamSide === "heim");
+    case "away_win":
+      // W2: Sieg UND Auswärtsspiel — analog home_win.
+      return outcome(match, rule, (m) => isWin(m) && m.teamSide === "gast");
     case "loss":
       return outcome(match, rule, isLoss);
     case "draw":
