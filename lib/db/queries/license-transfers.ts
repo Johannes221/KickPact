@@ -8,12 +8,14 @@
  * Server-Actions und Inngest-Functions greifen NIE direkt auf die Tabellen.
  */
 import { and, asc, desc, eq, inArray, isNull, lte, ne } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/lib/db/client";
 import {
   clubs,
   teams,
   users,
   clubMemberships,
+  teamMemberships,
   subscriptions,
   teamLicenses,
   teamLicenseTransferRequests,
@@ -174,22 +176,50 @@ export async function createLicenseTransferRequest(opts: {
   return row;
 }
 
-/** Voller Request inkl. Namen für Mails/Detail (oder undefined). */
+/** Voller Request inkl. Namen + Anfragenden-Kontakt für Mails/Detail (oder undefined). */
 export async function getLicenseTransferRequestById(requestId: string) {
+  const requestedBy = alias(users, "requested_by_user");
   const [row] = await db
     .select({
       request: teamLicenseTransferRequests,
       teamName: teams.name,
       teamClubId: teams.clubId,
       toClubName: clubs.name,
-      toClubSlug: clubs.slug
+      toClubSlug: clubs.slug,
+      requestedByEmail: requestedBy.email,
+      requestedByName: requestedBy.name
     })
     .from(teamLicenseTransferRequests)
     .innerJoin(teams, eq(teamLicenseTransferRequests.teamId, teams.id))
     .innerJoin(clubs, eq(teamLicenseTransferRequests.toClubId, clubs.id))
+    .innerJoin(
+      requestedBy,
+      eq(teamLicenseTransferRequests.requestedByUserId, requestedBy.id)
+    )
     .where(eq(teamLicenseTransferRequests.id, requestId))
     .limit(1);
   return row;
+}
+
+/**
+ * Co-Owned-Annahme: der Anfragende bekommt Mitverwalter-Zugriff auf das Team.
+ * Team-Ebene kennt nur admin|viewer — „Trainer" auf Team-Ebene = admin
+ * (gleiche Koerzierung wie acceptTeamMemberInvitation in invitations.ts).
+ */
+export async function grantCoOwnerMembership(opts: {
+  userId: string;
+  teamId: string;
+  invitedByUserId: string;
+}) {
+  await db
+    .insert(teamMemberships)
+    .values({
+      userId: opts.userId,
+      teamId: opts.teamId,
+      role: "admin",
+      invitedByUserId: opts.invitedByUserId
+    })
+    .onConflictDoNothing();
 }
 
 /** Pending-Anfragen, über die DIESER User entscheiden muss (Karte in /konto). */
