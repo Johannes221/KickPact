@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/session";
 import {
   Banknote,
+  CalendarClock,
   Coins,
   Gauge,
   Sparkles,
@@ -118,6 +119,20 @@ export default async function SponsorDashboard() {
           {sponsorRow.displayName}
         </h1>
       </div>
+
+      {/* Paket A.5 (Spec §1.2): Hinweis nur bei Saisonende-Abrechnung */}
+      {sponsorRow.billingCycle === "season_end" && (
+        <Link
+          href="/sponsor/profil"
+          className="flex items-center gap-2.5 rounded-xl bg-accent/10 px-4 py-2.5 text-xs font-medium text-brand-night-navy/80"
+        >
+          <CalendarClock aria-hidden className="h-4 w-4 shrink-0 text-accent-dark" />
+          <span>
+            Deine Beiträge werden am <strong>Saisonende</strong> abgerechnet —
+            eine Rechnung am 30.06.
+          </span>
+        </Link>
+      )}
 
       <NextSteps
         activePledgeCount={activePledgeCount}

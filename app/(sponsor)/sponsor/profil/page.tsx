@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
 import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
 import { SponsorProfileForm } from "./_components/sponsor-profile-form";
+import { BillingCycleCard } from "./_components/billing-cycle-card";
 import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata = { title: "Profil · KickPact" };
@@ -60,6 +61,9 @@ export default async function SponsorProfilPage() {
               }
         }
       />
+
+      {/* Paket A.5 (Spec §1.2): Abrechnungs-Rhythmus Monatlich/Saisonende */}
+      <BillingCycleCard currentCycle={sponsor.billingCycle} />
     </div>
   );
 }
