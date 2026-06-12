@@ -25,6 +25,7 @@ import {
   type TriggerType,
 } from "@/lib/validations/pledge";
 import { createPledge } from "../_actions/create-pledge";
+import { SimulationPanel } from "./simulation-panel";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics/track";
 import { CUP_ROUND_ORDER, CUP_ROUND_LABELS } from "@/lib/triggers/cup-rounds";
@@ -843,6 +844,16 @@ export function PledgeBuilder({
                 </div>
               </CardContent>
             </Card>
+
+            {/* W3: „Das hätte letzte Saison X € gebracht" — echte Spiele statt
+                Daumen-Schätzung. Mountet erst mit Step 4 → genau 1 Berechnung
+                pro Step-Eintritt; ohne Vorsaison-Daten unsichtbar. */}
+            <SimulationPanel
+              invitationToken={invitationToken}
+              rules={watchedRules}
+              monthlyCapEur={watchedMonthly}
+              dataCoverage={dataCoverage}
+            />
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
               <Button
