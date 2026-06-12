@@ -2,10 +2,12 @@ import Link from "next/link";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import {
   listMatchesForTeam,
+  listAvailableSeasonsForTeam,
   getMatchChargesSummaryForTeam,
-  getTeamForMatchesPage,
-  listTeamSiblingSeasons
+  getTeamForMatchesPage
 } from "@/lib/db/queries/matches";
+import { SeasonSwitcher } from "@/components/shared/season-switcher";
+import { saisonLabel } from "@/lib/utils/saison";
 import { detectTeamSide } from "@/lib/crawler/team-side";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
@@ -67,14 +69,14 @@ export default async function SpielePage({
 
   if (!team) return <div className="text-sm text-brand-alert-red">Mannschaft nicht gefunden.</div>;
 
-  // Saison-Umschalter: Geschwister-Team-Rows (gleiche fussballdeTeamId, andere
-  // Saison). Werden erst befüllt, wenn der Vorsaison-Crawl läuft (Phase 8/TODO);
-  // bis dahin steht hier nur die aktuelle Saison.
-  const siblingSeasons = team.fussballdeTeamId
-    ? await listTeamSiblingSeasons(team.fussballdeTeamId)
-    : [{ id: team.id, saison: team.saison }];
+  // W1.3 Saison-Switcher: die Vorsaison-Historie liegt auf DERSELBEN Team-Row
+  // (Saison-Bump-Architektur) und wird über das Datums-Fenster der gewählten
+  // Saison selektiert. Default = aktuelle team.saison.
+  const availableSeasons = await listAvailableSeasonsForTeam(team.id);
+  const selectedSaison =
+    sp.saison && availableSeasons.includes(sp.saison) ? sp.saison : team.saison;
 
-  const matches = await listMatchesForTeam(team.id, 300);
+  const matches = await listMatchesForTeam(team.id, 300, { saison: selectedSaison });
 
   // Crawl-Status für „Aktualisieren"-Button + „lädt"-Anzeige.
   const crawlState = await getTeamCrawlState(team.id);
@@ -113,9 +115,17 @@ export default async function SpielePage({
   const activeFilterCount = [zeit, ort, runde, result].filter(
     (v) => v !== "alle"
   ).length;
-  // Href bauen und dabei die anderen Filter erhalten.
+  // Href bauen und dabei die anderen Filter + die gewählte Saison erhalten.
+  // Saison-Default (= team.saison) bleibt URL-los.
   const buildHref = (overrides: Record<string, string>) => {
-    const next = { zeit, ort, runde, result, ...overrides };
+    const next = {
+      zeit,
+      ort,
+      runde,
+      result,
+      saison: selectedSaison === team.saison ? "" : selectedSaison,
+      ...overrides
+    };
     const qs = Object.entries(next)
       .filter(([, v]) => v && v !== "alle")
       .map(([k, v]) => `${k}=${v}`)
@@ -127,7 +137,7 @@ export default async function SpielePage({
     <div className="space-y-5 pb-24 md:pb-0">
       <PageHeader
         title="Spiele"
-        subtitle={`${team.name} · ${team.saison}`}
+        subtitle={`${team.name} · Saison ${saisonLabel(selectedSaison)}`}
       />
       <p className="-mt-3 text-sm leading-snug text-brand-night-navy/60">
         Vergangene und kommende Spiele dieser Mannschaft, gefiltert nach Zeit,
@@ -141,20 +151,12 @@ export default async function SpielePage({
         matchCount={matches.length}
       />
 
-      {/* Saison-Umschalter (nur wenn mehrere Saisons vorhanden) */}
-      {siblingSeasons.length > 1 && (
-        <FilterRow label="Saison">
-          {siblingSeasons.map((s) => (
-            <FilterChip
-              key={s.id}
-              href={`/verein/${slug}/mannschaft/${s.id}/spiele`}
-              active={s.id === team.id}
-            >
-              {s.saison}
-            </FilterChip>
-          ))}
-        </FilterRow>
-      )}
+      {/* Saison-Switcher (W1.3) — rendert nur bei mehreren Saisons. */}
+      <SeasonSwitcher
+        seasons={availableSeasons}
+        current={selectedSaison}
+        hrefFor={(s) => buildHref({ saison: s === team.saison ? "" : s })}
+      />
 
       {/* Filter — auf Mobile eingeklappt (spart Platz), per <details> ohne JS.
           Standardmäßig offen, sobald mind. ein Filter aktiv ist. */}

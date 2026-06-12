@@ -18,6 +18,7 @@ const {
   countPledgeRulesMock,
   assertCanAddSponsorMock,
   getActiveSeasonMock,
+  getSeasonWindowForTeamMock,
   assertWagerWindowOpenMock,
   findSponsorMock,
   createSponsorProfileMock,
@@ -33,6 +34,7 @@ const {
   countPledgeRulesMock: vi.fn(),
   assertCanAddSponsorMock: vi.fn(),
   getActiveSeasonMock: vi.fn(),
+  getSeasonWindowForTeamMock: vi.fn(),
   assertWagerWindowOpenMock: vi.fn(),
   findSponsorMock: vi.fn(),
   createSponsorProfileMock: vi.fn(),
@@ -104,7 +106,9 @@ vi.mock("@/lib/billing/wager-window", () => ({
 }));
 
 vi.mock("@/lib/billing/wager-window-server", () => ({
-  getActiveSeason: getActiveSeasonMock
+  getActiveSeason: getActiveSeasonMock,
+  // W1.2: createPledge bezieht das Fenster jetzt aus der TEAM-Saison.
+  getSeasonWindowForTeam: getSeasonWindowForTeamMock
 }));
 
 vi.mock("@/lib/db/schema/pledges", () => ({
@@ -152,6 +156,11 @@ beforeEach(() => {
     code: "2526",
     startsAt: new Date("2025-08-01T00:00:00Z"),
     endsAt: new Date("2026-05-31T23:59:59Z")
+  });
+  getSeasonWindowForTeamMock.mockResolvedValue({
+    id: "season-2627",
+    code: "2627",
+    matchdayFiveAt: new Date("2026-09-15T23:59:59Z")
   });
   assertWagerWindowOpenMock.mockReturnValue(undefined);
   // Sponsor existiert → kein Lazy-Create. Team-Lookup liefert clubId.

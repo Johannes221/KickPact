@@ -7,6 +7,7 @@ import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { listMyPendingRequests } from "@/lib/db/queries/membership-requests";
 import { pickDashboardDestination } from "@/lib/auth/identity-routing";
 import { eur } from "@/lib/utils/currency";
+import { saisonLabel } from "@/lib/utils/saison";
 
 export const metadata = { title: "Rolle wählen · KickPact" };
 
@@ -129,7 +130,7 @@ export default async function SelectRolePage() {
                 </span>
               </div>
               <p className="mt-1 text-xs text-brand-night-navy/60 truncate">
-                {t.clubName} · Saison {t.saison}
+                {t.clubName} · Saison {saisonLabel(t.saison)}
               </p>
               <div className="mt-3 inline-flex items-center text-xs font-semibold text-accent group-hover:translate-x-0.5 transition-transform">
                 Weiter →

@@ -12,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { saisonLabel } from "@/lib/utils/saison";
 import { requestClubAccessAction } from "../_actions/request";
 
 const schema = z.object({
@@ -176,7 +177,7 @@ export function RequestForm({
                             <option value="">— wählen —</option>
                             {teams.map((t) => (
                               <option key={t.id} value={t.id}>
-                                {t.name} · Saison {t.saison}
+                                {t.name} · Saison {saisonLabel(t.saison)}
                               </option>
                             ))}
                           </select>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { isPlausibleLeague } from "@/lib/utils/league";
+import { saisonLabel } from "@/lib/utils/saison";
 
 interface HeroProps {
   displayName: string;
@@ -55,7 +56,7 @@ export function ProfileHero({
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-brand-night-navy via-brand-night-navy/40 to-transparent" />
       <span className="absolute right-3 top-3 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur">
-        Saison {saison}
+        Saison {saisonLabel(saison)}
       </span>
       <div className="absolute inset-x-4 bottom-4">
         <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-accent text-xl font-black text-brand-night-navy shadow-lg">

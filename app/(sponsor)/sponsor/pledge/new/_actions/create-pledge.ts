@@ -29,7 +29,7 @@ import {
   assertWagerWindowOpen,
   WagerWindowClosedError
 } from "@/lib/billing/wager-window";
-import { getActiveSeason } from "@/lib/billing/wager-window-server";
+import { getSeasonWindowForTeam } from "@/lib/billing/wager-window-server";
 import { isSeasonTrigger } from "@/lib/db/schema/pledges";
 import { SeasonWagerNotAllowedError } from "@/lib/billing/season-wager-errors";
 import { deriveSponsorDisplayName } from "@/lib/db/queries/sponsor-label";
@@ -177,9 +177,12 @@ export async function createPledge(input: PledgeInput): Promise<CreatePledgeResu
       return { ok: false, message: new SeasonWagerNotAllowedError(plan).message };
     }
 
-    const activeSeason = await getActiveSeason(now);
+    // W1.2: Fenster-Quelle ist die TEAM-Saison (teams.saison → seasons-Row),
+    // nicht das Kalenderdatum — sonst sperrt im Juni das tote Vorsaison-Fenster
+    // die ab sofort buchbaren 26/27-Saison-Ziele. Fallback: getActiveSeason.
+    const seasonWindow = await getSeasonWindowForTeam(invitationTeamId, now);
     try {
-      assertWagerWindowOpen(activeSeason, now);
+      assertWagerWindowOpen(seasonWindow, now);
     } catch (e) {
       if (e instanceof WagerWindowClosedError) {
         return {

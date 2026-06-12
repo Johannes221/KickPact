@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { setSeasonResult } from "@/lib/actions/season-results";
 import { CUP_ROUND_ORDER, CUP_ROUND_LABELS } from "@/lib/triggers/cup-rounds";
+import { saisonLabel } from "@/lib/utils/saison";
 
 interface Current {
   finalPosition: number | null;
@@ -64,7 +65,7 @@ export function SeasonResultForm({
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
-              Saison-Ergebnis {saison}
+              Saison-Ergebnis {saisonLabel(saison)}
             </h3>
             <div className="mt-2 text-xs md:text-sm text-brand-night-navy/70 space-y-0.5">
               {current.finalPosition && (

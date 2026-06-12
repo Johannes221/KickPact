@@ -12,7 +12,7 @@ import { coverageAllowsTrigger } from "@/lib/triggers/coverage";
 import { getMonthlyChargedCents } from "@/lib/db/queries/evaluation";
 import { PLAN_CAPS } from "@/lib/stripe/pricing";
 import { assertWagerWindowOpen, WagerWindowClosedError } from "@/lib/billing/wager-window";
-import { getActiveSeason } from "@/lib/billing/wager-window-server";
+import { getSeasonWindowForTeam } from "@/lib/billing/wager-window-server";
 
 import { MANUAL_TRIGGERS } from "@/lib/triggers/manual-triggers";
 
@@ -378,7 +378,8 @@ export async function addPledgeRule(
       if (plan === "basic") return { error: "Saison-Ziele sind erst ab dem Pro-Tier verfügbar." };
       const now = new Date();
       try {
-        assertWagerWindowOpen(await getActiveSeason(now), now);
+        // W1.2: Fenster folgt der TEAM-Saison (teams.saison), nicht dem Datum.
+        assertWagerWindowOpen(await getSeasonWindowForTeam(pledge.teamId, now), now);
       } catch (e) {
         if (e instanceof WagerWindowClosedError) {
           return { error: "Saison-Ziele sind für diese Saison nicht mehr buchbar (Cutoff am 5. Spieltag)." };

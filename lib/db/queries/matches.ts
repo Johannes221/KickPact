@@ -15,7 +15,7 @@ import { users } from "@/lib/db/schema/auth";
 import { sponsorLabelSql } from "./sponsor-label";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { detectTeamSide } from "@/lib/crawler/team-side";
-import { saisonStartDate } from "@/lib/utils/saison";
+import { saisonStartDate, nextSaisonCode } from "@/lib/utils/saison";
 
 export async function getMatchById(matchId: string, clubSlug: string) {
   const [row] = await db
@@ -50,21 +50,37 @@ export async function listMatchEvents(matchId: string) {
  * gespielte (`finished`). Die UI im `app/`-Layer baut darauf ihre Filter (Heim/
  * Auswärts, Hin-/Rückrunde, Saison) — diese Query liefert nur die Rohdaten
  * sauber sortiert.
+ *
+ * W1.3 (Saison-Switcher): mit `opts.saison` wird statt des team.saison-Gates
+ * das Fenster `[saisonStartDate(saison), saisonStartDate(next(saison)))`
+ * selektiert — reine ANZEIGE-Auswahl, Charges/Stats bleiben unberührt.
  */
-export async function listMatchesForTeam(teamId: string, limit = 20) {
-  // Display-Gate: nur Spiele AB Saisonstart der Mannschaft zeigen. Verhindert,
-  // dass versehentlich persistierte Alt-Saison-Spiele (vor dem Scraper-Fix
-  // 2026-06-01) Dashboard + Spiele-Liste verschmutzen. Robuste „immer nur die
-  // aktuelle Saison"-Garantie, unabhängig vom DB-Zustand.
-  const [t] = await db
-    .select({ saison: teams.saison })
-    .from(teams)
-    .where(eq(teams.id, teamId))
-    .limit(1);
-  const fromDate = t ? saisonStartDate(t.saison) : null;
-
+export async function listMatchesForTeam(
+  teamId: string,
+  limit = 20,
+  opts: { saison?: string } = {}
+) {
   const conditions = [eq(matches.teamId, teamId)];
-  if (fromDate) conditions.push(gte(matches.datum, fromDate));
+
+  const windowFrom = opts.saison ? saisonStartDate(opts.saison) : null;
+  const windowNext = opts.saison ? nextSaisonCode(opts.saison) : null;
+  const windowTo = windowNext ? saisonStartDate(windowNext) : null;
+  if (windowFrom && windowTo) {
+    conditions.push(gte(matches.datum, windowFrom), lt(matches.datum, windowTo));
+  } else {
+    // Display-Gate: nur Spiele AB Saisonstart der Mannschaft zeigen. Verhindert,
+    // dass versehentlich persistierte Alt-Saison-Spiele (vor dem Scraper-Fix
+    // 2026-06-01) Dashboard + Spiele-Liste verschmutzen. Robuste „immer nur die
+    // aktuelle Saison"-Garantie, unabhängig vom DB-Zustand. (Ungültige
+    // saison-Optionen fallen bewusst hierauf zurück.)
+    const [t] = await db
+      .select({ saison: teams.saison })
+      .from(teams)
+      .where(eq(teams.id, teamId))
+      .limit(1);
+    const fromDate = t ? saisonStartDate(t.saison) : null;
+    if (fromDate) conditions.push(gte(matches.datum, fromDate));
+  }
 
   return db
     .select()
@@ -72,6 +88,42 @@ export async function listMatchesForTeam(teamId: string, limit = 20) {
     .where(and(...conditions))
     .orderBy(desc(matches.datum))
     .limit(limit);
+}
+
+/**
+ * Saisons, zu denen die Mannschaft mindestens ein Spiel hat (Datums-Bucketing
+ * per SQL, Juli-Grenze: Monat >= 7 → Startjahr = Jahr, sonst Jahr − 1),
+ * vereinigt mit `team.saison` — absteigend sortiert. Quelle für die
+ * Saison-Switcher-Pills (W1.3). Leeres Array bei unbekanntem Team.
+ */
+export async function listAvailableSeasonsForTeam(
+  teamId: string
+): Promise<string[]> {
+  const [t] = await db
+    .select({ saison: teams.saison })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  if (!t) return [];
+
+  const rows = await db
+    .selectDistinct({
+      startYear: sql<number>`(CASE WHEN EXTRACT(MONTH FROM ${matches.datum}) >= 7
+        THEN EXTRACT(YEAR FROM ${matches.datum})
+        ELSE EXTRACT(YEAR FROM ${matches.datum}) - 1 END)::int`
+    })
+    .from(matches)
+    .where(eq(matches.teamId, teamId));
+
+  const pad = (n: number) => String(((n % 100) + 100) % 100).padStart(2, "0");
+  const codes = new Set<string>(
+    rows.map((r) => `${pad(r.startYear)}${pad(r.startYear + 1)}`)
+  );
+  codes.add(t.saison);
+
+  // Absteigend nach Startjahr (Codes sind 4-stellig, "2627" > "2526" — String-
+  // Sort reicht innerhalb eines Jahrhunderts und hält die Liste deterministisch).
+  return [...codes].sort((a, b) => b.localeCompare(a));
 }
 
 /**
@@ -616,13 +668,4 @@ export async function getTeamForMatchesPage(teamId: string, clubId: string) {
     .where(and(eq(teams.id, teamId), eq(teams.clubId, clubId)))
     .limit(1);
   return team;
-}
-
-/** Geschwister-Saisons (gleiche fussballdeTeamId), neueste zuerst — Saison-Umschalter. */
-export async function listTeamSiblingSeasons(fussballdeTeamId: string) {
-  return db
-    .select({ id: teams.id, saison: teams.saison })
-    .from(teams)
-    .where(eq(teams.fussballdeTeamId, fussballdeTeamId))
-    .orderBy(desc(teams.saison));
 }

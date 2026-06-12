@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { createSponsorInquiry } from "@/lib/actions/sponsor-inquiries";
 import { TeamCrest } from "@/components/shared/team-crest";
 import { isPlausibleLeague } from "@/lib/utils/league";
+import { saisonLabel } from "@/lib/utils/saison";
 import type {
   DiscoverableTeam,
   SponsorTeamState
@@ -221,7 +222,7 @@ export function TeamDiscoverCard({
                 {team.clubName} · {team.teamName}
               </SheetTitle>
               <SheetDescription className="text-left text-sm text-brand-night-navy/60">
-                Saison {team.saison}
+                Saison {saisonLabel(team.saison)}
                 {team.clubOrt ? ` · ${team.clubOrt}` : ""}
               </SheetDescription>
             </SheetHeader>

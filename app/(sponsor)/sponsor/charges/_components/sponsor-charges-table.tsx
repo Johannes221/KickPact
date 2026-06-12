@@ -10,6 +10,7 @@ import { triggerLabel, triggerEmoji } from "@/lib/triggers/labels";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { eur } from "@/lib/utils/currency";
+import { formatSaisonLabel } from "@/lib/utils/saison";
 
 interface Row {
   id: string;
@@ -78,7 +79,7 @@ export function SponsorChargesTable({
             </div>
             {r.saison && (
               <div className="text-[0.65rem] text-brand-night-navy/60">
-                Saison {r.saison}
+                {formatSaisonLabel(r.saison)}
               </div>
             )}
           </div>
