@@ -136,6 +136,15 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
       .join("")
       .toUpperCase() || null;
 
+  // Avatar-Quelle: externe OAuth-URLs (Google/Apple) direkt rendern — der
+  // /api/user/avatar-Roundtrip entfällt. Storage-Keys (r2://, local://) sind
+  // nicht direkt ladbar → durch den Route-Handler. Ohne Bild gar kein <img>.
+  const avatarSrc = session.user.image
+    ? /^https?:\/\//.test(session.user.image)
+      ? session.user.image
+      : "/api/user/avatar"
+    : null;
+
   const entries = identities ? flattenIdentities(identities) : [];
   const active = activeIdentityFromPath(pathname);
   const currentEntry = entries.find((e) => e.matches(active)) ?? null;
@@ -153,9 +162,7 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
         >
           <span className="relative inline-flex">
             <Avatar className="h-8 w-8">
-              {session.user.image && (
-                <AvatarImage src="/api/user/avatar" alt="" />
-              )}
+              {avatarSrc && <AvatarImage src={avatarSrc} alt="" />}
               <AvatarFallback className="bg-accent text-white text-xs font-bold">
                 {initials ?? <User className="h-4 w-4" aria-hidden />}
               </AvatarFallback>

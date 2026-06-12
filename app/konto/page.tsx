@@ -147,7 +147,7 @@ export default async function KontoPage() {
           </p>
         </div>
 
-        <AvatarUpload initials={avatarInitials} />
+        <AvatarUpload initials={avatarInitials} image={userRow?.image ?? null} />
 
         <dl className="grid gap-3 sm:grid-cols-2 text-sm">
           <div>

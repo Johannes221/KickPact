@@ -12,7 +12,11 @@ export const dynamic = "force-dynamic";
  *  - POST: Bild hochladen (Route-Handler wegen 1-MB-Server-Action-Limit; HEIC →
  *    JPEG in uploadUserAvatar). Setzt users.image.
  *  - GET: das eigene Profilbild ausliefern (r2 → signierte Redirect-URL,
- *    lokaler Storage → direkt streamen).
+ *    externe OAuth-URL → Redirect, lokaler Storage → direkt streamen).
+ *
+ * Kein-Bild-Fälle antworten 204 statt 404/410: die App-Shell fragt die Route
+ * auf jedem Seitenladen an, ein 4xx würde dauerhaft als Fehler im Netzwerk-Log
+ * auftauchen. 204 lässt <img> still in den Initialen-Fallback laufen.
  */
 function contentTypeFor(key: string): string {
   const l = key.toLowerCase();
@@ -27,8 +31,13 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const key = await getUserAvatarKey(session.user.id);
-  if (!key) return NextResponse.json({ error: "no-avatar" }, { status: 404 });
+  if (!key) return new NextResponse(null, { status: 204 });
 
+  // OAuth-Signups (Google/Apple) tragen in users.image eine externe URL —
+  // die ist kein Storage-Key und darf nicht als lokaler Pfad gelesen werden.
+  if (key.startsWith("https://") || key.startsWith("http://")) {
+    return NextResponse.redirect(key);
+  }
   if (key.startsWith("r2://")) {
     return NextResponse.redirect(await getDocumentSignedUrl(key, 3600));
   }
@@ -40,7 +49,8 @@ export async function GET(): Promise<NextResponse> {
       headers: { "Content-Type": contentTypeFor(rel), "Cache-Control": "private, max-age=600" }
     });
   } catch {
-    return NextResponse.json({ error: "file-missing" }, { status: 410 });
+    // Datei weg (z.B. lokales Volume nach Redeploy) → wie "kein Avatar".
+    return new NextResponse(null, { status: 204 });
   }
 }
 
