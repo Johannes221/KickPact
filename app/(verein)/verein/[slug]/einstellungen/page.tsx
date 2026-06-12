@@ -2,6 +2,7 @@ import Link from "next/link";
 import { assertVereinAdminOrRedirect } from "@/lib/auth/scope";
 import { getClubById } from "@/lib/db/queries/club-admin";
 import { EinstellungenForm } from "./_components/einstellungen-form";
+import { PublicProfileCard } from "./_components/public-profile-card";
 
 export const metadata = { title: "Einstellungen · KickPact" };
 
@@ -47,6 +48,15 @@ export default async function EinstellungenPage({
           paypalHandle: clubData.paypalHandle ?? "",
           stripePaymentLink: clubData.stripePaymentLink ?? ""
         }}
+      />
+
+      {/* Öffentliches Vereinsprofil (/v/[slug], Phase 5 Paket C) */}
+      <PublicProfileCard
+        slug={slug}
+        clubId={clubData.id}
+        initialDescription={clubData.descriptionMd ?? ""}
+        hasHero={!!clubData.heroUrl}
+        isVerified={!!clubData.verifiedAt}
       />
 
       {/* Abo-Bereich */}

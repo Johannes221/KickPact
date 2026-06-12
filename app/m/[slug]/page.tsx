@@ -74,6 +74,7 @@ export default async function PublicTeamProfilePage({ params }: PageProps) {
       <ProfileHero
         displayName={profile.displayName}
         clubName={profile.clubName}
+        clubSlug={profile.clubSlug}
         league={profile.league}
         clubOrt={profile.clubOrt}
         saison={profile.saison}

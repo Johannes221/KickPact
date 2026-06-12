@@ -208,6 +208,12 @@ export interface PublicTeamProfile {
   gallery: { id: string; url: string }[];
   clubName: string;
   clubOrt: string | null;
+  /**
+   * Slug des Container-Vereins für die Querverlinkung aufs öffentliche
+   * Vereinsprofil /v/[slug] — nur gesetzt, wenn der Verein verifiziert ist
+   * (gleiches Gate wie getPublicClubProfileBySlug), sonst null.
+   */
+  clubSlug: string | null;
   clubVerifiedAt: Date | null;
   teamVerifiedAt: Date | null;
 }
@@ -242,6 +248,7 @@ export async function getPublicTeamProfileBySlug(
       teamVerifiedAt: teams.verifiedAt,
       clubName: clubs.name,
       clubOrt: clubs.ort,
+      clubSlug: clubs.slug,
       clubVerifiedAt: clubs.verifiedAt
     })
     .from(teams)
@@ -275,6 +282,7 @@ export async function getPublicTeamProfileBySlug(
     gallery,
     clubName: row.clubName,
     clubOrt: row.clubOrt,
+    clubSlug: row.clubVerifiedAt ? row.clubSlug : null,
     clubVerifiedAt: row.clubVerifiedAt,
     teamVerifiedAt: row.teamVerifiedAt
   };

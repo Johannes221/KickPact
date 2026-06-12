@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAllArticles } from "@/lib/help-center/articles";
 import { listPublicTeamSlugs } from "@/lib/db/queries/sponsor-discover";
+import { listVerifiedClubSlugs } from "@/lib/db/queries/club-public-profile";
 
 /**
  * Dynamische sitemap.xml via Next.js App Router.
@@ -97,5 +98,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   }
 
-  return [...staticRoutes, ...articleRoutes, ...teamRoutes];
+  // Öffentliche Vereinsprofile (/v/<slug>, nur verifizierte Clubs) — gleiches
+  // Production-Gate wie die Team-Profile.
+  let clubRoutes: MetadataRoute.Sitemap = [];
+  if (isProduction) {
+    const clubSlugs = await listVerifiedClubSlugs();
+    clubRoutes = clubSlugs.map((slug) => ({
+      url: `${baseUrl}/v/${slug}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
+  }
+
+  return [...staticRoutes, ...articleRoutes, ...teamRoutes, ...clubRoutes];
 }
