@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, lt, ne, notInArray, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lt, ne, notInArray, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   charges,
@@ -62,6 +62,14 @@ export interface ChargeForBilling {
  * Saison-Charges (evaluate-season) haben matchId=null — deshalb leftJoin auf
  * matches und der Team/Club-Scope über pledges.teamId statt matches.teamId
  * (vorher fielen Saison-Charges durch den innerJoin für immer aus jeder Rechnung).
+ *
+ * Paket A.3 (Spec 2026-05-26 §1.2) — Billing-Cycle-Filter:
+ *  - snapshot='monthly' → normal monatlich fakturieren (Bestand, Default).
+ *  - snapshot='season_end' nur, wenn der Sponsor AKTUELL 'monthly' ist
+ *    (Spec-Wechsel-Regel „season_end→monthly: bisher gesammelte Charges
+ *    werden mit der ersten Monatsrechnung beglichen"). Steht der Sponsor
+ *    weiter auf season_end, sammeln sich die Charges bis zum
+ *    Saisonende-Rechnungslauf (generate-season-end-invoices).
  */
 export async function listConfirmedChargesByPeriod(opts: {
   periodStart: Date;
@@ -85,13 +93,21 @@ export async function listConfirmedChargesByPeriod(opts: {
     .from(charges)
     .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
     .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
     .leftJoin(matches, eq(charges.matchId, matches.id))
     .where(
       and(
         eq(charges.status, "confirmed"),
         gte(charges.confirmedAt, opts.periodStart),
         // B8 (Audit 2026-06-11): periodEnd ist EXKLUSIV (Beginn Folgemonat).
-        lt(charges.confirmedAt, opts.periodEnd)
+        lt(charges.confirmedAt, opts.periodEnd),
+        or(
+          eq(charges.billingCycleSnapshot, "monthly"),
+          and(
+            eq(charges.billingCycleSnapshot, "season_end"),
+            eq(sponsors.billingCycle, "monthly")
+          )
+        )
       )
     );
   return rows;
