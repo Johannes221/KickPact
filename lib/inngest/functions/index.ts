@@ -3,6 +3,7 @@ import { backfillTeamHistory } from "./backfill-team-history";
 import { evaluateMatch } from "./evaluate-match";
 import { approvalReminders } from "./approval-reminders";
 import { generateInvoices } from "./generate-invoices";
+import { generateSeasonEndInvoices } from "./generate-season-end-invoices";
 import { evaluateSeason } from "./evaluate-season";
 import { trialReminders } from "./trial-reminders";
 import { verifyResults } from "./verify-results";
@@ -29,6 +30,7 @@ export const functions = [
   evaluateMatch,
   approvalReminders,
   generateInvoices,
+  generateSeasonEndInvoices,
   evaluateSeason,
   trialReminders,
   verifyResults,

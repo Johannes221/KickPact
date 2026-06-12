@@ -114,6 +114,53 @@ export async function listConfirmedChargesByPeriod(opts: {
 }
 
 /**
+ * Paket A.4 (Spec 2026-05-26 §1.2) — Selektion für den Saisonende-Rechnungslauf:
+ * alle `confirmed` (= noch nicht fakturierten) Charges mit
+ * snapshot='season_end', deren Sponsor AKTUELL auf season_end steht und deren
+ * Abrechnungs-Zeitpunkt `COALESCE(confirmedAt, createdAt)` im Saison-Fenster
+ * [1.7. Vorjahr, 1.7.) liegt. Sponsoren, die zurück auf monthly gewechselt
+ * haben, fallen bewusst raus — deren Gesammeltes holt die erste
+ * Monatsrechnung ab (listConfirmedChargesByPeriod).
+ */
+export async function listSeasonEndChargesForWindow(opts: {
+  windowStart: Date;
+  windowEnd: Date;
+}): Promise<ChargeForBilling[]> {
+  const rows = await db
+    .select({
+      chargeId: charges.id,
+      sponsorId: pledges.sponsorId,
+      clubId: teams.clubId,
+      triggerType: charges.triggerType,
+      amountCents: charges.amountCents,
+      saison: charges.saison,
+      confirmedAt: charges.confirmedAt,
+      matchDate: matches.datum,
+      heimName: matches.heimName,
+      gastName: matches.gastName,
+      ergebnisHeim: matches.ergebnisHeim,
+      ergebnisGast: matches.ergebnisGast
+    })
+    .from(charges)
+    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
+    .leftJoin(matches, eq(charges.matchId, matches.id))
+    .where(
+      and(
+        eq(charges.status, "confirmed"),
+        eq(charges.billingCycleSnapshot, "season_end"),
+        eq(sponsors.billingCycle, "season_end"),
+        // Datum als ISO-String binden: COALESCE(...) ist ein rohes SQL-Fragment
+        // ohne Spalten-Typ (vgl. getMonthlyChargedCents in evaluation.ts).
+        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${opts.windowStart.toISOString()}`,
+        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) < ${opts.windowEnd.toISOString()}`
+      )
+    );
+  return rows;
+}
+
+/**
  * B6 (Audit 2026-06-11): Charges, die bereits auf einer 'draft'-Rechnung der
  * Periode hängen. Ein Draft entsteht, wenn der Rechnungslauf die Invoice
  * anlegte, der Mail-Versand aber fehlschlug — die Charges sind dann schon
