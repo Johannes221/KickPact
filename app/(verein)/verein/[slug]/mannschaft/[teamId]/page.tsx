@@ -14,10 +14,12 @@ import { TriggerIcon } from "@/components/shared/trigger-icon";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import {
   listMatchesForTeam,
+  listAvailableSeasonsForTeam,
   getMatchChargesSummaryForTeam,
   getPreviousSeasonDisplay,
   type PreviousSeasonDisplay
 } from "@/lib/db/queries/matches";
+import { SeasonSwitcher } from "@/components/shared/season-switcher";
 import { listClubSeasonPledges } from "@/lib/db/queries/club-dashboard";
 import { computeTeamSeasonStats } from "@/lib/db/queries/team-dashboard";
 import {
@@ -43,11 +45,14 @@ import { eur } from "@/lib/utils/currency";
 export const metadata = { title: "Mannschaft · KickPact" };
 
 export default async function TeamDetailPage({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ slug: string; teamId: string }>;
+  searchParams: Promise<{ saison?: string }>;
 }) {
   const { slug, teamId } = await params;
+  const { saison: saisonParam } = await searchParams;
   const { club, user } = await assertTeamPageAccess(slug, teamId, "viewer");
 
   const team = await getFullTeamInClub(teamId, club.id);
@@ -63,9 +68,22 @@ export default async function TeamDetailPage({
   // Paket B (Spec §1.5): Banner für offene Lizenz-Transfer-Anfrage.
   const pendingTransfer = await getPendingTransferRequestForTeam(team.id);
 
+  // W1.3 Saison-Switcher: die ANZEIGE-Saison der Spiele-Liste (?saison=…) —
+  // Default team.saison; nur Saisons mit Spielen (∪ aktuelle) sind wählbar.
+  // Charges/Stats bleiben bewusst an der aktuellen Saison.
+  const availableSeasons = await listAvailableSeasonsForTeam(team.id);
+  const selectedSaison =
+    saisonParam && availableSeasons.includes(saisonParam)
+      ? saisonParam
+      : team.saison;
+  const isCurrentSeasonView = selectedSaison === team.saison;
+  // Jüngste verfügbare Saison VOR der aktuellen (für den EmptyState-Sprung).
+  const previousSeasonView =
+    availableSeasons.find((s) => s < team.saison) ?? null;
+
   const [matchRows, chargesSummary, seasonTarget, seasonPledges, previousSeason] =
     await Promise.all([
-      listMatchesForTeam(team.id, 30),
+      listMatchesForTeam(team.id, 30, { saison: selectedSaison }),
       getMatchChargesSummaryForTeam(team.id),
       // B8 (Audit 2026-06-11): welche Saison der Endstand-Block bedient,
       // entscheidet der Resolver — nach dem Saison-Bump (Juli) gehört das
@@ -144,7 +162,9 @@ export default async function TeamDetailPage({
   // anstoßen. Dedup über Event-ID (1h-Bucket) verhindert Mehrfach-Trigger bei
   // Reloads. crawlStartedAt wird direkt gesetzt, damit das Banner sofort in
   // diesem Render erscheint (statt erst beim ersten Crawler-Step).
-  if (matchRows.length === 0 && team.fussballdeTeamId && !isCrawling) {
+  // (W1.3: nur in der AKTUELLEN Saison-Ansicht — eine leere historische
+  // Anzeige-Saison soll keinen Crawl auslösen.)
+  if (matchRows.length === 0 && team.fussballdeTeamId && !isCrawling && isCurrentSeasonView) {
     await markCrawlStarted(team.id);
     isCrawling = true;
     const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000));
@@ -319,8 +339,8 @@ export default async function TeamDetailPage({
       </section>
 
       {/* Spiele */}
-      <section>
-        <div className="flex items-baseline justify-between gap-3 mb-4">
+      <section id="spiele">
+        <div className="flex items-baseline justify-between gap-3 mb-3">
           <h3 className="font-display font-bold text-xl tracking-tight text-brand-night-navy">
             Alle Spiele
           </h3>
@@ -328,6 +348,18 @@ export default async function TeamDetailPage({
             {matchRows.length} Spiel{matchRows.length === 1 ? "" : "e"}
           </span>
         </div>
+
+        {/* W1.3: Saison-Switcher — nur Anzeige der Liste, Stats/Beiträge oben
+            bleiben an der aktuellen Saison. */}
+        <SeasonSwitcher
+          className="mb-4"
+          seasons={availableSeasons}
+          current={selectedSaison}
+          hrefFor={(s) =>
+            s === team.saison ? `${teamBase}#spiele` : `${teamBase}?saison=${s}#spiele`
+          }
+        />
+
         {/* Crawl-Banner: erscheint solange der Job läuft — auch wenn schon
             Spiele geladen sind. Neue Spiele tauchen per Auto-Refresh nach und
             nach darunter auf. */}
@@ -363,9 +395,20 @@ export default async function TeamDetailPage({
                   : "Für diese Mannschaft wurden noch keine Spiele gefunden. Sobald die Saison startet, erscheinen sie hier automatisch."
               }
               action={
-                <Button asChild>
-                  <Link href={`${teamBase}/sponsoren`}>Sponsoren einladen</Link>
-                </Button>
+                <div className="flex flex-col items-center gap-3">
+                  <Button asChild>
+                    <Link href={`${teamBase}/sponsoren`}>Sponsoren einladen</Link>
+                  </Button>
+                  {/* W1.3: leere aktuelle Saison → Sprung in die Vorsaison-Ansicht. */}
+                  {isCurrentSeasonView && previousSeasonView && (
+                    <Link
+                      href={`${teamBase}?saison=${previousSeasonView}#spiele`}
+                      className="text-sm font-semibold text-accent hover:underline"
+                    >
+                      Saison {saisonLabel(previousSeasonView)} ansehen →
+                    </Link>
+                  )}
+                </div>
               }
             />
           )
@@ -434,11 +477,16 @@ export default async function TeamDetailPage({
         )}
       </section>
 
-      {/* Letzte Saison: Bilanz + letzte Ergebnisse der Vorsaison — nur solange
-          die aktuelle Saison noch (fast) leer ist. Klar als Vorsaison
-          beschriftet, damit es nicht wie aktuelle Spiele aussieht. */}
-      {previousSeason && (
-        <PreviousSeasonSection data={previousSeason} teamNames={teamNames} />
+      {/* Letzte Saison (Phase 3, jetzt Teaser): Bilanz der Vorsaison — nur
+          solange die aktuelle Saison noch (fast) leer ist. Die Vollanzeige der
+          Spiele übernimmt der Saison-Switcher (W1.3), der Block verlinkt nur
+          noch dorthin. Nur in der aktuellen Saison-Ansicht (sonst zeigt die
+          Liste oben bereits die Vorsaison). */}
+      {previousSeason && isCurrentSeasonView && (
+        <PreviousSeasonSection
+          data={previousSeason}
+          switcherHref={`${teamBase}?saison=${previousSeason.prevSaison}#spiele`}
+        />
       )}
     </div>
   );
@@ -446,10 +494,11 @@ export default async function TeamDetailPage({
 
 function PreviousSeasonSection({
   data,
-  teamNames
+  switcherHref
 }: {
   data: PreviousSeasonDisplay;
-  teamNames: string[];
+  /** Sprung in die Vorsaison-Ansicht der Spiele-Liste (Saison-Switcher). */
+  switcherHref: string;
 }) {
   const { record } = data;
   return (
@@ -481,49 +530,13 @@ function PreviousSeasonSection({
         ))}
       </div>
 
-      {/* Letzte Ergebnisse — bewusst KEINE Links: historische Spiele haben
-          weder Events noch Sponsor-Beiträge, eine Detailseite bietet nichts. */}
-      <ul className="space-y-2">
-        {data.recentMatches.map((m) => {
-          const isHeim = detectTeamSide(teamNames, m.heimName) === "heim";
-          const gF = isHeim ? (m.ergebnisHeim ?? null) : (m.ergebnisGast ?? null);
-          const gA = isHeim ? (m.ergebnisGast ?? null) : (m.ergebnisHeim ?? null);
-          const resultColor =
-            gF === null
-              ? "border-brand-neutral/40"
-              : gF > (gA ?? 0)
-                ? "border-emerald-200"
-                : gF < (gA ?? 0)
-                  ? "border-rose-200"
-                  : "border-amber-200";
-          return (
-            <li
-              key={m.id}
-              className={`rounded-lg border bg-white p-3 md:p-4 ${resultColor}`}
-            >
-              <div className="hidden sm:block text-xs text-brand-night-navy/50 mb-1">
-                {m.datum.toLocaleDateString("de-DE", {
-                  weekday: "short",
-                  day: "2-digit",
-                  month: "short",
-                  year: "2-digit"
-                })}
-              </div>
-              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm font-semibold text-brand-night-navy">
-                <span className="min-w-0 truncate text-right" title={m.heimName}>
-                  {abbreviateTeamName(m.heimName)}
-                </span>
-                <span className="font-mono tabular-nums text-brand-night-navy/70 whitespace-nowrap">
-                  {m.ergebnisHeim ?? "—"}:{m.ergebnisGast ?? "—"}
-                </span>
-                <span className="min-w-0 truncate text-left" title={m.gastName}>
-                  {abbreviateTeamName(m.gastName)}
-                </span>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      {/* W1.3: Vollanzeige der Vorsaison-Spiele übernimmt der Saison-Switcher. */}
+      <Link
+        href={switcherHref}
+        className="inline-flex items-center text-sm font-semibold text-accent hover:underline"
+      >
+        Alle Spiele {data.prevSaisonLabel} ansehen →
+      </Link>
     </section>
   );
 }
