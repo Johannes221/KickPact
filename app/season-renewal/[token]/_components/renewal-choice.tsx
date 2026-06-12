@@ -6,6 +6,7 @@ import {
   confirmSeasonRenewal,
   declineSeasonRenewal
 } from "@/lib/actions/season-renewal";
+import { saisonLabel } from "@/lib/utils/saison";
 
 interface Props {
   token: string;
@@ -31,6 +32,8 @@ export function RenewalChoice({
   const [state, setState] = useState<State>({ kind: "idle" });
   const [pending, startTransition] = useTransition();
   const [autoTriggered, setAutoTriggered] = useState(false);
+  // W1.4: Saison-Codes ("2627") nie roh rendern — immer lesbares Label.
+  const nextSaisonLabel = saisonLabel(nextSaison);
 
   function handleRenew() {
     startTransition(async () => {
@@ -68,7 +71,7 @@ export function RenewalChoice({
   if (alreadyCloned) {
     return (
       <div className="mt-6 rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">
-        Dein Pact wurde bereits auf die Saison <strong>{nextSaison}</strong>{" "}
+        Dein Pact wurde bereits auf die Saison <strong>{nextSaisonLabel}</strong>{" "}
         verlängert. Du musst nichts weiter tun.
       </div>
     );
@@ -79,7 +82,7 @@ export function RenewalChoice({
       <div className="mt-6 space-y-4">
         <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">
           <strong>Verlängert!</strong> Dein Pact läuft nahtlos in die Saison{" "}
-          <strong>{state.targetSaison}</strong>.
+          <strong>{saisonLabel(state.targetSaison)}</strong>.
         </div>
         <p className="text-sm text-brand-night-navy/60">
           Du bekommst eine Bestätigungs-Mail mit allen Details. In deinem
@@ -94,13 +97,13 @@ export function RenewalChoice({
       <div className="mt-6 space-y-4">
         <div className="rounded-lg border border-brand-neutral/40 bg-brand-off-white p-4 text-sm text-brand-night-navy/80">
           <strong>Verstanden.</strong> Dein Pact läuft regulär zum
-          Saisonende aus. Wir schicken dir dann eine Übersicht aller Charges
+          Saisonende aus. Wir schicken dir dann eine Übersicht aller Beiträge
           dieser Saison.
         </div>
         <p className="text-sm text-brand-night-navy/60">
           Du kannst jederzeit später wieder neu starten — einfach im
           Sponsor-Dashboard einen neuen Pact für die Saison{" "}
-          <strong>{nextSaison}</strong> abschließen.
+          <strong>{nextSaisonLabel}</strong> abschließen.
         </p>
       </div>
     );
@@ -128,7 +131,7 @@ export function RenewalChoice({
       {!nextSeasonTeamExists && (
         <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
           <strong>Achtung:</strong> Der Verein hat die Mannschaft für Saison{" "}
-          <strong>{nextSaison}</strong> noch nicht angelegt. Wenn du jetzt
+          <strong>{nextSaisonLabel}</strong> noch nicht angelegt. Wenn du jetzt
           verlängerst, scheitert die Aktion. Bitte warte auf Bescheid vom
           Verein oder antworte später.
         </div>
@@ -140,7 +143,7 @@ export function RenewalChoice({
           onClick={handleRenew}
           disabled={pending || !nextSeasonTeamExists}
         >
-          {pending ? "Verlängere…" : `Ja, auf Saison ${nextSaison} verlängern`}
+          {pending ? "Verlängere…" : `Ja, auf Saison ${nextSaisonLabel} verlängern`}
         </Button>
         <Button
           variant="outline"

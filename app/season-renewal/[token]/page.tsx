@@ -1,4 +1,5 @@
 import { inspectSeasonRenewalToken } from "@/lib/actions/season-renewal";
+import { saisonLabel } from "@/lib/utils/saison";
 import { RenewalChoice } from "./_components/renewal-choice";
 
 export const metadata = {
@@ -69,11 +70,11 @@ export default async function SeasonRenewalPage({
           Hi <strong>{inspection.sponsorName}</strong>, dein Pact für{" "}
           <strong>{inspection.teamName}</strong> bei{" "}
           <strong>{inspection.clubName}</strong> läuft mit der Saison{" "}
-          <strong>{inspection.currentSaison}</strong> aus.
+          <strong>{saisonLabel(inspection.currentSaison)}</strong> aus.
         </p>
         <p className="text-brand-night-navy/70">
           Möchtest du auf die Saison{" "}
-          <strong>{inspection.nextSaison}</strong> verlängern? Wir kopieren alle
+          <strong>{saisonLabel(inspection.nextSaison)}</strong> verlängern? Wir kopieren alle
           deine bisherigen Trigger + Beträge 1:1.
         </p>
       </div>

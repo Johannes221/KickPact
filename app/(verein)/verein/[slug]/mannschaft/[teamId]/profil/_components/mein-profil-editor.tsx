@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { saveTeamPublicProfile } from "@/lib/actions/team-public-profile";
 import { setTeamShowInsights } from "@/lib/actions/team-images";
 import { renameTeam } from "@/lib/actions/team-lifecycle";
+import { saisonLabel } from "@/lib/utils/saison";
 
 // Akzeptierte Endungen (inkl. iPhone-HEIC/HEIF — Server konvertiert nach JPEG).
 // MIME-Type-Prüfung bewusst lasch: Mobile-Browser senden gelegentlich einen
@@ -298,7 +299,7 @@ export function MeinProfilEditor({
             Avatar (unten) und untereinander nie überlappend. */}
         <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
           <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur">
-            Saison {saison}
+            Saison {saisonLabel(saison)}
           </span>
           <button
             type="button"

@@ -13,6 +13,7 @@ import { triggerEmoji, triggerLabel } from "@/lib/triggers/labels";
 import { CsvExportButton } from "@/components/shared/csv-export-button";
 import { SponsorChargesTable } from "./_components/sponsor-charges-table";
 import { eur } from "@/lib/utils/currency";
+import { saisonLabel } from "@/lib/utils/saison";
 
 export const metadata = { title: "Sponsor · KickPact" };
 
@@ -123,7 +124,7 @@ export default async function SponsorDetailPage({
                 >
                   <div className="font-semibold text-brand-night-navy">{t.teamName}</div>
                   <div className="text-xs text-brand-night-navy/50 mt-0.5">
-                    {t.saison} · {t.pledgeCount}{" "}
+                    Saison {saisonLabel(t.saison)} · {t.pledgeCount}{" "}
                     {t.pledgeCount === 1 ? "Pact" : "Pacts"}
                   </div>
                 </Link>

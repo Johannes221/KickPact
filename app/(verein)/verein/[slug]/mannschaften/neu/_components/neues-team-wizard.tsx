@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { getMannschaftenAction } from "@/app/(onboarding)/onboarding/verein/_actions/search";
 import { createTeamForExistingClub } from "@/lib/actions/team-lifecycle";
+import { saisonLabel } from "@/lib/utils/saison";
 
 type Mannschaft = {
   name: string;
@@ -171,7 +172,7 @@ export function NeuesTeamWizard({
                           {t.name}
                         </div>
                         <div className="text-xs text-brand-night-navy/60 mt-0.5">
-                          Saison {t.saison}
+                          Saison {saisonLabel(t.saison)}
                           {alreadyExists && (
                             <span className="ml-2 inline-flex items-center rounded-full bg-brand-neutral/40 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-brand-night-navy/60">
                               Bereits vorhanden
@@ -209,7 +210,7 @@ export function NeuesTeamWizard({
               {selectedTeam.name}
             </div>
             <div className="text-xs text-brand-night-navy/60 mt-0.5">
-              Saison {selectedTeam.saison}
+              Saison {saisonLabel(selectedTeam.saison)}
             </div>
           </div>
 
@@ -221,7 +222,7 @@ export function NeuesTeamWizard({
               Aus den fußball.de-Daten übernommen.
             </p>
             <div className="mt-2 rounded-md border border-brand-neutral/40 bg-brand-off-white px-3 py-2 text-sm text-brand-night-navy">
-              {selectedTeam.saison}
+              {saisonLabel(selectedTeam.saison)}
             </div>
           </div>
 
