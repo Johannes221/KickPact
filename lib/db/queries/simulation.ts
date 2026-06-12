@@ -6,12 +6,12 @@
  * teamSide wird — wie in evaluate-match — via `detectTeamSide` aus Team- UND
  * Vereinsname bestimmt.
  */
-import { and, asc, eq, gte, inArray, lt } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { clubs, teams } from "@/lib/db/schema";
+import { clubs, teams, pledges, pledgeRules, charges } from "@/lib/db/schema";
 import { matches, matchEvents } from "@/lib/db/schema/matches";
 import { detectTeamSide } from "@/lib/crawler/team-side";
-import { nextSaisonCode, saisonStartDate } from "@/lib/utils/saison";
+import { nextSaisonCode, prevSaisonCode, saisonLabel, saisonStartDate } from "@/lib/utils/saison";
 import {
   simulateRulesOverMatches,
   type SimMatch,
@@ -97,4 +97,157 @@ export async function simulateForTeamSeason(
   }));
 
   return simulateRulesOverMatches(simMatches, rules);
+}
+
+export interface TeamPrognose {
+  /** Vorsaison-Code ("2526") + UI-Label ("25/26"). */
+  prevSaison: string;
+  prevSaisonLabel: string;
+  /** (a) Was die AKTUELL aktiven Pacts über die Vorsaison gebracht hätten. */
+  lastSeason: { totalCents: number; matchCount: number } | null;
+  /** (b) Lineare Hochrechnung der laufenden Saison (ab 3 gespielten Spielen). */
+  onPace: {
+    projectedCents: number;
+    currentCents: number;
+    playedCount: number;
+    expectedGames: number;
+  } | null;
+}
+
+/**
+ * W3.3 — Daten der „Prognose"-Karte auf dem Team-Dashboard.
+ *
+ * (a) Rückblick: die aktiven Regeln (active=true, aktuelle Term-Version) aller
+ *     AKTIVEN Pledges des Teams, simuliert über die Vorsaison. Nur gesetzt,
+ *     wenn die Simulation Spiele UND einen Betrag > 0 ergab.
+ * (b) Hochrechnung: bestätigte + fakturierte Spiel-Beiträge der laufenden
+ *     Saison, linear auf die erwartete Spielzahl (= Vorsaison-Spielzahl,
+ *     Fallback 26, nie kleiner als bereits gespielt) hochgerechnet. Erst ab
+ *     3 gespielten Spielen und nur bei Beiträgen > 0 — vorher wäre die Linie
+ *     reine Münzwurf-Mathematik.
+ *
+ * `null`, wenn weder (a) noch (b) Daten hat (Karte wird nicht gerendert).
+ */
+export async function getTeamPrognose(teamId: string): Promise<TeamPrognose | null> {
+  const [team] = await db
+    .select({ saison: teams.saison })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  if (!team) return null;
+  const prevSaison = prevSaisonCode(team.saison);
+  const seasonStart = saisonStartDate(team.saison);
+  if (!prevSaison || !seasonStart) return null;
+
+  // (a) Aktive Regeln aller aktiven Pacts in der aktuellen Term-Version
+  // (effectiveUntil IS NULL — alte, geklonte Konditionen zählen nicht).
+  const ruleRows = await db
+    .select({
+      id: pledgeRules.id,
+      pledgeId: pledgeRules.pledgeId,
+      triggerType: pledgeRules.triggerType,
+      triggerParams: pledgeRules.triggerParamsJson,
+      amountCents: pledgeRules.amountCents,
+      perMatchCapCents: pledgeRules.perMatchCapCents,
+      capCents: pledgeRules.capCents,
+      capPeriod: pledgeRules.capPeriod,
+      monthlyCapCents: pledges.monthlyCapCents
+    })
+    .from(pledgeRules)
+    .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
+    .where(
+      and(
+        eq(pledges.teamId, teamId),
+        eq(pledges.status, "active"),
+        eq(pledgeRules.active, true),
+        isNull(pledgeRules.effectiveUntil)
+      )
+    );
+
+  let lastSeason: TeamPrognose["lastSeason"] = null;
+  if (ruleRows.length > 0) {
+    const sim = await simulateForTeamSeason(
+      teamId,
+      prevSaison,
+      ruleRows.map((r) => ({
+        id: r.id,
+        pledgeId: r.pledgeId,
+        triggerType: r.triggerType,
+        triggerParams: r.triggerParams ?? {},
+        amountCents: r.amountCents,
+        perMatchCapCents: r.perMatchCapCents,
+        capCents: r.capCents,
+        capPeriod: r.capPeriod,
+        monthlyCapCents: r.monthlyCapCents
+      }))
+    );
+    if (sim && sim.matchCount > 0 && sim.totalCents > 0) {
+      lastSeason = { totalCents: sim.totalCents, matchCount: sim.matchCount };
+    }
+  }
+
+  // (b) Hochrechnung der laufenden Saison.
+  let onPace: TeamPrognose["onPace"] = null;
+  const [playedRow] = await db
+    .select({ played: sql<number>`count(*)::int` })
+    .from(matches)
+    .where(
+      and(
+        eq(matches.teamId, teamId),
+        eq(matches.status, "finished"),
+        gte(matches.datum, seasonStart)
+      )
+    );
+  const playedCount = playedRow?.played ?? 0;
+  if (playedCount >= 3) {
+    // Spiel-Beiträge der Saison: confirmed + invoiced (eine bezahlte Rechnung
+    // lässt ihre Charges auf "invoiced" — damit sind alle „echten" Beiträge
+    // abgedeckt, pending/cancelled bleiben draußen). Saison-Ziel-Charges
+    // (matchId NULL) fallen erst am Saison-Ende an und bleiben bewusst raus.
+    const [sumRow] = await db
+      .select({ total: sql<number>`coalesce(sum(${charges.amountCents}), 0)::int` })
+      .from(charges)
+      .innerJoin(matches, eq(charges.matchId, matches.id))
+      .where(
+        and(
+          eq(matches.teamId, teamId),
+          gte(matches.datum, seasonStart),
+          inArray(charges.status, ["confirmed", "invoiced"])
+        )
+      );
+    const currentCents = sumRow?.total ?? 0;
+
+    if (currentCents > 0) {
+      const prevStart = saisonStartDate(prevSaison);
+      const [prevRow] = prevStart
+        ? await db
+            .select({ played: sql<number>`count(*)::int` })
+            .from(matches)
+            .where(
+              and(
+                eq(matches.teamId, teamId),
+                eq(matches.status, "finished"),
+                gte(matches.datum, prevStart),
+                lt(matches.datum, seasonStart)
+              )
+            )
+        : [{ played: 0 }];
+      const prevPlayed = prevRow?.played ?? 0;
+      const expectedGames = Math.max(prevPlayed > 0 ? prevPlayed : 26, playedCount);
+      onPace = {
+        projectedCents: Math.round((currentCents / playedCount) * expectedGames),
+        currentCents,
+        playedCount,
+        expectedGames
+      };
+    }
+  }
+
+  if (!lastSeason && !onPace) return null;
+  return {
+    prevSaison,
+    prevSaisonLabel: saisonLabel(prevSaison),
+    lastSeason,
+    onPace
+  };
 }

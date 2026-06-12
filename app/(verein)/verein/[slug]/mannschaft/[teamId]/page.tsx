@@ -19,6 +19,7 @@ import {
   type PreviousSeasonDisplay
 } from "@/lib/db/queries/matches";
 import { listClubSeasonPledges } from "@/lib/db/queries/club-dashboard";
+import { getTeamPrognose } from "@/lib/db/queries/simulation";
 import { computeTeamSeasonStats } from "@/lib/db/queries/team-dashboard";
 import {
   getFullTeamInClub,
@@ -63,7 +64,7 @@ export default async function TeamDetailPage({
   // Paket B (Spec §1.5): Banner für offene Lizenz-Transfer-Anfrage.
   const pendingTransfer = await getPendingTransferRequestForTeam(team.id);
 
-  const [matchRows, chargesSummary, seasonTarget, seasonPledges, previousSeason] =
+  const [matchRows, chargesSummary, seasonTarget, seasonPledges, previousSeason, prognose] =
     await Promise.all([
       listMatchesForTeam(team.id, 30),
       getMatchChargesSummaryForTeam(team.id),
@@ -75,7 +76,9 @@ export default async function TeamDetailPage({
       listClubSeasonPledges(club.id).then((rows) => rows.filter((r) => r.teamId === team.id)),
       // „Letzte Saison"-Block: nur befüllt, solange die aktuelle Saison < 3
       // gespielte Spiele hat UND Vorsaison-Historie (Backfill) existiert.
-      getPreviousSeasonDisplay(team.id)
+      getPreviousSeasonDisplay(team.id),
+      // W3: „Prognose"-Karte (Rückblick aktiver Pacts + Hochrechnung).
+      getTeamPrognose(team.id)
     ]);
 
   // Saison-Stats aus echten Matches berechnen
@@ -222,6 +225,46 @@ export default async function TeamDetailPage({
             </div>
           ))}
         </div>
+      )}
+
+      {/* W3: Prognose — was die aktiven Pacts letzte Saison gebracht hätten +
+          Hochrechnung der laufenden Saison. Rendert nur mit Daten. */}
+      {prognose && (
+        <section
+          aria-label="Prognose"
+          className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5"
+        >
+          <h3 className="font-display font-bold text-xl tracking-tight text-brand-night-navy">
+            📈 Prognose
+          </h3>
+          <div className="mt-2 space-y-2">
+            {prognose.lastSeason && (
+              <p className="text-sm text-brand-night-navy/80 leading-snug">
+                Letzte Saison ({prognose.prevSaisonLabel}) hätten eure aktuellen
+                Pacts über {prognose.lastSeason.matchCount} Spiele{" "}
+                <strong className="font-display text-lg text-accent">
+                  {eur(prognose.lastSeason.totalCents)}
+                </strong>{" "}
+                eingebracht.
+              </p>
+            )}
+            {prognose.onPace && (
+              <p className="text-sm text-brand-night-navy/80 leading-snug">
+                Auf diesem Kurs: ~
+                <strong className="font-display text-lg text-brand-night-navy">
+                  {eur(prognose.onPace.projectedCents)}
+                </strong>{" "}
+                bis Saisonende — nach {prognose.onPace.playedCount} von ~
+                {prognose.onPace.expectedGames} Spielen sind{" "}
+                {eur(prognose.onPace.currentCents)} zusammengekommen.
+              </p>
+            )}
+          </div>
+          <p className="mt-3 text-xs text-brand-night-navy/50">
+            Rückblick &amp; Hochrechnung auf Basis echter Spiele — eine Prognose,
+            kein Versprechen.
+          </p>
+        </section>
       )}
 
       {/* Saison-Wetten dieser Mannschaft */}

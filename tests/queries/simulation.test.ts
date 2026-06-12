@@ -8,10 +8,18 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createId } from "@paralleldrive/cuid2";
 import { db } from "@/lib/db/client";
-import { clubs, teams } from "@/lib/db/schema";
+import {
+  clubs,
+  teams,
+  users,
+  sponsors,
+  pledges,
+  pledgeRules,
+  charges
+} from "@/lib/db/schema";
 import { matches, matchEvents } from "@/lib/db/schema/matches";
 import { resetTestDb } from "../setup/db";
-import { simulateForTeamSeason } from "@/lib/db/queries/simulation";
+import { getTeamPrognose, simulateForTeamSeason } from "@/lib/db/queries/simulation";
 
 const CLUB_NAME = "Sportfreunde Testkirchen";
 
@@ -154,5 +162,127 @@ describe("simulateForTeamSeason (integration)", () => {
     ).resolves.toBeNull();
     const teamId = await seedTeam("2627");
     await expect(simulateForTeamSeason(teamId, "kaputt", [])).resolves.toBeNull();
+  });
+});
+
+// ─── getTeamPrognose ──────────────────────────────────────────────────────────
+
+async function seedActivePledgeWithRule(teamId: string, amountCents = 100) {
+  await db
+    .insert(users)
+    .values({ id: "u_prog", email: "prog@example.com" })
+    .onConflictDoNothing();
+  const [sponsor] = await db
+    .insert(sponsors)
+    .values({ userId: "u_prog", displayName: "Prognose-Sponsor", type: "familie" })
+    .returning({ id: sponsors.id });
+  const [pledge] = await db
+    .insert(pledges)
+    .values({
+      sponsorId: sponsor.id,
+      teamId,
+      status: "active",
+      endsAt: new Date("2027-06-30T22:00:00")
+    })
+    .returning({ id: pledges.id });
+  const [rule] = await db
+    .insert(pledgeRules)
+    .values({
+      pledgeId: pledge.id,
+      triggerType: "goal_total",
+      amountCents,
+      active: true
+    })
+    .returning({ id: pledgeRules.id });
+  return { pledgeId: pledge.id, ruleId: rule.id };
+}
+
+describe("getTeamPrognose (integration)", () => {
+  beforeEach(async () => {
+    await resetTestDb();
+  });
+
+  it("(a) simuliert aktive Pacts über die Vorsaison", async () => {
+    const teamId = await seedTeam("2627");
+    await seedActivePledgeWithRule(teamId, 100);
+    // Vorsaison-Heimsieg 2:0 (results_only) → 2 × 1 € = 2 €.
+    await seedMatch(teamId, {
+      datum: "2025-09-14",
+      heim: CLUB_NAME,
+      gast: "SV Gegner",
+      eh: 2,
+      eg: 0
+    });
+
+    const prognose = await getTeamPrognose(teamId);
+    expect(prognose).not.toBeNull();
+    expect(prognose!.prevSaisonLabel).toBe("25/26");
+    expect(prognose!.lastSeason).toMatchObject({ totalCents: 200, matchCount: 1 });
+    expect(prognose!.onPace).toBeNull(); // 0 gespielte Spiele in 26/27
+  });
+
+  it("(b) rechnet ab 3 gespielten Spielen hoch (Fallback 26 erwartete Spiele)", async () => {
+    const teamId = await seedTeam("2627");
+    const { pledgeId, ruleId } = await seedActivePledgeWithRule(teamId, 100);
+
+    // 3 gespielte Spiele der NEUEN Saison mit je einer bestätigten Charge à 1 €,
+    // plus eine stornierte und eine offene Charge (zählen nicht).
+    for (const [i, datum] of ["2026-08-09", "2026-08-23", "2026-09-06"].entries()) {
+      const matchId = await seedMatch(teamId, {
+        datum,
+        heim: CLUB_NAME,
+        gast: "SV Gegner",
+        eh: 1,
+        eg: 0
+      });
+      await db.insert(charges).values({
+        pledgeId,
+        pledgeRuleId: ruleId,
+        matchId,
+        triggerType: "goal_total",
+        amountCents: 100,
+        status: i === 0 ? "invoiced" : "confirmed",
+        goalIndex: 1
+      });
+      if (i === 0) {
+        await db.insert(charges).values([
+          {
+            pledgeId,
+            pledgeRuleId: ruleId,
+            matchId,
+            triggerType: "goal_total",
+            amountCents: 7700,
+            status: "cancelled",
+            goalIndex: 2
+          },
+          {
+            pledgeId,
+            pledgeRuleId: ruleId,
+            matchId,
+            triggerType: "goal_total",
+            amountCents: 8800,
+            status: "pending_approval",
+            goalIndex: 3
+          }
+        ]);
+      }
+    }
+
+    const prognose = await getTeamPrognose(teamId);
+    expect(prognose).not.toBeNull();
+    // Keine Vorsaison-Spiele → kein Rückblick, aber Hochrechnung:
+    expect(prognose!.lastSeason).toBeNull();
+    // 3 € über 3 Spiele × 26 erwartete Spiele = 26 €.
+    expect(prognose!.onPace).toMatchObject({
+      currentCents: 300,
+      playedCount: 3,
+      expectedGames: 26,
+      projectedCents: 2600
+    });
+  });
+
+  it("liefert null ohne jegliche Daten (keine Pacts, keine Spiele)", async () => {
+    const teamId = await seedTeam("2627");
+    await expect(getTeamPrognose(teamId)).resolves.toBeNull();
   });
 });
