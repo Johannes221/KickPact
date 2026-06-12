@@ -43,7 +43,9 @@ export default async function EinstellungenPage({
           city: addr?.city ?? "",
           isSmallBusiness: clubData.isSmallBusiness,
           taxId: clubData.taxId ?? "",
-          iban: clubData.iban ?? ""
+          iban: clubData.iban ?? "",
+          paypalHandle: clubData.paypalHandle ?? "",
+          stripePaymentLink: clubData.stripePaymentLink ?? ""
         }}
       />
 

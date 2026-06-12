@@ -82,7 +82,9 @@ export default async function TeamEinstellungenPage({
               city: billingAddr?.city ?? "",
               isSmallBusiness: clubData.isSmallBusiness,
               taxId: clubData.taxId ?? "",
-              iban: clubData.iban ?? ""
+              iban: clubData.iban ?? "",
+              paypalHandle: clubData.paypalHandle ?? "",
+              stripePaymentLink: clubData.stripePaymentLink ?? ""
             }}
           />
         </section>

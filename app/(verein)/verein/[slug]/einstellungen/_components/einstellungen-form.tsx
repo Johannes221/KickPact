@@ -31,7 +31,16 @@ const schema = z.object({
     .optional()
     .or(z.literal(""))
     .refine((v) => !v || v.length >= 15, "IBAN zu kurz")
-    .refine((v) => !v || v.length <= 34, "IBAN zu lang")
+    .refine((v) => !v || v.length <= 34, "IBAN zu lang"),
+  paypalHandle: z.string().max(120).optional().or(z.literal("")),
+  stripePaymentLink: z
+    .string()
+    .optional()
+    .or(z.literal(""))
+    .refine(
+      (v) => !v || v.trim().startsWith("https://buy.stripe.com/"),
+      "Muss mit https://buy.stripe.com/ beginnen"
+    )
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -238,6 +247,67 @@ export function EinstellungenForm({
                 </FormControl>
                 <FormDescription className="text-xs">
                   Erscheint auf Rechnungen als Zahlungsziel. Kann auch später ergänzt werden.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </section>
+
+        {/* Zusatz-Zahlwege (Spec §1.9): erscheinen auf Rechnung + Rechnungs-Mail
+            zusätzlich zum Girocode/IBAN-Block. */}
+        <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-5">
+          <div>
+            <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
+              Weitere Zahlwege
+            </h3>
+            <p className="mt-1 text-xs text-brand-night-navy/60">
+              Optional: Sponsoren können dann zusätzlich zur Überweisung per PayPal oder
+              Karte zahlen. Die Links erscheinen auf der Rechnung — das Geld geht direkt
+              an euch, KickPact ist nicht beteiligt.
+            </p>
+          </div>
+
+          <FormField
+            control={form.control}
+            name="paypalHandle"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  PayPal.Me-Name{" "}
+                  <span className="text-brand-night-navy/60 font-normal">(optional)</span>
+                </FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="z.B. fcmusterstadt" className="font-mono" />
+                </FormControl>
+                <FormDescription className="text-xs">
+                  Nur der Name aus eurem paypal.me-Link — „paypal.me/fcmusterstadt" oder
+                  „@fcmusterstadt" werden automatisch erkannt.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="stripePaymentLink"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Stripe Payment Link{" "}
+                  <span className="text-brand-night-navy/60 font-normal">(optional)</span>
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="https://buy.stripe.com/…"
+                    className="font-mono"
+                  />
+                </FormControl>
+                <FormDescription className="text-xs">
+                  Für Kartenzahlung — den Link erstellt ihr in eurem eigenen
+                  Stripe-Konto.
                 </FormDescription>
                 <FormMessage />
               </FormItem>

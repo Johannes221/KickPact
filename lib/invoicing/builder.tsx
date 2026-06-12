@@ -1,6 +1,7 @@
-import { Document, Page, Text, View, Image, StyleSheet, Font } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Image, Link, StyleSheet, Font } from "@react-pdf/renderer";
 import path from "node:path";
 import { eur } from "@/lib/utils/currency";
+import { paypalMeUrl } from "@/lib/invoicing/payment-options";
 
 // Inter Font registrieren — lokale TTFs unter public/fonts/inter/
 // (Remote rsms.me liefert seit ~Mai 2026 HTTP 404 für /font-files/*.otf —
@@ -87,6 +88,10 @@ const s = StyleSheet.create({
   },
   payBoxIban: { fontFamily: "Inter", fontSize: 10, color: "#1A1A2E" },
   payBoxMeta: { fontSize: 9, color: "#525252", marginTop: 2 },
+  // Zusätzliche Zahlwege (Spec §1.9): PayPal.Me / Stripe Payment Link.
+  // Bewusst unter dem IBAN-Block — Girocode bleibt Default & prominent.
+  payLinkRow: { marginTop: 6, fontSize: 9, color: "#525252" },
+  payLink: { color: "#1A1A2E", textDecoration: "underline" },
   qrWrap: { width: 80, alignItems: "center" },
   qrImage: { width: 80, height: 80 },
   qrCaption: {
@@ -127,6 +132,13 @@ export interface InvoiceData {
     iban: string | null;
     taxId: string | null;
     isSmallBusiness: boolean;
+    /**
+     * Spec §1.9 (Phase 5): optionale Zusatz-Zahlwege des Vereins. Werden —
+     * sofern gesetzt — unter dem IBAN/Girocode-Block als anklickbare Links
+     * gerendert. Girocode bleibt der Default-Zahlweg.
+     */
+    paypalHandle?: string | null;
+    stripePaymentLink?: string | null;
   };
   sponsor: {
     displayName: string;
@@ -287,20 +299,45 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
           </Text>
         ) : null}
 
-        {!isStorno && data.club.iban ? (
+        {!isStorno && (data.club.iban || data.club.paypalHandle || data.club.stripePaymentLink) ? (
           <View style={s.payBox} wrap={false}>
             <View style={s.payBoxText}>
               <Text style={s.payBoxLabel}>Zahlung</Text>
-              <Text>
-                Bitte überweise {eur(total)} innerhalb von 14 Tagen an:
-              </Text>
-              <Text style={[s.payBoxIban, { marginTop: 4 }]}>
-                {data.club.name}
-              </Text>
-              <Text style={s.payBoxIban}>IBAN: {data.club.iban}</Text>
-              <Text style={s.payBoxMeta}>
-                Verwendungszweck: {data.invoiceNumber}
-              </Text>
+              {data.club.iban ? (
+                <View>
+                  <Text>
+                    Bitte überweise {eur(total)} innerhalb von 14 Tagen an:
+                  </Text>
+                  <Text style={[s.payBoxIban, { marginTop: 4 }]}>
+                    {data.club.name}
+                  </Text>
+                  <Text style={s.payBoxIban}>IBAN: {data.club.iban}</Text>
+                  <Text style={s.payBoxMeta}>
+                    Verwendungszweck: {data.invoiceNumber}
+                  </Text>
+                </View>
+              ) : (
+                <Text>
+                  Bitte zahle {eur(total)} innerhalb von 14 Tagen über einen der
+                  folgenden Wege:
+                </Text>
+              )}
+              {data.club.paypalHandle ? (
+                <Text style={s.payLinkRow}>
+                  PayPal:{" "}
+                  <Link src={paypalMeUrl(data.club.paypalHandle)} style={s.payLink}>
+                    paypal.me/{data.club.paypalHandle}
+                  </Link>
+                </Text>
+              ) : null}
+              {data.club.stripePaymentLink ? (
+                <Text style={s.payLinkRow}>
+                  Online zahlen:{" "}
+                  <Link src={data.club.stripePaymentLink} style={s.payLink}>
+                    {data.club.stripePaymentLink}
+                  </Link>
+                </Text>
+              ) : null}
             </View>
             {data.girocodeDataUrl ? (
               <View style={s.qrWrap}>
