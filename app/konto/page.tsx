@@ -11,6 +11,8 @@ import {
   primaryDestinationFor
 } from "@/lib/auth/primary-role";
 import { countUnreadNotifications } from "@/lib/db/queries/notifications";
+import { listPendingTransferRequestsForUser } from "@/lib/db/queries/license-transfers";
+import { LicenseTransferCard } from "./_components/license-transfer-card";
 import { DeletionBanner } from "./_components/deletion-banner";
 import { DataPrivacyActions } from "./_components/data-privacy-actions";
 import { AvatarUpload } from "./_components/avatar-upload";
@@ -28,6 +30,10 @@ export default async function KontoPage() {
 
   const identities = await getUserIdentities(user.id);
   const unreadNotifications = await countUnreadNotifications(user.id);
+
+  // Paket B (Spec §1.5): offene Lizenz-Transfer-Anfragen, über die DIESER
+  // User (Lizenz-Inhaber) entscheiden muss.
+  const licenseTransferRequests = await listPendingTransferRequestsForUser(user.id);
 
   // Sponsor-Type wird nicht in UserIdentities zurückgegeben — separater Lookup
   // damit das Label „Familie/Business" auf der Karte stimmt.
@@ -79,6 +85,18 @@ export default async function KontoPage() {
         <DeletionBanner
           requestedAt={userRow.deletionRequestedAt}
           scheduledFor={deletionScheduledFor}
+        />
+      )}
+
+      {/* === Lizenz-Transfer-Anfragen (Spec §1.5) === */}
+      {licenseTransferRequests.length > 0 && (
+        <LicenseTransferCard
+          requests={licenseTransferRequests.map((r) => ({
+            id: r.id,
+            teamName: r.teamName,
+            toClubName: r.toClubName,
+            requestedByName: r.requestedByName
+          }))}
         />
       )}
 

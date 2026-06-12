@@ -13,6 +13,7 @@ import { pausePledgesSommerpause } from "./pause-pledges-sommerpause";
 import { resumePledgesSommerpause } from "./resume-pledges-sommerpause";
 import { expireApprovals, endPledges } from "./lifecycle-cleanup";
 import { expireTrials } from "./expire-trials";
+import { applyLicenseTransfers } from "./apply-license-transfers";
 import { cleanupSessions } from "./cleanup-sessions";
 import { anonymizeAccounts } from "./anonymize-accounts";
 import { seasonRenewalPrompts } from "./season-renewal-prompts";
@@ -41,6 +42,7 @@ export const functions = [
   expireApprovals,
   endPledges,
   expireTrials,
+  applyLicenseTransfers,
   cleanupSessions,
   anonymizeAccounts,
   seasonRenewalPrompts,
