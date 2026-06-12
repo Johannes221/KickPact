@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Gift, Copy, Check, Share2 } from "lucide-react";
 import { track } from "@/lib/analytics/track";
 import { referralShareText } from "@/lib/referral/link";
@@ -13,6 +13,15 @@ import { referralShareText } from "@/lib/referral/link";
  */
 export function ReferralShareCard({ shareUrl }: { shareUrl: string }) {
   const [copied, setCopied] = useState(false);
+  // Web-Share-Fähigkeit erst NACH dem Mount ermitteln: Auf dem Server ist
+  // `navigator` undefined, in Safari/iOS existiert `navigator.share` — eine
+  // Render-Zeit-Abfrage ließ Server- und Client-HTML auseinanderlaufen
+  // (Hydration-Error #418 auf /sponsor, nur in Safari sichtbar).
+  const [canNativeShare, setCanNativeShare] = useState(false);
+
+  useEffect(() => {
+    setCanNativeShare(typeof navigator.share === "function");
+  }, []);
 
   async function handleCopy() {
     try {
@@ -38,9 +47,6 @@ export function ReferralShareCard({ shareUrl }: { shareUrl: string }) {
       void handleCopy();
     }
   }
-
-  const canNativeShare =
-    typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   return (
     <div className="rounded-2xl border border-accent/30 bg-accent/5 p-4 md:p-5">
