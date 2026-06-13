@@ -39,10 +39,15 @@ function resolveDbUrl(): string {
  */
 const isTestRuntime =
   process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+// max NICHT zu klein wählen: Code-Pfade mit parallelen Queries INNERHALB
+// einer Transaktion (tx reserviert 1 Verbindung, Promise.all braucht weitere)
+// laufen bei max=2 in Pool-Starvation → Test-Timeout → Zombie-Promise feuert
+// in die nächste Test-Datei (TRUNCATE/DELETE-Deadlocks). idle_timeout allein
+// verhindert die Akkumulation über ~170 Datei-Pools.
 const queryClient = postgres(
   resolveDbUrl(),
   isTestRuntime
-    ? { prepare: false, max: 2, idle_timeout: 5, max_lifetime: 60 }
+    ? { prepare: false, max: 8, idle_timeout: 5 }
     : { prepare: false }
 );
 export const db = drizzle(queryClient, { schema: { ...schema, ...relations } });
