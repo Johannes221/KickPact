@@ -447,8 +447,10 @@ export default async function TeamDetailPage({
 
         {/* Crawl-Banner: erscheint solange der Job läuft — auch wenn schon
             Spiele geladen sind. Neue Spiele tauchen per Auto-Refresh nach und
-            nach darunter auf. */}
-        {isCrawling && (
+            nach darunter auf. NUR in der aktuellen Saison-Ansicht: in der
+            historischen 25/26-Ansicht (Switcher) ändert sich nichts mehr, das
+            „werden geladen"-Banner wäre dort faktisch falsch (QA 2026-06-12). */}
+        {isCrawling && isCurrentSeasonView && (
           <div className="mb-3 rounded-lg border border-accent/30 bg-accent/5 p-4 text-sm text-brand-night-navy/70">
             <div className="flex items-center gap-3">
               <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-accent animate-pulse" />
@@ -460,10 +462,11 @@ export default async function TeamDetailPage({
           </div>
         )}
 
-        {/* Unsichtbarer Poller (nur aktiv während des Crawls). */}
+        {/* Unsichtbarer Poller (nur aktiv während des Crawls, nur in der
+            aktuellen Saison-Ansicht — die Historie ändert sich nicht). */}
         <CrawlAutoRefresh
           teamId={team.id}
-          isCrawling={isCrawling}
+          isCrawling={isCrawling && isCurrentSeasonView}
           matchCount={matchRows.length}
         />
 
