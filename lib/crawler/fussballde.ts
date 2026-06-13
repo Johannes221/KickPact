@@ -5,6 +5,7 @@ import { parse as parseHtml, type HTMLElement } from "node-html-parser";
 import { saisonStartDate, currentSaisonCode } from "@/lib/utils/saison";
 import { decodeObfuscatedScore } from "./score-font";
 import { isReadableName } from "@/lib/players/readable-name";
+import { cleanPlayerName } from "@/lib/players/person-name";
 import { isPlausibleLeague } from "@/lib/utils/league";
 
 /**
@@ -1082,63 +1083,68 @@ export interface KaderPlayer {
 
 export async function getKader(
   teamId: string,
-  slug: string,
+  _slug: string,
   saison: string
 ): Promise<KaderPlayer[]> {
-  const raw = await withPage(async (page) => {
-    // SECURITY (M2): URL-Segmente encodieren (Defense-in-depth, s. paginateTeamGames).
-    const url = `https://www.fussball.de/mannschaft/${encodeURIComponent(slug)}/-/saison/${encodeURIComponent(saison)}/team-id/${encodeURIComponent(teamId)}#!/`;
-    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
-    await assertNotCaptcha(page);
-    await page.waitForTimeout(2000);
+  // Der offizielle Kader liegt auf dem server-gerenderten AJAX-Fragment
+  // `ajax.team.squad` (kein Browser/JS nötig — analog ajax.team.prev.games).
+  // WICHTIG (Probe 2026-06-11): fussball.de gibt den Kader nur frei, wenn der
+  // Team-Admin ihn aktiv VERÖFFENTLICHT hat. Sonst liefert das Fragment „Die
+  // Kaderliste ist bisher nicht zur Veröffentlichung freigegeben" + leere
+  // Tabelle. Die frühere getKader scrapte fälschlich die Mannschafts-Startseite
+  // (Aktuelles-Tab, kein Kader) und holte dort Match-Bericht-Überschriften.
+  // SECURITY (M2): teamId/saison URL-encodieren (Defense-in-depth).
+  const url = `https://www.fussball.de/ajax.team.squad/-/mode/PAGE/order-by/1/saison/${encodeURIComponent(
+    saison
+  )}/show-filter/true/team-id/${encodeURIComponent(teamId)}`;
 
-    return await page.evaluate(`(function() {
-      var players = [];
-      var seen = new Set();
+  let root: HTMLElement;
+  try {
+    root = await fetchHtml(url);
+  } catch (err) {
+    if (err instanceof Error && /Captcha/i.test(err.message)) throw err;
+    return [];
+  }
 
-      // Strategy 1: kader table rows with player profile links
-      document.querySelectorAll('a[href*="spielerprofil"]').forEach(function(link) {
-        var href = link.href || link.getAttribute("href") || "";
-        var idMatch = href.match(/\\/(?:player-id|userid)\\/([A-Z0-9]+)/i);
-        var id = idMatch ? idMatch[1] : null;
-        if (id && seen.has(id)) return;
-        var name = (link.textContent || "").replace(/\\s+/g, " ").trim();
-        if (name.length < 2) return;
-        if (id) seen.add(id);
-        players.push({ name: name, spielerId: id || undefined, href: href || undefined });
-      });
+  // Privater (nicht freigegebener) Kader → kein Spieler. Der Pool fällt dann
+  // auf die Torschützen aus match_events zurück (getTeamPlayerPool).
+  if (/nicht zur Veröffentlichung freigegeben/i.test(root.text)) return [];
 
-      // Bewusst KEINE column-name-Fallback-Strategie: Amateur-Mannschaftsseiten
-      // haben gar keine Kader-Sektion (Probe 2026-06-10, FG Union Heidelberg:
-      // kein Kader-Tab, 0 spielerprofil-Links). column-name matcht dort nur
-      // Match-Bericht-Teaser/Ergebnis-Zellen = Ueberschriften als Spieler.
-      // Lieber leerer Kader (Pool kommt aus Match-Events) als gefilterter Muell.
-      return players;
-    })()`) as Array<KaderPlayer & { href?: string }>;
-  });
+  // Kader-Zeilen: td.column-player > a.player-wrapper (href = spielerprofil-ID),
+  // Name in div.player-name als font-obfuskierte PUA-Glyphen.
+  const raw: Array<{ id: string | null; href: string }> = [];
+  const seen = new Set<string>();
+  for (const link of root.querySelectorAll(
+    'td.column-player a[href*="spielerprofil"]'
+  )) {
+    const href = link.getAttribute("href") || "";
+    const idMatch = href.match(/\/(?:player-id|userid)\/([A-Z0-9]+)/i);
+    const id = idMatch ? idMatch[1] : null;
+    if (id && seen.has(id)) continue;
+    if (id) seen.add(id);
+    raw.push({
+      id,
+      href: href.startsWith("http") ? href : `https://www.fussball.de${href}`
+    });
+  }
 
-  // fussball.de obfuskiert die Namen auf der Kader-Seite mit einem Custom-Font
-  // (Private Use Area) → der Linktext ist oft Tofu. Wir lösen solche Namen über
-  // die Spieler-Profilseite auf (gleicher Mechanismus + Cache wie Torschützen in
-  // getSpielDetails), sequenziell mit kleinem Delay gegen Rate-Limiting. So
-  // landet der VOLLE, lesbare Kader in der DB — auch Spieler ohne Tor.
+  // Namen sind font-obfuskiert (Private Use Area) → über die Spieler-Profilseite
+  // auflösen (gleicher Cache wie Torschützen in getSpielDetails), sequenziell mit
+  // kleinem Delay gegen Rate-Limiting. So landet der VOLLE, lesbare Kader in der
+  // DB — auch Spieler, die nie getroffen haben. Unauflösbare Namen werden
+  // verworfen (lieber kein Eintrag als Tofu).
   const out: KaderPlayer[] = [];
   for (const p of raw) {
-    let name = p.name;
-    const url = p.href
-      ? p.href.startsWith("http")
-        ? p.href
-        : `https://www.fussball.de${p.href}`
-      : null;
-    if (url && !isReadableName(name)) {
-      const id = extractPlayerIdFromUrl(url);
-      if (id && !playerNameCache.has(id)) {
-        await new Promise((r) => setTimeout(r, 250));
-      }
-      const resolved = await resolvePlayerName(url);
-      if (isReadableName(resolved)) name = resolved;
+    const id = extractPlayerIdFromUrl(p.href);
+    if (id && !playerNameCache.has(id)) {
+      await new Promise((r) => setTimeout(r, 250));
     }
-    out.push({ name, spielerId: p.spielerId });
+    // Der Roh-Profilname trägt oft den Suffix „(Verein) Spieler" — da der Kader
+    // team-scoped ist (alle = eigener Verein), unbedenklich strippen.
+    const name = cleanPlayerName(await resolvePlayerName(p.href));
+    if (isReadableName(name)) {
+      out.push({ name, spielerId: p.id ?? undefined });
+    }
   }
   return out;
 }

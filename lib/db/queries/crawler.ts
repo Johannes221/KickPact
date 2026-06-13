@@ -551,6 +551,23 @@ async function writeMatchEvents(
  *    frischen Tofu überschrieben wird.
  *  - Spieler OHNE spielerId → per Name gegen bestehende Zeilen deduplizieren.
  */
+/**
+ * Anzahl Roster-Spieler MIT fussball.de-ID für ein Team. Guard im Crawl: der
+ * Kader-Scrape (getKader) löst bei VERÖFFENTLICHTEN Kadern bis ~50 Spieler-
+ * profil-Seiten auf — das jeden Crawl-Lauf zu wiederholen wäre teuer + Ban-
+ * Risiko. Ist der Roster aus einem früheren Squad-Scrape befüllt, überspringen
+ * wir; neue Spieler kommen inkrementell über Torschützen (writeMatchEvents) dazu.
+ */
+export async function countRosterPlayersWithId(teamId: string): Promise<number> {
+  const [row] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(players)
+    .where(
+      and(eq(players.teamId, teamId), isNotNull(players.fussballdePlayerId))
+    );
+  return row?.n ?? 0;
+}
+
 export async function persistKader(
   teamId: string,
   kader: KaderPlayer[]

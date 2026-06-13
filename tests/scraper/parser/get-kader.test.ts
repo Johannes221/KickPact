@@ -116,21 +116,27 @@ describe("getKader parser", () => {
     }
   }
 
-  // Regression (2026-06-10): Amateur-Mannschaftsseiten haben keine Kader-Sektion.
-  // Früher matchte die .column-name-Fallback-Strategie dort Match-Bericht-Teaser
-  // ("Sprecakovic glänzt als dreifacher Torschütze") + Ergebnis-Zellen und gab
-  // Überschriften als "Spieler" zurück. Eine Seite ohne spielerprofil-Links MUSS
-  // jetzt einen LEEREN Kader liefern, nicht Müll.
-  it("liefert leeren Kader bei Seite ohne Spielerprofil-Links (kein column-name-Garbage)", async () => {
-    const result = await withMockedBrowser(
-      [
-        {
-          matchUrl: /fussball\.de\/mannschaft\//,
-          htmlPath: "negative/kader-headlines-only.html",
-        },
-      ],
-      async () => getKader("FAKETEAMID0000000000", "fake-team-slug", "2526"),
+  // Regression (2026-06-11): getKader holt den Kader jetzt über das server-
+  // gerenderte AJAX-Fragment ajax.team.squad (undici-fetch, kein Browser).
+  // fussball.de gibt Kader nur frei, wenn der Team-Admin ihn veröffentlicht hat.
+  it("privater (nicht freigegebener) Kader → leere Liste, kein Garbage", async () => {
+    const result = await withMockedFetch(
+      [{ matchUrl: /ajax\.team\.squad/, htmlPath: "negative/squad-private.html" }],
+      async () => getKader("ANYTEAMID00000000000", "slug", "2526"),
     );
     expect(result).toEqual([]);
-  }, 120_000);
+  }, 60_000);
+
+  it("veröffentlichter Kader → Spieler aus Zeilen, Namen über Profilseite aufgelöst", async () => {
+    const result = await withMockedFetch(
+      [
+        { matchUrl: /ajax\.team\.squad/, htmlPath: "squad/published-2players.html" },
+        { matchUrl: /userid\/TEST0AAAAA/, htmlPath: "squad/profile-p1.html" },
+        { matchUrl: /userid\/TEST0BBBBB/, htmlPath: "squad/profile-p2.html" },
+      ],
+      async () => getKader("ANYTEAMID00000000000", "slug", "2526"),
+    );
+    expect(result.map((p) => p.name)).toEqual(["Lukas Beispiel", "Mara Probe"]);
+    expect(result.every((p) => p.spielerId)).toBe(true);
+  }, 60_000);
 });

@@ -19,6 +19,7 @@ import {
   updateTeamLeague,
   updateTeamCoverage,
   persistKader,
+  countRosterPlayersWithId,
   type ActiveTeam
 } from "@/lib/db/queries/crawler";
 import { classifyScrapedMatches } from "@/lib/crawler/coverage";
@@ -128,6 +129,12 @@ export const crawlMatches = inngest.createFunction(
       // Non-fatal: ein Kader-Fehler darf den Match-Crawl nicht abbrechen.
       await step.run(`squad-${team.id}`, async () => {
         try {
+          // Teurer Kader-Scrape nur, wenn der Roster noch nicht aus einem
+          // früheren Squad-Scrape befüllt ist: getKader löst bei veröffentlichten
+          // Kadern bis ~50 fussball.de-Profilseiten auf — pro Crawl-Lauf wäre das
+          // ein Ban-Risiko. Neue Spieler kommen incrementell über Torschützen
+          // (writeMatchEvents) dazu; private Kader liefern ohnehin 0 (1 Fetch).
+          if ((await countRosterPlayersWithId(team.id)) >= 8) return 0;
           const kader = await getKader(
             team.fussballdeTeamId,
             team.fussballdeSlug,
