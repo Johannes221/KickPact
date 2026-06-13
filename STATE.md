@@ -1,14 +1,16 @@
 # KickPact State
 
 > **Live-Snapshot des aktiven Repos.** Bei jedem größeren Merge updaten.
-> Letztes Konsolidieren: 2026-06-12 — Komplett-Audit-Umsetzung (6 Phasen, Audit 2026-06-11).
+> Letztes Konsolidieren: 2026-06-12 — Audit-Umsetzung (6 Phasen) + Saison-Features 26/27 (W1–W4).
 
 ## Stand
 
 - **Branch:** `main` (synced)
 - **Staging:** https://kickpact.schartl.dev (Coolify-Auto-Deploy on push, post_deploy `npm run db:migrate`)
+- **Aktuelle Saison: 26/27** — am 12.06. per `scripts/season-rollover-now.ts --execute` alle 9 aktiven Teams von 2526 → 2627 gebumpt (Sofort-Umstellung, User-Wunsch). 25/26-Spiele bleiben sichtbar über den Saison-Switcher. Der reguläre `season-rollover`-Cron (15.7.) ist idempotent und findet danach 0 Teams mehr auf 2526.
 - **Production-Domain kickpact.com:** DNS bewusst NOCH NICHT gesetzt (User-Entscheid: „erst live wenn's läuft"). Code-seitige Domain-Fallbacks zeigen auf kickpact.com (lib/utils/base-url.ts).
-- **Migrationen:** bis 0058 (Phase 5: billing_cycle, license_transfers, pay-links, Vereinsprofil-Felder). Journal-when-Kette monoton bis 1782450000000.
+- **Migrationen:** bis 0059 (Phase 5: billing_cycle/license_transfers/pay-links/Vereinsprofil; 0059: trigger_type += home_win/away_win). Journal-when-Kette monoton bis 1782460000000.
+- **Test-Infra-Falle:** singleFork-Volllauf über 171 Dateien OOMt (Exit 137) bzw. löst Pool-Starvation-Deadlocks aus → `npm test` batchweise pro Verzeichnis laufen (alle 1387 Tests grün, 42 skipped). Pool-Größen im Test: lib/db/client.ts max=8, integration-db max=5, je idle_timeout=5; Test-Container max_connections=400.
 
 ## Audit-Umsetzung 2026-06-11/12 (alle 6 Phasen gemerged)
 
@@ -20,6 +22,17 @@
 | 4 | Journey/UX: Push-Deeplink Sponsoren→/m/, Wizard-onInvalid, Sommerpause-Badge, Coverage-Kommunikation (none-Teams onboardbar, alles manuell + Sponsor-Approval erzwungen), Check A verdrahtet, Spezialtor-Mirror + Server-Validierung (auch Edit), Mitglieder-Invite-Mail, Team/Verein verlassen, Terminologie-Sweep (Wette/Charge/Pledge raus), Empty-State-Offensive (Verein-„Nächste Schritte"), Kontrast /40→/60 + Pill-Sweep, eur()-Helper, Sitemap+Title+og, /status token-gegated | ✅ |
 | 5 | V1-Features: **Sponsor-Billing-Cycle** (monthly/season_end, History+Snapshot, Saisonende-Rechnungslauf 1.7., Wechsel-Regeln inkl. K1-Fix), **Lizenz-Transfer** (Spec §1.5: Anfrage→T entscheidet, Branding sofort via licensedUnderClubId, Stripe cancel_at_period_end, Flip-Cron; Rechnung gehört dem Billing-Club), **Pay-Links** (PayPal.Me+Stripe-Link auf PDF/Mail, injection-sicher), **Vereins-Public-Profil /v/[slug]** (verifiedAt-Gate, Pflege-UI, Sitemap), **Zahlungserinnerungs-Vorlage** (Copy/mailto, KEIN Auto-Versand — User-Entscheid statt Spec-§1.11-Mahncron) | ✅ |
 | 6 | Reviews: jede Phase adversarial reviewed (Befunde K1–K3/M1–M7 etc. gefixt) | ✅ |
+
+## Saison-Features 26/27 (2026-06-12, gemerged + deployed)
+
+| Paket | Inhalt | Status |
+|---|---|---|
+| W1 | **26/27 überall** (Sofort-Bump, Label-Sweep) + **Saison-Switcher** (Pills auf Spiele-Listen/Team-Dashboard/öffentl. Profil, Anzeige-Saison via ?saison=, Charges/Stats bleiben aktuell) + Wett-Fenster folgt `team.saison` (getSeasonWindowForTeam) | ✅ |
+| W2 | **Heim-/Auswärtssieg** als zwei eigene Trigger-Typen (`home_win`/`away_win`, Migration 0059, eigene Beträge, Auswärts höher bewertbar; feuert zusätzlich zu `win` — gewollt) | ✅ |
+| W3 | **Geld-Simulation** (`lib/simulation/pact-simulation.ts` — echte evaluateTriggers-Engine über Vorsaison-Spiele): Builder-Panel „hättest du letzte Saison X € beigetragen" (Conversion) + Team-Dashboard-Prognose (Rückblick + Hochrechnung laufende Saison) | ✅ |
+| W4 | **Saison-Wrapped** (Spotify-Stil): durchswipebarer Story-Player `…/mannschaft/[teamId]/wrapped` (Tore/Bilanz/bester Torschütze/Zu-Null/Comebacks/Heim-Auswärts/höchster Sieg/Pacts ODER Simulation/Outro), 9:16-Share-Bilder via next/og pro Slide, Entry-Karte im Dashboard | ✅ |
+
+**Bewusste Saison-Feature-Entscheidungen (User 2026-06-12):** Umstellung SOFORT (nicht 15.7.) · Heim/Auswärts = zwei eigene Regel-Typen · Voll-Wrapped mit Slides · Simulation auch im Builder. Wrapped-Fallback-Slide nutzt einen schmalen goal_total-Adapter (`lib/recap/wrapped-simulation.ts`), nicht den vollen Sim-Kern (dokumentiert).
 
 ## Bewusste Entscheidungen (User, 2026-06-11)
 
@@ -61,8 +74,8 @@ Manuell: (1) seasons-Rows kommen via Migration 0055 — nach Spielplan-Veröffen
 
 ## Tests
 
-`npm test`: 1338 passed / 40 skipped (163 Files) · `tsc --noEmit` clean · Stand 2026-06-12.
-Test-Infra: Vitest-Modul-Isolation erzeugt einen DB-Pool pro Datei → lib/db/client.ts begrenzt im Test (max=2, idle_timeout=5s); docker-compose.test.yml empfiehlt max_connections=400.
+`npm test` (batchweise pro Verzeichnis): **1387 passed / 42 skipped (171 Files)** · `tsc --noEmit` clean · Stand 2026-06-12.
+Test-Infra: singleFork-Volllauf über alle 171 Dateien OOMt/deadlockt (Vitest instanziiert lib/db/client + integration-db pro Datei neu → Pool-Akkumulation). Batchweise laufen: `npm test -- tests/queries tests/lib tests/simulation` etc. Pools begrenzt (client max=8, integration-db max=5, je idle_timeout=5s), Test-Container max_connections=400.
 
 ## Spec-Referenzen
 
