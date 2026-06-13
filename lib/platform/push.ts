@@ -15,9 +15,18 @@ export type PushPermission = "granted" | "denied" | "prompt" | "unsupported";
 
 type PushPlugin = typeof import("@capacitor/push-notifications").PushNotifications;
 
-async function loadPlugin(): Promise<PushPlugin> {
-  const mod = await import("@capacitor/push-notifications");
-  return mod.PushNotifications;
+/**
+ * Lädt das Capacitor-Push-MODUL (erst nach dem isNativeApp()-Guard, kein
+ * Capacitor-Chunk im Browser). Gibt bewusst das Modul-Namespace-Objekt zurück
+ * und NICHT die PushNotifications-Instanz: Capacitor-Plugins sind Proxys, die
+ * JEDEN Property-Zugriff als Methode behandeln — auch `.then`. Würde man die
+ * Instanz aus einer async-Funktion zurückgeben, behandelt die Promise-Auflösung
+ * sie als Thenable und ruft `PushNotifications.then(...)` auf →
+ * "PushNotifications.then() is not implemented on ios" (Sentry JS-NEXTJS-B).
+ * Über das Modul greifen die Aufrufer .PushNotifications SYNCHRON ab.
+ */
+function loadPushModule(): Promise<typeof import("@capacitor/push-notifications")> {
+  return import("@capacitor/push-notifications");
 }
 
 function normalize(receive: string): PushPermission {
@@ -30,7 +39,7 @@ function normalize(receive: string): PushPermission {
 export async function getPushPermission(): Promise<PushPermission> {
   if (!isNativeApp()) return "unsupported";
   try {
-    const P = await loadPlugin();
+    const P = (await loadPushModule()).PushNotifications;
     return normalize((await P.checkPermissions()).receive);
   } catch {
     return "unsupported";
@@ -60,7 +69,7 @@ async function registerAndForwardToken(P: PushPlugin): Promise<void> {
 export async function ensurePushRegistrationIfGranted(): Promise<void> {
   if (!isNativeApp()) return;
   try {
-    const P = await loadPlugin();
+    const P = (await loadPushModule()).PushNotifications;
     if (normalize((await P.checkPermissions()).receive) !== "granted") return;
     await registerAndForwardToken(P);
   } catch (err) {
@@ -76,7 +85,7 @@ export async function ensurePushRegistrationIfGranted(): Promise<void> {
 export async function enablePushNotifications(): Promise<PushPermission> {
   if (!isNativeApp()) return "unsupported";
   try {
-    const P = await loadPlugin();
+    const P = (await loadPushModule()).PushNotifications;
     let receive = (await P.checkPermissions()).receive;
     if (receive === "prompt" || receive === "prompt-with-rationale") {
       receive = (await P.requestPermissions()).receive;
