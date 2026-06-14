@@ -7,6 +7,11 @@ import { supportTickets, supportTicketReplies, users } from "@/lib/db/schema";
  * ein einfaches Anti-Spam-Rate-Limit im öffentlichen Kontaktformular.
  */
 export async function countRecentTicketsByEmail(email: string, minutes: number): Promise<number> {
+  // Ein nicht-positives Fenster enthält per Definition nichts. Guard auch gegen
+  // eine Clock-Skew-Flake: bei minutes=0 ist `since` = lokale Jetzt-Zeit, während
+  // createdAt von der (evtl. minimal vorgehenden) DB-Uhr kommt → ein gerade
+  // erstelltes Ticket würde sonst sporadisch mitgezählt.
+  if (minutes <= 0) return 0;
   const since = new Date(Date.now() - minutes * 60_000);
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })
