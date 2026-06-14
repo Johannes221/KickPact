@@ -74,7 +74,12 @@ function ParamFields({
         ))}
       </select>
     ) : (
-      <Input className="h-9 w-40" placeholder="Spielername" value={val} onChange={(e) => set("player_name", e.target.value)} />
+      <div className="flex flex-col gap-1">
+        <Input className="h-9 w-40" placeholder="Spielername" value={val} onChange={(e) => set("player_name", e.target.value)} />
+        <span className="max-w-[18rem] text-[0.65rem] leading-tight text-amber-700">
+          Keine Spielerliste verfügbar — der Verein muss den Kader auf fussball.de freigeben (Mannschaft → „Kader" → „Kader veröffentlichen"), dann erscheint er hier automatisch.
+        </span>
+      </div>
     );
   }
   if (triggerType === "goals_scored_min") {

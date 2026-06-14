@@ -3,7 +3,7 @@ import {
   getSpiele,
   getSpielDetails,
   computeMatchHash,
-  getKader,
+  getSquadAcrossSeasons,
   type SpielDetails
 } from "@/lib/crawler/fussballde";
 import { validateSpielListItem, validateSpielDetails } from "@/lib/crawler/validator";
@@ -135,7 +135,9 @@ export const crawlMatches = inngest.createFunction(
           // ein Ban-Risiko. Neue Spieler kommen incrementell über Torschützen
           // (writeMatchEvents) dazu; private Kader liefern ohnehin 0 (1 Fetch).
           if ((await countRosterPlayersWithId(team.id)) >= 8) return 0;
-          const kader = await getKader(
+          // Bewusst über mehrere Saisons: lieber Ex-Spieler zu viel im Pool als
+          // einer zu wenig (Spieler-Pacts). team-id ist saisonstabil.
+          const kader = await getSquadAcrossSeasons(
             team.fussballdeTeamId,
             team.fussballdeSlug,
             team.saison

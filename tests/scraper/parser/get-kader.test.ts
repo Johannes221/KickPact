@@ -8,6 +8,8 @@ import {
 import { withMockedFetch } from "../../setup/fetch-mocks";
 import {
   getKader,
+  getSquadAcrossSeasons,
+  shiftSaisonCode,
   type MannschaftHit,
   type KaderPlayer,
 } from "../../../lib/crawler/fussballde";
@@ -138,5 +140,33 @@ describe("getKader parser", () => {
     );
     expect(result.map((p) => p.name)).toEqual(["Lukas Beispiel", "Mara Probe"]);
     expect(result.every((p) => p.spielerId)).toBe(true);
+  }, 60_000);
+});
+
+describe("shiftSaisonCode", () => {
+  it("verschiebt Saison-Codes über die Jahresgrenze korrekt", () => {
+    expect(shiftSaisonCode("2526", -1)).toBe("2425");
+    expect(shiftSaisonCode("2526", -2)).toBe("2324");
+    expect(shiftSaisonCode("2425", -1)).toBe("2324");
+    expect(shiftSaisonCode("2627", -1)).toBe("2526");
+  });
+});
+
+describe("getSquadAcrossSeasons", () => {
+  it("vereint Kader über mehrere Saisons + dedupliziert über die Spieler-ID", async () => {
+    // 2526: Lukas(A)+Mara(B) · 2425: Mara(B)+Otto(C) · 2324: kein Route → 404 → [].
+    // Union nach ID: A, B (dedup, aktuelle Saison gewinnt), C → 3 Spieler.
+    const result = await withMockedFetch(
+      [
+        { matchUrl: /saison\/2526\//, htmlPath: "squad/published-2players.html" },
+        { matchUrl: /saison\/2425\//, htmlPath: "squad/published-season2.html" },
+        { matchUrl: /userid\/TEST0AAAAA/, htmlPath: "squad/profile-p1.html" },
+        { matchUrl: /userid\/TEST0BBBBB/, htmlPath: "squad/profile-p2.html" },
+        { matchUrl: /userid\/TEST0CCCCC/, htmlPath: "squad/profile-p3.html" },
+      ],
+      async () => getSquadAcrossSeasons("ANYTEAMID00000000000", "slug", "2526", 2),
+    );
+    const names = result.map((p) => p.name).sort();
+    expect(names).toEqual(["Lukas Beispiel", "Mara Probe", "Otto Test"]);
   }, 60_000);
 });

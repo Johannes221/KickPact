@@ -538,16 +538,41 @@ export function PledgeBuilder({
                                     ))}
                                   </select>
                                 ) : (
-                                  <Input
-                                    placeholder="z.B. Schmidt"
-                                    value={(pf.value as Record<string, string>)?.player_name ?? ""}
-                                    onChange={(e) =>
-                                      pf.onChange({
-                                        ...((pf.value as Record<string, unknown>) ?? {}),
-                                        player_name: e.target.value,
-                                      })
-                                    }
-                                  />
+                                  <div className="space-y-2.5">
+                                    {/* Leerer Pool: meist, weil der Verein den
+                                        Kader auf fussball.de nicht öffentlich
+                                        freigegeben hat (Default). Hinweis +
+                                        Mini-Anleitung statt nur leeres Feld. */}
+                                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-sm leading-snug text-amber-900">
+                                      <p className="font-semibold">
+                                        Noch keine Spielerliste verfügbar
+                                      </p>
+                                      <p className="mt-1 text-amber-900/80">
+                                        Für Spieler-Pacts brauchen wir den Kader von der offiziellen Datenquelle — diese
+                                        Mannschaft hat ihn dort noch nicht öffentlich freigegeben.
+                                      </p>
+                                      <p className="mt-2 text-amber-900/80">
+                                        <strong>So gibt der Verein ihn frei:</strong> auf fussball.de einloggen → Mannschaft
+                                        → Reiter „Kader" → „Kader veröffentlichen". Nach dem nächsten Datenabgleich (meist
+                                        am Folgetag) erscheinen die Spieler hier automatisch.
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <Input
+                                        placeholder="Oder Namen manuell eingeben, z.B. Schmidt"
+                                        value={(pf.value as Record<string, string>)?.player_name ?? ""}
+                                        onChange={(e) =>
+                                          pf.onChange({
+                                            ...((pf.value as Record<string, unknown>) ?? {}),
+                                            player_name: e.target.value,
+                                          })
+                                        }
+                                      />
+                                      <p className="mt-1 text-[0.7rem] text-brand-night-navy/50">
+                                        Ein manuell eingegebener Name zählt, sobald genau dieser Spieler trifft.
+                                      </p>
+                                    </div>
+                                  </div>
                                 )}
                               </FormControl>
                             </FormItem>

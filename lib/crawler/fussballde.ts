@@ -1148,3 +1148,53 @@ export async function getKader(
   }
   return out;
 }
+
+/** Verschiebt einen Saison-Code ("2526") um `delta` Jahre (-1 → "2425"). */
+export function shiftSaisonCode(code: string, delta: number): string {
+  const startYY = parseInt(code.slice(0, 2), 10);
+  if (Number.isNaN(startYY)) return code;
+  const startYear = 2000 + startYY + delta;
+  const yy = (n: number) => String(((n % 100) + 100) % 100).padStart(2, "0");
+  return yy(startYear) + yy(startYear + 1);
+}
+
+/**
+ * Kader über die aktuelle + die letzten `depth` Saisons vereinen. fussball.de
+ * gibt einen Kader nur frei, wenn der Verein ihn aktiv veröffentlicht — viele
+ * tun das gar nicht oder nur in einer einzelnen Saison. Bewusst GROSSZÜGIG: für
+ * „Tore von Spieler X" lieber einen Ex-Spieler zu viel im Dropdown als einen zu
+ * wenig (Spieler-Pool soll möglichst vollständig sein). Die team-id ist über
+ * Saisons stabil, also liefern Vorsaison-Abfragen die damaligen Kader. Dedup
+ * über die fussball.de-Spieler-ID; die aktuelle Saison gewinnt beim Anzeigenamen.
+ */
+export async function getSquadAcrossSeasons(
+  teamId: string,
+  slug: string,
+  currentSaison: string,
+  depth = 2
+): Promise<KaderPlayer[]> {
+  const codes = [currentSaison];
+  for (let i = 1; i <= depth; i++) {
+    const prev = shiftSaisonCode(currentSaison, -i);
+    if (!codes.includes(prev)) codes.push(prev);
+  }
+
+  const byId = new Map<string, KaderPlayer>();
+  const withoutId: KaderPlayer[] = [];
+  for (const saison of codes) {
+    let kader: KaderPlayer[] = [];
+    try {
+      kader = await getKader(teamId, slug, saison);
+    } catch {
+      // Eine einzelne Vorsaison-Abfrage darf den Gesamt-Scrape nicht kippen.
+    }
+    for (const p of kader) {
+      if (p.spielerId) {
+        if (!byId.has(p.spielerId)) byId.set(p.spielerId, p);
+      } else {
+        withoutId.push(p);
+      }
+    }
+  }
+  return [...byId.values(), ...withoutId];
+}
