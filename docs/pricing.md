@@ -1,6 +1,7 @@
 # KickPact Pricing
 
-**Stand:** 2026-06-02 · Konzept D nach Sparring-Iteration 3 · Source of Truth für `lib/stripe/pricing.ts`, Onboarding-Wizard, `/preise`-Page, Spec §6.8 + §8.4
+**Stand:** 2026-06-15 · Pricing-Rework (Spec `docs/superpowers/specs/2026-06-15-pricing-rework-design.md`) · Source of Truth für `lib/stripe/pricing.ts`, Onboarding-Wizard, `/preise`-Page, Spec §6.8 + §8.4
+> **Update 2026-06-15:** Preise gesenkt — Pro 19 → **11 €**, Verein 49 → **29 €**, Saison-Pass auf **~3 Monate gratis** (−42 % vs 12× Monat). Struktur, 0 %-Provision und 30-Tage-Trial unverändert. Vereinslizenz lohnt sich ab **3 Mannschaften**.
 > **Update 2026-06-02:** Der „Annual"-Cycle (12-Monats-Lizenz) wurde komplett entfernt — nur noch **Monatlich + Saison-Pass**. Saison-Pass IST die Jahres-Bindung für den Fußball-Rhythmus.
 
 > Rationale, Recherche und verworfene Konzepte: siehe [docs/strategy/2026-05-22-pricing-strategy.md](strategy/2026-05-22-pricing-strategy.md).
@@ -11,12 +12,12 @@
 
 | | **Basic** | **Pro** ⭐ | **Vereinslizenz** |
 |---|---|---|---|
-| **Zielgruppe** | 1 Mannschaft, 1–5 Sponsoren aus dem direkten Umfeld | 1 Mannschaft, ernsthaftes Sponsoring, ∞ Sponsoren | Verein mit ≥ 2 Mannschaften, zentrale Verwaltung |
-| **Monatspreis** | **5 €**/Mannschaft/Monat | **19 €**/Mannschaft/Monat | **49 €**/Verein/Monat |
-| **Saison-Pass** *(Aug–Mai, 2 Monate geschenkt)* | **39 €**/Saison · ≈ 3,90 €/Mon | **149 €**/Saison · ≈ 14,90 €/Mon | **389 €**/Saison · ≈ 38,90 €/Mon |
+| **Zielgruppe** | 1 Mannschaft, 1–5 Sponsoren aus dem direkten Umfeld | 1 Mannschaft, ernsthaftes Sponsoring, ∞ Sponsoren | Verein mit ≥ 3 Mannschaften, zentrale Verwaltung |
+| **Monatspreis** | **5 €**/Mannschaft/Monat | **11 €**/Mannschaft/Monat | **29 €**/Verein/Monat |
+| **Saison-Pass** *(Aug–Mai, 3 Monate geschenkt)* | **35 €**/Saison · ≈ 3,50 €/Mon | **75 €**/Saison · ≈ 7,50 €/Mon | **199 €**/Saison · ≈ 19,90 €/Mon |
 | **Provision auf Pledges** | **0 %** | **0 %** | **0 %** |
 | **Trial** | 30 Tage | 30 Tage | 30 Tage |
-| **Pro Spieler/Monat** *(typischer Kader)* | ~0,23 €/Spieler (22 Mann) | **< 1 €/Spieler** (22 Mann) | **< 1 €/Spieler** (50 Mann) · 0,25 € bei 200 Spielern |
+| **Pro Spieler/Monat** *(typischer Kader)* | ~0,23 €/Spieler (22 Mann) | **< 1 €/Spieler** (22 Mann) | **< 1 €/Spieler** (50 Mann) · 0,15 € bei 200 Spielern |
 
 **Headline-Versprechen:** *100 % der Einnahmen gehen an euch. KickPact stellt die Plattform — Tracking, PDFs, Sponsor-Inbox — und finanziert sich rein über Lizenzgebühren.*
 
@@ -30,7 +31,7 @@
 
 ### Pricing
 - **Monatlich:** 5 €/Mannschaft
-- **Saison-Pass (Aug–Mai):** 39 €/Saison · ~2 Monate geschenkt · Juni/Juli automatisch kostenlos pausiert
+- **Saison-Pass (Aug–Mai):** 35 €/Saison · ~3 Monate geschenkt · Juni/Juli automatisch kostenlos pausiert
 - **0 % Provision** auf bestätigte Pledges
 
 ### Was ist drin
@@ -67,15 +68,15 @@
 
 ---
 
-## 3. Pro — 19 €/Mannschaft/Monat ⭐
+## 3. Pro — 11 €/Mannschaft/Monat ⭐
 
 > **Beliebteste.** Für aktive Sponsoring-Setups mit ≥ 5 Sponsoren. Hier sollen 80 % der Vereine landen.
 >
 > **Bei 22-Mann-Kader: unter 1 € pro Spieler/Monat.**
 
 ### Pricing
-- **Monatlich:** 19 €/Mannschaft · bei 22-Mann-Kader **0,86 € pro Spieler/Monat**
-- **Saison-Pass (Aug–Mai):** **149 €**/Saison · effektiv 14,90 €/Mon · 35 % sparen · Juni/Juli kostenlos pausiert · **0,68 € pro Spieler/Monat**
+- **Monatlich:** 11 €/Mannschaft · bei 22-Mann-Kader **0,50 € pro Spieler/Monat**
+- **Saison-Pass (Aug–Mai):** **75 €**/Saison · effektiv 7,50 €/Mon · 42 % sparen (vs 12× Monat) · Juni/Juli kostenlos pausiert · **0,34 € pro Spieler/Monat**
 - **0 % Provision** auf bestätigte Pledges
 
 ### Was ist drin
@@ -102,15 +103,15 @@
 
 ---
 
-## 4. Vereinslizenz — 49 €/Verein/Monat
+## 4. Vereinslizenz — 29 €/Verein/Monat
 
 > **Für den ganzen Verein.** Eine Lizenz, unbegrenzt Mannschaften, alles inklusive.
 >
-> **Unter 1 € pro Spieler ab 50-Mann-Verein · ab 0,25 €/Spieler bei großen Vereinen.**
+> **Unter 1 € pro Spieler ab 50-Mann-Verein · ab 0,15 €/Spieler bei großen Vereinen.**
 
 ### Pricing
-- **Monatlich:** 49 €/Verein · bei 50 Spielern **0,98 € pro Spieler/Monat**
-- **Saison-Pass (Aug–Mai):** **389 €**/Saison · effektiv 38,90 €/Mon · 34 % sparen · Juni/Juli kostenlos pausiert · **0,78 € pro Spieler/Monat** (50 Spieler)
+- **Monatlich:** 29 €/Verein · bei 50 Spielern **0,58 € pro Spieler/Monat**
+- **Saison-Pass (Aug–Mai):** **199 €**/Saison · effektiv 19,90 €/Mon · 42 % sparen (vs 12× Monat) · Juni/Juli kostenlos pausiert · **0,40 € pro Spieler/Monat** (50 Spieler)
 - **0 % Provision**
 
 ### Was ist drin
@@ -128,30 +129,30 @@
 | **Support** | Email + WhatsApp, 4 h Antwortzeit |
 
 ### Per-Player-Pricing
-| Verein-Größe | €/Spieler/Monat (Lizenz 49 €) |
+| Verein-Größe | €/Spieler/Monat (Lizenz 29 €) |
 |---|---|
-| 30 Spieler | 1,63 € |
-| 50 Spieler | 0,98 € *„unter 1 € pro Spieler"* |
-| 100 Spieler | 0,49 € |
-| 200 Spieler | 0,25 € |
+| 30 Spieler | 0,97 € *„unter 1 € pro Spieler"* |
+| 50 Spieler | 0,58 € |
+| 100 Spieler | 0,29 € |
+| 200 Spieler | 0,15 € |
 
 ### Wann lohnt sich Vereinslizenz gegenüber n × Pro?
 | Mannschaften | Pro × n (Monat) | Vereinslizenz (Monat) | Ersparnis |
 |---|---|---|---|
-| 2 | 38 €/Mon | 49 €/Mon | -11 € (Pro besser) |
-| **3** | 57 €/Mon | **49 €/Mon** | **+8 €/Mon** ⭐ Break-Even |
-| 4 | 76 €/Mon | 49 €/Mon | +27 €/Mon |
-| 6 | 114 €/Mon | 49 €/Mon | +65 €/Mon |
-| 10 | 190 €/Mon | 49 €/Mon | +141 €/Mon |
+| 2 | 22 €/Mon | 29 €/Mon | -7 € (Pro besser) |
+| **3** | 33 €/Mon | **29 €/Mon** | **+4 €/Mon** ⭐ Break-Even |
+| 4 | 44 €/Mon | 29 €/Mon | +15 €/Mon |
+| 6 | 66 €/Mon | 29 €/Mon | +37 €/Mon |
+| 10 | 110 €/Mon | 29 €/Mon | +81 €/Mon |
 
 ### Saison-Pass-Vergleich
 | Mannschaften | Pro-Pass × n | Vereinslizenz-Pass | Ersparnis |
 |---|---|---|---|
-| 2 | 298 € | 389 € | -91 € (Pro besser) |
-| **3** | 447 € | **389 €** | **+58 €** ⭐ Break-Even |
-| 4 | 596 € | 389 € | +207 € |
-| 6 | 894 € | 389 € | +505 € |
-| 10 | 1.490 € | 389 € | +1.101 € |
+| 2 | 150 € | 199 € | -49 € (Pro besser) |
+| **3** | 225 € | **199 €** | **+26 €** ⭐ Break-Even |
+| 4 | 300 € | 199 € | +101 € |
+| 6 | 450 € | 199 € | +251 € |
+| 10 | 750 € | 199 € | +551 € |
 
 → Ab **3 Mannschaften** mathematisch günstiger als Pro × n, plus Master-Cockpit-Vorteile.
 
@@ -165,8 +166,8 @@
 | Feature | Basic | Pro | Vereinslizenz |
 |---|---|---|---|
 | **Pricing** | | | |
-| Monatspreis | 5 € | 19 € | 49 € |
-| Saison-Pass | **39 €** | **149 €** | **389 €** |
+| Monatspreis | 5 € | 11 € | 29 € |
+| Saison-Pass | **35 €** | **75 €** | **199 €** |
 | Provision | 0 % | 0 % | 0 % |
 | Trial | 30 Tage | 30 Tage | 30 Tage |
 | **Trigger** | | | |
@@ -209,7 +210,7 @@
 
 ### Mechanik
 - **Aktive Saison:** 1. August – 31. Mai (10 Monate). Definition pro Liga/Region in `seasons`-Tabelle, default-befüllt aus DFB-Spieljahr.
-- **Preis:** ~ 8 × Monatspreis (= **2 Monate geschenkt**, ~20 % Rabatt vs. 10× Monatspreis)
+- **Preis:** ~ 7 × Monatspreis (= **3 Monate geschenkt**, ~30 % vs. 10× Monatspreis · −42 % vs. 12× Monat)
 - **Sommerpause:** 1. Juni – 31. Juli automatisch `paused` → kein Crawler, keine Charges, Daten bleiben sichtbar, **kein €** wird abgebucht
 - **Renewal:** zum 1. August automatisch verlängert (Stripe-Subscription `billing_cycle_anchor = next_aug_1`). Vorab-Kündigungsrecht 30 Tage (= bis 1.7.)
 - **Winterpause:** Mitte Dez – Anfang Feb. **Keine** Subscription-Pause — App läuft weiter, nur der Crawler findet 4-6 Wochen keine neuen Matches. Tabelle/Stats bleiben sichtbar.
@@ -221,7 +222,7 @@
 | **1. Juli – 5. Spieltag** *(~Mitte Sep)* | ✅ Voller Saison-Pass-Preis (gleicher Preis unabhängig vom Einstiegsdatum) |
 | **Ab 6. Spieltag** | ❌ nur Monatsabo möglich · Saison-Pass startet zur nächsten Saison im Juli |
 
-→ Wer Anfang August einsteigt, hat den besten Deal (volle 10 Monate für 8× Monatspreis).
+→ Wer Anfang August einsteigt, hat den besten Deal (volle 10 Monate für 7× Monatspreis).
 → Wer im September einsteigt (bis 5. Spieltag), zahlt denselben Saison-Pass-Preis, hat aber nur noch ~8 Monate Restsaison. Kein Pro-Rated — bewusste Wahl: simpel, fair, kein "warte-bis-zum-letzten-Spieltag"-Gaming.
 
 ### Mid-Season-Einstieg
@@ -237,9 +238,9 @@
 
 | Tier | Monat | Saison-Pass | Ersparnis vs Monatsabo (10×) | Effektiv/Mon |
 |---|---|---|---|---|
-| Basic | 5 € | **39 €** | -11 € (~22 %) | 3,90 € |
-| Pro | 19 € | **149 €** | -41 € (~22 %) | 14,90 € |
-| Vereinslizenz | 49 € | **389 €** | -101 € (~21 %) | 38,90 € |
+| Basic | 5 € | **35 €** | -15 € (~30 %) | 3,50 € |
+| Pro | 11 € | **75 €** | -35 € (~32 %) | 7,50 € |
+| Vereinslizenz | 29 € | **199 €** | -91 € (~31 %) | 19,90 € |
 
 ---
 
@@ -290,12 +291,12 @@ Wiederverwendbare Sätze für Landing, Pricing-Page, Onboarding, Sales-Pitches:
 - **Vereinslizenz:** *„Der ganze Verein. Ein Tarif. Unter 1 € pro Spieler."*
 
 ### Saison-Pass-Anker
-> **„2 Monate geschenkt. Sommerpause kostet nichts."**
+> **„3 Monate geschenkt. Sommerpause kostet nichts."**
 
 ### Mathematik-Anker (für Pricing-FAQ)
-- Ab **3 Mannschaften** ist Vereinslizenz günstiger als 3× Pro (49 € vs. 57 €)
+- Ab **3 Mannschaften** ist Vereinslizenz günstiger als 3× Pro (29 € vs. 33 €)
 - Bei **50 Spielern** zahlt der Vereinslizenz-Verein **unter 1 € pro Spieler**
-- Bei **200 Spielern** = **0,25 € pro Spieler**
+- Bei **200 Spielern** = **0,15 € pro Spieler**
 
 ### Saison-Auftakt-Anker
 > **„Saison 2026/27 — Pass und Saison-Wetten freischalten bis 5. Spieltag. Danach erst wieder Juli 2027."** (jährlicher Push)
@@ -330,9 +331,9 @@ Was im Code/Spec geändert werden muss, sobald dieses Pricing abgesegnet ist:
 | 1 | Tarif-Namen | **Basic / Pro / Vereinslizenz** | ✅ entschieden |
 | 2 | Basic Sponsor-Cap | **5** | ✅ entschieden |
 | 3 | Basic Pledge-Rules-Cap pro Sponsor | **3** | ✅ entschieden |
-| 4 | Vereinslizenz-Monatspreis | **49 €** | ✅ entschieden |
+| 4 | Vereinslizenz-Monatspreis | **29 €** (war 49 €, gesenkt 2026-06-15) | ✅ entschieden |
 | 5 | Annual-Plan anbieten | **Nein** — 2026-06-02 komplett entfernt; Saison-Pass IST die Jahres-Bindung | ✅ entschieden |
-| 6 | Saison-Pass-Preise | **39 / 149 / 389 €** (~ 8× Monat, 2 Mon geschenkt) | ✅ entschieden |
+| 6 | Saison-Pass-Preise | **35 / 75 / 199 €** (~ 7× Monat, 3 Mon geschenkt) | ✅ entschieden |
 | 7 | Saison-Pass + Saison-Wetten Cutoff | **5. Spieltag der laufenden Saison** (gleicher Cutoff für beides) | ✅ entschieden |
 | 8 | Provision auf allen Tiers | **0 %** | ✅ entschieden |
 | 9 | Trial-Länge | **30 Tage** | ✅ entschieden |
