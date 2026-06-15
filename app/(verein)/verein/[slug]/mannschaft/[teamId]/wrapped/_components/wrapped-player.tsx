@@ -43,9 +43,10 @@ interface Slide {
 function buildSlides(stats: WrappedStats): Slide[] {
   const slides: Slide[] = [
     { key: "intro", imageKey: "intro" },
-    { key: "bilanz", imageKey: "bilanz" },
-    { key: "tore", imageKey: "tore" }
+    { key: "bilanz", imageKey: "bilanz" }
   ];
+  if (stats.tabellenplatz !== null) slides.push({ key: "tabellenplatz", imageKey: "tabellenplatz" });
+  slides.push({ key: "tore", imageKey: "tore" });
   if (stats.besterTorschuetze) slides.push({ key: "torschuetze", imageKey: "torschuetze" });
   if (stats.zuNull > 0) slides.push({ key: "zunull", imageKey: "zunull" });
   if (stats.comebacks > 0) slides.push({ key: "comebacks", imageKey: "comebacks" });
@@ -53,6 +54,7 @@ function buildSlides(stats: WrappedStats): Slide[] {
     slides.push({ key: "heimauswaerts", imageKey: "heimauswaerts" });
   }
   if (stats.hoechsterSieg) slides.push({ key: "hoechstersieg", imageKey: "hoechstersieg" });
+  if (stats.vsTop3 && stats.vsTop3.spiele > 0) slides.push({ key: "vstop3", imageKey: "vstop3" });
   if (stats.beitraegeSummeCents > 0) {
     slides.push({ key: "beitraege", imageKey: "beitraege" });
   } else if (stats.pactsCount === 0 && (stats.simulationFallbackCents ?? 0) > 0) {
@@ -323,6 +325,10 @@ function SlideContent({
       return <IntroSlide stats={stats} accent={accent} saisonLabel={saisonLabel} />;
     case "bilanz":
       return <BilanzSlide stats={stats} accent={accent} />;
+    case "tabellenplatz":
+      return <TabellenplatzSlide stats={stats} accent={accent} />;
+    case "vstop3":
+      return <VsTop3Slide stats={stats} accent={accent} />;
     case "tore":
       return <ToreSlide stats={stats} accent={accent} />;
     case "torschuetze":
@@ -592,6 +598,44 @@ function HeimAuswaertsSlide({ stats, accent }: { stats: WrappedStats; accent: st
   );
 }
 
+function TabellenplatzSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+  return (
+    <div>
+      <Kicker accent={accent}>In der Tabelle</Kicker>
+      <BigNumber value={`Platz ${stats.tabellenplatz}`} accent={accent} />
+      <h2
+        className="wr-rise font-display text-2xl font-black tracking-tight text-white"
+        style={{ animationDelay: "0.25s" }}
+      >
+        von {stats.teamsInLeague} Teams · {stats.punkte} Punkte
+      </h2>
+      <Body delay={0.55}>Volle Saison, schwarz auf weiß in der Liga-Tabelle. 📊</Body>
+    </div>
+  );
+}
+function VsTop3Slide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+  const v = stats.vsTop3!;
+  return (
+    <div>
+      <Kicker accent={accent}>Gegen die Top 3</Kicker>
+      <BigNumber value={`${v.siege}/${v.unentschieden}/${v.niederlagen}`} accent={accent} />
+      <h2
+        className="wr-rise font-display text-2xl font-black tracking-tight text-white"
+        style={{ animationDelay: "0.25s" }}
+      >
+        S/U/N gegen die Spitze
+      </h2>
+      <Body delay={0.55}>
+        {v.siege > v.niederlagen
+          ? "Gegen die Großen geliefert. 🔥"
+          : v.siege === 0 && v.niederlagen > 0
+            ? "Gegen die Spitze noch ausbaufähig — nächste Saison. 😤"
+            : "Auf Augenhöhe mit den Besten."}{" "}
+        <span className="text-white/55">(aus {v.spiele} ausgewerteten Spielen)</span>
+      </Body>
+    </div>
+  );
+}
 function HoechsterSiegSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
   const hs = stats.hoechsterSieg!;
   return (

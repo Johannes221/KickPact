@@ -3,9 +3,11 @@ import { requireUser } from "@/lib/auth/session";
 import { resolveTeamAccess } from "@/lib/auth/scope";
 import {
   getWrappedStatsForPrevSeason,
+  getPrevSaisonForTeam,
   WRAPPED_MIN_MATCHES,
   type WrappedStats
 } from "@/lib/db/queries/wrapped";
+import { getCachedStandings } from "@/lib/recap/standings-cache";
 import { eurWhole, seasonLabel } from "@/lib/recap/recap-format";
 
 // DB-Zugriff (postgres-js) → Node-Runtime, NICHT edge.
@@ -26,12 +28,14 @@ const OFF = "#F8F7F4";
 const SLIDE_KEYS = [
   "intro",
   "bilanz",
+  "tabellenplatz",
   "tore",
   "torschuetze",
   "zunull",
   "comebacks",
   "heimauswaerts",
   "hoechstersieg",
+  "vstop3",
   "beitraege",
   "simulation"
 ] as const;
@@ -41,12 +45,14 @@ type SlideKey = (typeof SLIDE_KEYS)[number];
 const SLIDE_ACCENTS: Record<SlideKey, string> = {
   intro: ORANGE,
   bilanz: RED,
+  tabellenplatz: LIME,
   tore: LIME,
   torschuetze: ORANGE,
   zunull: RED,
   comebacks: LIME,
   heimauswaerts: ORANGE,
   hoechstersieg: RED,
+  vstop3: ORANGE,
   beitraege: LIME,
   simulation: ORANGE
 };
@@ -65,7 +71,11 @@ export async function GET(
   const access = await resolveTeamAccess(user.id, teamId, "viewer");
   if (!access.granted) return new Response("Forbidden", { status: 403 });
 
-  const stats = await getWrappedStatsForPrevSeason(teamId);
+  // Verifizierte Voll-Saison-Tabelle best-effort dazu (gecacht); null → Wrapped
+  // rechnet ehrlich aus den ausgewerteten Spielen.
+  const prev = await getPrevSaisonForTeam(teamId);
+  const standings = prev ? await getCachedStandings(teamId, prev) : null;
+  const stats = await getWrappedStatsForPrevSeason(teamId, standings);
   if (!stats || stats.spiele < WRAPPED_MIN_MATCHES) {
     return new Response("Not found", { status: 404 });
   }
@@ -74,12 +84,14 @@ export async function GET(
   const hasData: Record<SlideKey, boolean> = {
     intro: true,
     bilanz: true,
+    tabellenplatz: stats.tabellenplatz !== null,
     tore: true,
     torschuetze: !!stats.besterTorschuetze,
     zunull: stats.zuNull > 0,
     comebacks: stats.comebacks > 0,
     heimauswaerts: stats.heimsiege + stats.auswaertssiege > 0,
     hoechstersieg: !!stats.hoechsterSieg,
+    vstop3: !!stats.vsTop3 && stats.vsTop3.spiele > 0,
     beitraege: stats.beitraegeSummeCents > 0,
     simulation: (stats.simulationFallbackCents ?? 0) > 0
   };
@@ -260,7 +272,7 @@ function SlideBody({
           big={stats.besterTorschuetze!.name}
           bigSize={110}
           accent={accent}
-          sub={`${stats.besterTorschuetze!.tore} Tor${stats.besterTorschuetze!.tore === 1 ? "" : "e"} diese Saison`}
+          sub={`${stats.besterTorschuetze!.tore} Tor${stats.besterTorschuetze!.tore === 1 ? "" : "e"} in ${stats.detailMatchCount} ausgewerteten Spielen`}
         />
       );
     case "zunull":
@@ -297,6 +309,25 @@ function SlideBody({
           big={stats.hoechsterSieg!.ergebnis}
           accent={accent}
           sub={`${stats.hoechsterSieg!.heimName} vs ${stats.hoechsterSieg!.gastName}`}
+        />
+      );
+    case "tabellenplatz":
+      return (
+        <Block
+          kicker="In der Tabelle"
+          big={`Platz ${stats.tabellenplatz}`}
+          bigSize={140}
+          accent={accent}
+          sub={`von ${stats.teamsInLeague} Teams · ${stats.punkte} Punkte`}
+        />
+      );
+    case "vstop3":
+      return (
+        <Block
+          kicker="Gegen die Top 3"
+          big={`${stats.vsTop3!.siege}/${stats.vsTop3!.unentschieden}/${stats.vsTop3!.niederlagen}`}
+          accent={accent}
+          sub={`S/U/N gegen die Spitze · aus ${stats.vsTop3!.spiele} Spielen`}
         />
       );
     case "beitraege":

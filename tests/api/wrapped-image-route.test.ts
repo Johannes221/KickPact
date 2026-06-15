@@ -7,18 +7,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WrappedStats } from "@/lib/db/queries/wrapped";
 
-const { requireUserMock, resolveTeamAccessMock, statsMock } = vi.hoisted(() => ({
-  requireUserMock: vi.fn(),
-  resolveTeamAccessMock: vi.fn(),
-  statsMock: vi.fn()
-}));
+const { requireUserMock, resolveTeamAccessMock, statsMock, prevSaisonMock, standingsMock } =
+  vi.hoisted(() => ({
+    requireUserMock: vi.fn(),
+    resolveTeamAccessMock: vi.fn(),
+    statsMock: vi.fn(),
+    prevSaisonMock: vi.fn(),
+    standingsMock: vi.fn()
+  }));
 
 vi.mock("@/lib/auth/session", () => ({ requireUser: requireUserMock }));
 vi.mock("@/lib/auth/scope", () => ({ resolveTeamAccess: resolveTeamAccessMock }));
 vi.mock("@/lib/db/queries/wrapped", () => ({
   getWrappedStatsForPrevSeason: statsMock,
+  getPrevSaisonForTeam: prevSaisonMock,
   WRAPPED_MIN_MATCHES: 3
 }));
+vi.mock("@/lib/recap/standings-cache", () => ({ getCachedStandings: standingsMock }));
 
 import { GET } from "@/app/api/teams/[teamId]/wrapped-image/[slide]/route";
 
@@ -39,7 +44,13 @@ const FULL_STATS: WrappedStats = {
   hoechsterSieg: { heimName: "Testkirchen", gastName: "Gegner F", ergebnis: "6:0" },
   pactsCount: 1,
   beitraegeSummeCents: 900,
-  simulationFallbackCents: null
+  simulationFallbackCents: null,
+  tabellenplatz: 6,
+  teamsInLeague: 14,
+  punkte: 42,
+  aggregateSource: "table",
+  detailMatchCount: 6,
+  vsTop3: { spiele: 2, siege: 0, unentschieden: 0, niederlagen: 2 }
 };
 
 function call(slide: string) {
@@ -53,6 +64,8 @@ describe("wrapped-image route", () => {
     requireUserMock.mockReset().mockResolvedValue({ id: "u1" });
     resolveTeamAccessMock.mockReset().mockResolvedValue({ granted: true });
     statsMock.mockReset().mockResolvedValue(FULL_STATS);
+    prevSaisonMock.mockReset().mockResolvedValue("2425");
+    standingsMock.mockReset().mockResolvedValue(null);
   });
 
   it.each(["tore", "bilanz"])("%s → 200 + image/png", async (slide) => {

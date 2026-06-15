@@ -3,6 +3,7 @@ import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { getWrappedStats, WRAPPED_MIN_MATCHES } from "@/lib/db/queries/wrapped";
+import { getCachedStandings } from "@/lib/recap/standings-cache";
 import { getFullTeamInClub } from "@/lib/db/queries/team-lifecycle";
 import { prevSaisonCode, saisonLabel } from "@/lib/utils/saison";
 import { WrappedPlayer } from "./_components/wrapped-player";
@@ -26,8 +27,14 @@ export default async function WrappedPage({
   const teamBase = `/verein/${slug}/mannschaft/${teamId}`;
   const team = await getFullTeamInClub(teamId, club.id);
   const prevSaison = team ? prevSaisonCode(team.saison) : null;
+  // Liga-Tabelle (verifizierte Voll-Saison-Aggregate) best-effort + gecacht;
+  // null → Wrapped fällt ehrlich auf die ausgewerteten Spiele zurück.
+  const standings =
+    team && prevSaison ? await getCachedStandings(teamId, prevSaison) : null;
   const stats =
-    team && prevSaison ? await getWrappedStats(teamId, prevSaison) : null;
+    team && prevSaison
+      ? await getWrappedStats(teamId, prevSaison, standings)
+      : null;
 
   if (!team || !prevSaison || !stats || stats.spiele < WRAPPED_MIN_MATCHES) {
     return (
