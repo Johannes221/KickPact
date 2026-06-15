@@ -20,7 +20,12 @@
 
 import type { EventName, EventProps } from "./track";
 
-const PLAUSIBLE_ENDPOINT = "https://plausible.io/api/event";
+// Self-hosted Plausible-Instanz unter analytics.schartl.dev. Host via
+// NEXT_PUBLIC_PLAUSIBLE_HOST überschreibbar (ohne Trailing-Slash).
+const PLAUSIBLE_HOST = (
+  process.env.NEXT_PUBLIC_PLAUSIBLE_HOST ?? "https://analytics.schartl.dev"
+).replace(/\/$/, "");
+const PLAUSIBLE_ENDPOINT = `${PLAUSIBLE_HOST}/api/event`;
 const USER_AGENT = "KickPact-Server/1.0";
 
 /**
