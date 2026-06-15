@@ -31,6 +31,14 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
   const [identities, setIdentities] = useState<UserIdentities | null>(null);
   const [pendingRequests, setPendingRequests] = useState<MyPendingRequest[]>([]);
   const [isOperator, setIsOperator] = useState(false);
+  // Hydration-Gate: Auf dem Server liefert useSession() immer `isPending`, der
+  // Header rendert also das Skeleton. Bei warmem better-auth-Session-Cache
+  // (nach Navigation) liefert useSession() beim ERSTEN Client-Render aber sofort
+  // die Session → der Client würde direkt das Avatar-Menü rendern und vom
+  // Server-Skeleton abweichen (Hydration-Error #418, Safari-prod-only). Bis zum
+  // Mount zeigen wir daher immer das Skeleton — danach das echte Menü.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!session?.user) {
@@ -60,7 +68,7 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
       .catch(() => {/* silent */});
   }, [session?.user?.id, pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (isPending) {
+  if (!mounted || isPending) {
     return <div className="h-9 w-20 animate-pulse rounded-md bg-white/10" />;
   }
 
