@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, Share2 } from "lucide-react";
+import { X, Share2, Volume2, VolumeX } from "lucide-react";
 import type { WrappedStats } from "@/lib/db/queries/wrapped";
 import { eurWhole } from "@/lib/recap/recap-format";
+import { useAmbientAudio } from "./use-ambient-audio";
 
 /**
  * Saison-Wrapped Story-Player (W4, Plan 2026-06-12).
@@ -95,6 +96,7 @@ export function WrappedPlayer({
   imageBase
 }: WrappedPlayerProps) {
   const router = useRouter();
+  const ambient = useAmbientAudio();
   const slides = useMemo(() => buildSlides(stats), [stats]);
   const [index, setIndex] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -243,16 +245,35 @@ export function WrappedPlayer({
           <span className="rounded-full bg-white/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/80">
             Wrapped {saisonLabel}
           </span>
-          <button
-            type="button"
-            aria-label="Schließen"
-            onPointerDown={(e) => e.stopPropagation()}
-            onPointerUp={(e) => e.stopPropagation()}
-            onClick={() => router.push(dashboardHref)}
-            className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white/90 transition-colors hover:bg-white/20"
-          >
-            <X className="h-5 w-5" aria-hidden />
-          </button>
+          <div className="flex items-center gap-2">
+            {ambient.supported && (
+              <button
+                type="button"
+                aria-label={ambient.on ? "Musik aus" : "Musik an"}
+                aria-pressed={ambient.on}
+                onPointerDown={(e) => e.stopPropagation()}
+                onPointerUp={(e) => e.stopPropagation()}
+                onClick={ambient.toggle}
+                className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white/90 transition-colors hover:bg-white/20"
+              >
+                {ambient.on ? (
+                  <Volume2 className="h-5 w-5" aria-hidden />
+                ) : (
+                  <VolumeX className="h-5 w-5" aria-hidden />
+                )}
+              </button>
+            )}
+            <button
+              type="button"
+              aria-label="Schließen"
+              onPointerDown={(e) => e.stopPropagation()}
+              onPointerUp={(e) => e.stopPropagation()}
+              onClick={() => router.push(dashboardHref)}
+              className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white/90 transition-colors hover:bg-white/20"
+            >
+              <X className="h-5 w-5" aria-hidden />
+            </button>
+          </div>
         </div>
 
         {/* Tap-/Hold-Fläche + Slide-Inhalt */}
