@@ -14,6 +14,7 @@ import {
   hasStripeEventBeenProcessed,
   markStripeEventProcessed,
   getClubIdByOriginalTransactionId,
+  getAppleExpiresAt,
   syncAppleSubscriptionForClub,
   setTeamLicensesPlanForSubscription,
   setTeamLicensesStatusForClubTeams
@@ -81,17 +82,34 @@ export async function POST(req: NextRequest) {
       if (otx && planCycle) {
         const clubId = await getClubIdByOriginalTransactionId(otx);
         if (clubId) {
-          await syncAppleSubscriptionForClub(clubId, {
-            originalTransactionId: otx,
-            status,
-            billingCycle: planCycle.cycle,
-            appleExpiresAt: tx?.expiresDate ? new Date(tx.expiresDate) : null
-          });
-          if (status === "cancelled") {
-            await setTeamLicensesStatusForClubTeams(clubId, "cancelled");
-          } else if (status === "active") {
-            await setTeamLicensesPlanForSubscription(clubId, planCycle.plan);
-            await setTeamLicensesStatusForClubTeams(clubId, "active");
+          // Reorder-Guard (MEDIUM-1): Apple ASSN v2 garantiert keine Reihen-
+          // folge. Eine reordered ältere Notification (kleineres expiresDate)
+          // darf einen neueren Zustand NICHT überschreiben. Strikt älteres
+          // expiresDate → skippen (aber als processed markieren + 200).
+          const incomingExpires = tx?.expiresDate ? new Date(tx.expiresDate) : null;
+          const stored = await getAppleExpiresAt(clubId);
+          if (
+            stored &&
+            incomingExpires &&
+            incomingExpires.getTime() < stored.getTime()
+          ) {
+            console.warn(
+              "[apple-webhook] stale notification (older expiresDate) — skipping write",
+              { clubId }
+            );
+          } else {
+            await syncAppleSubscriptionForClub(clubId, {
+              originalTransactionId: otx,
+              status,
+              billingCycle: planCycle.cycle,
+              appleExpiresAt: tx?.expiresDate ? new Date(tx.expiresDate) : null
+            });
+            if (status === "cancelled") {
+              await setTeamLicensesStatusForClubTeams(clubId, "cancelled");
+            } else if (status === "active") {
+              await setTeamLicensesPlanForSubscription(clubId, planCycle.plan);
+              await setTeamLicensesStatusForClubTeams(clubId, "active");
+            }
           }
         } else {
           console.warn("[apple-webhook] no club for originalTransactionId", otx);

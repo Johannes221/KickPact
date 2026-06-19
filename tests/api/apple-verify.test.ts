@@ -9,6 +9,7 @@ vi.mock("@/lib/auth/scope", () => ({
 }));
 vi.mock("@/lib/db/queries/subscriptions", () => ({
   getSubscriptionProvider: vi.fn(),
+  getClubIdByOriginalTransactionId: vi.fn(),
   syncAppleSubscriptionForClub: vi.fn(),
   setTeamLicensesPlanForSubscription: vi.fn()
 }));
@@ -29,6 +30,7 @@ function req(body: unknown) {
 beforeEach(() => {
   vi.clearAllMocks();
   (assertClubAccess as any).mockResolvedValue({ club: { id: "club_1", slug: "x" } });
+  (subs.getClubIdByOriginalTransactionId as any).mockResolvedValue(null);
   (verifyTransaction as any).mockResolvedValue({
     productId: "kickpact.pro.season",
     originalTransactionId: "otx_1",
@@ -51,6 +53,22 @@ describe("POST /api/apple/verify", () => {
     expect(subs.syncAppleSubscriptionForClub).toHaveBeenCalledWith("club_1",
       expect.objectContaining({ originalTransactionId: "otx_1", status: "active" }));
     expect(subs.setTeamLicensesPlanForSubscription).toHaveBeenCalledWith("club_1", "pro");
+  });
+
+  it("409 wenn die originalTransactionId schon einem ANDEREN Club gehört (Replay)", async () => {
+    (subs.getSubscriptionProvider as any).mockResolvedValue(null);
+    (subs.getClubIdByOriginalTransactionId as any).mockResolvedValue("other_club");
+    const res = await POST(req({ clubSlug: "x", signedTransaction: "jws" }) as any);
+    expect(res.status).toBe(409);
+    expect(subs.syncAppleSubscriptionForClub).not.toHaveBeenCalled();
+  });
+
+  it("idempotent: dieselbe originalTransactionId für DENSELBEN Club schreibt weiter", async () => {
+    (subs.getSubscriptionProvider as any).mockResolvedValue(null);
+    (subs.getClubIdByOriginalTransactionId as any).mockResolvedValue("club_1");
+    const res = await POST(req({ clubSlug: "x", signedTransaction: "jws" }) as any);
+    expect(res.status).toBe(200);
+    expect(subs.syncAppleSubscriptionForClub).toHaveBeenCalled();
   });
 
   it("rejects an unparseable / unknown product", async () => {

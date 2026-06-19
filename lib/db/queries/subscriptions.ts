@@ -142,6 +142,20 @@ export async function getClubIdByOriginalTransactionId(
   return row?.clubId ?? null;
 }
 
+/**
+ * Aktuell gespeichertes Apple-Ablaufdatum eines Clubs. Dient dem Reorder-Guard
+ * im ASSN-v2-Webhook: nur Notifications mit >= diesem expiresDate dürfen den
+ * Status überschreiben (Apple garantiert keine Zustellreihenfolge).
+ */
+export async function getAppleExpiresAt(clubId: string): Promise<Date | null> {
+  const [row] = await db
+    .select({ appleExpiresAt: subscriptions.appleExpiresAt })
+    .from(subscriptions)
+    .where(eq(subscriptions.clubId, clubId))
+    .limit(1);
+  return row?.appleExpiresAt ?? null;
+}
+
 /** Aktueller Bezahlkanal eines Clubs (für die Kanal-Invariante). */
 export async function getSubscriptionProvider(
   clubId: string

@@ -166,6 +166,49 @@ describe("gateFromSubscription", () => {
     expect(gate.reason).toBeNull();
   });
 
+  it("cancelled MIT appleOriginalTransactionId (refunded) → reason null, NICHT trial_expired", () => {
+    // Apple-Zahler haben nie eine stripeSubscriptionId, behalten aber ihr
+    // Onboarding-trialEndsAt. Ein refunded/expired Apple-Abo darf NICHT als
+    // "nie bezahlter Trial" gewertet werden (sonst crawlt der Club weiter).
+    const gate = gateFromSubscription(
+      row({
+        status: "cancelled",
+        stripeSubscriptionId: null,
+        appleOriginalTransactionId: "otx_999",
+        trialEndsAt: daysAgo(40)
+      }),
+      NOW
+    );
+    expect(gate.status).toBe("cancelled");
+    expect(gate.reason).toBeNull();
+  });
+
+  it("cancelled ohne stripe UND ohne apple, aber mit trialEndsAt → trial_expired (Sanity)", () => {
+    const gate = gateFromSubscription(
+      row({
+        status: "cancelled",
+        stripeSubscriptionId: null,
+        appleOriginalTransactionId: null,
+        trialEndsAt: daysAgo(5)
+      }),
+      NOW
+    );
+    expect(gate.reason).toBe("trial_expired");
+  });
+
+  it("trialing mit abgelaufenem Trial ABER Apple-Zahler → reason null", () => {
+    const gate = gateFromSubscription(
+      row({
+        status: "trialing",
+        trialEndsAt: daysAgo(1),
+        stripeSubscriptionId: null,
+        appleOriginalTransactionId: "otx_888"
+      }),
+      NOW
+    );
+    expect(gate.reason).toBeNull();
+  });
+
   it("trialing mit abgelaufenem trialEndsAt + nie bezahlt → reason trial_expired, aber nicht read-only", () => {
     // Fenster zwischen Trial-Ablauf und dem täglichen expire-trials-Cron:
     // Status steht noch auf trialing, lizenziert ist der Verein nicht mehr.
