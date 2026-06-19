@@ -24,6 +24,7 @@ import { notifyMatchResult } from "./notify-match-result";
 import { notifyAccessRequest } from "./notify-access-request";
 import { notifySponsorInquiry } from "./notify-sponsor-inquiry";
 import { notifySponsorLead } from "./notify-sponsor-lead";
+import { reconcileAppleSubscriptions } from "./reconcile-apple-subscriptions";
 
 export const functions = [
   crawlMatches,
@@ -52,5 +53,6 @@ export const functions = [
   notifyMatchResult,
   notifyAccessRequest,
   notifySponsorInquiry,
-  notifySponsorLead
+  notifySponsorLead,
+  reconcileAppleSubscriptions
 ];

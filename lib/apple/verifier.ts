@@ -3,7 +3,8 @@ import {
   SignedDataVerifier,
   Environment,
   type ResponseBodyV2DecodedPayload,
-  type JWSTransactionDecodedPayload
+  type JWSTransactionDecodedPayload,
+  type JWSRenewalInfoDecodedPayload
 } from "@apple/app-store-server-library";
 
 /**
@@ -75,4 +76,11 @@ export async function verifyTransaction(
   signedTransaction: string
 ): Promise<JWSTransactionDecodedPayload> {
   return getVerifier().verifyAndDecodeTransaction(signedTransaction);
+}
+
+/** Verifiziert + decodiert eine signierte Renewal-Info (JWS, z.B. aus der ASS-API). */
+export async function verifyRenewalInfo(
+  signedRenewalInfo: string
+): Promise<JWSRenewalInfoDecodedPayload> {
+  return getVerifier().verifyAndDecodeRenewalInfo(signedRenewalInfo);
 }

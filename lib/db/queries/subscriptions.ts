@@ -1,5 +1,15 @@
 import "server-only";
-import { eq, inArray, desc, sql } from "drizzle-orm";
+import {
+  eq,
+  inArray,
+  desc,
+  sql,
+  and,
+  isNotNull,
+  isNull,
+  or,
+  lt
+} from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   subscriptions,
@@ -125,6 +135,65 @@ export async function syncAppleSubscriptionForClub(
       billingCycle: patch.billingCycle,
       appleExpiresAt: patch.appleExpiresAt,
       pastDueSince: pastDueSincePatch(patch.status),
+      updatedAt: new Date()
+    })
+    .where(eq(subscriptions.clubId, clubId));
+}
+
+/**
+ * HIGH-2 — Apple-Abos, die eine Reconciliation gegen die App Store Server API
+ * brauchen: provider='apple', status in (active, past_due), OTX gesetzt und
+ * (appleExpiresAt NULL ODER vor dem cutoff). NULL-OTX wird defensiv gefiltert,
+ * obwohl die WHERE-Klausel sie schon ausschließt.
+ *
+ * @param cutoff  Abos, deren appleExpiresAt vor diesem Zeitpunkt liegt (oder
+ *                NULL ist), werden neu geprüft. Der Cron übergibt `now`.
+ */
+export async function listAppleSubscriptionsForReconcile(
+  cutoff: Date
+): Promise<{ clubId: string; originalTransactionId: string }[]> {
+  const rows = await db
+    .select({
+      clubId: subscriptions.clubId,
+      originalTransactionId: subscriptions.appleOriginalTransactionId
+    })
+    .from(subscriptions)
+    .where(
+      and(
+        eq(subscriptions.provider, "apple"),
+        inArray(subscriptions.status, ["active", "past_due"]),
+        isNotNull(subscriptions.appleOriginalTransactionId),
+        or(
+          isNull(subscriptions.appleExpiresAt),
+          lt(subscriptions.appleExpiresAt, cutoff)
+        )
+      )
+    );
+  return rows.flatMap((r) =>
+    r.originalTransactionId
+      ? [{ clubId: r.clubId, originalTransactionId: r.originalTransactionId }]
+      : []
+  );
+}
+
+/**
+ * HIGH-2 — Fokussiertes Status-Update für den Reconcile-Cron: setzt NUR Status,
+ * appleExpiresAt, pastDueSince und updatedAt. Lässt provider, billingCycle und
+ * appleOriginalTransactionId UNANGETASTET (im Gegensatz zu
+ * syncAppleSubscriptionForClub, das billingCycle erzwingt und damit den
+ * gespeicherten Cycle überschreiben würde).
+ */
+export async function setAppleStatusForClub(
+  clubId: string,
+  status: SubscriptionStatus,
+  appleExpiresAt: Date | null
+): Promise<void> {
+  await db
+    .update(subscriptions)
+    .set({
+      status,
+      appleExpiresAt,
+      pastDueSince: pastDueSincePatch(status),
       updatedAt: new Date()
     })
     .where(eq(subscriptions.clubId, clubId));
