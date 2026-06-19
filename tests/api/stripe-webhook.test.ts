@@ -27,7 +27,8 @@ const {
   setLicStatusMock,
   setStatusByCustomerMock,
   getClubIdByCustomerMock,
-  getCustomerIdMock
+  getCustomerIdMock,
+  getProviderMock
 } = vi.hoisted(() => ({
   constructEventMock: vi.fn(),
   subscriptionsRetrieveMock: vi.fn(),
@@ -39,7 +40,8 @@ const {
   setLicStatusMock: vi.fn(),
   setStatusByCustomerMock: vi.fn(),
   getClubIdByCustomerMock: vi.fn(),
-  getCustomerIdMock: vi.fn()
+  getCustomerIdMock: vi.fn(),
+  getProviderMock: vi.fn()
 }));
 
 vi.mock("@/lib/stripe/client", () => ({
@@ -69,7 +71,8 @@ vi.mock("@/lib/db/queries/subscriptions", () => ({
   cancelSubscriptionForClub: cancelClubMock,
   setTeamLicensesStatusForClubTeams: setLicStatusMock,
   setSubscriptionStatusByCustomer: setStatusByCustomerMock,
-  getClubIdByCustomer: getClubIdByCustomerMock
+  getClubIdByCustomer: getClubIdByCustomerMock,
+  getSubscriptionProvider: getProviderMock
 }));
 
 vi.mock("@/lib/billing/downgrade-enforcement", () => ({
@@ -113,6 +116,7 @@ beforeEach(() => {
   getCustomerIdMock.mockResolvedValue({ customerId: "cus_1" });
   subscriptionsRetrieveMock.mockResolvedValue(BASE_SUB);
   getClubIdByCustomerMock.mockResolvedValue("club1");
+  getProviderMock.mockResolvedValue(null);
 });
 
 describe("stripe webhook — Marker-Lebenszyklus (A4)", () => {

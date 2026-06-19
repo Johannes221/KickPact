@@ -91,6 +91,7 @@ export async function syncSubscriptionForClub(
   await db
     .update(subscriptions)
     .set({
+      provider: "stripe",
       stripeSubscriptionId: patch.stripeSubscriptionId,
       status: patch.status,
       ...(patch.billingCycle ? { billingCycle: patch.billingCycle } : {}),
