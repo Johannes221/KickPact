@@ -103,6 +103,56 @@ export async function syncSubscriptionForClub(
     .where(eq(subscriptions.clubId, clubId));
 }
 
+export interface AppleSubscriptionSync {
+  originalTransactionId: string;
+  status: SubscriptionStatus;
+  billingCycle: BillingCycle;
+  appleExpiresAt: Date | null;
+}
+
+/** Part B — Apple-Pendant zu syncSubscriptionForClub. Setzt provider='apple'. */
+export async function syncAppleSubscriptionForClub(
+  clubId: string,
+  patch: AppleSubscriptionSync
+): Promise<void> {
+  await db
+    .update(subscriptions)
+    .set({
+      provider: "apple",
+      appleOriginalTransactionId: patch.originalTransactionId,
+      status: patch.status,
+      billingCycle: patch.billingCycle,
+      appleExpiresAt: patch.appleExpiresAt,
+      pastDueSince: pastDueSincePatch(patch.status),
+      updatedAt: new Date()
+    })
+    .where(eq(subscriptions.clubId, clubId));
+}
+
+/** Club-Lookup über Apples stabilen Abo-Identifier (für den Webhook). */
+export async function getClubIdByOriginalTransactionId(
+  originalTransactionId: string
+): Promise<string | null> {
+  const [row] = await db
+    .select({ clubId: subscriptions.clubId })
+    .from(subscriptions)
+    .where(eq(subscriptions.appleOriginalTransactionId, originalTransactionId))
+    .limit(1);
+  return row?.clubId ?? null;
+}
+
+/** Aktueller Bezahlkanal eines Clubs (für die Kanal-Invariante). */
+export async function getSubscriptionProvider(
+  clubId: string
+): Promise<"stripe" | "apple" | "google" | null> {
+  const [row] = await db
+    .select({ provider: subscriptions.provider })
+    .from(subscriptions)
+    .where(eq(subscriptions.clubId, clubId))
+    .limit(1);
+  return row?.provider ?? null;
+}
+
 /** Spiegelt den Plan auf ALLE License-Rows dieser Subscription (Verein-Plan). */
 export async function setTeamLicensesPlanForSubscription(
   clubId: string,
