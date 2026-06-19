@@ -421,6 +421,13 @@
       "when": 1782470000000,
       "tag": "0060_conscious_metal_master",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1781878913425,
+      "tag": "0061_smart_randall_flagg",
+      "breakpoints": true
     }
   ]
 }
