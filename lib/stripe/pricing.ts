@@ -265,3 +265,27 @@ export const PLAN_CAPS: Record<
   pro: { maxSponsorsPerTeam: null, maxPledgeRulesPerSponsor: null },
   verein: { maxSponsorsPerTeam: null, maxPledgeRulesPerSponsor: null }
 } as const;
+
+/**
+ * Part B — Apple IAP Product-IDs (App Store Connect, angelegt via
+ * scripts/create-asc-iap-products.mjs). Apple-„season" = ONE_YEAR-Periode,
+ * intern aber unser season_end-Cycle.
+ */
+export const APPLE_PRODUCTS: Record<
+  string,
+  { plan: PlanKey; cycle: BillingCycle }
+> = {
+  "kickpact.basic.monthly": { plan: "basic", cycle: "monthly" },
+  "kickpact.basic.season": { plan: "basic", cycle: "season_end" },
+  "kickpact.pro.monthly": { plan: "pro", cycle: "monthly" },
+  "kickpact.pro.season": { plan: "pro", cycle: "season_end" },
+  "kickpact.verein.monthly": { plan: "verein", cycle: "monthly" },
+  "kickpact.verein.season": { plan: "verein", cycle: "season_end" }
+};
+
+/** Reverse-Lookup Apple-Product-ID → (plan, cycle). Pendant zu priceIdToPlanCycle. */
+export function appleProductToPlanCycle(
+  productId: string
+): { plan: PlanKey; cycle: BillingCycle } | null {
+  return APPLE_PRODUCTS[productId] ?? null;
+}
