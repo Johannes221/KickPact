@@ -23,6 +23,7 @@
     "test:live": "LIVE=1 vitest run live-smoke"
   },
   "dependencies": {
+    "@apple/app-store-server-library": "^3.1.0",
     "@aws-sdk/client-s3": "^3.1050.0",
     "@aws-sdk/s3-request-presigner": "^3.1050.0",
     "@capacitor-community/apple-sign-in": "^6.0.0",

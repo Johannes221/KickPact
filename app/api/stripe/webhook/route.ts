@@ -14,7 +14,8 @@ import {
   cancelSubscriptionForClub,
   setTeamLicensesStatusForClubTeams,
   setSubscriptionStatusByCustomer,
-  getClubIdByCustomer
+  getClubIdByCustomer,
+  getSubscriptionProvider
 } from "@/lib/db/queries/subscriptions";
 
 export const runtime = "nodejs";
@@ -96,6 +97,14 @@ export async function POST(req: NextRequest) {
             subId: sub.id,
             clubId
           });
+          break;
+        }
+
+        // Part B — Kanal-Invariante: ein über Apple zahlender Club wird vom
+        // Stripe-Webhook nicht angefasst (defensiv; im Normalfall gibt es für
+        // solche Clubs gar kein Stripe-Abo).
+        if ((await getSubscriptionProvider(clubId)) === "apple") {
+          console.warn("[stripe-webhook] club is apple-managed — ignoring", clubId);
           break;
         }
 

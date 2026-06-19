@@ -15,11 +15,18 @@
  *  - PDF-Öffnen / CSV-Download / Clipboard via Capacitor-Plugin statt Web-API
  */
 
+import type { IAPPluginShape } from "@/lib/platform/iap";
+
 declare global {
   interface Window {
     Capacitor?: {
       isNativePlatform?: () => boolean;
       getPlatform?: () => string;
+      // Native Capacitor-Plugins werden zur Laufzeit hier registriert
+      // (IAP-Bridge: siehe lib/platform/iap.ts).
+      Plugins?: {
+        IAPPlugin?: IAPPluginShape;
+      };
     };
   }
 }

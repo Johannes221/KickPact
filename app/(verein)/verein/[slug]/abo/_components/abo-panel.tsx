@@ -16,6 +16,7 @@ import { getDowngradeImpact } from "@/lib/db/queries/downgrade-impact";
 import type { DowngradeImpact } from "@/lib/billing/downgrade-impact";
 import { CheckoutButtons } from "./checkout-buttons";
 import { AboCycleToggle } from "./abo-cycle-toggle";
+import { NativeAboActions } from "./native-abo-actions";
 
 /**
  * Abo-Verwaltung (Status + Upgrade-Pfade + Plan-Wahl). Die Subscription lebt
@@ -89,10 +90,16 @@ export async function AboPanel({
         </div>
       )}
 
-      {/* In der iOS-App: keine Kauf-/Upgrade-/Preis-Oberfläche (Apple 3.1.1/3.1.3).
-          Nur ein neutraler Hinweis, dass das Abo im Browser verwaltet wird. */}
+      {/* In der iOS-App: nativer In-App-Kauf via StoreKit (Apple 3.1.1). Preise &
+          Kauf laufen ausschließlich über das native Plugin — KEINE Web-Preise,
+          kein Stripe, kein Browser-Link (Anti-Steering 3.1.3). Der Status-Card
+          oben bleibt; hier ersetzt der Kauf-Flow die frühere Sackgasse. */}
       {nativeApp ? (
-        <NativeManageNotice hasSub={!!sub} />
+        <NativeAboActions
+          clubSlug={clubSlug}
+          currentPlan={currentPlan}
+          hasSub={!!sub}
+        />
       ) : (
         <>
           {sub && impact && (
@@ -149,23 +156,6 @@ export async function AboPanel({
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-/**
- * iOS-App-Variante: kein Checkout, keine Preise, kein „Upgrade"-Link (Apple
- * Anti-Steering 3.1.3 verbietet auch das Verweisen auf externe Kaufwege). Nur
- * der sachliche Hinweis, dass die Abo-Verwaltung im Browser liegt.
- */
-function NativeManageNotice({ hasSub }: { hasSub: boolean }) {
-  return (
-    <div className="rounded-2xl border border-brand-night-navy/15 bg-brand-off-white p-4 md:p-5">
-      <p className="text-sm leading-relaxed text-brand-night-navy/80">
-        {hasSub
-          ? "Dein Abo verwaltest du im Browser. In der App siehst du nur den aktuellen Status — Plan-Wechsel, Zahlung und Kündigung laufen über die Web-Version."
-          : "Die Buchung eines Plans läuft im Browser. In der App ist das Abo nicht abschließbar — sobald es im Web aktiv ist, erscheint hier dein Status."}
-      </p>
     </div>
   );
 }

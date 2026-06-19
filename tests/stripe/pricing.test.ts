@@ -10,6 +10,8 @@ import {
   getMonthlyEquivalent,
   getSavings,
   priceIdToPlanCycle,
+  APPLE_PRODUCTS,
+  appleProductToPlanCycle,
   type PlanKey,
   type BillingCycle
 } from "@/lib/stripe/pricing";
@@ -149,5 +151,33 @@ describe("priceIdToPlanCycle", () => {
 
   it("returns null when the price ID is unknown", () => {
     expect(priceIdToPlanCycle("price_unknown")).toBeNull();
+  });
+});
+
+describe("Apple IAP product mapping", () => {
+  it("defines all 6 product IDs", () => {
+    expect(Object.keys(APPLE_PRODUCTS).sort()).toEqual([
+      "kickpact.basic.monthly",
+      "kickpact.basic.season",
+      "kickpact.pro.monthly",
+      "kickpact.pro.season",
+      "kickpact.verein.monthly",
+      "kickpact.verein.season"
+    ]);
+  });
+
+  it("maps a product ID back to plan + cycle", () => {
+    expect(appleProductToPlanCycle("kickpact.pro.season")).toEqual({
+      plan: "pro",
+      cycle: "season_end"
+    });
+    expect(appleProductToPlanCycle("kickpact.basic.monthly")).toEqual({
+      plan: "basic",
+      cycle: "monthly"
+    });
+  });
+
+  it("returns null for an unknown product ID", () => {
+    expect(appleProductToPlanCycle("com.foo.bar")).toBeNull();
   });
 });

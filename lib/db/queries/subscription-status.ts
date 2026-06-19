@@ -50,13 +50,20 @@ export type SubscriptionRowForGate = {
    * dann wird kein trial_expired-Reason abgeleitet.
    */
   stripeSubscriptionId?: string | null;
+  /**
+   * Apple-IAP: stabiler Abo-Identifier. Apple-Zahler haben NIE eine
+   * stripeSubscriptionId, behalten aber ihr Onboarding-trialEndsAt — ein
+   * gesetzter Wert zählt daher (wie stripeSubscriptionId) als "hat bezahlt".
+   * Optional für ältere Aufrufer/Tests.
+   */
+  appleOriginalTransactionId?: string | null;
 };
 
 export const GRACE_PERIOD_DAYS = 7;
 
 /** True, wenn der Trial abgelaufen ist und nie eine Stripe-Sub gestartet wurde. */
 function isTrialExpiredNeverPaid(sub: SubscriptionRowForGate, now: Date): boolean {
-  if (sub.stripeSubscriptionId) return false;
+  if (sub.stripeSubscriptionId || sub.appleOriginalTransactionId) return false;
   return !!sub.trialEndsAt && new Date(sub.trialEndsAt).getTime() < now.getTime();
 }
 
@@ -129,7 +136,11 @@ export function gateFromSubscription(
       trialEndsAt: null,
       pastDueSince: null,
       reason:
-        !sub.stripeSubscriptionId && sub.trialEndsAt ? "trial_expired" : null
+        !sub.stripeSubscriptionId &&
+        !sub.appleOriginalTransactionId &&
+        sub.trialEndsAt
+          ? "trial_expired"
+          : null
     };
   }
 

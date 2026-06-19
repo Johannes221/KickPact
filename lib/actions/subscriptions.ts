@@ -6,6 +6,7 @@ import { db } from "@/lib/db/client";
 import { clubs, subscriptions } from "@/lib/db/schema";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { requireUser } from "@/lib/auth/session";
+import { getSubscriptionProvider } from "@/lib/db/queries/subscriptions";
 import { getStripe, isStripeConfigured } from "@/lib/stripe/client";
 import {
   getStripePriceId,
@@ -47,6 +48,17 @@ export async function createCheckoutSession(opts: {
     );
   }
   const { club } = await assertClubAccess(opts.clubSlug, "admin");
+
+  // Part B — Kanal-Invariante: kein Stripe-Checkout, wenn der Club bereits
+  // über Apple IAP zahlt (kein Doppel-Abo). Die Abo-Verwaltung läuft dann
+  // ausschließlich in der iOS-App / über Apple.
+  const existingProvider = await getSubscriptionProvider(club.id);
+  if (existingProvider === "apple") {
+    throw new Error(
+      "Dieser Verein zahlt bereits über die iOS-App (Apple). Bitte das Abo dort verwalten."
+    );
+  }
+
   const user = await requireUser();
   const stripe = getStripe();
 
