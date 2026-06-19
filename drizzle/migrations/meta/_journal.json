@@ -414,13 +414,6 @@
       "when": 1782460000000,
       "tag": "0059_home_away_win",
       "breakpoints": true
-    },
-    {
-      "idx": 60,
-      "version": "7",
-      "when": 1781859139385,
-      "tag": "0060_abandoned_spirit",
-      "breakpoints": true
     }
   ]
 }
