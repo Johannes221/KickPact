@@ -46,14 +46,14 @@ const PER_PLAYER_ROWS: ReadonlyArray<{
   perPlayer: string;
   label?: string;
 }> = [
-  { players: 30, perPlayer: "1,63 €" },
+  { players: 30, perPlayer: "0,97 €" },
   {
     players: 50,
-    perPlayer: "0,98 €",
+    perPlayer: "0,58 €",
     label: "Unter 1 € pro Spieler"
   },
-  { players: 100, perPlayer: "0,49 €" },
-  { players: 200, perPlayer: "0,25 €" }
+  { players: 100, perPlayer: "0,29 €" },
+  { players: 200, perPlayer: "0,15 €" }
 ];
 
 const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
@@ -75,7 +75,7 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Wann lohnt sich die Vereinslizenz?",
-    a: "Ab 3 Mannschaften: mathematisch günstiger als 3× Pro (49 € vs. 57 €). Plus Master-Cockpit, Sammelrechnung, Cross-Team-Sponsor-View. Bei 50 Spielern bist du unter 1 € pro Spieler, bei 200 Spielern bei 0,25 €."
+    a: "Ab 3 Mannschaften: mathematisch günstiger als 3× Pro (29 € vs. 33 €). Plus Master-Cockpit, Sammelrechnung, Cross-Team-Sponsor-View. Bei 50 Spielern bist du unter 1 € pro Spieler, bei 200 Spielern bei 0,15 €."
   },
   {
     q: "Wirklich 0 % Provision auf Pacts?",
@@ -156,7 +156,7 @@ export default function PreisePage() {
                 Break-Even pro Monatsabo
               </h3>
               <p className="mt-1 text-xs text-brand-night-navy/60">
-                Pro × n Mannschaften vs. Vereinslizenz (49 €/Mon)
+                Pro × n Mannschaften vs. Vereinslizenz (29 €/Mon)
               </p>
               <div className="mt-4 overflow-hidden rounded-lg ring-1 ring-brand-neutral/30">
                 <table className="w-full text-sm tabular-nums">
@@ -225,7 +225,7 @@ export default function PreisePage() {
                 Per-Player-Pricing
               </h3>
               <p className="mt-1 text-xs text-brand-night-navy/60">
-                Vereinslizenz (49 €/Mon) geteilt durch Spieler-Anzahl
+                Vereinslizenz (29 €/Mon) geteilt durch Spieler-Anzahl
               </p>
               <div className="mt-4 overflow-hidden rounded-lg ring-1 ring-brand-neutral/30">
                 <table className="w-full text-sm tabular-nums">
