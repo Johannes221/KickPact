@@ -17,6 +17,14 @@ export const billingCycleEnum = pgEnum("billing_cycle", [
   "annual"
 ]);
 
+// Part B: Bezahlkanal-Diskriminator. 'google' inert reserviert (kein Code,
+// analog zum inerten 'annual'-Cycle) für späteres Play-Billing.
+export const billingProviderEnum = pgEnum("billing_provider", [
+  "stripe",
+  "apple",
+  "google"
+]);
+
 export const subscriptionStatusEnum = pgEnum("subscription_status", [
   "trialing",
   "active",
@@ -73,6 +81,14 @@ export const subscriptions = pgTable("subscriptions", {
    * 7-Tage-Grace aus `updatedAt` ab — jeder Webhook-Sync resettete das Fenster.
    */
   pastDueSince: timestamp("past_due_since", { withTimezone: true }),
+  // Part B: gesetzt beim ERSTEN echten Kauf; steuert die Kanal-Invariante
+  // (kein Doppel-Abo). NULL = Trial/unlizenziert, beide Kanäle offen.
+  provider: billingProviderEnum("provider"),
+  // Apples stabiler Abo-Identifier (bleibt über Renewals/Upgrades gleich).
+  // Pendant zu stripeSubscriptionId.
+  appleOriginalTransactionId: text("apple_original_transaction_id").unique(),
+  // Ablauf der aktuellen Apple-Periode. Pendant zu currentPeriodEnd.
+  appleExpiresAt: timestamp("apple_expires_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
 });
