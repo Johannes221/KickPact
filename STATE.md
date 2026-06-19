@@ -72,6 +72,39 @@ Manuell: (1) seasons-Rows kommen via Migration 0055 — nach Spielplan-Veröffen
 - [ ] kickpact.com: DNS-A-Record (CF), `NEXT_PUBLIC_BASE_URL`/`NEXT_PUBLIC_SITE_ENV=production` setzen, robots/sitemap-Verhalten prüfen.
 - [ ] APNS-Live-Keys für iOS-Push.
 
+## Go-Live TODO — Apple IAP (Branch `feat/apple-iap-entitlements`)
+
+> Backend komplett + getestet (322 Tests grün) + adversarial reviewed. Zwei Bezahlkanäle
+> (Stripe Web + Apple IAP) schreiben in EIN Entitlement-Gate; Kanal-Invariante verhindert
+> Doppel-Abo. Code ist web-inert ohne Credentials — bis die Env gesetzt ist passiert nichts.
+> Spec: docs/superpowers/specs/2026-06-16-apple-iap-entitlements-design.md
+
+**Erledigt (per ASC-API, Script `scripts/create-asc-iap-products.mjs`):** 6 IAP-Produkte +
+Subscription-Gruppe „KickPact Pläne" (22159886) + de-DE-Localizations. App-ID 6780505599.
+
+**Manuell (Johannes, vor Launch):**
+- [ ] **6 Start-Preise im ASC-UI setzen** (Apple-Pricing-API verbuggt): basic.monthly 4,99 € ·
+      basic.season 34,99 € · pro.monthly 10,99 € · pro.season 74,99 € · verein.monthly 28,99 € ·
+      verein.season 199,99 €.
+- [ ] **App Store Server Notifications V2 URL** in ASC eintragen → `/api/apple/notifications`
+      (Sandbox + Production getrennt).
+- [ ] **Coolify-Env setzen** (alle web-inert bis gesetzt):
+      `APPLE_IAP_BUNDLE_ID=com.kickpact.app`, `APPLE_IAP_ENV=sandbox` (später production),
+      `APPLE_IAP_APP_APPLE_ID=6780505599`, `APPLE_IAP_ROOT_CERTS` (Apple Root CA G3 als base64-PEM,
+      komma-sep — für JWS-Verifikation), sowie für den Reconciliation-Cron die ASC-API-Keys:
+      `APPLE_IAP_KEY_ID=VP65CLK9FZ`, `APPLE_IAP_ISSUER_ID=c3a68526-ca02-41cf-a5c7-e438c1ed939f`,
+      `APPLE_IAP_PRIVATE_KEY` (Inhalt der AuthKey_VP65CLK9FZ.p8 inkl. BEGIN/END).
+- [ ] **TestFlight-Build** mit dem neuen `IAPPlugin` (Xcode: In-App-Purchase-Capability auf der
+      App-ID aktivieren, signieren, hochladen). Simulator-Build kompiliert bereits (BUILD SUCCEEDED).
+- [ ] **Sandbox-Abnahme** (echtes Gerät): Kauf je Plan → Entitlement aktiv · `restore()` nach
+      Neuinstallation · Sandbox-Refund → Read-Only · Anti-Steering visuell (keine Web-Preise/Stripe
+      in der App).
+
+**Bewusst v1-Backlog (dokumentiert, kein Blocker):** kein Kanal-Wechsel Stripe↔Apple für einen
+bestehenden Club · Android/Play-Billing (`'google'`-Enum inert reserviert) · Saison-Pässe im
+In-App-Upsell (vorerst monthly-only, season bleibt web) · TOCTOU im provider=null-Trial-Fenster
+(theoretisch, durch UNIQUE-Constraints begrenzt).
+
 ## Tests
 
 `npm test` (batchweise pro Verzeichnis): **1387 passed / 42 skipped (171 Files)** · `tsc --noEmit` clean · Stand 2026-06-12.
