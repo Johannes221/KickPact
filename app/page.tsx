@@ -396,9 +396,9 @@ export default function LandingPage() {
           />
           <PriceCard
             plan="Pro"
-            price="19 €"
+            price="11 €"
             unit="/ Mannschaft / Monat"
-            perPlayer="0,76 – 1,06 € pro Spieler/Monat"
+            perPlayer="0,44 – 0,61 € pro Spieler/Monat"
             highlight
             features={[
               "Alles aus Basic",
@@ -411,9 +411,9 @@ export default function LandingPage() {
           />
           <PriceCard
             plan="Vereinslizenz"
-            price="49 €"
+            price="29 €"
             unit="/ Verein / Monat"
-            perPlayer="bei 4 Teams à 22 Spielern: ~0,56 € pro Spieler"
+            perPlayer="bei 4 Teams à 22 Spielern: ~0,33 € pro Spieler"
             features={[
               "Alle Mannschaften des Vereins inklusive",
               "Master-Admin verwaltet alle Teams zentral",
@@ -470,7 +470,7 @@ export default function LandingPage() {
             </AccordionItem>
             <FaqItem
               q="Mannschaft oder Verein: was ist der Unterschied?"
-              a={'Jede Mannschaft ist bei KickPact eigenständig. Trainer/Betreuer melden sich für ihre Mannschaft an, verwalten Sponsoren und Pacts selbst, keine Vorstands-Politik. Hat dein Verein mehrere Teams (Herren, Jugend, Damen, Senioren) und einen Master-Admin der alles zentral steuern soll, gibt es die Vereinslizenz: 49 €/Monat all-in für alle Mannschaften des Vereins, mit konsolidierter Rechnung und übergreifender Sponsor-Übersicht.'}
+              a={'Jede Mannschaft ist bei KickPact eigenständig. Trainer/Betreuer melden sich für ihre Mannschaft an, verwalten Sponsoren und Pacts selbst, keine Vorstands-Politik. Hat dein Verein mehrere Teams (Herren, Jugend, Damen, Senioren) und einen Master-Admin der alles zentral steuern soll, gibt es die Vereinslizenz: 29 €/Monat all-in für alle Mannschaften des Vereins, mit konsolidierter Rechnung und übergreifender Sponsor-Übersicht.'}
             />
             <FaqItem
               q="Sind die Beträge irgendwie vorgegeben?"

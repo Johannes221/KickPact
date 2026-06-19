@@ -56,10 +56,10 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
         caption: "/ Mannschaft / Monat"
       },
       season_end: {
-        amountCents: 3900,
-        display: "39 €",
-        caption: "/ Saison · 3,90 €/Mon",
-        saveBadge: "35 % sparen"
+        amountCents: 3500,
+        display: "35 €",
+        caption: "/ Saison · 3,50 €/Mon",
+        saveBadge: "42 % sparen"
       }
     },
     features: [
@@ -79,15 +79,15 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     unit: "team",
     cycles: {
       monthly: {
-        amountCents: 1900,
-        display: "19 €",
+        amountCents: 1100,
+        display: "11 €",
         caption: "/ Mannschaft / Monat"
       },
       season_end: {
-        amountCents: 14900,
-        display: "149 €",
-        caption: "/ Saison · 14,90 €/Mon",
-        saveBadge: "35 % sparen"
+        amountCents: 7500,
+        display: "75 €",
+        caption: "/ Saison · 7,50 €/Mon",
+        saveBadge: "43 % sparen"
       }
     },
     features: [
@@ -108,15 +108,15 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     unit: "club",
     cycles: {
       monthly: {
-        amountCents: 4900,
-        display: "49 €",
+        amountCents: 2900,
+        display: "29 €",
         caption: "/ Verein / Monat"
       },
       season_end: {
-        amountCents: 38900,
-        display: "389 €",
-        caption: "/ Saison · 38,90 €/Mon",
-        saveBadge: "34 % sparen"
+        amountCents: 19900,
+        display: "199 €",
+        caption: "/ Saison · 19,90 €/Mon",
+        saveBadge: "43 % sparen"
       }
     },
     features: [
@@ -155,7 +155,7 @@ export const CYCLE_LABELS: Record<BillingCycle, string> = {
 
 export const CYCLE_SUBLABELS: Record<BillingCycle, string> = {
   monthly: "jederzeit kündbar",
-  season_end: "Aug–Mai · 35 % sparen"
+  season_end: "Aug–Mai · 42 % sparen"
 };
 
 /**

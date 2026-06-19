@@ -249,7 +249,7 @@ export function NeuesTeamWizard({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="basic">Basic — 5 €/Monat</SelectItem>
-                  <SelectItem value="pro">Pro — 19 €/Monat</SelectItem>
+                  <SelectItem value="pro">Pro — 11 €/Monat</SelectItem>
                 </SelectContent>
               </Select>
             </div>

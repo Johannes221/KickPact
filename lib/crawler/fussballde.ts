@@ -1198,3 +1198,102 @@ export async function getSquadAcrossSeasons(
   }
   return [...byId.values(), ...withoutId];
 }
+
+/* ─── Liga-Tabelle (volle-Saison-Aggregate, verifizierbar) ──────────────────── */
+
+export interface LeagueStandingRow {
+  position: number;
+  teamName: string;
+  spiele: number;
+  siege: number;
+  unentschieden: number;
+  niederlagen: number;
+  toreFor: number;
+  toreAgainst: number;
+  punkte: number;
+}
+
+export interface LeagueStandings {
+  teamsInLeague: number;
+  rows: LeagueStandingRow[];
+  /** Zeile der eigenen Mannschaft (Namens-Match), null wenn nicht gefunden. */
+  ownRow: LeagueStandingRow | null;
+}
+
+/**
+ * Liga-Tabelle einer Mannschaft (volle Saison als AGGREGAT — Spiele, S/U/N,
+ * Tore, Punkte, Platz). Quelle der Wahrheit für die großen Wrapped-Zahlen, die
+ * sich aus den ~10 live gescrapten Spielen NICHT vollständig ergeben.
+ *
+ * BROWSER, nicht fetch: der ajax.team.table-Endpoint blockt plain HTTP hart
+ * (Datadome-Sperrseite), nur der echte Browser kommt durch. Daher withPage.
+ * Selten aufgerufen (1×/Team/Saison), also vertretbar.
+ */
+export async function getLeagueStandings(
+  teamId: string,
+  slug: string,
+  saison: string,
+  ownClubName: string
+): Promise<LeagueStandings | null> {
+  return withPage(async (page) => {
+    const url = `https://www.fussball.de/mannschaft/${encodeURIComponent(
+      slug
+    )}/-/saison/${encodeURIComponent(saison)}/team-id/${encodeURIComponent(
+      teamId
+    )}#!/section/table`;
+    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+    await assertNotCaptcha(page);
+    await page.waitForTimeout(3000);
+
+    const raw = (await page.evaluate(`(function(){
+      var out = [];
+      document.querySelectorAll('tr').forEach(function(tr){
+        var tds = [];
+        tr.querySelectorAll('td').forEach(function(td){
+          var t = (td.textContent||'').replace(/\\s+/g,' ').trim();
+          if (t) tds.push(t);
+        });
+        // Echte Tabellenzeile: erste Zelle ist die Platzierung ("6.").
+        if (tds.length >= 6 && /^\\d+\\.$/.test(tds[0])) out.push(tds);
+      });
+      return out;
+    })()`)) as string[][];
+
+    const rows: LeagueStandingRow[] = [];
+    const seenPos = new Set<number>();
+    for (const tds of raw) {
+      const position = parseInt(tds[0], 10);
+      if (seenPos.has(position)) continue; // Tabelle kann doppelt im DOM stehen.
+      seenPos.add(position);
+      const toreCell = tds.find((t) => /^\d+\s*:\s*\d+$/.test(t));
+      const tm = toreCell?.match(/^(\d+)\s*:\s*(\d+)$/);
+      rows.push({
+        position,
+        teamName: normalizeTeamName(tds[1] ?? ""),
+        spiele: parseInt(tds[2] ?? "0", 10) || 0,
+        siege: parseInt(tds[3] ?? "0", 10) || 0,
+        unentschieden: parseInt(tds[4] ?? "0", 10) || 0,
+        niederlagen: parseInt(tds[5] ?? "0", 10) || 0,
+        toreFor: tm ? parseInt(tm[1], 10) : 0,
+        toreAgainst: tm ? parseInt(tm[2], 10) : 0,
+        punkte: parseInt(tds[tds.length - 1] ?? "0", 10) || 0
+      });
+    }
+    if (rows.length === 0) return null;
+
+    // Eigene Zeile: alle distinktiven Tokens des Klub-Namens müssen vorkommen.
+    const ownTokens = normalizeTeamName(ownClubName)
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((t) => t.length > 2);
+    const ownRow =
+      ownTokens.length > 0
+        ? rows.find((r) => {
+            const rn = r.teamName.toLowerCase();
+            return ownTokens.every((t) => rn.includes(t));
+          }) ?? null
+        : null;
+
+    return { teamsInLeague: rows.length, rows, ownRow };
+  });
+}

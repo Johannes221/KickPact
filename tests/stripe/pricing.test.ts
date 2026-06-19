@@ -27,26 +27,26 @@ describe("PRICING table", () => {
     }
   });
 
-  it("uses canonical Concept-D prices from docs/pricing.md", () => {
+  it("uses canonical prices from docs/pricing.md (Rework 2026-06-15)", () => {
     expect(PLANS.basic.cycles.monthly.amountCents).toBe(500);
-    expect(PLANS.basic.cycles.season_end.amountCents).toBe(3900);
-    expect(PLANS.pro.cycles.monthly.amountCents).toBe(1900);
-    expect(PLANS.pro.cycles.season_end.amountCents).toBe(14900);
-    expect(PLANS.verein.cycles.monthly.amountCents).toBe(4900);
-    expect(PLANS.verein.cycles.season_end.amountCents).toBe(38900);
+    expect(PLANS.basic.cycles.season_end.amountCents).toBe(3500);
+    expect(PLANS.pro.cycles.monthly.amountCents).toBe(1100);
+    expect(PLANS.pro.cycles.season_end.amountCents).toBe(7500);
+    expect(PLANS.verein.cycles.monthly.amountCents).toBe(2900);
+    expect(PLANS.verein.cycles.season_end.amountCents).toBe(19900);
   });
 });
 
 describe("getMonthlyEquivalent", () => {
   it("monthly cycle returns the monthly price itself", () => {
     expect(getMonthlyEquivalent("basic", "monthly")).toBe(500);
-    expect(getMonthlyEquivalent("pro", "monthly")).toBe(1900);
+    expect(getMonthlyEquivalent("pro", "monthly")).toBe(1100);
   });
 
   it("season cycle divides by 10 (Aug–Mai aktive Monate)", () => {
-    expect(getMonthlyEquivalent("basic", "season_end")).toBe(390);
-    expect(getMonthlyEquivalent("pro", "season_end")).toBe(1490);
-    expect(getMonthlyEquivalent("verein", "season_end")).toBe(3890);
+    expect(getMonthlyEquivalent("basic", "season_end")).toBe(350);
+    expect(getMonthlyEquivalent("pro", "season_end")).toBe(750);
+    expect(getMonthlyEquivalent("verein", "season_end")).toBe(1990);
   });
 });
 
@@ -58,20 +58,20 @@ describe("getSavings", () => {
     });
   });
 
-  it("pro season ≈ 35 % cheaper than 12× monthly", () => {
-    // 12 × 19€ = 228€; Saison-Pass = 149€ → 79€ Ersparnis ≈ 34,6 %
+  it("pro season ≈ 43 % cheaper than 12× monthly", () => {
+    // 12 × 11€ = 132€; Saison-Pass = 75€ → 57€ Ersparnis ≈ 43,2 %
     const { absoluteCents, percent } = getSavings("pro", "season_end");
-    expect(absoluteCents).toBe(7900);
-    expect(percent).toBeGreaterThanOrEqual(34);
-    expect(percent).toBeLessThanOrEqual(35);
+    expect(absoluteCents).toBe(5700);
+    expect(percent).toBeGreaterThanOrEqual(42);
+    expect(percent).toBeLessThanOrEqual(44);
   });
 
-  it("verein season ≈ 34 % cheaper than 12× monthly", () => {
-    // 12 × 49€ = 588€; Saison-Pass = 389€ → 199€ Ersparnis ≈ 33,8 %
+  it("verein season ≈ 43 % cheaper than 12× monthly", () => {
+    // 12 × 29€ = 348€; Saison-Pass = 199€ → 149€ Ersparnis ≈ 42,8 %
     const { absoluteCents, percent } = getSavings("verein", "season_end");
-    expect(absoluteCents).toBe(19900);
-    expect(percent).toBeGreaterThanOrEqual(33);
-    expect(percent).toBeLessThanOrEqual(34);
+    expect(absoluteCents).toBe(14900);
+    expect(percent).toBeGreaterThanOrEqual(42);
+    expect(percent).toBeLessThanOrEqual(44);
   });
 });
 

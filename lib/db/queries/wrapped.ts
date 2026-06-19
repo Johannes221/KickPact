@@ -8,7 +8,19 @@ import { detectTeamSide } from "@/lib/crawler/team-side";
 import { evaluateTriggers, type MatchInput } from "@/lib/crawler/triggers";
 import { saisonStartDate, nextSaisonCode, prevSaisonCode } from "@/lib/utils/saison";
 import { cleanPlayerName, isLikelyPlayerName } from "@/lib/players/person-name";
-import { simulateRulesOverMatches } from "@/lib/recap/wrapped-simulation";
+// NUR der Typ (type-only → zur Laufzeit gelöscht): so zieht wrapped.ts NICHT den
+// Chromium-Import aus fussballde.ts mit in seine (DB-/RSC-)Bundles.
+import type { LeagueStandings } from "@/lib/crawler/fussballde";
+
+/** Schlanke Namens-Normalisierung für den Top-3-Gegner-Abgleich (kein Crawler-Import). */
+function normName(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[​-‍﻿]/g, "")
+    .replace(/ /g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 /**
  * Aggregat für das Saison-Wrapped (W4, Plan 2026-06-12). EIN Objekt mit allen
@@ -39,6 +51,30 @@ export interface WrappedStats {
   beitraegeSummeCents: number;
   /** Nur wenn pactsCount === 0: „mit 1 € pro Tor wären das X € gewesen". */
   simulationFallbackCents: number | null;
+
+  // ─── Volle-Saison-Aggregate aus der Liga-Tabelle (verifiziert, keine
+  //     Projektion). null, wenn keine Tabelle verfügbar war. ───
+  /** Tabellenplatz am Saison-Ende. */
+  tabellenplatz: number | null;
+  /** Anzahl Teams in der Staffel. */
+  teamsInLeague: number | null;
+  /** Punkte am Saison-Ende. */
+  punkte: number | null;
+  /** Quelle der großen Aggregate (Tore/Siege/Bilanz): "table" = volle Saison
+   *  verifiziert, "matches" = nur die ausgewerteten Spiele (Tabelle geblockt). */
+  aggregateSource: "table" | "matches";
+  /** Auf wie vielen TATSÄCHLICH ausgewerteten Spielen die Event-Stats
+   *  (Torschütze, zu Null, Comebacks, höchster Sieg) beruhen. Kann < spiele sein,
+   *  wenn die Tabelle mehr Spiele kennt, als wir im Detail gescrapet haben. */
+  detailMatchCount: number;
+  /** Bilanz gegen die Top-3 der Tabelle — NUR aus den ausgewerteten Spielen.
+   *  null, wenn keine Tabelle. */
+  vsTop3: {
+    spiele: number;
+    siege: number;
+    unentschieden: number;
+    niederlagen: number;
+  } | null;
 }
 
 /**
@@ -64,7 +100,8 @@ export const WRAPPED_MIN_MATCHES = 3;
  */
 export async function getWrappedStats(
   teamId: string,
-  saison: string
+  saison: string,
+  standings: LeagueStandings | null = null
 ): Promise<WrappedStats | null> {
   const [team] = await db
     .select({ name: teams.name, clubName: clubs.name })
@@ -146,12 +183,9 @@ export async function getWrappedStats(
   let hoechster: { heimName: string; gastName: string; ergebnis: string; diff: number; tore: number } | null =
     null;
   const torschuetzen = new Map<string, number>();
-  const simMatches: Array<{
-    teamSide: "heim" | "gast";
-    ergebnisHeim: number;
-    ergebnisGast: number;
-    datum: Date;
-  }> = [];
+  // Pro Spiel Gegner + Ausgang — Basis für die „gegen Top-3"-Bilanz (nur aus
+  // den tatsächlich ausgewerteten Spielen, verifizierbar).
+  const perMatch: Array<{ opponent: string; outcome: "win" | "draw" | "loss" }> = [];
 
   for (const m of withResult) {
     const teamSide = detectTeamSide(names, m.heimName);
@@ -211,11 +245,9 @@ export async function getWrappedStats(
       torschuetzen.set(name, (torschuetzen.get(name) ?? 0) + 1);
     }
 
-    simMatches.push({
-      teamSide,
-      ergebnisHeim: m.ergebnisHeim!,
-      ergebnisGast: m.ergebnisGast!,
-      datum: m.datum
+    perMatch.push({
+      opponent: isHeim ? m.gastName : m.heimName,
+      outcome: gF > gA ? "win" : gF < gA ? "loss" : "draw"
     });
   }
 
@@ -262,25 +294,71 @@ export async function getWrappedStats(
     );
   const beitraegeSummeCents = chargeRow?.total ?? 0;
 
+  // ─── Konsolidierung: große Aggregate (Tore/Siege/Bilanz/Platz) aus der LIGA-
+  //     TABELLE übernehmen, wenn verfügbar — das ist die volle, verifizierte
+  //     Saison (sonst nur die ~10 live gescrapten Spiele). Event-Stats
+  //     (Torschütze, zu Null, Comebacks, höchster Sieg) bleiben aus den
+  //     tatsächlich ausgewerteten Spielen — `detailMatchCount` macht die Basis
+  //     transparent. KEINE Projektion: jede Zahl ist entweder Tabelle (echt) oder
+  //     ausgewertete Spiele (echt). ───
+  const detailMatchCount = withResult.length;
+  let aggSpiele = withResult.length;
+  let aggSiege = siege;
+  let aggUnent = unentschieden;
+  let aggNiederl = niederlagen;
+  let aggToreF = toreGeschossen;
+  let aggToreA = toreKassiert;
+  let tabellenplatz: number | null = null;
+  let teamsInLeague: number | null = null;
+  let punkte: number | null = null;
+  let aggregateSource: "table" | "matches" = "matches";
+  let vsTop3: WrappedStats["vsTop3"] = null;
+
+  const own = standings?.ownRow ?? null;
+  if (own && standings) {
+    aggregateSource = "table";
+    aggSpiele = own.spiele;
+    aggSiege = own.siege;
+    aggUnent = own.unentschieden;
+    aggNiederl = own.niederlagen;
+    aggToreF = own.toreFor;
+    aggToreA = own.toreAgainst;
+    tabellenplatz = own.position;
+    teamsInLeague = standings.teamsInLeague;
+    punkte = own.punkte;
+
+    // Bilanz gegen Top-3 — NUR aus den ausgewerteten Spielen (verifizierbar).
+    const top3 = standings.rows
+      .filter((r) => r.position <= 3)
+      .map((r) => normName(r.teamName));
+    const isTop3 = (opp: string) => {
+      const o = normName(opp);
+      return top3.some((t) => t.length > 3 && (o.includes(t) || t.includes(o)));
+    };
+    const vt = { spiele: 0, siege: 0, unentschieden: 0, niederlagen: 0 };
+    for (const pm of perMatch) {
+      if (!isTop3(pm.opponent)) continue;
+      vt.spiele++;
+      if (pm.outcome === "win") vt.siege++;
+      else if (pm.outcome === "draw") vt.unentschieden++;
+      else vt.niederlagen++;
+    }
+    vsTop3 = vt;
+  }
+
   // Simulation-Fallback nur ohne Pacts: „mit 1 € pro Tor wären das X € gewesen".
-  // TODO(nach Merge von W3): läuft dann über lib/simulation/pact-simulation.ts
-  // (siehe lib/recap/wrapped-simulation.ts).
-  const simulationFallbackCents =
-    pactsCount === 0
-      ? simulateRulesOverMatches(simMatches, [
-          { triggerType: "goal_total", amountCents: 100 }
-        ]).totalCents
-      : null;
+  // Auf den ECHTEN Toren (Tabelle, wenn vorhanden) → exakt, keine Hochrechnung.
+  const simulationFallbackCents = pactsCount === 0 ? aggToreF * 100 : null;
 
   return {
     teamName: team.name,
     saison,
-    spiele: withResult.length,
-    siege,
-    unentschieden,
-    niederlagen,
-    toreGeschossen,
-    toreKassiert,
+    spiele: aggSpiele,
+    siege: aggSiege,
+    unentschieden: aggUnent,
+    niederlagen: aggNiederl,
+    toreGeschossen: aggToreF,
+    toreKassiert: aggToreA,
     besterTorschuetze,
     zuNull,
     comebacks,
@@ -291,7 +369,13 @@ export async function getWrappedStats(
       : null,
     pactsCount,
     beitraegeSummeCents,
-    simulationFallbackCents
+    simulationFallbackCents,
+    tabellenplatz,
+    teamsInLeague,
+    punkte,
+    aggregateSource,
+    detailMatchCount,
+    vsTop3
   };
 }
 
@@ -300,7 +384,8 @@ export async function getWrappedStats(
  * `null` bei unbekanntem Team oder ungültigem Saison-Code.
  */
 export async function getWrappedStatsForPrevSeason(
-  teamId: string
+  teamId: string,
+  standings: LeagueStandings | null = null
 ): Promise<WrappedStats | null> {
   const [t] = await db
     .select({ saison: teams.saison })
@@ -310,7 +395,21 @@ export async function getWrappedStatsForPrevSeason(
   if (!t) return null;
   const prev = prevSaisonCode(t.saison);
   if (!prev) return null;
-  return getWrappedStats(teamId, prev);
+  return getWrappedStats(teamId, prev, standings);
+}
+
+/** Vorsaison-Code einer Mannschaft (pure, kein Crawler-Import) — damit Caller
+ *  vor getWrappedStatsForPrevSeason die passende Tabelle (getCachedStandings)
+ *  holen können. `null` bei unbekanntem Team. */
+export async function getPrevSaisonForTeam(
+  teamId: string
+): Promise<string | null> {
+  const [t] = await db
+    .select({ saison: teams.saison })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  return t ? prevSaisonCode(t.saison) : null;
 }
 
 /**
