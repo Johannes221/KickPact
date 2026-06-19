@@ -69,3 +69,22 @@ export async function purchaseAndVerify(
     throw new Error(body.message ?? "Kauf konnte nicht verifiziert werden.");
   }
 }
+
+/** Native restore() + Server-Verifikation aller wiederhergestellten Transaktionen. */
+export async function restoreAndVerify(clubSlug: string): Promise<void> {
+  const transactions = await restore();
+  const res = await fetch("/api/apple/restore", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      clubSlug,
+      transactions: transactions.map((t) => ({
+        jwsRepresentation: t.jwsRepresentation
+      }))
+    })
+  });
+  if (!res.ok) {
+    const body: { message?: string } = await res.json().catch(() => ({}));
+    throw new Error(body.message ?? "Wiederherstellung fehlgeschlagen.");
+  }
+}
