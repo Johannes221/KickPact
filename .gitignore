@@ -9,6 +9,9 @@ out/
 .env
 .env.local
 .env*.local
+# Sicherheit: .env-Backups (z.B. .env.local.bak-…) nie committen
+.env*.bak
+.env*.bak-*
 
 # logs
 *.log
