@@ -20,6 +20,8 @@
     "fixtures:manifest": "tsx scripts/fixtures/build-manifest.ts",
     "fixtures:refresh": "tsx scripts/fixtures/capture-fixtures.ts --force && tsx scripts/fixtures/build-manifest.ts",
     "drift:check": "tsx scripts/drift/check-drift.ts",
+    "stripe:prices": "dotenv -e .env.local -- tsx scripts/sync-stripe-prices.ts",
+    "stripe:prices:verify": "dotenv -e .env.local -- tsx scripts/sync-stripe-prices.ts --verify",
     "test:live": "LIVE=1 vitest run live-smoke"
   },
   "dependencies": {
