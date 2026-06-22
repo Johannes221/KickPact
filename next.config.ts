@@ -43,7 +43,9 @@ const config: NextConfig = {
     // HMR & localhost-http nicht brechen.
     const csp = [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"} https://plausible.io`,
+      // analytics.schartl.dev = self-hosted Plausible (lädt /js/script.js); ohne
+      // diesen Origin blockt die CSP das Snippet → keine Reichweitenmessung.
+      `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"} https://plausible.io https://analytics.schartl.dev`,
       // Web-Worker aus Blobs (z.B. Bild-/WASM-Verarbeitung) erlauben — sonst
       // greift script-src als Fallback und blockt blob:-Worker (CSP-Konsolen-
       // Fehler + stilles Feature-Brechen).
@@ -51,7 +53,7 @@ const config: NextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://plausible.io https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.de.sentry.io",
+      "connect-src 'self' https://plausible.io https://analytics.schartl.dev https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.de.sentry.io",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
