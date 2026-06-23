@@ -91,7 +91,8 @@ describe("createCheckoutSession", () => {
     expect(stripeCustomersCreate).toHaveBeenCalledOnce();
     expect(dbUpdateFn).toHaveBeenCalledOnce();
     expect(stripeCheckoutSessionsCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ customer: "cus_real_123" })
+      expect.objectContaining({ customer: "cus_real_123" }),
+      expect.objectContaining({ idempotencyKey: expect.any(String) })
     );
     expect(url).toBe("https://stripe/checkout/test");
   });
@@ -106,7 +107,8 @@ describe("createCheckoutSession", () => {
 
     expect(stripeCustomersCreate).toHaveBeenCalledOnce();
     expect(stripeCheckoutSessionsCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ customer: "cus_real_456" })
+      expect.objectContaining({ customer: "cus_real_456" }),
+      expect.objectContaining({ idempotencyKey: expect.any(String) })
     );
   });
 
@@ -120,7 +122,8 @@ describe("createCheckoutSession", () => {
     expect(stripeCustomersCreate).not.toHaveBeenCalled();
     expect(dbUpdateFn).not.toHaveBeenCalled();
     expect(stripeCheckoutSessionsCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ customer: "cus_existing_789" })
+      expect.objectContaining({ customer: "cus_existing_789" }),
+      expect.objectContaining({ idempotencyKey: expect.any(String) })
     );
   });
 
@@ -134,7 +137,8 @@ describe("createCheckoutSession", () => {
     expect(stripeCheckoutSessionsCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         line_items: [{ price: "price_pro_season_end_test", quantity: 1 }]
-      })
+      }),
+      expect.objectContaining({ idempotencyKey: expect.any(String) })
     );
   });
 
@@ -148,7 +152,8 @@ describe("createCheckoutSession", () => {
     expect(stripeCheckoutSessionsCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         line_items: [{ price: "price_verein_season_end_test", quantity: 1 }]
-      })
+      }),
+      expect.objectContaining({ idempotencyKey: expect.any(String) })
     );
   });
 
@@ -267,7 +272,11 @@ describe("createCheckoutSession", () => {
       expect.objectContaining({
         items: [{ id: "si_item_1", price: "price_pro_monthly_test" }],
         proration_behavior: "create_prorations"
-      })
+      }),
+      {
+        idempotencyKey:
+          "sub-update-sub_existing_1-price_basic_monthly_test-price_pro_monthly_test"
+      }
     );
     expect(url).toContain("/verein/fc-test");
   });

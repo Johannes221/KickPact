@@ -245,9 +245,11 @@ describe.skipIf(isIntegrationDbDisabled)("license-transfer actions", () => {
       expect(team.licensedUnderClubId).toBe("club_y");
 
       expect(stripeRetrieveMock).toHaveBeenCalledWith("sub_t1");
-      expect(stripeUpdateMock).toHaveBeenCalledWith("sub_t1", {
-        cancel_at_period_end: true
-      });
+      expect(stripeUpdateMock).toHaveBeenCalledWith(
+        "sub_t1",
+        { cancel_at_period_end: true },
+        { idempotencyKey: `license-transfer-cancel-${req.id}` }
+      );
 
       const [updated] = await tdb
         .select()

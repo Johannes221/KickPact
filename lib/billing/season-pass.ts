@@ -25,7 +25,8 @@ export interface StripeSubscriptionPauseClient {
       id: string,
       params: {
         pause_collection?: { behavior: "keep_as_draft" } | null;
-      }
+      },
+      options?: { idempotencyKey?: string }
     ): Promise<Stripe.Subscription | Pick<Stripe.Subscription, "id">>;
   };
   /**
@@ -73,9 +74,14 @@ export async function pauseSeasonPassSubscriptions(
 
   for (const c of candidates) {
     if (c.stripeSubscriptionId) {
-      await stripe.subscriptions.update(c.stripeSubscriptionId, {
-        pause_collection: { behavior: "keep_as_draft" }
-      });
+      await stripe.subscriptions.update(
+        c.stripeSubscriptionId,
+        { pause_collection: { behavior: "keep_as_draft" } },
+        // Idempotenz: der Cron kann (Inngest-Retry) doppelt laufen — Key pro
+        // Subscription verhindert eine zweite Pause-Mutation. Stripe-Key-TTL
+        // 24h < jährlicher Abstand zur nächsten Pause, also keine Kollision.
+        { idempotencyKey: `season-pass-pause-${c.stripeSubscriptionId}` }
+      );
     }
     pausedClubIds.push(c.clubId);
   }
@@ -115,9 +121,12 @@ export async function resumeSeasonPassSubscriptions(
   const resumedClubIds: string[] = [];
   for (const c of candidates) {
     if (c.stripeSubscriptionId) {
-      await stripe.subscriptions.update(c.stripeSubscriptionId, {
-        pause_collection: null
-      });
+      await stripe.subscriptions.update(
+        c.stripeSubscriptionId,
+        { pause_collection: null },
+        // Idempotenz gegen doppelten Cron-Lauf (siehe pause).
+        { idempotencyKey: `season-pass-resume-${c.stripeSubscriptionId}` }
+      );
       // Review-Befund A6 (2026-06-11): während der Pause aufgelaufene
       // keep_as_draft-Invoices explizit finalisieren — Stripe tut das beim
       // Unpause nicht von selbst; die Sommer-Renewal bliebe sonst als

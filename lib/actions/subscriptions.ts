@@ -106,11 +106,23 @@ export async function createCheckoutSession(opts: {
         "Bestehendes Stripe-Abo hat kein Subscription-Item — bitte Support kontaktieren."
       );
     }
-    await stripe.subscriptions.update(existing.stripeSubscriptionId, {
-      items: [{ id: itemId, price: priceId }],
-      proration_behavior: "create_prorations",
-      metadata: { clubId: club.id, plan: opts.plan, cycle }
-    });
+    // Idempotenz gegen Doppelklick/Retry: ein zweiter identischer Call würde
+    // sonst eine zweite Proration erzeugen (doppelte Abrechnung). Key trägt
+    // die konkrete Preis-Transition (von→nach), damit ein legitimer
+    // Plan-Wechsel zurück auf einen früheren Preis innerhalb von 24h NICHT als
+    // Replay verschluckt wird.
+    const currentPriceId = stripeSub.items?.data?.[0]?.price?.id ?? "unknown";
+    await stripe.subscriptions.update(
+      existing.stripeSubscriptionId,
+      {
+        items: [{ id: itemId, price: priceId }],
+        proration_behavior: "create_prorations",
+        metadata: { clubId: club.id, plan: opts.plan, cycle }
+      },
+      {
+        idempotencyKey: `sub-update-${existing.stripeSubscriptionId}-${currentPriceId}-${priceId}`
+      }
+    );
     // Kein Stripe-Redirect nötig: Webhook (customer.subscription.updated)
     // spiegelt Plan/Cycle in die DB; wir leiten zurück auf die Abo-Seite.
     return { url: `${baseUrl}/verein/${club.slug}/abo?plan_changed=1` };
@@ -121,11 +133,16 @@ export async function createCheckoutSession(opts: {
     typeof customerId === "string" && customerId.startsWith("placeholder_");
 
   if (!customerId || isPlaceholder) {
-    const customer = await stripe.customers.create({
-      email: user.email,
-      name: club.name,
-      metadata: { clubId: club.id, clubSlug: club.slug }
-    });
+    // Idempotenz: ein Verein hat genau einen Stripe-Customer. Ohne Key legt
+    // ein Doppelklick/Retry einen zweiten (verwaisten) Customer an.
+    const customer = await stripe.customers.create(
+      {
+        email: user.email,
+        name: club.name,
+        metadata: { clubId: club.id, clubSlug: club.slug }
+      },
+      { idempotencyKey: `customer-create-${club.id}` }
+    );
     customerId = customer.id;
 
     if (existing) {
@@ -185,6 +202,12 @@ export async function createCheckoutSession(opts: {
     cancel_url: `${baseUrl}/verein/${club.slug}?subscribe_cancelled=1`,
     allow_promotion_codes: true,
     locale: "de"
+  }, {
+    // Idempotenz gegen Doppelklick: zwei identische Checkout-Sessions (selber
+    // Club/Plan/Cycle) würden sonst parallel entstehen. Key ist auf die
+    // Operation begrenzt; nach 24h (Stripe-Key-TTL) ist ein erneuter Versuch
+    // wieder frei.
+    idempotencyKey: `checkout-${club.id}-${opts.plan}-${cycle}`
   });
 
   if (!session.url) {
