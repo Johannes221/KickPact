@@ -9,6 +9,9 @@ export default defineConfig({
     globals: true,
     environment: "node",
     globalSetup: ["tests/setup/global.ts"],
+    // Pro-Datei-Teardown: schließt am Dateiende beide DB-Pools, damit keine
+    // verspätete/zombie DB-Query in die nächste Datei blutet (Flake-Wurzel).
+    setupFiles: ["tests/setup/db-teardown.ts"],
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     pool: "forks",
     poolOptions: {
