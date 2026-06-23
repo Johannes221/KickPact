@@ -220,9 +220,12 @@ export async function respondLicenseTransfer(input: {
     if (cancelableStripeSubId) {
       try {
         const stripe = getStripe();
-        await stripe.subscriptions.update(cancelableStripeSubId, {
-          cancel_at_period_end: true
-        });
+        await stripe.subscriptions.update(
+          cancelableStripeSubId,
+          { cancel_at_period_end: true },
+          // Idempotenz gegen Doppel-Entscheid/Retry: stabile Op-ID = Request-ID.
+          { idempotencyKey: `license-transfer-cancel-${row.request.id}` }
+        );
       } catch (err) {
         console.error(
           "[license-transfer] cancel_at_period_end fehlgeschlagen — manuell im Stripe-Dashboard nachziehen",

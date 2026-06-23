@@ -48,9 +48,11 @@ describe.skipIf(isIntegrationDbDisabled)("pauseSeasonPassSubscriptions (A6)", ()
     );
 
     expect(result.paused).toBe(1);
-    expect(update).toHaveBeenCalledWith("sub_sp", {
-      pause_collection: { behavior: "keep_as_draft" }
-    });
+    expect(update).toHaveBeenCalledWith(
+      "sub_sp",
+      { pause_collection: { behavior: "keep_as_draft" } },
+      { idempotencyKey: "season-pass-pause-sub_sp" }
+    );
   });
 
   it("Resume finalisiert liegengebliebene Draft-Invoices (Review-Befund A6)", async () => {
@@ -75,7 +77,11 @@ describe.skipIf(isIntegrationDbDisabled)("pauseSeasonPassSubscriptions (A6)", ()
     );
 
     expect(result.resumed).toBe(1);
-    expect(update).toHaveBeenCalledWith("sub_sp2", { pause_collection: null });
+    expect(update).toHaveBeenCalledWith(
+      "sub_sp2",
+      { pause_collection: null },
+      { idempotencyKey: "season-pass-resume-sub_sp2" }
+    );
     expect(list).toHaveBeenCalledWith({
       subscription: "sub_sp2",
       status: "draft",
