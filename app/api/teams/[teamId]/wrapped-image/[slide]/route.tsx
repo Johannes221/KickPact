@@ -31,11 +31,13 @@ const SLIDE_KEYS = [
   "tabellenplatz",
   "tore",
   "torschuetze",
+  "ligatorschuetze",
   "zunull",
   "comebacks",
   "heimauswaerts",
   "hoechstersieg",
   "vstop3",
+  "fairness",
   "beitraege",
   "simulation"
 ] as const;
@@ -48,11 +50,13 @@ const SLIDE_ACCENTS: Record<SlideKey, string> = {
   tabellenplatz: LIME,
   tore: LIME,
   torschuetze: ORANGE,
+  ligatorschuetze: LIME,
   zunull: RED,
   comebacks: LIME,
   heimauswaerts: ORANGE,
   hoechstersieg: RED,
   vstop3: ORANGE,
+  fairness: RED,
   beitraege: LIME,
   simulation: ORANGE
 };
@@ -87,11 +91,13 @@ export async function GET(
     tabellenplatz: stats.tabellenplatz !== null,
     tore: true,
     torschuetze: !!stats.besterTorschuetze,
+    ligatorschuetze: !!stats.ligaTorschuetze,
     zunull: stats.zuNull > 0,
     comebacks: stats.comebacks > 0,
     heimauswaerts: stats.heimsiege + stats.auswaertssiege > 0,
     hoechstersieg: !!stats.hoechsterSieg,
     vstop3: !!stats.vsTop3 && stats.vsTop3.spiele > 0,
+    fairness: !!stats.fairness,
     beitraege: stats.beitraegeSummeCents > 0,
     simulation: (stats.simulationFallbackCents ?? 0) > 0
   };
@@ -328,6 +334,26 @@ function SlideBody({
           big={`${stats.vsTop3!.siege}/${stats.vsTop3!.unentschieden}/${stats.vsTop3!.niederlagen}`}
           accent={accent}
           sub={`S/U/N gegen die Spitze · aus ${stats.vsTop3!.spiele} Spielen`}
+        />
+      );
+    case "ligatorschuetze":
+      return (
+        <Block
+          kicker={`${stats.ligaTorschuetze!.name} · in der ganzen Liga`}
+          big={`Nr. ${stats.ligaTorschuetze!.ligaPlatz}`}
+          bigSize={140}
+          accent={accent}
+          sub={`der Liga-Torschützen · ${stats.ligaTorschuetze!.tore} Tore ⚽`}
+        />
+      );
+    case "fairness":
+      return (
+        <Block
+          kicker="Fairnesstabelle"
+          big={`Platz ${stats.fairness!.platz}`}
+          bigSize={140}
+          accent={accent}
+          sub={`von ${stats.fairness!.teamsInLeague} · ${stats.fairness!.gelb} Gelbe${stats.fairness!.rot > 0 ? `, ${stats.fairness!.rot} Rote` : ""}`}
         />
       );
     case "beitraege":

@@ -49,6 +49,7 @@ function buildSlides(stats: WrappedStats): Slide[] {
   if (stats.tabellenplatz !== null) slides.push({ key: "tabellenplatz", imageKey: "tabellenplatz" });
   slides.push({ key: "tore", imageKey: "tore" });
   if (stats.besterTorschuetze) slides.push({ key: "torschuetze", imageKey: "torschuetze" });
+  if (stats.ligaTorschuetze) slides.push({ key: "ligatorschuetze", imageKey: "ligatorschuetze" });
   if (stats.zuNull > 0) slides.push({ key: "zunull", imageKey: "zunull" });
   if (stats.comebacks > 0) slides.push({ key: "comebacks", imageKey: "comebacks" });
   if (stats.heimsiege + stats.auswaertssiege > 0) {
@@ -56,6 +57,7 @@ function buildSlides(stats: WrappedStats): Slide[] {
   }
   if (stats.hoechsterSieg) slides.push({ key: "hoechstersieg", imageKey: "hoechstersieg" });
   if (stats.vsTop3 && stats.vsTop3.spiele > 0) slides.push({ key: "vstop3", imageKey: "vstop3" });
+  if (stats.fairness) slides.push({ key: "fairness", imageKey: "fairness" });
   if (stats.beitraegeSummeCents > 0) {
     slides.push({ key: "beitraege", imageKey: "beitraege" });
   } else if (stats.pactsCount === 0 && (stats.simulationFallbackCents ?? 0) > 0) {
@@ -354,6 +356,10 @@ function SlideContent({
       return <ToreSlide stats={stats} accent={accent} />;
     case "torschuetze":
       return <TorschuetzeSlide stats={stats} accent={accent} />;
+    case "ligatorschuetze":
+      return <LigaTorschuetzeSlide stats={stats} accent={accent} />;
+    case "fairness":
+      return <FairnessSlide stats={stats} accent={accent} />;
     case "zunull":
       return <ZuNullSlide stats={stats} accent={accent} />;
     case "comebacks":
@@ -634,6 +640,54 @@ function TabellenplatzSlide({ stats, accent }: { stats: WrappedStats; accent: st
     </div>
   );
 }
+function LigaTorschuetzeSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+  const lt = stats.ligaTorschuetze!;
+  const isNr1 = lt.ligaPlatz === 1;
+  return (
+    <div>
+      <Kicker accent={accent}>In der ganzen Liga</Kicker>
+      <h2 className="wr-pop font-display text-4xl font-black leading-tight tracking-tight text-white">
+        {lt.name}
+      </h2>
+      <BigNumber value={`Nr. ${lt.ligaPlatz}`} accent={accent} />
+      <h2
+        className="wr-rise font-display text-2xl font-black tracking-tight text-white"
+        style={{ animationDelay: "0.25s" }}
+      >
+        der Liga-Torschützen · {lt.tore} Tore
+      </h2>
+      <Body delay={0.55}>
+        {isNr1
+          ? "Toptorschütze der ganzen Liga. Mehr geht nicht. 👑⚽"
+          : "Vorne mit dabei in der ganzen Staffel. Respekt. 🎯"}
+      </Body>
+    </div>
+  );
+}
+
+function FairnessSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+  const f = stats.fairness!;
+  const sauber = f.platz <= Math.ceil(f.teamsInLeague / 3);
+  return (
+    <div>
+      <Kicker accent={accent}>Fairnesstabelle</Kicker>
+      <BigNumber value={`Platz ${f.platz}`} accent={accent} />
+      <h2
+        className="wr-rise font-display text-2xl font-black tracking-tight text-white"
+        style={{ animationDelay: "0.25s" }}
+      >
+        von {f.teamsInLeague} · {f.gelb} Gelbe{f.rot > 0 ? `, ${f.rot} Rote` : ""}
+      </h2>
+      <Body delay={0.55}>
+        {sauber
+          ? "Fair geblieben, die ganze Saison. Sauber gespielt. 🤝"
+          : "Vollgas mit Herzblut. Der Schiri kennt euch. 😅"}{" "}
+        <span className="text-white/55">({f.quote.toLocaleString("de-DE")} Karten/Spiel)</span>
+      </Body>
+    </div>
+  );
+}
+
 function VsTop3Slide({ stats, accent }: { stats: WrappedStats; accent: string }) {
   const v = stats.vsTop3!;
   return (

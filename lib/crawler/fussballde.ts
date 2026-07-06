@@ -1213,11 +1213,49 @@ export interface LeagueStandingRow {
   punkte: number;
 }
 
+/** Eine Zeile der Liga-Torschützenliste (Staffel-weit). */
+export interface LeagueTopScorer {
+  position: number;
+  name: string;
+  /** fussball.de-Spieler-ID (matcht match_events.spielerId/Kader), null möglich. */
+  userid: string | null;
+  teamName: string;
+  /** fussball.de-team-id aus dem Mannschafts-Link der Zeile (Eigen-Match), null möglich. */
+  teamId: string | null;
+  tore: number;
+}
+
+/** Fairnesstabellen-Zeile der eigenen Mannschaft (Staffel-weit). */
+export interface LeagueFairnessRow {
+  position: number;
+  teamName: string;
+  spiele: number;
+  gelb: number;
+  gelbRot: number;
+  rot: number;
+  /** Karten pro Spiel (fussball.de-Quote). */
+  quote: number;
+}
+
 export interface LeagueStandings {
   teamsInLeague: number;
   rows: LeagueStandingRow[];
   /** Zeile der eigenen Mannschaft (Namens-Match), null wenn nicht gefunden. */
   ownRow: LeagueStandingRow | null;
+  /**
+   * Wrapped-Extras (Spec 2026-07-06), best-effort im selben Browser-Lauf:
+   * Liga-Torschützenliste + Fairnesstabelle der Staffel. Undefined/leer, wenn
+   * die Staffel-ID nicht gefunden wurde oder der Extra-Scrape scheiterte — das
+   * Wrapped blendet die Slides dann einfach aus.
+   */
+  staffelId?: string | null;
+  /** Top der Liga-Torschützenliste (~30). */
+  topScorers?: LeagueTopScorer[];
+  /** Eigene Spieler in der Liga-Torschützenliste (mit Liga-Platz), best-first. */
+  ownTopScorers?: LeagueTopScorer[];
+  /** Fairness-Platz der eigenen Mannschaft + Ligagröße. */
+  fairnessOwnRow?: LeagueFairnessRow | null;
+  fairnessTeamsInLeague?: number;
 }
 
 /**
@@ -1294,6 +1332,128 @@ export async function getLeagueStandings(
           }) ?? null
         : null;
 
-    return { teamsInLeague: rows.length, rows, ownRow };
+    // ── Wrapped-Extras: Staffel-ID → Torschützen + Fairness (best-effort) ──
+    // Die Staffel-ID steht im Team-Seiten-HTML (u.a. in den fairness-Links).
+    // Format: 10+ alphanum + "-" + Buchstabe, z.B. 02TIQ…DEIN-G.
+    let staffelId: string | null = null;
+    let topScorers: LeagueTopScorer[] = [];
+    let ownTopScorers: LeagueTopScorer[] = [];
+    let fairnessOwnRow: LeagueFairnessRow | null = null;
+    let fairnessTeamsInLeague = 0;
+    try {
+      staffelId = (await page.evaluate(`(function(){
+        var m = document.documentElement.outerHTML.match(/staffel\\/([A-Z0-9]{10,}-[A-Z])/);
+        return m ? m[1] : null;
+      })()`)) as string | null;
+
+      if (staffelId) {
+        // Torschützenliste der Staffel (eigene Seite, nicht ajax.team.*).
+        await page.goto(
+          `https://www.fussball.de/torjaeger/-/staffel/${encodeURIComponent(staffelId)}`,
+          { waitUntil: "networkidle", timeout: 30000 }
+        );
+        await page.waitForTimeout(1500);
+        const scRaw = (await page.evaluate(`(function(){
+          var out = [];
+          document.querySelectorAll('tr').forEach(function(tr){
+            var prof = tr.querySelector('a[href*="spielerprofil"]');
+            if (!prof) return;
+            var tds = [];
+            tr.querySelectorAll('td').forEach(function(td){
+              var t = (td.textContent||'').replace(/\\s+/g,' ').trim();
+              tds.push(t);
+            });
+            if (tds.length < 4) return;
+            var uid = (prof.getAttribute('href')||'').match(/userid\\/([A-Z0-9]+)/);
+            var teamA = tr.querySelector('a[href*="team-id"]');
+            var tid = teamA ? (teamA.getAttribute('href')||'').match(/team-id\\/([A-Z0-9]+)/) : null;
+            out.push({
+              cells: tds.filter(function(t){ return t.length>0; }),
+              userid: uid ? uid[1] : null,
+              teamId: tid ? tid[1] : null
+            });
+          });
+          return out;
+        })()`)) as { cells: string[]; userid: string | null; teamId: string | null }[];
+
+        for (const r of scRaw) {
+          const position = parseInt(r.cells[0] ?? "", 10);
+          const tore = parseInt(r.cells[r.cells.length - 1] ?? "", 10);
+          if (!Number.isFinite(position) || !Number.isFinite(tore)) continue;
+          topScorers.push({
+            position,
+            name: r.cells[1] ?? "",
+            userid: r.userid,
+            teamName: normalizeTeamName(r.cells[2] ?? ""),
+            teamId: r.teamId,
+            tore
+          });
+        }
+        // Eigene Spieler = Torschützen-Zeilen mit unserer team-id (exakt, kein Fuzzy).
+        ownTopScorers = topScorers
+          .filter((s) => s.teamId === teamId)
+          .sort((a, b) => a.position - b.position);
+
+        // Fairnesstabelle (ajax-Fragment, Browser umgeht Datadome).
+        await page.goto(
+          `https://www.fussball.de/ajax.team.table.fairness/-/saison/${encodeURIComponent(
+            saison
+          )}/staffel/${encodeURIComponent(staffelId)}/team-id/${encodeURIComponent(teamId)}`,
+          { waitUntil: "networkidle", timeout: 30000 }
+        );
+        await page.waitForTimeout(1200);
+        const fairRaw = (await page.evaluate(`(function(){
+          var out = [];
+          document.querySelectorAll('tr').forEach(function(tr){
+            var tds = [];
+            tr.querySelectorAll('td').forEach(function(td){
+              var t = (td.textContent||'').replace(/\\s+/g,' ').trim();
+              tds.push(t);
+            });
+            if (tds.length >= 5 && /^\\d+\\.$/.test(tds[0])) out.push(tds);
+          });
+          return out;
+        })()`)) as string[][];
+
+        // Fairness-Zeilen: [Platz, Mannschaft, Spiele, Gelb, Gelb-Rot, Rot, …, Quote].
+        // Ties teilen sich den Platz → NICHT nach Position deduplizieren.
+        const fairRows: (LeagueFairnessRow & { teamName: string })[] = [];
+        for (const tds of fairRaw) {
+          const num = (i: number) => parseInt(tds[i] ?? "0", 10) || 0;
+          const quoteCell = tds[tds.length - 1] ?? "";
+          fairRows.push({
+            position: num(0),
+            teamName: normalizeTeamName(tds[1] ?? ""),
+            spiele: num(2),
+            gelb: num(3),
+            gelbRot: num(4),
+            rot: num(5),
+            quote: Number(quoteCell.replace(",", ".")) || 0
+          });
+        }
+        fairnessTeamsInLeague = fairRows.filter((r) => r.spiele > 0).length;
+        fairnessOwnRow =
+          ownTokens.length > 0
+            ? fairRows.find((r) => {
+                const rn = r.teamName.toLowerCase();
+                return ownTokens.every((t) => rn.includes(t));
+              }) ?? null
+            : null;
+      }
+    } catch {
+      // Extras sind best-effort — Tabelle steht auch ohne sie.
+      staffelId = staffelId ?? null;
+    }
+
+    return {
+      teamsInLeague: rows.length,
+      rows,
+      ownRow,
+      staffelId,
+      topScorers,
+      ownTopScorers,
+      fairnessOwnRow,
+      fairnessTeamsInLeague
+    };
   });
 }

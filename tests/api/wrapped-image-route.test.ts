@@ -50,7 +50,9 @@ const FULL_STATS: WrappedStats = {
   punkte: 42,
   aggregateSource: "table",
   detailMatchCount: 6,
-  vsTop3: { spiele: 2, siege: 0, unentschieden: 0, niederlagen: 2 }
+  vsTop3: { spiele: 2, siege: 0, unentschieden: 0, niederlagen: 2 },
+  ligaTorschuetze: { name: "Sasa Sprecakovic", tore: 29, ligaPlatz: 1 },
+  fairness: { platz: 12, teamsInLeague: 13, gelb: 51, rot: 5, quote: 2.91 }
 };
 
 function call(slide: string) {
@@ -68,13 +70,22 @@ describe("wrapped-image route", () => {
     standingsMock.mockReset().mockResolvedValue(null);
   });
 
-  it.each(["tore", "bilanz"])("%s → 200 + image/png", async (slide) => {
-    const res = await call(slide);
-    expect(res.status).toBe(200);
-    expect(res.headers.get("content-type")).toContain("image/png");
-    const buf = Buffer.from(await res.arrayBuffer());
-    // PNG-Magic-Bytes
-    expect(buf.subarray(0, 4)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  it.each(["tore", "bilanz", "ligatorschuetze", "fairness"])(
+    "%s → 200 + image/png",
+    async (slide) => {
+      const res = await call(slide);
+      expect(res.status).toBe(200);
+      expect(res.headers.get("content-type")).toContain("image/png");
+      const buf = Buffer.from(await res.arrayBuffer());
+      // PNG-Magic-Bytes
+      expect(buf.subarray(0, 4)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+    }
+  );
+
+  it("404 für ligatorschuetze/fairness ohne Liga-Daten", async () => {
+    statsMock.mockResolvedValue({ ...FULL_STATS, ligaTorschuetze: null, fairness: null });
+    expect((await call("ligatorschuetze")).status).toBe(404);
+    expect((await call("fairness")).status).toBe(404);
   });
 
   it("404 für unbekannte Slide-Keys (kein Auth-Roundtrip)", async () => {

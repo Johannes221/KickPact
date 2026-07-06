@@ -75,6 +75,22 @@ export interface WrappedStats {
     unentschieden: number;
     niederlagen: number;
   } | null;
+  /** Bester eigener Spieler in der LIGA-Torschützenliste (Staffel-weit,
+   *  verifiziert). null, wenn kein eigener Spieler gelistet / keine Liste. */
+  ligaTorschuetze: {
+    name: string;
+    tore: number;
+    /** Platz in der Liga-Torschützenliste (1 = Toptorschütze der Liga). */
+    ligaPlatz: number;
+  } | null;
+  /** Fairness-Platz der Mannschaft (Staffel-weit, volle Saison). null ohne Daten. */
+  fairness: {
+    platz: number;
+    teamsInLeague: number;
+    gelb: number;
+    rot: number;
+    quote: number;
+  } | null;
 }
 
 /**
@@ -346,6 +362,30 @@ export async function getWrappedStats(
     vsTop3 = vt;
   }
 
+  // Liga-Torschütze + Fairness (Staffel-weit, verifiziert) — best-effort aus
+  // den Standings-Extras. Der beste eigene Spieler der Liga-Torschützenliste.
+  let ligaTorschuetze: WrappedStats["ligaTorschuetze"] = null;
+  const ownScorer = standings?.ownTopScorers?.[0];
+  if (ownScorer && ownScorer.tore > 0) {
+    ligaTorschuetze = {
+      name: ownScorer.name,
+      tore: ownScorer.tore,
+      ligaPlatz: ownScorer.position
+    };
+  }
+
+  let fairness: WrappedStats["fairness"] = null;
+  const fr = standings?.fairnessOwnRow ?? null;
+  if (fr && standings?.fairnessTeamsInLeague) {
+    fairness = {
+      platz: fr.position,
+      teamsInLeague: standings.fairnessTeamsInLeague,
+      gelb: fr.gelb,
+      rot: fr.rot + fr.gelbRot,
+      quote: fr.quote
+    };
+  }
+
   // Simulation-Fallback nur ohne Pacts: „mit 1 € pro Tor wären das X € gewesen".
   // Auf den ECHTEN Toren (Tabelle, wenn vorhanden) → exakt, keine Hochrechnung.
   const simulationFallbackCents = pactsCount === 0 ? aggToreF * 100 : null;
@@ -375,7 +415,9 @@ export async function getWrappedStats(
     punkte,
     aggregateSource,
     detailMatchCount,
-    vsTop3
+    vsTop3,
+    ligaTorschuetze,
+    fairness
   };
 }
 
