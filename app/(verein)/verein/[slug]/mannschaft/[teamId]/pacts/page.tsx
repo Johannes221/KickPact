@@ -105,7 +105,7 @@ export default async function PactsPage({
                   <th className="px-4 py-3 font-semibold">Sponsor</th>
                   <th className="px-4 py-3 font-semibold">Ereignis</th>
                   <th className="px-4 py-3 font-semibold text-right">Betrag</th>
-                  <th className="px-4 py-3 font-semibold text-right">Per Match</th>
+                  <th className="px-4 py-3 font-semibold text-right">Pro Spiel</th>
                   <th className="px-4 py-3 font-semibold text-right">Bisher</th>
                   <th className="px-4 py-3 font-semibold">Status</th>
                 </tr>
@@ -155,7 +155,7 @@ export default async function PactsPage({
                       <div className="font-semibold">{eur(r.amountCents)}</div>
                     </div>
                     <div>
-                      <div className="text-brand-night-navy/50 uppercase tracking-wider">Per Match</div>
+                      <div className="text-brand-night-navy/50 uppercase tracking-wider">Pro Spiel</div>
                       <div>{r.perMatchCapCents != null ? eur(r.perMatchCapCents) : "—"}</div>
                     </div>
                     <div>

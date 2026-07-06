@@ -34,11 +34,11 @@ const CLUB_BREAKEVEN_ROWS: ReadonlyArray<{
   savings: number;
   highlight?: boolean;
 }> = [
-  { teams: 2, proMonthly: 38, vereinMonthly: 49, savings: -11 },
-  { teams: 3, proMonthly: 57, vereinMonthly: 49, savings: 8, highlight: true },
-  { teams: 4, proMonthly: 76, vereinMonthly: 49, savings: 27 },
-  { teams: 6, proMonthly: 114, vereinMonthly: 49, savings: 65 },
-  { teams: 10, proMonthly: 190, vereinMonthly: 49, savings: 141 }
+  { teams: 2, proMonthly: 22, vereinMonthly: 29, savings: -7 },
+  { teams: 3, proMonthly: 33, vereinMonthly: 29, savings: 4, highlight: true },
+  { teams: 4, proMonthly: 44, vereinMonthly: 29, savings: 15 },
+  { teams: 6, proMonthly: 66, vereinMonthly: 29, savings: 37 },
+  { teams: 10, proMonthly: 110, vereinMonthly: 29, savings: 81 }
 ];
 
 const PER_PLAYER_ROWS: ReadonlyArray<{

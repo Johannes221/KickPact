@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidIban } from "@/lib/utils/iban";
 
 export const clubStammdatenSchema = z.object({
   contactName: z.string().min(2, "Name fehlt"),
@@ -14,8 +15,7 @@ export const clubStammdatenSchema = z.object({
     .string()
     .optional()
     .or(z.literal(""))
-    .refine((v) => !v || v.length >= 15, "IBAN sieht zu kurz aus")
-    .refine((v) => !v || v.length <= 34, "IBAN zu lang")
+    .refine((v) => !v || isValidIban(v), "IBAN ungültig (bitte Prüfziffer checken)")
 });
 
 export type ClubStammdaten = z.infer<typeof clubStammdatenSchema>;

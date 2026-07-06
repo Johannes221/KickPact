@@ -204,7 +204,7 @@ export default function LandingPage() {
           </div>
           <p className="mt-6 md:mt-8 text-xs md:text-sm text-brand-night-navy/60 text-center max-w-2xl mx-auto">
             <strong>Du legst deinen Betrag selbst fest.</strong> Pro Trigger einzeln, mit optionalem
-            Monats-Cap, jederzeit anpassbar. Es gibt keine Mindest-Pact-Höhe.
+            Monats-Cap, jederzeit anpassbar. Schon ab 0,50 € pro Trigger.
           </p>
           <InlineCTA caption="Bereit für eure eigene Story?" />
         </div>
@@ -313,8 +313,8 @@ export default function LandingPage() {
           />
           <Step
             num="04"
-            title="Monats-Rechnung"
-            body="Am Monatsersten wandert eine PDF-Rechnung an jeden Sponsor. Mannschaft/Verein zieht das Geld selbst ein, KickPact bleibt Tool."
+            title="Monats-Übersicht"
+            body="Am Monatsersten wandert eine PDF-Zahlungsübersicht an jeden Sponsor. Mannschaft/Verein zieht das Geld selbst ein, KickPact bleibt Tool."
           />
         </div>
       </section>
@@ -390,7 +390,7 @@ export default function LandingPage() {
               "Bis zu 5 Sponsoren",
               "Alle 10 Auto-Trigger (Tor, Sieg, Comeback, …)",
               "Alle 6 manuelle Trigger",
-              "Monatliche PDF-Rechnung",
+              "Monatliche PDF-Zahlungsübersicht",
               "30 Tage gratis · monatlich kündbar"
             ]}
           />
@@ -403,7 +403,7 @@ export default function LandingPage() {
             features={[
               "Alles aus Basic",
               "Unlimited Sponsoren",
-              "Mannschafts-Logo auf PDF-Rechnungen",
+              "Mannschafts-Logo auf der PDF-Zahlungsübersicht",
               'Custom Trigger-Texte (z.B. "Bizeps-Tor")',
               "Saison-Ziele (Aufstieg, Klassenerhalt, …)",
               "30 Tage gratis · monatlich kündbar"
@@ -418,7 +418,7 @@ export default function LandingPage() {
               "Alle Mannschaften des Vereins inklusive",
               "Master-Admin verwaltet alle Teams zentral",
               "Pro-Features für jedes Team",
-              "Konsolidierte Vereins-Rechnung",
+              "Konsolidierte Zahlungsübersicht pro Sponsor",
               "Übergreifende Sponsor-Übersicht",
               "Lohnt ab ~3 Mannschaften"
             ]}
@@ -470,7 +470,7 @@ export default function LandingPage() {
             </AccordionItem>
             <FaqItem
               q="Mannschaft oder Verein: was ist der Unterschied?"
-              a={'Jede Mannschaft ist bei KickPact eigenständig. Trainer/Betreuer melden sich für ihre Mannschaft an, verwalten Sponsoren und Pacts selbst, keine Vorstands-Politik. Hat dein Verein mehrere Teams (Herren, Jugend, Damen, Senioren) und einen Master-Admin der alles zentral steuern soll, gibt es die Vereinslizenz: 29 €/Monat all-in für alle Mannschaften des Vereins, mit konsolidierter Rechnung und übergreifender Sponsor-Übersicht.'}
+              a={'Jede Mannschaft ist bei KickPact eigenständig. Trainer/Betreuer melden sich für ihre Mannschaft an, verwalten Sponsoren und Pacts selbst, keine Vorstands-Politik. Hat dein Verein mehrere Teams (Herren, Jugend, Damen, Senioren) und einen Master-Admin der alles zentral steuern soll, gibt es die Vereinslizenz: 29 €/Monat all-in für alle Mannschaften des Vereins, mit konsolidierter Zahlungsübersicht und übergreifender Sponsor-Übersicht.'}
             />
             <FaqItem
               q="Sind die Beträge irgendwie vorgegeben?"
@@ -497,12 +497,12 @@ export default function LandingPage() {
               a="Sponsoren zahlen weniger. Das ist genau die Idee von Performance-Sponsoring. Im Worst Case (kein Tor, keine Siege) bekommt die Mannschaftskasse gar nichts, aber dann gibt's auch nichts zu feiern."
             />
             <FaqItem
-              q="Wie verhindere ich, dass ein Sponsor von einer hohen Rechnung überrascht wird?"
+              q="Wie verhindere ich, dass ein Sponsor von einem hohen Betrag überrascht wird?"
               a='Jeder Pact kann einen optionalen Monats-Cap haben (z.B. "maximal 50 € pro Monat egal was passiert"). Wir empfehlen das aktiv im Pact-Setup. Außerdem zeigt KickPact dem Sponsor immer eine Worst-Case-Schätzung.'
             />
             <FaqItem
               q="Was, wenn der Trainer einen Spezial-Event falsch meldet?"
-              a={'Spezial-Events (Kopfballtor, Hackentor, etc.) erscheinen als "pending" beim Sponsor. Er kann bestätigen oder bestreiten. Erst bestätigte Events landen auf der Rechnung. Trust by design.'}
+              a={'Spezial-Events (Kopfballtor, Hackentor, etc.) erscheinen als "pending" beim Sponsor. Er kann bestätigen oder bestreiten. Erst bestätigte Events landen auf der Zahlungsübersicht. Trust by design.'}
             />
             <FaqItem
               q="Kann ich jederzeit kündigen?"

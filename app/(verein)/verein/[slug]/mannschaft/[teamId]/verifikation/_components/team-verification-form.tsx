@@ -274,8 +274,8 @@ export function TeamVerificationForm({ clubSlug, teamId }: Props) {
 
       <div className="rounded-lg bg-brand-off-white p-4 text-xs text-brand-night-navy/70">
         Wir prüfen den Nachweis manuell — innerhalb von 1–2 Werktagen meldet sich
-        unser Team. Bis dahin kannst du Sponsoren einladen und das Match-Tracking
-        nutzen, aber Sponsoren-Rechnungen werden zurückgehalten.
+        unser Team. Bis dahin läuft das Match-Tracking schon, aber Sponsoren
+        einladen geht erst nach der Verifizierung (schützt deine Sponsoren).
       </div>
 
       <Button

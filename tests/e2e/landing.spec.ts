@@ -26,15 +26,18 @@ test.describe("Landing Page", () => {
     await page.goto("/");
     const faq = page.getByText(/Sind die Beträge.*steuerlich absetzbar/);
     await faq.click();
-    await expect(page.getByText(/Werbeleistung/)).toBeVisible();
+    // Privatpersonen-only (Spec 2026-07-06): vorsichtiger Spenden-Hinweis
+    // statt des früheren „Werbeleistung"-Versprechens.
+    await expect(page.getByText(/Spendenbescheinigung/)).toBeVisible();
   });
 
   test("Pricing zeigt beide Pläne", async ({ page }) => {
     await page.goto("/");
+    // Pricing-Rework 2026-06-15: Basic 5 € / Pro 11 € (monatlich)
     await expect(page.getByText(/Basic/).first()).toBeVisible();
-    await expect(page.getByText(/9 €/).first()).toBeVisible();
+    await expect(page.getByText(/5 €/).first()).toBeVisible();
     await expect(page.getByText(/Pro/).first()).toBeVisible();
-    await expect(page.getByText(/19 €/).first()).toBeVisible();
+    await expect(page.getByText(/11 €/).first()).toBeVisible();
   });
 });
 

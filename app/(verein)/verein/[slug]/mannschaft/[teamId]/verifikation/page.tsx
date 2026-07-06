@@ -60,9 +60,9 @@ export default async function TeamVerifikationPage({
             ✓ Verifiziert seit {team.verifiedAt.toLocaleDateString("de-DE")}
           </div>
           <p className="mt-1 text-brand-night-navy/70">
-            Die Mannschaft ist verifiziert, Rechnungen werden normal versendet. Du
-            kannst hier einen neuen Nachweis einreichen falls sich Rolle/Trainer
-            geändert hat.
+            Die Mannschaft ist verifiziert, Zahlungsübersichten werden normal
+            versendet. Du kannst hier einen neuen Nachweis einreichen falls sich
+            Rolle/Trainer geändert hat.
           </p>
         </div>
       ) : existing?.status === "pending" ? (

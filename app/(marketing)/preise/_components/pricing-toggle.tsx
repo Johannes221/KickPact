@@ -117,14 +117,6 @@ const MATRIX: MatrixGroup[] = [
       {
         label: "Pact-Discovery (öffentl. Profil)",
         values: { basic: false, pro: true, verein: true }
-      },
-      {
-        label: "Embed-Widget Vereinswebsite",
-        values: { basic: false, pro: true, verein: true }
-      },
-      {
-        label: "Auto-Sponsor-Newsletter",
-        values: { basic: false, pro: true, verein: true }
       }
     ]
   },
@@ -132,20 +124,12 @@ const MATRIX: MatrixGroup[] = [
     title: "Analytics",
     rows: [
       {
-        label: "Sponsor-Stats-Widgets",
-        values: { basic: false, pro: true, verein: true }
-      },
-      {
         label: "CSV/Excel-Export",
         values: { basic: false, pro: true, verein: true }
       },
       {
-        label: "Saison-Recap-PDF (Mannschaft)",
+        label: "Saison-Recap & Wrapped zum Teilen",
         values: { basic: false, pro: true, verein: true }
-      },
-      {
-        label: "Saison-Recap-PDF (Verein-aggregiert)",
-        values: { basic: false, pro: false, verein: true }
       }
     ]
   },

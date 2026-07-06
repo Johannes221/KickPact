@@ -36,7 +36,7 @@ export const FEATURE_BY_PLAN: Record<PlanKey, PlanFeatureDef> = {
     upgradeHeadline: "Sponsoring, das mitfiebert — ohne Limits.",
     highlights: [
       "∞ Sponsoren · ∞ Regeln · ∞ Historie",
-      "Saison-Ziele, Custom-Trigger-Texte, Embed-Widget",
+      "Saison-Ziele, Custom-Trigger-Texte",
       "Vereins-Logo auf PDF, CSV-Export, Saison-Recap"
     ]
   },

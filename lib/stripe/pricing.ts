@@ -65,8 +65,8 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     features: [
       "Alle Auto-Trigger (10 Typen) + Manual-Trigger",
       "Bis zu 5 Sponsoren, 3 Regeln pro Sponsor",
-      "Automatische Spieldaten alle 6h",
-      "Monatliche PDF-Rechnung",
+      "Automatische Spieldaten nach jedem Spieltag",
+      "Monatliche PDF-Zahlungsübersicht",
       "Sponsor-Einladungslinks",
       "30 Tage gratis · 0 % Provision"
     ],
@@ -95,8 +95,8 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
       "∞ Sponsoren · ∞ Regeln · ∞ Historie",
       "Saison-Ziele + Custom-Trigger-Texte",
       "Vereins-Logo auf PDF · Vereins-Mail-Absender",
-      "Pact-Discovery, Embed-Widget, Newsletter",
-      "CSV-Export, Sponsor-Stats, Saison-Recap-PDF"
+      "Pact-Discovery: öffentliches Team-Profil",
+      "CSV-Export + Saison-Recap zum Teilen"
     ],
     note: "Bei 22-Mann-Kader: unter 1 € pro Spieler/Monat.",
     cta: "Pro auswählen"
@@ -125,7 +125,7 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
       "Master-Admin-Cockpit + bis zu 10 Admins",
       "Konsolidierte Sammelrechnung",
       "Cross-Team-Sponsor-View",
-      "Vereins-aggregiertes Saison-Recap"
+      "Teams jederzeit dazuholen, ein Preis"
     ],
     note: "Unter 1 € pro Spieler bei 50-Mann-Verein · ab 0,25 €/Spieler.",
     cta: "Verein anlegen"

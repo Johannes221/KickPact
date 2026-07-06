@@ -147,7 +147,7 @@ export default async function VereinLayout({
       title: `Pro-Trial — noch ${daysLeft} ${daysLeft === 1 ? "Tag" : "Tage"}`,
       detail:
         activePledgeCount > 0
-          ? `Endet am ${endDate}. Aktiviere dein Abo, damit deine ${activePledgeCount} aktiven Pledge${activePledgeCount === 1 ? "" : "s"} weiterlaufen.`
+          ? `Endet am ${endDate}. Aktiviere dein Abo, damit deine ${activePledgeCount} aktiven Pact${activePledgeCount === 1 ? "" : "s"} weiterlaufen.`
           : `Endet am ${endDate}. Aktiviere dein Abo, damit das Sponsoring nahtlos weiterläuft.`,
       actionLabel: "Aktivieren",
       actionHref: aboHref

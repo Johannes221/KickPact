@@ -31,7 +31,7 @@ export const BASIC_RULE_CAP = PLAN_CAPS.basic.maxPledgeRulesPerSponsor ?? 3;
 export const BASIC_LOST_FEATURES = [
   "Saison-Ziele",
   "Eigene Trigger-Texte",
-  "Vereins-Logo auf der PDF-Rechnung",
+  "Vereins-Logo auf der PDF-Zahlungsübersicht",
   "Vereins-Mail-Absender",
   "Pact-Discovery (öffentliches Profil)",
   "CSV/Excel-Export",

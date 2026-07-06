@@ -10,6 +10,7 @@ import {
   normalizePaypalHandle,
   validateStripePaymentLink
 } from "@/lib/invoicing/payment-options";
+import { isValidIban, normalizeIban } from "@/lib/utils/iban";
 
 const updateClubSchema = z.object({
   name: z.string().min(2, "Vereinsname fehlt"),
@@ -23,8 +24,9 @@ const updateClubSchema = z.object({
     .string()
     .optional()
     .or(z.literal(""))
-    .refine((v) => !v || v.length >= 15, "IBAN zu kurz")
-    .refine((v) => !v || v.length <= 34, "IBAN zu lang"),
+    // Echte Prüfsummen-Validierung (Mod-97) — die IBAN ist das Zahlungsziel
+    // auf den Sponsor-Zahlungsübersichten, ein Tippfehler darf nicht durch.
+    .refine((v) => !v || isValidIban(v), "IBAN ungültig (bitte Prüfziffer checken)"),
   // Spec §1.9 (Phase 5): Zusatz-Zahlwege. Normalisierung/Validierung passiert
   // in lib/invoicing/payment-options (PayPal-Handle-Regex, Stripe-Prefix) —
   // hier nur grobe String-Constraints fürs Form-Schema.
@@ -65,7 +67,7 @@ export async function updateClubSettings(
           city: parsed.data.city,
           country: "DE"
         },
-        iban: parsed.data.iban || null,
+        iban: parsed.data.iban ? normalizeIban(parsed.data.iban) : null,
         paypalHandle: paypal.handle,
         stripePaymentLink: stripeLink.url,
         updatedAt: new Date()

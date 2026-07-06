@@ -73,7 +73,10 @@ export type CapPeriod = (typeof CAP_PERIODS)[number];
 export const pledgeRuleInputSchema = z
   .object({
     triggerType: z.enum(TRIGGER_TYPES),
-    amountEur: z.number().min(0.5).max(500),
+    amountEur: z
+      .number({ invalid_type_error: "Bitte einen Betrag eingeben." })
+      .min(0.5, "Mindestens 0,50 € pro Trigger.")
+      .max(500, "Höchstens 500 € pro Trigger."),
     /** Optionaler Cap pro Wette, begrenzt pro `capPeriod`. Nicht bei Saison-Wetten. */
     capEur: z.number().positive().max(100000).optional(),
     capPeriod: z.enum(CAP_PERIODS).optional(),
