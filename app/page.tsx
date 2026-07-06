@@ -167,7 +167,7 @@ export default function LandingPage() {
             </h2>
             <p className="mt-2 text-sm md:text-base text-brand-night-navy/70">
               Keine Plakate, keine Trikot-Werbung. Sondern Menschen, die mitfiebern: von der
-              Bambini-Tante bis zum Bäcker um die Ecke. Jeder mit seinem eigenen Betrag, frei
+              Bambini-Tante bis zum Ex-Spieler von damals. Jeder mit seinem eigenen Betrag, frei
               gewählt. Vier Beispiele aus dem echten Leben:
             </p>
           </div>
