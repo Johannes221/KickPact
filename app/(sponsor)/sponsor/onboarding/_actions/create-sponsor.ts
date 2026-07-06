@@ -11,23 +11,17 @@ export async function createSponsor(input: SponsorOnboardingInput, invitationTok
   await assertNotPlatformAdminAction(user.email);
   const parsed = sponsorOnboardingSchema.parse(input);
 
+  // Privatpersonen-only (Spec 2026-07-06): type ist immer "familie", die
+  // inerten Business-Spalten werden nie mehr befüllt.
   const sponsor = await createSponsorProfile({
     userId: user.id,
     displayName: parsed.displayName,
-    type: parsed.type,
-    role: parsed.type === "familie" ? parsed.role || null : null,
-    description: parsed.type === "familie" ? parsed.description || null : null,
-    businessName: parsed.type === "business" ? parsed.businessName : null,
-    businessAddressJson:
-      parsed.type === "business"
-        ? {
-            street: parsed.street,
-            zip: parsed.zip,
-            city: parsed.city,
-            country: "DE"
-          }
-        : null,
-    businessTaxId: parsed.type === "business" ? parsed.businessTaxId || null : null
+    type: "familie",
+    role: parsed.role || null,
+    description: parsed.description || null,
+    businessName: null,
+    businessAddressJson: null,
+    businessTaxId: null
   });
 
   if (invitationToken) {

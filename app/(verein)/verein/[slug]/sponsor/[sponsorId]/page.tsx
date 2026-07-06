@@ -76,9 +76,7 @@ export default async function SponsorDetailPage({
               {overview.sponsor.displayName}
             </h2>
             <p className="mt-1 text-sm text-brand-night-navy/60">
-              {overview.sponsor.email} ·{" "}
-              <span className="capitalize">{overview.sponsor.type}</span>
-              {overview.sponsor.businessName && ` · ${overview.sponsor.businessName}`}
+              {overview.sponsor.email}
             </p>
           </div>
         </div>

@@ -153,7 +153,7 @@ const STEPS: Step[] = [
   { title: "Mannschaft anlegen", body: "In wenigen Schritten startklar." },
   { title: "Mannschaft verifizieren", body: "Kurzer Nachweis — einmalig." },
   { title: "Spiele laden automatisch", body: "Nach Spielende ziehen wir Tore, Siege & Co." },
-  { title: "Sponsoren einladen", body: "Ein Link für Familie, Stammtisch & lokale Firmen." },
+  { title: "Sponsoren einladen", body: "Ein Link für Familie, Stammtisch & Fans." },
   { title: "Ereignisse werden verrechnet", body: "Die Kasse füllt sich von allein — 100 % für euch." }
 ];
 
@@ -206,8 +206,8 @@ const BENEFITS: BenefitCard[] = [
     points: [
       "Zahl nur, wenn das Team wirklich liefert",
       "Frei wählbar: 0,50 € bis 500 € pro Event",
-      "Steuerlich absetzbar als Werbeleistung",
-      "Rechnung am Monatsende, 100 % ans Team"
+      "Optionaler Monats-Cap, nie Überraschungen",
+      "Zahlungsübersicht am Monatsende, 100 % ans Team"
     ]
   }
 ];

@@ -301,7 +301,7 @@ async function seed() {
 
   await db.insert(sponsors).values([
     { id: "sp_1", userId: "u_sp1", displayName: "Sponsor 1", type: "familie" },
-    { id: "sp_2", userId: "u_sp2", displayName: "Sponsor 2", type: "business" }
+    { id: "sp_2", userId: "u_sp2", displayName: "Sponsor 2", type: "familie" }
   ]);
 
   const endsAt = new Date(Date.UTC(2030, 0, 1));

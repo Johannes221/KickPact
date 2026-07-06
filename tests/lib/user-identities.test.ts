@@ -125,8 +125,8 @@ describe("getUserIdentities", () => {
     await db.insert(sponsors).values({
       id: createId(),
       userId,
-      displayName: "Bäckerei Müller",
-      type: "business"
+      displayName: "Onkel Klaus",
+      type: "familie"
     });
 
     const r = await getUserIdentities(userId);

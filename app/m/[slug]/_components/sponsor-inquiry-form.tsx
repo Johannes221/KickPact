@@ -84,7 +84,7 @@ export function SponsorInquiryForm({
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="max@firma.de"
+            placeholder="max@beispiel.de"
             maxLength={200}
             disabled={pending}
             required

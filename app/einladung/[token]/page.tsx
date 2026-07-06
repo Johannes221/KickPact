@@ -92,12 +92,12 @@ export default async function InvitationPage({
           <p className="text-sm text-brand-night-navy/80 leading-relaxed">
             Lege einen Pact an — z.B. <em>5 € pro Tor</em> oder <em>10 € pro Sieg</em>. Du
             zahlst nur, wenn die Mannschaft auch wirklich performt. Am Monatsende bekommst
-            du eine Rechnung vom Verein über das, was tatsächlich zusammenkam.
+            du eine Zahlungsübersicht vom Verein über das, was tatsächlich zusammenkam.
           </p>
           <div className="mt-6 grid gap-3 sm:grid-cols-2 text-xs">
             <Feature icon="✅" text="Cap pro Monat möglich" />
             <Feature icon="🛡️" text="Spezial-Events zur Bestätigung" />
-            <Feature icon="📄" text="Steuerlich absetzbar" />
+            <Feature icon="📄" text="Klare Zahlungsübersicht als PDF" />
             <Feature icon="🚪" text="Jederzeit kündbar" />
           </div>
           <div className="mt-8">

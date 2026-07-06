@@ -12,6 +12,16 @@
 - **Migrationen:** bis 0059 (Phase 5: billing_cycle/license_transfers/pay-links/Vereinsprofil; 0059: trigger_type += home_win/away_win). Journal-when-Kette monoton bis 1782460000000.
 - **Test-Infra-Falle:** singleFork-Volllauf über 171 Dateien OOMt (Exit 137) bzw. löst Pool-Starvation-Deadlocks aus → `npm test` batchweise pro Verzeichnis laufen (alle 1387 Tests grün, 42 skipped). Pool-Größen im Test: lib/db/client.ts max=8, integration-db max=5, je idle_timeout=5; Test-Container max_connections=400.
 
+## Privatpersonen-only Sponsoring (2026-07-06)
+
+**Strategie-Pivot (User-Entscheid):** Sponsoren sind ausschließlich Privatpersonen (Familie, Freunde, Fans) — kein Business/Gewerbe mehr, komplett aus Messaging, UI, Onboarding und Dokumenten. Spec: `docs/superpowers/specs/2026-07-06-privatpersonen-only-sponsoring.md` (inkl. Steuer-Recherche: Privatbeiträge ohne Gegenleistung = Spende, ideeller Bereich, keine USt).
+
+- **Onboarding:** Typ-Wahl („Familie vs. Unternehmen") entfällt; Business-Formularfelder gelöscht; `create-sponsor` schreibt hart `type='familie'`. Enum-Wert `business` bleibt INERT (annual-Muster), Business-Spalten bleiben nullable, 0 Bestandsdaten (verifiziert).
+- **Dokument-Reframing:** Sponsor-PDF heißt **„Zahlungsübersicht"** (Storno: „Stornobeleg"), **kein USt-Ausweis/Aufschlag mehr** (§14c-Risiko, Spendenframing) — `totalCents` = Summe der zugesagten Beiträge. Sponsor-Mails/UI-Labels umbenannt (Route `/sponsor/rechnungen` bleibt).
+- **Copy-Sweep:** Landing (Story-Cards, Benefits, FAQ), Preise-FAQ, Willkommen-Wizard, Einladungsseite — „lokale Firmen/Werbeleistung/absetzbar" raus, Privat-Personas rein. Steuer-FAQ neutral (Spende nur via gemeinnützigem Verein, kein pauschales Versprechen).
+- **Bleibt:** Postvorlagen/Share-Bilder (Recap/Wrapped) als Marketing-Kanal; `sponsor_leads`; Vereins-Stammdaten (USt betrifft nur Lizenz Verein↔KickPact).
+- **Phase 2 (offen, separater Plan):** Gemeinnützigkeits-Flag + „vereinfachter Nachweis ≤300 €"-Baustein + Spendenübersicht.
+
 ## Audit-Umsetzung 2026-06-11/12 (alle 6 Phasen gemerged)
 
 | Phase | Inhalt | Status |

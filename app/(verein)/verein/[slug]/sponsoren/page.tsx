@@ -93,7 +93,7 @@ export default async function SponsorenPage({
                     {s.displayName}
                   </div>
                   <div className="text-xs text-brand-night-navy/50 mt-0.5 truncate">
-                    {s.userEmail} · <span className="capitalize">{s.type}</span> · {s.teamName}
+                    {s.userEmail} · {s.teamName}
                   </div>
                 </div>
                 <div className="text-[0.65rem] md:text-xs uppercase tracking-widest font-semibold text-accent-dark shrink-0">

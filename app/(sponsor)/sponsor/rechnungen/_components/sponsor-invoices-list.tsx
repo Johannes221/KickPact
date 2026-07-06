@@ -57,7 +57,7 @@ export function SponsorInvoicesList({
   async function handleDownload(id: string) {
     try {
       const url = await invoiceDownloadUrl(id);
-      await openInNewTab(url, `rechnung-${id}.pdf`);
+      await openInNewTab(url, `zahlungsuebersicht-${id}.pdf`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Download fehlgeschlagen");
     }
@@ -119,7 +119,7 @@ export function SponsorInvoicesList({
       totalPages={totalPages}
       sort={sort}
       dir={dir}
-      emptyState="Keine Rechnungen auf dieser Seite."
+      emptyState="Keine Zahlungsübersichten auf dieser Seite."
     />
   );
 }

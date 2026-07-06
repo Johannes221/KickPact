@@ -47,7 +47,7 @@ export function RolesTabs() {
               </Bullet>
               <Bullet>
                 Sponsoren über einen Einladungslink: Familie, Freunde, Stammtisch,
-                lokale Firmen. Alle in einem System.
+                Fans. Alle in einem System.
               </Bullet>
               <Bullet>
                 Vollautomatische Auswertung jedes Spiels, ihr macht nichts außer
@@ -70,7 +70,7 @@ export function RolesTabs() {
               subtitle="1. Herren · so könnte's aussehen"
               lines={[
                 { label: "Tante Erna", value: "5 €/Tor · 10 €/Sieg" },
-                { label: "Bäckerei Müller", value: "20 €/Comeback · 50 €/Sieg" },
+                { label: "Stefan (Ex-Spieler)", value: "20 €/Comeback · 50 €/Sieg" },
                 { label: "Opa Heinz", value: "200 € auf Aufstieg" },
                 { label: "Onkel Tom", value: "10 €/Spezial-Tor" }
               ]}
@@ -105,8 +105,8 @@ export function RolesTabs() {
                 100 % geht direkt an die Mannschaft, KickPact zwackt nichts ab.
               </Bullet>
               <Bullet>
-                Als Unternehmen: ordentliche Rechnung, steuerlich absetzbar als
-                Werbeleistung.
+                Am Monatsende eine klare Zahlungsübersicht, du überweist direkt
+                an den Verein.
               </Bullet>
             </ul>
             <div className="flex flex-wrap gap-3 pt-2">

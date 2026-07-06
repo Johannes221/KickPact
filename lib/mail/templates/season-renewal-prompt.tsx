@@ -73,7 +73,7 @@ Wenn du gar nicht reagierst, läuft alles automatisch aus — du musst nichts tu
 
       <p style="color:#525252; font-size: 13px; line-height: 1.6; margin: 24px 0 0;">
         Wenn du gar nicht reagierst, läuft dein Pact einfach aus — keine weiteren
-        Charges, keine Rechnung.
+        Beiträge, keine Zahlungsübersicht.
       </p>
 
       <p style="color: #a3a3a3; font-size: 11px; margin-top: 36px; border-top: 1px solid #e5e5e5; padding-top: 16px;">

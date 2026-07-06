@@ -32,8 +32,8 @@ export function BillingCycleCard({
       } else {
         toast.success(
           next === "season_end"
-            ? "Umgestellt: eine Rechnung am Saisonende."
-            : "Umgestellt: monatliche Rechnung."
+            ? "Umgestellt: eine Zahlungsübersicht am Saisonende."
+            : "Umgestellt: monatliche Zahlungsübersicht."
         );
       }
     });
@@ -49,13 +49,13 @@ export function BillingCycleCard({
       value: "monthly",
       icon: CalendarDays,
       title: "Monatlich",
-      text: "Deine Beiträge werden am Monatsanfang abgerechnet — eine Rechnung pro Monat mit Spielereignissen."
+      text: "Deine Beiträge werden am Monatsanfang abgerechnet — eine Zahlungsübersicht pro Monat mit Spielereignissen."
     },
     {
       value: "season_end",
       icon: CalendarClock,
       title: "Saisonende",
-      text: "Alle Beiträge der Saison sammeln sich auf einer Rechnung am 30.06. — eine Überweisung pro Saison."
+      text: "Alle Beiträge der Saison sammeln sich auf einer Zahlungsübersicht am 30.06. — eine Überweisung pro Saison."
     }
   ];
 
@@ -120,8 +120,8 @@ export function BillingCycleCard({
 
       <p className="text-[0.7rem] leading-relaxed text-brand-night-navy/50">
         Wechsel auf Monatlich: bisher gesammelte Beiträge stehen auf deiner
-        nächsten Monatsrechnung. Wechsel auf Saisonende: ab sofort sammeln
-        sich neue Beiträge bis zum 30.06.
+        nächsten Monats-Zahlungsübersicht. Wechsel auf Saisonende: ab sofort
+        sammeln sich neue Beiträge bis zum 30.06.
       </p>
     </section>
   );

@@ -35,7 +35,7 @@ const PRIMARY_TABS: readonly Tab[] = [
 const OVERFLOW_TABS: readonly Tab[] = [
   { label: "Bilanz", href: "/sponsor/bilanz", icon: TrendingUp },
   { label: "Beiträge", href: "/sponsor/charges", icon: ChartColumnIncreasing },
-  { label: "Rechnungen", href: "/sponsor/rechnungen", icon: FileText }
+  { label: "Übersichten", href: "/sponsor/rechnungen", icon: FileText }
 ] as const;
 
 const ALL_TABS: readonly Tab[] = [...PRIMARY_TABS, ...OVERFLOW_TABS];
@@ -46,7 +46,7 @@ const ALL_TABS: readonly Tab[] = [...PRIMARY_TABS, ...OVERFLOW_TABS];
 const SETTINGS_ITEMS: SettingsNavItem[] = [
   { label: "Bilanz", href: "/sponsor/bilanz", icon: "trending" },
   { label: "Beiträge", href: "/sponsor/charges", icon: "chart" },
-  { label: "Rechnungen", href: "/sponsor/rechnungen", icon: "file" }
+  { label: "Übersichten", href: "/sponsor/rechnungen", icon: "file" }
 ];
 
 export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {

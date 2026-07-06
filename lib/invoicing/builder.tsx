@@ -54,7 +54,6 @@ const s = StyleSheet.create({
   cellTrigger: { width: 100, color: "#525252" },
   cellAmount: { width: 70, textAlign: "right" },
   summary: { marginTop: 18, alignSelf: "flex-end", width: 240 },
-  summaryRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4, fontSize: 10 },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -66,7 +65,7 @@ const s = StyleSheet.create({
     fontSize: 13
   },
   totalAmount: { color: "#01C457" },
-  ustNote: { marginTop: 24, fontSize: 9, color: "#525252", lineHeight: 1.5, maxWidth: 360 },
+  noteText: { marginTop: 24, fontSize: 9, color: "#525252", lineHeight: 1.5, maxWidth: 360 },
   payBox: {
     marginTop: 24,
     padding: 12,
@@ -115,6 +114,18 @@ const s = StyleSheet.create({
   }
 });
 
+/**
+ * Privatpersonen-only (Spec 2026-07-06 §4): Das sponsor-gerichtete Dokument
+ * ist KEINE Rechnung mehr, sondern eine „Zahlungsübersicht" über die zugesagten
+ * Unterstützungsbeiträge. Konsequenzen:
+ *   - Kein USt-Ausweis, kein Netto/Brutto, kein §19-Hinweis, keine USt-IdNr —
+ *     Beiträge von Privatpersonen ohne Gegenleistung sind kein Leistungs-
+ *     austausch (Werbeleistung); ein Steuerausweis wäre ein §14c-UStG-Risiko
+ *     und würde das Spenden-Framing zerstören.
+ *   - Business-Adressblock entfällt (Sponsoren sind ausschließlich privat).
+ *   - Die interne Beleg-Nummer (invoices-Tabelle) bleibt als Referenz/
+ *     Verwendungszweck erhalten — reines Anzeige-Reframing.
+ */
 export interface InvoiceData {
   invoiceNumber: string;
   period: string;
@@ -130,8 +141,6 @@ export interface InvoiceData {
     name: string;
     address: { street: string; zip: string; city: string; country?: string };
     iban: string | null;
-    taxId: string | null;
-    isSmallBusiness: boolean;
     /**
      * Spec §1.9 (Phase 5): optionale Zusatz-Zahlwege des Vereins. Werden —
      * sofern gesetzt — unter dem IBAN/Girocode-Block als anklickbare Links
@@ -143,9 +152,6 @@ export interface InvoiceData {
   sponsor: {
     displayName: string;
     email: string;
-    type: "familie" | "business";
-    businessName: string | null;
-    businessAddress: { street: string; zip: string; city: string; country?: string } | null;
   };
   items: {
     matchDate: Date;
@@ -163,17 +169,17 @@ export interface InvoiceData {
    */
   girocodeDataUrl?: string | null;
   /**
-   * Wenn gesetzt, wird das Dokument als STORNORECHNUNG (Gutschrift) gerendert:
-   * Titel "Stornorechnung", Referenz auf die Original-Rechnungsnummer, keine
-   * Zahlungsaufforderung (Beträge sind negativ = Gutschrift).
+   * Wenn gesetzt, wird das Dokument als STORNOBELEG (Korrektur) gerendert:
+   * Titel "Stornobeleg", Referenz auf die Original-Belegnummer, keine
+   * Zahlungsaufforderung (Beträge sind gegenläufig = Korrektur).
    */
   stornoOfNumber?: string | null;
 }
 
 export function InvoicePdf({ data }: { data: InvoiceData }) {
-  const subtotal = data.items.reduce((sum, i) => sum + i.amountCents, 0);
-  const ust = data.club.isSmallBusiness ? 0 : Math.round(subtotal * 0.19);
-  const total = subtotal + ust;
+  // Privatspenden-Framing: Zahlbetrag = Summe der zugesagten Beiträge.
+  // Kein USt-Aufschlag (siehe Interface-Kommentar).
+  const total = data.items.reduce((sum, i) => sum + i.amountCents, 0);
   const issued = data.issuedAt.toLocaleDateString("de-DE", {
     year: "numeric",
     month: "2-digit",
@@ -181,12 +187,13 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
   });
 
   const isStorno = Boolean(data.stornoOfNumber);
+  const docTitle = isStorno ? "Stornobeleg" : "Zahlungsübersicht";
 
   return (
     <Document
-      title={`${isStorno ? "Stornorechnung" : "Rechnung"} ${data.invoiceNumber}`}
+      title={`${docTitle} ${data.invoiceNumber}`}
       author={data.club.name}
-      subject={`KickPact-${isStorno ? "Stornorechnung" : "Rechnung"} für ${data.period}`}
+      subject={`KickPact-${docTitle} für ${data.period}`}
     >
       <Page size="A4" style={s.page}>
         {/* Header: Verein links, Sponsor rechts */}
@@ -197,28 +204,10 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
             <Text>
               {data.club.address.zip} {data.club.address.city}
             </Text>
-            {data.club.taxId ? <Text style={{ marginTop: 6 }}>USt-IdNr: {data.club.taxId}</Text> : null}
-            {data.club.iban ? <Text>IBAN: {data.club.iban}</Text> : null}
+            {data.club.iban ? <Text style={{ marginTop: 6 }}>IBAN: {data.club.iban}</Text> : null}
           </View>
           <View style={s.sponsorBlock}>
-            {data.sponsor.type === "business" && data.sponsor.businessName ? (
-              <View>
-                <Text style={s.sponsorName}>{data.sponsor.businessName}</Text>
-                {data.sponsor.businessAddress ? (
-                  <View>
-                    <Text>{data.sponsor.businessAddress.street}</Text>
-                    <Text>
-                      {data.sponsor.businessAddress.zip} {data.sponsor.businessAddress.city}
-                    </Text>
-                  </View>
-                ) : null}
-                <Text style={{ marginTop: 4, color: "#525252", fontSize: 9 }}>
-                  z. Hd. {data.sponsor.displayName}
-                </Text>
-              </View>
-            ) : (
-              <Text style={s.sponsorName}>{data.sponsor.displayName}</Text>
-            )}
+            <Text style={s.sponsorName}>{data.sponsor.displayName}</Text>
             <Text style={{ marginTop: 4, color: "#525252", fontSize: 9 }}>
               {data.sponsor.email}
             </Text>
@@ -228,20 +217,20 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
         {/* Meta */}
         <View style={s.meta}>
           <Text style={s.invoiceTitle}>
-            {isStorno ? "Stornorechnung" : "Rechnung"} {data.invoiceNumber}
+            {docTitle} {data.invoiceNumber}
           </Text>
           {isStorno ? (
             <View style={s.metaRow}>
-              <Text style={s.metaLabel}>Storno zu Rechnung</Text>
+              <Text style={s.metaLabel}>Storno zu Zahlungsübersicht</Text>
               <Text>{data.stornoOfNumber}</Text>
             </View>
           ) : null}
           <View style={s.metaRow}>
-            <Text style={s.metaLabel}>Leistungszeitraum</Text>
+            <Text style={s.metaLabel}>Zeitraum</Text>
             <Text>{data.period}</Text>
           </View>
           <View style={s.metaRow}>
-            <Text style={s.metaLabel}>{isStorno ? "Stornodatum" : "Rechnungsdatum"}</Text>
+            <Text style={s.metaLabel}>{isStorno ? "Stornodatum" : "Datum"}</Text>
             <Text>{issued}</Text>
           </View>
         </View>
@@ -262,43 +251,23 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
           </View>
         ))}
 
-        {/* Summary */}
+        {/* Summary — nur der zugesagte Gesamtbetrag, kein USt-Block */}
         <View style={s.summary}>
-          {data.club.isSmallBusiness ? null : (
-            <View style={s.summaryRow}>
-              <Text>Zwischensumme</Text>
-              <Text>{eur(subtotal)}</Text>
-            </View>
-          )}
-          {data.club.isSmallBusiness ? null : (
-            <View style={s.summaryRow}>
-              <Text>zzgl. 19 % USt</Text>
-              <Text>{eur(ust)}</Text>
-            </View>
-          )}
           <View style={s.totalRow}>
             <Text>Gesamtbetrag</Text>
             <Text style={s.totalAmount}>{eur(total)}</Text>
           </View>
         </View>
 
-        {/* USt-Hinweis bei §19 */}
-        {data.club.isSmallBusiness ? (
-          <Text style={s.ustNote}>
-            Gemäß § 19 UStG wird keine Umsatzsteuer ausgewiesen. Die Beträge sind als
-            Bruttobeträge zu verstehen.
+        {isStorno ? (
+          <Text style={s.noteText}>
+            Dieser Stornobeleg hebt die oben referenzierte Zahlungsübersicht auf. Bereits
+            gezahlte Beträge werden erstattet bzw. verrechnet. Es ist keine Zahlung erforderlich.
           </Text>
         ) : null}
 
         {/* Zahlungs-Block — IBAN prominent + Girocode-QR rechts (sofern beide
             vorhanden). Banking-App scannt → SEPA-Formular vorausgefüllt. */}
-        {isStorno ? (
-          <Text style={s.ustNote}>
-            Diese Stornorechnung hebt die oben referenzierte Rechnung auf. Bereits
-            gezahlte Beträge werden erstattet bzw. verrechnet. Es ist keine Zahlung erforderlich.
-          </Text>
-        ) : null}
-
         {!isStorno && (data.club.iban || data.club.paypalHandle || data.club.stripePaymentLink) ? (
           <View style={s.payBox} wrap={false}>
             <View style={s.payBoxText}>
@@ -306,7 +275,7 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
               {data.club.iban ? (
                 <View>
                   <Text>
-                    Bitte überweise {eur(total)} innerhalb von 14 Tagen an:
+                    Dein zugesagter Unterstützungsbeitrag: bitte überweise {eur(total)} innerhalb von 14 Tagen an:
                   </Text>
                   <Text style={[s.payBoxIban, { marginTop: 4 }]}>
                     {data.club.name}
@@ -318,8 +287,8 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
                 </View>
               ) : (
                 <Text>
-                  Bitte zahle {eur(total)} innerhalb von 14 Tagen über einen der
-                  folgenden Wege:
+                  Dein zugesagter Unterstützungsbeitrag: bitte zahle {eur(total)} innerhalb von
+                  14 Tagen über einen der folgenden Wege:
                 </Text>
               )}
               {data.club.paypalHandle ? (
@@ -353,8 +322,8 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
             Pro / Vereinslizenz: Vereins-Branding ohne KickPact-Hinweis. */}
         <Text style={s.footer} fixed>
           {isStorno
-            ? "Stornorechnung — keine Zahlung erforderlich."
-            : `Bitte überweisen Sie den Gesamtbetrag innerhalb von 14 Tagen${data.club.iban ? ` auf IBAN ${data.club.iban}` : ""}.`}
+            ? "Stornobeleg — keine Zahlung erforderlich."
+            : `Zugesagter Unterstützungsbeitrag: bitte innerhalb von 14 Tagen überweisen${data.club.iban ? ` (IBAN ${data.club.iban})` : ""}.`}
           {"\n"}
           {(data.plan ?? "basic") === "basic"
             ? "Erzeugt mit KickPact · Performance-Sponsoring im Amateurfußball · kickpact.de"

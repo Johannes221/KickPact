@@ -129,7 +129,11 @@ async function seed() {
     id: "club_1",
     slug: "fc-test",
     name: "FC Test",
-    isSmallBusiness: true,
+    // Bewusst NICHT-Kleinunternehmer (Review N6): seit Privatpersonen-only
+    // (Spec 2026-07-06 §4) darf auch dann KEINE USt aufgeschlagen werden —
+    // die totalCents-Assertion unten beweist total == Summe der Beiträge
+    // (alter Code hätte hier 19 % addiert).
+    isSmallBusiness: false,
     verifiedAt: new Date(Date.UTC(2026, 0, 1))
   });
   await tdb.insert(teams).values({
@@ -280,7 +284,8 @@ describe.skipIf(isIntegrationDbDisabled)("Saison-Charges im Rechnungslauf (integ
     expect(inv).toBeDefined();
     expect(inv.sponsorId).toBe("sp_1");
     expect(inv.clubId).toBe("club_1");
-    // Kleinunternehmer → keine USt: 5000 (Saison) + 500 (Match)
+    // Privatspenden → NIE USt-Aufschlag (auch Nicht-§19-Verein):
+    // 5000 (Saison) + 500 (Match) — alter Code hätte 6545 gebucht.
     expect(inv.totalCents).toBe(5500);
 
     const items = await db
