@@ -10,7 +10,7 @@
 - **Aktuelle Saison: 26/27** — am 12.06. per `scripts/season-rollover-now.ts --execute` alle 9 aktiven Teams von 2526 → 2627 gebumpt (Sofort-Umstellung, User-Wunsch). 25/26-Spiele bleiben sichtbar über den Saison-Switcher. Der reguläre `season-rollover`-Cron (15.7.) ist idempotent und findet danach 0 Teams mehr auf 2526.
 - **Production-Domain kickpact.com:** DNS bewusst NOCH NICHT gesetzt (User-Entscheid: „erst live wenn's läuft"). Code-seitige Domain-Fallbacks zeigen auf kickpact.com (lib/utils/base-url.ts).
 - **Migrationen:** bis 0059 (Phase 5: billing_cycle/license_transfers/pay-links/Vereinsprofil; 0059: trigger_type += home_win/away_win). Journal-when-Kette monoton bis 1782460000000.
-- **Test-Infra-Falle:** singleFork-Volllauf über 171 Dateien OOMt (Exit 137) bzw. löst Pool-Starvation-Deadlocks aus → `npm test` batchweise pro Verzeichnis laufen (alle 1387 Tests grün, 42 skipped). Pool-Größen im Test: lib/db/client.ts max=8, integration-db max=5, je idle_timeout=5; Test-Container max_connections=400.
+- **Test-Infra:** FK-Seeding-Flake im Volllauf 2026-07-06 an der Wurzel gefixt — `tests/setup/db.ts resetTestDb` war eine Kette aus 34 sequentiellen DELETEs, die nach einem Test-Timeout als Zombie in die nächste Datei blutete (Teams verschwanden mitten im Seed → FK-Fehler). Jetzt EIN atomares `TRUNCATE … CASCADE` (Muster aus integration-db.ts). Volllauf seither deterministisch grün (1467 Tests). Rest-Risiko: sehr seltener OOM-Abbruch (Exit 137) im singleFork-Volllauf → dann batchweise pro Verzeichnis nachlaufen. Pool-Größen im Test: lib/db/client.ts max=8, integration-db max=5, je idle_timeout=5; Test-Container max_connections=400.
 
 ## Privatpersonen-only Sponsoring (2026-07-06)
 
