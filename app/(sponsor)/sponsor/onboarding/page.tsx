@@ -16,8 +16,8 @@ export default async function SponsorOnboardingPage({
   const { invitation } = await searchParams;
 
   // ── Skip-If-Profile-Exists ────────────────────────────────────────────────
-  // Sponsor mit fertigem Profil soll niemals erneut die "Familie oder
-  // Unternehmen?"-Frage sehen — sonst Duplicate-Insert beim Submit.
+  // Sponsor mit fertigem Profil soll das Onboarding-Formular nie erneut
+  // sehen — sonst Duplicate-Insert beim Submit.
   const existing = await findSponsorForUser(user.id);
   if (existing) {
     redirect(
@@ -36,11 +36,11 @@ export default async function SponsorOnboardingPage({
         Willkommen bei <span className="text-accent">KickPact</span>
       </h1>
       <p className="mt-1.5 md:mt-2 text-sm md:text-base text-brand-night-navy/60">
-        Kurze Frage: Bist du Familie/Freund oder Unternehmen?
+        Sag der Mannschaft kurz, wer hinter ihr steht. Dauert keine Minute.
       </p>
       <p className="mt-3 rounded-md border border-brand-neutral/40 bg-brand-off-white px-3 py-2 text-xs md:text-sm text-brand-night-navy/70">
-        👨‍👩‍👧 Ein Konto pro Rechnungsempfänger — Familien teilen sich einfach
-        einen Zugang.
+        👨‍👩‍👧 Ein Konto pro Familie — teilt euch einfach einen Zugang, die
+        Zahlungsübersicht kommt gesammelt.
       </p>
       <div className="mt-6 md:mt-10">
         <Suspense fallback={<div className="text-brand-night-navy/60">Lade…</div>}>

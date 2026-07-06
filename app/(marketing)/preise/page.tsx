@@ -79,19 +79,19 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Wirklich 0 % Provision auf Pacts?",
-    a: "Ja, in allen Tarifen. KickPact stellt die Plattform und wickelt Tracking, PDF-Rechnungen und Sponsor-Bestätigungen ab, finanziert wird das über die Lizenzgebühr. Was Sponsoren per Pact versprechen, kommt 1:1 bei eurer Mannschaft an."
+    a: "Ja, in allen Tarifen. KickPact stellt die Plattform und wickelt Tracking, PDF-Zahlungsübersichten und Sponsor-Bestätigungen ab, finanziert wird das über die Lizenzgebühr. Was Sponsoren per Pact versprechen, kommt 1:1 bei eurer Mannschaft an."
   },
   {
     q: "Was ist mit der Umsatzsteuer?",
-    a: "Alle Preise zzgl. 19 % USt. Auf der Rechnung wird die USt. separat ausgewiesen. Vereine ohne Vorsteuerabzug zahlen brutto, gewerbliche Sponsoren können die USt. ihrer eigenen Pacts geltend machen."
+    a: "Alle Lizenz-Preise zzgl. 19 % USt, auf der Lizenz-Rechnung separat ausgewiesen. Das betrifft nur die KickPact-Lizenz eures Vereins. Sponsoren-Beiträge sind private Unterstützung: da kommt keine USt drauf."
   },
   {
     q: "Was passiert wenn ich von Basic auf Pro upgrade?",
-    a: "Sofort: Sponsor- und Pact-Regelgrenzen fallen weg, Saison-Ziele + Custom-Trigger werden freigeschaltet, dein Vereins-Logo erscheint auf der nächsten PDF-Rechnung. Bestehende Pacts laufen unverändert weiter, beim Monatsabo wird pro-rated abgerechnet."
+    a: "Sofort: Sponsor- und Pact-Regelgrenzen fallen weg, Saison-Ziele + Custom-Trigger werden freigeschaltet, dein Vereins-Logo erscheint auf der nächsten PDF-Zahlungsübersicht. Bestehende Pacts laufen unverändert weiter, beim Monatsabo wird pro-rated abgerechnet."
   },
   {
     q: "Was passiert bei einem Disput?",
-    a: "Sponsoren bestätigen oder bestreiten jedes Event innerhalb von 7 Tagen. Bei Streit erscheinen Event-Beweise (Spielnachweis, ggf. Trainer-Foto), und der Verein kann den Pact stornieren. Monats-Rechnung wird erst danach final erstellt: kein Geld fließt für strittige Events."
+    a: "Sponsoren bestätigen oder bestreiten jedes Event innerhalb von 7 Tagen. Bei Streit erscheinen Event-Beweise (Spielnachweis, ggf. Trainer-Foto), und der Verein kann den Pact stornieren. Die Monats-Zahlungsübersicht wird erst danach final erstellt: kein Geld fließt für strittige Events."
   }
 ];
 

@@ -28,7 +28,7 @@ export function buildReminderText(input: ReminderTextInput): {
   subject: string;
   body: string;
 } {
-  const subject = `Kurze Erinnerung: Rechnung ${input.invoiceNumber} (${input.clubName})`;
+  const subject = `Kurze Erinnerung: Zahlungsübersicht ${input.invoiceNumber} (${input.clubName})`;
 
   const openSince =
     input.dueSinceDays > 0
@@ -44,7 +44,7 @@ export function buildReminderText(input: ReminderTextInput): {
 
   const body = `Hi ${input.sponsorName},
 
-eine kurze Erinnerung von uns: deine Rechnung ${input.invoiceNumber} über ${input.amountEur} ${openSince}. Bestimmt ist sie nur untergegangen — kein Stress.
+eine kurze Erinnerung von uns: deine Zahlungsübersicht ${input.invoiceNumber} über ${input.amountEur} ${openSince}. Bestimmt ist sie nur untergegangen — kein Stress.
 ${payBlock}
 Danke, dass du uns unterstützt — das bedeutet der Mannschaft viel!
 

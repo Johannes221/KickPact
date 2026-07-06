@@ -168,7 +168,7 @@ export function SponsorsManager({
                 <span className="font-normal opacity-60">— optional, für Willkommensgruß</span>
               </span>
               <Input
-                placeholder='z.B. "Familie Müller" oder "Bäckerei Schreiber"'
+                placeholder='z.B. "Familie Müller" oder "Onkel Klaus"'
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && createNew()}

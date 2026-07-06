@@ -28,6 +28,8 @@ async function extractText(buffer: Buffer): Promise<string> {
   }
 }
 
+// Privatpersonen-only (Spec 2026-07-06 §4): Das Dokument ist eine
+// „Zahlungsübersicht" — kein USt-Ausweis, keine Business-Felder mehr.
 const INVOICE_FIXTURE: InvoiceData = {
   invoiceNumber: "2026-05-001",
   period: "2026-05",
@@ -35,16 +37,11 @@ const INVOICE_FIXTURE: InvoiceData = {
   club: {
     name: "FC Sportfreunde 1910 Dossenheim",
     address: { street: "Bahnhofstr. 1", zip: "69221", city: "Dossenheim" },
-    taxId: "DE123456789",
     iban: "DE89 3704 0044 0532 0130 00",
-    isSmallBusiness: true,
   },
   sponsor: {
     displayName: "Familie Müller",
     email: "familie.mueller@example.com",
-    type: "familie",
-    businessName: null,
-    businessAddress: null,
   },
   items: [
     {
@@ -75,9 +72,12 @@ describe("Invoice PDF — InvoicePdf component", () => {
     // 1500 cents = 15,00 € (de-DE formatting → "15,00")
     expect(text).toContain("15,00");
     expect(text).toContain("DE89 3704 0044 0532 0130 00");
-    // §19 UStG hint when isSmallBusiness
-    expect(text).toMatch(/§\s*19/);
-    expect(text.toLowerCase()).toContain("umsatzsteuer");
+    // Privatpersonen-only: Dokument heißt Zahlungsübersicht, nie Rechnung
+    expect(text).toContain("Zahlungsübersicht");
+    expect(text).not.toContain("Rechnung");
+    // Kein USt-Ausweis (Spendenframing, §14c-Risiko)
+    expect(text.toLowerCase()).not.toContain("umsatzsteuer");
+    expect(text).not.toMatch(/19\s*%/);
   }, 30_000);
 
   it("renders all line items (matchLabel + triggerLabel)", async () => {
@@ -230,17 +230,13 @@ describe("Invoice PDF — InvoicePdf component", () => {
     expect(text).not.toContain("Online zahlen");
   }, 30_000);
 
-  it("non-small-business: shows USt-Zwischensumme + 19 % USt row", async () => {
+  it("Storno: Titel 'Stornobeleg' + Referenz, keine Zahlungsaufforderung", async () => {
     const buffer = await renderToBuffer(
-      <InvoicePdf
-        data={{
-          ...INVOICE_FIXTURE,
-          club: { ...INVOICE_FIXTURE.club, isSmallBusiness: false },
-        }}
-      />
+      <InvoicePdf data={{ ...INVOICE_FIXTURE, stornoOfNumber: "2026-04-007" }} />
     );
-    const text = await extractText(buffer);
-    expect(text.toLowerCase()).toContain("zwischensumme");
-    expect(text).toMatch(/19\s*%/);
+    const text = (await extractText(buffer)).replace(/\s+/g, " ");
+    expect(text).toContain("Stornobeleg");
+    expect(text).toContain("2026-04-007");
+    expect(text).not.toContain("Verwendungszweck");
   }, 30_000);
 });

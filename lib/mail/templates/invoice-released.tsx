@@ -24,8 +24,8 @@ export function invoiceReleasedEmail(args: {
   const { sponsorName, entityName, invoiceCount, dashboardUrl } = args;
   const countLabel =
     invoiceCount === 1
-      ? "eine zurückgehaltene Rechnung"
-      : `${invoiceCount} zurückgehaltene Rechnungen`;
+      ? "eine zurückgehaltene Zahlungsübersicht"
+      : `${invoiceCount} zurückgehaltene Zahlungsübersichten`;
 
   return {
     subject: `${countLabel.charAt(0).toUpperCase() + countLabel.slice(1)} von ${entityName} ${invoiceCount === 1 ? "ist" : "sind"} jetzt verfügbar`,
@@ -37,7 +37,7 @@ ${countLabel.charAt(0).toUpperCase() + countLabel.slice(1)}, die wir bislang zur
 
 Dashboard: ${dashboardUrl}
 
-Tipp: Du findest alle Rechnungen unter "Abrechnungen" in deiner Sponsor-Übersicht.
+Tipp: Du findest alle Zahlungsübersichten unter "Übersichten" in deiner Sponsor-Übersicht.
 
 — KickPact`,
     html: `<!doctype html>
@@ -58,7 +58,7 @@ Tipp: Du findest alle Rechnungen unter "Abrechnungen" in deiner Sponsor-Übersic
       </p>
 
       <a href="${dashboardUrl}" style="display:inline-block;background:#01C457;color:#fff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:15px;">
-        Zu meinen Rechnungen
+        Zu meinen Übersichten
       </a>
 
       <p style="color:#a3a3a3;font-size:11px;margin-top:36px;border-top:1px solid #e5e5e5;padding-top:16px;">

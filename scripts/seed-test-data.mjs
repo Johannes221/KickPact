@@ -177,11 +177,8 @@ async function main() {
     return id;
   }
   const sErna = await sponsorFor(userErna, "Tante Erna", "familie");
-  const sBaeck = await sponsorFor(userBaeck, "Bäckerei Müller", "business", {
-    businessName: "Bäckerei Müller GmbH",
-    businessAddress: { street: "Hauptstr. 5", zip: "69221", city: "Dossenheim", country: "DE" },
-    businessTaxId: "DE123456789"
-  });
+  // Privatpersonen-only (Spec 2026-07-06): kein business-Seed mehr.
+  const sBaeck = await sponsorFor(userBaeck, "Stefan Berger (Ex-Spieler)", "familie");
   const sHeinz = await sponsorFor(userHeinz, "Familie Weber (Heinz)", "familie", {
     proxies: [
       { name: "Oma Hilde", sharePercent: 40, note: "Sammelt für die Mannschaftskasse" },

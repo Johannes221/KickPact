@@ -34,7 +34,7 @@ export const metadata = {
   // `absolute`: Marke vorne („KickPact – …") statt Layout-Template („… – KickPact").
   title: { absolute: "KickPact – Amateurfußball-Sponsoring, das mitfiebert" },
   description:
-    "Familie, Freunde und lokale Sponsoren setzen einen Betrag pro Tor, Sieg oder Aufstieg und füllen so die Mannschaftskasse. 100 % bleibt bei der Mannschaft.",
+    "Familie, Freunde und echte Fans setzen einen Betrag pro Tor, Sieg oder Aufstieg und füllen so die Mannschaftskasse. 100 % bleibt bei der Mannschaft.",
   keywords: [
     "Amateurfußball Sponsoring",
     "Vereinssponsoring Fußball",
@@ -45,7 +45,7 @@ export const metadata = {
   openGraph: {
     title: "KickPact – Amateurfußball-Sponsoring, das mitfiebert",
     description:
-      "Jedes Tor füllt die Mannschaftskasse. Familie, Freunde und lokale Sponsoren fiebern mit. 100 % bleibt bei der Mannschaft.",
+      "Jedes Tor füllt die Mannschaftskasse. Familie, Freunde und echte Fans fiebern mit. 100 % bleibt bei der Mannschaft.",
     // og:url der Landing — wird über metadataBase (Root-Layout) absolut aufgelöst.
     url: "/",
   },
@@ -120,7 +120,7 @@ export default function LandingPage() {
               füllt die <span className="text-accent">Mannschaftskasse.</span>
             </h1>
             <p className="animate-fade-up delay-2 mt-3 md:mt-5 text-sm md:text-lg text-brand-night-navy/85 leading-relaxed">
-              Familie, Freunde, der Bäcker um die Ecke: jeder setzt seinen eigenen Betrag
+              Familie, Freunde, Oma auf der Tribüne: jeder setzt seinen eigenen Betrag
               pro Tor, Sieg oder Aufstieg. Ihr fiebert gemeinsam mit, die Kasse wächst von
               allein. <strong>100 % bleibt bei der Mannschaft.</strong>
             </p>
@@ -167,7 +167,7 @@ export default function LandingPage() {
             </h2>
             <p className="mt-2 text-sm md:text-base text-brand-night-navy/70">
               Keine Plakate, keine Trikot-Werbung. Sondern Menschen, die mitfiebern: von der
-              Bambini-Tante bis zum Bäcker um die Ecke. Jeder mit seinem eigenen Betrag, frei
+              Bambini-Tante bis zum Ex-Spieler von damals. Jeder mit seinem eigenen Betrag, frei
               gewählt. Vier Beispiele aus dem echten Leben:
             </p>
           </div>
@@ -190,16 +190,16 @@ export default function LandingPage() {
             <StoryCard
               image={PHOTOS.teamCelebration}
               imageAlt="SG-Reichenbach-Mannschaft umarmt sich nach Tor"
-              kicker="Bäckerei Müller · Business · Sein Setup"
+              kicker="Stefan · Ex-Spieler · Sein Setup"
               headline="50 € pro Comeback-Sieg."
-              body="Stefan vom Bäcker hat sich bewusst für 50 €/Comeback entschieden, selten genug, dass es nicht ausartet. Steuerlich absetzbar als Werbeleistung, und jedes Comeback-Erlebnis ist ein Aufhänger für ein Kunden-Gespräch."
+              body="Stefan hat hier früher selbst gespielt. Er hat sich bewusst für 50 €/Comeback entschieden, selten genug, dass es nicht ausartet. Und wenn die Jungs ein 0:2 drehen, ist er der Lauteste am Platz."
             />
             <StoryCard
               image={PHOTOS.teamGreen}
               imageAlt="TSV-Abtswind-Mannschaft jubelt in grünen Trikots"
               kicker="Opa Heinz · Saison-Ziel · Seine Wahl"
               headline="200 € wenn der Aufstieg klappt."
-              body="Heinz fiebert seit 40 Jahren mit. Er hat 200 € auf den Aufstieg versprochen und 5 € pro Kopfballtor seines Enkels. Saisonende → Rechnung, Geld geht in die Mannschaftskasse."
+              body="Heinz fiebert seit 40 Jahren mit. Er hat 200 € auf den Aufstieg versprochen und 5 € pro Kopfballtor seines Enkels. Saisonende → Zahlungsübersicht, Geld geht in die Mannschaftskasse."
             />
           </div>
           <p className="mt-6 md:mt-8 text-xs md:text-sm text-brand-night-navy/60 text-center max-w-2xl mx-auto">
@@ -262,7 +262,7 @@ export default function LandingPage() {
                   <BenefitLi>Beträge frei wählbar: 50 Cent bis 500 € pro Event</BenefitLi>
                   <BenefitLi><strong>100 % gehen direkt an die Mannschaft.</strong> KickPact zwackt nichts ab</BenefitLi>
                   <BenefitLi>Optionaler Monats-Cap, nie Überraschungen</BenefitLi>
-                  <BenefitLi>Steuerlich absetzbar als Werbeleistung</BenefitLi>
+                  <BenefitLi>Klare Zahlungsübersicht am Monatsende, kein Papierkram</BenefitLi>
                   <BenefitLi>Live mitfiebern, jedes Tor zählt</BenefitLi>
                 </ul>
               </div>
@@ -275,8 +275,8 @@ export default function LandingPage() {
                 </h3>
                 <ul className="mt-3 space-y-2 text-xs md:text-sm text-brand-night-navy/80">
                   <BenefitLi>Onboarding in 90 Sekunden, ein Einladungslink für alle Sponsoren</BenefitLi>
-                  <BenefitLi>Familie, Stammtisch + lokale Firmen, alle in einem System</BenefitLi>
-                  <BenefitLi>Mannschaftskasse wächst automatisch, Rechnung zum Monatsersten</BenefitLi>
+                  <BenefitLi>Familie, Stammtisch, Fans: alle in einem System</BenefitLi>
+                  <BenefitLi>Mannschaftskasse wächst automatisch, Zahlungsübersicht zum Monatsersten</BenefitLi>
                   <BenefitLi>Performance-Ansporn: jedes Tor zählt direkt</BenefitLi>
                   <BenefitLi>Eigenständig, keine Vorstands-Politik</BenefitLi>
                 </ul>
@@ -474,7 +474,7 @@ export default function LandingPage() {
             />
             <FaqItem
               q="Sind die Beträge irgendwie vorgegeben?"
-              a="Nein. Beträge sind komplett frei wählbar, von 0,50 € bis 500 € pro Event. Familie nimmt oft 1–5 €/Tor, Unternehmen 25–100 €/Sieg. Im Pact-Setup siehst du eine Worst-Case-Hochrechnung, damit du nicht überraschend mehr zahlst als gedacht. Plus optionaler Monats-Cap."
+              a="Nein. Beträge sind komplett frei wählbar, von 0,50 € bis 500 € pro Event. Die meisten nehmen 1–5 €/Tor, wer richtig mitfiebert auch mal 25 €/Sieg. Im Pact-Setup siehst du eine Worst-Case-Hochrechnung, damit du nicht überraschend mehr zahlst als gedacht. Plus optionaler Monats-Cap."
             />
             <FaqItem
               q="Wie funktionieren die Saison-Ziele?"
@@ -486,7 +486,7 @@ export default function LandingPage() {
             />
             <FaqItem
               q="Sind die Beträge für den Sponsor steuerlich absetzbar?"
-              a="Bei Unternehmens-Sponsoren: ja, als Werbeleistung. KickPact erzeugt eine ordentliche Vereins-Rechnung mit USt-ID (oder §19-Kleinunternehmer-Hinweis). Bei Privatpersonen (Familie, Freunde) gilt der allgemeine Status, keine Steuervorteile, aber auch keine Pflichten."
+              a="Deine Beiträge sind freiwillige Unterstützung ohne Gegenleistung. Ob sie als Spende absetzbar sind, hängt vom Verein ab: gemeinnützige Vereine können dafür eine Spendenbescheinigung ausstellen, frag dort kurz nach. KickPact erstellt dir jeden Monat eine klare Zahlungsübersicht über alle Beiträge. Das ist keine Steuerberatung, im Zweifel hilft das Finanzamt."
             />
             <FaqItem
               q="Kann ich einen Pact auf einen bestimmten Spieler binden?"
@@ -510,7 +510,7 @@ export default function LandingPage() {
             />
             <FaqItem
               q="Müssen Vereine USt-pflichtig sein?"
-              a="Nein. Im Wizard markierst du, ob dein Verein Kleinunternehmer (§19 UStG) ist. Wir generieren die Rechnungen entsprechend mit oder ohne USt-Aufschlag und mit dem korrekten Hinweistext."
+              a="Nein. Sponsoren-Beiträge sind private Unterstützung ohne Gegenleistung, da kommt keine USt drauf — die Zahlungsübersichten an eure Sponsoren sind komplett USt-frei. Im Wizard kannst du trotzdem hinterlegen, ob dein Verein Kleinunternehmer (§19 UStG) ist; das betrifft nur eure Vereins-Stammdaten."
             />
           </Accordion>
         </div>

@@ -56,8 +56,9 @@ export default function DatenschutzPage() {
           Spieler-Bezug), Verein/Mannschaft, Pact-Konfigurationen.
         </li>
         <li>
-          <strong>Rechnungsdaten:</strong> Daten, die für die Erstellung der
-          monatlichen PDF-Rechnung notwendig sind (Rechnungsadresse, ggf. USt-ID).
+          <strong>Abrechnungsdaten:</strong> Daten, die für die Erstellung der
+          monatlichen PDF-Zahlungsübersicht notwendig sind (Anzeigename,
+          E-Mail-Adresse, zugesagte Beiträge).
         </li>
         <li>
           <strong>Öffentliche Spieldaten der DFB-Landesverbände:</strong>{" "}

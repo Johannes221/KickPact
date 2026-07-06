@@ -205,8 +205,8 @@ export function EinstellungenForm({
                     </FormLabel>
                     <FormDescription className="text-xs">
                       {isSmallBusiness
-                        ? "Auf Rechnungen erscheint: Kein Ausweis von Umsatzsteuer gem. §19 UStG"
-                        : "Rechnungen enthalten 19% MwSt. — USt-ID unbedingt ausfüllen."}
+                        ? "Euer Verein nutzt die Kleinunternehmer-Regelung (§19 UStG)."
+                        : "Euer Verein weist auf eigenen Rechnungen USt aus — USt-ID unbedingt ausfüllen."}
                     </FormDescription>
                   </div>
                 </div>

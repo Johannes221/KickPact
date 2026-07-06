@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { requireUser } from "@/lib/auth/session";
-import { getAccountOverview, getSponsorType } from "@/lib/db/queries/account";
+import { getAccountOverview } from "@/lib/db/queries/account";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { flattenIdentities } from "@/lib/auth/identity-routing";
 import {
@@ -35,9 +35,9 @@ export default async function KontoPage() {
   // User (Lizenz-Inhaber) entscheiden muss.
   const licenseTransferRequests = await listPendingTransferRequestsForUser(user.id);
 
-  // Sponsor-Type wird nicht in UserIdentities zurückgegeben — separater Lookup
-  // damit das Label „Familie/Business" auf der Karte stimmt.
-  const sponsorType = identities.sponsor ? await getSponsorType(user.id) : null;
+  // Privatpersonen-only (Spec 2026-07-06): kein Typ-Suffix mehr auf der
+  // Sponsor-Karte — alle Sponsoren sind privat, das rohe Enum-Label
+  // („familie") wäre nur Rauschen.
 
   // Hauptrollen-Auswahl: serialisierbare Options (flattenIdentities-Einträge
   // ohne die nicht-serialisierbare `matches`-Funktion) + aktuell aufgelöste
@@ -284,7 +284,7 @@ export default async function KontoPage() {
                   {identities.sponsor.displayName}
                 </span>
                 <span className="text-[0.7rem] uppercase tracking-wide font-semibold text-brand-night-navy/50">
-                  Sponsor{sponsorType ? ` · ${sponsorType}` : ""}
+                  Sponsor
                 </span>
               </div>
               <Link

@@ -246,8 +246,7 @@ async function seed() {
       id: "sp_2",
       userId: "u_sp2",
       displayName: "Sponsor 2",
-      type: "business",
-      businessName: "Biz GmbH"
+      type: "familie"
     }
   ]);
 

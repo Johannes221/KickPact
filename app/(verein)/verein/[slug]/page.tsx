@@ -180,7 +180,7 @@ function NextSteps({
     steps.push({
       icon: Send,
       label: "Sponsoren einladen",
-      desc: "Teile deinen Einladungslink — Familie, Freunde, der Wirt um die Ecke. Sponsoren legen ihre Pacts selbst fest.",
+      desc: "Teile deinen Einladungslink — Familie, Freunde, Oma, Onkel. Sponsoren legen ihre Pacts selbst fest.",
       href: `/verein/${slug}/sponsoren`
     });
   } else if (activePledgeCount === 0) {

@@ -189,9 +189,11 @@ export async function runInvoiceGroups(opts: {
             ? highestPlanFrom(planRows.map((r) => r.plan as PlanKey))
             : "basic";
 
-        const subtotal = group.items.reduce((s, i) => s + i.amountCents, 0);
-        const ust = billingClub.isSmallBusiness ? 0 : Math.round(subtotal * 0.19);
-        const total = subtotal + ust;
+        // Privatpersonen-only (Spec 2026-07-06 §4): Zahlbetrag = Summe der
+        // zugesagten Beiträge, KEIN USt-Aufschlag mehr. Beiträge von
+        // Privatpersonen ohne Gegenleistung sind kein Leistungsaustausch —
+        // das Dokument ist eine Zahlungsübersicht, keine Rechnung.
+        const total = group.items.reduce((s, i) => s + i.amountCents, 0);
 
         // Render PDF to Buffer (Node-side, react-pdf)
         const clubAddress = (billingClub.addressJson as {
@@ -200,12 +202,6 @@ export async function runInvoiceGroups(opts: {
           city?: string;
           country?: string;
         } | null) ?? { street: "", zip: "", city: "" };
-        const businessAddress = (spRow.sponsor.businessAddressJson as {
-          street?: string;
-          zip?: string;
-          city?: string;
-          country?: string;
-        } | null) ?? null;
 
         // Pre-render Girocode (EPC069-12) data-URL so the synchronous
         // react-pdf <Image> can embed it. Returns null when IBAN missing
@@ -234,8 +230,6 @@ export async function runInvoiceGroups(opts: {
                   country: clubAddress.country
                 },
                 iban: billingClub.iban ?? null,
-                taxId: billingClub.taxId ?? null,
-                isSmallBusiness: billingClub.isSmallBusiness,
                 // Spec §1.9 (Paket C): Zusatz-Zahlwege auf der PDF —
                 // konditional, Girocode bleibt Default.
                 paypalHandle: billingClub.paypalHandle ?? null,
@@ -243,17 +237,7 @@ export async function runInvoiceGroups(opts: {
               },
               sponsor: {
                 displayName: spRow.sponsor.displayName,
-                email: spRow.user.email,
-                type: spRow.sponsor.type,
-                businessName: spRow.sponsor.businessName ?? null,
-                businessAddress: businessAddress
-                  ? {
-                      street: businessAddress.street ?? "",
-                      zip: businessAddress.zip ?? "",
-                      city: businessAddress.city ?? "",
-                      country: businessAddress.country
-                    }
-                  : null
+                email: spRow.user.email
               },
               items: group.items.map((it) => {
                 const view = billingItemView(it);

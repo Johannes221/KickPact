@@ -159,9 +159,9 @@ export function StammdatenForm({ clubId, role, defaultValues }: Props) {
                     <span className="text-xs font-normal text-brand-night-navy/50">— optional</span>
                   </FormLabel>
                   <FormDescription className="text-xs text-brand-night-navy/60">
-                    Aktiviert lassen, wenn dein Verein nicht USt-pflichtig ist. Wir setzen
-                    dann den §19-Hinweis auf die Sponsoren-Rechnungen. Lässt sich später im
-                    Dashboard ändern.
+                    Aktiviert lassen, wenn dein Verein nicht USt-pflichtig ist. Betrifft
+                    nur die Vereins-Angaben — Sponsoren-Zahlungsübersichten enthalten
+                    generell keine USt. Lässt sich später im Dashboard ändern.
                   </FormDescription>
                 </div>
                 <FormControl>

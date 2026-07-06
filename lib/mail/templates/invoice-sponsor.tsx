@@ -49,17 +49,17 @@ export function invoiceSponsorEmail(args: {
       : "";
 
   return {
-    subject: `Deine KickPact-Rechnung ${invoiceNumber} · ${period}`,
+    subject: `Deine KickPact-Zahlungsübersicht ${invoiceNumber} · ${period}`,
     text: `Hi ${sponsorName},
 
-deine Rechnung für ${period} ist da: ${itemCount} Spielereignisse, Gesamt ${totalEur}.
+deine Zahlungsübersicht für ${period} ist da: ${itemCount} Spielereignisse, Gesamt ${totalEur}.
 
-Rechnungsnummer: ${invoiceNumber}
+Beleg-Nr.: ${invoiceNumber}
 Mannschaft: ${clubName}
 
 Die PDF findest du im Anhang. Der Verein wird sie dir auch separat per Mail schicken.
 ${payLinksText}
-Tipp: Banking-App auf, QR-Code auf der Rechnung scannen — fertig.
+Tipp: Banking-App auf, QR-Code auf der Übersicht scannen — fertig.
 
 Vielen Dank, dass du die Mannschaft unterstützt!
 
@@ -73,17 +73,17 @@ Vielen Dank, dass du die Mannschaft unterstützt!
 
       <h2 style="font-size: 20px; margin: 0 0 8px; color:#1A1A2E;">Hi ${sponsorName},</h2>
       <p style="color: #1A1A2E; margin: 0 0 16px; line-height: 1.6;">
-        deine Rechnung für <strong>${period}</strong> ist da — ${itemCount} bestätigte Spielereignisse für <strong>${clubName}</strong>.
+        deine Zahlungsübersicht für <strong>${period}</strong> ist da — ${itemCount} bestätigte Spielereignisse für <strong>${clubName}</strong>.
       </p>
 
       <table style="width:100%; background:#F5F8F5; border-radius:10px; padding: 18px; margin: 16px 0 24px;">
         <tr><td style="color:#525252; font-size: 13px;">Gesamt</td><td style="text-align:right; font-size: 22px; font-weight: 800; color:#01C457;">${totalEur}</td></tr>
-        <tr><td colspan="2" style="font-size: 12px; color:#a3a3a3; padding-top: 8px;">Rechnungsnummer ${invoiceNumber}</td></tr>
+        <tr><td colspan="2" style="font-size: 12px; color:#a3a3a3; padding-top: 8px;">Beleg-Nr. ${invoiceNumber}</td></tr>
       </table>
 
       <p style="color:#525252; font-size: 14px; line-height: 1.6; margin: 0 0 16px;">
         Die PDF findest du im Anhang. Bitte überweise den Betrag innerhalb von 14 Tagen an den Verein —
-        Bankverbindung steht auf der Rechnung.
+        Bankverbindung steht auf der Übersicht.
       </p>
 ${payLinksHtml}
       <p style="color:#525252; font-size: 13px; line-height: 1.6; margin: 0 0 24px; padding: 10px 14px; background:#F5F8F5; border-radius:8px;">

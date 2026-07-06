@@ -129,7 +129,7 @@ export default async function SponsorDashboard() {
           <CalendarClock aria-hidden className="h-4 w-4 shrink-0 text-accent-dark" />
           <span>
             Deine Beiträge werden am <strong>Saisonende</strong> abgerechnet —
-            eine Rechnung am 30.06.
+            eine Zahlungsübersicht am 30.06.
           </span>
         </Link>
       )}

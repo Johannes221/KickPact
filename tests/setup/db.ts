@@ -1,38 +1,4 @@
 import { db } from "@/lib/db/client";
-import {
-  users,
-  clubs,
-  clubMemberships,
-  clubMembershipRequests,
-  clubVerifications,
-  teamVerifications,
-  teamMemberships,
-  teams,
-  sponsors,
-  sponsorInquiries,
-  sponsorInvitations,
-  pledges,
-  pledgeRules,
-  matches,
-  matchEvents,
-  charges,
-  subscriptions,
-  teamLicenses,
-  invoices,
-  invoiceItems,
-  invoiceCounters,
-  eventApprovals,
-  players,
-  seasons,
-  seasonResults,
-  sentNotifications,
-  processedStripeEvents,
-  operatorAuditLog,
-  supportTickets,
-  supportTicketReplies,
-  sponsorBillingCycleHistory,
-  teamLicenseTransferRequests
-} from "@/lib/db/schema";
 
 /**
  * Wipes ALL business data. Use ONLY in integration tests.
@@ -60,39 +26,48 @@ export async function resetTestDb() {
     );
   }
 
-  // No-FK tables first (safe to delete in any order)
-  await db.delete(sentNotifications);
-  await db.delete(processedStripeEvents);
-  await db.delete(invoiceCounters);
-
-  await db.delete(invoiceItems);
-  await db.delete(invoices);
-  await db.delete(eventApprovals);
-  await db.delete(charges);
-  await db.delete(matchEvents);
-  await db.delete(matches);
-  await db.delete(pledgeRules);
-  await db.delete(pledges);
-  await db.delete(sponsorInquiries);
-  await db.delete(sponsorInvitations);
-  await db.delete(sponsorBillingCycleHistory);
-  await db.delete(sponsors);
-  await db.delete(teamLicenseTransferRequests);
-  await db.delete(teamLicenses);
-  await db.delete(subscriptions);
-  await db.delete(players);
-  await db.delete(seasonResults);
-  await db.delete(teamVerifications);
-  await db.delete(teamMemberships);
-  await db.delete(clubVerifications);
-  await db.delete(clubMembershipRequests);
-  await db.delete(clubMemberships);
-  await db.delete(supportTicketReplies);
-  await db.delete(supportTickets);
-  await db.delete(teams);
-  await db.delete(clubs);
-  // operator_audit_log FK → users ist ON DELETE restrict, muss VOR users weg.
-  await db.delete(operatorAuditLog);
-  await db.delete(users);
-  await db.delete(seasons);
+  // EIN atomares TRUNCATE statt 34 sequentieller DELETEs (Flake-Fix 2026-07-06):
+  // Die alte Delete-Kette (matches → … → teams → clubs → users) lief bei einem
+  // Test-Timeout als Zombie-Promise weiter, WÄHREND die nächste Datei schon
+  // seedete — deren frische teams-Rows wurden dann mitten im Seed weggeräumt
+  // („Key (team_id)=… is not present"). Ein einzelnes Statement ist atomar:
+  // es gibt kein Interleave-Fenster zwischen den Tabellen mehr. CASCADE räumt
+  // abhängige Tabellen (sessions/accounts via users-FK etc.) mit ab —
+  // identisches Muster wie resetTestDb() in tests/setup/integration-db.ts.
+  await db.execute(/* sql */ `
+    TRUNCATE
+      sent_notifications,
+      processed_stripe_events,
+      invoice_counters,
+      invoice_items,
+      invoices,
+      event_approvals,
+      charges,
+      match_events,
+      matches,
+      pledge_rules,
+      pledges,
+      sponsor_inquiries,
+      sponsor_invitations,
+      sponsor_billing_cycle_history,
+      sponsors,
+      team_license_transfer_requests,
+      team_licenses,
+      subscriptions,
+      players,
+      season_results,
+      team_verifications,
+      team_memberships,
+      club_verifications,
+      club_membership_requests,
+      club_memberships,
+      support_ticket_replies,
+      support_tickets,
+      teams,
+      clubs,
+      operator_audit_log,
+      users,
+      seasons
+    RESTART IDENTITY CASCADE;
+  `);
 }

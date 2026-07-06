@@ -6,6 +6,14 @@ import {
 import { createId } from "@paralleldrive/cuid2";
 import { users } from "./auth";
 
+// Privatpersonen-only (Spec 2026-07-06): Sponsoren sind ausschließlich
+// Privatpersonen. Der Wert 'business' ist INERT — Postgres kann Enum-Werte
+// nicht gefahrlos droppen (gleiches Muster wie der inerte 'annual'-Cycle in
+// billing.ts). Kein Code-Pfad erzeugt oder rendert mehr 'business'
+// (0 Bestandsdaten, verifiziert 2026-07-06); falls je ein Alt-Wert auftaucht,
+// steht normalizeSponsorType() (lib/validations/sponsor.ts) als defensiver
+// Lese-Helper bereit. Die Spalten businessName/businessAddressJson/
+// businessTaxId bleiben nullable stehen und werden nie mehr befüllt.
 export const sponsorTypeEnum = pgEnum("sponsor_type", ["familie", "business"]);
 
 /**

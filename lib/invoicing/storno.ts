@@ -17,10 +17,11 @@ function extractInvoiceNumber(pdfUrl: string | null): string | null {
 }
 
 /**
- * Erzeugt eine echte Stornorechnung (Gutschrift) zur Original-Rechnung:
+ * Erzeugt einen Stornobeleg (Korrektur) zur Original-Zahlungsübersicht:
  * neue fortlaufende Nummer aus dem Nummernkreis, negative Beträge, Verweis auf
- * die Original-Nummer, eigenes PDF. Die Original-Rechnung wird als storniert
- * (cancelled_at) markiert. Betrifft die Verein→Sponsor-Performance-Rechnungen.
+ * die Original-Nummer, eigenes PDF. Das Original wird als storniert
+ * (cancelled_at) markiert. Betrifft die Verein→Sponsor-Zahlungsübersichten
+ * (Privatpersonen-only, Spec 2026-07-06 §4 — früher „Stornorechnung").
  */
 export async function createStornoInvoice(
   originalInvoiceId: string
@@ -38,9 +39,6 @@ export async function createStornoInvoice(
   const [sponsorRow] = await db
     .select({
       displayName: sponsors.displayName,
-      type: sponsors.type,
-      businessName: sponsors.businessName,
-      businessAddressJson: sponsors.businessAddressJson,
       email: users.email
     })
     .from(sponsors)
@@ -59,12 +57,6 @@ export async function createStornoInvoice(
     city?: string;
     country?: string;
   } | null) ?? { street: "", zip: "", city: "" };
-  const businessAddress = (sponsorRow.businessAddressJson as {
-    street?: string;
-    zip?: string;
-    city?: string;
-    country?: string;
-  } | null) ?? null;
 
   const pdfBuf = await renderToBuffer(
     InvoicePdf({
@@ -82,30 +74,37 @@ export async function createStornoInvoice(
             city: clubAddress.city ?? "",
             country: clubAddress.country
           },
-          iban: club.iban ?? null,
-          taxId: club.taxId ?? null,
-          isSmallBusiness: club.isSmallBusiness
+          iban: club.iban ?? null
         },
         sponsor: {
           displayName: sponsorRow.displayName,
-          email: sponsorRow.email,
-          type: sponsorRow.type,
-          businessName: sponsorRow.businessName ?? null,
-          businessAddress: businessAddress
-            ? {
-                street: businessAddress.street ?? "",
-                zip: businessAddress.zip ?? "",
-                city: businessAddress.city ?? "",
-                country: businessAddress.country
-              }
-            : null
+          email: sponsorRow.email
         },
-        items: items.map((it) => ({
-          matchDate: orig.createdAt,
-          matchLabel: it.description,
-          triggerLabel: "",
-          amountCents: -it.amountCents
-        }))
+        items: (() => {
+          const rows = items.map((it) => ({
+            matchDate: orig.createdAt,
+            matchLabel: it.description,
+            triggerLabel: "",
+            amountCents: -it.amountCents
+          }));
+          // Alt-Beleg-Kante (Review M1): Belege aus der Zeit VOR dem
+          // Privatpersonen-Pivot tragen totalCents = Items + 19 % USt. Der
+          // Stornobeleg muss aber exakt den gebuchten/erstatteten Betrag
+          // (-orig.totalCents) ausweisen — sonst weicht das PDF von DB,
+          // Admin-Toast und tatsächlicher Erstattung ab. Differenz als
+          // eigene Ausgleichszeile ausweisen.
+          const itemSum = items.reduce((s, i) => s + i.amountCents, 0);
+          const rest = orig.totalCents - itemSum;
+          if (rest !== 0) {
+            rows.push({
+              matchDate: orig.createdAt,
+              matchLabel: "Ausgleich (im Original enthaltene USt)",
+              triggerLabel: "",
+              amountCents: -rest
+            });
+          }
+          return rows;
+        })()
       }
     })
   );

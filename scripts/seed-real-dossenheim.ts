@@ -182,10 +182,11 @@ interface SeedSponsor {
 async function seedSponsors(): Promise<SeedSponsor[]> {
   console.log("\n=== Phase 3: Sponsor-User anlegen ===");
 
+  // Privatpersonen-only (Spec 2026-07-06): alle Seed-Sponsoren sind privat.
   const sponsorDefs = [
     { name: "Familie Schreiber", email: "schreiber@kickpact-test.de", type: "familie" as const, businessName: null },
-    { name: "Bäckerei Müller GmbH", email: "baeckerei-mueller@kickpact-test.de", type: "business" as const, businessName: "Bäckerei Müller GmbH" },
-    { name: "Auto Weiss GmbH", email: "autoweiss@kickpact-test.de", type: "business" as const, businessName: "Auto Weiss GmbH" },
+    { name: "Stefan Berger (Ex-Spieler)", email: "stefan-berger@kickpact-test.de", type: "familie" as const, businessName: null },
+    { name: "Opa Heinz", email: "opa-heinz@kickpact-test.de", type: "familie" as const, businessName: null },
     { name: "Erna Kowalski", email: "erna@kickpact-test.de", type: "familie" as const, businessName: null },
   ];
 
