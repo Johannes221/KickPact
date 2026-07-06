@@ -14,13 +14,13 @@ last_updated: "2026-05-25"
 status: "published"
 ---
 
-KickPact braucht Spiel-Daten, um Trigger feuern zu lassen. Statt dass Trainer alles manuell einträgt, holen wir die offiziellen Daten von **Fußball.de** — automatisiert, viermal alle 24 Stunden. So funktioniert die Pipeline.
+KickPact braucht Spiel-Daten, um Trigger feuern zu lassen. Statt dass Trainer alles manuell einträgt, holen wir die offiziellen Daten von **Fußball.de** — automatisiert, täglich und am Spieltag-Wochenende mehrfach. So funktioniert die Pipeline.
 
 ## Crawl-Frequenz
 
-- **Alle 6 Stunden**, also vier Crawls am Tag (00:00, 06:00, 12:00, 18:00 UTC ≈ 02:00, 08:00, 14:00, 20:00 deutscher Zeit).
-- Bei großen Spieltagen (Samstagnachmittag) sind das die kritischen Crawl-Slots.
-- Die meisten Spielergebnisse sind innerhalb von **2-4 Stunden nach Spielende** auf Fußball.de — und damit beim nächsten Crawl bei uns.
+- **Einmal täglich am Morgen** — der Standard-Lauf für alle Mannschaften.
+- **Am Wochenende (Samstag + Sonntag) mehrfach zusätzlich** am Nachmittag und Abend — genau dann, wenn die meisten Spiele laufen.
+- Die meisten Spielergebnisse sind innerhalb von **2-4 Stunden nach Spielende** auf Fußball.de — und damit beim nächsten Lauf bei uns. Samstagsspiele siehst du in der Regel noch am selben Abend.
 
 ## Was der Crawler holt
 
@@ -47,7 +47,7 @@ Diese fehlenden Daten sind die **Manual-Trigger** und werden vom Trainer nach Sp
 2. HTML wird geparst, Match-Events extrahiert.
 3. Spieler werden über Name + Fußball.de-Player-ID identifiziert. Neue Spieler werden in `players` angelegt.
 4. **Idempotenz-Check**: ein Match-Event mit derselben Spiel-ID + Minute + Spieler-ID wird nicht doppelt importiert.
-5. Pro neuem Match-Event wird die **Trigger-Engine** gefeuert: alle aktiven Pledges der Mannschaft werden geprüft, passende Charges erzeugt.
+5. Pro neuem Match-Event wird die **Trigger-Engine** gefeuert: alle aktiven Pacts der Mannschaft werden geprüft, passende Beiträge erzeugt.
 
 Das ganze ist **transaktional** — entweder alle Events eines Crawls werden konsistent verarbeitet, oder nichts.
 
@@ -55,8 +55,8 @@ Das ganze ist **transaktional** — entweder alle Events eines Crawls werden kon
 
 Fußball.de korrigiert manchmal Daten nach 1-2 Tagen (z.B. falscher Torschütze, falsches Ergebnis). Unser Crawler erkennt das beim nächsten Lauf:
 
-- **Endergebnis korrigiert** (3:1 → 4:1): neuer Match-Event mit zusätzlichem Tor wird angelegt. Pledges feuern für das neue Tor.
-- **Torschütze korrigiert** (Tor von A → Tor von B): alter Event wird invalidiert (Charge storniert oder Storno-Charge erzeugt), neuer Event mit korrektem Spieler.
+- **Endergebnis korrigiert** (3:1 → 4:1): neuer Match-Event mit zusätzlichem Tor wird angelegt. Pacts feuern für das neue Tor.
+- **Torschütze korrigiert** (Tor von A → Tor von B): alter Event wird invalidiert (Beitrag storniert oder Storno-Beitrag erzeugt), neuer Event mit korrektem Spieler.
 
 Mehr in [Fußball.de ändert Daten](fussballde-aendert-daten.md).
 

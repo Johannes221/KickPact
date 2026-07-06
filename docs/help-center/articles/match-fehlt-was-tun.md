@@ -36,10 +36,10 @@ Manche Vereine haben mehrere Herren-Mannschaften (Herren I + II + III). KickPact
 
 ### Check 3 — Wann war der letzte Crawl?
 
-**Mannschaft → Einstellungen → Daten-Quelle** zeigt den letzten Crawl-Zeitstempel. Wenn der ältester als 6 Stunden ist:
+**Mannschaft → Einstellungen → Daten-Quelle** zeigt den letzten Crawl-Zeitstempel. Der Crawler läuft täglich, am Spieltag-Wochenende mehrfach.
 
-- Möglich: Rate-Limited oder vorübergehender Fehler. Beim nächsten Slot löst sich's.
-- Wenn 24+ Stunden alt: an support@kickpact.de melden.
+- Möglich: Rate-Limited oder vorübergehender Fehler. Beim nächsten Lauf löst sich's.
+- Wenn der Zeitstempel 48+ Stunden alt ist: an support@kickpact.de melden.
 
 ### Check 4 — Ist das Spielergebnis schon eingetragen?
 
@@ -70,11 +70,11 @@ KickPact prüft beim Anlegen, ob es schon ein Spiel mit gleichem Datum / Heim / 
 ### Manuelles Spiel löschen oder editieren
 
 Bis zum **1. des Folgemonats** kannst du:
-- Spiel komplett löschen (alle Charges werden storniert).
-- Einzelne Torschützen ändern (Charges werden angepasst).
+- Spiel komplett löschen (alle Beiträge werden storniert).
+- Einzelne Torschützen ändern (Beiträge werden angepasst).
 - Endergebnis ändern (alle abgeleiteten Trigger werden re-evaluiert).
 
-Nach dem 1.: nur noch Stornos in der Folgemonatsrechnung möglich.
+Nach dem 1.: nur noch Stornos in der Abrechnung des Folgemonats möglich.
 
 ## Manuelle Events zu einem gecrawlten Spiel hinzufügen
 
@@ -89,10 +89,10 @@ Diese Events erscheinen bei den Sponsoren als Pending zur Bestätigung — siehe
 ## Wenn der Crawler chronisch ein bestimmtes Spiel verpasst
 
 Beispiel: Ihr habt jede Woche Mittwoch ein Verbandsligaspiel, das Fußball.de erst spät nachzieht. KickPact-Tipp:
-- **Wartet bis Donnerstag-Mittag** — der mittäglich-Crawl-Slot holt das in der Regel.
-- Wenn auch Donnerstagabend nichts da ist: manuell anlegen.
+- **Wartet bis zum nächsten Morgen** — der tägliche Lauf holt das in der Regel.
+- Wenn auch am Tag danach nichts da ist: manuell anlegen.
 
-Es gibt **keinen "Crawl-Now"-Button** in v1 — Crawls sind fest auf 6h-Slots. Manuelle Trigger-Crawls führen wir in einer späteren Version evtl. ein.
+Es gibt **keinen "Jetzt abrufen"-Button** — die Läufe sind fest geplant (täglich + Spieltag-Wochenende). Manuell angestoßene Abrufe führen wir in einer späteren Version evtl. ein.
 
 Weiter lesen:
 - [Wie der Crawler funktioniert](wie-der-crawler-funktioniert.md)

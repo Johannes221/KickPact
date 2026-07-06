@@ -24,7 +24,7 @@ KickPact lebt von Fußball.de-Daten. Tore, Karten, Ergebnisse — alles kommt vo
 4. Wir laden alle aktiven Mannschaften und zeigen sie als Liste.
 5. Du klickst auf die Mannschaft, die mitspielen soll — fertig.
 
-Der Wizard speichert dabei die `fussballde_verein_id` und die `fussballde_team_id`. Ab da läuft der Crawler **alle 6 Stunden** und holt Spiele plus Match-Events automatisch ein.
+Der Wizard speichert dabei die `fussballde_verein_id` und die `fussballde_team_id`. Ab da läuft der Crawler **täglich, am Spieltag-Wochenende mehrfach**, und holt Spiele plus Match-Events automatisch ein.
 
 ## Was du sehen solltest
 

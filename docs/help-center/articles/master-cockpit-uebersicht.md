@@ -26,18 +26,18 @@ Die Startseite ist in vier Kacheln aufgeteilt:
 
 ### Kachel 1 — Mannschaften
 - Liste aller aktiven Mannschaften des Vereins
-- Pro Mannschaft: Anzahl Sponsoren, Monats-Pledges-Summe, Tabellenstand (wenn Fußball.de-verknüpft)
+- Pro Mannschaft: Anzahl Sponsoren, Monats-Pact-Summe, Tabellenstand (wenn Fußball.de-verknüpft)
 - Klick führt direkt zur Mannschafts-Seite
 
 ### Kachel 2 — Sponsoren-Total
 - Gesamtzahl Sponsoren über alle Mannschaften
-- "Top 10 Sponsoren" nach Pledge-Volumen
+- "Top 10 Sponsoren" nach Pact-Volumen
 - Sponsoren, die **mehrere Mannschaften** unterstützen (z.B. Onkel-Schmidt = Herren II + A-Jugend), siehe [Cross-Team-Sponsor-View](cross-team-sponsor-view.md)
 
 ### Kachel 3 — Aktueller Monat
-- Live-Charges für den laufenden Monat über alle Mannschaften zusammen
+- Live-Beiträge für den laufenden Monat über alle Mannschaften zusammen
 - Vergleich zum Vormonat (Trend ↑↓)
-- Top-Trigger-Typen (z.B. "60 % der Charges sind goal_team")
+- Top-Trigger-Typen (z.B. "60 % der Beiträge sind goal_team")
 
 ### Kachel 4 — Saison-Hochrechnung
 - Worst-Case-Total über alle Mannschaften
@@ -52,7 +52,7 @@ Direkt unter den Kacheln: **Welche Mannschaft ist auf welchem Saison-Pass?** Ein
 
 Rechte Spalte: aktueller Aktivitäts-Stream:
 
-- "11:32 — Sponsor Yilmaz hat Pledge auf U17 aktiviert"
+- "11:32 — Sponsor Yilmaz hat Pact auf U17 aktiviert"
 - "10:15 — Trainer hat 3 Manual-Events für FCM I vs ASV gemeldet"
 - "09:47 — Sponsor Schmidt bestätigt 5 Pending-Events"
 
@@ -69,17 +69,15 @@ Praktisch zum Tracken, was im Verein gerade läuft. Du kannst den Feed filtern (
 
 Im Menü oben: **Berichte**. Hier kannst du:
 
-- **CSV-Export** für Buchhaltung (alle Charges aller Mannschaften, ein File)
-- **PDF-Saison-Report** generieren — Verein-weite Zusammenfassung am Saison-Ende, brauchbar für Vorstandssitzung
-- **Sammelrechnung-Übersicht** — pro Sponsor eine Zeile, was er allen Mannschaften des Vereins schuldet
-
-Mehr in [Aggregiertes Saison-Recap](aggregiertes-saison-recap.md).
+- **CSV-Export** für Buchhaltung (alle Beiträge aller Mannschaften, ein File)
+- **Saison-Recap** — das Saison-Fazit deiner Mannschaften als teilbares Bild, perfekt für WhatsApp-Gruppe und Vorstandssitzung
+- **Sammelübersicht** — pro Sponsor eine Zeile, was er allen Mannschaften des Vereins zugesagt hat
 
 ## Was du im Cockpit **nicht** machst
 
 - **Einzelne Match-Events bestätigen** — das machst du auf der Mannschafts-Seite (Trainer-Rolle).
 - **Spieler hinzufügen** — Mannschaft → Kader.
-- **Pledges einzelner Sponsoren ansehen im Detail** — Klick auf Sponsor in der Liste führt zu seinem Detail.
+- **Pacts einzelner Sponsoren im Detail ansehen** — Klick auf den Sponsor in der Liste führt zu seinem Detail.
 
 ## Performance bei vielen Mannschaften
 

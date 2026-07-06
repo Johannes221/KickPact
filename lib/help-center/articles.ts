@@ -64,12 +64,37 @@ export interface Article {
   html: string;
 }
 
+/**
+ * Artikel-Querverweise stehen im Markdown als `[Titel](anderer-artikel.md)`
+ * (damit sie auch auf GitHub/im Editor funktionieren). Im gerenderten HTML
+ * wäre `href="….md"` ein relativer Link, der unter /hilfe/[kategorie]/[slug]
+ * ins 404 läuft. Deshalb: auf `/hilfe/<kategorie>/<slug>` umschreiben —
+ * und Links auf (noch) nicht existierende Artikel zu reinem Text entschärfen.
+ */
+function rewriteArticleLinks(
+  html: string,
+  slugToCategory: Map<string, string>
+): string {
+  return html.replace(
+    /<a href="([a-z0-9-]+)\.md">([\s\S]*?)<\/a>/g,
+    (_m, slug: string, label: string) => {
+      const category = slugToCategory.get(slug);
+      return category ? `<a href="/hilfe/${category}/${slug}">${label}</a>` : label;
+    }
+  );
+}
+
 let cache: Map<string, Article> | null = null;
 
 async function loadAll(): Promise<Map<string, Article>> {
   if (cache) return cache;
   const files = await fs.readdir(ARTICLES_DIR);
-  const map = new Map<string, Article>();
+
+  // Pass 1: parsen + Frontmatter validieren, damit für das Link-Rewrite in
+  // Pass 2 alle existierenden Slug→Kategorie-Paare bekannt sind.
+  type ValidatedFrontmatter = Partial<ArticleFrontmatter> &
+    Pick<ArticleFrontmatter, "title" | "slug" | "category" | "category_label">;
+  const entries: { fm: ValidatedFrontmatter; content: string }[] = [];
   for (const file of files) {
     if (!file.endsWith(".md")) continue;
     const fullPath = path.join(ARTICLES_DIR, file);
@@ -84,9 +109,17 @@ async function loadAll(): Promise<Map<string, Article>> {
       continue;
     }
     if (fm.status === "draft") continue; // nicht veröffentlichen
+    entries.push({ fm: fm as ValidatedFrontmatter, content: parsed.content });
+  }
 
-    const html = sanitizeArticleHtml(
-      marked.parse(parsed.content, { async: false }) as string
+  const slugToCategory = new Map(entries.map((e) => [e.fm.slug, e.fm.category]));
+
+  // Pass 2: rendern + Links umschreiben.
+  const map = new Map<string, Article>();
+  for (const { fm, content } of entries) {
+    const html = rewriteArticleLinks(
+      sanitizeArticleHtml(marked.parse(content, { async: false }) as string),
+      slugToCategory
     );
     map.set(fm.slug, {
       frontmatter: {
@@ -101,7 +134,7 @@ async function loadAll(): Promise<Map<string, Article>> {
         status: (fm.status ?? "published") as ArticleFrontmatter["status"],
         reading_time_min: fm.reading_time_min
       },
-      markdown: parsed.content,
+      markdown: content,
       html
     });
   }

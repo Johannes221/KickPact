@@ -33,7 +33,7 @@ Wenn du nicht weißt, was günstiger ist: [Vereinslizenz Break-Even](vereinslize
 4. **Schritt 3: Tarif** — wenn du Vereinslizenz hast, ist das nur ein Bestätigungsschritt (die Mannschaft wird automatisch abgedeckt). Bei Basic/Pro wählst du den Tarif für diese Mannschaft separat. Trial-Bonus: jede neue Mannschaft kriegt nochmal **14 Tage Trial** auf den gewählten Tarif (statt 30, weil du den Verein schon kennst).
 5. **Schritt 4: Sponsoren einladen** — optional, kannst du auch später machen.
 
-Nach Schritt 4 landest du auf der **neuen Mannschafts-Seite** mit leerem Spielplan. Der Crawler fängt innerhalb 6 Stunden an, Spiele zu importieren.
+Nach Schritt 4 landest du auf der **neuen Mannschafts-Seite** mit leerem Spielplan. Spätestens beim nächsten täglichen Lauf importiert der Crawler die Spiele.
 
 ## Bestehende Sponsoren auf die neue Mannschaft holen
 
@@ -41,10 +41,10 @@ Häufiger Use-Case: Onkel Schmidt sponsert seinen Neffen. Der Neffe wechselt von
 
 Zwei Wege:
 
-- **Sponsor legt selbst zweiten Pledge an** — Onkel Schmidt loggt sich ein, klickt auf der Sponsor-Übersicht "+ Neuer Pledge", wählt die neue Mannschaft. Das ist der saubere Weg.
-- **Du schickst ihm einen neuen Einladungslink** — dadurch landet er direkt im Pledge-Wizard für die neue Mannschaft, ohne dass er navigieren muss. Praktisch, wenn er KickPact selten benutzt.
+- **Sponsor legt selbst zweiten Pact an** — Onkel Schmidt loggt sich ein, klickt auf der Sponsor-Übersicht "+ Neuer Pact", wählt die neue Mannschaft. Das ist der saubere Weg.
+- **Du schickst ihm einen neuen Einladungslink** — dadurch landet er direkt im Pact-Wizard für die neue Mannschaft, ohne dass er navigieren muss. Praktisch, wenn er KickPact selten benutzt.
 
-Beide Wege erzeugen einen **eigenen Pledge** mit eigenen Triggern und Caps. Die alte Pledge auf der ursprünglichen Mannschaft bleibt unverändert.
+Beide Wege erzeugen einen **eigenen Pact** mit eigenen Triggern und Caps. Der alte Pact auf der ursprünglichen Mannschaft bleibt unverändert.
 
 ## Team-Membership separat verwalten
 

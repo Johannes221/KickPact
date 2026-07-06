@@ -2,7 +2,7 @@
 title: "Worst-Case-Berechnung verstehen"
 slug: "worst-case-berechnung-verstehen"
 category: "pledges-trigger"
-category_label: "Pledges & Trigger"
+category_label: "Pacts & Trigger"
 prio: "MUSS"
 audience: ["sponsor"]
 related_articles:
@@ -13,7 +13,7 @@ last_updated: "2026-05-25"
 status: "published"
 ---
 
-Bevor du einen Pledge aktivierst, zeigt KickPact dir den **Worst-Case** — also was du **maximal zahlen** würdest, wenn alles auf Höchstniveau läuft. Das ist kein Pessimismus, sondern Risikomanagement. So liest du die Zahlen.
+Bevor du einen Pact aktivierst, zeigt KickPact dir den **Worst-Case** — also was du **maximal zahlen** würdest, wenn alles auf Höchstniveau läuft. Das ist kein Pessimismus, sondern Risikomanagement. So liest du die Zahlen.
 
 ## Drei Worst-Case-Zahlen
 
@@ -57,7 +57,7 @@ Wir sind **bewusst pessimistisch**:
 
 - 4 Spiele/Monat (real oft 3, im Sommer manchmal 2)
 - Alle Auto-Trigger feuern (z.B. immer Comeback + Clean Sheet + Win)
-- Bei Spieler-Pledges: Spieler trifft so oft wie der gesamte Mannschafts-Schnitt
+- Bei Spieler-Pacts: Spieler trifft so oft wie der gesamte Mannschafts-Schnitt
 - Manuelle Trigger werden alle gemeldet **und** vom Sponsor approved
 - Per-Match-Cap wird ausgereizt
 
@@ -65,7 +65,7 @@ Real liegt der **Erwartungswert bei 30-60 %** des Worst-Case. Wenn dein Worst-Ca
 
 ## Beispielrechnung Schritt für Schritt
 
-Pledge "Tim's Eltern":
+Pact "Tim's Eltern":
 
 - Regel 1: `goal_player` (Tim), 10 €
 - Regel 2: `assist`, 5 € (Manual, gilt mit Approval)
@@ -92,20 +92,20 @@ KickPact zeigt also: "Worst-Case-Saison: 800 €. Erwarteter Bereich: 240-480 �
 
 ## Erwarteter Bereich (vs. Worst-Case)
 
-Der Worst-Case ist die obere Spitze. KickPact zeigt zusätzlich einen **realistischen Bereich** — das ist eine Spanne aus historischen Daten ähnlicher Pledges. Format: "Spanne: 240-480 €". Liegt zwischen 30 % und 60 % des Worst-Case.
+Der Worst-Case ist die obere Spitze. KickPact zeigt zusätzlich einen **realistischen Bereich** — das ist eine Spanne aus historischen Daten ähnlicher Pacts. Format: "Spanne: 240-480 €". Liegt zwischen 30 % und 60 % des Worst-Case.
 
 Diese Spanne basiert auf:
 
 - Durchschnittliche Toranzahl der Liga
 - Sieg-/Niederlage-Quote
 - Anteil Manual-Approvals, die typisch durchgehen
-- Realer Spielerbeitrag (für Spieler-Pledges aus Vorjahres-Daten)
+- Realer Spielerbeitrag (für Spieler-Pacts aus Vorjahres-Daten)
 
 Bei brandneuen Vereinen ohne Historie nutzen wir Default-Werte aus vergleichbaren Ligen.
 
 ## Was nicht im Worst-Case steckt
 
-- **Saison-Wetten-Pay-outs** (Aufstieg, Klassenerhalt, etc.) werden **getrennt** angezeigt, weil sie einmalig sind, nicht monatlich.
+- **Saison-Ziel-Beträge** (Aufstieg, Klassenerhalt, etc.) werden **getrennt** angezeigt, weil sie einmalig sind, nicht monatlich.
 - **Custom-Trigger** mit "1 € pro Trainer-Frisur-Lob" werden mit angenommener Häufigkeit reingerechnet (1×/Saison wenn nicht anders gesetzt).
 - **Ausreißer** wie 10 Tore in einem Spiel — der Worst-Case nimmt 10 Tore an, real kommt das alle paar Jahre vor. Cap deckt das ab.
 
@@ -115,5 +115,5 @@ Wenn KickPact dir 250 €/Monat Worst-Case zeigt und du nur 80 €/Monat Budget 
 
 Weiter lesen:
 - [Caps und Monats-Limits](caps-und-monats-limits.md)
-- [Ersten Pledge anlegen](ersten-pledge-anlegen.md)
-- [Was ist ein Pledge?](was-ist-ein-pledge.md)
+- [Ersten Pact anlegen](ersten-pledge-anlegen.md)
+- [Was ist ein Pact?](was-ist-ein-pledge.md)

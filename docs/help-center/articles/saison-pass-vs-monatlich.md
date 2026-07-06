@@ -14,22 +14,22 @@ last_updated: "2026-06-02"
 status: "published"
 ---
 
-KickPact hat zwei Abrechnungs-Wege: **Monatlich** (maximal flexibel) und den **Saison-Pass** (~2 Monate geschenkt). Beide kosten dich übers Jahr fast dasselbe pro aktivem Monat — der Unterschied ist **Flexibilität gegen Ersparnis**.
+KickPact hat zwei Abrechnungs-Wege: **Monatlich** (maximal flexibel) und den **Saison-Pass** (42–43 % günstiger als 12 Monatsraten). Der Unterschied ist **Flexibilität gegen Ersparnis**.
 
 ## Die kurze Antwort
 
 - **Du willst erst mal reinschnuppern oder steigst mitten in der Saison ein?** → **Monatlich**. Jederzeit zum Monatsende kündbar, kein Commitment.
-- **Du weißt, dass ihr die Saison durchspielt?** → **Saison-Pass**. ~2 Monate gespart, Juni/Juli kostenlos pausiert. Das ist die Default-Empfehlung im Wizard.
+- **Du weißt, dass ihr die Saison durchspielt?** → **Saison-Pass**. 42–43 % gespart, Juni/Juli kostenlos pausiert. Das ist die Default-Empfehlung im Wizard.
 
 ## Die Zahlen im direkten Vergleich
 
-| Tarif | Monatlich (10 Mon. Saison) | Saison-Pass | Du sparst |
+| Tarif | Monatlich (12 Monate) | Saison-Pass | Du sparst |
 |---|---|---|---|
-| Basic | 50 € (5 €/Mon) | **39 €** (3,90 €/Mon) | ~11 € (~22 %) |
-| Pro | 190 € (19 €/Mon) | **149 €** (14,90 €/Mon) | ~41 € (~22 %) |
-| Vereinslizenz | 490 € (49 €/Mon) | **389 €** (38,90 €/Mon) | ~101 € (~21 %) |
+| Basic | 60 € (5 €/Mon) | **35 €** (3,50 €/Mon) | 25 € (42 %) |
+| Pro | 132 € (11 €/Mon) | **75 €** (7,50 €/Mon) | 57 € (43 %) |
+| Vereinslizenz | 348 € (29 €/Mon) | **199 €** (19,90 €/Mon) | 149 € (43 %) |
 
-Der Saison-Pass ist effektiv „zahl 8, bekomm 10 aktive Monate" — plus die Sommerpause Juni/Juli, in der ohnehin nichts läuft, geschenkt.
+Der Saison-Pass kostet effektiv rund 7 Monatsraten für 10 aktive Monate — plus die Sommerpause Juni/Juli, in der ohnehin nichts läuft, geschenkt. Selbst wenn du beim Monatsabo im Sommer selbst kündigst und nur 10 Monate zahlst, bleibt der Saison-Pass klar günstiger.
 
 ## Wie funktioniert der Saison-Pass mechanisch?
 
@@ -40,14 +40,14 @@ Der Saison-Pass ist effektiv „zahl 8, bekomm 10 aktive Monate" — plus die So
 
 ## Wie funktioniert das Monatsabo?
 
-- Du zahlst den vollen Monatspreis (5 / 19 / 49 €), jeden Monat.
+- Du zahlst den vollen Monatspreis (5 / 11 / 29 €), jeden Monat.
 - Jederzeit zum Monatsende kündbar — null Bindung.
 - Keine automatische Sommerpause: Du entscheidest selbst, ob du im Sommer pausierst (kündigen) oder durchlaufen lässt.
 
 ## Konkrete Entscheidungs-Beispiele
 
 **Beispiel 1 — TSV Beispieldorf, Herren I, Kreisliga A**
-Startet am 1. August, spielt die volle Saison. → **Saison-Pass**. ~2 Monate geschenkt, Sommerpause kostenlos.
+Startet am 1. August, spielt die volle Saison. → **Saison-Pass**. 42–43 % gespart, Sommerpause kostenlos.
 
 **Beispiel 2 — Neuer Trainer, will erst mal testen**
 Noch unsicher, ob das Sponsoring-Thema zündet. → **Monatlich** starten. Wenn es läuft, zum nächsten 1. August auf den Saison-Pass wechseln und sparen.
@@ -70,7 +70,7 @@ Während der Laufzeit kannst du nicht direkt umstellen — Stripe-Subscriptions 
 
 ## Faustregel zum Mitnehmen
 
-Sicher, dass ihr die Saison durchspielt? **Saison-Pass** — das ist der Default und spart ~2 Monate. Noch am Ausprobieren oder mitten in der Saison eingestiegen? **Monatlich** — null Bindung, jederzeit kündbar, und der Wechsel auf den Saison-Pass steht dir zum nächsten August offen.
+Sicher, dass ihr die Saison durchspielt? **Saison-Pass** — das ist der Default und spart 42–43 %. Noch am Ausprobieren oder mitten in der Saison eingestiegen? **Monatlich** — null Bindung, jederzeit kündbar, und der Wechsel auf den Saison-Pass steht dir zum nächsten August offen.
 
 Weiter lesen:
 - [Welcher Tarif passt zu deinem Verein?](welcher-tarif-passt.md)

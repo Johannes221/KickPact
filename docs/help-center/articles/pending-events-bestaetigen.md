@@ -14,7 +14,7 @@ last_updated: "2026-05-25"
 status: "published"
 ---
 
-Manual-Trigger funktionieren so: Trainer meldet ein Ereignis (Kopfball-Tor, Assist, Spieler des Spiels), Sponsor bestätigt es, **dann** wird die Charge erzeugt. Diese Zwischenphase heißt **Pending**. So gehst du damit um.
+Manual-Trigger funktionieren so: Trainer meldet ein Ereignis (Kopfball-Tor, Assist, Spieler des Spiels), Sponsor bestätigt es, **dann** wird der Beitrag erzeugt. Diese Zwischenphase heißt **Pending**. So gehst du damit um.
 
 ## Wo du Pending Events siehst
 
@@ -25,7 +25,7 @@ Wenn neue Pending Events vorliegen, steht ein **roter Counter** auf dem Inbox-Ic
 - Mannschaftsname + Match (Datum + Gegner)
 - Trigger-Typ (Kopfball, Assist, Spieler des Spiels...)
 - Spieler-Name (wenn relevant)
-- Betrag aus deinem Pledge
+- Betrag aus deinem Pact
 - Wer hat es gemeldet (Trainer-Name + Zeitstempel)
 - Buttons: **Bestätigen** | **Bestreiten**
 
@@ -33,7 +33,7 @@ Wenn neue Pending Events vorliegen, steht ein **roter Counter** auf dem Inbox-Ic
 
 Mit Klick auf **Bestätigen**:
 - Event wechselt von `pending` zu `approved`
-- Charge wird **sofort erzeugt** (Betrag aus deiner Pledge-Regel)
+- Beitrag wird **sofort erzeugt** (Betrag aus deiner Pact-Regel)
 - Erscheint in deinem laufenden Monat
 - Trigger-Counter im Sponsor-Dashboard zählt hoch
 
@@ -45,8 +45,8 @@ Klick auf **Bestreiten** öffnet ein Dialog mit Textfeld (optional, max. 280 Zei
 
 - Event wechselt zu `disputed`
 - Verein-Admin und der meldende Trainer bekommen eine Notification
-- Charge wird **nicht erzeugt**
-- Audit-Log behält dein Dispute fest
+- Beitrag wird **nicht erzeugt**
+- Audit-Log hält dein Dispute fest
 
 Mehr in [Event bestreiten](event-bestreiten.md).
 
@@ -66,7 +66,7 @@ Du als Sponsor siehst die Konfiguration in deinem Dashboard transparent: "Pendin
 
 ## Empfehlung: Wöchentlich kurz reingucken
 
-Wenn dein Verein viel meldet (Kopfball-Pledges, Spieler des Spiels), kommen pro Spieltag mehrere Pending Events. Einmal pro Woche 5 Minuten:
+Wenn dein Verein viel meldet (Kopfball-Pacts, Spieler des Spiels), kommen pro Spieltag mehrere Pending Events. Einmal pro Woche 5 Minuten:
 
 1. Inbox öffnen.
 2. Alle plausiblen Events markieren + **Bestätigen**.
@@ -84,9 +84,9 @@ Wenn die Inbox voll ist:
 
 ## Vergangenheit ansehen
 
-**Inbox → Tab "Bestätigt"** zeigt dir die letzten 90 Tage. Du kannst eine Charge nachträglich **anfechten** (selten, aber möglich), wenn dir nach 5 Tagen auffällt, dass das Event doch falsch war:
+**Inbox → Tab "Bestätigt"** zeigt dir die letzten 90 Tage. Du kannst einen Beitrag nachträglich **anfechten** (selten, aber möglich), wenn dir nach 5 Tagen auffällt, dass das Event doch falsch war:
 
-- Klick auf "..." rechts an der Zeile → **"Charge anfechten"**.
+- Klick auf "..." rechts an der Zeile → **"Beitrag anfechten"**.
 - Verein bekommt Notification + Entscheidung.
 - Bis zum 7. des Folgemonats kann das noch rückgängig gemacht werden.
 

@@ -11,7 +11,7 @@
 ## Stil-Guide (gilt für alle Artikel)
 
 - **Tonalität:** sport-energetisch, knapp, freundlich. Stripe-Docs-Präzision plus Strava-In-App-Klarheit.
-- **Sprache:** Deutsch, **Du-Form**. Englische Begriffe nur wenn unvermeidbar (z.B. "Webhook", "Pledge").
+- **Sprache:** Deutsch, **Du-Form**. Englische Begriffe nur wenn unvermeidbar (z.B. "Webhook", "Pact").
 - **Länge:** **200–600 Wörter pro Artikel**. Lieber mehr kleine Artikel als wenige große.
 - **Verboten:** "Awesome!", "Super!", Emoji-Spam, Marketing-Floskeln, vage Versprechen.
 - **Erlaubt:** konkrete Zahlen, echte Beispielnamen (Schmidt, Mehmet, FC Musterstadt), klare Schritt-für-Schritt-Listen, Screenshot-Platzhalter.
@@ -42,22 +42,21 @@
 - [ ] **vereins-mail-absender-einrichten** — [Prio: SOLL] — Reply-To auf Vereinsadresse umstellen (Pro/Vereinslizenz).
 - [ ] **hilfe-mein-verein-existiert-nicht-auf-fussballde** — [Prio: Later] — Manueller Fallback, wenn Fußball.de den Verein nicht kennt.
 
-### 2. Erste Schritte — Sponsor (5 Artikel)
+### 2. Erste Schritte — Sponsor (4 Artikel)
 
 - [ ] **sponsor-einladung-oeffnen** — [Prio: MUSS] — Was passiert nach Klick auf den Einladungslink, Konto-Anlage in unter 2 Minuten.
-- [ ] **sponsor-typ-familie-vs-business** — [Prio: MUSS] — Welchen Typ wählen, was passiert mit USt-ID, Rechnungsadresse.
 - [ ] **ersten-pledge-anlegen** — [Prio: MUSS] — Trigger auswählen, Beträge setzen, Caps, Worst-Case-Review.
 - [ ] **eltern-als-sponsor-manager** — [Prio: SOLL] — Wenn Oma+Opa+Patenonkel über ein Konto laufen (Junioren-Use-Case).
 - [ ] **sponsor-dashboard-verstehen** — [Prio: SOLL] — Pledge-Übersicht, Saldo, History.
 
-### 3. Pledges & Trigger (10 Artikel)
+### 3. Pacts & Trigger (10 Artikel)
 
 - [ ] **was-ist-ein-pledge** — [Prio: MUSS] — Begriffsklärung: Sponsoring-Versprechen mit Regeln + Caps.
 - [ ] **auto-trigger-katalog** — [Prio: MUSS] — Alle 10 Auto-Trigger erklärt: Tor, Sieg, Clean Sheet, Comeback, Hattrick, Tordifferenz, Gesamttore, Spieler-Tor, Unentschieden, Niederlage.
 - [ ] **manual-trigger-katalog** — [Prio: MUSS] — Spezial-Tor-Subtypes (Kopfball, Hackentor, Volley, Fernschuss, Elfmeter, Freistoß), Karten, Assist, Spieler des Spiels.
 - [ ] **caps-und-monats-limits** — [Prio: MUSS] — Per-Match-Cap, Monats-Cap, was tun bei "Ausreißer-Spielen" (7:1-Sieg).
 - [ ] **worst-case-berechnung-verstehen** — [Prio: MUSS] — Wie KickPact die Saison-Range schätzt, warum die Spanne breit ist.
-- [ ] **saison-wetten-einfuehrung** — [Prio: SOLL] — Aufstieg, Klassenerhalt, Tabellenplatz, Meister, Pokalrunde, Custom-Saison-Ziel (Pro/Vereinslizenz).
+- [ ] **saison-ziele-einfuehrung** — [Prio: SOLL] — Saison-Ziele: Aufstieg, Klassenerhalt, Tabellenplatz, Meister, Pokalrunde, Custom-Saison-Ziel (Pro/Vereinslizenz).
 - [ ] **custom-trigger-anlegen** — [Prio: SOLL] — "Bizeps-Tor von Schmidt", "Eckball-Tor", "Trainer-Frisur-Lob" (Pro/Vereinslizenz).
 - [ ] **pledge-paused-und-beendet** — [Prio: SOLL] — Pledge pausieren, beenden, reaktivieren.
 - [ ] **mehrere-pledges-pro-sponsor** — [Prio: SOLL] — Einer für die Mannschaft, einer für den Sohn — wie kombinieren.
@@ -67,21 +66,18 @@
 
 - [x] **welcher-tarif-passt** — [Prio: MUSS] — Entscheidungshilfe: wie viele Sponsoren? wie viele Teams? → Tarif-Empfehlung.
 - [x] **saison-pass-vs-monatlich** — [Prio: MUSS] — Wann lohnt was, mit konkreten Zahlen.
-- [ ] **5-spieltag-cutoff** — [Prio: MUSS] — Was passiert ab dem 6. Spieltag (Saison-Pass + Saison-Wetten gesperrt bis nächste Saison).
+- [ ] **5-spieltag-cutoff** — [Prio: MUSS] — Was passiert ab dem 6. Spieltag (Saison-Pass + Saison-Ziele gesperrt bis nächste Saison).
 - [ ] **trial-30-tage** — [Prio: MUSS] — Trial-Start, Reminder, was nach Ablauf passiert, Grace-Period.
 - [ ] **upgrade-basic-auf-pro** — [Prio: SOLL] — Wann sinnvoll, was passiert mit bestehenden Pledges, Stripe-Pro-Rated.
 - [ ] **vereinslizenz-break-even** — [Prio: SOLL] — Ab 3 Mannschaften günstiger als 3× Pro — mit Rechnung.
 - [ ] **mid-season-einstieg** — [Prio: SOLL] — Onboarding im Oktober: was wird empfohlen, kein anteiliger Saison-Pass.
 - [ ] **kuendigung-und-pause** — [Prio: SOLL] — Wo kündigen, Sommerpause beim Saison-Pass, Daten bleiben.
 
-### 5. Sponsor-Akquise (Pro & Vereinslizenz, 6 Artikel)
+### 5. Sponsor-Akquise (Pro & Vereinslizenz, 3 Artikel)
 
 - [ ] **sponsoren-finden-pledge-discovery** — [Prio: SOLL] — Mannschaft öffentlich machen, in `/sponsor/discover` erscheinen.
-- [ ] **embed-widget-vereinswebsite** — [Prio: SOLL] — Code-Snippet einbauen, "5 € pro Tor — jetzt mitmachen"-Button.
-- [ ] **auto-sponsor-newsletter** — [Prio: SOLL] — Monatlicher Recap, was er enthält, wer ihn bekommt.
-- [ ] **einladungslinks-tracken** — [Prio: SOLL] — Wer hat geklickt, wer hat abgeschlossen, Reminder verschicken.
-- [ ] **sponsor-pitch-vorlage** — [Prio: Later] — Mustertext für WhatsApp/Mail an potenzielle Sponsoren.
-- [ ] **local-business-sponsoren-gewinnen** — [Prio: Later] — Bäcker, Autohaus, Friseur — wie ansprechen, was bieten.
+- [ ] **einladungslinks-tracken** — [Prio: SOLL] — Wer hat geklickt, wer hat abgeschlossen, Erinnerung verschicken.
+- [ ] **sponsor-pitch-vorlage** — [Prio: Later] — Mustertext für WhatsApp/Mail an potenzielle Sponsoren (Familie, Freunde, Fans).
 
 ### 6. Abrechnung (7 Artikel)
 
@@ -98,7 +94,7 @@
 - [ ] **master-cockpit-uebersicht** — [Prio: MUSS] — `/verein/[slug]/admin` — was steht drin, wie navigieren.
 - [ ] **cross-team-sponsor-view** — [Prio: SOLL] — Welcher Sponsor unterstützt welche Teams (Onkel = U13 + Senioren).
 - [ ] **10-admin-slots-verteilen** — [Prio: SOLL] — Vorstand + Trainer pro Mannschaft, Rollen einladen.
-- [ ] **aggregiertes-saison-recap** — [Prio: Later] — Vereinsweiter Saison-Report für Jahreshauptversammlung.
+- [ ] **aggregiertes-saison-recap** — [Prio: Later] — Vereinsweites Saison-Recap (teilbares Bild) für die Jahreshauptversammlung.
 - [ ] **custom-domain-v2** — [Prio: Later] — `sponsor.fc-musterstadt.de` (v2-Feature, Outlook).
 
 ### 8. Approvals & Disputes (5 Artikel)
@@ -111,7 +107,7 @@
 
 ### 9. Crawler & Fußball.de (5 Artikel)
 
-- [ ] **wie-der-crawler-funktioniert** — [Prio: MUSS] — Alle 6h, was wird geholt, was nicht (z.B. keine Kopfball-Info).
+- [ ] **wie-der-crawler-funktioniert** — [Prio: MUSS] — Täglich + mehrfach am Spieltag-Wochenende, was wird geholt, was nicht (z.B. keine Kopfball-Info).
 - [ ] **match-fehlt-was-tun** — [Prio: MUSS] — Manueller Match-Eintrag als Fallback, Idempotenz-Check.
 - [ ] **fussballde-aendert-daten** — [Prio: SOLL] — Was passiert wenn ein Ergebnis nachträglich korrigiert wird.
 - [ ] **crawler-pausen-und-sommerpause** — [Prio: SOLL] — Wann der Crawler nicht läuft (Trial-Ende, Sommerpause, Read-Only).
@@ -138,18 +134,18 @@
 | Kategorie | Artikel total | MUSS | SOLL | Later |
 |---|---:|---:|---:|---:|
 | 1. Erste Schritte — Verein | 8 | 5 | 2 | 1 |
-| 2. Erste Schritte — Sponsor | 5 | 3 | 2 | 0 |
-| 3. Pledges & Trigger | 10 | 5 | 4 | 1 |
+| 2. Erste Schritte — Sponsor | 4 | 2 | 2 | 0 |
+| 3. Pacts & Trigger | 10 | 5 | 4 | 1 |
 | 4. Tarife & Pricing | 8 | 4 | 4 | 0 |
-| 5. Sponsor-Akquise | 6 | 0 | 4 | 2 |
+| 5. Sponsor-Akquise | 3 | 0 | 2 | 1 |
 | 6. Abrechnung | 7 | 4 | 3 | 0 |
 | 7. Vereinslizenz-Spezial | 5 | 1 | 2 | 2 |
 | 8. Approvals & Disputes | 5 | 2 | 2 | 1 |
 | 9. Crawler & Fußball.de | 5 | 2 | 2 | 1 |
 | 10. FAQ | 1 | 1 | 0 | 0 |
-| **Total** | **60** | **27** | **25** | **8** |
+| **Total** | **56** | **26** | **23** | **7** |
 
-→ **MUSS-Launch-Set:** 27 Artikel. Bei 250–500 Wörter ≈ 8–14k Wörter — an einem fokussierten Wochenende schreibbar.
+→ **MUSS-Launch-Set:** 26 Artikel. Bei 250–500 Wörter ≈ 8–14k Wörter — an einem fokussierten Wochenende schreibbar.
 
 ---
 

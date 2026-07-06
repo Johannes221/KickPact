@@ -1,5 +1,5 @@
 ---
-title: "USt und Kleinunternehmer (§ 19 UStG)"
+title: "USt und Steuern — was gilt bei KickPact?"
 slug: "ust-und-kleinunternehmer"
 category: "abrechnung"
 category_label: "Abrechnung"
@@ -9,111 +9,42 @@ related_articles:
   - "vereins-stammdaten-und-logo"
   - "pdf-rechnung-lesen"
   - "so-funktioniert-die-monatsrechnung"
-last_updated: "2026-05-25"
+last_updated: "2026-07-06"
 status: "published"
 ---
 
-Steuerrechtlich entscheidest du beim Setup: ist dein Verein **Kleinunternehmer (§ 19 UStG)** oder **regelbesteuert**? Die Wahl bestimmt, was auf der Rechnung steht. KickPact ist neutral — wir wissen deine Steuersituation nicht, du musst es korrekt setzen.
+Das Steuerthema ist bei KickPact bewusst einfach gehalten. Kurzfassung: **Auf den Zahlungsübersichten für Sponsoren steht keine USt.** USt taucht nur an einer Stelle auf: auf der Lizenz-Rechnung von KickPact an euren Verein.
 
-> **Wichtig:** Das hier ist keine Steuerberatung. Im Zweifel deinen Steuerberater fragen. KickPact stellt nur die technische Möglichkeit zur Verfügung, beides korrekt abzubilden.
+> **Wichtig:** Das hier ist keine Steuerberatung. Für eure konkrete Vereinssituation fragt den Kassenwart oder Steuerberater.
 
-## Die zwei Optionen — Schnellüberblick
+## Die zwei Dokumente, um die es geht
 
-| § 19 UStG (Kleinunternehmer) | Regelbesteuerung |
-|---|---|
-| Kein USt-Ausweis auf Rechnung | USt-Ausweis (meist 19 %) auf Rechnung |
-| Hinweis "Gemäß § 19 UStG..." | USt-ID Pflicht auf Rechnung |
-| Keine USt-Voranmeldung nötig | USt-Voranmeldung beim Finanzamt |
-| Umsatzgrenze: 22.000 € im Vorjahr UND ≤ 50.000 € erwartet | Keine Grenze |
-| Praktisch für kleine Vereine | Standard für größere Vereine |
+| Dokument | Wer bekommt es | USt? |
+|---|---|---|
+| **Zahlungsübersicht** | Sponsor (Privatperson) | **Nein** — kein Ausweis, kein Aufschlag |
+| **Lizenz-Rechnung** | Verein (von KickPact, fürs Abo) | **Ja** — 19 % USt, separat ausgewiesen |
 
-## Wo du es setzt
+## Warum keine USt auf der Zahlungsübersicht?
 
-**Verein → Einstellungen → Stammdaten → Steuerstatus.**
+Sponsoren sind bei KickPact **Privatpersonen** — Eltern, Großeltern, Freunde, Fans. Ihre Beiträge sind freiwillige Unterstützung, keine bezahlte Leistung. Es gibt keinen Leistungsaustausch, also auch nichts, worauf USt anfallen könnte. Deshalb ist das Dokument auch eine **Zahlungsübersicht** und keine Rechnung: eine Zusammenfassung der zugesagten Beiträge, ein Gesamtbetrag, fertig.
 
-Drei Felder:
+## Was ist dann das Kleinunternehmer-Häkchen in den Stammdaten?
 
-- Radio-Button: **Kleinunternehmer (§ 19 UStG)** oder **Regelbesteuert**
-- Bei Regelbesteuerung: **USt-Satz** (meist 19 %, bei einigen Vereinen 7 % als ermäßigter Satz für gemeinnützige Tätigkeit)
-- **USt-ID** (Pflicht bei Regelbesteuerung, leer bei Kleinunternehmer)
+In **Verein → Einstellungen → Stammdaten** gibt es weiterhin das Feld **Kleinunternehmer (§ 19 UStG)**. Das betrifft **nur eure Vereins-Angaben** — es ändert nichts an den Zahlungsübersichten, die bleiben immer ohne USt. Ob euer Verein Kleinunternehmer ist oder nicht, ist eine Frage eurer Vereinsbuchhaltung. Wenn ihr unsicher seid: Kassenwart fragen, das ist eine 30-Sekunden-Frage.
 
-## Was auf der Rechnung erscheint
+## Die Lizenz-Rechnung von KickPact
 
-### Bei Kleinunternehmer (§ 19 UStG)
+Für euer Abo (Basic, Pro oder Vereinslizenz) bekommt ihr von KickPact eine normale Rechnung. Dort sind **19 % USt separat ausgewiesen**. Alle Lizenz-Preise verstehen sich zzgl. USt. Diese Rechnung ist ein Beleg für eure Vereinsbuchhaltung wie jede andere auch.
 
-```
-Zwischensumme: 78,00 €
+## Müssen wir die Sponsoren-Beiträge versteuern?
 
-Gemäß § 19 UStG wird keine Umsatzsteuer ausgewiesen.
+Wie euer Verein die Einnahmen aus Sponsoren-Beiträgen buchhalterisch behandelt, hängt von eurer Vereinssituation ab (gemeinnützig oder nicht, welcher Tätigkeitsbereich, wie hoch die Einnahmen). Das können und wollen wir nicht pauschal beantworten — sprecht mit eurem Steuerberater oder dem Kassenwart.
 
-Gesamtsumme: 78,00 €
-```
+## Können Sponsoren ihre Beiträge absetzen?
 
-Keine separate USt-Zeile, keine USt-ID nötig auf der Rechnung. Der Verein zeigt **stattdessen** seine Steuer-Nummer (vom Finanzamt, nicht USt-ID).
-
-### Bei Regelbesteuerung
-
-```
-Zwischensumme: 65,55 € (netto)
-zzgl. 19 % USt: 12,45 €
-Gesamtsumme: 78,00 € (brutto)
-
-USt-ID des Vereins: DE123456789
-```
-
-Wenn der **Sponsor geschäftlich** ist und seine USt-ID hinterlegt hat, erscheint sie auch auf der Rechnung. Damit kann er die ausgewiesene USt als Vorsteuer abziehen.
-
-## Welche Option für dich passt
-
-### Du bist sehr wahrscheinlich Kleinunternehmer wenn...
-
-- Dein Verein im Vorjahr unter 22.000 € Umsatz hatte (alle Vereinseinnahmen zusammen, nicht nur Sponsoring).
-- Du erwartest in diesem Jahr unter 50.000 € Umsatz.
-- Du hast bisher dem Finanzamt **keinen Verzicht auf die Kleinunternehmer-Regelung** mitgeteilt.
-
-In dieser Lage sind die meisten Amateur-Vereine.
-
-### Du bist regelbesteuert wenn...
-
-- Vorjahresumsatz über 22.000 € **oder** erwarteter Umsatz über 50.000 €.
-- Du hast aktiv **Verzicht auf § 19** beim Finanzamt erklärt (passiert manchmal bei größeren Vereinen, um Vorsteuer-Abzug auf Investitionen zu nutzen).
-
-## Wechsel der Option
-
-Du kannst jederzeit wechseln, aber:
-
-- **Wechsel von § 19 → Regelbesteuerung**: muss beim Finanzamt angemeldet werden. Gilt dann für 5 Jahre verpflichtend. Erst nach dieser Bindung kannst du zurück.
-- **Wechsel von Regelbesteuerung → § 19**: möglich bei Unterschreitung der Grenzen, beim Finanzamt anzeigen.
-
-In KickPact: Stammdaten ändern, alle **zukünftigen Rechnungen** verwenden den neuen Status. Alte Rechnungen bleiben mit dem damals gültigen Status archiviert.
-
-## Was der Sponsor steuerlich davon hat
-
-### Privat-Sponsor
-
-- **Nicht absetzbar** in der eigenen Steuererklärung, egal ob § 19 oder Regelbesteuerung.
-- Bei § 19: keine zusätzliche Komplikation.
-- Bei Regelbesteuerung: USt steht zur Info auf der Rechnung, hat aber keine steuerliche Wirkung für den Sponsor.
-
-### Geschäfts-Sponsor
-
-- **Bei Verein § 19**: Brutto = Netto, voller Betrag als Betriebsausgabe absetzbar (sofern Marketing-Charakter gegeben).
-- **Bei Verein Regelbesteuerung**: Netto als Betriebsausgabe + USt als Vorsteuer absetzbar (sofern Sponsor selbst USt-pflichtig).
-
-Für den Geschäfts-Sponsor ist **Regelbesteuerung des Vereins steuerlich attraktiver** — er kriegt die Vorsteuer zurück. Pragmatisch: Bei größeren Local-Business-Sponsoren ist Regelbesteuerung des Vereins oft willkommen.
-
-## Was wenn du falsch gesetzt hast und die Rechnung schon raus ist?
-
-- **Verein war § 19, sollte aber Regelbesteuerung sein**: Korrektur-Rechnung an den Sponsor, USt nachzahlen, beim Finanzamt klären. KickPact macht **Korrektur-Rechnungen über den Support**: support@kickpact.de mit Vereinsname.
-- **Verein war Regelbesteuerung, sollte § 19 sein**: Auch hier Korrektur. Sponsor zahlt zu viel, kriegt USt zurück. Verein darf die zu viel ausgewiesene USt nicht behalten — beim Finanzamt klären.
-
-## Sondertarife (ermäßigter USt-Satz 7 %)
-
-Manche gemeinnützige Vereine können für bestimmte Leistungen **7 % USt** statt 19 % ansetzen. Sponsoring ist normalerweise **nicht** in diesem Bereich — typischer Sponsoring-Umsatz fällt unter 19 %.
-
-Wenn dein Steuerberater dir sagt "7 % anwenden", kannst du das in KickPact entsprechend setzen. Wir prüfen das nicht inhaltlich, vertrauen deiner Angabe.
+Vorsichtige, ehrliche Antwort: Die Beiträge sind freiwillige Unterstützung ohne Gegenleistung. Ist euer Verein **gemeinnützig**, kann er dafür unter Umständen eine **Spendenbescheinigung** ausstellen — das entscheidet und verantwortet der Verein, nicht KickPact. Sponsoren fragen dafür am besten direkt beim Verein nach. Auch hier gilt: keine Steuerberatung, im Zweifel hilft das Finanzamt.
 
 Weiter lesen:
 - [Vereins-Stammdaten und Logo](vereins-stammdaten-und-logo.md)
-- [PDF-Rechnung lesen](pdf-rechnung-lesen.md)
-- [So funktioniert die Monatsrechnung](so-funktioniert-die-monatsrechnung.md)
+- [Zahlungsübersicht lesen](pdf-rechnung-lesen.md)
+- [So funktioniert die Monatsabrechnung](so-funktioniert-die-monatsrechnung.md)

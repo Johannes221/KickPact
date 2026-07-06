@@ -2,7 +2,7 @@
 title: "Manual-Trigger-Katalog"
 slug: "manual-trigger-katalog"
 category: "pledges-trigger"
-category_label: "Pledges & Trigger"
+category_label: "Pacts & Trigger"
 prio: "MUSS"
 audience: ["sponsor", "verein-admin", "trainer"]
 related_articles:
@@ -30,7 +30,7 @@ Manual-Trigger sind die Sponsoring-Optionen, die das **Wie** abbilden — und de
 ## Standard-Manual-Trigger (alle Tarife)
 
 ### Tor-Subtypen
-- **Kopfball-Tor** — Kopfball, oft als Premium-Pledge ("10 € pro Kopfball-Tor")
+- **Kopfball-Tor** — Kopfball, oft als Premium-Pact ("10 € pro Kopfball-Tor")
 - **Volley-Tor** — direkt aus der Luft geschossen
 - **Hackentor** — mit der Hacke
 - **Fernschuss** — Schuss aus großer Entfernung (~25+ m)
@@ -43,7 +43,7 @@ Manual-Trigger sind die Sponsoring-Optionen, die das **Wie** abbilden — und de
 - **Gelb-Rote Karte**
 - **Rote Karte**
 
-Pledges auf Karten sind oft "Anti-Pledges": "5 € pro Roter Karte als Vereinsstrafe" — Geld geht trotzdem an die Vereinskasse.
+Pacts auf Karten sind oft "Anti-Pacts": "5 € pro Roter Karte als Vereinsstrafe" — Geld geht trotzdem an die Vereinskasse.
 
 ### Spielereignisse
 - **Assist** — Tor-Vorbereitung. "5 € pro Assist meines Sohnes."
@@ -65,20 +65,20 @@ Du kannst eigene Manual-Trigger anlegen. Beispiele aus der Pilotphase:
 
 Die Logik: Du erfindest den Trigger-Text, der Trainer entscheidet pro Spiel, ob er ihn meldet. Mehr in [Custom-Trigger anlegen](custom-trigger-anlegen.md).
 
-## Workflow: vom Spiel zum Charge
+## Workflow: vom Spiel zum Beitrag
 
 1. **Samstag, 16:00** — Mannschaft spielt 2:1.
 2. **Samstag, 18:00** — Trainer öffnet KickPact, geht in **Verein → Mannschaft → Ereignisse → Spiel**.
-3. Crawler hat schon die zwei Tore importiert (Tor von Tim, Tor von Mehmet).
+3. Die zwei Tore sind schon automatisch importiert (Tor von Tim, Tor von Mehmet).
 4. Trainer klickt auf das Tor von Tim → "Tor-Subtyp: Kopfball".
 5. Trainer fügt einen Assist hinzu (Mehmet → Tim).
 6. Trainer benennt **Spieler des Spiels: Tim**.
 7. Trainer klickt **"Ereignisse abschicken"**.
 8. **Sonntag, 09:00** — Sponsor sieht in seinem Dashboard 3 **Pending Events**:
-   - Kopfball-Tor von Tim (15 € Pledge)
-   - Assist Mehmet → Tim (5 € Pledge)
-   - Spieler des Spiels Tim (20 € Pledge)
-9. Sponsor bestätigt einzeln oder alle auf einmal → Charges werden erzeugt.
+   - Kopfball-Tor von Tim (15 €-Pact)
+   - Assist Mehmet → Tim (5 €-Pact)
+   - Spieler des Spiels Tim (20 €-Pact)
+9. Sponsor bestätigt einzeln oder alle auf einmal → Beiträge werden erzeugt.
 10. Falls Sponsor **innerhalb 7 Tagen nicht reagiert**: Erinnerung. Nach 14 Tagen: zweite Erinnerung. Nach 30 Tagen: Auto-Approve oder Auto-Reject (je nach Vereinseinstellung, Default Auto-Approve).
 
 Mehr in [Pending Events bestätigen](pending-events-bestaetigen.md) und [Reminder-Logik](reminder-logik.md).

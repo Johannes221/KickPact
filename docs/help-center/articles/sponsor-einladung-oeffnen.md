@@ -7,7 +7,6 @@ prio: "MUSS"
 audience: ["sponsor"]
 related_articles:
   - "ersten-pledge-anlegen"
-  - "sponsor-typ-familie-vs-business"
   - "sponsor-dashboard-verstehen"
   - "was-ist-ein-pledge"
 last_updated: "2026-05-25"
@@ -23,9 +22,9 @@ Du landest auf einer Begrüßungsseite. Sie sagt dir:
 - **Welche Mannschaft** dich eingeladen hat (mit Logo)
 - Ggf. **dein Name**, wenn der Verein ihn beim Link-Erzeugen mitgegeben hat
 - Eine kurze Erklärung, was als nächstes passiert
-- Ein dicker oranger Button **"Pledge anlegen →"**
+- Ein dicker oranger Button **"Pact anlegen →"**
 
-Klick drauf. Wenn du noch keinen KickPact-Account hast, kommt jetzt der Login-Schritt. Wenn du schon eingeloggt bist, springst du direkt in den Pledge-Wizard.
+Klick drauf. Wenn du noch keinen KickPact-Account hast, kommt jetzt der Login-Schritt. Wenn du schon eingeloggt bist, springst du direkt in den Pact-Wizard.
 
 ## Login-Schritt (Magic-Link)
 
@@ -39,23 +38,24 @@ Du musst die Mail auf demselben Gerät öffnen, wo du gerade bist? **Nein, das i
 
 ## Sponsor-Profil ausfüllen
 
-Beim allerersten Login richtest du ein Sponsor-Profil ein. KickPact fragt drei Sachen:
+Beim allerersten Login richtest du ein Sponsor-Profil ein. KickPact fragt zwei Sachen:
 
-1. **Anzeigename** — wie du als Sponsor heißen sollst. Standard: dein vollständiger Name ("Mehmet Yilmaz") oder ein Familien-Alias ("Familie Schmidt").
-2. **Sponsor-Typ** — Privat (Familie) oder Geschäftlich (Local Business). Details in [Sponsor-Typ: Familie vs Business](sponsor-typ-familie-vs-business.md).
-3. **Rechnungsadresse** — fürs Monats-PDF, das du am 1. des Monats kriegst.
+1. **Anzeigename** — wie du als Sponsor heißen sollst. Dein Name ("Mehmet Yilmaz"), ein Familien-Alias ("Familie Schmidt") oder schlicht "Tante Erna".
+2. **Dein Bezug zur Mannschaft** — z.B. "Papa von Tim", "Onkel von Lisa" oder einfach "Fan". Die Mannschaft sieht so, wer hinter ihr steht.
 
-Das war's. Keine Bankdaten, keine SEPA-Lastschrift, keine Vorab-Authentifizierung. KickPact zieht in v1 **keine Beträge automatisch ein** — du zahlst, wenn die Rechnung kommt, direkt an den Verein per Überweisung.
+Tipp: Ein Konto pro Familie reicht. Oma, Opa und Patenonkel können sich einen Zugang teilen, die Zahlungsübersicht kommt gesammelt.
 
-## Direkt im Pledge-Wizard
+Das war's. Keine Bankdaten, keine SEPA-Lastschrift, keine Vorab-Authentifizierung. KickPact zieht **keine Beträge automatisch ein** — du zahlst, wenn die Zahlungsübersicht kommt, direkt an den Verein.
 
-Nach dem Profil bist du im Pledge-Wizard. Hier legst du fest, **was du versprichst**:
+## Direkt im Pact-Wizard
+
+Nach dem Profil bist du im Pact-Wizard. Hier legst du fest, **was du versprichst**:
 
 - "5 € pro Tor der Mannschaft"
 - "20 € wenn die Mannschaft gewinnt"
 - "10 € pro Tor meines Sohnes Mehmet"
 
-Mehr dazu in [Ersten Pledge anlegen](ersten-pledge-anlegen.md) und [Was ist ein Pledge?](was-ist-ein-pledge.md).
+Mehr dazu in [Ersten Pact anlegen](ersten-pledge-anlegen.md) und [Was ist ein Pact?](was-ist-ein-pledge.md).
 
 ## Was du sehen kannst, sobald du drin bist
 
@@ -74,6 +74,5 @@ Mehr dazu in [Ersten Pledge anlegen](ersten-pledge-anlegen.md) und [Was ist ein 
 Du hast kein Passwort — also auch keins zu verlieren. Jeder Login geht über einen Magic-Link an deine Mail. Schütze deinen Mail-Account, der Rest erledigt sich.
 
 Weiter lesen:
-- [Sponsor-Typ: Familie vs Business](sponsor-typ-familie-vs-business.md)
-- [Ersten Pledge anlegen](ersten-pledge-anlegen.md)
+- [Ersten Pact anlegen](ersten-pledge-anlegen.md)
 - [Sponsor-Dashboard verstehen](sponsor-dashboard-verstehen.md)

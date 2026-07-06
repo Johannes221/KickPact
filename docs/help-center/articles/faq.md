@@ -18,13 +18,13 @@ Kurze Antworten auf die Fragen, die wir am häufigsten hören. Wenn die Antwort 
 
 ## 1. Brauche ich eine USt-ID?
 
-**Verein:** Nur wenn du **regelbesteuert** bist (kein Kleinunternehmer). Mehr in [USt und Kleinunternehmer](ust-und-kleinunternehmer.md).
+**Verein:** Nur für eure eigenen Vereins-Angaben, falls ihr regelbesteuert seid. Auf den Zahlungsübersichten für Sponsoren steht generell keine USt. Mehr in [USt und Steuern](ust-und-kleinunternehmer.md).
 
-**Sponsor:** Nur wenn du als **Geschäftskunde** den Vorsteuerabzug nutzen willst. Privat-Sponsoren brauchen keine USt-ID.
+**Sponsor:** Nein, nie. Sponsoren sind bei KickPact Privatpersonen.
 
 ## 2. Was passiert, wenn ein Sponsor nicht zahlt?
 
-Die Rechnung wird nach 14 Tagen als **überfällig** markiert. KickPact schickt dann automatische Erinnerungen — siehe [Reminder an Sponsor](reminder-an-sponsor.md). Wenn der Sponsor weiterhin nicht reagiert, liegt das **Inkasso beim Verein** — wir betreiben kein eigenes Inkasso-Verfahren in v1.
+Die Zahlungsübersicht wird nach 14 Tagen als **überfällig** markiert. Automatische Mahnungen gibt es bewusst nicht — KickPact stellt dem Verein einen fertigen, freundlichen Erinnerungstext bereit, den er selbst per WhatsApp oder Mail verschickt. Das sind schließlich eure Leute, kein Inkasso-Fall.
 
 ## 3. Kann ich mehrere Vereine gleichzeitig verwalten?
 
@@ -36,7 +36,7 @@ Die Rechnung wird nach 14 Tagen als **überfällig** markiert. KickPact schickt 
 
 ## 5. Wie lange laufen die Daten nach Kündigung?
 
-- **Read-Only-Modus**: 90 Tage nach Kündigung. Du kannst alles ansehen, alte Rechnungen herunterladen, aber nichts ändern.
+- **Read-Only-Modus**: 90 Tage nach Kündigung. Du kannst alles ansehen, alte Zahlungsübersichten herunterladen, aber nichts ändern.
 - **Anonymisierung**: 12 Monate nach Kündigung. Spielernamen werden anonymisiert, Sponsor-Profile gelöscht (auf Wunsch früher).
 - **Vollständige Löschung**: auf DSGVO-Antrag jederzeit binnen 30 Tagen.
 
@@ -44,15 +44,15 @@ Mehr in [Kündigung und Pause](kuendigung-und-pause.md).
 
 ## 6. Kann ein Spieler selbst Sponsor sein?
 
-**Technisch ja.** Praktisch: bedenken, dass das **steuerlich heikel** sein kann (Eigeninteresse, Werbungskosten-Behandlung). Frag den Steuerberater. KickPact unterbindet das nicht.
+**Ja.** Sponsoren sind Privatpersonen — wenn ein Spieler seine eigene Mannschaft unterstützen will, spricht nichts dagegen. KickPact unterbindet das nicht.
 
 ## 7. Was, wenn Fußball.de das Ergebnis falsch hat?
 
-Fußball.de korrigiert manchmal nachträglich. Unser Crawler erkennt das beim nächsten Lauf und passt die Charges an — Storno + Korrektur. Wenn Fußball.de hartnäckig falsch ist: dem Verband melden, KickPact kann nicht korrigieren, was offiziell nicht stimmt. Mehr in [Fußball.de ändert Daten](fussballde-aendert-daten.md).
+Fußball.de korrigiert manchmal nachträglich. Unser Crawler erkennt das beim nächsten Lauf und passt die Beiträge an — Storno + Korrektur. Wenn Fußball.de hartnäckig falsch ist: dem Verband melden, KickPact kann nicht korrigieren, was offiziell nicht stimmt. Mehr in [Fußball.de ändert Daten](fussballde-aendert-daten.md).
 
-## 8. Können Pledges nachträglich geändert werden?
+## 8. Können Pacts nachträglich geändert werden?
 
-**Ja.** Beträge und Caps kannst du jederzeit anpassen. Die Änderung gilt **ab dem Änderungszeitpunkt**, nicht rückwirkend. Bereits erzeugte Charges bleiben unangetastet.
+**Ja.** Beträge und Caps kannst du jederzeit anpassen. Die Änderung gilt **ab dem Änderungszeitpunkt**, nicht rückwirkend. Bereits erzeugte Beiträge bleiben unangetastet.
 
 ## 9. Wie storniere ich einen falsch bestätigten Event?
 
@@ -63,11 +63,11 @@ Mehr in [Event bestreiten](event-bestreiten.md).
 
 ## 10. Brauchen Sponsoren ein Stripe-Konto?
 
-**Nein.** Sponsoren zahlen **per Überweisung** an den Verein, **off-platform**. KickPact zieht in v1 keine Beträge automatisch ein. Stripe nutzen wir nur für die **Vereins-Abrechnung** (KickPact ↔ Verein für das Lizenz-Abo).
+**Nein.** Sponsoren zahlen **per Überweisung** an den Verein, **off-platform**. KickPact zieht keine Beträge automatisch ein. Stripe nutzen wir nur für die **Vereins-Abrechnung** (KickPact ↔ Verein für das Lizenz-Abo).
 
-## 11. Kann ich Pledges pausieren?
+## 11. Kann ich Pacts pausieren?
 
-**Ja, jederzeit.** Im Sponsor-Dashboard auf den Pledge klicken → "Pausieren". Während Pause feuern keine Trigger. Du kannst die Pause jederzeit beenden, Pledge läuft wieder. Mehr in [Pledge pausiert und beendet](pledge-paused-und-beendet.md).
+**Ja, jederzeit.** Im Sponsor-Dashboard auf den Pact klicken → "Pausieren". Während der Pause feuern keine Trigger. Du kannst die Pause jederzeit beenden, der Pact läuft wieder. Mehr in [Pact pausiert und beendet](pledge-paused-und-beendet.md).
 
 ## 12. Funktioniert KickPact auch ohne Fußball.de-Verknüpfung?
 
@@ -75,9 +75,7 @@ Mehr in [Event bestreiten](event-bestreiten.md).
 
 ## 13. Bekomme ich als Sponsor eine Spendenbescheinigung?
 
-**Nein**, Sponsoring ist keine Spende. Die KickPact-Rechnung ist eine **regelmäßige Geschäftsrechnung**. Für eine Spendenbescheinigung müsstest du tatsächlich an einen gemeinnützigen Verein **ohne Gegenleistung** zahlen — KickPact-Pledges sind aber eindeutig leistungsbezogen.
-
-Wenn dein Verein dir trotzdem eine Spendenbescheinigung ausstellt: das ist sein Risiko mit dem Finanzamt, nicht unseres.
+**Vielleicht — frag deinen Verein.** Deine Beiträge sind freiwillige Unterstützung ohne Gegenleistung. Ist dein Verein gemeinnützig, kann er dir dafür unter Umständen eine Spendenbescheinigung ausstellen — das entscheidet und verantwortet der Verein. KickPact liefert dir dazu jeden Monat eine klare Zahlungsübersicht. Keine Steuerberatung, im Zweifel hilft das Finanzamt.
 
 ## 14. Kann ich KickPact für andere Sportarten nutzen?
 
@@ -91,9 +89,9 @@ Wenn du merkst, der Markt-Fit ist nicht da: **Downgrade auf Basic** (geht jederz
 
 ## Weitere Fragen
 
-- [Was ist ein Pledge?](was-ist-ein-pledge.md)
+- [Was ist ein Pact?](was-ist-ein-pledge.md)
 - [Welcher Tarif passt zu meinem Verein?](welcher-tarif-passt.md)
 - [Trial — 30 Tage testen](trial-30-tage.md)
-- [So funktioniert die Monatsrechnung](so-funktioniert-die-monatsrechnung.md)
+- [So funktioniert die Monatsabrechnung](so-funktioniert-die-monatsrechnung.md)
 
 Wenn nichts passt: **support@kickpact.de** — wir antworten Werktag binnen 24 Stunden.

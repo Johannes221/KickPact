@@ -19,11 +19,11 @@ Jeder Verein, der KickPact zum ersten Mal startet, bekommt **30 Tage Trial** auf
 
 Alles, was im gewählten Tarif drin ist. Heißt:
 
-- **Basic-Trial**: 5 Sponsoren, 3 Pledge-Regeln pro Sponsor, Standard-Trigger.
-- **Pro-Trial**: Unbegrenzte Sponsoren und Regeln, Saison-Wetten, Custom-Trigger, Embed-Widget.
+- **Basic-Trial**: 5 Sponsoren, 3 Regeln pro Sponsor, Standard-Trigger.
+- **Pro-Trial**: Unbegrenzte Sponsoren und Regeln, Saison-Ziele, Custom-Trigger.
 - **Vereinslizenz-Trial**: Pro-Funktionen × beliebige Mannschaften, Master-Cockpit, 10 Admin-Slots.
 
-Du kannst Sponsoren einladen, Pledges aktivieren, Charges erzeugen — wie wenn du bezahlt hättest. Im Trial-Zeitraum erstellte Pledges und Charges bleiben **auch nach Konvertierung zum Bezahl-Abo erhalten**.
+Du kannst Sponsoren einladen, Pacts aktivieren, Beiträge erzeugen — wie wenn du bezahlt hättest. Im Trial-Zeitraum erstellte Pacts und Beiträge bleiben **auch nach Konvertierung zum Bezahl-Abo erhalten**.
 
 ## Wann der Trial startet
 
@@ -52,7 +52,7 @@ Stripe versucht automatisch, das erste Monats- oder Saison-Pass-Abo zu belasten.
 - Trial endet.
 - Abo läuft normal weiter.
 - Du kriegst eine Quittung per Mail.
-- Alle bisher erstellten Daten (Sponsoren, Pledges) laufen unverändert weiter.
+- Alle bisher erstellten Daten (Sponsoren, Pacts) laufen unverändert weiter.
 
 Wenn die Belastung **fehlschlägt** (Karte abgelaufen, Limit erreicht):
 
@@ -65,14 +65,14 @@ Wenn die Belastung **fehlschlägt** (Karte abgelaufen, Limit erreicht):
 - Trial endet.
 - Verein geht in **Grace Period** für 7 Tage.
 - Sponsoren-Einladungslinks funktionieren weiter (sodass keine Anfragen ins Leere laufen).
-- Du kannst weiter alles ansehen, **aber keine neuen Pledges aktivieren** und **keine Manual-Events bestätigen**.
-- Crawler läuft weiter, Auto-Trigger feuern weiter — du siehst die Charges, sie sind aber als "pending" markiert.
+- Du kannst weiter alles ansehen, **aber keine neuen Pacts aktivieren** und **keine Manual-Events bestätigen**.
+- Automatische Spieldaten laufen weiter, Auto-Trigger feuern weiter — du siehst die Beiträge, sie sind aber als "pending" markiert.
 
 Nach Grace Period (7 weitere Tage = Tag 37 ab Trial-Start):
 
 - Mannschaft geht in **Read-Only-Modus**.
 - Alle Daten bleiben sichtbar.
-- Keine neuen Charges, keine neuen Pledges, keine Sponsoren-Einladungen.
+- Keine neuen Beiträge, keine neuen Pacts, keine Sponsoren-Einladungen.
 - Verein kann jederzeit reaktivieren durch Hinterlegung einer Zahlungsmethode.
 
 ### Szenario C — Du upgradest aktiv im Trial
@@ -85,7 +85,7 @@ Nach Grace Period (7 weitere Tage = Tag 37 ab Trial-Start):
 ## Down- und Upgrade während Trial
 
 - **Du startest mit Basic-Trial und merkst, du brauchst Pro?** Wechsel direkt im Tarif-Dialog. Der neue Trial gilt für den neuen Tarif, du verlierst keine Tage.
-- **Du startest mit Pro-Trial und merkst, Basic reicht?** Analog. Pledges, die Pro-Features nutzen (Saison-Wetten, Custom-Trigger), werden beim Downgrade **pausiert** mit Erklärung — sie sind nicht weg, nur inaktiv.
+- **Du startest mit Pro-Trial und merkst, Basic reicht?** Analog. Pacts, die Pro-Features nutzen (Saison-Ziele, Custom-Trigger), werden beim Downgrade **pausiert** mit Erklärung — sie sind nicht weg, nur inaktiv.
 
 ## Trial-Mehrfach-Nutzung — geht das?
 

@@ -1,5 +1,5 @@
 ---
-title: "So funktioniert die Monatsrechnung"
+title: "So funktioniert die Monatsabrechnung"
 slug: "so-funktioniert-die-monatsrechnung"
 category: "abrechnung"
 category_label: "Abrechnung"
@@ -14,37 +14,35 @@ last_updated: "2026-05-25"
 status: "published"
 ---
 
-KickPact rechnet **monatlich** ab. Am **1. eines Monats**, **08:00 Uhr**, generieren wir aus allen Charges des Vormonats eine **PDF-Rechnung** pro Sponsor + Mannschaft und schicken sie automatisch raus. So sieht der Ablauf aus.
+KickPact rechnet **monatlich** ab. Am **1. eines Monats**, **08:00 Uhr**, generieren wir aus allen Beiträgen des Vormonats eine **Zahlungsübersicht** (PDF) pro Sponsor + Mannschaft und schicken sie automatisch raus. So sieht der Ablauf aus.
 
 ## Was passiert am 1. des Monats
 
-1. **00:00 Uhr** — KickPact sperrt alle Charges des Vormonats für Änderungen. Sie sind ab jetzt unveränderlich.
-2. **08:00 Uhr** — Der **Rechnungs-Generator** läuft pro Mannschaft:
-   - Für jeden Sponsor wird ein **PDF erstellt** mit allen Charges aus dem Vormonat.
-   - Eine **Vereins-Übersicht** wird erstellt: Summe aller Sponsoren-Rechnungen.
-   - PDFs werden in deinem S3-Speicher abgelegt, persistent + revisionssicher.
+1. **00:00 Uhr** — KickPact sperrt alle Beiträge des Vormonats für Änderungen. Sie sind ab jetzt unveränderlich.
+2. **08:00 Uhr** — Der **Abrechnungslauf** startet pro Mannschaft:
+   - Für jeden Sponsor wird ein **PDF erstellt** mit allen Beiträgen aus dem Vormonat.
+   - Eine **Vereins-Übersicht** wird erstellt: Summe aller Zahlungsübersichten.
+   - PDFs werden dauerhaft gespeichert und bleiben jederzeit abrufbar.
 3. **08:30 Uhr** — **Mails an Sponsoren** mit PDF als Anhang + Link zum Dashboard.
-4. **08:30 Uhr** — **Mail an Verein** mit der Vereins-Übersicht + Liste aller Sponsoren-Rechnungen.
+4. **08:30 Uhr** — **Mail an Verein** mit der Vereins-Übersicht + Liste aller Zahlungsübersichten.
 
 Die ganze Aktion dauert für die meisten Vereine **wenige Sekunden**. Bei Vereinen mit 50+ Sponsoren ein paar Minuten.
 
-## Was auf der Sponsor-Rechnung steht
+## Was auf der Zahlungsübersicht steht
 
-Eine typische Monatsrechnung enthält:
+Eine typische Zahlungsübersicht enthält:
 
-- **Rechnungs-Empfänger:** Sponsor (Name + Adresse aus Sponsor-Profil)
-- **Rechnungs-Sender:** Verein (Name + Adresse + IBAN + USt-Status aus Vereins-Stammdaten)
-- **Rechnungsnummer:** fortlaufend pro Verein (Format: `VEREIN-2026-05-0001`)
-- **Rechnungsdatum:** 1. des Monats
-- **Leistungszeitraum:** der Vormonat (z.B. "April 2026")
-- **Trigger-Items:**
-  - Pro Charge eine Zeile: "Tor in Spiel FCM vs ASV am 12.04. — 5,00 €"
-  - Manual-Trigger werden separat gruppiert
-- **Summe**: netto, ggf. USt (falls Verein regelbesteuert), brutto
-- **Zahlungs-Hinweis:** "Bitte überweisen an IBAN ... mit Verwendungszweck Rechnungs-Nummer XYZ"
-- **§ 19 UStG-Hinweis** falls Verein Kleinunternehmer (siehe [USt und Kleinunternehmer](ust-und-kleinunternehmer.md))
+- **Empfänger:** Sponsor (Anzeigename + E-Mail aus dem Sponsor-Profil)
+- **Absender:** Verein (Name + Adresse + IBAN aus den Vereins-Stammdaten)
+- **Referenznummer:** fortlaufend pro Verein (Format: `VEREIN-2026-05-0001`)
+- **Datum:** 1. des Monats
+- **Zeitraum:** der Vormonat (z.B. "April 2026")
+- **Beitrags-Zeilen:**
+  - Pro Beitrag eine Zeile mit Datum, Spiel und Anlass: "Tor in Spiel FCM vs ASV am 12.04. — 5,00 €"
+- **Gesamtbetrag:** eine Summe, fertig. Keine USt — Sponsoren-Beiträge sind private Unterstützung, keine bezahlte Leistung.
+- **Zahlungs-Block:** IBAN mit QR-Code für die Banking-App, Verwendungszweck = Referenznummer. Wenn der Verein PayPal oder einen Online-Zahllink hinterlegt hat, stehen die auch drauf.
 
-Mehr zur Lesart in [PDF-Rechnung lesen](pdf-rechnung-lesen.md).
+Mehr zur Lesart in [Zahlungsübersicht lesen](pdf-rechnung-lesen.md).
 
 ## Was der Verein bekommt
 
@@ -52,57 +50,56 @@ Eine **Zusammenfassung** mit:
 
 - Pro Sponsor eine Zeile: "Familie Schmidt — 78 €"
 - Total für den Vormonat
-- Liste der bisher **bezahlten** vs. **offenen** Rechnungen
-- Reminder-Möglichkeit (Button "Sponsoren erinnern, die noch nicht gezahlt haben")
+- Liste der bisher **bezahlten** vs. **offenen** Zahlungsübersichten
+- Erinnerungs-Hilfe: KickPact stellt dir einen fertigen, freundlichen Erinnerungstext bereit, den du kopierst und selbst verschickst
 
-Plus eine **PDF-Sammelmappe** mit allen einzelnen Sponsor-Rechnungen.
+Plus eine **PDF-Sammelmappe** mit allen einzelnen Zahlungsübersichten.
 
 ## Wann der Sponsor zahlt
 
-KickPact zieht **nichts automatisch** ein. Der Sponsor sieht die Rechnung, überweist den Betrag manuell ans Vereinskonto.
+KickPact zieht **nichts automatisch** ein. Der Sponsor sieht die Zahlungsübersicht, überweist den Betrag manuell ans Vereinskonto — oder scannt einfach den QR-Code mit der Banking-App.
 
-Standardfristen:
+Standardablauf:
 
-- **Zahlbar binnen 14 Tagen** ohne Skonto (Default, Verein kann das in Stammdaten ändern).
-- Nach 14 Tagen: erste Erinnerung via KickPact + Mail.
-- Nach 28 Tagen: zweite Erinnerung.
-- Nach 60 Tagen: Verein entscheidet (Inkasso, Mahnverfahren, weglassen — KickPact unterstützt das nicht aktiv).
+- **Zahlbar binnen 14 Tagen** (Default).
+- Danach markiert KickPact die Übersicht als **überfällig**. Automatische Mahnungen gibt es bewusst nicht — das sind eure Leute, kein Inkasso-Fall.
+- Du kannst jederzeit den vorbereiteten Erinnerungstext kopieren und per WhatsApp oder Mail schicken.
 
-Mehr in [Reminder an Sponsor](reminder-an-sponsor.md) und [Als bezahlt markieren](als-bezahlt-markieren.md).
+Mehr in [Als bezahlt markieren](als-bezahlt-markieren.md).
 
 ## Was ist mit dem laufenden Monat?
 
-Charges des **laufenden Monats** werden im **Sponsor-Dashboard und im Vereins-Dashboard live** angezeigt. Du siehst:
+Beiträge des **laufenden Monats** werden im **Sponsor-Dashboard und im Vereins-Dashboard live** angezeigt. Du siehst:
 
-- "Stand heute, 23. Mai: 47 € offene Charges für diesen Monat"
-- Pro Charge die Match-Referenz, das Datum, der Betrag
+- "Stand heute, 23. Mai: 47 € offene Beiträge für diesen Monat"
+- Pro Beitrag die Match-Referenz, das Datum, den Betrag
 - Cap-Auslastung (z.B. "47 € / 100 € Monats-Cap — 47 %")
 
-Du kannst diese **Live-Charges noch ändern** — z.B. ein Manual-Event widerrufen, ein Match nachträglich anpassen. Sobald der 1. des Folgemonats kommt, sind alle Charges **eingefroren**.
+Du kannst diese **Live-Beiträge noch ändern** — z.B. ein Manual-Event widerrufen, ein Match nachträglich anpassen. Sobald der 1. des Folgemonats kommt, sind alle Beiträge **eingefroren**.
 
-## Mehrere Pledges, mehrere Mannschaften
+## Mehrere Pacts, mehrere Mannschaften
 
-Ein Sponsor mit mehreren Pledges (z.B. zwei Mannschaften):
+Ein Sponsor mit mehreren Pacts (z.B. zwei Mannschaften):
 
-- **Bei Basic / Pro**: 2 separate Rechnungen vom Verein (eine pro Mannschaft).
-- **Bei Vereinslizenz**: 1 Sammelrechnung mit allen Mannschaften zusammen. Siehe [Vereinslizenz Sammelrechnung](vereinslizenz-sammelrechnung.md).
+- **Bei Basic / Pro**: 2 separate Zahlungsübersichten vom Verein (eine pro Mannschaft).
+- **Bei Vereinslizenz**: 1 Sammelübersicht mit allen Mannschaften zusammen.
 
 ## Storno und Nachträge
 
-**Storno einer einzelnen Charge** (Verein-Admin):
+**Storno eines einzelnen Beitrags** (Verein-Admin):
 
-- Bis zum 1. des Folgemonats: Charge direkt löschen, taucht nirgends mehr auf.
-- Nach dem 1.: Storno-Eintrag in der **Folgemonatsrechnung** mit Negativbetrag.
+- Bis zum 1. des Folgemonats: Beitrag direkt löschen, taucht nirgends mehr auf.
+- Nach dem 1.: **Stornobeleg** zur ursprünglichen Zahlungsübersicht — der Betrag wird verrechnet bzw. erstattet.
 
 **Nachtrag** (Trainer hat ein Manual-Event vergessen):
 
-- Trainer kann bis zum 7. des Folgemonats nachpflegen. Der Eintrag erscheint in der **Folgemonatsrechnung** (nicht rückwirkend in der schon versendeten).
+- Trainer kann bis zum 7. des Folgemonats nachpflegen. Der Eintrag erscheint in der **Abrechnung des Folgemonats** (nicht rückwirkend in der schon versendeten).
 
-## Was wenn KickPact-Abo gekündigt ist?
+## Was wenn das KickPact-Abo gekündigt ist?
 
-Read-Only-Modus: Die letzte Monatsrechnung läuft noch durch. Danach: keine Crawler-Events, keine Charges, keine Rechnungen. Bestehende, unbezahlte Rechnungen bleiben sichtbar und können noch markiert werden.
+Read-Only-Modus: Die letzte Monatsabrechnung läuft noch durch. Danach: keine automatischen Spieldaten, keine Beiträge, keine Zahlungsübersichten. Bestehende, unbezahlte Übersichten bleiben sichtbar und können noch markiert werden.
 
 Weiter lesen:
-- [PDF-Rechnung lesen](pdf-rechnung-lesen.md)
+- [Zahlungsübersicht lesen](pdf-rechnung-lesen.md)
 - [Als bezahlt markieren](als-bezahlt-markieren.md)
-- [USt und Kleinunternehmer](ust-und-kleinunternehmer.md)
+- [USt und Steuern](ust-und-kleinunternehmer.md)

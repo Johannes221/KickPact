@@ -14,7 +14,7 @@ last_updated: "2026-05-25"
 status: "published"
 ---
 
-Der Sponsor-Einladungslink ist dein wichtigstes Akquise-Tool. Ein Link, ein Klick beim Empfänger — schon ist er in seinem Pledge-Wizard. So holst du ihn raus und schickst ihn richtig.
+Der Sponsor-Einladungslink ist dein wichtigstes Akquise-Tool. Ein Link, ein Klick beim Empfänger — schon ist er in seinem Pact-Wizard. So holst du ihn raus und schickst ihn richtig.
 
 ## So generierst du einen Link
 
@@ -39,9 +39,9 @@ Pro Sponsor solltest du **maximal einen aktiven Link** haben. Wenn du einen neue
 | Spalte | Bedeutung |
 |---|---|
 | Name | Person hinter dem Link oder "Anonym" bei generischem Link |
-| Status | `pending` (Link erzeugt, noch nicht eingelöst), `aktiv` (Pledge angelegt), `paused`, `cancelled` |
+| Status | `pending` (Link erzeugt, noch nicht eingelöst), `aktiv` (Pact angelegt), `paused`, `cancelled` |
 | Letzter Klick | Wann er den Link zuletzt geöffnet hat (Tracking via Token) |
-| Monats-Pledge | Aktueller Worst-Case-Betrag für den laufenden Monat |
+| Monats-Pact | Aktueller Worst-Case-Betrag für den laufenden Monat |
 
 Mehr zum Tracking in [Einladungslinks tracken](einladungslinks-tracken.md).
 
@@ -50,14 +50,14 @@ Mehr zum Tracking in [Einladungslinks tracken](einladungslinks-tracken.md).
 - **WhatsApp** (am häufigsten): kurzer persönlicher Text, dann der Link. Mobile-Klickrate >70 %.
 - **E-Mail**: Mustertext in [Sponsor-Pitch-Vorlage](sponsor-pitch-vorlage.md). Klickrate ca. 40 %.
 - **Vereins-WhatsApp-Gruppe**: nur mit generischem Link, nicht mit Persönlichkeits-Token. Sonst klickt der falsche Onkel.
-- **Vereinswebsite** (Pro/Vereinslizenz): Embed-Widget mit "5 € pro Tor"-CTA, siehe [Embed-Widget](embed-widget-vereinswebsite.md).
+- **Vereinswebsite**: den generischen Link als Button oder Textlink einbauen, z.B. "Unterstütze die Herren II — 5 € pro Tor".
 - **Druck (Flyer, Aushang)**: QR-Code-Funktion in der Sponsoren-Tabelle (Druck-Icon). 3-Klick-Download als PDF.
 
 ## Was passiert beim Sponsor nach Klick
 
 1. Er landet auf der Einladungs-Begrüßung: Vereinsname, Mannschaftsname, dein Logo.
 2. Wenn er noch keinen KickPact-Account hat: Magic-Link-Login per Mail (kein Passwort).
-3. Direkt nach Login: Pledge-Wizard für genau diese Mannschaft, vorausgefüllt. Mehr in [Ersten Pledge anlegen](ersten-pledge-anlegen.md).
+3. Direkt nach Login: Pact-Wizard für genau diese Mannschaft, vorausgefüllt. Mehr in [Ersten Pact anlegen](ersten-pledge-anlegen.md).
 
 Während dieses Flows ist die Einladung an seinen Account gebunden — auch wenn er den Wizard abbricht und morgen über sein Dashboard zurückkommt, weiß KickPact, zu welcher Mannschaft er gehört.
 

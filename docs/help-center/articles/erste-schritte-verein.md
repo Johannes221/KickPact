@@ -48,7 +48,7 @@ Im nächsten Schritt erscheinen alle Mannschaften deines Vereins. Wähle die Man
 
 KickPact schlägt dir basierend auf dem Datum den passenden Tarif vor:
 
-- **Vor dem 5. Spieltag der laufenden Saison** → Saison-Pass empfohlen (2 Monate geschenkt, Sommerpause kostenlos).
+- **Vor dem 5. Spieltag der laufenden Saison** → Saison-Pass empfohlen (42–43 % günstiger als 12 Monatsraten, Sommerpause kostenlos).
 - **Ab 6. Spieltag** → Monatsabo (Saison-Pass für die nächste Saison ab 1. Juli wieder buchbar).
 - **Im Juni** → Frühbucher-Saison-Pass für die nächste Saison.
 
@@ -60,10 +60,10 @@ Wenn du unsicher bist, welcher Tarif passt: → [Welcher Tarif passt zu deinem V
 
 Hier trägst du ein:
 
-- **Adresse des Vereins** — landet auf der PDF-Rechnung als Absender.
-- **USt-ID** *oder* **§19-Kleinunternehmer-Flag** — entscheidet, ob auf der Rechnung 19 % USt aufgeschlagen wird oder ein §19-Hinweis steht. Im Zweifel mit dem Kassenwart klären, das ist eine 30-Sekunden-Frage.
-- **IBAN** — wird auf der PDF-Rechnung gedruckt, damit Sponsoren wissen, wohin sie überweisen.
-- **Logo** (optional, Pro/Vereinslizenz) — ersetzt den KickPact-Footer auf der PDF.
+- **Adresse des Vereins** — landet auf der Zahlungsübersicht als Absender.
+- **§19-Kleinunternehmer-Flag** (optional) — betrifft nur eure Vereins-Angaben. Auf den Zahlungsübersichten für Sponsoren steht generell keine USt. Im Zweifel mit dem Kassenwart klären, das ist eine 30-Sekunden-Frage.
+- **IBAN** — wird auf der Zahlungsübersicht gedruckt, damit Sponsoren wissen, wohin sie überweisen.
+- **Logo** (optional) — erscheint auf den öffentlichen Seiten deiner Mannschaft.
 
 Du kannst alles später unter `/verein/[slug]/einstellungen` ändern. Bremst dich hier nicht, wenn die IBAN nicht zur Hand ist — Trial läuft trotzdem.
 
@@ -76,23 +76,23 @@ Letzter Wizard-Schritt: Du bekommst einen **Einladungslink** in der Form `kickpa
 **Was der Sponsor sieht:**
 „FC Beispieldorf lädt dich ein, die Herren II zu unterstützen. Klick rein, leg in 2 Minuten ein Sponsoring-Versprechen an."
 
-Der Link funktioniert für beliebig viele Sponsoren — kein Limit, keine separaten Codes nötig. Sobald der erste Sponsor seinen Pledge angelegt hat, taucht er in deinem Dashboard auf.
+Der Link funktioniert für beliebig viele Sponsoren — kein Limit, keine separaten Codes nötig. Sobald der erste Sponsor seinen Pact angelegt hat, taucht er in deinem Dashboard auf.
 
 ## Was als Nächstes passiert
 
 Du landest in deinem **Vereins-Dashboard** unter `/verein/[slug]`. Hier siehst du:
 
-- Aktive Pledges (am Anfang: 0)
-- Letzte Spiele deiner Mannschaft (vom Crawler in den nächsten 6 Stunden gezogen)
+- Aktive Pacts (am Anfang: 0)
+- Letzte Spiele deiner Mannschaft (werden automatisch importiert)
 - Pending Manual Events (wenn du Spezial-Tore meldest)
 - Trial-Restdauer
 
-Der Fußball.de-Crawler läuft alle 6 Stunden im Hintergrund. Innerhalb eines halben Tages siehst du die letzten 5 Spiele deiner Mannschaft in der Match-Liste.
+Der Fußball.de-Crawler läuft täglich im Hintergrund, am Spieltag-Wochenende mehrfach. Spätestens am nächsten Morgen siehst du die letzten Spiele deiner Mannschaft in der Match-Liste.
 
 ## Häufige Stolpersteine
 
 - **„Meine Mannschaft hat dieses Jahr eine andere Saison-Bezeichnung."** → Der Wizard nutzt den aktuellen Saison-Code von Fußball.de automatisch. Wenn die Saison auf Fußball.de schon umgestellt ist, bist du auf dem richtigen Stand.
-- **„Ich bin Trainer, nicht Vorstand — darf ich überhaupt einen Verein anlegen?"** → Technisch ja. Sinnvoll: Sprich mit dem Vorstand, weil die Rechnungen auf den Vereinsnamen laufen. Du kannst auch erst als **Trainer-Rolle** dazugeladen werden, sobald ein Admin den Verein angelegt hat.
+- **„Ich bin Trainer, nicht Vorstand — darf ich überhaupt einen Verein anlegen?"** → Technisch ja. Sinnvoll: Sprich mit dem Vorstand, weil das Lizenz-Abo und die Zahlungsübersichten auf den Vereinsnamen laufen. Du kannst auch erst als **Trainer-Rolle** dazugeladen werden, sobald ein Admin den Verein angelegt hat.
 - **„Ich möchte direkt mehrere Mannschaften anlegen."** → Lege erst eine an, schließe das Onboarding ab. Die zweite Mannschaft fügst du danach unter Einstellungen → Mannschaften hinzu. → [Mannschaft hinzufügen](mannschaft-hinzufuegen.md)
 
 Weiter lesen:

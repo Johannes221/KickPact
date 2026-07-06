@@ -1,5 +1,5 @@
 ---
-title: "PDF-Rechnung lesen — Aufbau erklärt"
+title: "Zahlungsübersicht lesen — Aufbau erklärt"
 slug: "pdf-rechnung-lesen"
 category: "abrechnung"
 category_label: "Abrechnung"
@@ -10,111 +10,83 @@ related_articles:
   - "ust-und-kleinunternehmer"
   - "als-bezahlt-markieren"
   - "csv-export-fuer-buchhaltung"
-last_updated: "2026-05-25"
+last_updated: "2026-07-06"
 status: "published"
 ---
 
-Die KickPact-Rechnung ist ein **steuerlich saubere DIN-A4-PDF** — geeignet für Buchhaltung, Vorsteuerabzug (wenn USt ausgewiesen) und Banküberweisung. Hier eine Tour durch die Seiten.
+Am 1. des Monats bekommst du als Sponsor eine **Zahlungsübersicht** als PDF — eine saubere DIN-A4-Übersicht über deine zugesagten Unterstützungsbeiträge aus dem Vormonat. Keine Rechnung, kein Kleingedrucktes. Hier eine Tour durch die Seite.
+
+## Warum "Zahlungsübersicht" und nicht "Rechnung"?
+
+Weil du als Sponsor keine Leistung kaufst. Du unterstützt deine Mannschaft freiwillig — die Übersicht fasst nur zusammen, was durch deine Pacts zusammengekommen ist. Deshalb steht auch keine USt drauf: private Unterstützung ist keine bezahlte Leistung.
 
 ## Kopfbereich
 
 Oben links:
-- **Vereinslogo** (wenn hinterlegt)
 - **Vereinsname** + Anschrift
-- **Steuer-ID oder USt-ID**
-- **IBAN**
+- **IBAN** des Vereins
 
 Oben rechts:
-- **Rechnungsnummer** (fortlaufend, z.B. `FCM-2026-05-0042`)
-- **Rechnungsdatum** (1. des Monats)
-- **Leistungszeitraum** (Vormonat)
-- **Zahlungsziel** (Datum, Standard 14 Tage)
+- **Dein Anzeigename** und deine E-Mail-Adresse
 
 Darunter:
-- **Sponsor-Anschrift** (Rechnungs-Empfänger)
+- **Titel mit Referenznummer** (fortlaufend, z.B. `FCM-2026-05-0042`)
+- **Zeitraum** (der Vormonat)
+- **Datum** (1. des Monats)
 
-## Anschreiben
+## Beitrags-Tabelle
 
-Ein kurzer freundlicher Absatz: "Wir bedanken uns für deine Unterstützung im Monat April. Die folgenden Ereignisse sind aus deinem Pledge entstanden."
+Die Hauptseite ist eine Tabelle mit allen Beiträgen. Spalten:
 
-Vereine mit Pro/Vereinslizenz können diesen Text individuell anpassen — siehe [Vereins-Mail-Absender einrichten](vereins-mail-absender-einrichten.md).
-
-## Detailtabelle
-
-Die Hauptseite ist eine Tabelle mit allen Charges. Spalten:
-
-| Datum | Match / Ereignis | Trigger | Anzahl | Einzelpreis | Summe |
-|---|---|---|---:|---:|---:|
-| 03.04. | FCM vs ASV (2:1) | Tor | 2 | 5,00 € | 10,00 € |
-| 03.04. | FCM vs ASV | Sieg | 1 | 20,00 € | 20,00 € |
-| 10.04. | FCM vs TSG (1:1) | Tor | 1 | 5,00 € | 5,00 € |
-| 10.04. | FCM vs TSG | Unentschieden | 1 | 5,00 € | 5,00 € |
-| ... | ... | ... | ... | ... | ... |
+| Datum | Spiel | Anlass | Betrag |
+|---|---|---|---:|
+| 03.04. | FCM vs ASV (2:1) | Tor | 10,00 € |
+| 03.04. | FCM vs ASV | Sieg | 20,00 € |
+| 10.04. | FCM vs TSG (1:1) | Tor | 5,00 € |
+| 10.04. | FCM vs TSG | Unentschieden | 5,00 € |
 
 **Lesehilfe:**
-- Eine Zeile pro Match × Trigger.
-- Spieler-Triggers haben den Spielernamen in der "Match / Ereignis"-Spalte mit drin: "FCM vs ASV — Tor Tim Schmidt".
-- Manual-Triggers werden gleich behandelt — der Sponsor sieht nicht, ob das auto oder manual war, das ist abrechnungstechnisch egal.
+- Eine Zeile pro Spiel × Anlass.
+- Bei Spieler-Triggern steht der Spielername mit dabei: "Tor Tim Schmidt".
+- Manual-Trigger sehen genauso aus wie automatische — für die Abrechnung ist egal, wie das Ereignis erfasst wurde.
+- Vom Cap geblockte Trigger tauchen hier gar nicht erst auf. Du zahlst nur, was innerhalb deiner Limits gezählt hat — die Cap-Details siehst du in deinem Dashboard.
 
-## Cap-Hinweise
+## Gesamtbetrag
 
-Wenn ein Cap gegriffen hat, gibt es einen Hinweis am Ende der Tabelle:
+Unten rechts steht eine einzige Summe: der **Gesamtbetrag**. Kein Netto/Brutto, keine USt-Zeile — der Betrag, den du siehst, ist der Betrag, den du überweist.
 
-> **Hinweis:** Im Spiel FCM vs ASV (03.04.) wurden 5 Tore erzielt, davon 3 Tore vom Per-Match-Cap (15 €) geblockt.
+## Zahlungs-Block
 
-Das ist **transparenz-only** — die geblockten Tore tauchen nicht als Charge auf, du wirst dafür nicht abgerechnet.
+Am Ende der klare Hinweis, wie du zahlst:
 
-## Summen-Block
-
-Unten rechts:
-
-- **Zwischensumme** (alle Charges summiert)
-- **USt** (falls Verein regelbesteuert): z.B. 19 %
-- **Brutto-Summe**
-
-Wenn der Verein **Kleinunternehmer (§ 19 UStG)** ist:
-- Keine USt-Zeile.
-- Stattdessen Text: "Gemäß § 19 UStG wird keine Umsatzsteuer ausgewiesen."
-- Brutto = Zwischensumme.
-
-## Zahlungs-Hinweis
-
-Ein klarer Hinweis am Ende:
-
-> Bitte überweise **78,00 €** binnen 14 Tagen auf:
+> Dein zugesagter Unterstützungsbeitrag: bitte überweise **78,00 €** innerhalb von 14 Tagen an:
+> FC Musterstadt
 > IBAN: DE12 3456 7890 1234 5678 90
-> BIC: BAFEDXXX
 > Verwendungszweck: **FCM-2026-05-0042**
 
-Der Verwendungszweck (= Rechnungsnummer) ist **wichtig**, damit der Verein die Zahlung automatisch zuordnen kann (wenn er die KickPact-Banking-Integration in einer späteren Version nutzt — v1 noch manuell).
+Daneben ein **QR-Code**: mit der Banking-App scannen, und das Überweisungsformular ist vorausgefüllt. Wenn der Verein PayPal oder einen Online-Zahllink hinterlegt hat, stehen die als zusätzliche Wege dabei.
+
+Der Verwendungszweck (= Referenznummer) ist **wichtig**, damit der Verein deine Zahlung sauber zuordnen kann.
 
 ## Fußzeile
 
-- Vereinsname, Anschrift (Pflicht laut UStG)
-- Geschäftsführung / Vorstand (vom Verein hinterlegt)
-- Vereinsregister-Nummer (optional)
-- KickPact-Branding nur in der Trial-Phase + auf Basic-Tarif — Pro / Vereinslizenz **white-label**, also kein KickPact-Hinweis.
+- Auf **Basic**: kleiner Hinweis "Erzeugt mit KickPact".
+- Auf **Pro / Vereinslizenz**: nur die Vereins-Angaben, kein KickPact-Branding.
 
-## Mehrseitig bei vielen Charges
+## Wo du die Zahlungsübersicht findest
 
-Wenn die Detailtabelle die erste Seite überschreitet, läuft sie auf Folgeseiten weiter. Jede Seite hat **Rechnungsnummer + Seitenzahl** in der Kopfzeile, damit beim Druck nichts verloren geht.
-
-## Wo du die Rechnung findest
-
-- **Sponsor**: Mail-Anhang am 1. des Monats + im Sponsor-Dashboard unter "Rechnungen".
-- **Verein**: Vereins-Dashboard unter "Abrechnungen → Vergangene Monate".
+- **Sponsor**: Mail-Anhang am 1. des Monats + im Sponsor-Dashboard unter "Zahlungsübersichten".
+- **Verein**: Vereins-Dashboard unter "Abrechnungen".
 
 Beide können die PDF jederzeit erneut herunterladen.
 
-## Wenn die Rechnung Fehler enthält
+## Wenn etwas nicht stimmt
 
-Drei Fälle:
-
-1. **Sponsoren-Stammdaten falsch** (z.B. neue Adresse nicht aktualisiert): Sponsor ändert in Profil, neue Rechnungen verwenden neue Daten. **Korrektur-Rechnung** auf Anfrage an support@kickpact.de.
-2. **Falsche Charge** (Manual-Event versehentlich bestätigt): Sponsor bestreitet die Charge — siehe [Event bestreiten](event-bestreiten.md). Bei berechtigtem Bestreit erscheint im **Folgemonat eine Storno-Charge**.
-3. **USt-Status falsch** (Verein war als § 19 hinterlegt, ist aber regelbesteuert): Verein ändert in Stammdaten, alle Folgerechnungen sind korrekt. Korrektur vergangener Rechnungen über Support.
+1. **Deine Daten falsch** (z.B. Anzeigename): im Profil ändern, neue Übersichten verwenden die neuen Daten.
+2. **Falscher Beitrag** (Manual-Event versehentlich bestätigt): Beitrag bestreiten — siehe [Event bestreiten](event-bestreiten.md). Bei berechtigtem Einwand gibt es einen **Stornobeleg**, der Betrag wird verrechnet oder erstattet.
+3. **Vereins-Daten falsch** (z.B. IBAN): das kann nur der Verein in seinen Stammdaten korrigieren — kurz Bescheid sagen.
 
 Weiter lesen:
-- [So funktioniert die Monatsrechnung](so-funktioniert-die-monatsrechnung.md)
-- [USt und Kleinunternehmer](ust-und-kleinunternehmer.md)
+- [So funktioniert die Monatsabrechnung](so-funktioniert-die-monatsrechnung.md)
+- [USt und Steuern](ust-und-kleinunternehmer.md)
 - [Als bezahlt markieren](als-bezahlt-markieren.md)
