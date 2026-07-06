@@ -1341,9 +1341,17 @@ export async function getLeagueStandings(
     let fairnessOwnRow: LeagueFairnessRow | null = null;
     let fairnessTeamsInLeague = 0;
     try {
+      // Die Team-Seite verlinkt mehrere Staffeln (Footer-Widgets: Bundesliga etc.).
+      // Die EIGENE Liga steht im Link mit unserer team-id bzw. im Fairness-Link —
+      // die naive First-Match-Regex würde eine fremde Staffel greifen.
       staffelId = (await page.evaluate(`(function(){
-        var m = document.documentElement.outerHTML.match(/staffel\\/([A-Z0-9]{10,}-[A-Z])/);
-        return m ? m[1] : null;
+        var html = document.documentElement.outerHTML;
+        var own = html.match(/staffel\\/([A-Z0-9]{10,}-[A-Z])\\/team-id\\/${teamId}/);
+        if (own) return own[1];
+        var fair = html.match(/ajax\\.team\\.table\\.fairness\\/-\\/saison\\/\\d+\\/staffel\\/([A-Z0-9]{10,}-[A-Z])\\/team-id/);
+        if (fair) return fair[1];
+        var any = html.match(/staffel\\/([A-Z0-9]{10,}-[A-Z])/);
+        return any ? any[1] : null;
       })()`)) as string | null;
 
       if (staffelId) {
