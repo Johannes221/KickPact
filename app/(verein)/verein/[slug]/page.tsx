@@ -162,7 +162,7 @@ function NextSteps({
     steps.push({
       icon: BadgeCheck,
       label: "Verein verifizieren",
-      desc: "Kurz bestätigen, dass du für den Verein sprichst — erst danach gehen Rechnungen an Sponsoren raus.",
+      desc: "Kurz bestätigen, dass du für den Verein sprichst. Erst danach gehen Zahlungsübersichten an Sponsoren raus.",
       href: `/verein/${slug}/verifikation`,
       urgent: true
     });

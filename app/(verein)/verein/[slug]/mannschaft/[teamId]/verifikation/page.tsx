@@ -10,7 +10,7 @@ export const metadata = { title: "Mannschaft verifizieren · KickPact" };
  *
  * Mannschaften ohne Vereinslizenz brauchen einen Nachweis (Trainerlizenz,
  * Vereinsbestätigung, Mannschaftsfoto, Spielleitungs-Eintrag oder Sonstiges).
- * Solange nicht verifiziert, werden Sponsoren-Rechnungen withheld erzeugt —
+ * Solange nicht verifiziert, werden Zahlungsübersichten withheld erzeugt —
  * Pledges + Tracking laufen aber durch.
  *
  * Mannschaften unter Vereinslizenz erben die Club-Verifikation und brauchen

@@ -92,8 +92,8 @@ const MATRIX: MatrixGroup[] = [
         label: "PDF-Footer",
         values: {
           basic: "KickPact",
-          pro: "Vereins-Logo",
-          verein: "Vereins-Logo + Sammel-PDF"
+          pro: "Vereins-Angaben",
+          verein: "Vereins-Angaben + Sammel-PDF"
         }
       },
       {

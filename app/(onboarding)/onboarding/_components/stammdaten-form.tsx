@@ -188,7 +188,8 @@ export function StammdatenForm({ clubId, role, defaultValues }: Props) {
                   <Input {...field} placeholder="DE123456789" />
                 </FormControl>
                 <FormDescription className="text-xs text-brand-night-navy/60">
-                  Erscheint auf den Sponsoren-Rechnungen.
+                  Nur für eure Vereins-Stammdaten. Die Zahlungsübersichten an
+                  Sponsoren sind USt-frei, hier steht keine USt-IdNr drauf.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -212,7 +213,7 @@ export function StammdatenForm({ clubId, role, defaultValues }: Props) {
                 />
               </FormControl>
               <FormDescription className="text-xs text-brand-night-navy/60">
-                Erscheint nur auf den Sponsoren-Rechnungen. KickPact nimmt nie Geld an. Du
+                Erscheint nur auf den Zahlungsübersichten an Sponsoren. KickPact nimmt nie Geld an. Du
                 kannst die IBAN auch später im Dashboard eintragen.
               </FormDescription>
               <FormMessage />

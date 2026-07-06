@@ -94,7 +94,7 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
       "Alles aus Basic, plus:",
       "∞ Sponsoren · ∞ Regeln · ∞ Historie",
       "Saison-Ziele + Custom-Trigger-Texte",
-      "Vereins-Logo auf PDF · Vereins-Mail-Absender",
+      "Vereins-Angaben auf PDF · Vereins-Mail-Absender",
       "Pact-Discovery: öffentliches Team-Profil",
       "CSV-Export + Saison-Recap zum Teilen"
     ],
@@ -222,7 +222,7 @@ export function getMonthlyEquivalent(
  *
  * - season_end: 12 × monthly als Vergleichsbasis — was ein Monatsabo über ein
  *   volles Jahr kostet (das Monatsabo pausiert im Sommer nicht). Ergibt die in
- *   docs/pricing.md ausgewiesenen 35 % (Basic/Pro) bzw. 34 % (Verein).
+ *   docs/pricing.md ausgewiesenen 42 % (Basic/Pro) bzw. 43 % (Verein).
  * - monthly: keine Ersparnis (0/0)
  */
 export function getSavings(

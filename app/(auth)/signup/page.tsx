@@ -38,7 +38,7 @@ const ROLE_META: Record<
       "Du repräsentierst einen ganzen Verein mit mehreren Mannschaften. Du wählst die Vereinslizenz im Plan-Schritt.",
     bullets: [
       "Mehrere Mannschaften unter einem Dach",
-      "Vereinslogo auf PDF-Rechnungen, CSV-Export",
+      "Vereins-Angaben auf PDF-Zahlungsübersichten, CSV-Export",
       "Per Mannschaft buchbar — Teams einzeln aktivieren"
     ]
   },

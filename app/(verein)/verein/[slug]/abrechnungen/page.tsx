@@ -97,7 +97,7 @@ export default async function AbrechnungenPage({
           Abrechnungen
         </h2>
         <p className="mt-1 text-sm text-brand-night-navy/60">
-          Alle Sponsoren-Rechnungen, die KickPact für diesen Verein erzeugt hat.
+          Alle Zahlungsübersichten, die KickPact für diesen Verein erzeugt hat.
         </p>
       </div>
 

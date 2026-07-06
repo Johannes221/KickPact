@@ -59,7 +59,7 @@ export default async function TeamEinstellungenPage({
       </div>
 
       {/* Rechnungs- & Zahlungsdaten (Absender, Adresse, Steuer, IBAN).
-          Erscheinen auf den PDF-Rechnungen an die Sponsoren. */}
+          Erscheinen auf den PDF-Zahlungsübersichten an die Sponsoren. */}
       {clubData && (
         <section id="zahlungsdaten" className="scroll-mt-24 space-y-4">
           <header>
@@ -67,8 +67,8 @@ export default async function TeamEinstellungenPage({
               Rechnungs- &amp; Zahlungsdaten
             </h3>
             <p className="mt-0.5 text-sm text-brand-night-navy/60">
-              Absender, Adresse, Steuer-Status und IBAN für die Rechnungen an
-              deine Sponsoren.
+              Absender, Adresse, Steuer-Status und IBAN für die Zahlungsübersichten
+              an deine Sponsoren.
             </p>
           </header>
           <EinstellungenForm

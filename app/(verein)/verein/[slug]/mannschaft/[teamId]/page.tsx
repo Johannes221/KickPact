@@ -151,13 +151,13 @@ export default async function TeamDetailPage({
     {
       done: hasIban,
       label: "IBAN / Rechnungsdaten hinterlegen",
-      hint: "IBAN + Absenderdaten für die Sponsoren-Rechnungen eintragen.",
+      hint: "IBAN + Absenderdaten für die Zahlungsübersichten eintragen.",
       href: `${teamBase}/einstellungen#zahlungsdaten`
     },
     {
       done: !!team.logoUrl,
       label: "Logo hinzufügen",
-      hint: "Euer Wappen erscheint auf dem Profil und den Sponsoren-Rechnungen.",
+      hint: "Euer Wappen erscheint auf dem öffentlichen Profil.",
       href: `${teamBase}/einstellungen`
     },
     {

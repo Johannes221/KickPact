@@ -204,7 +204,7 @@ function CurrentSubscriptionCard({
               </strong>
               . Der Trial verlängert sich nicht von selbst und während des Tests
               wird nichts abgebucht. Hinterlege bis dahin deine Zahlungsdaten —
-              sonst werden ab Trial-Ende die Sponsoren-Rechnungen pausiert.
+              sonst werden ab Trial-Ende die Zahlungsübersichten pausiert.
             </p>
           </div>
         )}
@@ -256,8 +256,9 @@ function TrialEndLossFraming({
         </h3>
         <p className="text-sm leading-relaxed text-brand-night-navy/75">
           Du testest gerade <strong>Pro</strong> — voll freigeschaltet: ∞ Sponsoren,
-          Saison-Ziele, eigene Trigger-Texte und dein Vereins-Logo auf der
-          Rechnung. Es ist nur noch kein Sponsor angelegt.
+          Saison-Ziele, eigene Trigger-Texte und deine Vereins-Angaben statt
+          KickPact-Branding auf der PDF-Zahlungsübersicht. Es ist nur noch kein
+          Sponsor angelegt.
         </p>
         <p className="text-sm leading-relaxed text-brand-night-navy/75">
           Lade deinen ersten Sponsor ein — Familie, Freunde, der Wirt um die Ecke —

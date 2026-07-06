@@ -14,7 +14,7 @@ export const metadata = {
   title: "Preise & Pakete – Vereinssponsoring ohne versteckte Kosten",
   description:
     "Transparente Preise für Amateurfußball-Sponsoring: 0 % Provision auf Pacts, " +
-    "Saison-Pass mit 2 Monaten geschenkt, ab 5 €/Mannschaft/Monat. " +
+    "Saison-Pass bis zu 43 % günstiger, ab 5 €/Mannschaft/Monat. " +
     "Weniger als 1 € pro Spieler im Monat.",
   keywords: [
     "Vereinssponsoring Kosten",
@@ -87,7 +87,7 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Was passiert wenn ich von Basic auf Pro upgrade?",
-    a: "Sofort: Sponsor- und Pact-Regelgrenzen fallen weg, Saison-Ziele + Custom-Trigger werden freigeschaltet, dein Vereins-Logo erscheint auf der nächsten PDF-Zahlungsübersicht. Bestehende Pacts laufen unverändert weiter, beim Monatsabo wird pro-rated abgerechnet."
+    a: "Sofort: Sponsor- und Pact-Regelgrenzen fallen weg, Saison-Ziele + Custom-Trigger werden freigeschaltet, auf der nächsten PDF-Zahlungsübersicht stehen eure Vereins-Angaben statt KickPact-Branding. Bestehende Pacts laufen unverändert weiter, beim Monatsabo wird pro-rated abgerechnet."
   },
   {
     q: "Was passiert bei einem Disput?",
@@ -307,7 +307,7 @@ export default function PreisePage() {
 
         <p className="mt-10 text-center text-xs md:text-sm text-brand-night-navy/55 leading-relaxed">
           Alle Preise zzgl. USt. (19 %). Monatlich kündbar. Saison-Pass mit bis
-          zu 35 % Rabatt vs. Monatsabo. Sommerpause Juni/Juli kostenlos.
+          zu 43 % Rabatt vs. Monatsabo. Sommerpause Juni/Juli kostenlos.
         </p>
       </section>
 
