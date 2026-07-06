@@ -30,6 +30,10 @@ const EMPTY_RETRY_MS = 12 * 60 * 60 * 1000; // 12 h für leere Treffer
 function isFresh(stored: { data: LeagueStandings; scrapedAt: Date }): boolean {
   const age = Date.now() - stored.scrapedAt.getTime();
   const hasRows = stored.data?.rows?.length > 0;
+  // Zeilen aus der Zeit VOR den Liga-Extras (Torschützen/Fairness) einmalig
+  // nachscrapen, damit die neuen Slides erscheinen. Ein neuer Scrape setzt
+  // topScorers immer (mind. []) → danach greift wieder die normale TTL.
+  if (hasRows && stored.data.topScorers === undefined) return false;
   return age < (hasRows ? TTL_MS : EMPTY_RETRY_MS);
 }
 

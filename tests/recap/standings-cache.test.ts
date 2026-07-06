@@ -59,8 +59,19 @@ const STANDINGS: LeagueStandings = {
     toreFor: 76,
     toreAgainst: 45,
     punkte: 42
-  }
+  },
+  // Modern geformte Zeile: topScorers ist gesetzt (mind. []) → nicht upgrade-pflichtig.
+  topScorers: [],
+  ownTopScorers: [],
+  fairnessOwnRow: null
 };
+
+// Alt-Zeile aus der Zeit vor den Liga-Extras: topScorers fehlt komplett.
+const LEGACY_STANDINGS = {
+  teamsInLeague: STANDINGS.teamsInLeague,
+  rows: STANDINGS.rows,
+  ownRow: STANDINGS.ownRow
+} as LeagueStandings;
 
 describe("getCachedStandings (read-through)", () => {
   beforeEach(() => {
@@ -82,6 +93,16 @@ describe("getCachedStandings (read-through)", () => {
 
   it("Cache-Miss → scrapen + persistieren", async () => {
     getStoredMock.mockResolvedValue(null);
+    scrapeMock.mockResolvedValue(STANDINGS);
+    const res = await getCachedStandings("t1", "2425");
+    expect(res).toBe(STANDINGS);
+    expect(scrapeMock).toHaveBeenCalledOnce();
+    expect(storeMock).toHaveBeenCalledWith("t1", "2425", STANDINGS);
+  });
+
+  it("Alt-Zeile ohne Liga-Extras → einmal nachscrapen (Upgrade)", async () => {
+    // frisch geschrieben, aber pre-Feature-Form (kein topScorers) → nachscrapen.
+    getStoredMock.mockResolvedValue({ data: LEGACY_STANDINGS, scrapedAt: new Date() });
     scrapeMock.mockResolvedValue(STANDINGS);
     const res = await getCachedStandings("t1", "2425");
     expect(res).toBe(STANDINGS);
