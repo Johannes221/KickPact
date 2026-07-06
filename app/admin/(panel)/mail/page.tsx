@@ -1,53 +1,10 @@
 import { renderTemplatePreviews } from "@/lib/mail/preview";
 import { assertPlatformAdmin } from "@/lib/auth/admin";
 import { MailPreview } from "@/components/admin/mail-preview";
+import { fetchResendEmails } from "@/lib/mail/resend-admin";
 
 export const metadata = { title: "Mail · Admin · KickPact" };
 export const dynamic = "force-dynamic";
-
-interface ResendEmail {
-  id: string;
-  to: string[];
-  from: string;
-  subject: string;
-  created_at: string;
-  last_event?: string;
-}
-
-interface ResendListResponse {
-  object?: string;
-  data?: ResendEmail[];
-}
-
-async function fetchResendEmails(): Promise<{
-  data: ResendEmail[];
-  error: string | null;
-}> {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    return { data: [], error: "RESEND_API_KEY ist nicht gesetzt." };
-  }
-  try {
-    // Resend API: GET /emails returns last emails. Limit param keeps payload small.
-    const res = await fetch("https://api.resend.com/emails?limit=50", {
-      headers: { Authorization: `Bearer ${apiKey}` },
-      cache: "no-store"
-    });
-    if (!res.ok) {
-      return {
-        data: [],
-        error: `Resend API antwortete mit ${res.status} ${res.statusText}`
-      };
-    }
-    const json = (await res.json()) as ResendListResponse;
-    return { data: json.data ?? [], error: null };
-  } catch (e) {
-    return {
-      data: [],
-      error: e instanceof Error ? e.message : "Resend-API-Fetch fehlgeschlagen"
-    };
-  }
-}
 
 function eventColor(event: string | undefined): string {
   if (!event) return "text-brand-night-navy/60";

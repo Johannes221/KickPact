@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
         // (sonst zählen wir Plan-Wechsel/Trial-Ende doppelt). Fire-and-forget,
         // damit Plausible-Outage niemals den Webhook scheitern lässt.
         if (event.type === "customer.subscription.created") {
-          await trackServer(
+          void trackServer(
             "stripe_subscription_created",
             `${getBaseUrl()}/server/subscription`,
             {

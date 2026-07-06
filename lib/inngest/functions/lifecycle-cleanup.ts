@@ -21,6 +21,7 @@ import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
 import { eventApprovals, charges } from "@/lib/db/schema";
 import { endExpiredPledges } from "@/lib/db/queries/pledges";
+import { deleteExpiredSystemRows } from "@/lib/db/queries/system-retention";
 
 /**
  * C2 (Audit 2026-06-11): Direkte Charges (ohne matchEvent — Saison-Charges
@@ -76,9 +77,17 @@ export const expireApprovals = inngest.createFunction(
         .returning({ id: charges.id })
     );
 
+    // Retention (Vibe-Check 2026-07-06): processed_stripe_events +
+    // sent_notifications wachsen sonst unbegrenzt. Muss VOR dem
+    // nothing-to-expire-Early-Return laufen.
+    const retention = await step.run("delete-expired-system-rows", () =>
+      deleteExpiredSystemRows(now)
+    );
+
     if (expired.length === 0) {
       logger.info("expire-approvals: nothing to expire", {
-        cancelledDirectCharges: expiredDirect.length
+        cancelledDirectCharges: expiredDirect.length,
+        retention
       });
       return {
         expiredApprovals: 0,
@@ -119,7 +128,8 @@ export const expireApprovals = inngest.createFunction(
     logger.info("expire-approvals done", {
       expiredApprovals: expired.length,
       cancelledCharges: result.cancelled,
-      cancelledDirectCharges: expiredDirect.length
+      cancelledDirectCharges: expiredDirect.length,
+      retention
     });
     return {
       expiredApprovals: expired.length,

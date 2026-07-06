@@ -60,7 +60,9 @@ export async function trackServer(
         url,
         domain,
         props
-      })
+      }),
+      // Hängendes Plausible darf Aufrufer (v.a. Stripe-Webhook) nie stallen.
+      signal: AbortSignal.timeout(3000)
     });
     if (!res.ok) {
       console.warn(

@@ -80,6 +80,7 @@ vi.mock("@/lib/billing/downgrade-enforcement", () => ({
 }));
 
 import { POST } from "@/app/api/stripe/webhook/route";
+import { trackServer } from "@/lib/analytics/track-server";
 
 function makeReq(): NextRequest {
   return new NextRequest("http://localhost/api/stripe/webhook", {
@@ -304,5 +305,25 @@ describe("stripe webhook — invoice.payment_failed authoritative (Review-Befund
     await POST(makeReq());
 
     expect(setStatusByCustomerMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("stripe webhook — Analytics fire-and-forget (Vibe-Check 2026-07-06 / M1)", () => {
+  it("hängendes Plausible blockiert den Webhook nicht", async () => {
+    constructEventMock.mockReturnValue(
+      subscriptionEvent("customer.subscription.created", BASE_SUB)
+    );
+    // trackServer hängt für immer — der Webhook darf darauf NICHT warten,
+    // sonst stallt ein Plausible-Ausfall den Webhook über Stripes Timeout.
+    vi.mocked(trackServer).mockReturnValueOnce(new Promise<void>(() => {}));
+
+    const result = await Promise.race([
+      POST(makeReq()),
+      new Promise<"hang">((resolve) => setTimeout(() => resolve("hang"), 1500))
+    ]);
+
+    expect(result).not.toBe("hang");
+    expect((result as Response).status).toBe(200);
+    expect(trackServer).toHaveBeenCalledTimes(1);
   });
 });
