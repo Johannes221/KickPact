@@ -285,6 +285,21 @@ export async function approveRequest(args: ApproveArgs): Promise<MembershipReque
   }
 
   if (req.requestedTeamId) {
+    // Cross-Tenant-Guard (fail closed): requestedTeamId ist client-kontrolliert.
+    // Nur genehmigen, wenn die Mannschaft WIRKLICH zum Club der Anfrage gehört —
+    // sonst könnte ein Fremd-Request Team-Admin auf ein Team eines anderen
+    // Vereins erschleichen (Confused Deputy). Backstop zur Action-Prüfung.
+    const [ownTeam] = await db
+      .select({ id: teams.id })
+      .from(teams)
+      .where(and(eq(teams.id, req.requestedTeamId), eq(teams.clubId, req.clubId)))
+      .limit(1);
+    if (!ownTeam) {
+      throw new Error(
+        `requestedTeam ${req.requestedTeamId} does not belong to club ${req.clubId}`
+      );
+    }
+
     // Team-scoped: admin | viewer (alles außer viewer → Mannschaftsadmin)
     const teamRole = req.requestedRole === "viewer" ? "viewer" : "admin";
     await db

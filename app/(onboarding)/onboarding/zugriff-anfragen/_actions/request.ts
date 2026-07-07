@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth/session";
 import { inngest } from "@/lib/inngest/client";
 import { createRequest, isClubMember } from "@/lib/db/queries/membership-requests";
 import { getClubBySlug } from "@/lib/db/queries/club-admin";
-import { getTeamNameById } from "@/lib/db/queries/team-lifecycle";
+import { getTeamNameById, getTeamInClub } from "@/lib/db/queries/team-lifecycle";
 import { listClubAdminEmails } from "@/lib/db/queries/notification-recipients";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { accessRequestEmail } from "@/lib/mail/templates/access-request";
@@ -43,6 +43,17 @@ export async function requestClubAccessAction(formData: FormData) {
 
   if (await isClubMember(user.id, club.id)) {
     return { ok: true as const, alreadyMember: true, clubSlug: club.slug };
+  }
+
+  // Cross-Tenant-Guard: requestedTeamId ist client-kontrolliert. Eine team-
+  // scoped Anfrage darf nur auf eine Mannschaft DIESES Vereins zeigen — sonst
+  // landet ein Fremd-Team-Request im Postfach (Info-Leak + Confused-Deputy-
+  // Vorstufe). Fehl-Requests gar nicht erst anlegen.
+  if (
+    parsed.data.requestedTeamId &&
+    !(await getTeamInClub(parsed.data.requestedTeamId, club.id))
+  ) {
+    return { ok: false as const, error: "Mannschaft nicht gefunden" };
   }
 
   // Conflict-claim path: Bescheinigung ist OPTIONAL. Wenn eine Datei mitkommt,
