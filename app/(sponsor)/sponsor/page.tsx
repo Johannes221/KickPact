@@ -99,8 +99,7 @@ export default async function SponsorDashboard() {
       : "/sponsor/mannschaften";
 
   const referralUrl = buildReferralShareUrl(
-    process.env.NEXT_PUBLIC_BASE_URL ?? "https://kickpact.schartl.dev",
-    sponsorRow.id
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://kickpact.schartl.dev"
   );
 
   return (
