@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { db } from "@/lib/db/client";
-import { invoices, invoiceItems, clubs, sponsors, users } from "@/lib/db/schema";
+import { invoices, invoiceItems, charges, clubs, sponsors, users } from "@/lib/db/schema";
 import { InvoicePdf } from "@/lib/invoicing/builder";
 import { nextInvoiceNumber } from "@/lib/invoicing/numbering";
 import { storePdf } from "@/lib/invoicing/storage";
@@ -138,6 +138,24 @@ export async function createStornoInvoice(
     }
 
     await tx.update(invoices).set({ cancelledAt: new Date() }).where(eq(invoices.id, orig.id));
+
+    // Die zugrunde liegenden Charges reversen: der Storno erstattet den vollen
+    // Betrag, also dürfen die Charges nicht auf 'invoiced' stehen bleiben —
+    // sonst zählt jedes Sponsor-Reporting (ACTIVE_STATUSES = confirmed|invoiced)
+    // den erstatteten Betrag dauerhaft weiter und die Monats-Cap-Auslastung
+    // bleibt belegt. 'cancelled' ist überall aus den aktiven Aggregaten
+    // ausgeklammert; der zugehörige Invoice-Item-Beleg bleibt für die Historie.
+    const chargeIds = items.map((it) => it.chargeId);
+    if (chargeIds.length > 0) {
+      await tx
+        .update(charges)
+        .set({
+          status: "cancelled",
+          cancelledReason: "invoice_reversed",
+          cancelledAt: new Date()
+        })
+        .where(inArray(charges.id, chargeIds));
+    }
     return storno.id;
   });
 
