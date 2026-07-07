@@ -48,7 +48,8 @@ const SLIDE_KEYS = [
   "vstop3",
   "fairness",
   "beitraege",
-  "simulation"
+  "simulation",
+  "zusammenfassung"
 ] as const;
 
 type SlideKey = (typeof SLIDE_KEYS)[number];
@@ -67,7 +68,8 @@ const SLIDE_ACCENTS: Record<SlideKey, string> = {
   vstop3: ORANGE,
   fairness: RED,
   beitraege: LIME,
-  simulation: ORANGE
+  simulation: ORANGE,
+  zusammenfassung: ORANGE
 };
 
 export async function GET(
@@ -108,7 +110,8 @@ export async function GET(
     vstop3: !!stats.vsTop3 && stats.vsTop3.spiele > 0,
     fairness: !!stats.fairness,
     beitraege: stats.beitraegeSummeCents > 0,
-    simulation: (stats.simulationFallbackCents ?? 0) > 0
+    simulation: (stats.simulationFallbackCents ?? 0) > 0,
+    zusammenfassung: true
   };
   if (!hasData[slideKey]) return new Response("Not found", { status: 404 });
 
@@ -388,7 +391,142 @@ function SlideBody({
           sub="hätte ein 1-€-pro-Tor-Pact letzte Saison gebracht 👀"
         />
       );
+    case "zusammenfassung":
+      return <SummaryBody stats={stats} accent={accent} />;
   }
+}
+
+/** Zusammenfassungs-Slide: mehrere Kern-Stats als Kachel-Grid (Spotify-Wrapped-Style). */
+function SummaryBody({ stats, accent }: { stats: WrappedStats; accent: string }) {
+  const tiles: Array<{ label: string; value: string; sub: string }> = [
+    {
+      label: "Bilanz",
+      value: `${stats.siege} · ${stats.unentschieden} · ${stats.niederlagen}`,
+      sub: "Siege · Unent. · Nied."
+    },
+    {
+      label: "Tore",
+      value: `${stats.toreGeschossen} : ${stats.toreKassiert}`,
+      sub: "geschossen : kassiert"
+    }
+  ];
+  if (stats.tabellenplatz !== null) {
+    tiles.push({
+      label: "Tabelle",
+      value: `Platz ${stats.tabellenplatz}`,
+      sub: stats.teamsInLeague ? `von ${stats.teamsInLeague} Teams` : "in der Liga"
+    });
+  }
+  if (stats.besterTorschuetze) {
+    const parts = stats.besterTorschuetze.name.trim().split(" ");
+    tiles.push({
+      label: "Knipser",
+      value: parts[parts.length - 1] || stats.besterTorschuetze.name,
+      sub: `${stats.besterTorschuetze.tore} Tor${stats.besterTorschuetze.tore === 1 ? "" : "e"} ⚽`
+    });
+  }
+  const moneyCents =
+    stats.beitraegeSummeCents > 0
+      ? stats.beitraegeSummeCents
+      : stats.simulationFallbackCents ?? 0;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div
+        style={{
+          display: "flex",
+          fontSize: 34,
+          color: accent,
+          fontWeight: 800,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase"
+        }}
+      >
+        Die ganze Saison auf einen Blick
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
+        {tiles.map((t) => (
+          <div
+            key={t.label}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              width: 436,
+              gap: 8,
+              padding: "32px 36px",
+              borderRadius: 28,
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.1)"
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                fontSize: 26,
+                color: "rgba(248,247,244,0.5)",
+                fontWeight: 700,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase"
+              }}
+            >
+              {t.label}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                fontSize: 72,
+                fontWeight: 900,
+                color: accent,
+                letterSpacing: "-0.02em",
+                lineHeight: 1.0
+              }}
+            >
+              {t.value}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                fontSize: 28,
+                color: "rgba(248,247,244,0.6)",
+                fontWeight: 600
+              }}
+            >
+              {t.sub}
+            </div>
+          </div>
+        ))}
+      </div>
+      {moneyCents > 0 && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+            padding: "28px 36px",
+            borderRadius: 28,
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)"
+          }}
+        >
+          <div style={{ display: "flex", fontSize: 60, fontWeight: 900, color: OFF }}>
+            {eurWhole(moneyCents)}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 30,
+              color: "rgba(248,247,244,0.6)",
+              fontWeight: 600
+            }}
+          >
+            {stats.beitraegeSummeCents > 0
+              ? "in die Mannschaftskasse 💰"
+              : "wären drin gewesen 💰"}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function Block({
