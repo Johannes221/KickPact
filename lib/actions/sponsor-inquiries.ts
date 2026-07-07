@@ -14,7 +14,7 @@ import {
 } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { inngest } from "@/lib/inngest/client";
-import { assertClubWriteAccess, resolveTeamAccess } from "@/lib/auth/scope";
+import { assertTeamWriteAccess, resolveTeamAccess } from "@/lib/auth/scope";
 import { getSubscriptionGateForTeam } from "@/lib/db/queries/subscription-status";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { createInvitation } from "@/lib/db/queries/invitations";
@@ -349,8 +349,6 @@ export async function setTeamDiscoverable(input: {
   discoverable: boolean;
   publicTagline?: string;
 }) {
-  const user = await requireUser();
-  void user; // assertClubAccess validates ownership
   const [teamRow] = await db
     .select({
       clubSlug: clubs.slug,
@@ -363,7 +361,9 @@ export async function setTeamDiscoverable(input: {
     .where(eq(teams.id, input.teamId))
     .limit(1);
   if (!teamRow) throw new Error("Mannschaft nicht gefunden");
-  await assertClubWriteAccess(teamRow.clubSlug, "admin");
+  // Autark-bewusst + Read-Only-Gate (team-scoped): Club-Admin-Durchgriff nur auf
+  // nicht-autarke Teams, sonst Mannschaftsadmin via team_memberships.
+  await assertTeamWriteAccess(input.teamId);
 
   // Beim Öffentlich-Schalten einen stabilen Slug erzeugen, damit die Mannschaft
   // sofort eine teilbare /m/{slug}-URL hat (egal über welchen Toggle).

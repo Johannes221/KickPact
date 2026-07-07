@@ -38,6 +38,7 @@ import {
   users,
   clubs,
   clubMemberships,
+  teamMemberships,
   teams,
   teamLicenses,
   subscriptions,
@@ -116,6 +117,19 @@ async function makeClubWithAdmin(slug: string, planForFirstTeam: "basic" | "pro"
     plan: planForFirstTeam,
     status: "trialing"
   });
+
+  // Autarke Mannschaft (basic/pro): der Club-Admin-Durchgriff ist per Design
+  // gesperrt, der Zugriff kommt aus team_memberships. createTeamForExistingClub
+  // trägt den Ersteller genau so ein — die Test-Fixture spiegelt das, sonst
+  // sähe der Admin sein eigenes autarkes Team nicht (team-scoped Write-Guards).
+  if (planForFirstTeam !== "verein") {
+    await db.insert(teamMemberships).values({
+      userId,
+      teamId: team.id,
+      role: "admin",
+      invitedByUserId: userId
+    });
+  }
 
   return { userId, clubId: club.id, clubSlug: club.slug, teamId: team.id };
 }
