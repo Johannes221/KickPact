@@ -157,9 +157,14 @@ export const evaluateMatch = inngest.createFunction(
     // Sponsor im Cap-Tile über seasonToDateCents transparent gemacht
     // (getCapUsageForActivePledges). Ein separater Saison-Cap existiert nicht.
     //
-    // Rest-Risiko (dokumentiert, nicht gelöst): pending_approval-Charges aus
-    // dem Vormonat, die erst im Folgemonat confirmed werden, belasten den
-    // Cap des Erstellungs-Monats, landen aber auf der Folgemonats-Rechnung.
+    // Root-Fix 2026-07-07: Der Cap zählt nur noch confirmed+invoiced
+    // (CAP_COUNTED_STATUSES) — unbestätigte Manual-Events reservieren kein
+    // Budget mehr und können reale Auto-Charges nicht mehr verdrängen. Die
+    // Grenze für eine bestätigte Charge wird beim Confirm durchgesetzt
+    // (findConfirmCapViolation). Ein cap-bedingter Drop hinterlässt bewusst
+    // KEINE Zeile (kein Auto-Recovery — der cancelled-freie Unique-Index würde
+    // sonst deliberate Stornos wiederbeleben); Nachholen läuft über
+    // scripts/recalculate-charges.ts. Drops werden zur Forensik geloggt.
     const capAnchor = new Date();
     for (const p of proposals) {
       // Step-ID muss pro Proposal eindeutig sein: results_only-Tor-Charges
@@ -198,7 +203,17 @@ export const evaluateMatch = inngest.createFunction(
                   pledgeRow.endsAt
                 );
                 const ruleCharged = await sumRuleChargedCents(tx, p.pledgeRuleId, start, end);
-                if (ruleCharged + p.amountCents > ruleCap.capCents) return false;
+                if (ruleCharged + p.amountCents > ruleCap.capCents) {
+                  logger.warn("evaluate-match: charge dropped — rule cap reached", {
+                    matchId,
+                    teamId,
+                    pledgeRuleId: p.pledgeRuleId,
+                    triggerType: p.triggerType,
+                    amountCents: p.amountCents,
+                    capCents: ruleCap.capCents
+                  });
+                  return false;
+                }
               }
 
               if (pledgeRow.cap !== null) {
@@ -219,7 +234,18 @@ export const evaluateMatch = inngest.createFunction(
                     )
                   );
                 const alreadyCharged = sumRow?.total ?? 0;
-                if (alreadyCharged + p.amountCents > pledgeRow.cap) return false;
+                if (alreadyCharged + p.amountCents > pledgeRow.cap) {
+                  logger.warn("evaluate-match: charge dropped — monthly cap reached", {
+                    matchId,
+                    teamId,
+                    pledgeId: p.pledgeId,
+                    triggerType: p.triggerType,
+                    amountCents: p.amountCents,
+                    capCents: pledgeRow.cap,
+                    alreadyChargedCents: alreadyCharged
+                  });
+                  return false;
+                }
               }
 
               await tx.insert(charges).values({

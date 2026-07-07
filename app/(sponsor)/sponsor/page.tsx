@@ -166,6 +166,7 @@ export default async function SponsorDashboard() {
             clubName={topCapPledge.clubName}
             chargedCents={topCapPledge.chargedThisMonthCents}
             capCents={topCapPledge.monthlyCapCents ?? 0}
+            pendingCents={topCapPledge.pendingThisMonthCents}
             percentage={topCapPledge.percentage ?? 0}
             billingCycle={topCapPledge.billingCycle}
             seasonToDateCents={topCapPledge.seasonToDateCents}
@@ -473,6 +474,7 @@ function CapUsageTile({
   clubName,
   chargedCents,
   capCents,
+  pendingCents,
   percentage,
   billingCycle,
   seasonToDateCents
@@ -481,6 +483,7 @@ function CapUsageTile({
   clubName: string;
   chargedCents: number;
   capCents: number;
+  pendingCents: number;
   percentage: number;
   billingCycle: SponsorBillingCycle;
   seasonToDateCents: number;
@@ -514,6 +517,11 @@ function CapUsageTile({
             aria-valuemax={100}
           />
         </div>
+        {pendingCents > 0 && (
+          <div className="text-xs text-brand-night-navy/50">
+            {eur(pendingCents)} ausstehend · zählt erst nach Bestätigung
+          </div>
+        )}
         {isSeasonEnd && (
           <div className="text-xs text-brand-night-navy/60">
             Saison bisher{" "}

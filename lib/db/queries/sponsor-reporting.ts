@@ -464,6 +464,13 @@ export interface PledgeCapUsage {
   clubSlug: string;
   monthlyCapCents: number | null;
   chargedThisMonthCents: number;
+  /**
+   * Noch unbestätigte (pending_approval) Beiträge dieses Monats. Zählen seit
+   * dem Root-Fix 2026-07-07 NICHT gegen den Cap (reservieren kein Budget) —
+   * rein informativ ("ausstehend, zählt erst nach Bestätigung"), damit der
+   * Sponsor sieht, dass ein Bestätigen den Cap-Verbrauch erhöht.
+   */
+  pendingThisMonthCents: number;
   /** 0..1, oder null wenn kein Cap gesetzt ist. */
   percentage: number | null;
   /** Abrechnungs-Rhythmus des Sponsors (steuert das Tile-Framing). */
@@ -490,9 +497,9 @@ export async function getCapUsageForActivePledges(
 ): Promise<PledgeCapUsage[]> {
   // Gemeinsame Cap-Fenster-/Status-Definition — deckungsgleich mit dem
   // Enforcement (evaluate-match / getMonthlyChargedCents): UTC-Monat, Anker
-  // COALESCE(confirmedAt, createdAt), Status ∈ CAP_COUNTED_STATUSES (inkl.
-  // pending_approval). Vorher zeigte die Anzeige systematisch weniger
-  // Auslastung als durchgesetzt wurde.
+  // COALESCE(confirmedAt, createdAt), Status ∈ CAP_COUNTED_STATUSES
+  // (confirmed+invoiced; pending zählt seit dem Root-Fix nicht mehr). Das
+  // ausstehende pending wird separat als pendingThisMonthCents ausgewiesen.
   const { start: monthStart, end: monthEnd } = utcMonthWindow(now);
 
   // Laufendes Saison-Fenster [1.7., 1.7. Folgejahr) — dieselbe Juli–Juni-Logik
@@ -515,10 +522,18 @@ export async function getCapUsageForActivePledges(
       billingCycle: sponsors.billingCycle,
       // chargeCountsTowardCap = EINE gemeinsame Definition mit dem Enforcement
       // (getMonthlyChargedCents): COALESCE(confirmedAt, createdAt) im UTC-Monat
-      // UND Status ∈ CAP_COUNTED_STATUSES (inkl. pending_approval). Sonst zeigt
-      // die Kachel eine andere Auslastung, als der Cap-Check durchsetzt.
+      // UND Status ∈ CAP_COUNTED_STATUSES (confirmed+invoiced). Sonst zeigt die
+      // Kachel eine andere Auslastung, als der Cap-Check durchsetzt.
       chargedThisMonthCents: sql<number>`COALESCE(SUM(${charges.amountCents}) FILTER (
         WHERE ${chargeCountsTowardCap(monthStart, monthEnd)}
+      ), 0)::int`,
+      // Ausstehend (pending_approval) im selben Fenster — reserviert kein
+      // Cap-Budget mehr, nur zur Anzeige. Anker analog createdAt (pending hat
+      // noch kein confirmedAt).
+      pendingThisMonthCents: sql<number>`COALESCE(SUM(${charges.amountCents}) FILTER (
+        WHERE ${charges.status} = 'pending_approval'
+          AND COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${monthStart.toISOString()}
+          AND COALESCE(${charges.confirmedAt}, ${charges.createdAt}) <  ${monthEnd.toISOString()}
       ), 0)::int`,
       // Saison-Kumuliert (season_end): was sich auf die EINE Saison-Rechnung
       // sammelt — nur fakturierbare Beiträge (confirmed/invoiced), Anker
@@ -557,6 +572,7 @@ export async function getCapUsageForActivePledges(
         clubSlug: r.clubSlug,
         monthlyCapCents: cap,
         chargedThisMonthCents: charged,
+        pendingThisMonthCents: Number(r.pendingThisMonthCents ?? 0),
         percentage: cap ? Math.min(1, charged / cap) : null,
         billingCycle: r.billingCycle,
         seasonToDateCents: Number(r.seasonToDateCents ?? 0)
