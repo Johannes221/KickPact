@@ -41,6 +41,10 @@ const TRANSIENT_PATTERNS: ReadonlyArray<RegExp> = [
   /ETIMEDOUT/i,
   /Navigation timeout/i,
   /HTTP 5\d{2}/i,
+  // Vibe-Check C: 429 (fussball.de drosselt) + client-seitiger Request-Timeout
+  // (AbortSignal.timeout → "aborted"/"TimeoutError") sind transient → Backoff-Retry.
+  /HTTP 429/i,
+  /aborted|timeout/i,
 ];
 
 export type RetryOptions = { maxAttempts: number; baseDelayMs?: number };
@@ -67,7 +71,10 @@ export async function withRetry<T>(
       const message = err instanceof Error ? err.message : String(err);
       const transient = TRANSIENT_PATTERNS.some((p) => p.test(message));
       if (!transient || attempt === opts.maxAttempts) throw err;
-      const delay = baseDelay * Math.pow(2, attempt - 1);
+      // Exponential Backoff + additiver Jitter (0..baseDelay) gegen
+      // Thundering-Herd bei parallelen Crawl-Workern. Jitter nur additiv, damit
+      // die Mindest-Wartezeit erhalten bleibt.
+      const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * baseDelay;
       await new Promise((r) => setTimeout(r, delay));
     }
   }
@@ -118,25 +125,33 @@ async function fetchHtml(url: string): Promise<HTMLElement> {
             "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
           "Accept-Language": "de-DE,de;q=0.9,en;q=0.8"
         },
-        redirect: "follow"
+        redirect: "follow",
+        // Vibe-Check C: harte Obergrenze — sonst hängt ein stockender Upstream
+        // (undici-Default ~kein Timeout) bis zu 5 Min und blockiert u.a. die
+        // synchrone Onboarding-Suche. 10s reichen für die ~28-190 KB-Seiten.
+        signal: AbortSignal.timeout(10_000)
       });
+      if (res.status === 429) throw new Error(`HTTP 429 für ${url}`); // transient (Backoff)
       if (res.status >= 500) throw new Error(`HTTP ${res.status}`); // transient
       if (!res.ok) throw new Error(`HTTP ${res.status} für ${url}`);
       const html = await res.text();
       if (process.env.CRAWL_DEBUG === "1") {
         console.log(`[fetchHtml] ${url.slice(0, 70)} → ${html.length}B`);
       }
-      // Harte Block-/Captcha-Seite: nur bei KLEINER Seite + Block-Marker werfen.
-      // Echte Seiten (Liste ~28 KB, Detail ~190 KB) referenzieren teils "captcha"
-      // in Hidden-Forms → Längen-Guard verhindert False-Positives.
-      // Marker decken die echte fussball.de-Sperrseite ab: Titel/H1
-      // „Sicherheitsabfrage" + reCAPTCHA-iframe (recaptcha/api…). g-recaptcha
-      // allein verfehlte beide → stiller Leer-Parse statt lautem Fehler.
+      // Harte Block-/Captcha-Seite laut abfangen (NICHT still als 0:0-Match
+      // durchreichen). Zwei Klassen von Markern:
+      //  - STRUKTURELL eindeutig (Sperrseiten-Titel/DataDome/„Zugriff
+      //    verweigert“): kommen in echten Match-/Listen-Seiten praktisch nie
+      //    vor → bei JEDER Länge werfen. So passiert auch eine GROSSE
+      //    Interstitial-Seite (>3 KB) den Guard nicht mehr.
+      //  - reCAPTCHA-Klassen/-Endpunkte: können in Hidden-Forms echter Seiten
+      //    (Liste ~28 KB, Detail ~190 KB) auftauchen → nur bei KLEINER Seite
+      //    werfen, sonst False-Positives.
       if (
-        html.length < 3000 &&
-        /g-recaptcha|recaptcha\/api|sicherheitsabfrage|datadome|captcha-delivery|zugriff verweigert|access denied/i.test(
+        /sicherheitsabfrage|datadome|captcha-delivery|zugriff verweigert|access denied/i.test(
           html
-        )
+        ) ||
+        (html.length < 3000 && /g-recaptcha|recaptcha\/api/i.test(html))
       ) {
         throw new Error("Captcha/Sicherheitsabfrage-Seite erkannt");
       }
@@ -416,6 +431,16 @@ export interface SpielDetails {
   ergebnis: { heim: number; gast: number };
   halbzeit: { heim: number; gast: number } | null;
   events: ScrapedEvent[];
+  /**
+   * `false`, wenn der Endstand NICHT sicher ermittelt werden konnte: der
+   * Obfuscation-Font war nicht dekodierbar (Font-Endpoint geblockt, rotierte/
+   * unbekannte Glyphen) UND es gab keine Tor-Events als Beleg — dann ist das
+   * zurückgegebene 0:0 fabriziert, nicht real. `validateSpielDetails` verwirft
+   * solche Matches, statt sie als `finished` zu persistieren (stilles Falsch-
+   * geld). Optional/Default `true`: nur echte Scrapes setzen es, Test-Fixtures
+   * gelten als verlässlich. Siehe getSpielDetails.
+   */
+  resultReliable?: boolean;
 }
 
 export interface ScrapedEvent {
@@ -1040,6 +1065,13 @@ export async function getSpielDetails(
   const ergebnisGast = displayedEnd
     ? displayedEnd.gast
     : goals.filter((g) => g.side === "gast").length;
+  // Ist der Endstand überhaupt belegt? Sicher, wenn der Anzeige-Score
+  // dekodiert wurde ODER Tor-Events ihn rekonstruieren. Wenn BEIDES fehlt
+  // (Font nicht dekodierbar + kein Spielbericht), ist das obige 0:0 geraten —
+  // markieren, damit validateSpielDetails es verwirft statt als „gespielt“ zu
+  // persistieren. Deckt auch eine Block-/Interstitial-Seite ab, die den
+  // fetchHtml-Guard passiert hat (kein .end-result, kein .row-event).
+  const resultReliable = displayedEnd !== null || goals.length > 0;
   // Halbzeit PRIMÄR aus der angezeigten Klammer (offizieller HZ-Stand, auch
   // ohne Spielbericht vorhanden); Fallback: Tor-Events mit Minute ≤ 45.
   const displayedHalftime = parseDisplayedHalftime(root);
@@ -1106,7 +1138,8 @@ export async function getSpielDetails(
     // Wie zuvor immer als Objekt (auch 0:0) — NICHT null, sonst ändert sich der
     // content-hash aller bestehenden Matches und löst unnötige Re-Evaluation aus.
     halbzeit: { heim: halbzeitHeim, gast: halbzeitGast },
-    events
+    events,
+    resultReliable
   };
 }
 

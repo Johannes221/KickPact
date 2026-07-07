@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { db } from "@/lib/db/client";
 import { invoices, invoiceItems, charges, clubs, sponsors, users } from "@/lib/db/schema";
@@ -8,7 +8,16 @@ import { storePdf } from "@/lib/invoicing/storage";
 
 export type StornoResult =
   | { ok: true; stornoInvoiceId: string; stornoNumber: string; amountCents: number }
-  | { ok: false; reason: "not_found" | "already_cancelled" | "is_storno" | "wrong_status" | "no_pdf" };
+  | {
+      ok: false;
+      reason:
+        | "not_found"
+        | "already_cancelled"
+        | "is_storno"
+        | "wrong_status"
+        | "no_pdf"
+        | "no_charges";
+    };
 
 function extractInvoiceNumber(pdfUrl: string | null): string | null {
   if (!pdfUrl) return null;
@@ -16,22 +25,28 @@ function extractInvoiceNumber(pdfUrl: string | null): string | null {
   return m ? m[1] : null;
 }
 
-/**
- * Erzeugt einen Stornobeleg (Korrektur) zur Original-Zahlungsübersicht:
- * neue fortlaufende Nummer aus dem Nummernkreis, negative Beträge, Verweis auf
- * die Original-Nummer, eigenes PDF. Das Original wird als storniert
- * (cancelled_at) markiert. Betrifft die Verein→Sponsor-Zahlungsübersichten
- * (Privatpersonen-only, Spec 2026-07-06 §4 — früher „Stornorechnung").
- */
-export async function createStornoInvoice(
-  originalInvoiceId: string
-): Promise<StornoResult> {
-  const [orig] = await db.select().from(invoices).where(eq(invoices.id, originalInvoiceId)).limit(1);
-  if (!orig) return { ok: false, reason: "not_found" };
-  if (orig.reversalOfInvoiceId) return { ok: false, reason: "is_storno" };
-  if (orig.cancelledAt) return { ok: false, reason: "already_cancelled" };
-  if (orig.status !== "sent" && orig.status !== "paid") return { ok: false, reason: "wrong_status" };
+type InvoiceRow = typeof invoices.$inferSelect;
 
+/**
+ * Geteilter Kern für Storno-/Korrekturbelege: erzeugt eine Reversal-Rechnung
+ * (neue fortlaufende Nummer, negative Beträge, Verweis auf die Original-Nummer,
+ * eigenes PDF) und storniert die zugrunde liegenden Charges.
+ *
+ * `subsetChargeIds = null`  → VOLLSTORNO: reversed alle Items, Betrag exakt
+ *   -orig.totalCents (inkl. Alt-Beleg-USt-Ausgleich), markiert das Original als
+ *   storniert (cancelledAt).
+ * `subsetChargeIds = Set`   → TEIL-GUTSCHRIFT (Daten-Integrität 2026-07-07):
+ *   reversed NUR die Items der genannten Charges, Betrag = -Summe dieser Items,
+ *   das Original bleibt gültig (andere Zeilen sind weiter offen/bezahlt).
+ */
+async function buildReversal(
+  orig: InvoiceRow,
+  opts: {
+    subsetChargeIds: Set<string> | null;
+    cancelOriginal: boolean;
+    chargeCancelReason: string;
+  }
+): Promise<StornoResult> {
   const originalNumber = extractInvoiceNumber(orig.pdfUrl);
   if (!originalNumber) return { ok: false, reason: "no_pdf" };
 
@@ -45,8 +60,23 @@ export async function createStornoInvoice(
     .innerJoin(users, eq(users.id, sponsors.userId))
     .where(eq(sponsors.id, orig.sponsorId))
     .limit(1);
-  const items = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, orig.id));
   if (!club || !sponsorRow) return { ok: false, reason: "not_found" };
+
+  const allItems = await db
+    .select()
+    .from(invoiceItems)
+    .where(eq(invoiceItems.invoiceId, orig.id));
+  const items =
+    opts.subsetChargeIds === null
+      ? allItems
+      : allItems.filter((it) => opts.subsetChargeIds!.has(it.chargeId));
+  if (items.length === 0) return { ok: false, reason: "no_charges" };
+
+  const partial = opts.subsetChargeIds !== null;
+  const itemSum = items.reduce((s, i) => s + i.amountCents, 0);
+  // Vollstorno erstattet den exakt gebuchten Betrag (inkl. evtl. Alt-USt);
+  // Teil-Gutschrift erstattet genau die Summe der betroffenen Zeilen.
+  const reversedTotal = partial ? -itemSum : -orig.totalCents;
 
   const year = new Date().getFullYear();
   const stornoNumber = await nextInvoiceNumber(orig.clubId, year);
@@ -87,21 +117,23 @@ export async function createStornoInvoice(
             triggerLabel: "",
             amountCents: -it.amountCents
           }));
-          // Alt-Beleg-Kante (Review M1): Belege aus der Zeit VOR dem
-          // Privatpersonen-Pivot tragen totalCents = Items + 19 % USt. Der
-          // Stornobeleg muss aber exakt den gebuchten/erstatteten Betrag
-          // (-orig.totalCents) ausweisen — sonst weicht das PDF von DB,
-          // Admin-Toast und tatsächlicher Erstattung ab. Differenz als
-          // eigene Ausgleichszeile ausweisen.
-          const itemSum = items.reduce((s, i) => s + i.amountCents, 0);
-          const rest = orig.totalCents - itemSum;
-          if (rest !== 0) {
-            rows.push({
-              matchDate: orig.createdAt,
-              matchLabel: "Ausgleich (im Original enthaltene USt)",
-              triggerLabel: "",
-              amountCents: -rest
-            });
+          // Alt-Beleg-Kante (Review M1): NUR beim Vollstorno. Belege aus der
+          // Zeit VOR dem Privatpersonen-Pivot tragen totalCents = Items + 19 %
+          // USt. Der Vollstorno muss exakt -orig.totalCents ausweisen — sonst
+          // weicht das PDF von DB/Erstattung ab. Bei der Teil-Gutschrift gibt
+          // es keinen belastbaren USt-Anteil pro Zeile → keine Ausgleichszeile
+          // (post-pivot USt-frei; Alt-Belege werden voll storniert, nicht
+          // teil-gutgeschrieben).
+          if (!partial) {
+            const rest = orig.totalCents - itemSum;
+            if (rest !== 0) {
+              rows.push({
+                matchDate: orig.createdAt,
+                matchLabel: "Ausgleich (im Original enthaltene USt)",
+                triggerLabel: "",
+                amountCents: -rest
+              });
+            }
           }
           return rows;
         })()
@@ -111,6 +143,8 @@ export async function createStornoInvoice(
 
   const storageUrl = await storePdf(`${orig.clubId}/${stornoNumber}.pdf`, pdfBuf);
 
+  const chargeIds = items.map((it) => it.chargeId);
+
   const stornoInvoiceId = await db.transaction(async (tx) => {
     const [storno] = await tx
       .insert(invoices)
@@ -118,7 +152,7 @@ export async function createStornoInvoice(
         sponsorId: orig.sponsorId,
         clubId: orig.clubId,
         period: orig.period,
-        totalCents: -orig.totalCents,
+        totalCents: reversedTotal,
         pdfUrl: storageUrl,
         status: "sent",
         sentAt: new Date(),
@@ -126,38 +160,97 @@ export async function createStornoInvoice(
       })
       .returning({ id: invoices.id });
 
-    if (items.length > 0) {
-      await tx.insert(invoiceItems).values(
-        items.map((it) => ({
-          invoiceId: storno.id,
-          chargeId: it.chargeId,
-          description: `Storno: ${it.description}`,
-          amountCents: -it.amountCents
-        }))
-      );
+    await tx.insert(invoiceItems).values(
+      items.map((it) => ({
+        invoiceId: storno.id,
+        chargeId: it.chargeId,
+        description: `Storno: ${it.description}`,
+        amountCents: -it.amountCents
+      }))
+    );
+
+    if (opts.cancelOriginal) {
+      await tx.update(invoices).set({ cancelledAt: new Date() }).where(eq(invoices.id, orig.id));
     }
 
-    await tx.update(invoices).set({ cancelledAt: new Date() }).where(eq(invoices.id, orig.id));
-
-    // Die zugrunde liegenden Charges reversen: der Storno erstattet den vollen
-    // Betrag, also dürfen die Charges nicht auf 'invoiced' stehen bleiben —
-    // sonst zählt jedes Sponsor-Reporting (ACTIVE_STATUSES = confirmed|invoiced)
-    // den erstatteten Betrag dauerhaft weiter und die Monats-Cap-Auslastung
-    // bleibt belegt. 'cancelled' ist überall aus den aktiven Aggregaten
-    // ausgeklammert; der zugehörige Invoice-Item-Beleg bleibt für die Historie.
-    const chargeIds = items.map((it) => it.chargeId);
-    if (chargeIds.length > 0) {
-      await tx
-        .update(charges)
-        .set({
-          status: "cancelled",
-          cancelledReason: "invoice_reversed",
-          cancelledAt: new Date()
-        })
-        .where(inArray(charges.id, chargeIds));
+    // Charges reversen: dürfen nicht auf 'invoiced' stehen bleiben, sonst zählt
+    // jedes Sponsor-Reporting (confirmed|invoiced) + die Monats-Cap den
+    // erstatteten Betrag dauerhaft weiter. 'cancelled' ist überall aus den
+    // aktiven Aggregaten ausgeklammert; der Invoice-Item-Beleg bleibt für die
+    // Historie. correctionFlaggedAt wird zurückgesetzt → verlässt die Queue.
+    // Guard auf status='invoiced' + count-Abgleich: gibt der Betrag im PDF
+    // (was wir gutschreiben) exakt das wieder, was tatsächlich storniert wurde
+    // (Race gegen einen parallelen Lauf → rollback statt falscher Gutschrift).
+    const reversed = await tx
+      .update(charges)
+      .set({
+        status: "cancelled",
+        cancelledReason: opts.chargeCancelReason,
+        cancelledAt: new Date(),
+        correctionFlaggedAt: null
+      })
+      .where(and(inArray(charges.id, chargeIds), eq(charges.status, "invoiced")))
+      .returning({ id: charges.id });
+    if (reversed.length !== chargeIds.length) {
+      throw new Error(
+        `storno: charge-status-mismatch (${reversed.length}/${chargeIds.length}) — rollback`
+      );
     }
     return storno.id;
   });
 
-  return { ok: true, stornoInvoiceId, stornoNumber, amountCents: -orig.totalCents };
+  return { ok: true, stornoInvoiceId, stornoNumber, amountCents: reversedTotal };
+}
+
+/**
+ * Erzeugt einen Stornobeleg (Vollkorrektur) zur Original-Zahlungsübersicht.
+ * Betrifft die Verein→Sponsor-Zahlungsübersichten (Privatpersonen-only,
+ * Spec 2026-07-06 §4 — früher „Stornorechnung").
+ */
+export async function createStornoInvoice(
+  originalInvoiceId: string
+): Promise<StornoResult> {
+  const [orig] = await db.select().from(invoices).where(eq(invoices.id, originalInvoiceId)).limit(1);
+  if (!orig) return { ok: false, reason: "not_found" };
+  if (orig.reversalOfInvoiceId) return { ok: false, reason: "is_storno" };
+  if (orig.cancelledAt) return { ok: false, reason: "already_cancelled" };
+  if (orig.status !== "sent" && orig.status !== "paid") return { ok: false, reason: "wrong_status" };
+
+  return buildReversal(orig, {
+    subsetChargeIds: null,
+    cancelOriginal: true,
+    chargeCancelReason: "invoice_reversed"
+  });
+}
+
+/**
+ * Daten-Integrität (2026-07-07): Teil-Gutschrift für einzelne bereits
+ * fakturierte Charges, deren Spiel nachträglich korrigiert wurde
+ * (Admin-Review-Queue → createCorrectionInvoice). Erstattet genau die
+ * genannten Charges auf einem eigenen Korrekturbeleg; die restlichen Zeilen
+ * der Original-Rechnung bleiben unverändert gültig.
+ *
+ * `chargeIds` wird serverseitig gegen die Items der Rechnung gefiltert
+ * (kein Vertrauen auf die Client-Liste) — fremde/nicht zugehörige IDs fallen
+ * raus; bleibt danach nichts übrig → `no_charges`.
+ */
+export async function createCorrectionInvoice(
+  originalInvoiceId: string,
+  chargeIds: string[]
+): Promise<StornoResult> {
+  if (chargeIds.length === 0) return { ok: false, reason: "no_charges" };
+  const [orig] = await db.select().from(invoices).where(eq(invoices.id, originalInvoiceId)).limit(1);
+  if (!orig) return { ok: false, reason: "not_found" };
+  if (orig.reversalOfInvoiceId) return { ok: false, reason: "is_storno" };
+  if (orig.cancelledAt) return { ok: false, reason: "already_cancelled" };
+  // Nur versendete/bezahlte Belege können teil-gutgeschrieben werden. Steht die
+  // Rechnung noch auf draft/withheld, ging sie nie an den Sponsor — dann ist
+  // Verwerfen (dismiss) der richtige Weg, nicht ein Korrekturbeleg.
+  if (orig.status !== "sent" && orig.status !== "paid") return { ok: false, reason: "wrong_status" };
+
+  return buildReversal(orig, {
+    subsetChargeIds: new Set(chargeIds),
+    cancelOriginal: false,
+    chargeCancelReason: "correction_reversed"
+  });
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { assertPlatformAdmin } from "@/lib/auth/admin";
 import { countOpenTickets } from "@/lib/db/queries/support";
+import { countChargesPendingCorrection } from "@/lib/db/queries/charges";
 import { OperatorLogoutButton } from "@/components/admin/operator-logout-button";
 
 export const metadata = { title: "Admin · KickPact" };
@@ -15,6 +16,7 @@ const NAV_ITEMS: Array<{ href: string; label: string }> = [
   { href: "/admin/crawler", label: "Crawler" },
   { href: "/admin/sponsoring", label: "Sponsoring" },
   { href: "/admin/rechnungen", label: "Rechnungen" },
+  { href: "/admin/rechnungen/korrekturen", label: "Korrekturen" },
   { href: "/admin/stripe", label: "Stripe" },
   { href: "/admin/mail", label: "Mail" },
   { href: "/admin/audit-log", label: "Audit-Log" }
@@ -26,7 +28,10 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const { user } = await assertPlatformAdmin();
-  const openTickets = await countOpenTickets();
+  const [openTickets, openCorrections] = await Promise.all([
+    countOpenTickets(),
+    countChargesPendingCorrection()
+  ]);
 
   return (
     <main className="mx-auto max-w-7xl px-5 md:px-6 py-8 md:py-12">
@@ -46,7 +51,12 @@ export default async function AdminLayout({
       </div>
       <nav className="mb-8 -mx-1 flex flex-wrap gap-1 rounded-2xl border border-brand-neutral/30 bg-brand-off-white p-1.5">
         {NAV_ITEMS.map((item) => {
-          const badge = item.href === "/admin/support" && openTickets > 0 ? openTickets : 0;
+          const badge =
+            item.href === "/admin/support" && openTickets > 0
+              ? openTickets
+              : item.href === "/admin/rechnungen/korrekturen" && openCorrections > 0
+                ? openCorrections
+                : 0;
           return (
             <Link
               key={item.href}

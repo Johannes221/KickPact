@@ -94,13 +94,14 @@ export async function getNotificationSettings(
   return row ?? null;
 }
 
-/** Push-Präferenzen setzen/aktualisieren. */
+/** Push- + E-Mail-Präferenzen setzen/aktualisieren. */
 export async function upsertNotificationSettings(args: {
   userId: string;
   matchResults: boolean;
   accessRequests: boolean;
   sponsorRequests: boolean;
   billing: boolean;
+  emailRecurring: boolean;
 }): Promise<void> {
   const now = new Date();
   await db
@@ -111,6 +112,7 @@ export async function upsertNotificationSettings(args: {
       accessRequests: args.accessRequests,
       sponsorRequests: args.sponsorRequests,
       billing: args.billing,
+      emailRecurring: args.emailRecurring,
       updatedAt: now
     })
     .onConflictDoUpdate({
@@ -120,7 +122,40 @@ export async function upsertNotificationSettings(args: {
         accessRequests: args.accessRequests,
         sponsorRequests: args.sponsorRequests,
         billing: args.billing,
+        emailRecurring: args.emailRecurring,
         updatedAt: now
       }
+    });
+}
+
+/**
+ * Gilt für WIEDERKEHRENDE Mails (Reminder/Renewal). Fehlt die Zeile → `true`
+ * (Opt-out-Default: senden). Transaktionale Mails ignorieren diese Präferenz.
+ */
+export async function isEmailRecurringEnabled(userId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ v: notificationSettings.emailRecurring })
+    .from(notificationSettings)
+    .where(eq(notificationSettings.userId, userId))
+    .limit(1);
+  return row?.v ?? true;
+}
+
+/**
+ * Setzt NUR das `email_recurring`-Flag (One-Click-Unsubscribe / Toggle),
+ * ohne die Push-Präferenzen zu überschreiben. Idempotent; legt bei Bedarf die
+ * Zeile mit Push-Defaults (alle an) an.
+ */
+export async function setEmailRecurring(
+  userId: string,
+  enabled: boolean
+): Promise<void> {
+  const now = new Date();
+  await db
+    .insert(notificationSettings)
+    .values({ userId, emailRecurring: enabled, updatedAt: now })
+    .onConflictDoUpdate({
+      target: notificationSettings.userId,
+      set: { emailRecurring: enabled, updatedAt: now }
     });
 }

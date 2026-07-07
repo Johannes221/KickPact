@@ -15,7 +15,7 @@ import {
   pledges
 } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
-import { assertClubWriteAccess } from "@/lib/auth/scope";
+import { assertTeamWriteAccess } from "@/lib/auth/scope";
 import {
   evaluateTriggers,
   type MatchInput,
@@ -68,8 +68,11 @@ export async function addManualEvent(
     .limit(1);
   if (!target) throw new Error("Match nicht gefunden");
 
-  // Permission: mindestens trainer + Subscription darf nicht read-only sein
-  await assertClubWriteAccess(target.club.slug, "trainer");
+  // Permission: mindestens trainer (Club-Durchgriff) ODER Mannschaftsadmin bei
+  // autarkem Team + Subscription darf nicht read-only sein. Autark-bewusst über
+  // assertTeamWriteAccess (nicht der reine Club-Guard, der autarke Teams durch-
+  // greifen ließ). Neuanlage blockt paused (kein allowPaused).
+  await assertTeamWriteAccess(target.team.id, { clubMinRole: "trainer" });
 
   // Bestimme teamSide via detectTeamSide-Helper — identisch zur Crawler-Pipeline,
   // damit Manual-Events nicht anders klassifiziert werden als Scraped-Events.

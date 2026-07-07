@@ -28,6 +28,7 @@ export interface RenewalCandidate {
   pledgeId: string;
   endsAt: Date;
   sponsorId: string;
+  sponsorUserId: string;
   teamId: string;
   sponsorDisplayName: string;
   sponsorEmail: string;
@@ -68,6 +69,7 @@ export async function findPledgesEligibleForRenewal(
       pledgeId: pledges.id,
       endsAt: pledges.endsAt,
       sponsorId: pledges.sponsorId,
+      sponsorUserId: users.id,
       teamId: pledges.teamId,
       sponsorDisplayName: sponsorLabelSql,
       sponsorEmail: users.email,

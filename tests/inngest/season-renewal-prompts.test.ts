@@ -28,7 +28,8 @@ import {
   sponsors,
   pledges,
   pledgeRules,
-  sentNotifications
+  sentNotifications,
+  notificationSettings
 } from "@/lib/db/schema";
 import { resetTestDb } from "../setup/db";
 import { seasonRenewalPrompts } from "@/lib/inngest/functions/season-renewal-prompts";
@@ -184,6 +185,7 @@ async function seedPledgeEligibleForRenewal(opts: {
     teamId: team.id,
     nextTeamId,
     sponsorId: sponsor.id,
+    sponsorUserId,
     pledgeId: pledge.id,
     sponsorEmail: `${sponsorUserId}@test.local`
   };
@@ -240,6 +242,34 @@ describe("seasonRenewalPrompts (cron)", () => {
     expect(second.sent).toBe(0);
     expect(second.skipped).toBe(1);
     expect(resendSendMock).not.toHaveBeenCalled();
+  });
+
+  it("respektiert das E-Mail-Opt-out des Sponsors (kein Send, Dedupe bleibt)", async () => {
+    const seed = await seedPledgeEligibleForRenewal({
+      saison: "2526",
+      withNextSeasonTeam: true
+    });
+    // Sponsor hat wiederkehrende Mails abbestellt.
+    await db
+      .insert(notificationSettings)
+      .values({ userId: seed.sponsorUserId, emailRecurring: false });
+
+    const result = await runRenewalCron();
+    expect(result.sent).toBe(0);
+    expect(result.skipped).toBe(1);
+    expect(resendSendMock).not.toHaveBeenCalled();
+
+    // Dedupe-Gate bleibt bewusst gesetzt → keine erneuten Versuche.
+    const [dedupe] = await db
+      .select()
+      .from(sentNotifications)
+      .where(
+        and(
+          eq(sentNotifications.kind, "season-renewal"),
+          eq(sentNotifications.key, `${seed.pledgeId}:2627:30`)
+        )
+      );
+    expect(dedupe).toBeTruthy();
   });
 
   it("verarbeitet keine eligible-Pledges wenn keine vorhanden", async () => {

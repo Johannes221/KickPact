@@ -48,6 +48,7 @@ export async function resetTestDb() {
       pledge_rules,
       pledges,
       sponsor_inquiries,
+      sponsor_leads,
       sponsor_invitations,
       sponsor_billing_cycle_history,
       sponsors,

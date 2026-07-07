@@ -8,9 +8,10 @@ import {
   eventApprovals,
   sponsors,
   users,
-  invoices
+  invoices,
+  clubs
 } from "@/lib/db/schema";
-import { isNull } from "drizzle-orm";
+import { isNull, isNotNull } from "drizzle-orm";
 
 /**
  * SECURITY (H5): Sponsor-Kontakt + Eckdaten zu einer Charge (club-gescoped),
@@ -244,9 +245,15 @@ export function groupChargesBySponsorClub<T extends { sponsorId: string; clubId:
  * nachgetragene Tore). Vor der Re-Evaluation müssen alle vorherigen Charges
  * unschädlich gemacht werden, damit `evaluate-match` neu zählen kann.
  *
- * `invoiced` Charges werden bewusst NICHT angefasst — sie wurden bereits
- * dem Sponsor in Rechnung gestellt und sind out-of-scope für Korrekturen
- * (das wäre Buchhaltung, nicht Crawler-Logik).
+ * `invoiced` Charges werden weiterhin NICHT storniert — sie wurden bereits
+ * dem Sponsor in Rechnung gestellt, ein stilles Cancel wäre Buchhaltung, nicht
+ * Crawler-Logik. ABER (Daten-Integrität 2026-07-07): Sie dürfen auch nicht
+ * mehr geräuschlos liegen bleiben. Wird ein bereits fakturiertes Ergebnis
+ * offiziell gekippt (Einspruch/Wertung/Annullierung), hätte der Sponsor sonst
+ * für nicht mehr existierende Ereignisse gezahlt, ohne dass es jemand bemerkt.
+ * Deshalb werden betroffene `invoiced`-Charges für die Admin-Review-Queue
+ * markiert (`correctionFlaggedAt`); ein Operator entscheidet dort über eine
+ * Teil-Gutschrift (siehe listChargesPendingCorrection / createCorrectionInvoice).
  */
 export async function invalidateChargesForMatch(
   matchId: string,
@@ -266,6 +273,16 @@ export async function invalidateChargesForMatch(
       .set({ status: "cancelled", cancelledReason: reason, cancelledAt: new Date() })
       .where(and(eq(charges.matchId, matchId), ne(charges.status, "invoiced")));
 
+    // Daten-Integrität (2026-07-07): bereits fakturierte Charges dieses Spiels
+    // für die Admin-Review-Queue markieren. Der Aufrufer ruft diese Funktion
+    // nur bei echtem Hash-Drift (crawl-matches.ts) — das Spiel hat sich also
+    // tatsächlich geändert, jede invoiced-Charge darauf ist jetzt verdächtig.
+    // Status bleibt `invoiced` (nicht stornieren); nur das Flag wird gesetzt.
+    await tx
+      .update(charges)
+      .set({ correctionFlaggedAt: new Date() })
+      .where(and(eq(charges.matchId, matchId), eq(charges.status, "invoiced")));
+
     const eventIds = affectedCharges
       .map((c) => c.matchEventId)
       .filter((id): id is string => id !== null);
@@ -281,6 +298,101 @@ export async function invalidateChargesForMatch(
         );
     }
   });
+}
+
+/**
+ * Daten-Integrität (2026-07-07): Admin-Review-Queue für bereits fakturierte
+ * Charges, deren Spiel nachträglich auf fussball.de korrigiert wurde
+ * (correctionFlaggedAt gesetzt, Status noch `invoiced` = weder gutgeschrieben
+ * noch verworfen). Flach pro Charge inkl. Rechnungs-, Sponsor-, Club- und
+ * (korrigiertem) Spiel-Kontext; die Admin-Seite gruppiert nach Rechnung.
+ */
+export interface PendingCorrectionRow {
+  chargeId: string;
+  amountCents: number;
+  triggerType: string;
+  goalIndex: number;
+  correctionFlaggedAt: Date | string | null;
+  invoiceId: string;
+  invoicePeriod: string;
+  invoiceStatus: string;
+  invoicePdfUrl: string | null;
+  sponsorId: string;
+  sponsorName: string;
+  sponsorEmail: string | null;
+  clubId: string;
+  clubName: string;
+  matchId: string | null;
+  matchDate: Date | string | null;
+  heimName: string | null;
+  gastName: string | null;
+  ergebnisHeim: number | null;
+  ergebnisGast: number | null;
+}
+
+export async function listChargesPendingCorrection(): Promise<PendingCorrectionRow[]> {
+  return db
+    .select({
+      chargeId: charges.id,
+      amountCents: charges.amountCents,
+      triggerType: charges.triggerType,
+      goalIndex: charges.goalIndex,
+      correctionFlaggedAt: charges.correctionFlaggedAt,
+      invoiceId: invoices.id,
+      invoicePeriod: invoices.period,
+      invoiceStatus: invoices.status,
+      invoicePdfUrl: invoices.pdfUrl,
+      sponsorId: sponsors.id,
+      sponsorName: sponsors.displayName,
+      sponsorEmail: users.email,
+      clubId: clubs.id,
+      clubName: clubs.name,
+      matchId: charges.matchId,
+      matchDate: matches.datum,
+      heimName: matches.heimName,
+      gastName: matches.gastName,
+      ergebnisHeim: matches.ergebnisHeim,
+      ergebnisGast: matches.ergebnisGast
+    })
+    .from(charges)
+    .innerJoin(invoices, eq(charges.invoiceId, invoices.id))
+    .innerJoin(sponsors, eq(invoices.sponsorId, sponsors.id))
+    .leftJoin(users, eq(sponsors.userId, users.id))
+    .innerJoin(clubs, eq(invoices.clubId, clubs.id))
+    .leftJoin(matches, eq(charges.matchId, matches.id))
+    .where(and(eq(charges.status, "invoiced"), isNotNull(charges.correctionFlaggedAt)))
+    .orderBy(clubs.name, invoices.id, charges.correctionFlaggedAt);
+}
+
+/** Anzahl offener Korrektur-Fälle (für das Admin-Nav-Badge). */
+export async function countChargesPendingCorrection(): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(charges)
+    .where(and(eq(charges.status, "invoiced"), isNotNull(charges.correctionFlaggedAt)));
+  return row?.count ?? 0;
+}
+
+/**
+ * Verwirft die Korrektur-Markierung (Operator hat entschieden: Scrape-Flake,
+ * keine Gutschrift). Nur noch offene (`invoiced` + geflaggte) Charges werden
+ * angefasst — bereits per Gutschrift stornierte bleiben unberührt.
+ * Gibt die Anzahl tatsächlich zurückgesetzter Charges zurück.
+ */
+export async function dismissChargeCorrections(chargeIds: string[]): Promise<number> {
+  if (chargeIds.length === 0) return 0;
+  const res = await db
+    .update(charges)
+    .set({ correctionFlaggedAt: null })
+    .where(
+      and(
+        inArray(charges.id, chargeIds),
+        eq(charges.status, "invoiced"),
+        isNotNull(charges.correctionFlaggedAt)
+      )
+    )
+    .returning({ id: charges.id });
+  return res.length;
 }
 
 /**

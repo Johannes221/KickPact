@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
 import { sentNotifications } from "@/lib/db/schema";
-import { resend, MAIL_FROM } from "@/lib/mail/client";
+import { sendRecurringEmail } from "@/lib/mail/send-recurring";
 import { seasonRenewalPromptEmail } from "@/lib/mail/templates/season-renewal-prompt";
 import { getReplyToForClub } from "@/lib/mail/reply-to";
 import {
@@ -169,8 +169,8 @@ export const seasonRenewalPrompts = inngest.createFunction(
           const replyTo = await getReplyToForClub(c.clubId);
           let result;
           try {
-            result = await resend.emails.send({
-              from: MAIL_FROM,
+            result = await sendRecurringEmail({
+              userId: c.sponsorUserId,
               to: c.sponsorEmail,
               replyTo,
               subject: mail.subject,
@@ -191,6 +191,12 @@ export const seasonRenewalPrompts = inngest.createFunction(
                 )
               );
             throw err;
+          }
+          // Opt-out: Sponsor hat wiederkehrende Mails abbestellt. Dedupe-Gate
+          // BEWUSST stehen lassen → diese Stage wird nicht erneut versucht.
+          if (result.skipped) {
+            skipped += 1;
+            return;
           }
           if (result.error) {
             logger.error("season-renewal mail failed", {

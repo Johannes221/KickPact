@@ -14,8 +14,9 @@ import {
 } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { inngest } from "@/lib/inngest/client";
-import { assertClubWriteAccess, resolveTeamAccess } from "@/lib/auth/scope";
+import { assertTeamWriteAccess, resolveTeamAccess } from "@/lib/auth/scope";
 import { getSubscriptionGateForTeam } from "@/lib/db/queries/subscription-status";
+import { isTeamOpenForSponsorEntry } from "@/lib/db/queries/sponsor-discover";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { createInvitation } from "@/lib/db/queries/invitations";
 import { generateUniqueTeamSlug } from "@/lib/db/queries/team-public-slug";
@@ -72,7 +73,11 @@ export async function createSponsorInquiry(input: {
     .where(eq(teams.id, parsed.teamId))
     .limit(1);
   if (!teamRow) return { ok: false, message: "Mannschaft nicht gefunden." };
-  if (!teamRow.team.discoverable) {
+  // Gleiches Gate wie Discover: discoverable && isActive && verifiedAt. Ohne
+  // isActive/verifiedAt legte eine veraltete teamId aus dem Client-State eine
+  // dangling Inquiry an + mailte an Admins eines deaktivierten/unverifizierten
+  // Teams (deactivateTeam lässt discoverable stehen).
+  if (!isTeamOpenForSponsorEntry(teamRow.team)) {
     return {
       ok: false,
       message: "Diese Mannschaft akzeptiert aktuell keine direkten Anfragen."
@@ -349,8 +354,6 @@ export async function setTeamDiscoverable(input: {
   discoverable: boolean;
   publicTagline?: string;
 }) {
-  const user = await requireUser();
-  void user; // assertClubAccess validates ownership
   const [teamRow] = await db
     .select({
       clubSlug: clubs.slug,
@@ -363,7 +366,9 @@ export async function setTeamDiscoverable(input: {
     .where(eq(teams.id, input.teamId))
     .limit(1);
   if (!teamRow) throw new Error("Mannschaft nicht gefunden");
-  await assertClubWriteAccess(teamRow.clubSlug, "admin");
+  // Autark-bewusst + Read-Only-Gate (team-scoped): Club-Admin-Durchgriff nur auf
+  // nicht-autarke Teams, sonst Mannschaftsadmin via team_memberships.
+  await assertTeamWriteAccess(input.teamId);
 
   // Beim Öffentlich-Schalten einen stabilen Slug erzeugen, damit die Mannschaft
   // sofort eine teilbare /m/{slug}-URL hat (egal über welchen Toggle).

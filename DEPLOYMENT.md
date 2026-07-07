@@ -69,6 +69,22 @@ git push origin production
 
 Alle anderen Secrets (DB, Stripe, Resend etc.) sind in **Vaultwarden** hinterlegt.
 
+### 🇪🇺 Datenregion — verpflichtend EU (DSGVO)
+
+KickPact verarbeitet personenbezogene Daten (Vereinsmitglieder, Sponsoren,
+Spieler). Alle datenhaltenden Dienste **müssen in einer EU-Region** laufen —
+beim Provisioning aktiv prüfen, nicht auf Provider-Defaults verlassen:
+
+| Dienst | Anforderung | Prüfen |
+|---|---|---|
+| **Neon Postgres** (`DATABASE_URL`) | Region **EU (Frankfurt / `eu-central-1`)** | Neon-Console → Project → Region; der Default kann `us-east` sein |
+| **Cloudflare R2** (`CLOUDFLARE_R2_*`) | Jurisdiction/Location Hint **EU** | Bucket mit `--jurisdiction eu` bzw. Location `EEUR` anlegen |
+| **Hetzner/Coolify** (App-Hosting) | Standort **DE (Nürnberg/Falkenstein)** | bereits EU (schartl.dev) |
+
+US-/Dritt-Dienste mit PII-Berührung (Stripe, Apple, Resend, Sentry) laufen unter
+DPA/SCC; PII wird vor Übermittlung minimiert (Sentry `sendDefaultPii=false`,
+`maskAllText`). Neue Sub-Prozessoren nur mit AVV.
+
 ### ⚠️ Test-Auth-Endpoints (`/api/test-auth/*`)
 
 Die Endpoints `/api/test-auth/magic-link-stub` und `/api/test-auth/cleanup`

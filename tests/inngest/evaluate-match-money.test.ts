@@ -304,6 +304,38 @@ describe.skipIf(isIntegrationDbDisabled)("evaluate-match Geld-Integrität", () =
     expect(await db.select().from(charges)).toHaveLength(1);
   });
 
+  it("Root-Fix: eine pending Manual-Charge reserviert KEIN Cap-Budget — Auto-Charge feuert trotzdem", async () => {
+    const db = await getTestDb();
+    // Cap 600 (= genau eine 600er-Charge). Vorbelegt mit einer PENDING
+    // Manual-Charge über 600 im aktuellen Monat (vom Sponsor ungesehen).
+    const { teamId, pledgeId, ruleId } = await seedBase({
+      monthlyCapCents: 600,
+      ruleAmountCents: 600
+    });
+    await db.insert(charges).values({
+      pledgeId,
+      pledgeRuleId: ruleId,
+      matchId: null,
+      matchEventId: null,
+      saison: "2025/26",
+      triggerType: "goal_total",
+      amountCents: 600,
+      status: "pending_approval"
+    });
+
+    // Scraped 1:0 → eine confirmed Auto-Charge (Team-Coverage null → confirmed).
+    const m = await seedMayMatch(teamId, "root", 1);
+    const result = await runEvaluateMatch(m.matchId, teamId);
+
+    // Früher: pending 600 + 600 > 600 → verdrängt (inserted 0). Jetzt: pending
+    // zählt nicht → 0 + 600 ≤ 600 → Auto-Charge wird eingefügt.
+    expect(result.inserted).toBe(1);
+    const confirmed = (await db.select().from(charges)).filter(
+      (c) => c.status === "confirmed"
+    );
+    expect(confirmed).toHaveLength(1);
+  });
+
   it("B4: Re-Eval nach Invalidate stellt fehlende eventApprovals-Row wieder her", async () => {
     const db = await getTestDb();
     const { teamId, ruleId } = await seedBase({});

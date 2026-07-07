@@ -57,7 +57,9 @@ async function fetchScoreFont(id: string): Promise<ScoreFont | null> {
       Accept: "*/*",
       "Accept-Language": "de-DE,de;q=0.9"
     },
-    redirect: "follow"
+    redirect: "follow",
+    // Vibe-Check C: harte Obergrenze gegen hängenden Upstream.
+    signal: AbortSignal.timeout(10_000)
   });
   if (!res.ok) return null;
   const buf = Buffer.from(await res.arrayBuffer());

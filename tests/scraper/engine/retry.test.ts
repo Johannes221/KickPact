@@ -31,6 +31,31 @@ describe("withRetry", () => {
     expect(fn).toHaveBeenCalledTimes(3);
   });
 
+  it("retries on HTTP 429 (rate-limited upstream)", async () => {
+    let calls = 0;
+    const fn = async () => {
+      calls++;
+      if (calls < 2) throw new Error("HTTP 429 für https://fussball.de/x");
+      return "ok";
+    };
+    const result = await withRetry(fn, { maxAttempts: 3, baseDelayMs: 1 });
+    expect(result).toBe("ok");
+    expect(calls).toBe(2);
+  });
+
+  it("retries on request timeout (AbortSignal.timeout)", async () => {
+    let calls = 0;
+    const fn = async () => {
+      calls++;
+      // undici throws a DOMException named "TimeoutError" on AbortSignal.timeout
+      if (calls < 2) throw new Error("The operation was aborted due to timeout");
+      return "ok";
+    };
+    const result = await withRetry(fn, { maxAttempts: 3, baseDelayMs: 1 });
+    expect(result).toBe("ok");
+    expect(calls).toBe(2);
+  });
+
   it("does NOT retry on non-network errors", async () => {
     const fn = vi.fn(async () => {
       throw new Error("ParseError: missing element");

@@ -6,6 +6,10 @@ import { z } from "zod";
 import { db } from "@/lib/db/client";
 import { charges, pledges, sponsors } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
+import {
+  findConfirmCapViolation,
+  confirmCapViolationMessage
+} from "@/lib/db/queries/evaluation";
 
 /**
  * Bestätigung/Ablehnung DIREKT auf der Charge (Audit 2026-06-11 / C2+C3).
@@ -26,9 +30,24 @@ const disputeSchema = z.object({
 async function getPendingDirectChargeForUser(
   chargeId: string,
   userId: string
-): Promise<{ id: string; status: string } | undefined> {
+): Promise<
+  | {
+      id: string;
+      status: string;
+      pledgeId: string;
+      pledgeRuleId: string;
+      amountCents: number;
+    }
+  | undefined
+> {
   const [row] = await db
-    .select({ id: charges.id, status: charges.status })
+    .select({
+      id: charges.id,
+      status: charges.status,
+      pledgeId: charges.pledgeId,
+      pledgeRuleId: charges.pledgeRuleId,
+      amountCents: charges.amountCents
+    })
     .from(charges)
     .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
@@ -53,10 +72,23 @@ export async function confirmSeasonCharge(chargeId: string) {
     throw new Error(`Beitrag ist bereits ${row.status}.`);
   }
 
-  await db
-    .update(charges)
-    .set({ status: "confirmed", confirmedAt: new Date() })
-    .where(and(eq(charges.id, chargeId), eq(charges.status, "pending_approval")));
+  // Cap-Enforcement beim Confirm (Root-Fix 2026-07-07): pending zählt nicht
+  // gegen den Cap → hier prüfen, dass confirmed+invoiced mit diesem Beitrag den
+  // Monats-/Regel-Cap nicht sprengt. FOR-UPDATE-Lock auf den Pledge in der tx.
+  await db.transaction(async (tx) => {
+    const violation = await findConfirmCapViolation(tx, {
+      pledgeId: row.pledgeId,
+      pledgeRuleId: row.pledgeRuleId,
+      amountCents: row.amountCents,
+      asOf: new Date()
+    });
+    if (violation) throw new Error(confirmCapViolationMessage(violation));
+
+    await tx
+      .update(charges)
+      .set({ status: "confirmed", confirmedAt: new Date() })
+      .where(and(eq(charges.id, chargeId), eq(charges.status, "pending_approval")));
+  });
 
   revalidatePath("/sponsor/inbox");
   revalidatePath("/sponsor");

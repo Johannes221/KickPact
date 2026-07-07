@@ -36,7 +36,7 @@ async function makeClubWithAdmin(slug: string) {
     .values({ clubId: club.id, name: "1. Herren", saison: "2526", fussballdeTeamId: `T_${slug}`, isActive: true })
     .returning({ id: teams.id });
   await db.insert(teamLicenses).values({ subscriptionClubId: club.id, teamId: team.id, plan: "pro", status: "trialing" });
-  return { teamId: team.id };
+  return { teamId: team.id, clubId: club.id };
 }
 
 describe("team-images actions", () => {
@@ -60,5 +60,13 @@ describe("team-images actions", () => {
     await expect(
       addTeamGalleryImage({ teamId, filename: "g9.png", contentType: "image/png", bytes: pngBytes })
     ).rejects.toThrow(/max|8/i);
+  });
+
+  it("uploadTeamCover wirft im Read-Only-Modus (Abo gekündigt)", async () => {
+    const { teamId, clubId } = await makeClubWithAdmin("club-cover-ro");
+    await db.update(subscriptions).set({ status: "cancelled" }).where(eq(subscriptions.clubId, clubId));
+    await expect(
+      uploadTeamCover({ teamId, filename: "c.png", contentType: "image/png", bytes: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]) })
+    ).rejects.toThrow(/Read-Only/);
   });
 });

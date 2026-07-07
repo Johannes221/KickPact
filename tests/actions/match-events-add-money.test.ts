@@ -18,7 +18,9 @@ vi.mock("@/lib/auth/session", () => ({
   requireUser: vi.fn().mockResolvedValue({ id: "u_mea", email: "mea@example.com" })
 }));
 vi.mock("@/lib/auth/scope", () => ({
-  assertClubWriteAccess: vi.fn().mockResolvedValue(undefined)
+  assertTeamWriteAccess: vi.fn().mockResolvedValue({
+    access: { granted: true, scope: "club" }
+  })
 }));
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn()
@@ -231,9 +233,12 @@ describe.skipIf(isIntegrationDbDisabled)("addManualEvent Geld-Integrität", () =
     expect(types).toEqual(["goal_by_player", "goal_total"]);
   });
 
-  it("B5: zwei Proposals desselben Events sehen einander beim Monats-Cap (tx statt db)", async () => {
+  it("Root-Fix: zwei pending Proposals desselben Events reservieren KEIN Cap-Budget — beide entstehen (Enforcement beim Confirm)", async () => {
     const db = await getTestDb();
-    // goal_total (600) + goal_by_player (600), Cap 1000 → nur EINES passt.
+    // goal_total (600) + goal_by_player (600), Cap 1000. Manuelle Events sind
+    // immer approval-pflichtig (C1) → beide Charges pending. Seit dem Root-Fix
+    // zählt pending NICHT gegen den Cap, also entstehen BEIDE; die 1000er-Grenze
+    // greift erst beim Bestätigen (findConfirmCapViolation), nicht beim Anlegen.
     const seeded = await seedBase({
       score: [2, 0],
       monthlyCapCents: 1000,
@@ -248,9 +253,41 @@ describe.skipIf(isIntegrationDbDisabled)("addManualEvent Geld-Integrität", () =
       playerName: "Max Müller"
     }));
 
-    expect(result.charges).toBe(1);
+    expect(result.charges).toBe(2);
+    const all = await db.select().from(charges);
+    expect(all).toHaveLength(2);
+    expect(all.every((c) => c.status === "pending_approval")).toBe(true);
+  });
+
+  it("Root-Fix: bereits confirmed Charges füllen den Cap → manuelles pending wird beim Anlegen geblockt", async () => {
+    const db = await getTestDb();
+    // Cap 1000, bereits 1000 confirmed (anderes Spiel, aktueller Monat) → für
+    // eine neue (pending) Manual-Charge ist kein confirmed+invoiced-Rest da.
+    const seeded = await seedBase({ score: [2, 0], monthlyCapCents: 1000 });
+    await db.insert(charges).values({
+      pledgeId: seeded.pledgeId,
+      pledgeRuleId: seeded.goalTotalRuleId,
+      matchId: null,
+      matchEventId: null,
+      saison: "2025/26",
+      triggerType: "goal_total",
+      amountCents: 1000,
+      status: "confirmed",
+      confirmedAt: new Date()
+    });
+
+    const result = expectOk(await addManualEvent({
+      matchId: seeded.matchId,
+      minute: 12,
+      type: "tor",
+      side: "heim",
+      playerName: "Max Müller"
+    }));
+
+    expect(result.charges).toBe(0);
     const all = await db.select().from(charges);
     expect(all).toHaveLength(1);
+    expect(all[0].status).toBe("confirmed");
   });
 
   it("B7: manuelles Tor auf scheduled-Match erzeugt Event, aber keine Sofort-Charges", async () => {

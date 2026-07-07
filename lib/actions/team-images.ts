@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createId } from "@paralleldrive/cuid2";
 import { db } from "@/lib/db/client";
 import { clubs, teams } from "@/lib/db/schema";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertClubWriteAccess } from "@/lib/auth/scope";
 import { storeDocument } from "@/lib/storage/documents";
 import { normalizeImageUpload } from "@/lib/storage/images";
 import { addTeamImage, countTeamImages, deleteTeamImage } from "@/lib/db/queries/team-images";
@@ -20,7 +20,7 @@ async function authTeam(teamId: string) {
     .where(eq(teams.id, teamId))
     .limit(1);
   if (!row) throw new Error("Mannschaft nicht gefunden.");
-  await assertClubAccess(row.clubSlug, "admin");
+  await assertClubWriteAccess(row.clubSlug, "admin");
   return row.clubSlug;
 }
 

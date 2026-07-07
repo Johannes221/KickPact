@@ -64,6 +64,9 @@ function buildSlides(stats: WrappedStats): Slide[] {
   } else if (stats.pactsCount === 0 && (stats.simulationFallbackCents ?? 0) > 0) {
     slides.push({ key: "simulation", imageKey: "simulation" });
   }
+  // Finale Zusammenfassung — die ganze Saison auf einem Screen (der „Screenshot-
+  // &-teilen"-Moment). Immer da, direkt vor dem Outro.
+  slides.push({ key: "zusammenfassung", imageKey: "zusammenfassung" });
   slides.push({ key: "outro" });
   return slides;
 }
@@ -363,6 +366,8 @@ function SlideContent({
       return <BeitraegeSlide stats={stats} accent={accent} />;
     case "simulation":
       return <SimulationSlide stats={stats} accent={accent} />;
+    case "zusammenfassung":
+      return <ZusammenfassungSlide stats={stats} accent={accent} onShare={onShare} />;
     case "outro":
       return (
         <OutroSlide
@@ -760,6 +765,104 @@ function SimulationSlide({ stats, accent }: { stats: WrappedStats; accent: strin
         gewesen 👀
       </h2>
       <Body delay={0.6}>Eure Tore können die Mannschaftskasse füllen. Nur so als Idee.</Body>
+    </div>
+  );
+}
+
+function ZusammenfassungSlide({
+  stats,
+  accent,
+  onShare
+}: {
+  stats: WrappedStats;
+  accent: string;
+  onShare: (imageKey: string) => void;
+}) {
+  const tiles: Array<{ label: string; value: string; sub?: string }> = [
+    {
+      label: "Bilanz",
+      value: `${stats.siege}·${stats.unentschieden}·${stats.niederlagen}`,
+      sub: "S · U · N"
+    },
+    {
+      label: "Tore",
+      value: `${stats.toreGeschossen}:${stats.toreKassiert}`,
+      sub: "geschossen : kassiert"
+    }
+  ];
+  if (stats.tabellenplatz !== null) {
+    tiles.push({
+      label: "Tabelle",
+      value: `Platz ${stats.tabellenplatz}`,
+      sub: stats.teamsInLeague ? `von ${stats.teamsInLeague}` : undefined
+    });
+  }
+  if (stats.besterTorschuetze) {
+    const parts = stats.besterTorschuetze.name.trim().split(" ");
+    tiles.push({
+      label: "Knipser",
+      value: parts[parts.length - 1] || stats.besterTorschuetze.name,
+      sub: `${stats.besterTorschuetze.tore} Tore`
+    });
+  }
+  const moneyCents =
+    stats.beitraegeSummeCents > 0
+      ? stats.beitraegeSummeCents
+      : stats.simulationFallbackCents ?? 0;
+
+  return (
+    <div>
+      <Kicker accent={accent}>Die ganze Saison</Kicker>
+      <h2 className="wr-rise font-display text-4xl font-black leading-tight tracking-tight text-white">
+        Auf einen Blick
+      </h2>
+      <div className="mt-6 grid grid-cols-2 gap-3">
+        {tiles.map((t, i) => (
+          <div
+            key={t.label}
+            className="wr-pop rounded-2xl border border-white/10 bg-white/5 p-4"
+            style={{ animationDelay: `${0.15 + i * 0.1}s` }}
+          >
+            <div className="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-white/50">
+              {t.label}
+            </div>
+            <div
+              className="mt-1 font-display text-2xl font-black leading-tight tracking-tight"
+              style={{ color: accent }}
+            >
+              {t.value}
+            </div>
+            {t.sub && <div className="mt-0.5 text-[0.7rem] text-white/45">{t.sub}</div>}
+          </div>
+        ))}
+      </div>
+      {moneyCents > 0 && (
+        <div
+          className="wr-rise mt-4 rounded-2xl bg-white/5 p-4 text-center"
+          style={{ animationDelay: "0.5s" }}
+        >
+          <span className="font-display text-xl font-black text-white">
+            {eurWhole(moneyCents)}
+          </span>
+          <span className="text-white/60">
+            {stats.beitraegeSummeCents > 0
+              ? " in die Mannschaftskasse 💰"
+              : " wären drin gewesen 💰"}
+          </span>
+        </div>
+      )}
+      {/* Dezenter Insta-CTA — das Motiv teilt sich in einem Tap. */}
+      <div className="mt-6 flex justify-center">
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+          onClick={() => onShare("zusammenfassung")}
+          className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/15"
+        >
+          📲 Jetzt auf Insta teilen
+        </button>
+      </div>
     </div>
   );
 }

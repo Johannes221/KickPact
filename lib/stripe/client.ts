@@ -18,7 +18,12 @@ export function getStripe(): Stripe {
   if (!_stripe) {
     _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: "2026-04-22.dahlia",
-      typescript: true
+      typescript: true,
+      // Vibe-Check C: transiente Netzwerk-Blips bei Read-Calls (z.B. im Webhook)
+      // automatisch abfangen. Stripe garantiert Idempotenz auf Retries; Writes
+      // setzen zusätzlich eigene Idempotency-Keys.
+      maxNetworkRetries: 2,
+      timeout: 20_000
     });
   }
   return _stripe;
