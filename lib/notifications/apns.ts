@@ -119,14 +119,37 @@ function buildApsBody(payload: ApnsPayload): Record<string, unknown> {
   return { aps, ...(payload.data ?? {}) };
 }
 
-const DEAD_REASONS = new Set(["Unregistered", "BadDeviceToken", "DeviceTokenNotForTopic"]);
+/**
+ * „Verdächtige" Gründe: dauerhaft ungültig sein KANN, aber auch das exakte
+ * Symptom einer globalen Fehlkonfiguration ist (falscher APNS_PRODUCTION-Host,
+ * falsches Topic) — dann antwortet Apple für JEDEN Token so. Werden getrennt
+ * behandelt, damit ein Env-Fehler nicht die Token aller User löscht.
+ */
+const SUSPECT_REASONS = new Set(["BadDeviceToken", "DeviceTokenNotForTopic"]);
+
+/** Eindeutig tot: Gerät deinstalliert / Token abgelaufen. Env-unabhängig. */
+const HARD_DEAD_REASONS = new Set(["Unregistered"]);
+
+/**
+ * True, wenn der Grund ein Env-/Topic-Fehlkonfig-Symptom ist (BadDeviceToken /
+ * DeviceTokenNotForTopic). Für sich genommen KEIN sicherer Löschgrund.
+ */
+export function isSuspectTokenResult(r: ApnsResult): boolean {
+  return r.reason != null && SUSPECT_REASONS.has(r.reason);
+}
 
 /**
  * True, wenn die APNs-Antwort bedeutet, dass der Token dauerhaft ungültig ist
- * (Gerät deinstalliert / Token abgelaufen / falsche App) → aufräumen.
+ * (Gerät deinstalliert / Token abgelaufen / falsche App) → grundsätzlich
+ * aufräumbar. Der Aufrufer muss zusätzlich gegen Mass-Failure absichern (s.
+ * `sendPushToUser`): ein kompletter Batch aus lauter `isSuspectTokenResult`
+ * ist fast sicher eine Fehlkonfiguration, kein echter Token-Tod.
  */
 export function isDeadTokenResult(r: ApnsResult): boolean {
-  return r.status === 410 || (r.reason != null && DEAD_REASONS.has(r.reason));
+  return (
+    r.status === 410 ||
+    (r.reason != null && (HARD_DEAD_REASONS.has(r.reason) || SUSPECT_REASONS.has(r.reason)))
+  );
 }
 
 function sendOne(

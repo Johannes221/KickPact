@@ -46,7 +46,11 @@ import {
   respondToInquiry
 } from "@/lib/actions/sponsor-inquiries";
 
-async function seedBase(opts?: { discoverable?: boolean }) {
+async function seedBase(opts?: {
+  discoverable?: boolean;
+  isActive?: boolean;
+  verified?: boolean;
+}) {
   const db = await getTestDb();
   await db.insert(users).values([
     { id: "u_inq", email: "u_inq@kickpact.local", name: "Sponsor" },
@@ -63,8 +67,11 @@ async function seedBase(opts?: { discoverable?: boolean }) {
       name: "1. Herren",
       saison: "2526",
       fussballdeTeamId: "TEAM_INQ",
-      isActive: true,
-      discoverable: opts?.discoverable ?? true
+      isActive: opts?.isActive ?? true,
+      discoverable: opts?.discoverable ?? true,
+      // Discover-Gate verlangt verifiedAt — Default verifiziert, damit der
+      // Happy Path das Gate passiert.
+      verifiedAt: (opts?.verified ?? true) ? new Date() : null
     })
     .returning();
   return { teamId: team.id };
@@ -89,6 +96,22 @@ describe.skipIf(isIntegrationDbDisabled)("createSponsorInquiry — {ok,message}"
 
   it("nicht-discoverable Mannschaft → ok:false mit Message", async () => {
     const { teamId } = await seedBase({ discoverable: false });
+    const res = await createSponsorInquiry({ teamId });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.message).toMatch(/keine direkten Anfragen/i);
+  });
+
+  it("deaktivierte Mannschaft (discoverable, aber isActive=false) → ok:false", async () => {
+    // Regression: deactivateTeam lässt discoverable=true. Ohne isActive-Gate
+    // legte eine veraltete teamId eine dangling Inquiry + Mail-Fanout an.
+    const { teamId } = await seedBase({ isActive: false });
+    const res = await createSponsorInquiry({ teamId });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.message).toMatch(/keine direkten Anfragen/i);
+  });
+
+  it("unverifizierte Mannschaft (discoverable+aktiv, verifiedAt=null) → ok:false", async () => {
+    const { teamId } = await seedBase({ verified: false });
     const res = await createSponsorInquiry({ teamId });
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.message).toMatch(/keine direkten Anfragen/i);

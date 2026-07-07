@@ -66,4 +66,27 @@ describe("negative cases", () => {
     // undefined behavior.
     if (result) expect(result.events).toEqual([]);
   }, 60_000);
+
+  it("flags a page with no decodable score and no events as unreliable (not a real 0:0)", async () => {
+    // malformed-spiel.html has neither `.end-result` (font-decode → null, font
+    // fetch 404s in the mock) nor `.row-event` (0 goals). The old code returned
+    // a fabricated 0:0 finished match; now the score is marked unreliable so the
+    // validator rejects it instead of persisting silent Falschgeld.
+    const result = await withMockedFetch(
+      [{ matchUrl: /fussball\.de\/spiel/, htmlPath: "negative/malformed-spiel.html" }],
+      async () => getSpielDetails("FAKE_ID", "fake-slug"),
+    );
+    expect(result.resultReliable).toBe(false);
+    expect(result.ergebnis).toEqual({ heim: 0, gast: 0 });
+    expect(result.events).toEqual([]);
+  }, 60_000);
+
+  it("large (>3000B) block page with a structural marker throws loud, not silent 0:0", async () => {
+    await expect(
+      withMockedFetch(
+        [{ matchUrl: /fussball\.de\/spiel/, htmlPath: "negative/block-large.html" }],
+        async () => getSpielDetails("FAKE_ID", "fake-slug"),
+      ),
+    ).rejects.toThrow(/captcha|sicherheitsabfrage/i);
+  }, 60_000);
 });

@@ -8,6 +8,10 @@ import { eventApprovals, charges } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { getApprovalForUpdate, getApprovalById } from "@/lib/db/queries/approvals";
 import { verifyApprovalToken } from "@/lib/auth/approval-token";
+import {
+  findConfirmCapViolation,
+  confirmCapViolationMessage
+} from "@/lib/db/queries/evaluation";
 
 const disputeSchema = z.object({
   approvalId: z.string().min(1),
@@ -43,7 +47,10 @@ export async function confirmApproval(
   // konnte die stornierte treffen und blockierte dann die legitime
   // Bestätigung der neuen Charge für immer.
   const [chargeRow] = await db
-    .select({ status: charges.status })
+    .select({
+      pledgeId: charges.pledgeId,
+      amountCents: charges.amountCents
+    })
     .from(charges)
     .where(
       and(
@@ -62,7 +69,18 @@ export async function confirmApproval(
     };
   }
 
-  await db.transaction(async (tx) => {
+  // Cap-Enforcement beim Confirm (Root-Fix 2026-07-07): pending zählt nicht
+  // gegen den Cap, also hier prüfen, ob confirmed+invoiced mit dieser Charge den
+  // Monats-/Regel-Cap sprengen würde. FOR-UPDATE-Lock auf den Pledge in der tx.
+  const outcome = await db.transaction(async (tx) => {
+    const violation = await findConfirmCapViolation(tx, {
+      pledgeId: chargeRow.pledgeId,
+      pledgeRuleId: row.pledgeRuleId,
+      amountCents: chargeRow.amountCents,
+      asOf: new Date()
+    });
+    if (violation) return { violation };
+
     await tx
       .update(eventApprovals)
       .set({ status: "confirmed", respondedAt: new Date() })
@@ -79,7 +97,12 @@ export async function confirmApproval(
           eq(charges.status, "pending_approval")
         )
       );
+    return { violation: null };
   });
+
+  if (outcome.violation) {
+    return { ok: false, message: confirmCapViolationMessage(outcome.violation) };
+  }
 
   revalidatePath("/sponsor/inbox");
   revalidatePath("/sponsor");
@@ -115,8 +138,36 @@ export async function confirmApprovals(
     if (!row || row.approval.status !== "pending") continue;
 
     const didConfirm = await db.transaction(async (tx) => {
-      // Nur die (ggf. neueste) pending_approval-Charge treffen — cancelled bleibt
-      // unberührt (C4). `.returning()` erkennt zwischenzeitlich widerrufene Events.
+      // Neueste pending_approval-Charge (cancelled bleibt unberührt, C4) — für
+      // den Cap-Check + gezieltes Confirm.
+      const [pendingCharge] = await tx
+        .select({
+          pledgeId: charges.pledgeId,
+          amountCents: charges.amountCents
+        })
+        .from(charges)
+        .where(
+          and(
+            eq(charges.pledgeRuleId, row.pledgeRuleId),
+            eq(charges.matchEventId, row.matchEventId),
+            eq(charges.status, "pending_approval")
+          )
+        )
+        .orderBy(desc(charges.createdAt))
+        .limit(1);
+      if (!pendingCharge) return false; // zwischenzeitlich widerrufen
+
+      // Cap-Enforcement beim Confirm (Root-Fix): passt der Beitrag nicht mehr in
+      // Monats-/Regel-Cap, wird er still übersprungen — der Batch bestätigt in
+      // Iterationsreihenfolge nur, was in confirmed+invoiced hineinpasst.
+      const violation = await findConfirmCapViolation(tx, {
+        pledgeId: pendingCharge.pledgeId,
+        pledgeRuleId: row.pledgeRuleId,
+        amountCents: pendingCharge.amountCents,
+        asOf: new Date()
+      });
+      if (violation) return false;
+
       const updated = await tx
         .update(charges)
         .set({ status: "confirmed", confirmedAt: new Date() })
@@ -249,7 +300,10 @@ export async function confirmApprovalByToken(
   // C4 (Audit 2026-06-11): siehe confirmApproval — neueste pending-Charge
   // selektieren statt ungeordnetem LIMIT 1 (cancelled+pending-Paar).
   const [chargeRow] = await db
-    .select({ status: charges.status })
+    .select({
+      pledgeId: charges.pledgeId,
+      amountCents: charges.amountCents
+    })
     .from(charges)
     .where(
       and(
@@ -268,7 +322,16 @@ export async function confirmApprovalByToken(
     };
   }
 
-  await db.transaction(async (tx) => {
+  // Cap-Enforcement beim Confirm — siehe confirmApproval.
+  const outcome = await db.transaction(async (tx) => {
+    const violation = await findConfirmCapViolation(tx, {
+      pledgeId: chargeRow.pledgeId,
+      pledgeRuleId: row.pledgeRuleId,
+      amountCents: chargeRow.amountCents,
+      asOf: new Date()
+    });
+    if (violation) return { violation };
+
     await tx
       .update(eventApprovals)
       .set({ status: "confirmed", respondedAt: new Date() })
@@ -284,7 +347,12 @@ export async function confirmApprovalByToken(
           eq(charges.status, "pending_approval")
         )
       );
+    return { violation: null };
   });
+
+  if (outcome.violation) {
+    return { ok: false, error: confirmCapViolationMessage(outcome.violation) };
+  }
 
   revalidatePath("/sponsor/inbox");
   revalidatePath("/sponsor");
