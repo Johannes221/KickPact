@@ -75,7 +75,10 @@ describe("Sponsoren-Invite-Gate", () => {
 
   it("blockt Invite, wenn Container-Verein der Mannschaft NICHT verifiziert ist", async () => {
     const s = await seed(false);
-    assertClubWriteAccessMock.mockResolvedValue({ user: { id: s.userId } });
+    assertClubWriteAccessMock.mockResolvedValue({
+      user: { id: s.userId },
+      club: { id: s.clubId }
+    });
 
     await expect(
       createInvitationAction({ clubSlug: s.slug, teamId: s.teamId })
@@ -90,7 +93,10 @@ describe("Sponsoren-Invite-Gate", () => {
 
   it("erlaubt Invite, wenn Container-Verein der Mannschaft verifiziert ist", async () => {
     const s = await seed(true);
-    assertClubWriteAccessMock.mockResolvedValue({ user: { id: s.userId } });
+    assertClubWriteAccessMock.mockResolvedValue({
+      user: { id: s.userId },
+      club: { id: s.clubId }
+    });
 
     const res = await createInvitationAction({ clubSlug: s.slug, teamId: s.teamId });
     expect(res.token).toBeTruthy();
@@ -103,25 +109,30 @@ describe("Sponsoren-Invite-Gate", () => {
     expect(invs[0].kind).toBe("sponsor");
   });
 
-  it("löst das Gate über den Container der Mannschaft auf (nicht über den Slug-Verein)", async () => {
-    // Team hängt in einem VERIFIZIERTEN Container, dessen Slug aber NICHT der
-    // übergebene clubSlug ist. Die Auth-Schicht (gemockt) erlaubt den Zugriff;
-    // das Gate muss am Container des Teams hängen → Invite erlaubt.
-    const s = await seed(true);
-    const fremderSlug = `other-${createId().slice(0, 6)}`;
-    assertClubWriteAccessMock.mockResolvedValue({ user: { id: s.userId } });
+  it("blockt Cross-Tenant: Admin von Verein A darf keine Einladung für ein Team von Verein B erzeugen (IDOR)", async () => {
+    // Angreifer = verifizierter Admin von Verein A. Verein B hat ein
+    // (verifiziertes) Team. Der Angreifer schickt B's teamId an die Action,
+    // während die Auth-Schicht ihn nur für seinen EIGENEN Verein autorisiert.
+    // Ohne Ownership-Check entstünde ein gültiger Sponsor-Token auf B's Team
+    // → Kader-Leak via /api/squad + fremde Pledges. Muss geblockt werden.
+    const attacker = await seed(true); // Verein A (Angreifer, verifiziert)
+    const victim = await seed(true); // Verein B (Opfer, Team verifiziert)
 
-    const res = await createInvitationAction({
-      clubSlug: fremderSlug,
-      teamId: s.teamId
+    // Auth autorisiert den Angreifer ausschließlich für seinen eigenen Verein A.
+    assertClubWriteAccessMock.mockResolvedValue({
+      user: { id: attacker.userId },
+      club: { id: attacker.clubId }
     });
-    expect(res.token).toBeTruthy();
 
-    // Gegenprobe: unverifizierter Container → Block trotz "ok" der Auth-Schicht.
-    const unverified = await seed(false);
-    assertClubWriteAccessMock.mockResolvedValue({ user: { id: unverified.userId } });
     await expect(
-      createInvitationAction({ clubSlug: unverified.slug, teamId: unverified.teamId })
-    ).rejects.toThrow(/zuerst den Verein verifizieren/i);
+      createInvitationAction({ clubSlug: attacker.slug, teamId: victim.teamId })
+    ).rejects.toThrow(/Mannschaft/i);
+
+    // Keine Einladung auf dem Opfer-Team entstanden.
+    const invs = await db
+      .select()
+      .from(sponsorInvitations)
+      .where(eq(sponsorInvitations.teamId, victim.teamId));
+    expect(invs).toHaveLength(0);
   });
 });
