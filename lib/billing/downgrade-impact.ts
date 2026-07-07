@@ -35,7 +35,7 @@ export const BASIC_LOST_FEATURES = [
   "Vereins-Mail-Absender",
   "Pact-Discovery (öffentliches Profil)",
   "CSV/Excel-Export",
-  "Saison-Recap"
+  "Saison-Rückblick (Wrapped)"
 ] as const;
 
 /**

@@ -128,7 +128,7 @@ const MATRIX: MatrixGroup[] = [
         values: { basic: false, pro: true, verein: true }
       },
       {
-        label: "Saison-Recap & Wrapped zum Teilen",
+        label: "Saison-Rückblick (Wrapped) zum Teilen",
         values: { basic: false, pro: true, verein: true }
       }
     ]

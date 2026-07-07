@@ -103,7 +103,6 @@ export function rule(overrides: Partial<PledgeRuleInput> = {}): PledgeRuleInput 
     triggerType: "goal_total",
     triggerParams: {},
     amountCents: 500,
-    perMatchCapCents: null,
     ...overrides,
   };
 }

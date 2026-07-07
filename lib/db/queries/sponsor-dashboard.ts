@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, lt, asc, desc, sql, inArray } from "drizzle-orm";
+import { and, eq, gte, lte, asc, desc, sql, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   charges,
@@ -28,6 +28,7 @@ export async function getSponsorDashboardKpis(
   now: Date
 ): Promise<SponsorDashboardKpis> {
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
   const yearStart = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
   const lastYearStart = new Date(Date.UTC(now.getUTCFullYear() - 1, 0, 1));
   const lastYearEnd = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
@@ -42,7 +43,17 @@ export async function getSponsorDashboardKpis(
       .select({ s: sql<number>`coalesce(sum(${charges.amountCents}), 0)::int` })
       .from(charges)
       .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-      .where(and(eq(pledges.sponsorId, sponsorId), gte(charges.createdAt, monthStart)))
+      // Periodisierung + Status wie Bilanz/Cap/Rechnung: nur fälliges Geld
+      // (confirmed|invoiced) im Confirm-Monat-Fenster [monthStart, monthEnd)
+      // über COALESCE(confirmedAt, createdAt) — identisch zu getMonthlyChargedCents.
+      .where(
+        and(
+          eq(pledges.sponsorId, sponsorId),
+          inArray(charges.status, ["confirmed", "invoiced"]),
+          sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${monthStart.toISOString()}`,
+          sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) <  ${monthEnd.toISOString()}`
+        )
+      )
       .then((r) => Number(r[0]?.s ?? 0)),
     db
       .select({
@@ -52,18 +63,26 @@ export async function getSponsorDashboardKpis(
       })
       .from(charges)
       .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-      .where(eq(pledges.sponsorId, sponsorId))
+      // nur fälliges Geld (confirmed|invoiced) — ein cancelled/pending_approval
+      // Charge war nie geschuldet und darf nicht als „größter Einzel-Charge"
+      // auftauchen. Deckt sich mit monthlyCents/ytd + getSponsorBalance.
+      .where(
+        and(
+          eq(pledges.sponsorId, sponsorId),
+          inArray(charges.status, ["confirmed", "invoiced"])
+        )
+      )
       .orderBy(desc(charges.amountCents))
       .limit(1)
       .then((r) => r[0] ?? null),
     db
       .select({
         ytd: sql<number>`COALESCE(SUM(${charges.amountCents}) FILTER (
-          WHERE ${charges.createdAt} >= ${yearStart.toISOString()}
+          WHERE COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${yearStart.toISOString()}
         ), 0)::int`,
         lastYear: sql<number>`COALESCE(SUM(${charges.amountCents}) FILTER (
-          WHERE ${charges.createdAt} >= ${lastYearStart.toISOString()}
-            AND ${charges.createdAt} <  ${lastYearEnd.toISOString()}
+          WHERE COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${lastYearStart.toISOString()}
+            AND COALESCE(${charges.confirmedAt}, ${charges.createdAt}) <  ${lastYearEnd.toISOString()}
         ), 0)::int`
       })
       .from(charges)
@@ -72,8 +91,8 @@ export async function getSponsorDashboardKpis(
         and(
           eq(pledges.sponsorId, sponsorId),
           inArray(charges.status, ["confirmed", "invoiced"]),
-          gte(charges.createdAt, lastYearStart),
-          lt(charges.createdAt, new Date(Date.UTC(now.getUTCFullYear() + 1, 0, 1)))
+          sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${lastYearStart.toISOString()}`,
+          sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) <  ${new Date(Date.UTC(now.getUTCFullYear() + 1, 0, 1)).toISOString()}`
         )
       )
       .then((r) => ({

@@ -248,7 +248,6 @@ export interface ClubPledgeReportRow {
   teamName: string;
   triggerType: string;
   amountCents: number;
-  perMatchCapCents: number | null;
   monthlyCapCents: number | null;
   status: string;
   startsAt: Date;
@@ -321,7 +320,6 @@ function buildPledgeSelect(monthStart: Date, monthEnd: Date) {
     teamName: teams.name,
     triggerType: pledgeRules.triggerType,
     amountCents: pledgeRules.amountCents,
-    perMatchCapCents: pledgeRules.perMatchCapCents,
     monthlyCapCents: pledges.monthlyCapCents,
     status: pledges.status,
     startsAt: pledges.startsAt,

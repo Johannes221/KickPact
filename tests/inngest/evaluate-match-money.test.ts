@@ -236,6 +236,40 @@ describe.skipIf(isIntegrationDbDisabled)("evaluate-match Geld-Integrität", () =
     expect(await db.select().from(charges)).toHaveLength(0);
   });
 
+  it("Lizenz-Transfer: Team unter aktiver Vereinslizenz chargt weiter, obwohl der Container gekündigt ist", async () => {
+    // Repro des Tier-1-Bugs: Container-Club gekündigt (echte Stripe-Kündigung),
+    // aber das Team läuft unter der aktiven Lizenz von Verein V. Das Geld-Gate
+    // MUSS V lesen (licensedUnderClubId), nicht den gekündigten Container —
+    // sonst gehen die Charges still verloren, obwohl V zahlt.
+    const db = await getTestDb();
+    const { teamId } = await seedBase({
+      subscriptionStatus: "cancelled",
+      stripeSubscriptionId: "sub_container_cancelled"
+    });
+    // Lizenz-Verein V mit aktivem Abo.
+    await db
+      .insert(clubs)
+      .values({ id: "c_v_lic", slug: "verein-v-lic", name: "SV V e.V." });
+    await db.insert(subscriptions).values({
+      clubId: "c_v_lic",
+      stripeCustomerId: "cus_v_lic",
+      status: "active",
+      stripeSubscriptionId: "sub_v_active"
+    });
+    // Transfer angenommen → Team unter Vereinslizenz von V.
+    await db
+      .update(teams)
+      .set({ licensedUnderClubId: "c_v_lic" })
+      .where(eq(teams.id, teamId));
+
+    const m = await seedMayMatch(teamId, "lt", 2);
+    const result = await runEvaluateMatch(m.matchId, teamId);
+
+    expect(result.skippedReadOnly).toBeFalsy();
+    expect(result.inserted).toBe(2);
+    expect(await db.select().from(charges)).toHaveLength(2);
+  });
+
   // --- Phase 3 / R6: abgelaufener Trial (nie bezahlt) darf keine Charges erzeugen ---
 
   it("R6: trialing mit abgelaufenem Trial (nie bezahlt) → keine Charges", async () => {

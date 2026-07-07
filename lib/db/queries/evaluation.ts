@@ -31,7 +31,6 @@ export async function loadActivePledgeRulesForTeam(
       triggerType: pledgeRules.triggerType,
       triggerParams: pledgeRules.triggerParamsJson,
       amountCents: pledgeRules.amountCents,
-      perMatchCapCents: pledgeRules.perMatchCapCents,
       capCents: pledgeRules.capCents,
       capPeriod: pledgeRules.capPeriod
     })
@@ -117,7 +116,6 @@ export async function loadActivePledgeRulesForTeam(
       triggerType: r.triggerType as TriggerType,
       triggerParams: (r.triggerParams ?? {}) as Record<string, unknown>,
       amountCents: r.amountCents,
-      perMatchCapCents: r.perMatchCapCents,
       capCents: r.capCents,
       capPeriod: r.capPeriod
     }));

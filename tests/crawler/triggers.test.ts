@@ -15,7 +15,6 @@ function rule(overrides: Partial<PledgeRuleInput>): PledgeRuleInput {
     triggerType: "goal_total",
     triggerParams: {},
     amountCents: 500,
-    perMatchCapCents: null,
     ...overrides
   };
 }
@@ -35,17 +34,6 @@ describe("evaluateTriggers — goal_total", () => {
     });
   });
 
-  it("respektiert per_match_cap (Cap stoppt vor letztem Tor, das den Cap überschreiten würde)", () => {
-    const match = loadFixture("win-with-goals");
-    const r = rule({ triggerType: "goal_total", amountCents: 500, perMatchCapCents: 1200 });
-    const charges = evaluateTriggers(match, [r]);
-    // 3 Tore × 500 = 1500. Cap 1200. Logik: emit charges in order, stop wenn next charge cap überschreiten würde.
-    // Nach 2 charges: emittedSum=1000. Charge 3 würde auf 1500 gehen — 1500 > 1200, also stop.
-    // Erwartung: 2 charges à 500 = 1000.
-    const sum = charges.reduce((acc, c) => acc + c.amountCents, 0);
-    expect(sum).toBeLessThanOrEqual(1200);
-    expect(charges.length).toBe(2);
-  });
 
   it("erzeugt nichts bei 0 Toren", () => {
     const match = loadFixture("draw-no-goals");
@@ -436,23 +424,4 @@ describe("evaluateTriggers — multiple pledge-rules in einem Match", () => {
     expect(total).toBe(3 * 500 + 1000 + 2000 + 2 * 300);
   });
 
-  it("zwei Rules mit unterschiedlichen Caps werden unabhängig gekappt", () => {
-    const match = loadFixture("hattrick"); // 4 Tore heim, Schmidt 3, Maier 1
-    const allGoals = rule({
-      id: "rA",
-      triggerType: "goal_total",
-      amountCents: 500,
-      perMatchCapCents: 1000 // → 2 charges (1000 ≤ cap), 3. würde 1500 > 1000 sein → stop
-    });
-    const schmidtGoals = rule({
-      id: "rB",
-      triggerType: "goal_by_player",
-      triggerParams: { playerId: "p_schmidt" },
-      amountCents: 400,
-      perMatchCapCents: 1000 // 2 charges (800 ≤ 1000), 3. wäre 1200 > 1000 → stop
-    });
-    const charges = evaluateTriggers(match, [allGoals, schmidtGoals]);
-    expect(charges.filter((c) => c.pledgeRuleId === "rA")).toHaveLength(2);
-    expect(charges.filter((c) => c.pledgeRuleId === "rB")).toHaveLength(2);
-  });
 });

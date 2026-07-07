@@ -222,6 +222,33 @@ describe("membership-requests queries", () => {
     expect(tmem.role).toBe("viewer");
   });
 
+  it("approveRequest rejects a requestedTeamId that belongs to a FOREIGN club (cross-tenant IDOR guard)", async () => {
+    const attackerId = await seedUser("atk");
+    const adminId = await seedUser("victimadmin");
+    const { clubId: clubX } = await seedClubWithTeam("victimclub");
+    const { teamId: foreignTeam } = await seedClubWithTeam("foreignclub");
+
+    // Forged request: scoped to club X, but pointing at a team from club Y.
+    const req = await createRequest({
+      userId: attackerId,
+      clubId: clubX,
+      requestedRole: "trainer",
+      requestedTeamId: foreignTeam,
+      message: null
+    });
+
+    await expect(
+      approveRequest({ requestId: req.id, respondedByUserId: adminId })
+    ).rejects.toThrow();
+
+    // No team membership on the foreign team may be granted.
+    const tmems = await db
+      .select()
+      .from(teamMemberships)
+      .where(eq(teamMemberships.userId, attackerId));
+    expect(tmems).toHaveLength(0);
+  });
+
   it("rejectRequest marks request rejected and stores reason; no membership row created", async () => {
     const requesterId = await seedUser("rj");
     const adminId = await seedUser("rja");

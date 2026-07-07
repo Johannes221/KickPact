@@ -40,8 +40,20 @@ export interface RenewalCandidate {
 
 /**
  * Liefert alle Pledges die für eine Renewal-Prompt in Frage kommen:
- *   - status='active'
+ *   - status='active' ODER sommerpause-pausiert (status='paused' +
+ *     sommerpausePaused=true)
  *   - endsAt zwischen now und now + daysBeforeEnd
+ *
+ * Warum auch sommerpause-pausierte Pledges (2026-07-07): der Cron
+ * `pause-pledges-sommerpause` setzt am 1.6. ALLE aktiven Pledges auf
+ * `paused`. Ein Standard-Pact endet 30.6., die gestaffelte Renewal-Strecke
+ * feuert 30/14/3 Tage vorher (31.5./16.6./27.6.). Ohne diese Pledges würde
+ * die Strecke am 1.6. abbrechen — nur die 30-Tage-Mail käme an, 14 & 3 nie.
+ * Der Sponsor liefe damit un-renewt aus. Sponsor-MANUELL pausierte Pledges
+ * (sommerpausePaused=false) bleiben bewusst ausgeschlossen — die will der
+ * Sponsor nicht verlängert bekommen. Der 1-Click-Renewal-Link liest die
+ * Pledge per ID (status-agnostisch), der Clone entsteht als neue aktive
+ * Pledge — funktioniert also auch auf pausierten Pledges.
  *
  * Dedupe (eine Mail pro Pledge) ist Aufgabe des Inngest-Jobs via
  * `sent_notifications` Tabelle.
@@ -72,7 +84,13 @@ export async function findPledgesEligibleForRenewal(
     .innerJoin(clubs, eq(teams.clubId, clubs.id))
     .where(
       and(
-        eq(pledges.status, "active"),
+        or(
+          eq(pledges.status, "active"),
+          and(
+            eq(pledges.status, "paused"),
+            eq(pledges.sommerpausePaused, true)
+          )
+        ),
         gte(pledges.endsAt, now),
         lte(pledges.endsAt, windowEnd)
       )
@@ -319,7 +337,6 @@ async function runCloneTransaction(
           triggerType: r.triggerType,
           triggerParamsJson: r.triggerParamsJson,
           amountCents: r.amountCents,
-          perMatchCapCents: r.perMatchCapCents,
           capCents: r.capCents,
           capPeriod: r.capPeriod,
           requiresApproval: r.requiresApproval

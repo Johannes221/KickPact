@@ -108,14 +108,6 @@ describe("simulateRulesOverMatches — Zählung", () => {
 });
 
 describe("simulateRulesOverMatches — Caps", () => {
-  it("perMatchCapCents wird pro Spiel respektiert (Engine-Verhalten)", () => {
-    const result = simulateRulesOverMatches(fixtureMatches(), [
-      mkRule({ triggerType: "goal_total", amountCents: 100, perMatchCapCents: 250 })
-    ]);
-    // M1: 3 Tore, aber 100+100(+100>250) → 2; M2: 2 Tore = 200 ≤ 250 → 2.
-    expect(result.totalCents).toBe(400);
-  });
-
   it("Rule-Cap mit capPeriod=month gilt pro Kalendermonat des Spieldatums", () => {
     const matches = [
       ...fixtureMatches(),

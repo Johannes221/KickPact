@@ -1,10 +1,28 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createId } from "@paralleldrive/cuid2";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { users, clubs, sponsors, invoices } from "@/lib/db/schema";
+import {
+  users,
+  clubs,
+  teams,
+  sponsors,
+  pledges,
+  pledgeRules,
+  matches,
+  charges,
+  invoices,
+  invoiceItems
+} from "@/lib/db/schema";
 import { createStornoInvoice } from "@/lib/invoicing/storno";
+import { getSponsorBalance } from "@/lib/db/queries/sponsor-reporting";
 import { resetTestDb } from "../setup/db";
 import { isIntegrationDbDisabled } from "../setup/integration-db";
+
+// PDF-Rendering läuft real; nur den Storage-Write stubben (kein FS/R2 im Test).
+vi.mock("@/lib/invoicing/storage", () => ({
+  storePdf: vi.fn().mockResolvedValue("local://test/storno.pdf")
+}));
 
 async function seedInvoice(overrides: Partial<typeof invoices.$inferInsert> = {}) {
   const userId = createId();
@@ -60,5 +78,114 @@ describe.skipIf(isIntegrationDbDisabled)("createStornoInvoice — Guards", () =>
     const id = await seedInvoice({ pdfUrl: null });
     const r = await createStornoInvoice(id);
     expect(r).toEqual({ ok: false, reason: "no_pdf" });
+  });
+});
+
+/**
+ * Business-Logik-Bug (Tier 1): Der Storno hob nur die Rechnungs-Zeile auf,
+ * ließ die zugrunde liegenden Charges aber auf status='invoiced' — Sponsor-
+ * Reporting zählt 'invoiced' als aktiv weiter, die Bilanz zeigte den
+ * erstatteten Betrag dauerhaft. Der Storno muss die Charges reversen.
+ */
+describe.skipIf(isIntegrationDbDisabled)("createStornoInvoice — Charge-Reversal", () => {
+  beforeEach(async () => {
+    await resetTestDb();
+    vi.clearAllMocks();
+  });
+
+  async function seedInvoicedCharge() {
+    const userId = createId();
+    await db.insert(users).values({ id: userId, email: `s-${userId}@k.local`, emailVerified: true, name: "S" });
+    const sponsorId = createId();
+    await db.insert(sponsors).values({ id: sponsorId, userId, displayName: "Sp", type: "familie" });
+    const clubId = createId();
+    await db.insert(clubs).values({ id: clubId, slug: `c-${clubId.slice(0, 6)}`, name: "FC Test", logoUrl: null });
+    const teamId = createId();
+    await db.insert(teams).values({ id: teamId, clubId, name: "Erste", saison: "2526" });
+    const pledgeId = createId();
+    await db.insert(pledges).values({
+      id: pledgeId,
+      sponsorId,
+      teamId,
+      status: "active",
+      startsAt: new Date(Date.UTC(2025, 6, 1)),
+      endsAt: new Date(Date.UTC(2026, 5, 30))
+    });
+    const ruleId = createId();
+    await db.insert(pledgeRules).values({
+      id: ruleId,
+      pledgeId,
+      triggerType: "goal_total",
+      amountCents: 20000,
+      requiresApproval: false
+    });
+    const matchId = createId();
+    await db.insert(matches).values({
+      id: matchId,
+      teamId,
+      fussballdeSpielId: `fs-${matchId.slice(0, 6)}`,
+      datum: new Date(Date.UTC(2026, 4, 10, 13, 0)),
+      heimName: "FC Test",
+      gastName: "SV Gegner",
+      ergebnisHeim: 1,
+      ergebnisGast: 0,
+      status: "finished"
+    });
+    const invoiceId = createId();
+    await db.insert(invoices).values({
+      id: invoiceId,
+      sponsorId,
+      clubId,
+      period: "2026-05",
+      totalCents: 20000,
+      status: "sent",
+      sentAt: new Date(),
+      pdfUrl: `local://${clubId}/KP-2026-0002.pdf`
+    });
+    const chargeId = createId();
+    await db.insert(charges).values({
+      id: chargeId,
+      pledgeId,
+      pledgeRuleId: ruleId,
+      matchId,
+      triggerType: "goal_total",
+      amountCents: 20000,
+      status: "invoiced",
+      invoiceId,
+      confirmedAt: new Date(Date.UTC(2026, 4, 10, 15, 0)),
+      createdAt: new Date(Date.UTC(2026, 4, 10, 15, 0))
+    });
+    await db.insert(invoiceItems).values({
+      invoiceId,
+      chargeId,
+      description: "1 Tor",
+      amountCents: 20000
+    });
+    return { sponsorId, invoiceId, chargeId };
+  }
+
+  it("sets the underlying charges to cancelled", async () => {
+    const { invoiceId, chargeId } = await seedInvoicedCharge();
+
+    const r = await createStornoInvoice(invoiceId);
+    expect(r.ok).toBe(true);
+
+    const [ch] = await db.select().from(charges).where(eq(charges.id, chargeId));
+    expect(ch.status).toBe("cancelled");
+    expect(ch.cancelledAt).not.toBeNull();
+  });
+
+  it("removes the reversed amount from the sponsor balance", async () => {
+    const { sponsorId, invoiceId } = await seedInvoicedCharge();
+
+    const range = { from: new Date(Date.UTC(2000, 0, 1)), to: new Date(Date.UTC(2030, 0, 1)) };
+    const before = await getSponsorBalance(sponsorId, range);
+    expect(before.totalCents).toBe(20000);
+
+    await createStornoInvoice(invoiceId);
+
+    const after = await getSponsorBalance(sponsorId, range);
+    expect(after.totalCents).toBe(0);
+    expect(after.eventsCount).toBe(0);
   });
 });

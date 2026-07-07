@@ -97,14 +97,14 @@ describe("combo scenarios — synthetic matches", () => {
     expect(props[0].pledgeRuleId).toBe("rC");
   });
 
-  it("caps and combos interact: rA capped tight, rB unbounded, rC outcome", () => {
+  it("combos interact: per-goal rules emit per goal, outcome rule once", () => {
     const m = SYNTHETIC_MATCHES[0]; // 3 own goals
     const props = evaluateTriggers(m, [
-      rule({ id: "rA", triggerType: "goal_total", amountCents: 100, perMatchCapCents: 200 }), // 2
-      rule({ id: "rB", triggerType: "goal_total", amountCents: 100, perMatchCapCents: null }), // 3
+      rule({ id: "rA", triggerType: "goal_total", amountCents: 100 }), // 3
+      rule({ id: "rB", triggerType: "goal_total", amountCents: 100 }), // 3
       rule({ id: "rC", triggerType: "clean_sheet", amountCents: 1000 }), // 1
     ]);
-    expect(props.filter((p) => p.pledgeRuleId === "rA").length).toBe(2);
+    expect(props.filter((p) => p.pledgeRuleId === "rA").length).toBe(3);
     expect(props.filter((p) => p.pledgeRuleId === "rB").length).toBe(3);
     expect(props.filter((p) => p.pledgeRuleId === "rC").length).toBe(1);
   });

@@ -50,7 +50,6 @@ export async function listTeamPactRuleRows(teamId: string) {
       triggerType: pledgeRules.triggerType,
       triggerParams: pledgeRules.triggerParamsJson,
       amountCents: pledgeRules.amountCents,
-      perMatchCapCents: pledgeRules.perMatchCapCents,
       monthlyCapCents: pledges.monthlyCapCents,
       sponsorDisplayName: sponsorLabelSql,
       chargedSum: sql<number>`COALESCE((SELECT SUM(amount_cents) FROM ${charges} c WHERE c.pledge_rule_id = ${pledgeRules.id} AND c.status = 'confirmed'), 0)`

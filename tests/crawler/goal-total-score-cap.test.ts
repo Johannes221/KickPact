@@ -16,7 +16,6 @@ const RULE: PledgeRuleInput = {
   triggerType: "goal_total",
   triggerParams: {},
   amountCents: 500,
-  perMatchCapCents: null,
   capCents: null,
   capPeriod: null
 };

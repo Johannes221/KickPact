@@ -117,7 +117,13 @@ export const pledgeRules = pgTable(
     triggerType: triggerTypeEnum("trigger_type").notNull(),
     triggerParamsJson: jsonb("trigger_params_json").$type<Record<string, unknown>>().default({}),
     amountCents: integer("amount_cents").notNull(),
-    /** @deprecated Pro-Spiel-Cap. Abgelöst durch capCents+capPeriod (Migration 0040). */
+    /**
+     * @deprecated Pro-Spiel-Cap. Abgelöst durch capCents+capPeriod (Migration 0040,
+     * die alle Alt-Werte nach capCents migriert und diese Spalte genullt hat).
+     * Wird von KEINEM App-Code mehr gelesen oder geschrieben — inerter Tombstone,
+     * immer NULL. Spalte bleibt bewusst stehen (kein destruktives DROP); ein
+     * späteres DROP COLUMN ist optional. NICHT wieder anfangen zu befüllen.
+     */
     perMatchCapCents: integer("per_match_cap_cents"),
     /** Optionaler Cap-Betrag pro Wette (in Cent), begrenzt pro `capPeriod`. */
     capCents: integer("cap_cents"),

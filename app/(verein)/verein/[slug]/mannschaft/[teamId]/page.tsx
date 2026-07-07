@@ -394,35 +394,6 @@ export default async function TeamDetailPage({
         </section>
       )}
 
-      {/* Saison-Recap: teilbares Highlight-Bild der Saison (Phase 3 / R9) */}
-      <section
-        aria-label="Saison-Recap"
-        className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/10 text-accent-dark">
-              <Sparkles className="h-[1.15rem] w-[1.15rem]" aria-hidden />
-            </span>
-            <div className="min-w-0">
-              <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
-                Saison-Recap
-              </h3>
-              <p className="text-xs md:text-sm text-brand-night-navy/70">
-                Eure Saison als teilbares Highlight-Bild — perfekt für
-                WhatsApp-Gruppe und Social Media.
-              </p>
-            </div>
-          </div>
-          <Link
-            href={`${teamBase}/recap`}
-            className="text-xs md:text-sm font-semibold text-accent hover:underline shrink-0"
-          >
-            Saison-Recap ansehen →
-          </Link>
-        </div>
-      </section>
-
       {/* Spiele */}
       <section id="spiele">
         <div className="flex items-baseline justify-between gap-3 mb-3">

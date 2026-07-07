@@ -25,7 +25,7 @@ import {
 } from "@/lib/db/queries/evaluation";
 import { resolveCyclesAt } from "@/lib/db/queries/billing-cycle";
 import {
-  getSubscriptionGate,
+  getSubscriptionGateForTeam,
   isChargeBlockedByGate
 } from "@/lib/db/queries/subscription-status";
 import { isUniqueViolation } from "@/lib/db/errors";
@@ -63,8 +63,11 @@ export const evaluateMatch = inngest.createFunction(
     // `match/evaluation-deferred` geloggt statt still verworfen — Forensik +
     // Re-Emit nach Reaktivierung (Admin: Spieldaten erneut einlesen) bleiben
     // möglich, weil das Match selbst unangetastet bleibt.
+    // Team-scoped: effektiver Lizenz-Verein (licensedUnderClubId ?? clubId).
+    // Der Container-Club des Teams kann gekündigt sein, während der Verein,
+    // unter dessen Lizenz das Team läuft, zahlt — dann müssen Charges laufen.
     const gate = await step.run("gate-check", () =>
-      getSubscriptionGate(matchData.t.clubId)
+      getSubscriptionGateForTeam(teamId)
     );
     if (isChargeBlockedByGate(gate)) {
       logger.warn("match/evaluation-deferred — club unlicensed, charges not generated", {
@@ -139,10 +142,21 @@ export const evaluateMatch = inngest.createFunction(
     let inserted = 0;
     let cappedOrSkipped = 0;
     // Audit 2026-06-11 / B1: Cap-Anker = ABRECHNUNGSmonat (jetzt), nicht
-    // Spielmonat. Caps begrenzen, was auf einer Rechnung landet — die
-    // Rechnungsperiode selektiert über confirmedAt (= Insert-Zeitpunkt).
-    // Vorher: Fenster nach Spieldatum, Summe nach Confirm-Zeit → zwei spät
-    // gescrapte Vormonats-Spiele konnten 2× den Cap auf EINE Rechnung legen.
+    // Spielmonat. Der monthlyCap ist ein Monats-EXPOSURE-Limit: er deckelt, was
+    // pro Kalendermonat berechnet wird — die Cap-Periode selektiert über
+    // confirmedAt (= Insert-Zeitpunkt). Vorher: Fenster nach Spieldatum, Summe
+    // nach Confirm-Zeit → zwei spät gescrapte Vormonats-Spiele konnten 2× den
+    // Cap auf EINE Monatsrechnung legen.
+    //
+    // WICHTIG (Tier-2-Klärung 2026-07-07): Bei monthly-Sponsoren gilt
+    // Cap-Dimension == Rechnungs-Dimension (1 Monat). Bei season_end-Sponsoren
+    // NICHT — dort bündelt generate-season-end-invoices die ganze Saison auf
+    // EINE Rechnung, während der Monats-Cap bewusst weiter pro Monat greift.
+    // Die Saison-Rechnung kann also ~11×Cap groß werden; das ist gewollt (der
+    // Cap ist ein Monats-Exposure-Limit, kein Rechnungs-Deckel) und wird dem
+    // Sponsor im Cap-Tile über seasonToDateCents transparent gemacht
+    // (getCapUsageForActivePledges). Ein separater Saison-Cap existiert nicht.
+    //
     // Rest-Risiko (dokumentiert, nicht gelöst): pending_approval-Charges aus
     // dem Vormonat, die erst im Folgemonat confirmed werden, belasten den
     // Cap des Erstellungs-Monats, landen aber auf der Folgemonats-Rechnung.

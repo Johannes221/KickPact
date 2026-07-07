@@ -7,7 +7,7 @@ import {
   type PledgeInput
 } from "@/lib/validations/pledge";
 import { findInvitationByToken, markInvitationUsed } from "@/lib/db/queries/invitations";
-import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
+import { getSubscriptionGateForTeam } from "@/lib/db/queries/subscription-status";
 import {
   assertCanAddSponsorToTeam,
   PlanCapExceededError
@@ -95,14 +95,16 @@ export async function createPledge(input: PledgeInput): Promise<CreatePledgeResu
   }
   const invitationTeamId: string = invitation.teamId;
 
-  // Read-Only-Gate: Mannschaft → Club → Subscription. Wir lassen Sponsoren keinen
-  // neuen Pledge anlegen, wenn der Verein im Read-Only-Modus ist.
+  // Read-Only-Gate: Mannschaft → (Lizenz-)Verein → Subscription. Wir lassen
+  // Sponsoren keinen neuen Pledge anlegen, wenn der Verein im Read-Only-Modus
+  // ist. getClubIdForTeam bleibt die Existenz-Prüfung; das Gate liest den
+  // EFFEKTIVEN Lizenz-Verein (licensedUnderClubId ?? clubId).
   const clubId = await getClubIdForTeam(invitationTeamId);
   if (!clubId) {
     return { ok: false, message: "Mannschaft zur Einladung nicht gefunden." };
   }
 
-  const gate = await getSubscriptionGate(clubId);
+  const gate = await getSubscriptionGateForTeam(invitationTeamId);
   if (gate.isReadOnly) {
     return {
       ok: false,
@@ -221,7 +223,6 @@ export async function createPledge(input: PledgeInput): Promise<CreatePledgeResu
       amountCents: Math.round(r.amountEur * 100),
       capCents: r.capEur ? Math.round(r.capEur * 100) : null,
       capPeriod: r.capEur ? (r.capPeriod ?? null) : null,
-      perMatchCapCents: null,
       requiresApproval: MANUAL_TRIGGERS.has(r.triggerType)
     }))
   });

@@ -9,6 +9,7 @@ import {
   rejectRequest,
   getRequestById
 } from "@/lib/db/queries/membership-requests";
+import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
 import { getUserEmailById } from "@/lib/db/queries/account";
 import { getClubById } from "@/lib/db/queries/club-admin";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
@@ -30,6 +31,12 @@ export async function approveRequestAction(input: { requestId: string; clubSlug:
 
   const req = await getRequestById(parsed.data.requestId);
   if (!req || req.clubId !== club.id) {
+    return { ok: false as const, error: "Anfrage nicht gefunden" };
+  }
+  // Cross-Tenant-Guard: requestedTeamId ist client-kontrolliert. Team muss zum
+  // Verein der Anfrage gehören, sonst würde ein Fremd-Request Team-Admin auf ein
+  // Team eines anderen Vereins erschleichen (Confused Deputy). Fail closed.
+  if (req.requestedTeamId && !(await getTeamInClub(req.requestedTeamId, club.id))) {
     return { ok: false as const, error: "Anfrage nicht gefunden" };
   }
 

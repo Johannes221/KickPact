@@ -86,6 +86,66 @@ export async function confirmApproval(
   return { ok: true };
 }
 
+/**
+ * Batch-Bestätigung (Tier-3-Usability): Manual-Teams (coverage=none) erzeugen
+ * pro Tor + pro Outcome eine eigene Approval-Zeile — ein 8:0-Spiel = viele
+ * Einzel-Bestätigungen. `confirmApprovals` bestätigt eine ganze (UI-seitig nach
+ * Spiel gruppierte) Auswahl in einem Aufruf. Jede ID läuft durch denselben
+ * Tenant-/Status-/Widerruf-Check wie das Einzel-`confirmApproval`; fremde,
+ * bereits erledigte oder inzwischen widerrufene Approvals werden übersprungen
+ * (nie client-gelieferten IDs vertrauen). Rückgabe: Anzahl tatsächlich
+ * bestätigter Beiträge.
+ */
+export async function confirmApprovals(
+  approvalIds: string[]
+): Promise<{ ok: true; confirmed: number } | { ok: false; message: string }> {
+  const user = await requireUser();
+  const ids = [...new Set(approvalIds)].filter((id) => typeof id === "string" && id.length > 0);
+  if (ids.length === 0) {
+    return { ok: false, message: "Keine Auswahl übergeben." };
+  }
+  if (ids.length > 200) {
+    return { ok: false, message: "Zu viele Einträge auf einmal." };
+  }
+
+  let confirmed = 0;
+  for (const approvalId of ids) {
+    const row = await getApprovalForUpdate(approvalId, user.id);
+    // Fremd, nicht gefunden oder nicht mehr pending → still überspringen.
+    if (!row || row.approval.status !== "pending") continue;
+
+    const didConfirm = await db.transaction(async (tx) => {
+      // Nur die (ggf. neueste) pending_approval-Charge treffen — cancelled bleibt
+      // unberührt (C4). `.returning()` erkennt zwischenzeitlich widerrufene Events.
+      const updated = await tx
+        .update(charges)
+        .set({ status: "confirmed", confirmedAt: new Date() })
+        .where(
+          and(
+            eq(charges.pledgeRuleId, row.pledgeRuleId),
+            eq(charges.matchEventId, row.matchEventId),
+            eq(charges.status, "pending_approval")
+          )
+        )
+        .returning({ id: charges.id });
+      if (updated.length === 0) return false;
+
+      await tx
+        .update(eventApprovals)
+        .set({ status: "confirmed", respondedAt: new Date() })
+        .where(eq(eventApprovals.id, approvalId));
+      return true;
+    });
+    if (didConfirm) confirmed += 1;
+  }
+
+  if (confirmed > 0) {
+    revalidatePath("/sponsor/inbox");
+    revalidatePath("/sponsor");
+  }
+  return { ok: true, confirmed };
+}
+
 export async function disputeApproval(input: {
   approvalId: string;
   reason?: string;

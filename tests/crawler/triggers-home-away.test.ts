@@ -33,8 +33,7 @@ function rule(triggerType: TriggerType): PledgeRuleInput {
     pledgeId: "p_test",
     triggerType,
     triggerParams: {},
-    amountCents: 700,
-    perMatchCapCents: null
+    amountCents: 700
   };
 }
 

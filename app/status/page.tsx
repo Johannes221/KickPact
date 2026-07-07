@@ -67,32 +67,28 @@ function runDemo() {
       pledgeId: "p-erna",
       triggerType: "goal_total",
       triggerParams: {},
-      amountCents: 500,
-      perMatchCapCents: null
+      amountCents: 500
     },
     {
       id: "r-win",
       pledgeId: "p-erna",
       triggerType: "win",
       triggerParams: {},
-      amountCents: 1000,
-      perMatchCapCents: null
+      amountCents: 1000
     },
     {
       id: "r-comeback",
       pledgeId: "p-erna",
       triggerType: "comeback_win",
       triggerParams: {},
-      amountCents: 2000,
-      perMatchCapCents: null
+      amountCents: 2000
     },
     {
       id: "r-schmidt",
       pledgeId: "p-erna",
       triggerType: "goal_by_player",
       triggerParams: { playerId: "p_schmidt" },
-      amountCents: 300,
-      perMatchCapCents: null
+      amountCents: 300
     }
   ];
 

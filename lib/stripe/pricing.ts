@@ -96,7 +96,7 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
       "Saison-Ziele + Custom-Trigger-Texte",
       "Vereins-Angaben auf PDF · Vereins-Mail-Absender",
       "Pact-Discovery: öffentliches Team-Profil",
-      "CSV-Export + Saison-Recap zum Teilen"
+      "CSV-Export + Saison-Rückblick (Wrapped) zum Teilen"
     ],
     note: "Bei 22-Mann-Kader: unter 1 € pro Spieler/Monat.",
     cta: "Pro auswählen"

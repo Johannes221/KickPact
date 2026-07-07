@@ -77,8 +77,10 @@ const TRIGGER_LIBRARY: LibItem[] = [
   { key: "special_goal:eckentor", type: "special_goal", subtype: "eckentor", label: "Eckentor (direkt)", emoji: "🚩", description: "Direkt verwandelter Eckstoß", defaultEur: 20, group: "club" },
   { key: "special_goal:tor_mittellinie", type: "special_goal", subtype: "tor_mittellinie", label: "Tor hinter Mittellinie", emoji: "🎯", description: "Tor aus der eigenen Hälfte", defaultEur: 25, group: "club" },
   { key: "special_goal:sonstiges", type: "special_goal", subtype: "sonstiges", label: "Sonstiges Spezialtor", emoji: "🎭", description: "Anderes besonderes Tor — Verein beschreibt es im Kommentar", defaultEur: 10, group: "club" },
-  { key: "assist", type: "assist", label: "Vorlage (Assist)", emoji: "🅰️", description: "Torvorlage eines Spielers", defaultEur: 3, group: "club" },
-  { key: "man_of_match", type: "man_of_match", label: "Spieler des Spiels", emoji: "⭐", description: "Vom Verein gekürt", defaultEur: 10, group: "club" },
+  // assist/man_of_match bewusst NICHT wählbar: die Melde-UI des Vereins bietet
+  // sie nicht an und `validateSubtype` lehnt sie serverseitig ab (B3-Audit
+  // 2026-06-11) — ein solcher Pact könnte nie feuern und würde dem Sponsor eine
+  // Geld-Prognose vorgaukeln, die immer 0 € bleibt.
   { key: "yellow_card", type: "yellow_card", label: "Gelbe Karte", emoji: "🟨", description: "Für die Mannschaftskasse 😉", defaultEur: 2, group: "club" },
   { key: "red_card", type: "red_card", label: "Rote Karte", emoji: "🟥", description: "Für die Mannschaftskasse 😉", defaultEur: 5, group: "club" },
 
@@ -1135,10 +1137,8 @@ function estimateWorstCase(
   const SPECIAL_GOAL_PER_GAME = 0.3;
   const HIGH_DIFF_RATE = 0.1;
   const FIVE_PLUS_GOALS_RATE = 0.1;
-  const ASSIST_PER_GAME = 1.5;
   const YELLOW_PER_GAME = 1.5;
   const RED_PER_GAME = 0.1;
-  const MOTM_PER_GAME = 1;
 
   return Math.round(
     rules.reduce((total, r) => {
@@ -1165,14 +1165,10 @@ function estimateWorstCase(
           return total + r.amountEur * SAISON_GAMES * HIGH_DIFF_RATE;
         case "goals_scored_min":
           return total + r.amountEur * SAISON_GAMES * FIVE_PLUS_GOALS_RATE;
-        case "assist":
-          return total + Math.min(r.amountEur * ASSIST_PER_GAME, cap) * SAISON_GAMES;
         case "yellow_card":
           return total + Math.min(r.amountEur * YELLOW_PER_GAME, cap) * SAISON_GAMES;
         case "red_card":
           return total + r.amountEur * SAISON_GAMES * RED_PER_GAME;
-        case "man_of_match":
-          return total + r.amountEur * SAISON_GAMES * MOTM_PER_GAME;
         default:
           return total + r.amountEur;
       }

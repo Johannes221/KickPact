@@ -37,7 +37,7 @@ export const FEATURE_BY_PLAN: Record<PlanKey, PlanFeatureDef> = {
     highlights: [
       "∞ Sponsoren · ∞ Regeln · ∞ Historie",
       "Saison-Ziele, Custom-Trigger-Texte",
-      "Vereins-Angaben auf PDF, CSV-Export, Saison-Recap"
+      "Vereins-Angaben auf PDF, CSV-Export, Saison-Rückblick (Wrapped)"
     ]
   },
   verein: {

@@ -8,7 +8,6 @@
  *
  * Cap-Nachbildung (bewusst VEREINFACHT gegenüber der DB-bewussten Logik in
  * evaluate-match/recalc, dokumentierte Abweichungen):
- * - `perMatchCapCents` — von der Engine selbst durchgesetzt (identisch).
  * - Rule-Cap `capCents` + `capPeriod`:
  *     - `month`  → Budget pro KALENDERMONAT des Spieldatums.
  *     - `season` → ein Budget über die gesamte Simulation.
@@ -51,8 +50,6 @@ export interface SimRule {
   triggerType: string;
   triggerParams?: Record<string, unknown>;
   amountCents: number;
-  /** Pro-Spiel-Cap — wird von der Engine durchgesetzt. */
-  perMatchCapCents?: number | null;
   /** Perioden-Cap-Betrag (Cent), Fenster via `capPeriod` (Default month). */
   capCents?: number | null;
   capPeriod?: "month" | "season" | null;
@@ -92,8 +89,7 @@ export function simulateRulesOverMatches(
     pledgeId: r.pledgeId ?? "draft",
     triggerType: r.triggerType as TriggerType,
     triggerParams: r.triggerParams ?? {},
-    amountCents: r.amountCents,
-    perMatchCapCents: r.perMatchCapCents ?? null
+    amountCents: r.amountCents
   }));
   const ruleById = new Map(matchRules.map((r) => [r.id, r]));
 
