@@ -223,7 +223,11 @@ export function MeinProfilEditor({
           publicGoals: goals.trim() || undefined
         });
         toast.success(
-          nextIsPublic ? "Gespeichert & öffentlich." : "Gespeichert (privat)."
+          nextIsPublic
+            ? isVerified
+              ? "Gespeichert & öffentlich."
+              : "Gespeichert. Öffentlich sichtbar, sobald verifiziert."
+            : "Gespeichert (privat)."
         );
         router.refresh();
       } catch (e) {
@@ -274,6 +278,11 @@ export function MeinProfilEditor({
             </Link>
           )}
         </div>
+        {isPublic && !isVerified && (
+          <p className="basis-full text-[11px] font-medium text-brand-night-navy/60">
+            Wird öffentlich sichtbar, sobald die Mannschaft verifiziert ist.
+          </p>
+        )}
       </div>
 
       {/* 2. Hero (dunkel) */}

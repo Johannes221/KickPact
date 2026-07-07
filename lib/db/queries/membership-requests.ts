@@ -265,6 +265,15 @@ export async function applyConflictTakeover(args: {
 export interface ApproveArgs {
   requestId: string;
   respondedByUserId: string;
+  /**
+   * Läuft NACH dem (idempotenten) Membership-Insert, aber VOR dem Status-Flip
+   * auf "approved". Wirft `beforeCommit` (z.B. Benachrichtigungs-Mail schlägt
+   * fehl), bleibt der Request "pending" → der Aufrufer kann ihn gefahrlos
+   * erneut freigeben (Membership-Insert ist `onConflictDoNothing`, Mail geht
+   * neu raus). Verhindert den stillen Datenverlust "Zugriff gewährt, aber der
+   * Nutzer wird nie benachrichtigt". Analog zur B6-Härtung im Rechnungslauf.
+   */
+  beforeCommit?: () => Promise<void>;
 }
 
 /**
@@ -323,6 +332,10 @@ export async function approveRequest(args: ApproveArgs): Promise<MembershipReque
       .onConflictDoNothing();
   }
 
+  // Benachrichtigung o.ä. VOR dem Status-Commit — wirft sie, bleibt der Request
+  // "pending" und der Insert oben ist idempotent → sauber wiederholbar.
+  if (args.beforeCommit) await args.beforeCommit();
+
   const [updated] = await db
     .update(clubMembershipRequests)
     .set({
@@ -340,6 +353,13 @@ export interface RejectArgs {
   requestId: string;
   respondedByUserId: string;
   reason?: string;
+  /**
+   * Läuft VOR dem Status-Flip auf "rejected". Wirft `beforeCommit` (z.B. die
+   * Absage-Mail schlägt fehl), bleibt der Request "pending" → gefahrlos
+   * wiederholbar, statt still "abgelehnt ohne Info an den Nutzer". Siehe
+   * [[ApproveArgs.beforeCommit]].
+   */
+  beforeCommit?: () => Promise<void>;
 }
 
 /**
@@ -352,6 +372,8 @@ export async function rejectRequest(args: RejectArgs): Promise<MembershipRequest
   if (req.status !== "pending") {
     throw new Error(`request not pending (status=${req.status})`);
   }
+
+  if (args.beforeCommit) await args.beforeCommit();
 
   const [updated] = await db
     .update(clubMembershipRequests)

@@ -15,7 +15,7 @@ import {
   clubMemberships,
   users
 } from "@/lib/db/schema";
-import { assertClubWriteAccess, assertClubAccess } from "@/lib/auth/scope";
+import { assertClubWriteAccess } from "@/lib/auth/scope";
 import { storeDocument } from "@/lib/storage/documents";
 import { normalizeImageUpload } from "@/lib/storage/images";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
@@ -219,7 +219,7 @@ export async function renameTeam(input: z.infer<typeof renameSchema>): Promise<v
     .limit(1);
   if (!row) throw new Error("Mannschaft nicht gefunden.");
 
-  await assertClubAccess(row.clubSlug, "admin");
+  await assertClubWriteAccess(row.clubSlug, "admin");
 
   await db
     .update(teams)
@@ -327,7 +327,7 @@ export async function uploadTeamLogo(input: {
     .limit(1);
   if (!row) throw new Error("Mannschaft nicht gefunden.");
 
-  await assertClubAccess(row.clubSlug, "admin");
+  await assertClubWriteAccess(row.clubSlug, "admin");
 
   // Format + Größe validieren und HEIC/HEIF → JPEG konvertieren.
   const normalized = await normalizeImageUpload({

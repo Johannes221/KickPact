@@ -16,6 +16,33 @@ import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { accessRequestApprovedEmail } from "@/lib/mail/templates/access-request-approved";
 import { accessRequestRejectedEmail } from "@/lib/mail/templates/access-request-rejected";
 
+type MailContent = { subject: string; html: string; text: string };
+
+/**
+ * Schickt dem Antragsteller die Entscheidungs-Mail und wirft bei einem
+ * Provider-Fehler (`resend` liefert `{ error }` statt zu werfen — sonst still
+ * verschluckt). Als `beforeCommit` an approve/reject übergeben, damit der
+ * Status erst nach erfolgreichem Versand kippt. Kein Empfänger → No-op.
+ */
+async function sendRequesterMail(
+  requesterUserId: string,
+  buildMail: () => MailContent
+): Promise<void> {
+  const requesterEmail = await getUserEmailById(requesterUserId);
+  if (!requesterEmail) return;
+  const mail = buildMail();
+  const { error } = await resend.emails.send({
+    from: MAIL_FROM,
+    to: requesterEmail,
+    subject: mail.subject,
+    html: mail.html,
+    text: mail.text
+  });
+  if (error) {
+    throw new Error(`access-request mail failed: ${error.message ?? "unknown"}`);
+  }
+}
+
 const approveSchema = z.object({ requestId: z.string().min(1), clubSlug: z.string().min(1) });
 const rejectSchema = z.object({
   requestId: z.string().min(1),
@@ -40,29 +67,35 @@ export async function approveRequestAction(input: { requestId: string; clubSlug:
     return { ok: false as const, error: "Anfrage nicht gefunden" };
   }
 
-  await approveRequest({ requestId: req.id, respondedByUserId: admin.id });
-
-  // Notify requester
-  const requesterEmail = await getUserEmailById(req.userId);
-  if (requesterEmail) {
-    const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
-    const homeUrl = req.requestedTeamId
-      ? `${base}/verein/${club.slug}/mannschaft/${req.requestedTeamId}`
-      : `${base}/verein/${club.slug}`;
-    const scopeLabel = req.requestedTeamId ? "Mannschafts-Zugriff" : "Vereins-Zugriff";
-    const mail = accessRequestApprovedEmail({
-      clubName: club.name,
-      requestedRole: req.requestedRole,
-      scopeLabel,
-      homeUrl
+  // Mail läuft als beforeCommit: schlägt der Versand fehl, bleibt der Request
+  // "pending" (kein stiller "freigegeben, aber nie benachrichtigt"-Verlust) und
+  // ist per erneutem Klick sauber wiederholbar.
+  try {
+    await approveRequest({
+      requestId: req.id,
+      respondedByUserId: admin.id,
+      beforeCommit: () =>
+        sendRequesterMail(req.userId, () => {
+          const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+          const homeUrl = req.requestedTeamId
+            ? `${base}/verein/${club.slug}/mannschaft/${req.requestedTeamId}`
+            : `${base}/verein/${club.slug}`;
+          const scopeLabel = req.requestedTeamId
+            ? "Mannschafts-Zugriff"
+            : "Vereins-Zugriff";
+          return accessRequestApprovedEmail({
+            clubName: club.name,
+            requestedRole: req.requestedRole,
+            scopeLabel,
+            homeUrl
+          });
+        })
     });
-    await resend.emails.send({
-      from: MAIL_FROM,
-      to: requesterEmail,
-      subject: mail.subject,
-      html: mail.html,
-      text: mail.text
-    });
+  } catch {
+    return {
+      ok: false as const,
+      error: "Benachrichtigung konnte nicht gesendet werden. Bitte erneut versuchen."
+    };
   }
 
   revalidatePath(`/verein/${club.slug}/einstellungen/mitglieder`);
@@ -80,27 +113,26 @@ export async function rejectRequestAction(input: { requestId: string; clubSlug: 
     return { ok: false as const, error: "Anfrage nicht gefunden" };
   }
 
-  await rejectRequest({
-    requestId: req.id,
-    respondedByUserId: admin.id,
-    reason: parsed.data.reason
-  });
-
-  // Notify requester
-  const requesterEmail = await getUserEmailById(req.userId);
-  if (requesterEmail) {
-    const clubRow = await getClubById(req.clubId);
-    const mail = accessRequestRejectedEmail({
-      clubName: clubRow?.name ?? club.name,
-      reason: parsed.data.reason ?? null
+  try {
+    await rejectRequest({
+      requestId: req.id,
+      respondedByUserId: admin.id,
+      reason: parsed.data.reason,
+      beforeCommit: async () => {
+        const clubRow = await getClubById(req.clubId);
+        await sendRequesterMail(req.userId, () =>
+          accessRequestRejectedEmail({
+            clubName: clubRow?.name ?? club.name,
+            reason: parsed.data.reason ?? null
+          })
+        );
+      }
     });
-    await resend.emails.send({
-      from: MAIL_FROM,
-      to: requesterEmail,
-      subject: mail.subject,
-      html: mail.html,
-      text: mail.text
-    });
+  } catch {
+    return {
+      ok: false as const,
+      error: "Benachrichtigung konnte nicht gesendet werden. Bitte erneut versuchen."
+    };
   }
 
   revalidatePath(`/verein/${club.slug}/einstellungen/mitglieder`);

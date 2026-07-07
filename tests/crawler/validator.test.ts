@@ -148,4 +148,24 @@ describe("validateSpielDetails", () => {
   it("accepts no halbzeit (null)", () => {
     expect(validateSpielDetails(details({ halbzeit: null })).valid).toBe(true);
   });
+
+  it("rejects 0:0 when the score could not be reliably established", () => {
+    // getSpielDetails sets resultReliable=false when the obfuscation-font
+    // decode fails AND there are no goal events (results-only team, or a
+    // block/interstitial page that slipped through). The 0:0 is fabricated,
+    // not real — must NOT be persisted as a finished match.
+    const v = validateSpielDetails(
+      details({ ergebnis: { heim: 0, gast: 0 }, halbzeit: null, resultReliable: false })
+    );
+    expect(v.valid).toBe(false);
+    expect(v.reason).toMatch(/nicht.*(verläss|dekodier|ermittel)/i);
+  });
+
+  it("accepts a decoded 0:0 (resultReliable true)", () => {
+    expect(
+      validateSpielDetails(
+        details({ ergebnis: { heim: 0, gast: 0 }, halbzeit: { heim: 0, gast: 0 }, resultReliable: true })
+      ).valid
+    ).toBe(true);
+  });
 });
