@@ -61,8 +61,11 @@ export const evaluateMatch = inngest.createFunction(
     // auch im Fenster, in dem expire-trials den Status noch nicht auf
     // cancelled gedreht hat. Geblockte Matches werden als
     // `match/evaluation-deferred` geloggt statt still verworfen — Forensik +
-    // Re-Emit nach Reaktivierung (Admin: Spieldaten erneut einlesen) bleiben
-    // möglich, weil das Match selbst unangetastet bleibt.
+    // Recovery bleiben möglich, weil das Match selbst unangetastet bleibt. Bei
+    // Reaktivierung eines past_due-Vereins re-emittet recover-deferred-charges
+    // (Trigger: Stripe invoice.paid) match/finished für die jungen Spiele; ein
+    // manuelles „erneut einlesen" reicht NICHT, weil der Crawler die Spiele bei
+    // unverändertem contentHash überspringt.
     // Team-scoped: effektiver Lizenz-Verein (licensedUnderClubId ?? clubId).
     // Der Container-Club des Teams kann gekündigt sein, während der Verein,
     // unter dessen Lizenz das Team läuft, zahlt — dann müssen Charges laufen.
