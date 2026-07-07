@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getServerSession } from "@/lib/auth/session";
-import { upsertDeviceToken, deleteDeviceTokens } from "@/lib/db/queries/device-tokens";
+import { upsertDeviceToken, deleteDeviceTokensForUser } from "@/lib/db/queries/device-tokens";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,6 +62,6 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "bad-request" }, { status: 400 });
   }
 
-  await deleteDeviceTokens([parsed.data.token]);
+  await deleteDeviceTokensForUser(session.user.id, [parsed.data.token]);
   return NextResponse.json({ ok: true });
 }
