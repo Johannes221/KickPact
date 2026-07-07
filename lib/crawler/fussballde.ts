@@ -405,6 +405,14 @@ export interface SpielDetails {
   spielId: string;
   heim: string;
   gast: string;
+  /**
+   * fussball.de-team-id der Heim-/Gast-Mannschaft (aus dem `.team-name`-Link der
+   * Detailseite). Die EINDEUTIGE Team-Kennung — mit ihr bestimmt die Pipeline die
+   * eigene Spielseite deterministisch (resolveTeamSide), statt über
+   * kollisionsanfälliges Namens-Token-Matching. `null`, wenn der Link fehlt.
+   */
+  heimTeamId: string | null;
+  gastTeamId: string | null;
   ergebnis: { heim: number; gast: number };
   halbzeit: { heim: number; gast: number } | null;
   events: ScrapedEvent[];
@@ -938,6 +946,23 @@ export function parseDisplayedHalftime(
   return { heim: parseInt(m[1], 10), gast: parseInt(m[2], 10) };
 }
 
+/**
+ * Zieht die fussball.de-team-id aus dem Mannschafts-Link einer Spiel-Seite
+ * (`{selector} .team-name a[href*="team-id"]`). Rückgabe `null`, wenn die Seite
+ * den Link nicht enthält (z.B. Layout-Änderung) — der Aufrufer fällt dann auf
+ * Namens-Matching zurück statt zu raten.
+ */
+function extractTeamIdFromSection(
+  root: HTMLElement,
+  selector: string
+): string | null {
+  for (const a of root.querySelectorAll(`${selector} a[href*="team-id"]`)) {
+    const m = (a.getAttribute("href") || "").match(/team-id\/([A-Z0-9]{20,})/i);
+    if (m) return m[1];
+  }
+  return null;
+}
+
 export async function getSpielDetails(
   spielId: string,
   slug: string
@@ -947,6 +972,13 @@ export async function getSpielDetails(
 
   const heim = nodeText(root.querySelector(".team-home .team-name"));
   const gast = nodeText(root.querySelector(".team-away .team-name"));
+
+  // Eindeutige fussball.de-team-id beider Seiten aus dem Mannschafts-Link ziehen
+  // (`.team-name a[href*="team-id"]`). Sie ist die verlässliche Kennung, mit der
+  // downstream die eigene Spielseite deterministisch bestimmt wird — Namen
+  // kollidieren bei Reserve-Derbys / gleicher Stadt.
+  const heimTeamId = extractTeamIdFromSection(root, ".team-home");
+  const gastTeamId = extractTeamIdFromSection(root, ".team-away");
 
   const matchCourse = root.querySelector(".match-course");
   const rowEvents = matchCourse
@@ -1067,6 +1099,8 @@ export async function getSpielDetails(
     spielId,
     heim,
     gast,
+    heimTeamId,
+    gastTeamId,
     ergebnis: { heim: ergebnisHeim, gast: ergebnisGast },
     // Halbzeit: angezeigte "[H : G]"-Klammer, sonst Tor-Events (Minute ≤ 45).
     // Wie zuvor immer als Objekt (auch 0:0) — NICHT null, sonst ändert sich der

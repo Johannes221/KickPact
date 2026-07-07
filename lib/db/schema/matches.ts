@@ -41,6 +41,16 @@ export const matches = pgTable(
     datum: timestamp("datum", { withTimezone: true }).notNull(),
     heimName: text("heim_name").notNull(),
     gastName: text("gast_name").notNull(),
+    /**
+     * Eindeutige fussball.de-team-id der Heim-/Gast-Mannschaft (aus der Spiel-
+     * Detailseite). Mit ihr bestimmt `resolveTeamSide` die eigene Spielseite
+     * DETERMINISTISCH — Namens-Matching kollidiert bei Reserve-Derbys / gleicher
+     * Stadt und wertet dann die falsche Seite (stilles Falschgeld). NULL für
+     * Alt-Matches (vor der Spalte) und scheduled-Stubs (Listen-Item ohne id) →
+     * dort fällt resolveTeamSide auf das Namens-Matching zurück.
+     */
+    heimTeamId: text("heim_team_id"),
+    gastTeamId: text("gast_team_id"),
     ergebnisHeim: integer("ergebnis_heim"),
     ergebnisGast: integer("ergebnis_gast"),
     halbzeitHeim: integer("halbzeit_heim"),

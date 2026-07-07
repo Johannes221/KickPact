@@ -23,6 +23,8 @@ function details(overrides: Partial<SpielDetails> = {}): SpielDetails {
     spielId: "ABCDEF12",
     heim: "SV Musterhausen",
     gast: "FC Testdorf",
+    heimTeamId: null,
+    gastTeamId: null,
     ergebnis: { heim: 2, gast: 1 },
     halbzeit: { heim: 1, gast: 0 },
     events: [],

@@ -15,7 +15,7 @@ import {
   applyCoverageApprovalPolicy,
   type Coverage
 } from "@/lib/triggers/coverage";
-import { detectTeamSide } from "@/lib/crawler/team-side";
+import { resolveTeamSide } from "@/lib/crawler/team-side";
 import {
   loadActivePledgeRulesForTeam,
   sumRuleChargedCents,
@@ -80,12 +80,17 @@ export const evaluateMatch = inngest.createFunction(
       return { proposals: 0, inserted: 0, cappedOrSkipped: 0, skippedReadOnly: true };
     }
 
-    // Determine teamSide: nutzt signifikante Wörter (≥5 Zeichen) aus Mannschafts-
-    // UND Vereinsname. Letzterer ist nötig, weil der Mannschafts-Name (z.B.
-    // "1. Herren") oft keinen identifizierenden Token enthält.
-    const teamSide = detectTeamSide(
-      [matchData.t.name, matchData.clubName ?? ""],
-      matchData.m.heimName
+    // Eigene Spielseite DETERMINISTISCH über die fussball.de-team-id
+    // (matches.heimTeamId/gastTeamId vs teams.fussballdeTeamId). Nur wenn die
+    // ids fehlen (Alt-Match vor der Migration) fällt resolveTeamSide auf das
+    // Namens-Matching zurück. Kritisch fürs Geld: das reine Namens-Matching
+    // kippt bei Reserve-Derbys / gleicher Stadt auf die falsche Seite und würde
+    // Sieg/Niederlage + Torzurechnung invertieren → Charges für den falschen
+    // Ausgang.
+    const teamSide = resolveTeamSide(
+      matchData.m,
+      matchData.t.fussballdeTeamId,
+      [matchData.t.name, matchData.clubName ?? ""]
     );
 
     const input: MatchInput = {

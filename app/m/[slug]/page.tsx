@@ -9,7 +9,6 @@ import {
   listMatchesForTeam,
   type PreviousSeasonDisplay
 } from "@/lib/db/queries/matches";
-import { detectTeamSide } from "@/lib/crawler/team-side";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { saisonLabel } from "@/lib/utils/saison";
 import { SeasonSwitcher } from "@/components/shared/season-switcher";
@@ -126,7 +125,6 @@ export default async function PublicTeamProfilePage({
           <MatchesSection
             slug={slug}
             matches={seasonMatches}
-            teamNames={[profile.teamName, profile.clubName]}
             selectedSaison={selectedSaison}
             currentSaison={profile.saison}
             availableSeasons={availableSeasons}
@@ -238,7 +236,6 @@ function PreviousSeasonSection({
 function MatchesSection({
   slug,
   matches,
-  teamNames,
   selectedSaison,
   currentSaison,
   availableSeasons,
@@ -246,7 +243,6 @@ function MatchesSection({
 }: {
   slug: string;
   matches: Awaited<ReturnType<typeof listMatchesForTeam>>;
-  teamNames: string[];
   selectedSaison: string;
   currentSaison: string;
   availableSeasons: string[];
@@ -281,7 +277,7 @@ function MatchesSection({
         ) : (
           <ul className="space-y-1.5">
             {matches.map((m) => {
-              const isHeim = detectTeamSide(teamNames, m.heimName) === "heim";
+              const isHeim = m.ownSide === "heim";
               const gF = isHeim ? (m.ergebnisHeim ?? null) : (m.ergebnisGast ?? null);
               const gA = isHeim ? (m.ergebnisGast ?? null) : (m.ergebnisHeim ?? null);
               const dot =

@@ -14,7 +14,7 @@ import {
   extractSuffixClub,
   suffixClubMatchesOwn
 } from "@/lib/players/person-name";
-import { detectTeamSide } from "@/lib/crawler/team-side";
+import { resolveTeamSide } from "@/lib/crawler/team-side";
 import { isPlausibleLeague } from "@/lib/utils/league";
 import {
   type Coverage,
@@ -296,6 +296,8 @@ export async function insertMatchWithEvents(args: {
       datum: parseDateDdMmYyyy(listItem.datum),
       heimName: details.heim || listItem.heim,
       gastName: details.gast || listItem.gast,
+      heimTeamId: details.heimTeamId,
+      gastTeamId: details.gastTeamId,
       ergebnisHeim: details.ergebnis.heim,
       ergebnisGast: details.ergebnis.gast,
       halbzeitHeim: details.halbzeit?.heim ?? null,
@@ -351,6 +353,8 @@ export async function updateMatchWithEvents(args: {
       datum: parseDateDdMmYyyy(listItem.datum),
       heimName: details.heim || listItem.heim,
       gastName: details.gast || listItem.gast,
+      heimTeamId: details.heimTeamId,
+      gastTeamId: details.gastTeamId,
       ergebnisHeim: details.ergebnis.heim,
       ergebnisGast: details.ergebnis.gast,
       halbzeitHeim: details.halbzeit?.heim ?? null,
@@ -398,14 +402,30 @@ async function writeMatchEvents(
   // dürfen in den `players`-Kader, NICHT die Gegner-Torschützen (sonst
   // verschmutzen fremde Spieler den Pool, E2E-Finding 2026-06-09).
   const [ctx] = await db
-    .select({ heimName: matches.heimName, teamName: teams.name, clubName: clubs.name })
+    .select({
+      heimName: matches.heimName,
+      teamName: teams.name,
+      clubName: clubs.name,
+      fussballdeTeamId: teams.fussballdeTeamId
+    })
     .from(matches)
     .innerJoin(teams, eq(matches.teamId, teams.id))
     .innerJoin(clubs, eq(teams.clubId, clubs.id))
     .where(eq(matches.id, matchId))
     .limit(1);
+  // Eigene Seite deterministisch über die fussball.de-team-id (aus `details`,
+  // frisch gescrapt) — nur eigene Torschützen dürfen in den Kader. Fallback aufs
+  // Namens-Matching, wenn die team-id fehlt.
   const ownSide: "heim" | "gast" = ctx
-    ? detectTeamSide([ctx.teamName, ctx.clubName], ctx.heimName)
+    ? resolveTeamSide(
+        {
+          heimTeamId: details.heimTeamId,
+          gastTeamId: details.gastTeamId,
+          heimName: ctx.heimName
+        },
+        ctx.fussballdeTeamId,
+        [ctx.teamName, ctx.clubName]
+      )
     : "heim";
   const isOwn = (s: "heim" | "gast" | "unbekannt") => s === ownSide;
   // Echter, eigener Spielername? (eigene Seite ist via isOwn schon geprüft;

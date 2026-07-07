@@ -8,7 +8,6 @@ import {
 } from "@/lib/db/queries/matches";
 import { SeasonSwitcher } from "@/components/shared/season-switcher";
 import { saisonLabel } from "@/lib/utils/saison";
-import { detectTeamSide } from "@/lib/crawler/team-side";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
 import { PageHeader } from "@/components/shared/page-header";
@@ -85,9 +84,8 @@ export default async function SpielePage({
     : false;
   const chargesByMatch = await getMatchChargesSummaryForTeam(team.id);
 
-  const teamNames = [team.name, club.name];
   const enriched = matches.map((m) => {
-    const isHeim = m.heimName ? detectTeamSide(teamNames, m.heimName) === "heim" : false;
+    const isHeim = m.ownSide === "heim";
     const res = getResult(m, isHeim);
     const isScheduled = m.status === "scheduled" || res === "open";
     return {

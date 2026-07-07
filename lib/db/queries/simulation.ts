@@ -10,7 +10,7 @@ import { and, asc, eq, gte, inArray, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { clubs, teams, pledges, pledgeRules, charges } from "@/lib/db/schema";
 import { matches, matchEvents } from "@/lib/db/schema/matches";
-import { detectTeamSide } from "@/lib/crawler/team-side";
+import { resolveTeamSide } from "@/lib/crawler/team-side";
 import { nextSaisonCode, prevSaisonCode, saisonLabel, saisonStartDate } from "@/lib/utils/saison";
 import {
   simulateRulesOverMatches,
@@ -32,7 +32,11 @@ export async function simulateForTeamSeason(
   rules: SimRule[]
 ): Promise<SimulationResult | null> {
   const [team] = await db
-    .select({ name: teams.name, clubName: clubs.name })
+    .select({
+      name: teams.name,
+      clubName: clubs.name,
+      fussballdeTeamId: teams.fussballdeTeamId
+    })
     .from(teams)
     .innerJoin(clubs, eq(teams.clubId, clubs.id))
     .where(eq(teams.id, teamId))
@@ -78,7 +82,7 @@ export async function simulateForTeamSeason(
   const names = [team.name, team.clubName];
   const simMatches: SimMatch[] = withResult.map((m) => ({
     id: m.id,
-    teamSide: detectTeamSide(names, m.heimName),
+    teamSide: resolveTeamSide(m, team.fussballdeTeamId, names),
     ergebnisHeim: m.ergebnisHeim!,
     ergebnisGast: m.ergebnisGast!,
     halbzeitHeim: m.halbzeitHeim,

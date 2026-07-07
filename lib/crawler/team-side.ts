@@ -46,3 +46,33 @@ export function detectTeamSide(
   }
   return "gast";
 }
+
+/**
+ * Bestimmt die eigene Spielseite DETERMINISTISCH über die eindeutige
+ * fussball.de-team-id — die einzige kollisionsfreie Kennung. Namens-Matching
+ * (detectTeamSide) kippt bei Reserve-Derbys ("SV X II" vs "SV X III") und
+ * gleicher Stadt ("TSG Weinheim" vs "FC Weinheim") systematisch auf die falsche
+ * Seite → invertierte Stats UND falsche Charge-Seite (stilles Falschgeld).
+ *
+ * Die team-id gewinnt immer, wenn `ownFussballdeTeamId` gespeichert ist UND auf
+ * genau einer Seite des Matches auftaucht. Nur als Fallback — für Alt-Matches
+ * ohne gespeicherte team-ids oder bei Datendrift (id passt auf keine Seite) —
+ * greift das Namens-Matching. So werden gespeicherte, aber inkonsistente ids nie
+ * zu einer stillen Fehlentscheidung; im Zweifel entscheidet der Name.
+ */
+export function resolveTeamSide(
+  match: {
+    heimTeamId: string | null;
+    gastTeamId: string | null;
+    heimName: string;
+    gastName?: string | null;
+  },
+  ownFussballdeTeamId: string | null,
+  fallbackNames: string | string[]
+): "heim" | "gast" {
+  if (ownFussballdeTeamId) {
+    if (match.heimTeamId === ownFussballdeTeamId) return "heim";
+    if (match.gastTeamId === ownFussballdeTeamId) return "gast";
+  }
+  return detectTeamSide(fallbackNames, match.heimName);
+}

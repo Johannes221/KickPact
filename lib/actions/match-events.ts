@@ -21,7 +21,7 @@ import {
   type MatchInput,
   type MatchEventInput
 } from "@/lib/crawler/triggers";
-import { detectTeamSide } from "@/lib/crawler/team-side";
+import { resolveTeamSide } from "@/lib/crawler/team-side";
 import {
   loadActivePledgeRulesForTeam,
   getMonthlyChargedCents
@@ -76,9 +76,10 @@ export async function addManualEvent(
   // Audit 2026-05-24 Phase 2 Task 2.7: vorher split(" ")[0] → bei
   // "Herren - FC Sportfreunde 1910 Dossenheim 3" greift first word "herren"
   // nicht im heimName → teamSide=gast → Manual-Events feuern für falsche Seite.
-  const teamSide = detectTeamSide(
-    [target.team.name, target.club.name],
-    target.match.heimName
+  const teamSide = resolveTeamSide(
+    target.match,
+    target.team.fussballdeTeamId,
+    [target.team.name, target.club.name]
   );
 
   // Falls Trainer ein Event auf der "anderen Seite" einträgt (also nicht teamSide):

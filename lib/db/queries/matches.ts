@@ -14,7 +14,7 @@ import { sponsors } from "@/lib/db/schema/sponsors";
 import { users } from "@/lib/db/schema/auth";
 import { sponsorLabelSql } from "./sponsor-label";
 import { TRIGGER_META } from "@/lib/triggers/labels";
-import { detectTeamSide } from "@/lib/crawler/team-side";
+import { resolveTeamSide } from "@/lib/crawler/team-side";
 import { saisonStartDate, nextSaisonCode } from "@/lib/utils/saison";
 
 export async function getMatchById(matchId: string, clubSlug: string) {
@@ -60,6 +60,20 @@ export async function listMatchesForTeam(
   limit = 20,
   opts: { saison?: string } = {}
 ) {
+  // Team einmal laden (Saison-Gate + eigene Seiten-Auflösung): saison fürs
+  // Display-Gate, fussballdeTeamId + Namen für resolveTeamSide.
+  const [t] = await db
+    .select({
+      saison: teams.saison,
+      name: teams.name,
+      clubName: clubs.name,
+      fussballdeTeamId: teams.fussballdeTeamId
+    })
+    .from(teams)
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(eq(teams.id, teamId))
+    .limit(1);
+
   const conditions = [eq(matches.teamId, teamId)];
 
   const windowFrom = opts.saison ? saisonStartDate(opts.saison) : null;
@@ -73,21 +87,27 @@ export async function listMatchesForTeam(
     // 2026-06-01) Dashboard + Spiele-Liste verschmutzen. Robuste „immer nur die
     // aktuelle Saison"-Garantie, unabhängig vom DB-Zustand. (Ungültige
     // saison-Optionen fallen bewusst hierauf zurück.)
-    const [t] = await db
-      .select({ saison: teams.saison })
-      .from(teams)
-      .where(eq(teams.id, teamId))
-      .limit(1);
     const fromDate = t ? saisonStartDate(t.saison) : null;
     if (fromDate) conditions.push(gte(matches.datum, fromDate));
   }
 
-  return db
+  const rows = await db
     .select()
     .from(matches)
     .where(and(...conditions))
     .orderBy(desc(matches.datum))
     .limit(limit);
+
+  // Eigene Spielseite je Match deterministisch anreichern (fussball.de-team-id
+  // zuerst, Namens-Fallback für Alt-Matches). Die Anzeige (Heim/Auswärts,
+  // Sieg/Niederlage) darf bei Reserve-Derbys / gleicher Stadt nicht auf die
+  // falsche Seite kippen — ein zentraler Punkt statt pro Seite neu geraten.
+  const names = t ? [t.name, t.clubName] : [];
+  const ownFussballdeTeamId = t?.fussballdeTeamId ?? null;
+  return rows.map((m) => ({
+    ...m,
+    ownSide: resolveTeamSide(m, ownFussballdeTeamId, names)
+  }));
 }
 
 /**
@@ -204,7 +224,11 @@ export async function getPreviousSeasonRecord(
   teamId: string
 ): Promise<PreviousSeasonRecord | null> {
   const [team] = await db
-    .select({ name: teams.name, clubName: clubs.name })
+    .select({
+      name: teams.name,
+      clubName: clubs.name,
+      fussballdeTeamId: teams.fussballdeTeamId
+    })
     .from(teams)
     .innerJoin(clubs, eq(teams.clubId, clubs.id))
     .where(eq(teams.id, teamId))
@@ -227,7 +251,8 @@ export async function getPreviousSeasonRecord(
     toreMinus: 0
   };
   for (const m of withResult) {
-    const isHeim = detectTeamSide(names, m.heimName) === "heim";
+    const isHeim =
+      resolveTeamSide(m, team.fussballdeTeamId, names) === "heim";
     const gF = isHeim ? m.ergebnisHeim! : m.ergebnisGast!;
     const gA = isHeim ? m.ergebnisGast! : m.ergebnisHeim!;
     record.torePlus += gF;
@@ -558,7 +583,11 @@ export async function listMatchCharges(matchId: string): Promise<MatchChargesDat
  */
 export async function getTeamPlayerNames(teamId: string): Promise<string[]> {
   const [team] = await db
-    .select({ name: teams.name, clubName: clubs.name })
+    .select({
+      name: teams.name,
+      clubName: clubs.name,
+      fussballdeTeamId: teams.fussballdeTeamId
+    })
     .from(teams)
     .innerJoin(clubs, eq(teams.clubId, clubs.id))
     .where(eq(teams.id, teamId))
@@ -568,6 +597,8 @@ export async function getTeamPlayerNames(teamId: string): Promise<string[]> {
   const rows = await db
     .select({
       heimName: matches.heimName,
+      heimTeamId: matches.heimTeamId,
+      gastTeamId: matches.gastTeamId,
       side: matchEvents.side,
       playerName: matchEvents.playerName
     })
@@ -576,11 +607,12 @@ export async function getTeamPlayerNames(teamId: string): Promise<string[]> {
     .where(eq(matches.teamId, teamId));
 
   const names = new Set<string>();
+  const teamNames = [team.name, team.clubName];
   for (const r of rows) {
     // Nur echte Personennamen (keine Match-Überschriften, kein Tofu).
     if (!isLikelyPlayerName(r.playerName)) continue;
     const name = cleanPlayerName(r.playerName);
-    const ownSide = detectTeamSide([team.name, team.clubName], r.heimName);
+    const ownSide = resolveTeamSide(r, team.fussballdeTeamId, teamNames);
     if (r.side === ownSide) names.add(name);
   }
   return [...names].sort((a, b) => a.localeCompare(b, "de"));

@@ -428,6 +428,34 @@
       "when": 1782480000000,
       "tag": "0061_smart_randall_flagg",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1783456755545,
+      "tag": "0062_burly_tag",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1783457840683,
+      "tag": "0063_absent_wolfpack",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1783458118609,
+      "tag": "0064_parched_triathlon",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1783458200000,
+      "tag": "0065_match_team_ids",
+      "breakpoints": true
     }
   ]
 }

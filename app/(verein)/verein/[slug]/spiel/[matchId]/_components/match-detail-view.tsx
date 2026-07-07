@@ -3,7 +3,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
 import { resolveTeamAccess } from "@/lib/auth/scope";
 import { getMatchById, listMatchEvents, listMatchCharges } from "@/lib/db/queries/matches";
-import { detectTeamSide } from "@/lib/crawler/team-side";
+import { resolveTeamSide } from "@/lib/crawler/team-side";
 import { FitTeamName } from "@/components/shared/fit-team-name";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MatchEventsList } from "./match-events-list";
@@ -62,7 +62,9 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
   });
   const metaLine = `${datumStr} · Saison ${formatSaison(team.saison)}`;
 
-  const isHeim = detectTeamSide([team.name, data.club.name], match.heimName) === "heim";
+  const isHeim =
+    resolveTeamSide(match, team.fussballdeTeamId, [team.name, data.club.name]) ===
+    "heim";
   const unsereGoals = isHeim ? (match.ergebnisHeim ?? 0) : (match.ergebnisGast ?? 0);
   const gegnerGoals = isHeim ? (match.ergebnisGast ?? 0) : (match.ergebnisHeim ?? 0);
   const result =

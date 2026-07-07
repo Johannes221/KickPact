@@ -4,7 +4,7 @@ import { teams, clubs } from "@/lib/db/schema/clubs";
 import { matches, matchEvents } from "@/lib/db/schema/matches";
 import { charges } from "@/lib/db/schema/charges";
 import { pledges } from "@/lib/db/schema/pledges";
-import { detectTeamSide } from "@/lib/crawler/team-side";
+import { resolveTeamSide } from "@/lib/crawler/team-side";
 import { evaluateTriggers, type MatchInput } from "@/lib/crawler/triggers";
 import { saisonStartDate, nextSaisonCode, prevSaisonCode } from "@/lib/utils/saison";
 import { cleanPlayerName, isLikelyPlayerName } from "@/lib/players/person-name";
@@ -120,7 +120,11 @@ export async function getWrappedStats(
   standings: LeagueStandings | null = null
 ): Promise<WrappedStats | null> {
   const [team] = await db
-    .select({ name: teams.name, clubName: clubs.name })
+    .select({
+      name: teams.name,
+      clubName: clubs.name,
+      fussballdeTeamId: teams.fussballdeTeamId
+    })
     .from(teams)
     .innerJoin(clubs, eq(teams.clubId, clubs.id))
     .where(eq(teams.id, teamId))
@@ -203,7 +207,7 @@ export async function getWrappedStats(
   const perMatch: Array<{ opponent: string; outcome: "win" | "draw" | "loss" }> = [];
 
   for (const m of withResult) {
-    const teamSide = detectTeamSide(names, m.heimName);
+    const teamSide = resolveTeamSide(m, team.fussballdeTeamId, names);
     const isHeim = teamSide === "heim";
     const gF = isHeim ? m.ergebnisHeim! : m.ergebnisGast!;
     const gA = isHeim ? m.ergebnisGast! : m.ergebnisHeim!;

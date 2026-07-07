@@ -2,7 +2,7 @@ import { and, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { matches, pledges, charges, sponsors, users, teams } from "@/lib/db/schema";
 import { sponsorLabelSql } from "./sponsor-label";
-import { detectTeamSide } from "@/lib/crawler/team-side";
+import { resolveTeamSide } from "@/lib/crawler/team-side";
 import { saisonStartDate } from "@/lib/utils/saison";
 
 export interface TeamSponsorRow {
@@ -73,7 +73,7 @@ export async function computeTeamSeasonStats(
   teamId: string, teamName: string, clubName: string
 ): Promise<TeamSeasonStats> {
   const [t] = await db
-    .select({ saison: teams.saison })
+    .select({ saison: teams.saison, fussballdeTeamId: teams.fussballdeTeamId })
     .from(teams)
     .where(eq(teams.id, teamId))
     .limit(1);
@@ -85,7 +85,8 @@ export async function computeTeamSeasonStats(
   const names = [teamName, clubName];
   let wins = 0, draws = 0, losses = 0, goalsFor = 0, goalsAgainst = 0;
   for (const m of finished) {
-    const isHeim = detectTeamSide(names, m.heimName) === "heim";
+    const isHeim =
+      resolveTeamSide(m, t?.fussballdeTeamId ?? null, names) === "heim";
     const gF = isHeim ? (m.ergebnisHeim ?? 0) : (m.ergebnisGast ?? 0);
     const gA = isHeim ? (m.ergebnisGast ?? 0) : (m.ergebnisHeim ?? 0);
     goalsFor += gF; goalsAgainst += gA;

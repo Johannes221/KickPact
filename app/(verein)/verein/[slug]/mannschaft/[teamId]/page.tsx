@@ -36,7 +36,6 @@ import { getTeamLicensePlanDirect } from "@/lib/db/queries/subscriptions";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { inngest } from "@/lib/inngest/client";
 import { isTeamCrawling } from "@/lib/crawler/crawl-status";
-import { detectTeamSide } from "@/lib/crawler/team-side";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { markCrawlStarted } from "@/lib/db/queries/crawler";
 import { TeamSetupChecklist } from "./_components/team-setup-checklist";
@@ -113,7 +112,6 @@ export default async function TeamDetailPage({
   // Saison-Stats aus echten Matches berechnen
   const { games, wins, draws, losses, goalsFor, goalsAgainst } =
     await computeTeamSeasonStats(team.id, team.name, club.name);
-  const teamNames = [team.name, club.name];
   const totalCharges = [...chargesSummary.values()].reduce((s, v) => s + v, 0);
 
   // Setup-Checkliste: Daten für "Anstehende Aufgaben".
@@ -474,7 +472,7 @@ export default async function TeamDetailPage({
         ) : (
           <ul className="space-y-2">
             {matchRows.map((m) => {
-              const isHeim = detectTeamSide(teamNames, m.heimName) === "heim";
+              const isHeim = m.ownSide === "heim";
               const gF = isHeim ? (m.ergebnisHeim ?? null) : (m.ergebnisGast ?? null);
               const gA = isHeim ? (m.ergebnisGast ?? null) : (m.ergebnisHeim ?? null);
               const matchCharges = chargesSummary.get(m.id) ?? 0;
