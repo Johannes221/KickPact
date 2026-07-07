@@ -69,6 +69,18 @@ export const charges = pgTable(
      */
     cancelledByUserId: text("cancelled_by_user_id"),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    /**
+     * Daten-Integrität (2026-07-07): gesetzt, wenn fussball.de das Ergebnis
+     * eines Spiels NACH dem Rechnungslauf korrigiert (Einspruch/Wertung/
+     * Annullierung) und dabei bereits `invoiced`-Charges betrifft. Diese
+     * Charges bleiben `invoiced` (der Betrag wurde fakturiert — nicht still
+     * stornieren, das wäre Buchhaltung), werden aber für die Admin-Review-Queue
+     * (/admin/rechnungen/korrekturen) markiert. Ein Operator entscheidet dort
+     * zwischen Teil-Gutschrift (createCorrectionInvoice) und Verwerfen
+     * (Scrape-Flake). Wird beim Storno der Charge oder beim Verwerfen wieder
+     * auf NULL gesetzt. NULL = nichts offen.
+     */
+    correctionFlaggedAt: timestamp("correction_flagged_at", { withTimezone: true }),
     invoiceId: text("invoice_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true })

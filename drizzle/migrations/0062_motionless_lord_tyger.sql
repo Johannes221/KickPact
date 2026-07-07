@@ -1,0 +1,1 @@
+ALTER TABLE "charges" ADD COLUMN "correction_flagged_at" timestamp with time zone;
