@@ -158,7 +158,7 @@ export default async function TeamDetailPage({
       done: !!team.logoUrl,
       label: "Logo hinzufügen",
       hint: "Euer Wappen erscheint auf dem öffentlichen Profil.",
-      href: `${teamBase}/einstellungen`
+      href: `${teamBase}/profil#logo`
     },
     {
       done: hasSponsor,

@@ -277,7 +277,7 @@ export function MeinProfilEditor({
       </div>
 
       {/* 2. Hero (dunkel) */}
-      <header className="relative -mx-4 h-64 overflow-hidden bg-brand-night-navy md:mx-0">
+      <header id="logo" className="relative -mx-4 h-64 scroll-mt-24 overflow-hidden bg-brand-night-navy md:mx-0">
         {coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
