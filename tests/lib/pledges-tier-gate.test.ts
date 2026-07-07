@@ -62,7 +62,8 @@ vi.mock("@/lib/db/queries/invitations", () => ({
 }));
 
 vi.mock("@/lib/db/queries/subscription-status", () => ({
-  getSubscriptionGate: getSubscriptionGateMock
+  // createPledge liest das Read-Only-Gate team-scoped (effektiver Lizenz-Verein).
+  getSubscriptionGateForTeam: getSubscriptionGateMock
 }));
 
 vi.mock("@/lib/billing/plan-features", () => ({

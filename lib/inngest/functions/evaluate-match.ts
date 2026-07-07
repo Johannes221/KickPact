@@ -23,7 +23,7 @@ import {
 } from "@/lib/db/queries/evaluation";
 import { resolveCyclesAt } from "@/lib/db/queries/billing-cycle";
 import {
-  getSubscriptionGate,
+  getSubscriptionGateForTeam,
   isChargeBlockedByGate
 } from "@/lib/db/queries/subscription-status";
 import { isUniqueViolation } from "@/lib/db/errors";
@@ -61,8 +61,11 @@ export const evaluateMatch = inngest.createFunction(
     // `match/evaluation-deferred` geloggt statt still verworfen — Forensik +
     // Re-Emit nach Reaktivierung (Admin: Spieldaten erneut einlesen) bleiben
     // möglich, weil das Match selbst unangetastet bleibt.
+    // Team-scoped: effektiver Lizenz-Verein (licensedUnderClubId ?? clubId).
+    // Der Container-Club des Teams kann gekündigt sein, während der Verein,
+    // unter dessen Lizenz das Team läuft, zahlt — dann müssen Charges laufen.
     const gate = await step.run("gate-check", () =>
-      getSubscriptionGate(matchData.t.clubId)
+      getSubscriptionGateForTeam(teamId)
     );
     if (isChargeBlockedByGate(gate)) {
       logger.warn("match/evaluation-deferred — club unlicensed, charges not generated", {

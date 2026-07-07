@@ -29,7 +29,7 @@ import {
   shouldBackfillTeamHistory
 } from "@/lib/db/queries/matches";
 import {
-  getSubscriptionGate,
+  getSubscriptionGateForTeam,
   isCrawlBlockedByGate
 } from "@/lib/db/queries/subscription-status";
 import { isCrawlerSommerpause } from "@/lib/utils/sommerpause";
@@ -109,8 +109,11 @@ export const crawlMatches = inngest.createFunction(
       // Charges. Beim ersten Cron nach Reaktivierung eines cancelled-Clubs
       // läuft der Crawler komplett durch, Hash-Vergleich detected den Drift,
       // und alles wird konsistent neu aufgebaut.
+      // Team-scoped: löst den effektiven Lizenz-Verein auf
+      // (licensedUnderClubId ?? clubId). Ein per Transfer angehängtes Team
+      // bleibt so gecrawlt, auch wenn sein alter Container gekündigt wurde.
       const gate = await step.run(`gate-${team.id}`, () =>
-        getSubscriptionGate(team.clubId)
+        getSubscriptionGateForTeam(team.id)
       );
       if (isCrawlBlockedByGate(gate)) {
         logger.info("skipped because club is cancelled", {
