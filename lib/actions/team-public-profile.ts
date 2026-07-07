@@ -11,7 +11,7 @@ import {
   users,
   sponsorLeads
 } from "@/lib/db/schema";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertClubWriteAccess } from "@/lib/auth/scope";
 import { getSubscriptionGateForTeam } from "@/lib/db/queries/subscription-status";
 import { isTeamOpenForSponsorEntry } from "@/lib/db/queries/sponsor-discover";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
@@ -57,7 +57,7 @@ export async function saveTeamPublicProfile(input: {
     .limit(1);
   if (!row) throw new Error("Mannschaft nicht gefunden.");
 
-  await assertClubAccess(row.clubSlug, "admin");
+  await assertClubWriteAccess(row.clubSlug, "admin");
 
   // Slug nur einmal generieren — danach stabil (geteilte Links bleiben gültig).
   let slug = row.publicSlug;
