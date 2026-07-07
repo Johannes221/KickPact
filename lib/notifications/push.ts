@@ -1,5 +1,5 @@
 import type { ApnsPayload, ApnsSender } from "./apns";
-import { realApnsSender, isApnsConfigured, isDeadTokenResult } from "./apns";
+import { realApnsSender, isApnsConfigured, isDeadTokenResult, isSuspectTokenResult } from "./apns";
 import { getDeviceTokensForUser, deleteDeviceTokens } from "@/lib/db/queries/device-tokens";
 
 /**
@@ -29,8 +29,8 @@ export const defaultPushDeps: PushDeps = {
 export interface PushResult {
   sent: number;
   removed: number;
-  /** Gesetzt, wenn nichts gesendet wurde — "not-configured" | "no-tokens" | "error". */
-  skipped?: "not-configured" | "no-tokens" | "error";
+  /** Gesetzt, wenn nichts (Sinnvolles) passiert ist. */
+  skipped?: "not-configured" | "no-tokens" | "error" | "mass-failure";
 }
 
 export async function sendPushToUser(
@@ -45,10 +45,28 @@ export async function sendPushToUser(
     if (tokens.length === 0) return { sent: 0, removed: 0, skipped: "no-tokens" };
 
     const results = await deps.send(tokens, payload);
-    const dead = results.filter(isDeadTokenResult).map((r) => r.token);
-    if (dead.length > 0) await deps.removeTokens(dead);
+    const dead = results.filter(isDeadTokenResult);
 
-    return { sent: results.filter((r) => r.ok).length, removed: dead.length };
+    // Mass-Failure-Guard: Stirbt ein KOMPLETTER Batch und besteht das Sterben
+    // nur aus Env-/Topic-Symptomen (BadDeviceToken/DeviceTokenNotForTopic), ist
+    // das fast sicher eine Fehlkonfiguration (falscher APNS_PRODUCTION-Host o.ä.)
+    // — Apple antwortet dann für JEDEN Token so. Löschen würde erreichbare User
+    // aus device_tokens werfen. Deshalb: nicht löschen, laut alarmieren. Ein
+    // echter Voll-Uninstall (410/Unregistered) enthält KEINE Suspect-Gründe und
+    // wird weiterhin normal aufgeräumt.
+    const wholeBatchDead = results.length > 0 && dead.length === results.length;
+    if (wholeBatchDead && dead.every(isSuspectTokenResult)) {
+      console.error(
+        "[push] ALLE Tokens tot via Env-Symptom — Cleanup verweigert (vermutlich APNs-Host/Topic-Fehlkonfig)",
+        { userId, tokenCount: results.length, reasons: [...new Set(dead.map((r) => r.reason))] }
+      );
+      return { sent: 0, removed: 0, skipped: "mass-failure" };
+    }
+
+    const deadTokens = dead.map((r) => r.token);
+    if (deadTokens.length > 0) await deps.removeTokens(deadTokens);
+
+    return { sent: results.filter((r) => r.ok).length, removed: deadTokens.length };
   } catch (err) {
     console.error("[push] sendPushToUser failed", {
       userId,

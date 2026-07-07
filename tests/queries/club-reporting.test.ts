@@ -29,6 +29,7 @@ import {
   getSponsorOverviewForClub,
   getVereinDashboardKpis
 } from "@/lib/db/queries/club-reporting";
+import { getMonthlyChargedCents } from "@/lib/db/queries/evaluation";
 
 describe.skipIf(isIntegrationDbDisabled)("club-reporting (integration)", () => {
   beforeEach(async () => {
@@ -140,6 +141,108 @@ describe.skipIf(isIntegrationDbDisabled)("club-reporting (integration)", () => {
       pagination: { page: 1, pageSize: 10 }
     });
     expect(result.total).toBe(0);
+  });
+
+  // ─── monthChargedCents: Cap-Auslastung == Enforcement ─────────────────────
+  // Der Verein sieht dieselbe Monats-Auslastung, die evaluate-match durchsetzt:
+  // UTC-Fenster, Anker COALESCE(confirmedAt, createdAt), Status ∈
+  // CAP_COUNTED_STATUSES (inkl. pending_approval), per-PLEDGE (nicht per-Rule) —
+  // deckungsgleich mit getMonthlyChargedCents. Sonst zeigt der CapBar mehr freien
+  // Spielraum als das Enforcement erlaubt (dieselbe Divergenz wie sponsorseitig).
+
+  it("listPledgesForClub: monthChargedCents zählt pending_approval mit (Enforcement-Parität)", async () => {
+    const db = await getTestDb();
+    const now = new Date(Date.UTC(2026, 2, 20));
+    await db.insert(charges).values({
+      id: "c_pending",
+      pledgeId: "pl_1",
+      pledgeRuleId: "pr_1",
+      matchId: null,
+      triggerType: "goal_total",
+      amountCents: 3000,
+      status: "pending_approval",
+      createdAt: new Date(Date.UTC(2026, 2, 5)),
+      confirmedAt: null
+    });
+    const rows = await listPledgesForClub("club_a", {
+      filter: { teamId: "team_1" },
+      now
+    });
+    const pl1 = rows.find((r) => r.pledgeId === "pl_1");
+    expect(pl1?.monthChargedCents).toBe(3000);
+    // exakt das, was das Enforcement gegen den Pledge-Cap zählt
+    expect(pl1?.monthChargedCents).toBe(
+      await getMonthlyChargedCents("pl_1", now)
+    );
+  });
+
+  it("listPledgesForClub: monthChargedCents ankert auf COALESCE(confirmedAt, createdAt) — Spät-Confirm zählt im Confirm-Monat", async () => {
+    const db = await getTestDb();
+    const now = new Date(Date.UTC(2026, 2, 20));
+    // createdAt im Vormonat, confirmedAt im Abfragemonat → zählt im Abfragemonat.
+    await db.insert(charges).values({
+      id: "c_late",
+      pledgeId: "pl_1",
+      pledgeRuleId: "pr_1",
+      matchId: null,
+      triggerType: "goal_total",
+      amountCents: 1200,
+      status: "confirmed",
+      createdAt: new Date(Date.UTC(2026, 1, 26)),
+      confirmedAt: new Date(Date.UTC(2026, 2, 3))
+    });
+    const rows = await listPledgesForClub("club_a", {
+      filter: { teamId: "team_1" },
+      now
+    });
+    expect(rows.find((r) => r.pledgeId === "pl_1")?.monthChargedCents).toBe(1200);
+  });
+
+  it("listPledgesForClub: monthChargedCents ist per-PLEDGE (Summe über alle Regeln), passend zum per-Pledge monthlyCapCents", async () => {
+    const db = await getTestDb();
+    const now = new Date(Date.UTC(2026, 2, 20));
+    // Zweite Regel auf demselben Pledge — beide teilen sich monthlyCapCents.
+    await db.insert(pledgeRules).values({
+      id: "pr_1b",
+      pledgeId: "pl_1",
+      triggerType: "win",
+      amountCents: 1500,
+      requiresApproval: false
+    });
+    await db.insert(charges).values([
+      {
+        id: "c_r1",
+        pledgeId: "pl_1",
+        pledgeRuleId: "pr_1",
+        matchId: null,
+        triggerType: "goal_total",
+        amountCents: 2000,
+        status: "confirmed",
+        createdAt: new Date(Date.UTC(2026, 2, 4)),
+        confirmedAt: new Date(Date.UTC(2026, 2, 4))
+      },
+      {
+        id: "c_r1b",
+        pledgeId: "pl_1",
+        pledgeRuleId: "pr_1b",
+        matchId: null,
+        triggerType: "win",
+        amountCents: 1500,
+        status: "confirmed",
+        createdAt: new Date(Date.UTC(2026, 2, 6)),
+        confirmedAt: new Date(Date.UTC(2026, 2, 6))
+      }
+    ]);
+    const rows = await listPledgesForClub("club_a", {
+      filter: { teamId: "team_1" },
+      now
+    });
+    // 2 Regel-Zeilen für pl_1 — beide zeigen die per-Pledge-Summe 3500, damit die
+    // CapBar-Auslastung (used/cap) mit dem Enforcement übereinstimmt.
+    const pl1Rows = rows.filter((r) => r.pledgeId === "pl_1");
+    expect(pl1Rows.length).toBe(2);
+    expect(pl1Rows.every((r) => r.monthChargedCents === 3500)).toBe(true);
+    expect(await getMonthlyChargedCents("pl_1", now)).toBe(3500);
   });
 
   // ─── getSponsorOverviewForClub ─────────────────────────────────────────────
