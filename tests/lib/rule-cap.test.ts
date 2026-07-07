@@ -56,12 +56,8 @@ describe("utcMonthWindow", () => {
 });
 
 describe("CAP_COUNTED_STATUSES", () => {
-  it("zählt confirmed, pending_approval und invoiced (pending reserviert Headroom)", () => {
-    expect([...CAP_COUNTED_STATUSES].sort()).toEqual([
-      "confirmed",
-      "invoiced",
-      "pending_approval"
-    ]);
+  it("zählt nur confirmed + invoiced — pending_approval reserviert seit 07f6e94 KEIN Cap-Budget (Missbrauchsvektor)", () => {
+    expect([...CAP_COUNTED_STATUSES].sort()).toEqual(["confirmed", "invoiced"]);
   });
 });
 

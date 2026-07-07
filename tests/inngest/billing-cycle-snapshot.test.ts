@@ -20,6 +20,11 @@ vi.mock("@/lib/auth/session", () => ({
   requireUser: vi.fn().mockResolvedValue({ id: "u_bcs", email: "bcs@example.com" })
 }));
 vi.mock("@/lib/auth/scope", () => ({
+  // addManualEvent guardet seit abb6008 autark-bewusst über assertTeamWriteAccess
+  // (nicht mehr den reinen Club-Guard) — der Mock muss diesen Export mitliefern.
+  assertTeamWriteAccess: vi.fn().mockResolvedValue({
+    access: { granted: true, scope: "club" }
+  }),
   assertClubWriteAccess: vi.fn().mockResolvedValue(undefined)
 }));
 vi.mock("next/cache", () => ({

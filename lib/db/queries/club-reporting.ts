@@ -300,7 +300,8 @@ function pledgeOrder(sort?: ClubPledgeSortKey, dir?: SortDir): SQL[] {
  * Spielraum als tatsächlich durchgesetzt wird — dieselbe Divergenz wie zuvor
  * sponsorseitig. Daher die gemeinsame Quelle `chargeCountsTowardCap`
  * (UTC-Fenster über `utcMonthWindow`, Anker COALESCE(confirmedAt, createdAt),
- * Status ∈ CAP_COUNTED_STATUSES inkl. pending_approval) — nicht mehr das
+ * Status ∈ CAP_COUNTED_STATUSES = confirmed + invoiced; pending_approval zählt
+ * seit dem Root-Fix 07f6e94 NICHT — reserviert kein Cap-Budget) — nicht mehr das
  * TZ-abhängige `date_trunc('month', NOW())` mit nacktem `confirmed_at`.
  *
  * Grouping per PLEDGE (nicht per Rule): `monthlyCapCents` ist ein pro-Pledge

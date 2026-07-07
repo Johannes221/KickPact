@@ -146,30 +146,46 @@ describe.skipIf(isIntegrationDbDisabled)("club-reporting (integration)", () => {
   // ─── monthChargedCents: Cap-Auslastung == Enforcement ─────────────────────
   // Der Verein sieht dieselbe Monats-Auslastung, die evaluate-match durchsetzt:
   // UTC-Fenster, Anker COALESCE(confirmedAt, createdAt), Status ∈
-  // CAP_COUNTED_STATUSES (inkl. pending_approval), per-PLEDGE (nicht per-Rule) —
-  // deckungsgleich mit getMonthlyChargedCents. Sonst zeigt der CapBar mehr freien
-  // Spielraum als das Enforcement erlaubt (dieselbe Divergenz wie sponsorseitig).
+  // CAP_COUNTED_STATUSES (= confirmed + invoiced; pending_approval zählt seit dem
+  // Root-Fix 07f6e94 NICHT mehr — Missbrauchsvektor/Anzeige-Divergenz), per-PLEDGE
+  // (nicht per-Rule) — deckungsgleich mit getMonthlyChargedCents. Sonst zeigt der
+  // CapBar mehr freien Spielraum als das Enforcement erlaubt.
 
-  it("listPledgesForClub: monthChargedCents zählt pending_approval mit (Enforcement-Parität)", async () => {
+  it("listPledgesForClub: monthChargedCents zählt pending_approval NICHT mit (Enforcement-Parität, Root-Fix 07f6e94)", async () => {
     const db = await getTestDb();
     const now = new Date(Date.UTC(2026, 2, 20));
-    await db.insert(charges).values({
-      id: "c_pending",
-      pledgeId: "pl_1",
-      pledgeRuleId: "pr_1",
-      matchId: null,
-      triggerType: "goal_total",
-      amountCents: 3000,
-      status: "pending_approval",
-      createdAt: new Date(Date.UTC(2026, 2, 5)),
-      confirmedAt: null
-    });
+    // Confirmed zählt (2000) — pending_approval (3000) reserviert kein Cap-Budget.
+    await db.insert(charges).values([
+      {
+        id: "c_confirmed",
+        pledgeId: "pl_1",
+        pledgeRuleId: "pr_1",
+        matchId: null,
+        triggerType: "goal_total",
+        amountCents: 2000,
+        status: "confirmed",
+        createdAt: new Date(Date.UTC(2026, 2, 5)),
+        confirmedAt: new Date(Date.UTC(2026, 2, 5))
+      },
+      {
+        id: "c_pending",
+        pledgeId: "pl_1",
+        pledgeRuleId: "pr_1",
+        matchId: null,
+        triggerType: "goal_total",
+        amountCents: 3000,
+        status: "pending_approval",
+        createdAt: new Date(Date.UTC(2026, 2, 6)),
+        confirmedAt: null
+      }
+    ]);
     const rows = await listPledgesForClub("club_a", {
       filter: { teamId: "team_1" },
       now
     });
     const pl1 = rows.find((r) => r.pledgeId === "pl_1");
-    expect(pl1?.monthChargedCents).toBe(3000);
+    // Nur die confirmed Charge zählt — pending_approval bleibt aussen vor.
+    expect(pl1?.monthChargedCents).toBe(2000);
     // exakt das, was das Enforcement gegen den Pledge-Cap zählt
     expect(pl1?.monthChargedCents).toBe(
       await getMonthlyChargedCents("pl_1", now)
