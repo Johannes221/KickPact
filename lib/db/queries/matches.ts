@@ -407,6 +407,40 @@ export async function countFinishedMatchesSince(
 }
 
 /**
+ * Gespielte Spiele (finished) ab `since` für alle Mannschaften, deren
+ * EFFEKTIVER Lizenz-Verein (licensedUnderClubId ?? clubId) dieser Club ist.
+ *
+ * Basis für die Deferred-Charge-Recovery nach Reaktivierung eines past_due-
+ * Vereins: während des Read-Only-Lapse crawlt der Crawler weiter und
+ * persistiert die Spiele mit korrektem Hash, evaluate-match stellt aber die
+ * Charges zurück. „Spieldaten erneut einlesen" ist für diese Spiele ein No-Op
+ * (Hash unverändert → kein Re-Emit) — deshalb muss die Recovery sie gezielt
+ * wiederfinden und match/finished neu emittieren.
+ *
+ * Fenster (Cutoff auf `datum`) begrenzt bewusst auf junge Spiele: ein ganzer
+ * Rückstau würde sonst auf den Monats-Cap des Reaktivierungs-Monats einschlagen
+ * (Cap-Crush, Anker = confirmedAt = jetzt). Ältere deferred Charges verfallen.
+ * Scoping über die effektive Lizenz, damit ein per Transfer angehängtes Team
+ * mit dem zahlenden Verein reaktiviert wird (analog getSubscriptionGateForTeam).
+ */
+export async function getRecentFinishedMatchesForClubLicense(
+  clubId: string,
+  since: Date
+): Promise<{ matchId: string; teamId: string }[]> {
+  return db
+    .select({ matchId: matches.id, teamId: matches.teamId })
+    .from(matches)
+    .innerJoin(teams, eq(matches.teamId, teams.id))
+    .where(
+      and(
+        eq(matches.status, "finished"),
+        gte(matches.datum, since),
+        sql`COALESCE(${teams.licensedUnderClubId}, ${teams.clubId}) = ${clubId}`
+      )
+    );
+}
+
+/**
  * Entscheidet, ob für eine Mannschaft der Vorsaison-Backfill
  * (`crawler/team.backfill`) angestoßen werden soll — am Ende des
  * Onboarding-/Einzel-Team-Crawls (crawl-matches, Event crawler/team.crawl).

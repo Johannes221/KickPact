@@ -14,9 +14,11 @@ import {
   cancelSubscriptionForClub,
   setTeamLicensesStatusForClubTeams,
   setSubscriptionStatusByCustomer,
+  getSubscriptionStatusByCustomer,
   getClubIdByCustomer,
   getSubscriptionProvider
 } from "@/lib/db/queries/subscriptions";
+import { inngest } from "@/lib/inngest/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -256,6 +258,8 @@ export async function POST(req: NextRequest) {
           break;
         }
 
+        // Übergang VOR dem Update lesen — steuert die Deferred-Charge-Recovery.
+        const priorStatus = await getSubscriptionStatusByCustomer(customerId);
         await setSubscriptionStatusByCustomer(customerId, freshStatus);
         if (freshStatus === "active") {
           // Auch teamLicenses auf active setzen — vorher blieb status dauerhaft
@@ -263,6 +267,23 @@ export async function POST(req: NextRequest) {
           const paidClubId = await getClubIdByCustomer(customerId);
           if (paidClubId) {
             await setTeamLicensesStatusForClubTeams(paidClubId, "active");
+
+            // Deferred-Charge-Recovery NUR beim Übergang past_due → active.
+            // Während past_due (read-only jenseits der Grace) crawlt der Crawler
+            // weiter und persistiert Spiele mit korrektem Hash, evaluate-match
+            // stellt aber die Charges zurück. „Erneut einlesen" ist für diese
+            // Spiele ein No-Op (Hash unverändert → kein Re-Emit), die deferred
+            // Charges gingen still verloren. recover-deferred-charges re-emittet
+            // match/finished für die jungen Spiele (Fenster = Cap-Crush-Schutz).
+            // Andere Übergänge brauchen das nicht: aus `active` (Verlängerung)
+            // ist nichts zurückgestellt, aus `cancelled` werden Spiele beim
+            // nächsten Crawl ohnehin frisch inserted (Crawl-Gate war zu).
+            if (priorStatus === "past_due") {
+              await inngest.send({
+                name: "billing/charges.recover",
+                data: { clubId: paidClubId }
+              });
+            }
           }
         }
         break;

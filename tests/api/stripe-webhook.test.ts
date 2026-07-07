@@ -26,9 +26,11 @@ const {
   cancelClubMock,
   setLicStatusMock,
   setStatusByCustomerMock,
+  getStatusByCustomerMock,
   getClubIdByCustomerMock,
   getCustomerIdMock,
-  getProviderMock
+  getProviderMock,
+  inngestSendMock
 } = vi.hoisted(() => ({
   constructEventMock: vi.fn(),
   subscriptionsRetrieveMock: vi.fn(),
@@ -39,9 +41,11 @@ const {
   cancelClubMock: vi.fn(),
   setLicStatusMock: vi.fn(),
   setStatusByCustomerMock: vi.fn(),
+  getStatusByCustomerMock: vi.fn(),
   getClubIdByCustomerMock: vi.fn(),
   getCustomerIdMock: vi.fn(),
-  getProviderMock: vi.fn()
+  getProviderMock: vi.fn(),
+  inngestSendMock: vi.fn()
 }));
 
 vi.mock("@/lib/stripe/client", () => ({
@@ -71,8 +75,13 @@ vi.mock("@/lib/db/queries/subscriptions", () => ({
   cancelSubscriptionForClub: cancelClubMock,
   setTeamLicensesStatusForClubTeams: setLicStatusMock,
   setSubscriptionStatusByCustomer: setStatusByCustomerMock,
+  getSubscriptionStatusByCustomer: getStatusByCustomerMock,
   getClubIdByCustomer: getClubIdByCustomerMock,
   getSubscriptionProvider: getProviderMock
+}));
+
+vi.mock("@/lib/inngest/client", () => ({
+  inngest: { send: inngestSendMock }
 }));
 
 vi.mock("@/lib/billing/downgrade-enforcement", () => ({
@@ -118,6 +127,9 @@ beforeEach(() => {
   subscriptionsRetrieveMock.mockResolvedValue(BASE_SUB);
   getClubIdByCustomerMock.mockResolvedValue("club1");
   getProviderMock.mockResolvedValue(null);
+  // Default: Verein war zuletzt active (normale Verlängerung) → keine Recovery.
+  getStatusByCustomerMock.mockResolvedValue("active");
+  inngestSendMock.mockResolvedValue(undefined);
 });
 
 describe("stripe webhook — Marker-Lebenszyklus (A4)", () => {
@@ -260,6 +272,34 @@ describe("stripe webhook — invoice.paid Guard (A4)", () => {
     await POST(makeReq());
 
     expect(setStatusByCustomerMock).not.toHaveBeenCalled();
+  });
+
+  it("Reaktivierung aus past_due → stößt Deferred-Charge-Recovery an", async () => {
+    // Bug: während past_due (read-only) crawlt der Crawler weiter und stellt
+    // Charges zurück; „erneut einlesen" ist wegen unverändertem Hash ein No-Op.
+    // Bei Reaktivierung müssen die zurückgestellten Charges gezielt neu
+    // ausgewertet werden.
+    constructEventMock.mockReturnValue(invoicePaidEvent("sub_1"));
+    subscriptionsRetrieveMock.mockResolvedValue({ ...BASE_SUB, status: "active" });
+    getStatusByCustomerMock.mockResolvedValue("past_due");
+
+    await POST(makeReq());
+
+    expect(inngestSendMock).toHaveBeenCalledWith({
+      name: "billing/charges.recover",
+      data: { clubId: "club1" }
+    });
+  });
+
+  it("normale Verlängerung (war active) → KEINE Recovery (kein Re-Emit-Sturm)", async () => {
+    constructEventMock.mockReturnValue(invoicePaidEvent("sub_1"));
+    subscriptionsRetrieveMock.mockResolvedValue({ ...BASE_SUB, status: "active" });
+    getStatusByCustomerMock.mockResolvedValue("active");
+
+    await POST(makeReq());
+
+    expect(setStatusByCustomerMock).toHaveBeenCalledWith("cus_1", "active");
+    expect(inngestSendMock).not.toHaveBeenCalled();
   });
 });
 

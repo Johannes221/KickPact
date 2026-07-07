@@ -5,6 +5,7 @@ import {
   listIncompleteSubscriptions,
   listRecentStripeEvents
 } from "@/lib/db/queries/subscriptions";
+import { DEFERRED_CHARGE_RECOVERY_DAYS } from "@/lib/inngest/functions/recover-deferred-charges";
 
 export const metadata = { title: "Stripe · Admin · KickPact" };
 export const dynamic = "force-dynamic";
@@ -30,9 +31,13 @@ export default async function StripePage() {
           <p className="mb-2 text-xs text-brand-night-navy/60">
             Hinweis: Für read-only Vereine (past_due jenseits der Grace /
             cancelled) werden Spiel-Auswertungen zurückgestellt
-            (Log: <code>match/evaluation-deferred</code>). Nach Reaktivierung
-            die betroffenen Mannschaften über „Spieldaten erneut einlesen"
-            re-scrapen, damit die zurückgestellten Charges entstehen.
+            (Log: <code>match/evaluation-deferred</code>). Bei Reaktivierung
+            (Zahlung eingegangen, Übergang past_due → active) werden die
+            zurückgestellten Charges der letzten {DEFERRED_CHARGE_RECOVERY_DAYS}{" "}
+            Tage automatisch neu ausgewertet (<code>billing/charges.recover</code>).
+            Ältere zurückgestellte Charges verfallen bewusst (Cap-Schutz).
+            „Spieldaten erneut einlesen" stellt sie NICHT wieder her —
+            der Inhalt ist unverändert, der Crawler überspringt die Spiele.
           </p>
         )}
         <div className="rounded-2xl border border-brand-neutral/40 bg-white overflow-x-auto">
