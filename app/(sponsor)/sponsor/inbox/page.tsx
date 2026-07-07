@@ -4,8 +4,10 @@ import {
   listPendingDirectChargesForSponsor
 } from "@/lib/db/queries/approvals";
 import { ApprovalRow } from "./_components/approval-row";
+import { MatchApprovalGroup } from "./_components/match-approval-group";
 import { DirectChargeRow } from "./_components/direct-charge-row";
 import { PageHeader } from "@/components/shared/page-header";
+import type { PendingApprovalRow } from "@/lib/db/queries/approvals";
 
 // Hieß früher „Inbox" (eigener Bottom-Tab). Der Tab ist weg — erreichbar bleibt
 // die Seite über „Nächste Schritte" auf der Übersicht + E-Mail-Deep-Links,
@@ -23,6 +25,16 @@ export default async function SponsorInboxPage() {
     listPendingDirectChargesForSponsor(user.id)
   ]);
   const total = pending.length + directCharges.length;
+
+  // Nach Spiel gruppieren (Reihenfolge = zuerst gesehen, folgt createdAt DESC).
+  // Manual-Teams erzeugen viele Approvals pro Spiel — die Gruppe bekommt eine
+  // Batch-Bestätigung, Einzel-Spiele bleiben eine schlichte ApprovalRow.
+  const matchGroups = new Map<string, PendingApprovalRow[]>();
+  for (const p of pending) {
+    const arr = matchGroups.get(p.matchId);
+    if (arr) arr.push(p);
+    else matchGroups.set(p.matchId, [p]);
+  }
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -59,9 +71,13 @@ export default async function SponsorInboxPage() {
         <div className="space-y-6">
           {pending.length > 0 && (
             <div className="space-y-3">
-              {pending.map((p) => (
-                <ApprovalRow key={p.approvalId} data={p} />
-              ))}
+              {[...matchGroups.values()].map((rows) =>
+                rows.length === 1 ? (
+                  <ApprovalRow key={rows[0].approvalId} data={rows[0]} />
+                ) : (
+                  <MatchApprovalGroup key={rows[0].matchId} rows={rows} />
+                )
+              )}
             </div>
           )}
           {directCharges.length > 0 && (
