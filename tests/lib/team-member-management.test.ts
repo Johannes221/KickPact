@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createId } from "@paralleldrive/cuid2";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   users,
@@ -56,6 +57,20 @@ async function setLicense(
     status: "active",
     parentClubLicenseId
   });
+}
+
+async function seedClub(): Promise<string> {
+  const clubId = createId();
+  await db.insert(clubs).values({
+    id: clubId,
+    slug: `b-${clubId.slice(0, 8)}`,
+    name: "Verein B"
+  });
+  return clubId;
+}
+
+async function setLicensedUnder(teamId: string, clubId: string | null) {
+  await db.update(teams).set({ licensedUnderClubId: clubId }).where(eq(teams.id, teamId));
 }
 
 describe("isTeamAutark", () => {
@@ -189,6 +204,28 @@ describe("canManageTeamMembers", () => {
     const { teamId } = await seedClubTeam();
     const u = await seedUser();
     expect(await canManageTeamMembers(u, teamId)).toBe(false);
+  });
+
+  // A5: nach Lizenz-Transfer verwaltet der zahlende Verein B, nicht mehr der
+  // Alt-Container A (Durchgriff folgt licensedUnderClubId ?? clubId).
+  it("true for the LICENSING club's admin after a transfer", async () => {
+    const { teamId } = await seedClubTeam();
+    const clubB = await seedClub();
+    const adminB = await seedUser();
+    await db.insert(clubMemberships).values({ userId: adminB, clubId: clubB, role: "admin" });
+    await setLicensedUnder(teamId, clubB);
+    await setLicense(clubB, teamId, "verein");
+    expect(await canManageTeamMembers(adminB, teamId)).toBe(true);
+  });
+
+  it("false for the OLD container admin after a transfer", async () => {
+    const { clubId: containerId, teamId } = await seedClubTeam();
+    const containerAdmin = await seedUser();
+    await db.insert(clubMemberships).values({ userId: containerAdmin, clubId: containerId, role: "admin" });
+    const clubB = await seedClub();
+    await setLicensedUnder(teamId, clubB);
+    await setLicense(clubB, teamId, "verein");
+    expect(await canManageTeamMembers(containerAdmin, teamId)).toBe(false);
   });
 
   it("false when the team does not exist", async () => {

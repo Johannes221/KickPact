@@ -1,7 +1,16 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { clubs, teams, subscriptions, clubMemberships } from "@/lib/db/schema";
 import { generateUniqueTeamSlug } from "./team-public-slug";
+
+/**
+ * Ein Team gehört einem Verein für club-scoped Zwecke, wenn der effektive
+ * Lizenz-Verein (COALESCE(licensedUnderClubId, clubId)) auf ihn zeigt — nach
+ * einem Lizenz-Transfer also der zahlende Verein, nicht der Alt-Container.
+ * Identisch zur Billing-Auflösung (charges.ts / billing-club.ts, A5).
+ */
+const teamBelongsToClub = (clubId: string) =>
+  sql`COALESCE(${teams.licensedUnderClubId}, ${teams.clubId}) = ${clubId}`;
 
 function nullIfEmpty(v: string | null | undefined): string | null {
   if (v == null) return null;
@@ -200,7 +209,12 @@ export async function getClubTeamsBasic(clubId: string) {
     .where(eq(teams.clubId, clubId));
 }
 
-/** Teams eines Clubs mit Status (id/name/saison/isActive), nach Name sortiert. */
+/**
+ * Teams eines Clubs mit Status (id/name/saison/isActive), nach Name sortiert.
+ * Folgt dem effektiven Lizenz-Verein (A5): ein per Transfer übernommenes Team
+ * erscheint beim zahlenden Verein, ein weg-lizenziertes verschwindet aus dem
+ * Alt-Container.
+ */
 export async function listClubTeamsWithStatus(clubId: string) {
   return db
     .select({
@@ -210,6 +224,6 @@ export async function listClubTeamsWithStatus(clubId: string) {
       isActive: teams.isActive
     })
     .from(teams)
-    .where(eq(teams.clubId, clubId))
+    .where(teamBelongsToClub(clubId))
     .orderBy(teams.name);
 }
