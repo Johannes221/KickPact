@@ -38,6 +38,7 @@ import {
   paginate,
   type PaginatedResult
 } from "@/lib/db/queries/_helpers/paginate";
+import { utcMonthWindow, chargeCountsTowardCap } from "@/lib/db/queries/evaluation";
 import { sponsorLabelSql } from "./sponsor-label";
 
 type SortDir = "asc" | "desc";
@@ -292,43 +293,59 @@ function pledgeOrder(sort?: ClubPledgeSortKey, dir?: SortDir): SQL[] {
   }
 }
 
-const pledgeSelect = {
-  pledgeId: pledges.id,
-  ruleId: pledgeRules.id,
-  sponsorId: sponsors.id,
-  sponsorDisplayName: sponsorLabelSql,
-  sponsorEmail: users.email,
-  teamId: teams.id,
-  teamName: teams.name,
-  triggerType: pledgeRules.triggerType,
-  amountCents: pledgeRules.amountCents,
-  perMatchCapCents: pledgeRules.perMatchCapCents,
-  monthlyCapCents: pledges.monthlyCapCents,
-  status: pledges.status,
-  startsAt: pledges.startsAt,
-  endsAt: pledges.endsAt,
-  createdAt: pledges.createdAt,
-  monthChargedCents: sql<number>`COALESCE((
-    SELECT SUM(c.amount_cents)
-    FROM ${charges} c
-    WHERE c.pledge_id = ${pledges.id}
-      AND c.pledge_rule_id = ${pledgeRules.id}
-      AND c.status IN ('confirmed','invoiced')
-      AND c.confirmed_at >= date_trunc('month', NOW())
-      AND c.confirmed_at < date_trunc('month', NOW()) + interval '1 month'
-  ), 0)::int`,
-  lifetimeChargedCents: sql<number>`COALESCE((
-    SELECT SUM(c.amount_cents)
-    FROM ${charges} c
-    WHERE c.pledge_id = ${pledges.id}
-      AND c.pledge_rule_id = ${pledgeRules.id}
-      AND c.status IN ('confirmed','invoiced')
-  ), 0)::int`
-};
+/**
+ * Baut das Pledge-Report-Select mit dem Cap-Fenster `[monthStart, monthEnd)`.
+ *
+ * `monthChargedCents` MUSS deckungsgleich zum Enforcement (evaluate-match /
+ * getMonthlyChargedCents) rechnen, sonst zeigt die CapBar (used/cap) mehr freien
+ * Spielraum als tatsächlich durchgesetzt wird — dieselbe Divergenz wie zuvor
+ * sponsorseitig. Daher die gemeinsame Quelle `chargeCountsTowardCap`
+ * (UTC-Fenster über `utcMonthWindow`, Anker COALESCE(confirmedAt, createdAt),
+ * Status ∈ CAP_COUNTED_STATUSES inkl. pending_approval) — nicht mehr das
+ * TZ-abhängige `date_trunc('month', NOW())` mit nacktem `confirmed_at`.
+ *
+ * Grouping per PLEDGE (nicht per Rule): `monthlyCapCents` ist ein pro-Pledge
+ * geteiltes Budget aller Regeln, und das Enforcement summiert per-Pledge über
+ * alle Regeln. Für mehrere Regeln eines Pledges zeigen daher alle Zeilen
+ * dieselbe (korrekte) Auslastung. `lifetimeChargedCents` bleibt per-Rule (eigene
+ * Lifetime-Spalte je Regel, kein Cap-Gate).
+ */
+function buildPledgeSelect(monthStart: Date, monthEnd: Date) {
+  return {
+    pledgeId: pledges.id,
+    ruleId: pledgeRules.id,
+    sponsorId: sponsors.id,
+    sponsorDisplayName: sponsorLabelSql,
+    sponsorEmail: users.email,
+    teamId: teams.id,
+    teamName: teams.name,
+    triggerType: pledgeRules.triggerType,
+    amountCents: pledgeRules.amountCents,
+    perMatchCapCents: pledgeRules.perMatchCapCents,
+    monthlyCapCents: pledges.monthlyCapCents,
+    status: pledges.status,
+    startsAt: pledges.startsAt,
+    endsAt: pledges.endsAt,
+    createdAt: pledges.createdAt,
+    monthChargedCents: sql<number>`COALESCE((
+      SELECT SUM(${charges.amountCents})
+      FROM ${charges}
+      WHERE ${charges.pledgeId} = ${pledges.id}
+        AND ${chargeCountsTowardCap(monthStart, monthEnd)}
+    ), 0)::int`,
+    lifetimeChargedCents: sql<number>`COALESCE((
+      SELECT SUM(c.amount_cents)
+      FROM ${charges} c
+      WHERE c.pledge_id = ${pledges.id}
+        AND c.pledge_rule_id = ${pledgeRules.id}
+        AND c.status IN ('confirmed','invoiced')
+    ), 0)::int`
+  };
+}
 
 export function listPledgesForClub(
   clubId: string,
-  opts?: { filter?: ClubPledgeFilter }
+  opts?: { filter?: ClubPledgeFilter; now?: Date }
 ): Promise<ClubPledgeReportRow[]>;
 export function listPledgesForClub(
   clubId: string,
@@ -337,6 +354,7 @@ export function listPledgesForClub(
     filter?: ClubPledgeFilter;
     sort?: ClubPledgeSortKey;
     dir?: SortDir;
+    now?: Date;
   }
 ): Promise<PaginatedResult<ClubPledgeReportRow>>;
 export async function listPledgesForClub(
@@ -346,9 +364,13 @@ export async function listPledgesForClub(
     filter?: ClubPledgeFilter;
     sort?: ClubPledgeSortKey;
     dir?: SortDir;
+    /** Anker für das Monats-Cap-Fenster (Test-Injektion); default `new Date()`. */
+    now?: Date;
   }
 ): Promise<ClubPledgeReportRow[] | PaginatedResult<ClubPledgeReportRow>> {
   const where = pledgeWhere(clubId, opts?.filter);
+  const { start: monthStart, end: monthEnd } = utcMonthWindow(opts?.now ?? new Date());
+  const pledgeSelect = buildPledgeSelect(monthStart, monthEnd);
 
   if (!opts?.pagination) {
     return db
