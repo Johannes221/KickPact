@@ -105,4 +105,51 @@ describe("comeback_win — manuelle Evidenz (C3)", () => {
     expect(proposals).toHaveLength(1);
     expect(proposals[0].requiresApproval).toBe(true);
   });
+
+  it("Comeback steht gescrapt fest, irrelevantes Manual-Tor → weiterhin Auto-Confirm", () => {
+    // Report Tier-3: Rückstand (0:1) und Sieg (3:1) sind rein gescrapt belegt.
+    // Ein nachgetragenes, für den Ausgang belangloses eigenes Tor darf die
+    // sonst auto-bestätigte Comeback-Charge NICHT approval-pflichtig machen.
+    const match: MatchInput = {
+      id: "m3",
+      teamSide: "heim",
+      ergebnisHeim: 3,
+      ergebnisGast: 1,
+      halbzeitHeim: null,
+      halbzeitGast: null,
+      events: [
+        goal("og1", { side: "gast", minute: 5 }),
+        goal("g1", { minute: 60 }),
+        goal("g2", { minute: 70 }),
+        goal("g3", { minute: 85 }),
+        // Belangloses, nachträglich manuell gemeldetes eigenes Tor.
+        goal("g4-manual", { minute: 88, source: "manual" })
+      ]
+    };
+    const proposals = evaluateTriggers(match, [rule("comeback_win")]);
+    expect(proposals).toHaveLength(1);
+    expect(proposals[0].requiresApproval).toBe(false);
+  });
+
+  it("Rückstand entsteht NUR aus manuellem Gegner-Tor → requiresApproval=true", () => {
+    // Sicherheitsfall: gescrapt lag das Team nie hinten (nur eigene Tore),
+    // der „war hinten\"-Zustand hängt allein am manuellen Gegner-Tor.
+    const match: MatchInput = {
+      id: "m4",
+      teamSide: "heim",
+      ergebnisHeim: 2,
+      ergebnisGast: 1,
+      halbzeitHeim: null,
+      halbzeitGast: null,
+      events: [
+        goal("g1", { minute: 60 }),
+        goal("g2", { minute: 85 }),
+        // Manuell nachgetragenes Gegner-Tor in Minute 5 fabriziert den Rückstand.
+        goal("og1-manual", { side: "gast", minute: 5, source: "manual" })
+      ]
+    };
+    const proposals = evaluateTriggers(match, [rule("comeback_win")]);
+    expect(proposals).toHaveLength(1);
+    expect(proposals[0].requiresApproval).toBe(true);
+  });
 });

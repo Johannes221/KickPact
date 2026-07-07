@@ -135,13 +135,19 @@ function evaluateRule(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[
     case "clean_sheet":
       return outcome(match, rule, isCleanSheet);
     case "comeback_win":
-      // C3 (Audit 2026-06-11): manuelle Tor-Evidenz ⇒ Sponsor-Approval.
+      // C3 (Audit 2026-06-11): manuelle Tor-Evidenz ⇒ Sponsor-Approval — ABER
+      // nur, wenn der Rückstand tatsächlich an manuellen Toren hängt. Der Sieg
+      // kommt aus dem offiziellen Endstand (immun); manipulierbar ist allein der
+      // „war hinten"-Zustand. Steht dieser bereits aus gescrapter Chronologie/HZ
+      // fest, ist ein zusätzliches (irrelevantes) Manual-Tor unschädlich und die
+      // Charge bleibt Auto-Confirm. Nur wenn der Rückstand ohne die manuellen
+      // Tore verschwindet (fabrizierter Comeback), braucht es Freigabe.
       return outcome(match, rule, isComebackWin, {
-        requiresApproval: hasManualGoalEvidence(match, false)
+        requiresApproval: !wasEverBehind(match, { scrapedOnly: true })
       });
     case "hattrick":
       return outcome(match, rule, isHattrick, {
-        requiresApproval: hasManualGoalEvidence(match, true)
+        requiresApproval: hasManualOwnGoalEvidence(match)
       });
     case "goal_diff_min":
       return outcome(match, rule, (m) => {
@@ -309,19 +315,16 @@ function outcome(
 }
 
 /**
- * Audit 2026-06-11 / C3: Liegt mindestens ein BEITRAGENDES manuelles Tor-Event
- * vor, ist die Evidenz für hattrick/comeback_win nicht mehr rein gescrapte —
- * ein Verein könnte sich den Outcome über fingierte manuelle Tore zusammen-
- * bauen. Solche Proposals brauchen Sponsor-Bestätigung (Auto-Confirm bleibt
- * für rein gescrapte Evidenz). `ownOnly`: Hattrick zählt nur eigene Tore;
- * Comeback hängt an der Chronologie BEIDER Seiten.
+ * Audit 2026-06-11 / C3: Liegt mindestens ein eigenes manuelles Tor-Event vor,
+ * ist die Hattrick-Evidenz nicht mehr rein gescrapte — ein Verein könnte sich
+ * den Hattrick über fingierte manuelle Tore (Phantom-Minuten/-Spieler) zusammen-
+ * bauen. Solche Proposals brauchen Sponsor-Bestätigung (Auto-Confirm bleibt für
+ * rein gescrapte Evidenz). Comeback nutzt bewusst eine andere Regel: dort hängt
+ * die Manipulierbarkeit am Rückstand, nicht an eigenen Toren (s. comeback_win).
  */
-function hasManualGoalEvidence(m: MatchInput, ownOnly: boolean): boolean {
+function hasManualOwnGoalEvidence(m: MatchInput): boolean {
   return m.events.some(
-    (e) =>
-      e.type === "tor" &&
-      e.source === "manual" &&
-      (!ownOnly || e.side === m.teamSide)
+    (e) => e.type === "tor" && e.source === "manual" && e.side === m.teamSide
   );
 }
 
@@ -351,10 +354,12 @@ function isComebackWin(m: MatchInput): boolean {
   return wasEverBehind(m);
 }
 
-function wasEverBehind(m: MatchInput): boolean {
+function wasEverBehind(m: MatchInput, opts: { scrapedOnly?: boolean } = {}): boolean {
   // Tor-Events chronologisch — stabil sortiert, Tore ohne Minute hinten.
+  // `scrapedOnly`: manuelle Tore ausblenden, um zu prüfen, ob der Rückstand
+  // allein aus gescrapten Daten belegt ist (Approval-Entscheidung comeback_win).
   const goals = m.events
-    .filter((e) => e.type === "tor")
+    .filter((e) => e.type === "tor" && (!opts.scrapedOnly || e.source === "scraped"))
     .map((e, i) => ({ e, i }))
     .sort((a, b) => {
       const ma = a.e.minute ?? Number.POSITIVE_INFINITY;
