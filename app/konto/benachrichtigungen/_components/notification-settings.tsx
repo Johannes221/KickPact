@@ -10,6 +10,13 @@ import { PushEnableCard } from "./push-enable-card";
 
 type Key = keyof NotificationSettingsInput;
 
+const PUSH_KEYS = [
+  "matchResults",
+  "accessRequests",
+  "sponsorRequests",
+  "billing"
+] as const;
+
 const ROWS: { key: Key; label: string; hint: string }[] = [
   {
     key: "matchResults",
@@ -33,6 +40,41 @@ const ROWS: { key: Key; label: string; hint: string }[] = [
   }
 ];
 
+function Toggle({
+  on,
+  label,
+  disabled,
+  onClick
+}: {
+  on: boolean;
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={[
+        "relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
+        on ? "bg-accent" : "bg-brand-neutral/60"
+      ].join(" ")}
+    >
+      <span
+        className={[
+          "absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
+          on ? "translate-x-5" : "translate-x-0"
+        ].join(" ")}
+      />
+    </button>
+  );
+}
+
 export function NotificationSettings({ initial }: { initial: NotificationSettingsInput }) {
   const [settings, setSettings] = useState<NotificationSettingsInput>(initial);
   const [pending, startTransition] = useTransition();
@@ -53,49 +95,71 @@ export function NotificationSettings({ initial }: { initial: NotificationSetting
   }
 
   return (
-    <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-4">
-      <div>
-        <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
-          Push-Benachrichtigungen
-        </h2>
-        <p className="mt-0.5 text-xs text-brand-night-navy/60">
-          Steuert die nativen Push-Mitteilungen in der KickPact-App (iOS). Im
-          Browser siehst du alle Ereignisse weiterhin in der Liste unten.
-        </p>
-      </div>
+    <>
+      <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-4">
+        <div>
+          <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
+            Push-Benachrichtigungen
+          </h2>
+          <p className="mt-0.5 text-xs text-brand-night-navy/60">
+            Steuert die nativen Push-Mitteilungen in der KickPact-App (iOS). Im
+            Browser siehst du alle Ereignisse weiterhin in der Liste unten.
+          </p>
+        </div>
 
-      {/* Rationale-first Freischaltung (nur in der iOS-App sichtbar). */}
-      <PushEnableCard />
+        {/* Rationale-first Freischaltung (nur in der iOS-App sichtbar). */}
+        <PushEnableCard />
 
-      <ul className="divide-y divide-brand-neutral/30">
-        {ROWS.map((row) => (
-          <li key={row.key} className="flex items-start justify-between gap-4 py-3">
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-brand-night-navy">{row.label}</p>
-              <p className="mt-0.5 text-xs text-brand-night-navy/55">{row.hint}</p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={settings[row.key]}
-              aria-label={row.label}
-              disabled={pending}
-              onClick={() => toggle(row.key)}
-              className={[
-                "relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50",
-                settings[row.key] ? "bg-accent" : "bg-brand-neutral/60"
-              ].join(" ")}
-            >
-              <span
-                className={[
-                  "absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
-                  settings[row.key] ? "translate-x-5" : "translate-x-0"
-                ].join(" ")}
-              />
-            </button>
-          </li>
-        ))}
-      </ul>
-    </section>
+        <ul className="divide-y divide-brand-neutral/30">
+          {ROWS.filter((r) => (PUSH_KEYS as readonly string[]).includes(r.key)).map(
+            (row) => (
+              <li key={row.key} className="flex items-start justify-between gap-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-brand-night-navy">
+                    {row.label}
+                  </p>
+                  <p className="mt-0.5 text-xs text-brand-night-navy/55">{row.hint}</p>
+                </div>
+                <Toggle
+                  on={settings[row.key]}
+                  label={row.label}
+                  disabled={pending}
+                  onClick={() => toggle(row.key)}
+                />
+              </li>
+            )
+          )}
+        </ul>
+      </section>
+
+      <section className="rounded-2xl bg-white shadow-ios-card p-5 md:p-6 space-y-4">
+        <div>
+          <h2 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
+            E-Mail-Benachrichtigungen
+          </h2>
+          <p className="mt-0.5 text-xs text-brand-night-navy/60">
+            Wichtige Mails wie Rechnungen und Bestätigungslinks bekommst du immer.
+          </p>
+        </div>
+
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-brand-night-navy">
+              Erinnerungen &amp; Hinweise
+            </p>
+            <p className="mt-0.5 text-xs text-brand-night-navy/55">
+              Wiederkehrende E-Mails wie offene Bestätigungen und
+              Saison-Verlängerungen.
+            </p>
+          </div>
+          <Toggle
+            on={settings.emailRecurring}
+            label="E-Mail-Erinnerungen"
+            disabled={pending}
+            onClick={() => toggle("emailRecurring")}
+          />
+        </div>
+      </section>
+    </>
   );
 }

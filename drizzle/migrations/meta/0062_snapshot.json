@@ -1,5 +1,5 @@
 {
-  "id": "93cb0254-a414-4c58-a03e-a0e17a11b0e5",
+  "id": "2c0612c9-c023-40e3-a46c-91e4c6113ba1",
   "prevId": "1d631ad7-69f9-49f6-8b5e-ede34910d73a",
   "version": "7",
   "dialect": "postgresql",
@@ -2681,12 +2681,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "correction_flagged_at": {
-          "name": "correction_flagged_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
         "invoice_id": {
           "name": "invoice_id",
           "type": "text",
@@ -4897,6 +4891,13 @@
         },
         "billing": {
           "name": "billing",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "email_recurring": {
+          "name": "email_recurring",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,

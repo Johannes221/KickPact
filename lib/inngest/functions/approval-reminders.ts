@@ -13,10 +13,17 @@ import {
   users
 } from "@/lib/db/schema";
 import { sponsorLabelSql } from "@/lib/db/queries/sponsor-label";
-import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { approvalReminderEmail } from "@/lib/mail/templates/approval-reminder";
+import { sendRecurringEmail } from "@/lib/mail/send-recurring";
 import { signApprovalToken } from "@/lib/auth/approval-token";
 import { eur } from "@/lib/utils/currency";
+
+/**
+ * Deckel: nach so vielen 7-Tage-Erinnerungen pro Approval hört KickPact auf.
+ * Verhindert endlose Mails an einen Sponsor, der eine pending Approval dauerhaft
+ * ignoriert (der Verein kann die Beiträge weiterhin selbst stornieren).
+ */
+export const MAX_APPROVAL_REMINDERS = 3;
 
 function eventLabel(type: string, subtype: string | null): string {
   if (type === "tor") return "Tor";
@@ -77,6 +84,7 @@ export const approvalReminders = inngest.createFunction(
           and(
             eq(eventApprovals.status, "pending"),
             lt(eventApprovals.createdAt, sevenDaysAgo),
+            lt(eventApprovals.reminderCount, MAX_APPROVAL_REMINDERS),
             or(
               isNull(eventApprovals.lastRemindedAt),
               lt(eventApprovals.lastRemindedAt, sevenDaysAgo)
@@ -139,14 +147,14 @@ export const approvalReminders = inngest.createFunction(
           }),
           inboxUrl
         });
-        await resend.emails.send({
-          from: MAIL_FROM,
+        const res = await sendRecurringEmail({
+          userId,
           to: group.email,
           subject: mail.subject,
           html: mail.html,
           text: mail.text
         });
-        remindersSent++;
+        if (!res.skipped) remindersSent++;
       });
 
       // 4) Update reminder_count + last_reminded_at für alle approvals dieses sponsors

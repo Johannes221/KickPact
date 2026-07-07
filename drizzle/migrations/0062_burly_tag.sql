@@ -1,0 +1,1 @@
+ALTER TABLE "notification_settings" ADD COLUMN "email_recurring" boolean DEFAULT true NOT NULL;
