@@ -41,6 +41,10 @@ const TRANSIENT_PATTERNS: ReadonlyArray<RegExp> = [
   /ETIMEDOUT/i,
   /Navigation timeout/i,
   /HTTP 5\d{2}/i,
+  // Vibe-Check C: 429 (fussball.de drosselt) + client-seitiger Request-Timeout
+  // (AbortSignal.timeout → "aborted"/"TimeoutError") sind transient → Backoff-Retry.
+  /HTTP 429/i,
+  /aborted|timeout/i,
 ];
 
 export type RetryOptions = { maxAttempts: number; baseDelayMs?: number };
@@ -67,7 +71,10 @@ export async function withRetry<T>(
       const message = err instanceof Error ? err.message : String(err);
       const transient = TRANSIENT_PATTERNS.some((p) => p.test(message));
       if (!transient || attempt === opts.maxAttempts) throw err;
-      const delay = baseDelay * Math.pow(2, attempt - 1);
+      // Exponential Backoff + additiver Jitter (0..baseDelay) gegen
+      // Thundering-Herd bei parallelen Crawl-Workern. Jitter nur additiv, damit
+      // die Mindest-Wartezeit erhalten bleibt.
+      const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * baseDelay;
       await new Promise((r) => setTimeout(r, delay));
     }
   }
@@ -118,8 +125,13 @@ async function fetchHtml(url: string): Promise<HTMLElement> {
             "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
           "Accept-Language": "de-DE,de;q=0.9,en;q=0.8"
         },
-        redirect: "follow"
+        redirect: "follow",
+        // Vibe-Check C: harte Obergrenze — sonst hängt ein stockender Upstream
+        // (undici-Default ~kein Timeout) bis zu 5 Min und blockiert u.a. die
+        // synchrone Onboarding-Suche. 10s reichen für die ~28-190 KB-Seiten.
+        signal: AbortSignal.timeout(10_000)
       });
+      if (res.status === 429) throw new Error(`HTTP 429 für ${url}`); // transient (Backoff)
       if (res.status >= 500) throw new Error(`HTTP ${res.status}`); // transient
       if (!res.ok) throw new Error(`HTTP ${res.status} für ${url}`);
       const html = await res.text();

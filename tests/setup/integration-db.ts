@@ -73,6 +73,7 @@ export async function resetTestDb(): Promise<void> {
       pledge_rules,
       pledges,
       sponsor_inquiries,
+      sponsor_leads,
       sponsor_invitations,
       sponsors,
       season_results,

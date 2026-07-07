@@ -7,19 +7,29 @@
  * zeit-/saisonsgebunden (Reminder-Fenster, Approval-Expiry 21d, Match-Push
  * direkt nach Spiel). 90 Tage sind damit weit auf der sicheren Seite.
  *
+ * sponsor_leads (Vibe-Check 2026-07-07): Kontaktdaten (Name/E-Mail) NICHT
+ * eingeloggter Besucher — DSGVO-relevante Dritt-PII, die ohne Retention
+ * unbegrenzt wüchse und per Betroffenenanfrage nicht auffindbar wäre. Ein Lead
+ * ist eine transiente Kontaktaufnahme; nach 180 Tagen ist er entweder in einen
+ * Sponsor konvertiert (eigener Datensatz) oder verfallen → löschen.
+ *
  * Aufgerufen vom täglichen expire-approvals-Cron (lifecycle-cleanup).
  */
 import { lt } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { processedStripeEvents, sentNotifications } from "@/lib/db/schema";
+import { processedStripeEvents, sentNotifications, sponsorLeads } from "@/lib/db/schema";
 
 export const SYSTEM_RETENTION_DAYS = 90;
+export const LEADS_RETENTION_DAYS = 180;
 
 export async function deleteExpiredSystemRows(
   now: Date
-): Promise<{ stripeEvents: number; notifications: number }> {
+): Promise<{ stripeEvents: number; notifications: number; leads: number }> {
   const cutoff = new Date(
     now.getTime() - SYSTEM_RETENTION_DAYS * 24 * 60 * 60 * 1000
+  );
+  const leadsCutoff = new Date(
+    now.getTime() - LEADS_RETENTION_DAYS * 24 * 60 * 60 * 1000
   );
   const stripeEvents = await db
     .delete(processedStripeEvents)
@@ -29,5 +39,13 @@ export async function deleteExpiredSystemRows(
     .delete(sentNotifications)
     .where(lt(sentNotifications.sentAt, cutoff))
     .returning({ key: sentNotifications.key });
-  return { stripeEvents: stripeEvents.length, notifications: notifications.length };
+  const leads = await db
+    .delete(sponsorLeads)
+    .where(lt(sponsorLeads.createdAt, leadsCutoff))
+    .returning({ id: sponsorLeads.id });
+  return {
+    stripeEvents: stripeEvents.length,
+    notifications: notifications.length,
+    leads: leads.length
+  };
 }

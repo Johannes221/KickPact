@@ -81,7 +81,10 @@ export const charges = pgTable(
      * auf NULL gesetzt. NULL = nichts offen.
      */
     correctionFlaggedAt: timestamp("correction_flagged_at", { withTimezone: true }),
-    invoiceId: text("invoice_id"),
+    // Vibe-Check B: FK auf invoices (vorher plain text → dangling ref möglich).
+    // set null: Rechnungen werden storniert statt hart gelöscht; falls doch,
+    // bleibt die Charge erhalten und verliert nur die Verknüpfung.
+    invoiceId: text("invoice_id").references(() => invoices.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true })
   },

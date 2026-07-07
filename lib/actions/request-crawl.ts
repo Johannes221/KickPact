@@ -2,6 +2,7 @@
 
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { inngest } from "@/lib/inngest/client";
+import { rateLimit } from "@/lib/utils/rate-limit";
 
 /**
  * Manuelles „Spiele aktualisieren" aus der App: stößt einen On-Demand-Crawl
@@ -19,6 +20,15 @@ export async function requestTeamCrawlAction(input: {
     await assertTeamPageAccess(input.slug, input.teamId, "viewer");
   } catch {
     return { ok: false, error: "Kein Zugriff auf diese Mannschaft." };
+  }
+  // Vibe-Check A: On-Demand-Crawl stößt einen externen fussball.de-Scrape-Job an.
+  // Ohne Drossel könnte ein Team-Mitglied per Klick-Flut beliebig viele Jobs
+  // erzeugen (Kosten/IP-Ban-Risiko der Scraper-Pipeline). 3 Crawls / 5 Min / Team.
+  if (!(await rateLimit(`crawl:${input.teamId}`, { limit: 3, windowMs: 5 * 60_000 }))) {
+    return {
+      ok: false,
+      error: "Zu viele Aktualisierungen in kurzer Zeit. Bitte ein paar Minuten warten."
+    };
   }
   try {
     await inngest.send({
