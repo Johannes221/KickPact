@@ -166,6 +166,21 @@ export async function respondLicenseTransfer(input: {
   let cancelableStripeSubId: string | null = null;
 
   if (decision === "accept_license") {
+    // Symmetrie zum Request-Guard (clubHasActiveVereinLicense): die Lizenz des
+    // ZIEL-Vereins muss auch zum ANNAHME-Zeitpunkt noch aktiv sein. Zwischen
+    // Anfrage und Annahme (bis Perioden-Ende von T's Abo; der Flip-Cron greift
+    // bis 90d) kann sie ausgelaufen sein — ohne diesen Check würde das Team
+    // unter einen Verein OHNE zahlende Lizenz gebrandet und liefe Gefahr, dass
+    // das Team-Gate (getSubscriptionGateForTeam) auf ein `missing`-Abo fällt
+    // und still weiter chargt. Fail closed: Request bleibt pending.
+    if (!(await clubHasActiveVereinLicense(row.request.toClubId))) {
+      return {
+        ok: false,
+        message:
+          "Der anfragende Verein hat aktuell keine aktive Vereinslizenz mehr. Die Übernahme ist erst wieder möglich, wenn das Vereins-Abo aktiv ist."
+      };
+    }
+
     // (b zuerst, READ-ONLY) effectiveAt = current_period_end von T's Stripe-
     // Abo. Ohne lebendes Stripe-Abo (Trial/cancelled) wechselt die Lizenz
     // sofort (effectiveAt = now).
