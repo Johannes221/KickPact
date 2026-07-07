@@ -9,16 +9,16 @@ vi.mock("@/lib/auth/session", () => ({
   }))
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("@/lib/storage/documents", () => ({
-  storeDocument: vi.fn().mockImplementation(async (key: string) => `local://${key.replace(/\//g, "_")}`)
+vi.mock("@/lib/mail/client", () => ({
+  resend: { emails: { send: vi.fn().mockResolvedValue({ id: "stub" }) } },
+  MAIL_FROM: "KickPact <stub@test.local>"
 }));
 
 import { db } from "@/lib/db/client";
 import { clubs, clubMemberships, subscriptions, teams, teamLicenses, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { resetTestDb } from "../setup/db";
-import { uploadTeamCover, addTeamGalleryImage } from "@/lib/actions/team-images";
-import { listTeamImages } from "@/lib/db/queries/team-images";
+import { saveTeamPublicProfile } from "@/lib/actions/team-public-profile";
 
 async function makeClubWithAdmin(slug: string) {
   const userId = createId();
@@ -39,34 +39,26 @@ async function makeClubWithAdmin(slug: string) {
   return { teamId: team.id, clubId: club.id };
 }
 
-describe("team-images actions", () => {
+describe("saveTeamPublicProfile", () => {
   beforeEach(async () => { await resetTestDb(); });
 
-  it("uploadTeamCover setzt cover_url", async () => {
-    const { teamId } = await makeClubWithAdmin("club-cover");
-    const res = await uploadTeamCover({ teamId, filename: "c.png", contentType: "image/png", bytes: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]) });
-    expect(res.coverUrl).toMatch(/^local:\/\//);
+  it("speichert das öffentliche Profil und vergibt einen Slug", async () => {
+    const { teamId } = await makeClubWithAdmin("club-pp-ok");
+    const res = await saveTeamPublicProfile({ teamId, isPublic: true, publicTagline: "Wir suchen Sponsoren" });
+    expect(res.slug).toBeTruthy();
     const [t] = await db.select().from(teams).where(eq(teams.id, teamId));
-    expect(t.coverUrl).toBe(res.coverUrl);
+    expect(t.discoverable).toBe(true);
+    expect(t.publicTagline).toBe("Wir suchen Sponsoren");
   });
 
-  it("addTeamGalleryImage fügt hinzu, lehnt >8 ab", async () => {
-    const { teamId } = await makeClubWithAdmin("club-gal");
-    const pngBytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
-    for (let i = 0; i < 8; i++) {
-      await addTeamGalleryImage({ teamId, filename: `g${i}.png`, contentType: "image/png", bytes: pngBytes });
-    }
-    expect((await listTeamImages(teamId)).length).toBe(8);
-    await expect(
-      addTeamGalleryImage({ teamId, filename: "g9.png", contentType: "image/png", bytes: pngBytes })
-    ).rejects.toThrow(/max|8/i);
-  });
-
-  it("uploadTeamCover wirft im Read-Only-Modus (Abo gekündigt)", async () => {
-    const { teamId, clubId } = await makeClubWithAdmin("club-cover-ro");
+  it("wirft im Read-Only-Modus (Abo gekündigt) und ändert nichts", async () => {
+    const { teamId, clubId } = await makeClubWithAdmin("club-pp-ro");
     await db.update(subscriptions).set({ status: "cancelled" }).where(eq(subscriptions.clubId, clubId));
     await expect(
-      uploadTeamCover({ teamId, filename: "c.png", contentType: "image/png", bytes: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]) })
+      saveTeamPublicProfile({ teamId, isPublic: true, publicTagline: "x" })
     ).rejects.toThrow(/Read-Only/);
+    const [t] = await db.select().from(teams).where(eq(teams.id, teamId));
+    expect(t.discoverable).toBe(false);
+    expect(t.publicSlug).toBeNull();
   });
 });

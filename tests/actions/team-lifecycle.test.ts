@@ -284,6 +284,42 @@ describe("uploadTeamLogo", () => {
   });
 });
 
+describe("Read-Only-Gate blockt Schreib-Actions", () => {
+  beforeEach(async () => {
+    await resetTestDb();
+  });
+
+  async function setCancelled(clubId: string) {
+    await db
+      .update(subscriptions)
+      .set({ status: "cancelled" })
+      .where(eq(subscriptions.clubId, clubId));
+  }
+
+  it("renameTeam wirft im Read-Only-Modus und ändert nichts", async () => {
+    const { teamId, clubId } = await makeClubWithAdmin("club-ro-rename");
+    await setCancelled(clubId);
+    await expect(renameTeam({ teamId, newName: "Neu" })).rejects.toThrow(
+      /Read-Only/
+    );
+    const [t] = await db.select().from(teams).where(eq(teams.id, teamId));
+    expect(t.name).toBe("1. Herren");
+  });
+
+  it("uploadTeamLogo wirft im Read-Only-Modus", async () => {
+    const { teamId, clubId } = await makeClubWithAdmin("club-ro-logo");
+    await setCancelled(clubId);
+    await expect(
+      uploadTeamLogo({
+        teamId,
+        filename: "logo.png",
+        contentType: "image/png",
+        bytes: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0])
+      })
+    ).rejects.toThrow(/Read-Only/);
+  });
+});
+
 describe("togglePlayerBlock", () => {
   beforeEach(async () => {
     await resetTestDb();

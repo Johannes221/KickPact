@@ -76,6 +76,20 @@ export function validateSpielDetails(d: SpielDetails): ValidationResult {
   const gastCheck = validateTeamName(d.gast, "Gast");
   if (!gastCheck.valid) return gastCheck;
 
+  // Endstand nicht belegt: Obfuscation-Font war nicht dekodierbar UND es gab
+  // keine Tor-Events. Das von getSpielDetails zurückgegebene 0:0 ist geraten,
+  // kein reales Ergebnis (results_only-Team ohne Score-Font, oder eine Block-/
+  // Interstitial-Seite die den fetchHtml-Guard passierte). Nicht als gespieltes
+  // Match persistieren — sonst fehlen echte Charges bzw. feuert fälschlich eine
+  // Zu-Null-/Unentschieden-Wette. Ein ECHT dekodiertes 0:0 hat resultReliable
+  // !== false und bleibt gültig.
+  if (d.resultReliable === false) {
+    return {
+      valid: false,
+      reason: "Endstand nicht verlässlich ermittelbar (Score-Font nicht dekodierbar, keine Tor-Events) — als Scrape-Fehler behandelt"
+    };
+  }
+
   // Scores must be non-negative integers
   if (!Number.isInteger(d.ergebnis.heim) || d.ergebnis.heim < 0) {
     return { valid: false, reason: `Ergebnis Heim kein gültiger Wert: ${d.ergebnis.heim}` };
