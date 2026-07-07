@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db/client";
 import {
@@ -19,7 +19,9 @@ import { detectTeamSide } from "@/lib/crawler/team-side";
 import {
   loadActivePledgeRulesForTeam,
   sumRuleChargedCents,
-  ruleCapWindow
+  ruleCapWindow,
+  utcMonthWindow,
+  chargeCountsTowardCap
 } from "@/lib/db/queries/evaluation";
 import { resolveCyclesAt } from "@/lib/db/queries/billing-cycle";
 import {
@@ -189,20 +191,11 @@ export const evaluateMatch = inngest.createFunction(
               }
 
               if (pledgeRow.cap !== null) {
-                const monthStart = new Date(
-                  capAnchor.getFullYear(),
-                  capAnchor.getMonth(),
-                  1
-                );
-                const monthEnd = new Date(
-                  capAnchor.getFullYear(),
-                  capAnchor.getMonth() + 1,
-                  1
-                );
-                // Datum als ISO-String binden: COALESCE(...) ist ein rohes
-                // SQL-Fragment ohne Spalten-Typ — postgres.js kann den
-                // Bind-Typ für ein Date nicht ableiten (vgl.
-                // getMonthlyChargedCents in lib/db/queries/evaluation.ts).
+                // Gemeinsame Cap-Fenster-/Status-Definition — deckungsgleich
+                // mit der Anzeige (getCapUsageForActivePledges). UTC-Monat um
+                // capAnchor (= now, Abrechnungsmonat), Anker
+                // COALESCE(confirmedAt, createdAt), Status ∈ CAP_COUNTED_STATUSES.
+                const { start, end } = utcMonthWindow(capAnchor);
                 const [sumRow] = await tx
                   .select({
                     total: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int`
@@ -211,13 +204,7 @@ export const evaluateMatch = inngest.createFunction(
                   .where(
                     and(
                       eq(charges.pledgeId, p.pledgeId),
-                      sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${monthStart.toISOString()}`,
-                      sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) < ${monthEnd.toISOString()}`,
-                      inArray(charges.status, [
-                        "confirmed",
-                        "pending_approval",
-                        "invoiced"
-                      ])
+                      chargeCountsTowardCap(start, end)
                     )
                   );
                 const alreadyCharged = sumRow?.total ?? 0;

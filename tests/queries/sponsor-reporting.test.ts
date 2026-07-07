@@ -282,6 +282,32 @@ describe.skipIf(isIntegrationDbDisabled)("sponsor-reporting (integration)", () =
     expect(apr.find((u) => u.pledgeId === "pl_1")?.chargedThisMonthCents).toBe(0);
   });
 
+  it("getCapUsageForActivePledges: zählt pending_approval mit (Enforcement-Parität)", async () => {
+    const db = await getTestDb();
+    // Enforcement (evaluate-match) zählt pending_approval gegen den Cap. Die
+    // Anzeige MUSS dieselbe Auslastung zeigen — sonst sieht der Sponsor freien
+    // Spielraum, den das Enforcement bereits verbraucht hat, und die nächste
+    // Charge wird still verworfen.
+    await db.insert(charges).values({
+      id: "c_pending",
+      pledgeId: "pl_1",
+      pledgeRuleId: "pr_1",
+      matchId: null,
+      triggerType: "goal_total",
+      amountCents: 3500,
+      status: "pending_approval",
+      createdAt: new Date(Date.UTC(2026, 2, 12)),
+      confirmedAt: null
+    });
+    const usage = await getCapUsageForActivePledges(
+      "sp_1",
+      new Date(Date.UTC(2026, 2, 20))
+    );
+    const pl1 = usage.find((u) => u.pledgeId === "pl_1");
+    expect(pl1?.chargedThisMonthCents).toBe(3500);
+    expect(pl1?.percentage).toBeCloseTo(0.7); // 3500 / 5000
+  });
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   it("getRangeForOption: this-month gibt Monatsanfang→Folgemonat", () => {
