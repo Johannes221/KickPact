@@ -25,6 +25,10 @@ import {
   paginate,
   type PaginatedResult
 } from "@/lib/db/queries/_helpers/paginate";
+import {
+  utcMonthWindow,
+  chargeCountsTowardCap
+} from "@/lib/db/queries/evaluation";
 import type { TriggerType } from "@/lib/triggers/labels";
 
 const ACTIVE_STATUSES = ["confirmed", "invoiced"] as const;
@@ -461,12 +465,12 @@ export async function getCapUsageForActivePledges(
   sponsorId: string,
   now: Date = new Date()
 ): Promise<PledgeCapUsage[]> {
-  const monthStart = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
-  );
-  const monthEnd = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)
-  );
+  // Gemeinsame Cap-Fenster-/Status-Definition — deckungsgleich mit dem
+  // Enforcement (evaluate-match / getMonthlyChargedCents): UTC-Monat, Anker
+  // COALESCE(confirmedAt, createdAt), Status ∈ CAP_COUNTED_STATUSES (inkl.
+  // pending_approval). Vorher zeigte die Anzeige systematisch weniger
+  // Auslastung als durchgesetzt wurde.
+  const { start: monthStart, end: monthEnd } = utcMonthWindow(now);
 
   const rows = await db
     .select({
@@ -477,9 +481,7 @@ export async function getCapUsageForActivePledges(
       clubSlug: clubs.slug,
       monthlyCapCents: pledges.monthlyCapCents,
       chargedThisMonthCents: sql<number>`COALESCE(SUM(${charges.amountCents}) FILTER (
-        WHERE ${charges.status} IN ('confirmed','invoiced')
-          AND ${charges.createdAt} >= ${monthStart.toISOString()}
-          AND ${charges.createdAt} <  ${monthEnd.toISOString()}
+        WHERE ${chargeCountsTowardCap(monthStart, monthEnd)}
       ), 0)::int`
     })
     .from(pledges)
