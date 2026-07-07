@@ -185,6 +185,18 @@ async function seedWithUser(role: "admin" | "trainer" | "viewer" = "trainer") {
   };
 }
 
+/**
+ * Saison-Pass in Sommerpause (paused). paused ist read-only, chargt aber
+ * weiter (Juni-Charges bis 30.6.) — daher MÜSSEN die Fehl-Korrektur-Actions
+ * hier durchlaufen, konsistent mit setSeasonResult (…AllowPaused).
+ */
+async function setPaused(clubId: string) {
+  await db
+    .update(subscriptions)
+    .set({ status: "paused" })
+    .where(eq(subscriptions.clubId, clubId));
+}
+
 describe("editMatchEventAction", () => {
   beforeEach(async () => {
     await resetTestDb();
@@ -220,6 +232,17 @@ describe("editMatchEventAction", () => {
     await expect(
       editMatchEventAction({ matchEventId: seed.eventId, minute: 1 })
     ).rejects.toThrow();
+  });
+
+  it("paused: Fehl-Korrektur bleibt in der Sommerpause möglich", async () => {
+    const seed = await seedWithUser("trainer");
+    await setPaused(seed.clubId);
+    const result = await editMatchEventAction({
+      matchEventId: seed.eventId,
+      minute: 12
+    });
+    if (!result.ok) throw new Error(`unexpected: ${result.message}`);
+    expect(result.matchId).toBe(seed.matchId);
   });
 
   it("M1: Minuten-Korrektur an Legacy-Subtype-Event bleibt möglich (subtype unverändert)", async () => {
@@ -288,6 +311,18 @@ describe("deleteMatchEventAction", () => {
       deleteMatchEventAction({ matchEventId: seed.eventId })
     ).rejects.toThrow();
   });
+
+  it("paused: Event-Löschung bleibt in der Sommerpause möglich", async () => {
+    const seed = await seedWithUser("trainer");
+    await setPaused(seed.clubId);
+    const result = await deleteMatchEventAction({ matchEventId: seed.eventId });
+    expect(result.matchId).toBe(seed.matchId);
+    const after = await db
+      .select()
+      .from(matchEvents)
+      .where(eq(matchEvents.id, seed.eventId));
+    expect(after.length).toBe(0);
+  });
 });
 
 describe("overrideMatchResultAction", () => {
@@ -340,5 +375,20 @@ describe("overrideMatchResultAction", () => {
         reason: "test reason"
       })
     ).rejects.toThrow();
+  });
+
+  it("paused: Ergebnis-Override bleibt in der Sommerpause möglich", async () => {
+    const seed = await seedWithUser("trainer");
+    await setPaused(seed.clubId);
+    const result = await overrideMatchResultAction({
+      matchId: seed.matchId,
+      ergebnisHeim: 0,
+      ergebnisGast: 3,
+      reason: "Crawler übernahm 3:0 statt 0:3 (Relegation)"
+    });
+    expect(result.matchId).toBe(seed.matchId);
+    const [m] = await db.select().from(matches).where(eq(matches.id, seed.matchId));
+    expect(m.ergebnisHeim).toBe(0);
+    expect(m.ergebnisGast).toBe(3);
   });
 });

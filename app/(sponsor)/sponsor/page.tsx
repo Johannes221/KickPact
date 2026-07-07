@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { DashboardTile } from "@/components/shared/dashboard-tile";
 import { getCapUsageForActivePledges } from "@/lib/db/queries/sponsor-reporting";
+import type { SponsorBillingCycle } from "@/lib/db/schema/sponsors";
 import {
   findSponsorForUser,
   getSponsorDashboardKpis,
@@ -167,6 +168,8 @@ export default async function SponsorDashboard() {
             chargedCents={topCapPledge.chargedThisMonthCents}
             capCents={topCapPledge.monthlyCapCents ?? 0}
             percentage={topCapPledge.percentage ?? 0}
+            billingCycle={topCapPledge.billingCycle}
+            seasonToDateCents={topCapPledge.seasonToDateCents}
           />
         )}
 
@@ -471,23 +474,31 @@ function CapUsageTile({
   clubName,
   chargedCents,
   capCents,
-  percentage
+  percentage,
+  billingCycle,
+  seasonToDateCents
 }: {
   teamName: string;
   clubName: string;
   chargedCents: number;
   capCents: number;
   percentage: number;
+  billingCycle: SponsorBillingCycle;
+  seasonToDateCents: number;
 }) {
   const pct = Math.round(percentage * 100);
   const barCls = pct >= 90 ? "bg-red-500" : pct >= 70 ? "bg-amber-500" : "bg-accent";
   const labelCls = pct >= 90 ? "text-red-600" : "text-brand-night-navy/60";
+  const isSeasonEnd = billingCycle === "season_end";
   return (
     <DashboardTile
       icon={Gauge}
       title="Cap-Auslastung"
       primary={`${pct}%`}
-      secondary={`${eur(chargedCents)} / ${eur(capCents)}`}
+      // Bei season_end deckelt der Cap nur pro Monat — deshalb explizit
+      // „diesen Monat", damit die eine Saison-Rechnung nicht mit dem
+      // Monatswert verwechselt wird.
+      secondary={`${eur(chargedCents)} / ${eur(capCents)}${isSeasonEnd ? " diesen Monat" : ""}`}
       href="/sponsor/pledge"
     >
       <div className="space-y-1.5">
@@ -504,6 +515,15 @@ function CapUsageTile({
             aria-valuemax={100}
           />
         </div>
+        {isSeasonEnd && (
+          <div className="text-xs text-brand-night-navy/60">
+            Saison bisher{" "}
+            <span className="font-semibold text-brand-night-navy">
+              {eur(seasonToDateCents)}
+            </span>{" "}
+            · sammelt sich auf eine Rechnung am Saisonende
+          </div>
+        )}
       </div>
     </DashboardTile>
   );

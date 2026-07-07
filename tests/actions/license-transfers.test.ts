@@ -299,6 +299,37 @@ describe.skipIf(isIntegrationDbDisabled)("license-transfer actions", () => {
       );
     });
 
+    it("accept_license blockt, wenn die Vereinslizenz des Ziel-Vereins zwischenzeitlich ausgelaufen ist", async () => {
+      // Zwischen Anfrage und Annahme (bis Perioden-Ende von T's Abo) kann die
+      // Vereinslizenz des anfragenden Vereins auslaufen. Dann darf das Team NICHT
+      // unter einen Verein ohne zahlende Lizenz gebrandet werden (sonst chargt
+      // das Team-Gate still auf einen Verein, der nicht zahlt).
+      const req = await seedRequest();
+      const tdb = await getTestDb();
+      await tdb
+        .update(subscriptions)
+        .set({ status: "cancelled" })
+        .where(eq(subscriptions.clubId, "club_y"));
+      loginAs("u_trainer", "trainer@x.de");
+
+      const res = await respondLicenseTransfer({
+        requestId: req.id,
+        decision: "accept_license"
+      });
+      expect(res.ok).toBe(false);
+      if (!res.ok) expect(res.message).toContain("Vereinslizenz");
+
+      // Team NICHT umgebrandet, Request bleibt pending, kein Stripe-Effekt.
+      const [team] = await tdb.select().from(teams).where(eq(teams.id, "team_t1"));
+      expect(team.licensedUnderClubId).toBeNull();
+      const [request] = await tdb
+        .select()
+        .from(teamLicenseTransferRequests)
+        .where(eq(teamLicenseTransferRequests.id, req.id));
+      expect(request.status).toBe("pending");
+      expect(stripeUpdateMock).not.toHaveBeenCalled();
+    });
+
     it("accept_co_owned: Mitverwalter-Membership, kein licensedUnder, status co_owned", async () => {
       const req = await seedRequest();
       loginAs("u_trainer", "trainer@x.de");

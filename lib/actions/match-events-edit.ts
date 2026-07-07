@@ -7,7 +7,7 @@ import { db } from "@/lib/db/client";
 import { matches, teams, clubs } from "@/lib/db/schema";
 import { matchEvents } from "@/lib/db/schema/matches";
 import { requireUser } from "@/lib/auth/session";
-import { assertClubWriteAccess } from "@/lib/auth/scope";
+import { assertClubWriteAccessAllowPaused } from "@/lib/auth/scope";
 import { validateSubtype } from "@/lib/validations/match-events";
 import {
   updateMatchEvent,
@@ -29,6 +29,16 @@ import { inngest } from "@/lib/inngest/client";
  * Alle Actions invalidieren die durch das Event/Ergebnis entstandenen
  * Charges (siehe queries/match-events-edit.ts) und feuern danach
  * `match/finished` an Inngest, damit `evaluate-match` neu zählt.
+ *
+ * Gate = `assertClubWriteAccessAllowPaused`: In der Saison-Pass-Sommerpause
+ * (status=paused) ist der Verein read-only, wird aber WEITER gechargt
+ * (`isChargeBlockedByGate` blockt paused nicht — Juni-Charges laufen bis 30.6.).
+ * Diese drei Actions korrigieren falsch übernommene Ergebnisse/Events und die
+ * dadurch entstandenen Fehl-Charges; sie müssen im selben Fenster laufen, in dem
+ * das System noch Charges erzeugt — sonst stünden Fehl-Charges bis zum Resume
+ * (1.8.) unkorrigierbar in der Abrechnung. Konsistent mit season-results.ts.
+ * NUR Korrektur: Neuanlage (addManualEvent, match-events.ts) bleibt bewusst am
+ * strikten `assertClubWriteAccess` und ist in der Pause weiter gesperrt.
  */
 
 // ───────────────────────── Helpers ──────────────────────────
@@ -102,7 +112,7 @@ export async function editMatchEventAction(
   const scope = await loadMatchScope(parsed.matchEventId, "matchEvent");
   if (!scope) return { ok: false, message: "Match-Event nicht gefunden." };
 
-  await assertClubWriteAccess(scope.clubSlug, "trainer");
+  await assertClubWriteAccessAllowPaused(scope.clubSlug, "trainer"); // paused: siehe Docblock
 
   // B3-Folge + Review M1 (Audit 2026-06-11): auch der EDIT-Pfad validiert den
   // subtype — aber NUR wenn er sich gegenüber dem Bestand wirklich ändert.
@@ -166,7 +176,7 @@ export async function deleteMatchEventAction(
   const scope = await loadMatchScope(parsed.matchEventId, "matchEvent");
   if (!scope) throw new Error("Match-Event nicht gefunden.");
 
-  await assertClubWriteAccess(scope.clubSlug, "trainer");
+  await assertClubWriteAccessAllowPaused(scope.clubSlug, "trainer"); // paused: siehe Docblock
 
   const result = await deleteMatchEvent(parsed.matchEventId, user.id);
 
@@ -208,7 +218,7 @@ export async function overrideMatchResultAction(
   const scope = await loadMatchScope(parsed.matchId, "match");
   if (!scope) throw new Error("Match nicht gefunden.");
 
-  await assertClubWriteAccess(scope.clubSlug, "trainer");
+  await assertClubWriteAccessAllowPaused(scope.clubSlug, "trainer"); // paused: siehe Docblock
 
   const result = await overrideMatchResultQuery(
     parsed.matchId,

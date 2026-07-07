@@ -28,6 +28,7 @@ async function seedSponsorPledge(opts: {
   endsAtOffsetDays: number;
   saison?: string;
   status?: "active" | "ended" | "paused";
+  sommerpausePaused?: boolean;
   ruleCount?: number;
   withNextSeasonTeam?: boolean;
 }) {
@@ -104,6 +105,7 @@ async function seedSponsorPledge(opts: {
       sponsorId: sponsor.id,
       teamId: team.id,
       status: opts.status ?? "active",
+      sommerpausePaused: opts.sommerpausePaused ?? false,
       startsAt: new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000),
       endsAt,
       monthlyCapCents: 5000
@@ -162,12 +164,29 @@ describe("findPledgesEligibleForRenewal", () => {
     expect(result.length).toBe(0);
   });
 
-  it("filtert ended/paused Pledges raus", async () => {
+  it("filtert ended + sponsor-manuell-pausierte Pledges raus", async () => {
     await seedSponsorPledge({ endsAtOffsetDays: 10, status: "ended" });
+    // Sponsor-manuell pausiert (sommerpausePaused=false) → kein Renewal
     await seedSponsorPledge({ endsAtOffsetDays: 10, status: "paused" });
     const now = new Date();
     const result = await findPledgesEligibleForRenewal(now, 30);
     expect(result.length).toBe(0);
+  });
+
+  it("findet sommerpause-pausierte Pledges (status=paused + sommerpausePaused)", async () => {
+    // Regression: pause-pledges-sommerpause (1.6.) setzt alle aktiven Pledges
+    // auf paused. Die gestaffelte Renewal-Strecke (30/14/3) darf für diese
+    // Pledges nicht abbrechen — sonst verliert ein Pact mit endsAt 30.6. die
+    // 14- und 3-Tage-Mail und läuft un-renewt aus.
+    const seed = await seedSponsorPledge({
+      endsAtOffsetDays: 12,
+      status: "paused",
+      sommerpausePaused: true
+    });
+    const now = new Date();
+    const result = await findPledgesEligibleForRenewal(now, 30);
+    expect(result.length).toBe(1);
+    expect(result[0].pledgeId).toBe(seed.pledgeId);
   });
 });
 
@@ -252,6 +271,30 @@ describe("clonePledgeForNextSeason", () => {
     expect(clone.sponsorId).toBe(seed.sponsorId);
     expect(clone.status).toBe("active");
     expect(clone.monthlyCapCents).toBe(5000);
+  });
+
+  it("klont auch aus einer sommerpause-pausierten Pledge (1-Click-Link in der Pause)", async () => {
+    // Regression-Guard zum Query-Fix: während der Sommerpause (Pledge paused)
+    // klickt der Sponsor den Renewal-Link. Der Clone liest per ID, ist also
+    // status-agnostisch und muss eine neue AKTIVE Pledge erzeugen.
+    const seed = await seedSponsorPledge({
+      endsAtOffsetDays: 12,
+      status: "paused",
+      sommerpausePaused: true,
+      ruleCount: 2,
+      withNextSeasonTeam: true
+    });
+
+    const result = await clonePledgeForNextSeason(seed.pledgeId, "2627");
+
+    expect(result.pledgeId).not.toBe(seed.pledgeId);
+    expect(result.pledgeRulesCount).toBe(2);
+    const [clone] = await db
+      .select()
+      .from(pledges)
+      .where(eq(pledges.id, result.pledgeId));
+    expect(clone.status).toBe("active");
+    expect(clone.sommerpausePaused).toBe(false);
   });
 
   it("Pre-Bump-Klick (Juni): kein next-season-Team → klont auf dieselbe Team-Row mit korrektem Fenster", async () => {

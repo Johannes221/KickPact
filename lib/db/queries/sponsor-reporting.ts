@@ -7,8 +7,15 @@
  *  - Active = confirmed | invoiced. pending_approval/cancelled werden
  *    NIE einbezogen (konsistent mit team-finances.ts und sponsor-dashboard.ts).
  *  - `range.from` inklusiv, `range.to` exklusiv.
- *  - Monatliche Gruppierung via `date_trunc('month', confirmedAt)` —
- *    fällt zurück auf `createdAt`, wenn confirmedAt NULL ist.
+ *  - Periodisierung (Range-Fenster, Monats-Gruppierung, Cap-Kachel) läuft
+ *    durchgängig über `COALESCE(confirmedAt, createdAt)` — identisch zum
+ *    Rechnungslauf (`listConfirmedChargesByPeriod`) und Cap-Fenster
+ *    (`getMonthlyChargedCents`). So landet ein Spät-Confirm in der Bilanz im
+ *    selben Monat wie auf seiner Rechnung, statt im createdAt-Monat.
+ *
+ * NB: Die Charge-*History* (`listChargesForSponsor`) filtert/sortiert bewusst
+ *    weiter über `createdAt` — sie ist ein Ereignis-Log ("wann ist das
+ *    passiert"), keine Perioden-Summe, und zeigt confirmedAt als eigene Spalte.
  */
 import { and, asc, desc, eq, gte, inArray, lt, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db/client";
@@ -18,13 +25,19 @@ import {
   pledgeRules,
   matches,
   teams,
-  clubs
+  clubs,
+  sponsors
 } from "@/lib/db/schema";
+import type { SponsorBillingCycle } from "@/lib/db/schema/sponsors";
 import {
   countStar,
   paginate,
   type PaginatedResult
 } from "@/lib/db/queries/_helpers/paginate";
+import {
+  utcMonthWindow,
+  chargeCountsTowardCap
+} from "@/lib/db/queries/evaluation";
 import type { TriggerType } from "@/lib/triggers/labels";
 
 const ACTIVE_STATUSES = ["confirmed", "invoiced"] as const;
@@ -93,8 +106,13 @@ export async function getSponsorBalance(
   const whereBase = and(
     eq(pledges.sponsorId, sponsorId),
     inArray(charges.status, [...ACTIVE_STATUSES]),
-    gte(charges.createdAt, range.from),
-    lt(charges.createdAt, range.to)
+    // Periodisierung über COALESCE(confirmedAt, createdAt) — konsistent mit dem
+    // Rechnungslauf (listConfirmedChargesByPeriod) und dem Cap-Fenster
+    // (getMonthlyChargedCents). Sonst zeigt die Bilanz einen Spät-Confirm im
+    // createdAt-Monat an, obwohl er auf der Rechnung des confirmedAt-Monats
+    // landet. COALESCE als rohes SQL-Fragment → Datum als ISO-String binden.
+    sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${range.from.toISOString()}`,
+    sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) < ${range.to.toISOString()}`
   );
 
   const [totals, byClub, byTeam, byTrigger, byMonth, pledgeCountRow] =
@@ -158,7 +176,7 @@ export async function getSponsorBalance(
       // Per Month (UTC)
       db
         .select({
-          month: sql<string>`to_char(date_trunc('month', ${charges.createdAt} AT TIME ZONE 'UTC'), 'YYYY-MM')`,
+          month: sql<string>`to_char(date_trunc('month', COALESCE(${charges.confirmedAt}, ${charges.createdAt}) AT TIME ZONE 'UTC'), 'YYYY-MM')`,
           totalCents: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int`,
           eventsCount: sql<number>`COUNT(*)::int`
         })
@@ -166,11 +184,11 @@ export async function getSponsorBalance(
         .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
         .where(whereBase)
         .groupBy(
-          sql`date_trunc('month', ${charges.createdAt} AT TIME ZONE 'UTC')`
+          sql`date_trunc('month', COALESCE(${charges.confirmedAt}, ${charges.createdAt}) AT TIME ZONE 'UTC')`
         )
         .orderBy(
           asc(
-            sql`date_trunc('month', ${charges.createdAt} AT TIME ZONE 'UTC')`
+            sql`date_trunc('month', COALESCE(${charges.confirmedAt}, ${charges.createdAt}) AT TIME ZONE 'UTC')`
           )
         ),
       // Distinct pledges in range (separate query — pledges existieren auch
@@ -448,6 +466,15 @@ export interface PledgeCapUsage {
   chargedThisMonthCents: number;
   /** 0..1, oder null wenn kein Cap gesetzt ist. */
   percentage: number | null;
+  /** Abrechnungs-Rhythmus des Sponsors (steuert das Tile-Framing). */
+  billingCycle: SponsorBillingCycle;
+  /**
+   * Summe der bisher in der LAUFENDEN Saison bestätigten Beiträge dieses
+   * Pledges. Bei `billingCycle='season_end'` ist das der Betrag, der sich auf
+   * die EINE Saison-Rechnung sammelt — der Monats-Cap deckelt nur pro Monat,
+   * nicht die Rechnungssumme. Für monthly-Sponsoren informativ (= YTD-Saison).
+   */
+  seasonToDateCents: number;
 }
 
 /**
@@ -461,12 +488,21 @@ export async function getCapUsageForActivePledges(
   sponsorId: string,
   now: Date = new Date()
 ): Promise<PledgeCapUsage[]> {
-  const monthStart = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
-  );
-  const monthEnd = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)
-  );
+  // Gemeinsame Cap-Fenster-/Status-Definition — deckungsgleich mit dem
+  // Enforcement (evaluate-match / getMonthlyChargedCents): UTC-Monat, Anker
+  // COALESCE(confirmedAt, createdAt), Status ∈ CAP_COUNTED_STATUSES (inkl.
+  // pending_approval). Vorher zeigte die Anzeige systematisch weniger
+  // Auslastung als durchgesetzt wurde.
+  const { start: monthStart, end: monthEnd } = utcMonthWindow(now);
+
+  // Laufendes Saison-Fenster [1.7., 1.7. Folgejahr) — dieselbe Juli–Juni-Logik
+  // wie seasonWindowFor (generate-season-end-invoices), aber für die AKTUELL
+  // laufende, noch nicht fakturierte Saison. Bestimmt, was sich bei season_end
+  // auf die eine Saison-Rechnung sammelt (Insert-/Confirm-Zeitpunkt =
+  // COALESCE(confirmedAt, createdAt), konsistent mit dem Rechnungslauf).
+  const seasonStartYear = now.getUTCMonth() >= 6 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
+  const seasonStart = new Date(Date.UTC(seasonStartYear, 6, 1));
+  const seasonEnd = new Date(Date.UTC(seasonStartYear + 1, 6, 1));
 
   const rows = await db
     .select({
@@ -476,18 +512,38 @@ export async function getCapUsageForActivePledges(
       clubName: clubs.name,
       clubSlug: clubs.slug,
       monthlyCapCents: pledges.monthlyCapCents,
+      billingCycle: sponsors.billingCycle,
+      // chargeCountsTowardCap = EINE gemeinsame Definition mit dem Enforcement
+      // (getMonthlyChargedCents): COALESCE(confirmedAt, createdAt) im UTC-Monat
+      // UND Status ∈ CAP_COUNTED_STATUSES (inkl. pending_approval). Sonst zeigt
+      // die Kachel eine andere Auslastung, als der Cap-Check durchsetzt.
       chargedThisMonthCents: sql<number>`COALESCE(SUM(${charges.amountCents}) FILTER (
+        WHERE ${chargeCountsTowardCap(monthStart, monthEnd)}
+      ), 0)::int`,
+      // Saison-Kumuliert (season_end): was sich auf die EINE Saison-Rechnung
+      // sammelt — nur fakturierbare Beiträge (confirmed/invoiced), Anker
+      // COALESCE(confirmedAt, createdAt) wie der Rechnungslauf.
+      seasonToDateCents: sql<number>`COALESCE(SUM(${charges.amountCents}) FILTER (
         WHERE ${charges.status} IN ('confirmed','invoiced')
-          AND ${charges.createdAt} >= ${monthStart.toISOString()}
-          AND ${charges.createdAt} <  ${monthEnd.toISOString()}
+          AND COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${seasonStart.toISOString()}
+          AND COALESCE(${charges.confirmedAt}, ${charges.createdAt}) <  ${seasonEnd.toISOString()}
       ), 0)::int`
     })
     .from(pledges)
     .innerJoin(teams, eq(pledges.teamId, teams.id))
     .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
     .leftJoin(charges, eq(charges.pledgeId, pledges.id))
     .where(and(eq(pledges.sponsorId, sponsorId), eq(pledges.status, "active")))
-    .groupBy(pledges.id, teams.id, teams.name, clubs.name, clubs.slug, pledges.monthlyCapCents);
+    .groupBy(
+      pledges.id,
+      teams.id,
+      teams.name,
+      clubs.name,
+      clubs.slug,
+      pledges.monthlyCapCents,
+      sponsors.billingCycle
+    );
 
   return rows
     .map((r) => {
@@ -501,7 +557,9 @@ export async function getCapUsageForActivePledges(
         clubSlug: r.clubSlug,
         monthlyCapCents: cap,
         chargedThisMonthCents: charged,
-        percentage: cap ? Math.min(1, charged / cap) : null
+        percentage: cap ? Math.min(1, charged / cap) : null,
+        billingCycle: r.billingCycle,
+        seasonToDateCents: Number(r.seasonToDateCents ?? 0)
       } satisfies PledgeCapUsage;
     })
     .sort((a, b) => {

@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, inArray, or, sql } from "drizzle-orm";
+import { and, eq, gte, lte, inArray, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   pledges,
@@ -131,8 +131,50 @@ export async function loadActivePledgeRulesForTeam(
  * Cap-Check in evaluate-match atomar unter `SELECT … FOR UPDATE` laufen kann.
  */
 /**
+ * Status, die gegen einen Cap zählen. `pending_approval` reserviert
+ * Cap-Headroom (kann noch confirmed werden). Enforcement (evaluate-match)
+ * UND Anzeige (getCapUsageForActivePledges) MÜSSEN exakt diese Menge nutzen —
+ * sonst zeigt das Dashboard mehr Spielraum als tatsächlich durchgesetzt wird
+ * und die nächste Charge wird still verworfen.
+ */
+export const CAP_COUNTED_STATUSES = [
+  "confirmed",
+  "pending_approval",
+  "invoiced"
+] as const;
+
+/**
+ * UTC-Kalendermonat `[start, end)` um `anchor`. UTC-Anker ist identisch zur
+ * Rechnungs-Periode (lib/invoicing/period.ts) — damit driften Cap-Fenster,
+ * Rechnung und Anzeige nicht bei Server-TZ≠UTC an den Monatsrändern
+ * auseinander (vorher server-lokales `new Date(y,m,1)`).
+ */
+export function utcMonthWindow(anchor: Date): { start: Date; end: Date } {
+  return {
+    start: new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth(), 1)),
+    end: new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth() + 1, 1))
+  };
+}
+
+/**
+ * SQL-Prädikat „diese Charge zählt gegen den Cap im Fenster `[start, end)`":
+ * Anker = `COALESCE(confirmedAt, createdAt)` (Rechnung selektiert über
+ * confirmedAt; Spät-Confirms belasten den Cap ihres Confirm-Monats) und Status
+ * ∈ {@link CAP_COUNTED_STATUSES}. Als SQL-Fragment wiederverwendbar in einer
+ * WHERE-Klausel (Enforcement) wie in einem `FILTER (WHERE …)` (Anzeige) — die
+ * EINE gemeinsame Quelle, die Enforcement und Anzeige deckungsgleich hält.
+ */
+export function chargeCountsTowardCap(start: Date, end: Date): SQL {
+  return and(
+    sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${start.toISOString()}`,
+    sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) < ${end.toISOString()}`,
+    inArray(charges.status, [...CAP_COUNTED_STATUSES])
+  ) as SQL;
+}
+
+/**
  * Liefert das Cap-Fenster `[start, end)` für eine Wette:
- *  - `month`  → Kalendermonat des Anker-Datums. Audit 2026-06-11 / B1:
+ *  - `month`  → UTC-Kalendermonat des Anker-Datums. Audit 2026-06-11 / B1:
  *    Anker ist der ABRECHNUNGSmonat (Insert-/Confirm-Zeitpunkt), nicht das
  *    Spieldatum — Caps und generate-invoices-Periode sind damit identisch
  *    dimensioniert (beide über confirmedAt). evaluate-match übergibt `now`.
@@ -147,10 +189,7 @@ export function ruleCapWindow(
   if (capPeriod === "season") {
     return { start: pledgeStartsAt, end: new Date(pledgeEndsAt.getTime() + 1) };
   }
-  return {
-    start: new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1),
-    end: new Date(anchorDate.getFullYear(), anchorDate.getMonth() + 1, 1)
-  };
+  return utcMonthWindow(anchorDate);
 }
 
 export async function sumRuleChargedCents(
@@ -165,9 +204,7 @@ export async function sumRuleChargedCents(
     .where(
       and(
         eq(charges.pledgeRuleId, pledgeRuleId),
-        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${windowStart.toISOString()}`,
-        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) < ${windowEnd.toISOString()}`,
-        inArray(charges.status, ["confirmed", "pending_approval", "invoiced"])
+        chargeCountsTowardCap(windowStart, windowEnd)
       )
     );
   return row?.total ?? 0;
@@ -198,25 +235,13 @@ export async function getMonthlyChargedCents(
   asOf: Date,
   exec: Pick<typeof db, "select"> = db
 ): Promise<number> {
-  const monthStart = new Date(asOf.getFullYear(), asOf.getMonth(), 1);
-  const monthEnd = new Date(asOf.getFullYear(), asOf.getMonth() + 1, 1);
+  const { start, end } = utcMonthWindow(asOf);
   const [row] = await exec
     .select({
       total: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int`
     })
     .from(charges)
-    .where(
-      and(
-        eq(charges.pledgeId, pledgeId),
-        // COALESCE(...) ist ein rohes SQL-Fragment ohne Spalten-Typ — Drizzle
-        // kann daher den Bind-Typ für ein Date nicht ableiten und postgres.js
-        // wirft "Received an instance of Date". Daher Datum als ISO-String
-        // binden (Postgres castet zu timestamptz).
-        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${monthStart.toISOString()}`,
-        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) < ${monthEnd.toISOString()}`,
-        inArray(charges.status, ["confirmed", "pending_approval", "invoiced"])
-      )
-    );
+    .where(and(eq(charges.pledgeId, pledgeId), chargeCountsTowardCap(start, end)));
   return row?.total ?? 0;
 }
 

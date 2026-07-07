@@ -15,7 +15,7 @@ import {
 import { requireUser } from "@/lib/auth/session";
 import { inngest } from "@/lib/inngest/client";
 import { assertClubWriteAccess, resolveTeamAccess } from "@/lib/auth/scope";
-import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
+import { getSubscriptionGateForTeam } from "@/lib/db/queries/subscription-status";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { createInvitation } from "@/lib/db/queries/invitations";
 import { generateUniqueTeamSlug } from "@/lib/db/queries/team-public-slug";
@@ -79,8 +79,9 @@ export async function createSponsorInquiry(input: {
     };
   }
 
-  // Read-Only-Verein darf keine neuen Anfragen annehmen.
-  const gate = await getSubscriptionGate(teamRow.club.id);
+  // Read-Only-Verein darf keine neuen Anfragen annehmen. Team-scoped:
+  // effektiver Lizenz-Verein statt Container-Club (licensedUnderClubId).
+  const gate = await getSubscriptionGateForTeam(teamRow.team.id);
   if (gate.isReadOnly) {
     return {
       ok: false,
@@ -247,7 +248,7 @@ export async function respondToInquiry(input: {
   // Annehmen erzeugt eine Einladung (= neues Sponsoring) → im Read-Only-Modus
   // blockieren. Ablehnen ist immer erlaubt (räumt nur die Inbox auf).
   if (parsed.accept) {
-    const gate = await getSubscriptionGate(row.club.id);
+    const gate = await getSubscriptionGateForTeam(row.team.id);
     if (gate.isReadOnly) {
       return {
         ok: false,

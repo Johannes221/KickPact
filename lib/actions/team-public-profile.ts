@@ -12,7 +12,7 @@ import {
   sponsorLeads
 } from "@/lib/db/schema";
 import { assertClubAccess } from "@/lib/auth/scope";
-import { getSubscriptionGate } from "@/lib/db/queries/subscription-status";
+import { getSubscriptionGateForTeam } from "@/lib/db/queries/subscription-status";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { generateUniqueTeamSlug } from "@/lib/db/queries/team-public-slug";
 import { rateLimit, getClientIp } from "@/lib/utils/rate-limit";
@@ -132,7 +132,8 @@ export async function createPublicSponsorLead(input: {
     throw new Error("Diese Mannschaft nimmt aktuell keine Anfragen entgegen.");
   }
 
-  const gate = await getSubscriptionGate(row.clubId);
+  // Team-scoped: effektiver Lizenz-Verein (licensedUnderClubId ?? clubId).
+  const gate = await getSubscriptionGateForTeam(row.teamId);
   if (gate.isReadOnly) {
     throw new Error(
       "Diese Mannschaft ist aktuell pausiert. Sponsoring ist bald wieder möglich."

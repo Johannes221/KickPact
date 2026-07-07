@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { subscriptions } from "@/lib/db/schema";
+import { billingClubForTeam } from "@/lib/billing/billing-club";
 
 export type SubscriptionStatus =
   | "trialing"
@@ -223,4 +224,27 @@ export async function getSubscriptionGate(clubId: string): Promise<SubscriptionG
     .limit(1);
 
   return gateFromSubscription(sub ?? null);
+}
+
+/**
+ * Team-scoped Gate: löst — wie der Rechnungs-Layer (billingClubForTeam,
+ * billingClubIdExpr) — den EFFEKTIVEN Lizenz-Verein auf
+ * (teams.licensedUnderClubId ?? teams.clubId) und liest DESSEN Subscription.
+ *
+ * Ohne diese Auflösung geht ein per Lizenz-Transfer angehängtes Team dunkel,
+ * sobald sein alter Container-Club nach Perioden-Ende auf `cancelled` läuft:
+ * Crawl-Gate (crawl-matches) und Geld-Gate (evaluate-match) sperrten es aus,
+ * obwohl der Lizenz-Verein zahlt. Deshalb müssen alle team-bezogenen Gates
+ * (Crawl, Charge, Sponsor-Read-Only) über diese Funktion gehen, nicht über
+ * getSubscriptionGate(team.clubId).
+ *
+ * Unbekanntes Team → `missing`-Gate (isReadOnly=false, nicht geblockt),
+ * identisch zu getSubscriptionGate ohne Subscription-Row.
+ */
+export async function getSubscriptionGateForTeam(
+  teamId: string
+): Promise<SubscriptionGate> {
+  const club = await billingClubForTeam(teamId);
+  if (!club) return gateFromSubscription(null);
+  return getSubscriptionGate(club.id);
 }
