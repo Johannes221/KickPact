@@ -105,7 +105,6 @@ export default async function PactsPage({
                   <th className="px-4 py-3 font-semibold">Sponsor</th>
                   <th className="px-4 py-3 font-semibold">Ereignis</th>
                   <th className="px-4 py-3 font-semibold text-right">Betrag</th>
-                  <th className="px-4 py-3 font-semibold text-right">Pro Spiel</th>
                   <th className="px-4 py-3 font-semibold text-right">Bisher</th>
                   <th className="px-4 py-3 font-semibold">Status</th>
                 </tr>
@@ -120,9 +119,6 @@ export default async function PactsPage({
                         {getTriggerLabel(r.triggerType, r.triggerParams as Record<string, unknown>)}
                       </td>
                       <td className="px-4 py-3 text-right font-semibold">{eur(r.amountCents)}</td>
-                      <td className="px-4 py-3 text-right text-brand-night-navy/60">
-                        {r.perMatchCapCents != null ? eur(r.perMatchCapCents) : "—"}
-                      </td>
                       <td className="px-4 py-3 text-right tabular-nums">{eur(Number(r.chargedSum))}</td>
                       <td className="px-4 py-3">
                         <Badge tone={sb.tone}>{sb.label}</Badge>
@@ -149,14 +145,10 @@ export default async function PactsPage({
                     </div>
                     <Badge tone={sb.tone} className="shrink-0">{sb.label}</Badge>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
+                  <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                     <div>
                       <div className="text-brand-night-navy/50 uppercase tracking-wider">Betrag</div>
                       <div className="font-semibold">{eur(r.amountCents)}</div>
-                    </div>
-                    <div>
-                      <div className="text-brand-night-navy/50 uppercase tracking-wider">Pro Spiel</div>
-                      <div>{r.perMatchCapCents != null ? eur(r.perMatchCapCents) : "—"}</div>
                     </div>
                     <div>
                       <div className="text-brand-night-navy/50 uppercase tracking-wider">Bisher</div>

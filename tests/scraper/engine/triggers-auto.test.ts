@@ -42,15 +42,6 @@ describe("auto triggers — real fixtures", () => {
         expect(proposals.every((p) => p.requiresApproval === false)).toBe(true);
       });
 
-      it("goal_total respects per_match_cap", () => {
-        const match = loadMatchFixture(s.club, s.team, ids[0], s.ownName);
-        const proposals = evaluateTriggers(match, [
-          rule({ triggerType: "goal_total", amountCents: 100, perMatchCapCents: 250 }),
-        ]);
-        const sum = proposals.reduce((acc, p) => acc + p.amountCents, 0);
-        expect(sum).toBeLessThanOrEqual(250);
-      });
-
       it("win / loss / draw — exactly one of three fires per match", () => {
         for (const id of ids) {
           const m = loadMatchFixture(s.club, s.team, id, s.ownName);

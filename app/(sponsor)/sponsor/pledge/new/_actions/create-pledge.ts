@@ -221,7 +221,6 @@ export async function createPledge(input: PledgeInput): Promise<CreatePledgeResu
       amountCents: Math.round(r.amountEur * 100),
       capCents: r.capEur ? Math.round(r.capEur * 100) : null,
       capPeriod: r.capEur ? (r.capPeriod ?? null) : null,
-      perMatchCapCents: null,
       requiresApproval: MANUAL_TRIGGERS.has(r.triggerType)
     }))
   });

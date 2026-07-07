@@ -118,7 +118,6 @@ describe("Engine-Hardening: fehlender Schwellwert feuert NICHT (C1)", () => {
       triggerType: triggerType as PledgeRuleInput["triggerType"],
       triggerParams: params,
       amountCents: 500,
-      perMatchCapCents: null,
       capCents: null,
       capPeriod: null
     };

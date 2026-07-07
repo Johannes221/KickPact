@@ -134,7 +134,6 @@ interface SeedSponsorPledgeOpts {
   startsAt?: Date;
   endsAt?: Date;
   monthlyCapCents?: number | null;
-  perMatchCapCents?: number | null;
   triggerParamsJson?: Record<string, unknown>;
 }
 
@@ -192,7 +191,6 @@ export async function seedSponsorWithPledge(
     triggerType: opts.triggerType,
     triggerParamsJson: opts.triggerParamsJson ?? {},
     amountCents: opts.amountCents,
-    perMatchCapCents: opts.perMatchCapCents ?? null,
     requiresApproval: opts.requiresApproval ?? false
   });
 
