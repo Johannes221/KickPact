@@ -23,7 +23,8 @@ export default async function NotificationsPage() {
     matchResults: settings?.matchResults ?? true,
     accessRequests: settings?.accessRequests ?? true,
     sponsorRequests: settings?.sponsorRequests ?? true,
-    billing: settings?.billing ?? true
+    billing: settings?.billing ?? true,
+    emailRecurring: settings?.emailRecurring ?? true
   };
 
   // Dates -> serialisierbar für die Client-Komponente.

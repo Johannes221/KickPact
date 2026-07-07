@@ -82,6 +82,11 @@ export const notifications = pgTable(
  * Spalten auf `users`, um better-auth-Schema-Drift zu vermeiden.
  *
  * Opt-out-Modell: fehlt die Zeile, gelten ALLE Kategorien als aktiviert.
+ *
+ * `emailRecurring` steuert (global) die WIEDERKEHRENDEN, nicht-zwingenden Mails
+ * (Approval-Reminder, Saison-Renewal-Prompt) — NICHT die transaktionalen Mails
+ * (Rechnung, Verifikation, Magic-Link), die immer zugestellt werden. Getrieben
+ * vom One-Click-List-Unsubscribe-Link (RFC 8058) und dem Toggle in „Mein Konto".
  */
 export const notificationSettings = pgTable("notification_settings", {
   userId: text("user_id")
@@ -91,6 +96,7 @@ export const notificationSettings = pgTable("notification_settings", {
   accessRequests: boolean("access_requests").notNull().default(true),
   sponsorRequests: boolean("sponsor_requests").notNull().default(true),
   billing: boolean("billing").notNull().default(true),
+  emailRecurring: boolean("email_recurring").notNull().default(true),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
 });
 
