@@ -197,18 +197,30 @@ export async function resolveTeamAccess(
   clubMinRole: Role = minRole
 ): Promise<TeamAccessResult> {
   const [team] = await db
-    .select({ id: teams.id, clubId: teams.clubId })
+    .select({
+      id: teams.id,
+      clubId: teams.clubId,
+      licensedUnderClubId: teams.licensedUnderClubId
+    })
     .from(teams)
     .where(eq(teams.id, teamId))
     .limit(1);
   if (!team) return { granted: false };
 
-  // Club-level first — admins and trainers of the parent club see everything,
-  // AUSSER autarke Teams (eigene basic/pro-Einzellizenz ohne Vereinsbündelung).
-  // Die sind dem Verein-Admin nicht unterstellt; dort kommt der Zugriff
-  // ausschließlich aus team_memberships (siehe unten). Lizenzlose Container-
-  // Teams sind NICHT autark → Durchgriff erlaubt (sonst Redirect-Loop, weil die
-  // Identity-Logik den Club-Admin in genau dieses Team routet).
+  // Der VEREINS-Durchgriff folgt dem effektiven Lizenz-Verein
+  // (licensedUnderClubId ?? clubId) — identisch zu Gate/Billing (L1/A5). Nach
+  // einem Lizenz-Transfer trägt teams.clubId weiter den Alt-Container, aber
+  // licensedUnderClubId den zahlenden Verein: DER bekommt den Durchgriff, der
+  // Alt-Container verliert ihn (sonst leakt der Alt-Container ein fremd-
+  // lizenziertes Team bzw. der zahlende Verein käme gar nicht an sein Team).
+  const controllingClubId = team.licensedUnderClubId ?? team.clubId;
+
+  // Club-level first — admins and trainers of the controlling club see
+  // everything, AUSSER autarke Teams (eigene basic/pro-Einzellizenz ohne
+  // Vereinsbündelung). Die sind dem Verein-Admin nicht unterstellt; dort kommt
+  // der Zugriff ausschließlich aus team_memberships (siehe unten). Lizenzlose
+  // Container-Teams sind NICHT autark → Durchgriff erlaubt (sonst Redirect-Loop,
+  // weil die Identity-Logik den Club-Admin in genau dieses Team routet).
   //
   // `clubMinRole` entkoppelt den Club-Floor vom Team-Floor: Match-Event-Schreib-
   // Actions z.B. lassen Club-TRAINER durchgreifen (clubMinRole="trainer"),
@@ -221,18 +233,31 @@ export async function resolveTeamAccess(
     .where(
       and(
         eq(clubMemberships.userId, userId),
-        eq(clubMemberships.clubId, team.clubId)
+        eq(clubMemberships.clubId, controllingClubId)
       )
     )
     .limit(1);
   if (clubMem && ROLE_RANK[clubMem.role] >= ROLE_RANK[clubMinRole]) {
-    if (!(await isTeamAutark(team.id))) {
+    // Autark-Sperre greift NUR für den eigenen Container (kein Lizenz-Transfer).
+    // Ein Verein, der das Team EXPLIZIT lizenziert (licensedUnderClubId gesetzt),
+    // hat immer Durchgriff — auch im Transfer-Fenster, in dem die team_license
+    // noch autark aussieht (Branding schon geflippt, Lizenz-Flip erst zum
+    // Periodenende).
+    const autarkBlocks =
+      team.licensedUnderClubId === null && (await isTeamAutark(team.id));
+    if (!autarkBlocks) {
       return {
         granted: true,
         scope: "club",
         role: clubMem.role,
         teamId: team.id,
-        clubId: team.clubId
+        // Der Club-Scope läuft über den KONTROLLIERENDEN Verein: der Lizenz-
+        // Verein-Admin navigiert das Team unter SEINEM Slug (sonst würde ihn der
+        // Vereins-Layout-Guard assertVereinSectionAccess unter dem Alt-Container-
+        // Slug rauswerfen). Die DB-Spalte teams.clubId bleibt unberührt
+        // (Entscheidung A5: kein Re-Home) — nur der Zugriffs-/URL-Kontext folgt
+        // der Lizenz. Team-Mitglieder behalten unten den Container-Slug.
+        clubId: controllingClubId
       };
     }
   }
@@ -463,23 +488,28 @@ export async function canManageTeamMembers(
   if (teamMem?.role === "admin") return true;
 
   const [team] = await db
-    .select({ clubId: teams.clubId })
+    .select({ clubId: teams.clubId, licensedUnderClubId: teams.licensedUnderClubId })
     .from(teams)
     .where(eq(teams.id, teamId))
     .limit(1);
   if (!team) return false;
 
+  // Wie resolveTeamAccess: die Verwaltungs-Delegation folgt dem effektiven
+  // Lizenz-Verein (licensedUnderClubId ?? clubId), nicht dem Alt-Container.
+  const controllingClubId = team.licensedUnderClubId ?? team.clubId;
   const [clubMem] = await db
     .select({ role: clubMemberships.role })
     .from(clubMemberships)
     .where(
       and(
         eq(clubMemberships.userId, userId),
-        eq(clubMemberships.clubId, team.clubId)
+        eq(clubMemberships.clubId, controllingClubId)
       )
     )
     .limit(1);
-  if (clubMem?.role === "admin" && !(await isTeamAutark(teamId))) {
+  const autarkBlocks =
+    team.licensedUnderClubId === null && (await isTeamAutark(teamId));
+  if (clubMem?.role === "admin" && !autarkBlocks) {
     return true;
   }
   return false;

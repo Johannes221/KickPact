@@ -9,6 +9,16 @@ import {
 } from "@/lib/db/queries/wrapped";
 import { getCachedStandings } from "@/lib/recap/standings-cache";
 import { eurWhole, seasonLabel } from "@/lib/recap/recap-format";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+// Grünes KickPact-Logo (Mark + Wortmarke) einmalig als data-URI — next/og
+// (Satori) bettet lokale Assets nur als data-URI/absolute-URL zuverlässig ein.
+const LOGO_GREEN =
+  "data:image/png;base64," +
+  readFileSync(
+    join(process.cwd(), "public/brand/logo-green-horizontal.png")
+  ).toString("base64");
 
 // DB-Zugriff (postgres-js) → Node-Runtime, NICHT edge.
 export const runtime = "nodejs";
@@ -21,9 +31,8 @@ const LIME = "#A3E635";
 const OFF = "#F8F7F4";
 
 /**
- * 9:16-Share-Bild pro Wrapped-Slide (W4) — Mechanik + Zugriffs-Gates 1:1 von
- * der recap-image-Route: auth-gated (kein öffentlicher Leak von Namen/Summen),
- * der Nutzer teilt die PNG-Datei selbst.
+ * 9:16-Share-Bild pro Wrapped-Slide (W4) — auth-gated (kein öffentlicher Leak
+ * von Namen/Summen), der Nutzer teilt die PNG-Datei selbst.
  */
 const SLIDE_KEYS = [
   "intro",
@@ -221,9 +230,14 @@ function WrappedCard({ stats, slide }: { stats: WrappedStats; slide: SlideKey })
           gap: 20
         }}
       >
-        <div style={{ display: "flex", fontSize: 52, fontWeight: 900, color: OFF, letterSpacing: "-0.03em" }}>
-          Kick<span style={{ color: ORANGE }}>Pact</span>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={LOGO_GREEN}
+          width={395}
+          height={52}
+          alt="KickPact"
+          style={{ objectFit: "contain" }}
+        />
         <div style={{ display: "flex", flex: 1 }} />
         <div style={{ display: "flex", fontSize: 26, color: "rgba(248,247,244,0.55)", fontWeight: 600 }}>
           Macht die Mannschaftskasse voll.

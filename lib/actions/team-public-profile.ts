@@ -13,6 +13,7 @@ import {
 } from "@/lib/db/schema";
 import { assertClubAccess } from "@/lib/auth/scope";
 import { getSubscriptionGateForTeam } from "@/lib/db/queries/subscription-status";
+import { isTeamOpenForSponsorEntry } from "@/lib/db/queries/sponsor-discover";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { generateUniqueTeamSlug } from "@/lib/db/queries/team-public-slug";
 import { rateLimit, getClientIp } from "@/lib/utils/rate-limit";
@@ -120,6 +121,7 @@ export async function createPublicSponsorLead(input: {
       publicName: teams.publicName,
       discoverable: teams.discoverable,
       isActive: teams.isActive,
+      verifiedAt: teams.verifiedAt,
       clubId: clubs.id,
       clubSlug: clubs.slug
     })
@@ -128,7 +130,10 @@ export async function createPublicSponsorLead(input: {
     .where(eq(teams.publicSlug, parsed.teamSlug))
     .limit(1);
 
-  if (!row || !row.discoverable || !row.isActive) {
+  // Gleiches Gate wie /m/{slug} (getPublicTeamProfileBySlug): discoverable &&
+  // isActive && verifiedAt. verifiedAt fehlte — ein discoverable, aber
+  // unverifiziertes Team (dessen /m/-Seite 404t) nahm sonst weiter Leads an.
+  if (!row || !isTeamOpenForSponsorEntry(row)) {
     throw new Error("Diese Mannschaft nimmt aktuell keine Anfragen entgegen.");
   }
 

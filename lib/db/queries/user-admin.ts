@@ -1,10 +1,19 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { users, sponsors, accounts, sessions, clubMemberships } from "@/lib/db/schema";
+import {
+  users,
+  sponsors,
+  accounts,
+  sessions,
+  clubMemberships,
+  supportTickets,
+  sponsorInquiries
+} from "@/lib/db/schema";
 
 export const DELETED_EMAIL_DOMAIN = "kickpact.invalid";
 export const DELETED_NAME = "Gelöschter Nutzer";
 export const DELETED_SPONSOR_DISPLAY = "Gelöschter Sponsor";
+export const DELETED_TEXT = "[gelöscht]";
 
 /** Eckdaten eines Users für die Admin-User-Actions (oder null). */
 export async function getUserForAdmin(userId: string) {
@@ -23,6 +32,10 @@ export async function getUserForAdmin(userId: string) {
  *
  * - OAuth-Accounts + Sessions löschen (kein Login mehr möglich)
  * - Sponsor-Profile anonymisieren (Pledges/Invoices bleiben für § 147 AO)
+ * - Support-Tickets + Sponsor-Anfragen: denormalisierte PII (Name/E-Mail) und
+ *   Freitext des Users neutralisieren — dieselben Zeilen, die der DSGVO-Export
+ *   (lib/actions/dsgvo.ts) als „Daten dieses Users" listet, müssen auch bei der
+ *   Art.-17-Löschung symmetrisch anonymisiert werden.
  * - User-Row als Tombstone (email notNull+unique → deleted-<id>@invalid)
  */
 export async function anonymizeUserAccount(userId: string): Promise<void> {
@@ -38,6 +51,25 @@ export async function anonymizeUserAccount(userId: string): Promise<void> {
         businessTaxId: null
       })
       .where(eq(sponsors.userId, userId));
+    // Support-Tickets tragen Name/E-Mail denormalisiert (auch für eingeloggte
+    // Absender) + Freitext (Betreff/Nachricht) → alle vier neutralisieren.
+    await tx
+      .update(supportTickets)
+      .set({
+        name: DELETED_NAME,
+        email: `deleted-${userId}@${DELETED_EMAIL_DOMAIN}`,
+        subject: DELETED_TEXT,
+        message: DELETED_TEXT,
+        updatedAt: new Date()
+      })
+      .where(eq(supportTickets.userId, userId));
+    // Sponsor-Anfragen: der vom User verfasste Freitext (message/responseMessage
+    // dieser Beziehung) wird entfernt; Status/Verknüpfungen bleiben für die
+    // Vereinsseite erhalten.
+    await tx
+      .update(sponsorInquiries)
+      .set({ message: null, responseMessage: null })
+      .where(eq(sponsorInquiries.sponsorUserId, userId));
     await tx
       .update(users)
       .set({

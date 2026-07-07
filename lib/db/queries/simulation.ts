@@ -148,7 +148,6 @@ export async function getTeamPrognose(teamId: string): Promise<TeamPrognose | nu
       triggerType: pledgeRules.triggerType,
       triggerParams: pledgeRules.triggerParamsJson,
       amountCents: pledgeRules.amountCents,
-      perMatchCapCents: pledgeRules.perMatchCapCents,
       capCents: pledgeRules.capCents,
       capPeriod: pledgeRules.capPeriod,
       monthlyCapCents: pledges.monthlyCapCents
@@ -175,7 +174,6 @@ export async function getTeamPrognose(teamId: string): Promise<TeamPrognose | nu
         triggerType: r.triggerType,
         triggerParams: r.triggerParams ?? {},
         amountCents: r.amountCents,
-        perMatchCapCents: r.perMatchCapCents,
         capCents: r.capCents,
         capPeriod: r.capPeriod,
         monthlyCapCents: r.monthlyCapCents

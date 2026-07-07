@@ -282,12 +282,11 @@ describe.skipIf(isIntegrationDbDisabled)("sponsor-reporting (integration)", () =
     expect(apr.find((u) => u.pledgeId === "pl_1")?.chargedThisMonthCents).toBe(0);
   });
 
-  it("getCapUsageForActivePledges: zählt pending_approval mit (Enforcement-Parität)", async () => {
+  it("getCapUsageForActivePledges: pending_approval zählt NICHT gegen den Cap, wird aber als pendingThisMonthCents ausgewiesen (Root-Fix 2026-07-07)", async () => {
     const db = await getTestDb();
-    // Enforcement (evaluate-match) zählt pending_approval gegen den Cap. Die
-    // Anzeige MUSS dieselbe Auslastung zeigen — sonst sieht der Sponsor freien
-    // Spielraum, den das Enforcement bereits verbraucht hat, und die nächste
-    // Charge wird still verworfen.
+    // Enforcement zählt pending_approval seit dem Root-Fix NICHT mehr gegen den
+    // Cap (reserviert kein Budget) — die Grenze greift beim Confirm. Die Anzeige
+    // muss deckungsgleich sein: Cap-Verbrauch = 0, das Ausstehende separat.
     await db.insert(charges).values({
       id: "c_pending",
       pledgeId: "pl_1",
@@ -304,8 +303,43 @@ describe.skipIf(isIntegrationDbDisabled)("sponsor-reporting (integration)", () =
       new Date(Date.UTC(2026, 2, 20))
     );
     const pl1 = usage.find((u) => u.pledgeId === "pl_1");
-    expect(pl1?.chargedThisMonthCents).toBe(3500);
-    expect(pl1?.percentage).toBeCloseTo(0.7); // 3500 / 5000
+    expect(pl1?.chargedThisMonthCents).toBe(0);
+    expect(pl1?.pendingThisMonthCents).toBe(3500);
+    expect(pl1?.percentage).toBe(0);
+  });
+
+  it("getCapUsageForActivePledges: season_end → Saison-Kumuliert sichtbar, unabhängig vom Monat", async () => {
+    // Tier-2-Fix (2026-07-07): Bei season_end sammeln sich ALLE Monats-Beiträge
+    // auf EINE Saison-Rechnung. Der Monats-Cap deckelt weiter pro Monat, aber
+    // die Query muss die Saison-Kumulation offenlegen, damit das Tile nicht den
+    // Eindruck erweckt, der Cap begrenze die Rechnungssumme.
+    const db = await getTestDb();
+    const { eq } = await import("drizzle-orm");
+    await db
+      .update(sponsors)
+      .set({ billingCycle: "season_end" })
+      .where(eq(sponsors.id, "sp_1"));
+
+    // now = Oktober 2025 (Saison 2025/26). pl_1 hat NUR September-Charges,
+    // pl_3 nur eine Oktober-Charge.
+    const now = new Date(Date.UTC(2025, 9, 20));
+    const usage = await getCapUsageForActivePledges("sp_1", now);
+
+    const pl1 = usage.find((u) => u.pledgeId === "pl_1")!;
+    const pl3 = usage.find((u) => u.pledgeId === "pl_3")!;
+
+    expect(pl1.billingCycle).toBe("season_end");
+    // pl_1: Monat Oktober = 0 €, aber Saison bereits 20 € (c_1 + c_2 im Sept).
+    expect(pl1.chargedThisMonthCents).toBe(0);
+    expect(pl1.seasonToDateCents).toBe(2000);
+    // pl_3: Monat Oktober = 20 € (c_3) und Saison ebenfalls 20 €.
+    expect(pl3.chargedThisMonthCents).toBe(2000);
+    expect(pl3.seasonToDateCents).toBe(2000);
+  });
+
+  it("getCapUsageForActivePledges: monthly-Sponsor bekommt billingCycle='monthly'", async () => {
+    const usage = await getCapUsageForActivePledges("sp_1");
+    expect(usage.every((u) => u.billingCycle === "monthly")).toBe(true);
   });
 
   // ── Helpers ───────────────────────────────────────────────────────────────

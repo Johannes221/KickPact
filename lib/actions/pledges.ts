@@ -58,7 +58,6 @@ async function loadOwnedRule(ruleId: string) {
       amountCents: pledgeRules.amountCents,
       capCents: pledgeRules.capCents,
       capPeriod: pledgeRules.capPeriod,
-      perMatchCapCents: pledgeRules.perMatchCapCents,
       triggerParamsJson: pledgeRules.triggerParamsJson,
       requiresApproval: pledgeRules.requiresApproval,
       sponsorUserId: sponsors.userId
@@ -264,7 +263,6 @@ export async function updatePledgeRule(
           triggerParamsJson:
             patch.triggerParamsJson ?? (rule.triggerParamsJson ?? {}),
           amountCents: patch.amountCents ?? rule.amountCents,
-          perMatchCapCents: rule.perMatchCapCents,
           capCents: capProvided ? (patch.capCents ?? null) : rule.capCents,
           capPeriod: capProvided ? (patch.capPeriod ?? null) : rule.capPeriod,
           requiresApproval: rule.requiresApproval,
@@ -395,7 +393,6 @@ export async function addPledgeRule(
       amountCents: input.amountCents,
       capCents: cap.capCents,
       capPeriod: cap.capPeriod,
-      perMatchCapCents: null,
       requiresApproval: MANUAL_TRIGGERS.has(input.triggerType),
       active: true
     });

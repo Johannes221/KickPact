@@ -31,7 +31,6 @@ export async function loadActivePledgeRulesForTeam(
       triggerType: pledgeRules.triggerType,
       triggerParams: pledgeRules.triggerParamsJson,
       amountCents: pledgeRules.amountCents,
-      perMatchCapCents: pledgeRules.perMatchCapCents,
       capCents: pledgeRules.capCents,
       capPeriod: pledgeRules.capPeriod
     })
@@ -117,7 +116,6 @@ export async function loadActivePledgeRulesForTeam(
       triggerType: r.triggerType as TriggerType,
       triggerParams: (r.triggerParams ?? {}) as Record<string, unknown>,
       amountCents: r.amountCents,
-      perMatchCapCents: r.perMatchCapCents,
       capCents: r.capCents,
       capPeriod: r.capPeriod
     }));
@@ -133,17 +131,17 @@ export async function loadActivePledgeRulesForTeam(
  * Cap-Check in evaluate-match atomar unter `SELECT … FOR UPDATE` laufen kann.
  */
 /**
- * Status, die gegen einen Cap zählen. `pending_approval` reserviert
- * Cap-Headroom (kann noch confirmed werden). Enforcement (evaluate-match)
- * UND Anzeige (getCapUsageForActivePledges) MÜSSEN exakt diese Menge nutzen —
- * sonst zeigt das Dashboard mehr Spielraum als tatsächlich durchgesetzt wird
- * und die nächste Charge wird still verworfen.
+ * Status, die gegen einen Cap zählen. Root-Fix 2026-07-07: `pending_approval`
+ * ist bewusst NICHT dabei — eine unbestätigte Charge reserviert kein
+ * Cap-Budget mehr. Vorher konnte ein Trainer mit erfundenen, unbestätigten
+ * Manual-Events den Cap ausschöpfen und reale (gescrapte, sofort confirmed)
+ * Auto-Charges verdrängen, während der Sponsor die Reservierung nirgends sah.
+ * Die Cap-Grenze (confirmed+invoiced) wird stattdessen beim BESTÄTIGEN
+ * durchgesetzt — siehe {@link findConfirmCapViolation}. Enforcement
+ * (evaluate-match) UND Anzeige (getCapUsageForActivePledges) nutzen exakt
+ * diese Menge, bleiben also deckungsgleich.
  */
-export const CAP_COUNTED_STATUSES = [
-  "confirmed",
-  "pending_approval",
-  "invoiced"
-] as const;
+export const CAP_COUNTED_STATUSES = ["confirmed", "invoiced"] as const;
 
 /**
  * UTC-Kalendermonat `[start, end)` um `anchor`. UTC-Anker ist identisch zur
@@ -254,4 +252,102 @@ export async function getPledgeMonthlyCap(pledgeId: string): Promise<number | nu
     .where(eq(pledges.id, pledgeId))
     .limit(1);
   return p?.cap ?? null;
+}
+
+/**
+ * Prüft, ob eine noch `pending_approval`-Charge bestätigt werden darf, ohne
+ * einen Cap zu sprengen. Notwendig, seit `pending_approval` NICHT mehr gegen
+ * den Cap zählt ({@link CAP_COUNTED_STATUSES}): ohne diese Prüfung könnte ein
+ * Sponsor durch Bestätigen mehrerer Approvals confirmed+invoiced gemeinsam über
+ * den Monats-/Regel-Cap schieben.
+ *
+ * Läuft in einer Transaktion und lockt den Pledge `FOR UPDATE` (Atomarität
+ * gegen parallele Confirms). Liefert die zuerst verletzte Cap (Monat vor Regel)
+ * für eine Klartext-Meldung, sonst `null`.
+ */
+export interface ConfirmCapViolation {
+  scope: "month" | "rule";
+  capCents: number;
+  alreadyCents: number;
+  amountCents: number;
+}
+
+export async function findConfirmCapViolation(
+  tx: Pick<typeof db, "select">,
+  args: {
+    pledgeId: string;
+    pledgeRuleId: string;
+    amountCents: number;
+    asOf: Date;
+  }
+): Promise<ConfirmCapViolation | null> {
+  const [pledgeRow] = await tx
+    .select({
+      cap: pledges.monthlyCapCents,
+      startsAt: pledges.startsAt,
+      endsAt: pledges.endsAt
+    })
+    .from(pledges)
+    .where(eq(pledges.id, args.pledgeId))
+    .for("update")
+    .limit(1);
+  if (!pledgeRow) return null;
+
+  // Monats-Cap des Pledges (Anker = Abrechnungsmonat = asOf, identisch zum
+  // Insert-Pfad in evaluate-match / addManualEvent).
+  if (pledgeRow.cap !== null) {
+    const already = await getMonthlyChargedCents(args.pledgeId, args.asOf, tx);
+    if (already + args.amountCents > pledgeRow.cap) {
+      return {
+        scope: "month",
+        capCents: pledgeRow.cap,
+        alreadyCents: already,
+        amountCents: args.amountCents
+      };
+    }
+  }
+
+  // Perioden-Cap der Regel (Monat/Saison).
+  const [ruleRow] = await tx
+    .select({
+      capCents: pledgeRules.capCents,
+      capPeriod: pledgeRules.capPeriod
+    })
+    .from(pledgeRules)
+    .where(eq(pledgeRules.id, args.pledgeRuleId))
+    .limit(1);
+  if (ruleRow?.capCents != null && ruleRow.capPeriod) {
+    const { start, end } = ruleCapWindow(
+      ruleRow.capPeriod,
+      args.asOf,
+      pledgeRow.startsAt,
+      pledgeRow.endsAt
+    );
+    const already = await sumRuleChargedCents(
+      tx,
+      args.pledgeRuleId,
+      start,
+      end
+    );
+    if (already + args.amountCents > ruleRow.capCents) {
+      return {
+        scope: "rule",
+        capCents: ruleRow.capCents,
+        alreadyCents: already,
+        amountCents: args.amountCents
+      };
+    }
+  }
+  return null;
+}
+
+/** Deutsche Klartext-Meldung für einen Confirm-Cap-Konflikt (Sponsor-Toast). */
+export function confirmCapViolationMessage(v: ConfirmCapViolation): string {
+  const euro = (c: number) => (c / 100).toFixed(2).replace(".", ",") + " €";
+  const scope = v.scope === "month" ? "Monats-Cap" : "Cap dieser Regel";
+  return (
+    `${scope} erreicht: bereits ${euro(v.alreadyCents)} von ${euro(v.capCents)} vergeben — ` +
+    `dieser Beitrag (${euro(v.amountCents)}) passt nicht mehr in den aktuellen ` +
+    `Abrechnungszeitraum und kann nicht bestätigt werden.`
+  );
 }

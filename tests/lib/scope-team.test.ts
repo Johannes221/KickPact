@@ -79,6 +79,31 @@ async function grantAutarkLizenz(
   });
 }
 
+/** Zweiter Verein (der übernehmende Lizenz-Verein B) inkl. Admin-User. */
+async function seedLicensingClub(): Promise<{ clubB: string; adminB: string }> {
+  const clubB = createId();
+  const adminB = createId();
+  await db.insert(clubs).values({
+    id: clubB,
+    slug: `b-${clubB.slice(0, 8)}`,
+    name: "Verein B"
+  });
+  await db.insert(users).values({
+    id: adminB,
+    email: `b-${adminB}@kickpact.local`,
+    emailVerified: true,
+    name: "Vorstand B",
+    createdAt: new Date(),
+    updatedAt: new Date()
+  });
+  await db.insert(clubMemberships).values({ userId: adminB, clubId: clubB, role: "admin" });
+  return { clubB, adminB };
+}
+
+async function setLicensedUnder(teamId: string, clubId: string | null) {
+  await db.update(teams).set({ licensedUnderClubId: clubId }).where(eq(teams.id, teamId));
+}
+
 describe("resolveTeamAccess", () => {
   beforeEach(async () => {
     await resetTestDb();
@@ -156,6 +181,50 @@ describe("resolveTeamAccess", () => {
     if (!r.granted) return;
     expect(r.scope).toBe("club");
     expect(r.role).toBe("admin");
+  });
+
+  // A5 (Lizenz-Transfer, Access-Seite): nach accept_license bleibt teams.clubId
+  // der ALT-Container, teams.licensedUnderClubId zeigt auf den zahlenden Verein.
+  // Der Durchgriff MUSS dem effektiven Lizenz-Verein folgen (licensedUnderClubId
+  // ?? clubId) — wie Gate/Billing —, sonst greift der Alt-Container durch (Leak)
+  // und der zahlende Verein bekommt gar keinen Zugriff.
+  it("grants the LICENSING club's admin durchgriff on a transferred team (flipped)", async () => {
+    const { clubId: containerId, teamId } = await seed();
+    const { clubB, adminB } = await seedLicensingClub();
+    // Transfer angenommen + geflippt: Branding auf B, Lizenz plan=verein unter B.
+    await setLicensedUnder(teamId, clubB);
+    await grantVereinsLizenz(clubB, teamId);
+    void containerId;
+    const r = await resolveTeamAccess(adminB, teamId, "admin");
+    expect(r.granted).toBe(true);
+    if (!r.granted) return;
+    expect(r.scope).toBe("club");
+    expect(r.role).toBe("admin");
+  });
+
+  it("denies the OLD container admin durchgriff after a license transfer", async () => {
+    const { userId: containerAdmin, clubId: containerId, teamId } = await seed();
+    await db.insert(clubMemberships).values({ userId: containerAdmin, clubId: containerId, role: "admin" });
+    const { clubB } = await seedLicensingClub();
+    await setLicensedUnder(teamId, clubB);
+    await grantVereinsLizenz(clubB, teamId);
+    // Alt-Container-Admin ohne team_membership → nach dem Flip KEIN Durchgriff.
+    const r = await resolveTeamAccess(containerAdmin, teamId, "viewer");
+    expect(r.granted).toBe(false);
+  });
+
+  it("during the transfer window (branding set, license not yet flipped): B in, old container out", async () => {
+    const { userId: containerAdmin, clubId: containerId, teamId } = await seed();
+    await db.insert(clubMemberships).values({ userId: containerAdmin, clubId: containerId, role: "admin" });
+    // Fenster: Team trägt noch die eigene pro-Lizenz (autark-Form), Branding
+    // aber schon auf B. licensedUnderClubId hebt die Autark-Sperre für B auf.
+    await grantAutarkLizenz(containerId, teamId, "pro");
+    const { clubB, adminB } = await seedLicensingClub();
+    await setLicensedUnder(teamId, clubB);
+    const rB = await resolveTeamAccess(adminB, teamId, "viewer");
+    expect(rB.granted).toBe(true);
+    const rA = await resolveTeamAccess(containerAdmin, teamId, "viewer");
+    expect(rA.granted).toBe(false);
   });
 
   it("grants autark-team access via direct team-membership despite gating", async () => {
@@ -333,6 +402,59 @@ describe("resolveTeamPageAccess", () => {
     const d2 = await resolveTeamPageAccess(userId, clubSlug, otherTeamId, "admin");
     expect(d1.kind).toBe("granted");
     expect(d2.kind).toBe("granted");
+  });
+
+  // A5: nach einem Lizenz-Transfer navigiert der Lizenz-Verein-Admin das Team
+  // unter SEINEM Slug (der Vereins-Layout-Guard würde ihn unter dem Alt-
+  // Container-Slug rauswerfen). Der Alt-Container-Slug leitet ihn dorthin um.
+  it("grants the licensing club's admin under the LICENSING club's slug (no redirect)", async () => {
+    const { clubId: containerId, teamId } = await seedWithSlug();
+    const { clubB, adminB } = await seedLicensingClub();
+    const [bClub] = await db
+      .select({ slug: clubs.slug })
+      .from(clubs)
+      .where(eq(clubs.id, clubB))
+      .limit(1);
+    await setLicensedUnder(teamId, clubB);
+    await grantVereinsLizenz(clubB, teamId);
+    void containerId;
+
+    const d = await resolveTeamPageAccess(adminB, bClub!.slug, teamId, "admin");
+    expect(d.kind).toBe("granted");
+    if (d.kind !== "granted") return;
+    expect(d.access.scope).toBe("club");
+    expect(d.club.slug).toBe(bClub!.slug);
+  });
+
+  it("redirects the licensing club's admin from the old container slug to their own", async () => {
+    const { clubSlug: containerSlug, teamId } = await seedWithSlug();
+    const { clubB, adminB } = await seedLicensingClub();
+    const [bClub] = await db
+      .select({ slug: clubs.slug })
+      .from(clubs)
+      .where(eq(clubs.id, clubB))
+      .limit(1);
+    await setLicensedUnder(teamId, clubB);
+    await grantVereinsLizenz(clubB, teamId);
+
+    const d = await resolveTeamPageAccess(adminB, containerSlug, teamId, "viewer");
+    expect(d.kind).toBe("redirect-slug");
+    if (d.kind !== "redirect-slug") return;
+    expect(d.correctSlug).toBe(bClub!.slug);
+  });
+
+  it("owner keeps team-scope access under the CONTAINER slug after transfer", async () => {
+    const { userId: owner, clubSlug: containerSlug, teamId } = await seedWithSlug();
+    await db.insert(teamMemberships).values({ userId: owner, teamId, role: "admin" });
+    const { clubB } = await seedLicensingClub();
+    await setLicensedUnder(teamId, clubB);
+    await grantVereinsLizenz(clubB, teamId);
+
+    const d = await resolveTeamPageAccess(owner, containerSlug, teamId, "admin");
+    expect(d.kind).toBe("granted");
+    if (d.kind !== "granted") return;
+    expect(d.access.scope).toBe("team");
+    expect(d.club.slug).toBe(containerSlug);
   });
 
   it("redirects to correct slug when URL slug does not match team's club", async () => {

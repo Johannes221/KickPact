@@ -63,7 +63,15 @@ export async function getSponsorDashboardKpis(
       })
       .from(charges)
       .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-      .where(eq(pledges.sponsorId, sponsorId))
+      // nur fälliges Geld (confirmed|invoiced) — ein cancelled/pending_approval
+      // Charge war nie geschuldet und darf nicht als „größter Einzel-Charge"
+      // auftauchen. Deckt sich mit monthlyCents/ytd + getSponsorBalance.
+      .where(
+        and(
+          eq(pledges.sponsorId, sponsorId),
+          inArray(charges.status, ["confirmed", "invoiced"])
+        )
+      )
       .orderBy(desc(charges.amountCents))
       .limit(1)
       .then((r) => r[0] ?? null),

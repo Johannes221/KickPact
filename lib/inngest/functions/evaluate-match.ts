@@ -142,13 +142,29 @@ export const evaluateMatch = inngest.createFunction(
     let inserted = 0;
     let cappedOrSkipped = 0;
     // Audit 2026-06-11 / B1: Cap-Anker = ABRECHNUNGSmonat (jetzt), nicht
-    // Spielmonat. Caps begrenzen, was auf einer Rechnung landet — die
-    // Rechnungsperiode selektiert über confirmedAt (= Insert-Zeitpunkt).
-    // Vorher: Fenster nach Spieldatum, Summe nach Confirm-Zeit → zwei spät
-    // gescrapte Vormonats-Spiele konnten 2× den Cap auf EINE Rechnung legen.
-    // Rest-Risiko (dokumentiert, nicht gelöst): pending_approval-Charges aus
-    // dem Vormonat, die erst im Folgemonat confirmed werden, belasten den
-    // Cap des Erstellungs-Monats, landen aber auf der Folgemonats-Rechnung.
+    // Spielmonat. Der monthlyCap ist ein Monats-EXPOSURE-Limit: er deckelt, was
+    // pro Kalendermonat berechnet wird — die Cap-Periode selektiert über
+    // confirmedAt (= Insert-Zeitpunkt). Vorher: Fenster nach Spieldatum, Summe
+    // nach Confirm-Zeit → zwei spät gescrapte Vormonats-Spiele konnten 2× den
+    // Cap auf EINE Monatsrechnung legen.
+    //
+    // WICHTIG (Tier-2-Klärung 2026-07-07): Bei monthly-Sponsoren gilt
+    // Cap-Dimension == Rechnungs-Dimension (1 Monat). Bei season_end-Sponsoren
+    // NICHT — dort bündelt generate-season-end-invoices die ganze Saison auf
+    // EINE Rechnung, während der Monats-Cap bewusst weiter pro Monat greift.
+    // Die Saison-Rechnung kann also ~11×Cap groß werden; das ist gewollt (der
+    // Cap ist ein Monats-Exposure-Limit, kein Rechnungs-Deckel) und wird dem
+    // Sponsor im Cap-Tile über seasonToDateCents transparent gemacht
+    // (getCapUsageForActivePledges). Ein separater Saison-Cap existiert nicht.
+    //
+    // Root-Fix 2026-07-07: Der Cap zählt nur noch confirmed+invoiced
+    // (CAP_COUNTED_STATUSES) — unbestätigte Manual-Events reservieren kein
+    // Budget mehr und können reale Auto-Charges nicht mehr verdrängen. Die
+    // Grenze für eine bestätigte Charge wird beim Confirm durchgesetzt
+    // (findConfirmCapViolation). Ein cap-bedingter Drop hinterlässt bewusst
+    // KEINE Zeile (kein Auto-Recovery — der cancelled-freie Unique-Index würde
+    // sonst deliberate Stornos wiederbeleben); Nachholen läuft über
+    // scripts/recalculate-charges.ts. Drops werden zur Forensik geloggt.
     const capAnchor = new Date();
     for (const p of proposals) {
       // Step-ID muss pro Proposal eindeutig sein: results_only-Tor-Charges
@@ -187,7 +203,17 @@ export const evaluateMatch = inngest.createFunction(
                   pledgeRow.endsAt
                 );
                 const ruleCharged = await sumRuleChargedCents(tx, p.pledgeRuleId, start, end);
-                if (ruleCharged + p.amountCents > ruleCap.capCents) return false;
+                if (ruleCharged + p.amountCents > ruleCap.capCents) {
+                  logger.warn("evaluate-match: charge dropped — rule cap reached", {
+                    matchId,
+                    teamId,
+                    pledgeRuleId: p.pledgeRuleId,
+                    triggerType: p.triggerType,
+                    amountCents: p.amountCents,
+                    capCents: ruleCap.capCents
+                  });
+                  return false;
+                }
               }
 
               if (pledgeRow.cap !== null) {
@@ -208,7 +234,18 @@ export const evaluateMatch = inngest.createFunction(
                     )
                   );
                 const alreadyCharged = sumRow?.total ?? 0;
-                if (alreadyCharged + p.amountCents > pledgeRow.cap) return false;
+                if (alreadyCharged + p.amountCents > pledgeRow.cap) {
+                  logger.warn("evaluate-match: charge dropped — monthly cap reached", {
+                    matchId,
+                    teamId,
+                    pledgeId: p.pledgeId,
+                    triggerType: p.triggerType,
+                    amountCents: p.amountCents,
+                    capCents: pledgeRow.cap,
+                    alreadyChargedCents: alreadyCharged
+                  });
+                  return false;
+                }
               }
 
               await tx.insert(charges).values({

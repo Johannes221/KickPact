@@ -6,6 +6,7 @@ import { X, Share2, Volume2, VolumeX } from "lucide-react";
 import type { WrappedStats } from "@/lib/db/queries/wrapped";
 import { eurWhole } from "@/lib/recap/recap-format";
 import { useAmbientAudio } from "./use-ambient-audio";
+import { shareImageFile } from "@/lib/platform/files";
 
 /**
  * Saison-Wrapped Story-Player (W4, Plan 2026-06-12).
@@ -181,23 +182,12 @@ export function WrappedPlayer({
 
   const share = useCallback(
     async (imageKey: string) => {
-      const url = `${imageBase}/${imageKey}`;
-      try {
-        const res = await fetch(url);
-        if (res.ok) {
-          const blob = await res.blob();
-          const file = new File([blob], `kickpact-wrapped-${imageKey}.png`, {
-            type: "image/png"
-          });
-          if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file] });
-            return;
-          }
-        }
-      } catch {
-        // Abbruch/Fehler → Fallback unten.
-      }
-      window.open(url, "_blank", "noopener");
+      // Nativ (iOS-App): Capacitor-Share-Sheet → das EXAKTE Motiv landet in
+      // Instagram/Stories/WhatsApp. Web: Web-Share-API mit Datei, sonst neuer Tab.
+      await shareImageFile(
+        `${imageBase}/${imageKey}`,
+        `kickpact-wrapped-${imageKey}.png`
+      );
     },
     [imageBase]
   );
@@ -315,9 +305,10 @@ export function WrappedPlayer({
           </div>
         )}
 
-        {/* Footer-Wordmark */}
-        <div className="pointer-events-none absolute bottom-4 left-0 right-0 z-10 text-center font-display text-sm font-black tracking-tight text-white/40">
-          Kick<span style={{ color: "#FF6A30" }}>Pact</span>
+        {/* Footer: grünes KickPact-Logo */}
+        <div className="pointer-events-none absolute bottom-4 left-0 right-0 z-10 flex justify-center opacity-70">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/logo-green-horizontal.png" alt="KickPact" className="h-4 w-auto" />
         </div>
       </div>
     </div>

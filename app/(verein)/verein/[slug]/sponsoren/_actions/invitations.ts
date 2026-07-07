@@ -8,6 +8,7 @@ import {
   getTeamContainerVerifiedAt,
   revokeInvitation
 } from "@/lib/db/queries/invitations";
+import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
 
 const createSchema = z.object({
   clubSlug: z.string().min(1),
@@ -21,7 +22,18 @@ export async function createInvitationAction(input: {
   recipientName?: string;
 }) {
   const parsed = createSchema.parse(input);
-  const { user } = await assertClubWriteAccess(parsed.clubSlug, "admin");
+  const { user, club } = await assertClubWriteAccess(parsed.clubSlug, "admin");
+
+  // Tenant-Ownership (fail closed): assertClubWriteAccess autorisiert nur den
+  // Slug-Verein — es prüft NICHT, dass das aus dem Formular stammende Team auch
+  // zu diesem Verein gehört. Ohne diesen Check könnte ein Admin von Verein A
+  // eine gültige Sponsor-Einladung + Token auf ein fremdes Team von Verein B
+  // erzeugen (Kader-Leak via /api/squad, fremde Pledges). Die Sponsoren-Seite
+  // zeigt ohnehin nur Teams mit teams.clubId == club.id (getClubSponsorenOverview),
+  // also ist genau das die legitime Menge.
+  if (!(await getTeamInClub(parsed.teamId, club.id))) {
+    throw new Error("Mannschaft nicht gefunden.");
+  }
 
   // Sponsoren-Gate (Design 2026-05-29 §3.5/§6): Einladungen sind erst erlaubt,
   // wenn der Container-Verein DER MANNSCHAFT verifiziert ist — nicht der

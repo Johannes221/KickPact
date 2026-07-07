@@ -3,7 +3,8 @@ import { users } from "@/lib/db/schema";
 import {
   upsertDeviceToken,
   getDeviceTokensForUser,
-  deleteDeviceTokens
+  deleteDeviceTokens,
+  deleteDeviceTokensForUser
 } from "@/lib/db/queries/device-tokens";
 import { sendPushToUser } from "@/lib/notifications/push";
 import {
@@ -61,6 +62,20 @@ describe.skipIf(isIntegrationDbDisabled)("device-tokens (DB)", () => {
 
     await deleteDeviceTokens(["dead"]);
     expect(await getDeviceTokensForUser("u1")).toEqual(["alive"]);
+  });
+
+  it("deleteDeviceTokensForUser löscht nur eigene Tokens (kein Fremd-Abmelden)", async () => {
+    await seedUser("u1");
+    await seedUser("u2");
+    await upsertDeviceToken({ token: "tok-victim", userId: "u2" });
+
+    // u1 kennt den opaken Token von u2 und versucht ihn abzumelden → No-Op.
+    await deleteDeviceTokensForUser("u1", ["tok-victim"]);
+    expect(await getDeviceTokensForUser("u2")).toEqual(["tok-victim"]);
+
+    // Eigenen Token darf u2 weiterhin abmelden.
+    await deleteDeviceTokensForUser("u2", ["tok-victim"]);
+    expect(await getDeviceTokensForUser("u2")).toEqual([]);
   });
 
   it("sendPushToUser räumt 410-Tokens aus der echten DB (Auswahl + Cleanup e2e)", async () => {

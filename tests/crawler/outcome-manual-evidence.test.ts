@@ -19,7 +19,6 @@ function rule(triggerType: "hattrick" | "comeback_win"): PledgeRuleInput {
     triggerType,
     triggerParams: {},
     amountCents: 1000,
-    perMatchCapCents: null,
     capCents: null,
     capPeriod: null
   };

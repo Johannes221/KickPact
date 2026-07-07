@@ -60,6 +60,13 @@ describe.skipIf(isIntegrationDbDisabled)("sponsor-dashboard KPIs (integration)",
     expect(kpis.monthlyCents).toBe(4000);
   });
 
+  it("biggestRecent: größter cancelled/pending Charge zählt nicht — nur confirmed|invoiced", async () => {
+    const kpis = await getSponsorDashboardKpis("sp_1", new Date(Date.UTC(2026, 1, 15)));
+    // c_huge_cancelled (99999) ist der größte, aber cancelled → ignoriert.
+    // Größter confirmed ist c_dec (7000).
+    expect(kpis.biggestRecent?.amountCents).toBe(7000);
+  });
+
   it("ytd/lastYear: Spät-Confirm über Jahresgrenze zählt im Confirm-Jahr", async () => {
     const kpis = await getSponsorDashboardKpis("sp_1", new Date(Date.UTC(2026, 1, 15)));
     // 2026 confirmed: c_dec (7000, confirmed Jan 26) + c_late (1000) + c_feb (3000) = 11000
@@ -123,7 +130,7 @@ async function seed() {
     }
   ]);
 
-  const matchRows = ["m_late", "m_feb", "m_cancel", "m_pending", "m_dec"].map(
+  const matchRows = ["m_late", "m_feb", "m_cancel", "m_pending", "m_dec", "m_huge"].map(
     (id, i) => ({
       id,
       teamId: "team_1",
@@ -198,6 +205,19 @@ async function seed() {
       status: "confirmed",
       createdAt: new Date(Date.UTC(2025, 11, 28)),
       confirmedAt: new Date(Date.UTC(2026, 0, 3))
+    },
+    // größter Betrag von allen, aber cancelled → darf NIE als „größter
+    // Einzel-Charge" auftauchen (Geld war nie fällig)
+    {
+      id: "c_huge_cancelled",
+      pledgeId: "pl_1",
+      pledgeRuleId: "pr_1",
+      matchId: "m_huge",
+      triggerType: "goal_total",
+      amountCents: 99999,
+      status: "cancelled",
+      createdAt: new Date(Date.UTC(2026, 1, 14)),
+      confirmedAt: null
     }
   ]);
 }

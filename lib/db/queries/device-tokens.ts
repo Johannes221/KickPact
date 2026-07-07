@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { deviceTokens } from "@/lib/db/schema";
 
@@ -43,4 +43,19 @@ export async function getDeviceTokensForUser(userId: string): Promise<string[]> 
 export async function deleteDeviceTokens(tokens: string[]): Promise<void> {
   if (tokens.length === 0) return;
   await db.delete(deviceTokens).where(inArray(deviceTokens.token, tokens));
+}
+
+/**
+ * Owner-gebundenes Löschen fürs App-Logout/Opt-out: löscht nur, wenn der Token
+ * dem übergebenen User gehört. Verhindert, dass ein eingeloggter User fremde
+ * Registrierungen abmeldet, wenn er deren opaken Token-String kennt.
+ */
+export async function deleteDeviceTokensForUser(
+  userId: string,
+  tokens: string[]
+): Promise<void> {
+  if (tokens.length === 0) return;
+  await db
+    .delete(deviceTokens)
+    .where(and(eq(deviceTokens.userId, userId), inArray(deviceTokens.token, tokens)));
 }

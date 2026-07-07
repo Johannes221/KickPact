@@ -183,8 +183,7 @@ export async function getWrappedStats(
     pledgeId: "wrapped-probe",
     triggerType: "comeback_win" as const,
     triggerParams: {},
-    amountCents: 1,
-    perMatchCapCents: null
+    amountCents: 1
   };
 
   let siege = 0;

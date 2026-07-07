@@ -4,7 +4,12 @@ import {
   sendPushToUser,
   type PushDeps
 } from "@/lib/notifications/push";
-import { isDeadTokenResult, buildProviderToken, type ApnsResult } from "@/lib/notifications/apns";
+import {
+  isDeadTokenResult,
+  isSuspectTokenResult,
+  buildProviderToken,
+  type ApnsResult
+} from "@/lib/notifications/apns";
 import { prefCategoryForType } from "@/lib/notifications/deliver";
 
 const payload = { title: "Titel", body: "Body" };
@@ -79,6 +84,59 @@ describe("sendPushToUser — 410/Unregistered-Cleanup", () => {
   });
 });
 
+describe("sendPushToUser — Mass-Failure-Guard (Env-Fehlkonfiguration)", () => {
+  it("löscht NICHTS, wenn ein ganzer Batch nur mit Env-Symptom (BadDeviceToken) stirbt", async () => {
+    const deps = makeDeps({
+      getTokens: vi.fn(async () => ["t1", "t2", "t3"]),
+      send: vi.fn(async () => [
+        { token: "t1", ok: false, status: 400, reason: "BadDeviceToken" },
+        { token: "t2", ok: false, status: 400, reason: "BadDeviceToken" },
+        { token: "t3", ok: false, status: 400, reason: "DeviceTokenNotForTopic" }
+      ])
+    });
+    const res = await sendPushToUser("user-1", payload, deps);
+
+    expect(res).toEqual({ sent: 0, removed: 0, skipped: "mass-failure" });
+    expect(deps.removeTokens).not.toHaveBeenCalled();
+  });
+
+  it("schützt auch Single-Device-User vor dem BadDeviceToken-Wipe", async () => {
+    const deps = makeDeps({
+      getTokens: vi.fn(async () => ["only"]),
+      send: vi.fn(async () => [{ token: "only", ok: false, status: 400, reason: "BadDeviceToken" }])
+    });
+    const res = await sendPushToUser("user-1", payload, deps);
+
+    expect(res).toEqual({ sent: 0, removed: 0, skipped: "mass-failure" });
+    expect(deps.removeTokens).not.toHaveBeenCalled();
+  });
+
+  it("löscht echten Voll-Uninstall (ganzer Batch 410/Unregistered) weiterhin", async () => {
+    const deps = makeDeps({
+      getTokens: vi.fn(async () => ["only"]),
+      send: vi.fn(async () => [{ token: "only", ok: false, status: 410 }])
+    });
+    const res = await sendPushToUser("user-1", payload, deps);
+
+    expect(res).toEqual({ sent: 0, removed: 1 });
+    expect(deps.removeTokens).toHaveBeenCalledWith(["only"]);
+  });
+
+  it("löscht einzelnes BadDeviceToken, solange der Batch nicht komplett stirbt", async () => {
+    const deps = makeDeps({
+      getTokens: vi.fn(async () => ["t1", "t2"]),
+      send: vi.fn(async () => [
+        { token: "t1", ok: true, status: 200 },
+        { token: "t2", ok: false, status: 400, reason: "BadDeviceToken" }
+      ])
+    });
+    const res = await sendPushToUser("user-1", payload, deps);
+
+    expect(res).toEqual({ sent: 1, removed: 1 });
+    expect(deps.removeTokens).toHaveBeenCalledWith(["t2"]);
+  });
+});
+
 describe("sendPushToUser — best-effort", () => {
   it("wirft nie, auch wenn der Sender wirft", async () => {
     const deps = makeDeps({
@@ -117,6 +175,21 @@ describe("isDeadTokenResult", () => {
     expect(isDeadTokenResult({ token: "x", ok: false, status: 429, reason: "TooManyRequests" })).toBe(
       false
     );
+  });
+});
+
+describe("isSuspectTokenResult", () => {
+  it("markiert nur die Env-/Topic-Fehlkonfig-Symptome, nicht den echten Uninstall", () => {
+    expect(
+      isSuspectTokenResult({ token: "x", ok: false, status: 400, reason: "BadDeviceToken" })
+    ).toBe(true);
+    expect(
+      isSuspectTokenResult({ token: "x", ok: false, status: 400, reason: "DeviceTokenNotForTopic" })
+    ).toBe(true);
+    expect(isSuspectTokenResult({ token: "x", ok: false, status: 410 })).toBe(false);
+    expect(
+      isSuspectTokenResult({ token: "x", ok: false, status: 400, reason: "Unregistered" })
+    ).toBe(false);
   });
 });
 

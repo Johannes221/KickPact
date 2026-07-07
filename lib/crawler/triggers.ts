@@ -58,7 +58,6 @@ export interface PledgeRuleInput {
   triggerType: TriggerType;
   triggerParams: Record<string, unknown>;
   amountCents: number;
-  perMatchCapCents: number | null;
   /** Perioden-Cap-Betrag (Cent). Enforcement DB-aware in evaluate-match/recalc, nicht hier. */
   capCents?: number | null;
   /** Perioden-Cap-Fenster für `capCents`. */
@@ -85,31 +84,16 @@ export interface ChargeProposal {
 /**
  * Pure function. Gegeben ein Match + die für die gesponserte Mannschaft aktiven
  * Pledge-Rules, liefert die Liste der ChargeProposals zurück.
- * Respektiert per_match_cap pro Rule.
- * Monthly-Cap wird NICHT hier durchgesetzt (passiert downstream im evaluate-match Job
- * mit DB-Zugriff auf bisherige Charges des Monats).
+ * Caps werden NICHT hier durchgesetzt: Perioden-Cap (`capCents`) und
+ * Pledge-Monats-Cap laufen DB-bewusst downstream im evaluate-match/recalc-Job
+ * (skip-Semantik pro Charge). Der frühere Pro-Spiel-Cap (`perMatchCapCents`)
+ * wurde mit Migration 0040 abgelöst und aus der Engine entfernt.
  */
 export function evaluateTriggers(
   match: MatchInput,
   rules: PledgeRuleInput[]
 ): ChargeProposal[] {
-  const proposals: ChargeProposal[] = [];
-
-  for (const r of rules) {
-    const ruleProposals = evaluateRule(match, r);
-
-    // Per-match-cap: emit charges in order, stop emitting once full charge would exceed cap.
-    let emittedSum = 0;
-    for (const p of ruleProposals) {
-      const wouldExceed =
-        r.perMatchCapCents !== null && emittedSum + p.amountCents > r.perMatchCapCents;
-      if (wouldExceed) break;
-      proposals.push(p);
-      emittedSum += p.amountCents;
-    }
-  }
-
-  return proposals;
+  return rules.flatMap((r) => evaluateRule(match, r));
 }
 
 function evaluateRule(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[] {

@@ -337,7 +337,6 @@ async function runCloneTransaction(
           triggerType: r.triggerType,
           triggerParamsJson: r.triggerParamsJson,
           amountCents: r.amountCents,
-          perMatchCapCents: r.perMatchCapCents,
           capCents: r.capCents,
           capPeriod: r.capPeriod,
           requiresApproval: r.requiresApproval

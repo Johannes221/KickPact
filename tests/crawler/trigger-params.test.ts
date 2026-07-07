@@ -50,8 +50,7 @@ function ruleFromUi(
     pledgeId: "p_test",
     triggerType,
     triggerParams: normalizeTriggerParams(uiParams),
-    amountCents: 500,
-    perMatchCapCents: null
+    amountCents: 500
   };
 }
 
@@ -123,8 +122,7 @@ describe("goals_scored_min — Threshold wird respektiert (snake_case UI-Params)
       pledgeId: "p",
       triggerType: "goals_scored_min",
       triggerParams: { min_goals: 5 }, // bewusst NICHT normalisiert
-      amountCents: 500,
-      perMatchCapCents: null
+      amountCents: 500
     };
     expect(evaluateTriggers(threeGoals, [raw])).toHaveLength(0);
   });
