@@ -13,7 +13,8 @@ const settingsSchema = z.object({
   matchResults: z.boolean(),
   accessRequests: z.boolean(),
   sponsorRequests: z.boolean(),
-  billing: z.boolean()
+  billing: z.boolean(),
+  emailRecurring: z.boolean()
 });
 
 export type NotificationSettingsInput = z.infer<typeof settingsSchema>;

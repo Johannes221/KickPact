@@ -283,6 +283,23 @@ export async function setSubscriptionStatusByCustomer(
     .where(eq(subscriptions.stripeCustomerId, customerId));
 }
 
+/**
+ * Aktueller Subscription-Status zu einer Stripe-Customer-ID — VOR einem
+ * invoice.paid-Update gelesen, um den Übergang zu erkennen (z.B. past_due →
+ * active triggert die Deferred-Charge-Recovery, eine reguläre Verlängerung
+ * aus `active` nicht).
+ */
+export async function getSubscriptionStatusByCustomer(
+  customerId: string
+): Promise<SubscriptionStatus | null> {
+  const [sub] = await db
+    .select({ status: subscriptions.status })
+    .from(subscriptions)
+    .where(eq(subscriptions.stripeCustomerId, customerId))
+    .limit(1);
+  return sub?.status ?? null;
+}
+
 /** clubId der Subscription mit dieser Stripe-Customer-ID (invoice.paid). */
 export async function getClubIdByCustomer(
   customerId: string
