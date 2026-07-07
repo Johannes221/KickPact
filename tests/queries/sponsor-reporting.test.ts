@@ -133,6 +133,47 @@ describe.skipIf(isIntegrationDbDisabled)("sponsor-reporting (integration)", () =
     expect(bal.eventsCount).toBe(2);
   });
 
+  it("getSponsorBalance: Spät-Confirm wird über confirmedAt periodisiert (nicht createdAt)", async () => {
+    const db = await getTestDb();
+    // Charge entsteht 30.4. (pending_approval), Sponsor bestätigt erst 2.5.
+    // → muss in die Mai-Periode fallen, konsistent mit dem Rechnungslauf
+    // (listConfirmedChargesByPeriod fenstert über confirmedAt).
+    await db.insert(charges).values({
+      id: "c_late",
+      pledgeId: "pl_1",
+      pledgeRuleId: "pr_1",
+      matchId: "m_2", // (pr_1, m_2, goal_total) frei → verletzt Unique-Index nicht
+      triggerType: "goal_total",
+      amountCents: 1000,
+      status: "confirmed",
+      createdAt: new Date(Date.UTC(2026, 3, 30)),
+      confirmedAt: new Date(Date.UTC(2026, 4, 2))
+    });
+
+    // April [1.4., 1.5.): darf die Charge NICHT enthalten (confirmedAt liegt im Mai).
+    const apr = await getSponsorBalance("sp_1", {
+      from: new Date(Date.UTC(2026, 3, 1)),
+      to: new Date(Date.UTC(2026, 4, 1))
+    });
+    expect(apr.totalCents).toBe(0);
+
+    // Mai [1.5., 1.6.): MUSS sie enthalten.
+    const may = await getSponsorBalance("sp_1", {
+      from: new Date(Date.UTC(2026, 4, 1)),
+      to: new Date(Date.UTC(2026, 5, 1))
+    });
+    expect(may.totalCents).toBe(1000);
+    expect(may.eventsCount).toBe(1);
+
+    // byMonth über weite Range: gehört in 2026-05, nicht 2026-04.
+    const wide = await getSponsorBalance("sp_1", {
+      from: new Date(Date.UTC(2024, 0, 1)),
+      to: new Date(Date.UTC(2030, 0, 1))
+    });
+    expect(wide.byMonth.find((m) => m.month === "2026-04")).toBeUndefined();
+    expect(wide.byMonth.find((m) => m.month === "2026-05")?.totalCents).toBe(1000);
+  });
+
   // ── listChargesForSponsor ─────────────────────────────────────────────────
 
   it("listChargesForSponsor: ohne pagination liefert alle Rows", async () => {
@@ -216,6 +257,29 @@ describe.skipIf(isIntegrationDbDisabled)("sponsor-reporting (integration)", () =
     const usage = await getCapUsageForActivePledges("sp_1");
     expect(usage.length).toBe(1);
     expect(usage[0].pledgeId).toBe("pl_3");
+  });
+
+  it("getCapUsageForActivePledges: Spät-Confirm zählt im confirmedAt-Monat (deckt sich mit dem Cap-Check)", async () => {
+    const db = await getTestDb();
+    // createdAt 30.4., confirmedAt 2.5. → gehört in den Mai-Cap, genau wie
+    // getMonthlyChargedCents (COALESCE(confirmedAt, createdAt)) es enforced.
+    await db.insert(charges).values({
+      id: "c_late_cap",
+      pledgeId: "pl_1",
+      pledgeRuleId: "pr_1",
+      matchId: "m_2",
+      triggerType: "goal_total",
+      amountCents: 1000,
+      status: "confirmed",
+      createdAt: new Date(Date.UTC(2026, 3, 30)),
+      confirmedAt: new Date(Date.UTC(2026, 4, 2))
+    });
+
+    const may = await getCapUsageForActivePledges("sp_1", new Date(Date.UTC(2026, 4, 15)));
+    expect(may.find((u) => u.pledgeId === "pl_1")?.chargedThisMonthCents).toBe(1000);
+
+    const apr = await getCapUsageForActivePledges("sp_1", new Date(Date.UTC(2026, 3, 15)));
+    expect(apr.find((u) => u.pledgeId === "pl_1")?.chargedThisMonthCents).toBe(0);
   });
 
   // ── Helpers ───────────────────────────────────────────────────────────────

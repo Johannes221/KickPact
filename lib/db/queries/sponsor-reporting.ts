@@ -7,8 +7,15 @@
  *  - Active = confirmed | invoiced. pending_approval/cancelled werden
  *    NIE einbezogen (konsistent mit team-finances.ts und sponsor-dashboard.ts).
  *  - `range.from` inklusiv, `range.to` exklusiv.
- *  - Monatliche Gruppierung via `date_trunc('month', confirmedAt)` —
- *    fällt zurück auf `createdAt`, wenn confirmedAt NULL ist.
+ *  - Periodisierung (Range-Fenster, Monats-Gruppierung, Cap-Kachel) läuft
+ *    durchgängig über `COALESCE(confirmedAt, createdAt)` — identisch zum
+ *    Rechnungslauf (`listConfirmedChargesByPeriod`) und Cap-Fenster
+ *    (`getMonthlyChargedCents`). So landet ein Spät-Confirm in der Bilanz im
+ *    selben Monat wie auf seiner Rechnung, statt im createdAt-Monat.
+ *
+ * NB: Die Charge-*History* (`listChargesForSponsor`) filtert/sortiert bewusst
+ *    weiter über `createdAt` — sie ist ein Ereignis-Log ("wann ist das
+ *    passiert"), keine Perioden-Summe, und zeigt confirmedAt als eigene Spalte.
  */
 import { and, asc, desc, eq, gte, inArray, lt, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db/client";
@@ -93,8 +100,13 @@ export async function getSponsorBalance(
   const whereBase = and(
     eq(pledges.sponsorId, sponsorId),
     inArray(charges.status, [...ACTIVE_STATUSES]),
-    gte(charges.createdAt, range.from),
-    lt(charges.createdAt, range.to)
+    // Periodisierung über COALESCE(confirmedAt, createdAt) — konsistent mit dem
+    // Rechnungslauf (listConfirmedChargesByPeriod) und dem Cap-Fenster
+    // (getMonthlyChargedCents). Sonst zeigt die Bilanz einen Spät-Confirm im
+    // createdAt-Monat an, obwohl er auf der Rechnung des confirmedAt-Monats
+    // landet. COALESCE als rohes SQL-Fragment → Datum als ISO-String binden.
+    sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${range.from.toISOString()}`,
+    sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) < ${range.to.toISOString()}`
   );
 
   const [totals, byClub, byTeam, byTrigger, byMonth, pledgeCountRow] =
@@ -158,7 +170,7 @@ export async function getSponsorBalance(
       // Per Month (UTC)
       db
         .select({
-          month: sql<string>`to_char(date_trunc('month', ${charges.createdAt} AT TIME ZONE 'UTC'), 'YYYY-MM')`,
+          month: sql<string>`to_char(date_trunc('month', COALESCE(${charges.confirmedAt}, ${charges.createdAt}) AT TIME ZONE 'UTC'), 'YYYY-MM')`,
           totalCents: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int`,
           eventsCount: sql<number>`COUNT(*)::int`
         })
@@ -166,11 +178,11 @@ export async function getSponsorBalance(
         .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
         .where(whereBase)
         .groupBy(
-          sql`date_trunc('month', ${charges.createdAt} AT TIME ZONE 'UTC')`
+          sql`date_trunc('month', COALESCE(${charges.confirmedAt}, ${charges.createdAt}) AT TIME ZONE 'UTC')`
         )
         .orderBy(
           asc(
-            sql`date_trunc('month', ${charges.createdAt} AT TIME ZONE 'UTC')`
+            sql`date_trunc('month', COALESCE(${charges.confirmedAt}, ${charges.createdAt}) AT TIME ZONE 'UTC')`
           )
         ),
       // Distinct pledges in range (separate query — pledges existieren auch
@@ -476,10 +488,14 @@ export async function getCapUsageForActivePledges(
       clubName: clubs.name,
       clubSlug: clubs.slug,
       monthlyCapCents: pledges.monthlyCapCents,
+      // Fenster über COALESCE(confirmedAt, createdAt) — muss sich mit dem
+      // enforcten Cap (getMonthlyChargedCents) decken, sonst zeigt die
+      // Dashboard-Kachel eine andere Auslastung als der Cap-Check tatsächlich
+      // durchsetzt (Spät-Confirms landen sonst im falschen Monat).
       chargedThisMonthCents: sql<number>`COALESCE(SUM(${charges.amountCents}) FILTER (
         WHERE ${charges.status} IN ('confirmed','invoiced')
-          AND ${charges.createdAt} >= ${monthStart.toISOString()}
-          AND ${charges.createdAt} <  ${monthEnd.toISOString()}
+          AND COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${monthStart.toISOString()}
+          AND COALESCE(${charges.confirmedAt}, ${charges.createdAt}) <  ${monthEnd.toISOString()}
       ), 0)::int`
     })
     .from(pledges)
