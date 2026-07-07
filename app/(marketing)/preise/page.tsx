@@ -14,7 +14,7 @@ export const metadata = {
   title: "Preise & Pakete – Vereinssponsoring ohne versteckte Kosten",
   description:
     "Transparente Preise für Amateurfußball-Sponsoring: 0 % Provision auf Pacts, " +
-    "Saison-Pass bis zu 43 % günstiger, ab 5 €/Mannschaft/Monat. " +
+    "Saison-Pass bis zu 67 % günstiger, ab 4,99 €/Mannschaft/Monat. " +
     "Weniger als 1 € pro Spieler im Monat.",
   keywords: [
     "Vereinssponsoring Kosten",
@@ -34,11 +34,11 @@ const CLUB_BREAKEVEN_ROWS: ReadonlyArray<{
   savings: number;
   highlight?: boolean;
 }> = [
-  { teams: 2, proMonthly: 22, vereinMonthly: 29, savings: -7 },
-  { teams: 3, proMonthly: 33, vereinMonthly: 29, savings: 4, highlight: true },
-  { teams: 4, proMonthly: 44, vereinMonthly: 29, savings: 15 },
-  { teams: 6, proMonthly: 66, vereinMonthly: 29, savings: 37 },
-  { teams: 10, proMonthly: 110, vereinMonthly: 29, savings: 81 }
+  { teams: 2, proMonthly: 18, vereinMonthly: 20, savings: -2 },
+  { teams: 3, proMonthly: 27, vereinMonthly: 20, savings: 7, highlight: true },
+  { teams: 4, proMonthly: 36, vereinMonthly: 20, savings: 16 },
+  { teams: 6, proMonthly: 54, vereinMonthly: 20, savings: 34 },
+  { teams: 10, proMonthly: 90, vereinMonthly: 20, savings: 70 }
 ];
 
 const PER_PLAYER_ROWS: ReadonlyArray<{
@@ -46,14 +46,14 @@ const PER_PLAYER_ROWS: ReadonlyArray<{
   perPlayer: string;
   label?: string;
 }> = [
-  { players: 30, perPlayer: "0,97 €" },
+  { players: 30, perPlayer: "0,67 €" },
   {
     players: 50,
-    perPlayer: "0,58 €",
+    perPlayer: "0,40 €",
     label: "Unter 1 € pro Spieler"
   },
-  { players: 100, perPlayer: "0,29 €" },
-  { players: 200, perPlayer: "0,15 €" }
+  { players: 100, perPlayer: "0,20 €" },
+  { players: 200, perPlayer: "0,10 €" }
 ];
 
 const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
@@ -75,7 +75,7 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Wann lohnt sich die Vereinslizenz?",
-    a: "Ab 3 Mannschaften: mathematisch günstiger als 3× Pro (29 € vs. 33 €). Plus Master-Cockpit, Sammelrechnung, Cross-Team-Sponsor-View. Bei 50 Spielern bist du unter 1 € pro Spieler, bei 200 Spielern bei 0,15 €."
+    a: "Ab 3 Mannschaften: mathematisch günstiger als 3× Pro (20 € vs. 27 €). Plus Master-Cockpit, Sammelrechnung, Cross-Team-Sponsor-View. Bei 50 Spielern bist du bei 0,40 € pro Spieler, bei 200 Spielern bei 0,10 €."
   },
   {
     q: "Wirklich 0 % Provision auf Pacts?",
@@ -307,7 +307,7 @@ export default function PreisePage() {
 
         <p className="mt-10 text-center text-xs md:text-sm text-brand-night-navy/55 leading-relaxed">
           Alle Preise zzgl. USt. (19 %). Monatlich kündbar. Saison-Pass mit bis
-          zu 43 % Rabatt vs. Monatsabo. Sommerpause Juni/Juli kostenlos.
+          zu 67 % Rabatt vs. Monatsabo. Sommerpause Juni/Juli kostenlos.
         </p>
       </section>
 

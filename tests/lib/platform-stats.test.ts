@@ -171,20 +171,20 @@ describe("platform-stats", () => {
     const club1 = await seedClub("a");
     const team1 = await seedTeam(club1);
     await seedSubscription(club1, { status: "active", billingCycle: "monthly" });
-    await seedTeamLicense(club1, team1, "pro"); // 1100 monthly
+    await seedTeamLicense(club1, team1, "pro"); // 899 monthly
 
     const club2 = await seedClub("b");
     const team2 = await seedTeam(club2);
     await seedSubscription(club2, { status: "active", billingCycle: "monthly" });
-    await seedTeamLicense(club2, team2, "basic"); // 500 monthly
+    await seedTeamLicense(club2, team2, "basic"); // 499 monthly
 
     const club3 = await seedClub("c");
     await seedSubscription(club3, { status: "trialing", billingCycle: "monthly" });
 
     const k = await getPlatformKpis();
     expect(k.activeClubs).toBe(2);
-    // 1100 (pro) + 500 (basic) = 1600
-    expect(k.mrrCents).toBe(1600);
+    // 899 (pro) + 499 (basic) = 1398
+    expect(k.mrrCents).toBe(1398);
   });
 
   it("getPlatformKpis counts season_end (Saison-Pass) subs into MRR", async () => {
@@ -193,17 +193,17 @@ describe("platform-stats", () => {
     const clubMonthly = await seedClub("mrr-mon");
     const teamMonthly = await seedTeam(clubMonthly);
     await seedSubscription(clubMonthly, { status: "active", billingCycle: "monthly" });
-    await seedTeamLicense(clubMonthly, teamMonthly, "pro"); // 1100 monthly
+    await seedTeamLicense(clubMonthly, teamMonthly, "pro"); // 899 monthly
 
     const clubSeason = await seedClub("mrr-sea");
     const teamSeason = await seedTeam(clubSeason);
     await seedSubscription(clubSeason, { status: "active", billingCycle: "season_end" });
-    await seedTeamLicense(clubSeason, teamSeason, "pro"); // 750 monthly-equiv (7500 Saison / 10)
+    await seedTeamLicense(clubSeason, teamSeason, "pro"); // 360 monthly-equiv (3599 Saison / 10)
 
     const k = await getPlatformKpis();
-    // 1100 (monthly) + 750 (season_end) — season MUST NOT be 0.
-    expect(k.mrrCents).toBe(1850);
-    expect(k.mrrSeries.at(-1)?.mrrCents).toBe(1850);
+    // 899 (monthly) + 360 (season_end) — season MUST NOT be 0.
+    expect(k.mrrCents).toBe(1259);
+    expect(k.mrrSeries.at(-1)?.mrrCents).toBe(1259);
   });
 
   it("getPlatformKpis computes avg pledge amount across active pledges", async () => {

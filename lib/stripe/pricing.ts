@@ -51,15 +51,15 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     unit: "team",
     cycles: {
       monthly: {
-        amountCents: 500,
-        display: "5 €",
+        amountCents: 499,
+        display: "4,99 €",
         caption: "/ Mannschaft / Monat"
       },
       season_end: {
-        amountCents: 3500,
-        display: "35 €",
-        caption: "/ Saison · 3,50 €/Mon",
-        saveBadge: "42 % sparen"
+        amountCents: 1999,
+        display: "19,99 €",
+        caption: "/ Saison · 2 €/Mon",
+        saveBadge: "67 % sparen"
       }
     },
     features: [
@@ -79,15 +79,15 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     unit: "team",
     cycles: {
       monthly: {
-        amountCents: 1100,
-        display: "11 €",
+        amountCents: 899,
+        display: "8,99 €",
         caption: "/ Mannschaft / Monat"
       },
       season_end: {
-        amountCents: 7500,
-        display: "75 €",
-        caption: "/ Saison · 7,50 €/Mon",
-        saveBadge: "43 % sparen"
+        amountCents: 3599,
+        display: "35,99 €",
+        caption: "/ Saison · 3,60 €/Mon",
+        saveBadge: "67 % sparen"
       }
     },
     features: [
@@ -108,15 +108,15 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     unit: "club",
     cycles: {
       monthly: {
-        amountCents: 2900,
-        display: "29 €",
+        amountCents: 1999,
+        display: "19,99 €",
         caption: "/ Verein / Monat"
       },
       season_end: {
-        amountCents: 19900,
-        display: "199 €",
-        caption: "/ Saison · 19,90 €/Mon",
-        saveBadge: "43 % sparen"
+        amountCents: 7999,
+        display: "79,99 €",
+        caption: "/ Saison · 8 €/Mon",
+        saveBadge: "67 % sparen"
       }
     },
     features: [
@@ -155,7 +155,7 @@ export const CYCLE_LABELS: Record<BillingCycle, string> = {
 
 export const CYCLE_SUBLABELS: Record<BillingCycle, string> = {
   monthly: "jederzeit kündbar",
-  season_end: "Aug–Mai · 42 % sparen"
+  season_end: "Aug–Mai · 67 % sparen"
 };
 
 /**

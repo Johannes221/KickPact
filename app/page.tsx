@@ -382,9 +382,9 @@ export default function LandingPage() {
         <div className="mt-6 md:mt-8 grid gap-4 md:gap-6 md:grid-cols-3">
           <PriceCard
             plan="Basic"
-            price="5 €"
+            price="4,99 €"
             unit="/ Mannschaft / Monat"
-            perPlayer="0,23 – 0,50 € pro Spieler/Monat"
+            perPlayer="0,20 – 0,50 € pro Spieler/Monat"
             features={[
               "Eine Mannschaft, eigenständig verwaltet",
               "Bis zu 5 Sponsoren",
@@ -396,9 +396,9 @@ export default function LandingPage() {
           />
           <PriceCard
             plan="Pro"
-            price="11 €"
+            price="8,99 €"
             unit="/ Mannschaft / Monat"
-            perPlayer="0,44 – 0,61 € pro Spieler/Monat"
+            perPlayer="0,36 – 0,60 € pro Spieler/Monat"
             highlight
             features={[
               "Alles aus Basic",
@@ -411,9 +411,9 @@ export default function LandingPage() {
           />
           <PriceCard
             plan="Vereinslizenz"
-            price="29 €"
+            price="19,99 €"
             unit="/ Verein / Monat"
-            perPlayer="bei 4 Teams à 22 Spielern: ~0,33 € pro Spieler"
+            perPlayer="bei 4 Teams à 22 Spielern: ~0,23 € pro Spieler"
             features={[
               "Alle Mannschaften des Vereins inklusive",
               "Master-Admin verwaltet alle Teams zentral",
