@@ -49,6 +49,23 @@ export interface DiscoverableTeam {
 }
 
 /**
+ * Kanonisches Gate für den Sponsor-Einstieg: eine Mannschaft ist nur
+ * ansprechbar (Anfrage/Lead), wenn sie discoverable, aktiv UND verifiziert ist
+ * — exakt die drei Bedingungen, die `listDiscoverableTeams`,
+ * `getPublicTeamProfileBySlug` & Co. in SQL durchsetzen. Muss von jeder
+ * Sponsor-Einstiegs-Action geprüft werden: sonst legen veraltete teamIds/Slugs
+ * aus dem Client-State dangling Inquiries/Leads an und lösen Mail-Fanout an die
+ * Admins unsichtbarer (deaktivierter/unverifizierter) Teams aus.
+ */
+export function isTeamOpenForSponsorEntry(t: {
+  discoverable: boolean;
+  isActive: boolean;
+  verifiedAt: Date | null;
+}): boolean {
+  return t.discoverable && t.isActive && t.verifiedAt != null;
+}
+
+/**
  * Listet alle "discoverable" Mannschaften, optional gefiltert nach Suchbegriff
  * (Mannschafts- oder Vereinsname oder Ort), Liga und Ort. Nur verifizierte
  * Mannschaften (teams.verifiedAt IS NOT NULL) sind auffindbar.
