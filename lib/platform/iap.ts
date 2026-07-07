@@ -1,3 +1,4 @@
+import { registerPlugin } from "@capacitor/core";
 import { isIOSApp } from "@/lib/platform/native";
 
 /**
@@ -27,15 +28,18 @@ export interface AppleTransaction {
   jwsRepresentation: string;
 }
 
+// registerPlugin erzeugt den Bridge-Proxy DETERMINISTISCH und routet zum nativen
+// CAP_PLUGIN("IAPPlugin") (IAPPlugin.m) — unabhängig davon, ob
+// window.Capacitor.Plugins den Eintrag (schon) trägt. Der direkte
+// window.Capacitor.Plugins.IAPPlugin-Zugriff war auf der remote-server.url-WebView
+// unzuverlässig (undefined) → irreführende „nur in der iOS-App"-Meldung trotz App.
+const IAPPlugin = registerPlugin<IAPPluginShape>("IAPPlugin");
+
 function plugin(): IAPPluginShape {
-  const p =
-    typeof window !== "undefined"
-      ? window.Capacitor?.Plugins?.IAPPlugin
-      : undefined;
-  if (!isIOSApp() || !p) {
+  if (!isIOSApp()) {
     throw new Error("In-App-Käufe sind nur in der iOS-App verfügbar.");
   }
-  return p;
+  return IAPPlugin;
 }
 
 export async function getProducts(productIds: string[]): Promise<AppleProduct[]> {

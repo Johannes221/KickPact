@@ -87,12 +87,20 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
     ausstehend: "Noch nicht gespielt"
   };
 
+  // Event-Aktionen nur bei tatsächlich gespielten Partien anbieten — nicht bei
+  // zukünftigen/ungespielten (oder abgesagten/verlegten) Spielen.
+  const isPlayed =
+    match.status === "finished" ||
+    (match.datum.getTime() < Date.now() &&
+      match.status !== "cancelled" &&
+      match.status !== "postponed");
+
   return (
     <div className="space-y-8 pb-24">
       {/* Zurück-Link (kein wrappender Breadcrumb mehr) */}
       <Link
         href={backHref}
-        className="inline-flex items-center gap-1.5 text-sm text-brand-night-navy/60 hover:text-accent transition-colors"
+        className="hidden md:inline-flex items-center gap-1.5 text-sm text-brand-night-navy/60 hover:text-accent transition-colors"
       >
         <span aria-hidden>←</span>
         <span>Zurück</span>
@@ -261,7 +269,7 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
       <AdminNoteDisplay adminNote={match.adminNote} />
 
       {/* Admin-Controls — Manual-Event hinzufügen + Result-Override */}
-      {canEdit && (
+      {canEdit && isPlayed && (
         <section className="flex flex-wrap items-center justify-center gap-3 pt-4">
           <ManualEventEditor matchId={match.id} />
           <ResultOverrideEditor

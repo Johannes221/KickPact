@@ -48,7 +48,7 @@ export default async function NeuesTeamPage({
       <div>
         <Link
           href={`/verein/${slug}/mannschaften`}
-          className="text-sm text-brand-night-navy/60 hover:text-accent"
+          className="hidden md:inline-block text-sm text-brand-night-navy/60 hover:text-accent"
         >
           ← Mannschaften
         </Link>

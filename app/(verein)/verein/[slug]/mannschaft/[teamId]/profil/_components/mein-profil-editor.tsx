@@ -263,7 +263,7 @@ export function MeinProfilEditor({
               Öffentlich
             </span>
           </label>
-          {publicSlug && isPublic && (
+          {publicSlug && isPublic && isVerified && (
             <Link
               href={`/m/${publicSlug}`}
               target="_blank"

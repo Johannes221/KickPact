@@ -73,6 +73,10 @@ export function VereinSubNav({ slug, clubName }: { slug: string; clubName: strin
   ) {
     backHref = fullHref(activeTab.href);
     backLabel = activeTab.label;
+  } else if (pathname.startsWith(`${base}/spiel/`)) {
+    // Spiel-Detail (club-scoped Route, kein eigener Tab) → zurück zur Übersicht.
+    backHref = base;
+    backLabel = "Übersicht";
   } else {
     navTitle = activeTab?.label ?? clubName;
   }
