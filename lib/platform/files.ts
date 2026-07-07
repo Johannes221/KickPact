@@ -53,6 +53,34 @@ export async function openInNewTab(url: string, filename: string): Promise<void>
   window.open(url, "_blank");
 }
 
+/**
+ * Bild teilen (Wrapped-Share-Motive). Nativ (iOS-App): über das Capacitor
+ * Share-Sheet → landet in Instagram/Stories/WhatsApp etc. mit dem EXAKTEN Motiv.
+ * Web: Web-Share-API Level 2 (Datei-Share) → Fallback neuer Tab.
+ */
+export async function shareImageFile(url: string, filename: string): Promise<void> {
+  if (isNativeApp()) {
+    await shareServerFile(url, filename);
+    return;
+  }
+  try {
+    const res = await fetch(url);
+    if (res.ok) {
+      const file = new File([await res.blob()], filename, { type: "image/png" });
+      if (
+        typeof navigator.canShare === "function" &&
+        navigator.canShare({ files: [file] })
+      ) {
+        await navigator.share({ files: [file] });
+        return;
+      }
+    }
+  } catch {
+    // Abbruch/Fehler → Fallback unten.
+  }
+  window.open(url, "_blank", "noopener");
+}
+
 /** Datei-Download anstoßen (Web: <a download>) bzw. nativ teilen. */
 export async function triggerDownload(url: string, filename: string): Promise<void> {
   if (isNativeApp()) {
