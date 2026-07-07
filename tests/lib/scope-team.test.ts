@@ -288,6 +288,52 @@ describe("resolveTeamAccess", () => {
     expect(r.scope).toBe("team");
     expect(r.role).toBe("admin");
   });
+
+  // ── clubMinRole: getrennter Club-Floor (Match-Event-Schreib-Actions) ──
+  // Match-Events dürfen Club-TRAINER schreiben, in autarken Teams aber nur der
+  // Mannschafts-ADMIN (Team-Memberships kennen kein „trainer"). Der 4. Parameter
+  // entkoppelt den Club-Floor vom Team-Floor.
+
+  it("grants club-trainer at scope=club when clubMinRole=trainer but teamMinRole=admin (vereinsgeführt)", async () => {
+    const { userId, clubId, teamId } = await seed();
+    await db.insert(clubMemberships).values({ userId, clubId, role: "trainer" });
+    await grantVereinsLizenz(clubId, teamId);
+    const r = await resolveTeamAccess(userId, teamId, "admin", "trainer");
+    expect(r.granted).toBe(true);
+    if (!r.granted) return;
+    expect(r.scope).toBe("club");
+    expect(r.role).toBe("trainer");
+  });
+
+  it("still blocks club-trainer durchgriff on an AUTARK team even with clubMinRole=trainer", async () => {
+    const { userId, clubId, teamId } = await seed();
+    await db.insert(clubMemberships).values({ userId, clubId, role: "trainer" });
+    await grantAutarkLizenz(clubId, teamId, "pro");
+    // Kein team_membership → autark blockt Club-Durchgriff → kein Zugriff.
+    const r = await resolveTeamAccess(userId, teamId, "admin", "trainer");
+    expect(r.granted).toBe(false);
+  });
+
+  it("grants autark team-admin via team-scope when clubMinRole=trainer (match-event floor)", async () => {
+    const { userId, clubId, teamId } = await seed();
+    await db.insert(clubMemberships).values({ userId, clubId, role: "trainer" });
+    await db.insert(teamMemberships).values({ userId, teamId, role: "admin" });
+    await grantAutarkLizenz(clubId, teamId, "pro");
+    const r = await resolveTeamAccess(userId, teamId, "admin", "trainer");
+    expect(r.granted).toBe(true);
+    if (!r.granted) return;
+    expect(r.scope).toBe("team");
+    expect(r.role).toBe("admin");
+  });
+
+  it("defaults clubMinRole to minRole (unchanged behavior): club-trainer denied at minRole=admin", async () => {
+    const { userId, clubId, teamId } = await seed();
+    await db.insert(clubMemberships).values({ userId, clubId, role: "trainer" });
+    await grantVereinsLizenz(clubId, teamId);
+    // Ohne 4. Parameter bleibt der Club-Floor = admin → Trainer reicht nicht.
+    const r = await resolveTeamAccess(userId, teamId, "admin");
+    expect(r.granted).toBe(false);
+  });
 });
 
 /**

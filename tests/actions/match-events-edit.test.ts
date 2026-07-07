@@ -91,10 +91,14 @@ async function seedWithUser(role: "admin" | "trainer" | "viewer" = "trainer") {
       isActive: true
     })
     .returning({ id: teams.id });
+  // Vereinsgeführt (verein-Plan): der Club-Durchgriff greift → ein Club-Trainer
+  // darf Match-Events editieren. (Ein autarkes basic/pro-Team wäre bewusst nur
+  // über team_memberships steuerbar — separater Guard-Pfad, siehe
+  // tests/lib/team-write-access.test.ts.)
   await db.insert(teamLicenses).values({
     subscriptionClubId: club.id,
     teamId: team.id,
-    plan: "pro",
+    plan: "verein",
     status: "trialing"
   });
 

@@ -15,7 +15,7 @@ import {
   clubMemberships,
   users
 } from "@/lib/db/schema";
-import { assertClubWriteAccess } from "@/lib/auth/scope";
+import { assertClubWriteAccess, assertTeamWriteAccess } from "@/lib/auth/scope";
 import { storeDocument } from "@/lib/storage/documents";
 import { normalizeImageUpload } from "@/lib/storage/images";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
@@ -219,7 +219,10 @@ export async function renameTeam(input: z.infer<typeof renameSchema>): Promise<v
     .limit(1);
   if (!row) throw new Error("Mannschaft nicht gefunden.");
 
-  await assertClubWriteAccess(row.clubSlug, "admin");
+  // Autark-bewusst (Club-Durchgriff nur nicht-autark, sonst Mannschaftsadmin)
+  // UND Read-Only-Gate: eine pausierte/gekündigte Lizenz blockt das Umbenennen
+  // (kein allowPaused — kosmetische Writes sollen in der Sommerpause sperren).
+  await assertTeamWriteAccess(parsed.teamId);
 
   await db
     .update(teams)
@@ -242,7 +245,9 @@ export async function deactivateTeam(teamId: string): Promise<void> {
     .limit(1);
   if (!row) throw new Error("Mannschaft nicht gefunden.");
 
-  await assertClubWriteAccess(row.clubSlug, "admin");
+  // Autark-bewusst + Read-Only-Gate (team-scoped): Club-Durchgriff nur auf
+  // nicht-autarke Teams, sonst Mannschaftsadmin.
+  await assertTeamWriteAccess(teamId);
 
   await db.update(teams).set({ isActive: false }).where(eq(teams.id, teamId));
 
@@ -289,7 +294,8 @@ export async function reactivateTeam(teamId: string): Promise<void> {
     .limit(1);
   if (!row) throw new Error("Mannschaft nicht gefunden.");
 
-  await assertClubWriteAccess(row.clubSlug, "admin");
+  // Autark-bewusst + Read-Only-Gate (team-scoped), analog deactivateTeam.
+  await assertTeamWriteAccess(teamId);
 
   await db.update(teams).set({ isActive: true }).where(eq(teams.id, teamId));
 
@@ -327,7 +333,9 @@ export async function uploadTeamLogo(input: {
     .limit(1);
   if (!row) throw new Error("Mannschaft nicht gefunden.");
 
-  await assertClubWriteAccess(row.clubSlug, "admin");
+  // Autark-bewusst (Club-Durchgriff nur nicht-autark, sonst Mannschaftsadmin)
+  // UND Read-Only-Gate: pausierte/gekündigte Lizenz blockt den Logo-Upload.
+  await assertTeamWriteAccess(input.teamId);
 
   // Format + Größe validieren und HEIC/HEIF → JPEG konvertieren.
   const normalized = await normalizeImageUpload({

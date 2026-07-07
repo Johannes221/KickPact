@@ -6,6 +6,7 @@ import { teamLicenses } from "@/lib/db/schema/billing";
 import { requireUser } from "./session";
 import {
   getSubscriptionGate,
+  getSubscriptionGateForTeam,
   type SubscriptionGate
 } from "@/lib/db/queries/subscription-status";
 
@@ -192,7 +193,8 @@ export type TeamAccessResult =
 export async function resolveTeamAccess(
   userId: string,
   teamId: string,
-  minRole: TeamRole = "viewer"
+  minRole: TeamRole = "viewer",
+  clubMinRole: Role = minRole
 ): Promise<TeamAccessResult> {
   const [team] = await db
     .select({
@@ -219,6 +221,12 @@ export async function resolveTeamAccess(
   // der Zugriff ausschließlich aus team_memberships (siehe unten). Lizenzlose
   // Container-Teams sind NICHT autark → Durchgriff erlaubt (sonst Redirect-Loop,
   // weil die Identity-Logik den Club-Admin in genau dieses Team routet).
+  //
+  // `clubMinRole` entkoppelt den Club-Floor vom Team-Floor: Match-Event-Schreib-
+  // Actions z.B. lassen Club-TRAINER durchgreifen (clubMinRole="trainer"),
+  // verlangen in autarken Teams aber Mannschafts-ADMIN (minRole="admin", da
+  // team_memberships kein „trainer" kennen). Default = minRole → unverändertes
+  // Verhalten für alle bestehenden Aufrufer.
   const [clubMem] = await db
     .select({ role: clubMemberships.role })
     .from(clubMemberships)
@@ -229,7 +237,7 @@ export async function resolveTeamAccess(
       )
     )
     .limit(1);
-  if (clubMem && ROLE_RANK[clubMem.role] >= ROLE_RANK[minRole]) {
+  if (clubMem && ROLE_RANK[clubMem.role] >= ROLE_RANK[clubMinRole]) {
     // Autark-Sperre greift NUR für den eigenen Container (kein Lizenz-Transfer).
     // Ein Verein, der das Team EXPLIZIT lizenziert (licensedUnderClubId gesetzt),
     // hat immer Durchgriff — auch im Transfer-Fenster, in dem die team_license
@@ -291,6 +299,64 @@ export async function assertTeamAccess(
   const access = await resolveTeamAccess(user.id, teamId, minRole);
   if (!access.granted) redirect("/dashboard");
   return { user, ...access };
+}
+
+export type TeamWriteAccess = {
+  user: Awaited<ReturnType<typeof requireUser>>;
+  access: Extract<TeamAccessResult, { granted: true }>;
+  gate: SubscriptionGate;
+};
+
+/**
+ * Schreibguard für TEAM-scoped Server-Actions (Match-Events, Team-Lifecycle,
+ * Discoverable-Toggle). Ersetzt `assertClubWriteAccess(team.clubSlug, …)` in
+ * genau den Actions, die auf ein konkretes Team schreiben.
+ *
+ * Zwei Dinge, die der reine Club-Guard falsch machte:
+ *   1. AUTARK-Awareness — er prüfte nur die Club-Rolle und ignorierte
+ *      `isTeamAutark`. Ein Club-Admin/-Trainer konnte so in ein autarkes Team
+ *      (eigene basic/pro-Lizenz) durchschreiben, obwohl Lese-/Verwaltungs-Guards
+ *      (resolveTeamAccess / canManageTeamMembers) ihn dort sperren. Hier läuft
+ *      die Autorisierung über `resolveTeamAccess`: Club-Durchgriff (nicht-autark)
+ *      ODER direkte team_membership (autark).
+ *   2. Falsches Read-Only-Gate — `getSubscriptionGate(team.clubId)` sperrte ein
+ *      per Lizenz-Transfer angehängtes Team aus, sobald der alte Container-Club
+ *      auf `cancelled` lief. Das Gate geht jetzt über `getSubscriptionGateForTeam`
+ *      (licensedUnderClubId ?? clubId), konsistent mit Crawl-/Charge-Gate.
+ *
+ * `allowPaused` lässt — wie `assertClubWriteAccessAllowPaused` — den Read-Only-
+ * Grund „paused" (Saison-Pass-Sommerpause) durch; alle anderen Read-Only-Gründe
+ * (past_due>Grace / cancelled / incomplete) bleiben geblockt.
+ *
+ * `clubMinRole` erlaubt einen niedrigeren Club-Floor als `minRole` (Team-Floor):
+ * Match-Events z.B. clubMinRole="trainer", minRole="admin".
+ */
+export async function assertTeamWriteAccess(
+  teamId: string,
+  opts: {
+    minRole?: TeamRole;
+    clubMinRole?: Role;
+    allowPaused?: boolean;
+  } = {}
+): Promise<TeamWriteAccess> {
+  const minRole = opts.minRole ?? "admin";
+  const user = await requireUser();
+  const access = await resolveTeamAccess(
+    user.id,
+    teamId,
+    minRole,
+    opts.clubMinRole ?? minRole
+  );
+  if (!access.granted) redirect("/dashboard");
+
+  const gate = await getSubscriptionGateForTeam(teamId);
+  if (gate.isReadOnly && !(opts.allowPaused && gate.status === "paused")) {
+    throw new Error(
+      "Diese Mannschaft ist im Read-Only-Modus. Bitte Abo reaktivieren."
+    );
+  }
+
+  return { user, access, gate };
 }
 
 export type TeamPageAccessDecision =

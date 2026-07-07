@@ -18,7 +18,9 @@ vi.mock("@/lib/auth/session", () => ({
   requireUser: vi.fn().mockResolvedValue({ id: "u_mea", email: "mea@example.com" })
 }));
 vi.mock("@/lib/auth/scope", () => ({
-  assertClubWriteAccess: vi.fn().mockResolvedValue(undefined)
+  assertTeamWriteAccess: vi.fn().mockResolvedValue({
+    access: { granted: true, scope: "club" }
+  })
 }));
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn()
