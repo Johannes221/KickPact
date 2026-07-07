@@ -249,6 +249,68 @@ describe("membership-requests queries", () => {
     expect(tmems).toHaveLength(0);
   });
 
+  it("approveRequest: wirft beforeCommit (Mail-Fehler) → Request bleibt pending, Membership idempotent, Retry committet", async () => {
+    const requesterId = await seedUser("bcq");
+    const adminId = await seedUser("bca");
+    const { clubId, teamId } = await seedClubWithTeam("bcappr");
+
+    const req = await createRequest({
+      userId: requesterId, clubId, requestedRole: "admin", requestedTeamId: teamId, message: null
+    });
+
+    // 1. Versuch: Benachrichtigung schlägt fehl → darf NICHT als approved gelten.
+    await expect(
+      approveRequest({
+        requestId: req.id,
+        respondedByUserId: adminId,
+        beforeCommit: async () => {
+          throw new Error("mail down");
+        }
+      })
+    ).rejects.toThrow(/mail down/);
+
+    const afterFail = await getRequestById(req.id);
+    expect(afterFail?.status).toBe("pending");
+
+    // 2. Versuch (Mail ok): committet, ohne doppelte Membership.
+    await approveRequest({ requestId: req.id, respondedByUserId: adminId });
+
+    const afterRetry = await getRequestById(req.id);
+    expect(afterRetry?.status).toBe("approved");
+    const tmems = await db
+      .select()
+      .from(teamMemberships)
+      .where(eq(teamMemberships.userId, requesterId));
+    expect(tmems).toHaveLength(1);
+    expect(tmems[0]?.role).toBe("admin");
+  });
+
+  it("rejectRequest: wirft beforeCommit (Mail-Fehler) → Request bleibt pending, Retry committet", async () => {
+    const requesterId = await seedUser("bcrq");
+    const adminId = await seedUser("bcra");
+    const { clubId } = await seedClubWithTeam("bcrej");
+
+    const req = await createRequest({
+      userId: requesterId, clubId, requestedRole: "trainer", requestedTeamId: null, message: null
+    });
+
+    await expect(
+      rejectRequest({
+        requestId: req.id,
+        respondedByUserId: adminId,
+        reason: "nope",
+        beforeCommit: async () => {
+          throw new Error("mail down");
+        }
+      })
+    ).rejects.toThrow(/mail down/);
+
+    expect((await getRequestById(req.id))?.status).toBe("pending");
+
+    await rejectRequest({ requestId: req.id, respondedByUserId: adminId, reason: "nope" });
+    expect((await getRequestById(req.id))?.status).toBe("rejected");
+  });
+
   it("rejectRequest marks request rejected and stores reason; no membership row created", async () => {
     const requesterId = await seedUser("rj");
     const adminId = await seedUser("rja");

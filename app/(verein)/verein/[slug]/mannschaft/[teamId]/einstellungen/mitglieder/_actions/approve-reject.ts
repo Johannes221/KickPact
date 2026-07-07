@@ -18,6 +18,36 @@ import { accessRequestRejectedEmail } from "@/lib/mail/templates/access-request-
 type ActionResult = { ok: true } | { ok: false; error: string };
 
 const NO_PERMISSION = "Keine Berechtigung für diese Mannschaft.";
+const MAIL_FAILED =
+  "Benachrichtigung konnte nicht gesendet werden. Bitte erneut versuchen.";
+
+type MailContent = { subject: string; html: string; text: string };
+
+/**
+ * Schickt dem Antragsteller die Entscheidungs-Mail und wirft bei Provider-
+ * Fehler (`resend` liefert `{ error }` statt zu werfen). Als `beforeCommit`
+ * an approve/reject übergeben → Status kippt erst nach erfolgreichem Versand,
+ * sonst bleibt der Request "pending" und ist wiederholbar. Kein Empfänger →
+ * No-op.
+ */
+async function sendRequesterMail(
+  requesterUserId: string,
+  buildMail: () => MailContent
+): Promise<void> {
+  const requesterEmail = await getUserEmailById(requesterUserId);
+  if (!requesterEmail) return;
+  const mail = buildMail();
+  const { error } = await resend.emails.send({
+    from: MAIL_FROM,
+    to: requesterEmail,
+    subject: mail.subject,
+    html: mail.html,
+    text: mail.text
+  });
+  if (error) {
+    throw new Error(`access-request mail failed: ${error.message ?? "unknown"}`);
+  }
+}
 
 const approveSchema = z.object({
   requestId: z.string().min(1),
@@ -44,25 +74,26 @@ export async function approveRequestAction(
     return { ok: false, error: NO_PERMISSION };
   }
 
-  await approveRequest({ requestId: req.id, respondedByUserId: user.id });
-
-  const requesterEmail = await getUserEmailById(req.userId);
-  const clubRow = await getClubById(req.clubId);
-  if (requesterEmail && clubRow) {
-    const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
-    const mail = accessRequestApprovedEmail({
-      clubName: clubRow.name,
-      requestedRole: req.requestedRole,
-      scopeLabel: "Mannschafts-Zugriff",
-      homeUrl: `${base}/verein/${clubRow.slug}/mannschaft/${req.requestedTeamId}`
+  try {
+    await approveRequest({
+      requestId: req.id,
+      respondedByUserId: user.id,
+      beforeCommit: async () => {
+        const clubRow = await getClubById(req.clubId);
+        if (!clubRow) return;
+        await sendRequesterMail(req.userId, () => {
+          const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+          return accessRequestApprovedEmail({
+            clubName: clubRow.name,
+            requestedRole: req.requestedRole,
+            scopeLabel: "Mannschafts-Zugriff",
+            homeUrl: `${base}/verein/${clubRow.slug}/mannschaft/${req.requestedTeamId}`
+          });
+        });
+      }
     });
-    await resend.emails.send({
-      from: MAIL_FROM,
-      to: requesterEmail,
-      subject: mail.subject,
-      html: mail.html,
-      text: mail.text
-    });
+  } catch {
+    return { ok: false, error: MAIL_FAILED };
   }
 
   revalidatePath(
@@ -86,26 +117,23 @@ export async function rejectRequestAction(
     return { ok: false, error: NO_PERMISSION };
   }
 
-  await rejectRequest({
-    requestId: req.id,
-    respondedByUserId: user.id,
-    reason: parsed.data.reason
-  });
-
-  const requesterEmail = await getUserEmailById(req.userId);
-  const clubRow = await getClubById(req.clubId);
-  if (requesterEmail) {
-    const mail = accessRequestRejectedEmail({
-      clubName: clubRow?.name ?? "deinem Verein",
-      reason: parsed.data.reason ?? null
+  try {
+    await rejectRequest({
+      requestId: req.id,
+      respondedByUserId: user.id,
+      reason: parsed.data.reason,
+      beforeCommit: async () => {
+        const clubRow = await getClubById(req.clubId);
+        await sendRequesterMail(req.userId, () =>
+          accessRequestRejectedEmail({
+            clubName: clubRow?.name ?? "deinem Verein",
+            reason: parsed.data.reason ?? null
+          })
+        );
+      }
     });
-    await resend.emails.send({
-      from: MAIL_FROM,
-      to: requesterEmail,
-      subject: mail.subject,
-      html: mail.html,
-      text: mail.text
-    });
+  } catch {
+    return { ok: false, error: MAIL_FAILED };
   }
 
   revalidatePath(

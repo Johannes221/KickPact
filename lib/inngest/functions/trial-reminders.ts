@@ -92,7 +92,16 @@ export const trialReminders = inngest.createFunction(
                 clubId: sub.clubId,
                 error: result.error
               });
-              return;
+              // Werfen statt `return` → der Step gilt als fehlgeschlagen und
+              // Inngest retryt ihn (Backoff, gleiche Step-ID). Sonst wäre der
+              // Step memoisiert-erfolgreich, am selben Tag kein Retry und am
+              // Folgetag ist das 7/3/1-Fenster weitergewandert → Mail für immer
+              // verloren, während der Push (eigener Step) rausging.
+              throw new Error(
+                `trial-reminder mail failed for club ${sub.clubId}: ${
+                  result.error.message ?? "unknown"
+                }`
+              );
             }
             mailsSent += admins.length;
             reports.push({ clubId: sub.clubId, days: daysLeft, emails: admins.length });
