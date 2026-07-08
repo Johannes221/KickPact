@@ -1,4 +1,4 @@
-import { eq, and, inArray, isNotNull, desc, sql } from "drizzle-orm";
+import { eq, and, inArray, isNull, isNotNull, desc, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   teams,
@@ -278,6 +278,73 @@ function parseDateDdMmYyyy(s: string): Date {
   // fussball.de liefert manchmal 2-stellige Jahre ("10.05.26" statt "10.05.2026")
   const yyyy = yy.length === 2 ? "20" + yy : yy;
   return new Date(`${yyyy}-${mm}-${dd}T12:00:00Z`);
+}
+
+// ---------------------------------------------------------------------------
+// team-id-Backfill für Alt-Matches (vor Migration 0065)
+// ---------------------------------------------------------------------------
+
+/**
+ * Ein `finished`-Match ohne gespeicherte fussball.de-team-ids (Alt-Bestand vor
+ * Mig 0065) inkl. der Namensquellen, die `detectTeamSide`/`matchHasNameCollision`
+ * brauchen (Mannschafts- + Vereinsname + eigene team-id).
+ */
+export interface MatchMissingTeamIds {
+  id: string;
+  fussballdeSpielId: string;
+  teamId: string;
+  heimName: string;
+  gastName: string;
+  teamName: string;
+  clubName: string;
+  ownFussballdeTeamId: string | null;
+}
+
+/**
+ * Alle `finished`-Matches mit NULL `heim_team_id` (⇒ auch `gast_team_id` NULL,
+ * beide werden gemeinsam gesetzt). Bewusst OHNE Kollisions-Filter in SQL — die
+ * Token-Logik (matchHasNameCollision) läuft im Aufrufer. Deterministisch nach
+ * Datum sortiert (älteste zuerst), damit ein gecappter Lauf reproduzierbar
+ * fortsetzt. `limit` als harte Obergrenze gegen versehentliches Vollladen.
+ */
+export async function listFinishedMatchesMissingTeamIds(
+  limit: number
+): Promise<MatchMissingTeamIds[]> {
+  return db
+    .select({
+      id: matches.id,
+      fussballdeSpielId: matches.fussballdeSpielId,
+      teamId: matches.teamId,
+      heimName: matches.heimName,
+      gastName: matches.gastName,
+      teamName: teams.name,
+      clubName: clubs.name,
+      ownFussballdeTeamId: teams.fussballdeTeamId
+    })
+    .from(matches)
+    .innerJoin(teams, eq(matches.teamId, teams.id))
+    .innerJoin(clubs, eq(teams.clubId, clubs.id))
+    .where(and(eq(matches.status, "finished"), isNull(matches.heimTeamId)))
+    .orderBy(matches.datum)
+    .limit(limit);
+}
+
+/**
+ * Setzt die gescrapten team-ids NUR, solange `heim_team_id` noch NULL ist
+ * (Idempotenz + Schutz gegen ein paralleles Update durch den regulären Crawl).
+ * Gibt zurück, ob die Zeile tatsächlich geschrieben wurde.
+ */
+export async function setMatchTeamIds(
+  matchId: string,
+  heimTeamId: string,
+  gastTeamId: string
+): Promise<boolean> {
+  const res = await db
+    .update(matches)
+    .set({ heimTeamId, gastTeamId })
+    .where(and(eq(matches.id, matchId), isNull(matches.heimTeamId)))
+    .returning({ id: matches.id });
+  return res.length > 0;
 }
 
 export async function insertMatchWithEvents(args: {

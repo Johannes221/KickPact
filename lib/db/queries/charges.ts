@@ -301,6 +301,25 @@ export async function invalidateChargesForMatch(
 }
 
 /**
+ * Charge-Anzahl je Status für EIN Match. Für den team-id-Backfill-Audit: er
+ * bestimmt vor der Remediation (invalidateChargesForMatch), wie viele falsche
+ * Charges storniert (non-invoiced) bzw. für die Korrektur-Queue markiert
+ * (invoiced) werden — ohne die Remediation selbst zu duplizieren.
+ */
+export async function getMatchChargeStatusCounts(
+  matchId: string
+): Promise<{ pending_approval: number; confirmed: number; invoiced: number; cancelled: number }> {
+  const rows = await db
+    .select({ status: charges.status, n: sql<number>`count(*)::int` })
+    .from(charges)
+    .where(eq(charges.matchId, matchId))
+    .groupBy(charges.status);
+  const out = { pending_approval: 0, confirmed: 0, invoiced: 0, cancelled: 0 };
+  for (const r of rows) out[r.status as keyof typeof out] = r.n;
+  return out;
+}
+
+/**
  * Daten-Integrität (2026-07-07): Admin-Review-Queue für bereits fakturierte
  * Charges, deren Spiel nachträglich auf fussball.de korrigiert wurde
  * (correctionFlaggedAt gesetzt, Status noch `invoiced` = weder gutgeschrieben

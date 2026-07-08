@@ -26,6 +26,7 @@ import { notifySponsorInquiry } from "./notify-sponsor-inquiry";
 import { notifySponsorLead } from "./notify-sponsor-lead";
 import { reconcileAppleSubscriptions } from "./reconcile-apple-subscriptions";
 import { recoverDeferredCharges } from "./recover-deferred-charges";
+import { backfillMatchTeamIds } from "./backfill-match-team-ids";
 
 export const functions = [
   crawlMatches,
@@ -56,5 +57,6 @@ export const functions = [
   notifySponsorInquiry,
   notifySponsorLead,
   reconcileAppleSubscriptions,
-  recoverDeferredCharges
+  recoverDeferredCharges,
+  backfillMatchTeamIds
 ];
