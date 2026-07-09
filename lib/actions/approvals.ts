@@ -232,7 +232,7 @@ export async function disputeApproval(input: {
 
     await tx
       .update(charges)
-      .set({ status: "cancelled" })
+      .set({ status: "cancelled", cancelledReason: "disputed", cancelledAt: new Date() })
       .where(
         and(
           eq(charges.pledgeRuleId, row.pledgeRuleId),
@@ -391,7 +391,7 @@ export async function disputeApprovalByToken(
 
     await tx
       .update(charges)
-      .set({ status: "cancelled" })
+      .set({ status: "cancelled", cancelledReason: "disputed", cancelledAt: new Date() })
       .where(
         and(
           eq(charges.pledgeRuleId, row.pledgeRuleId),

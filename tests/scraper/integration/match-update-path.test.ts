@@ -17,6 +17,7 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { charges, matchEvents, matches } from "@/lib/db/schema";
+import { invalidateChargesForMatch } from "@/lib/db/queries/charges";
 import {
   closeTestDb,
   getTestDb,
@@ -160,5 +161,91 @@ describe.skipIf(isIntegrationDbDisabled)("match-update-path", () => {
     rows = await db.select().from(charges).where(eq(charges.matchId, m!.id));
     expect(rows).toHaveLength(1);
     expect(rows[0]?.status).toBe("confirmed");
+  });
+
+  // Regression (UAT 2026-07-08): Re-Scrape eines schon FAKTURIERTEN Spiels darf
+  // die eingefrorenen invoiced-Charges nicht korrumpieren. invalidate meldet die
+  // frozen-Anzahl (Freeze-Guard-Signal in crawl-matches); die Events dürfen dann
+  // NICHT gelöscht werden, sonst verwaist der FK (onDelete:set null) beide
+  // event-gebundenen Charges (goalIndex 0) → partieller Unique-Index-Crash.
+  it("invoiced event-gebundene Charges: invalidate friert ein (frozenInvoiced), Event-Löschen crasht den Unique-Index", async () => {
+    const db = await getTestDb();
+    const { teamIds } = await seedClubFromFixture("dossenheim");
+    const { pledgeId, ruleId } = await seedSponsorWithPledge({
+      sponsorKey: "invoiced-freeze",
+      teamDbId: teamIds.herren1!,
+      triggerType: "goal_total",
+      amountCents: 500
+    });
+
+    const [m] = await db
+      .insert(matches)
+      .values({
+        teamId: teamIds.herren1!,
+        fussballdeSpielId: "FROZEN01",
+        datum: new Date("2025-05-31T15:00:00Z"),
+        heimName: "FC Sportfreunde 1910 Dossenheim",
+        gastName: "TSV Test",
+        ergebnisHeim: 2,
+        ergebnisGast: 0,
+        status: "finished",
+        contentHash: "hash-v1"
+      })
+      .returning();
+
+    const ev = await db
+      .insert(matchEvents)
+      .values([
+        { matchId: m!.id, type: "tor", minute: 30, side: "heim", playerName: "A", source: "scraped" },
+        { matchId: m!.id, type: "tor", minute: 60, side: "heim", playerName: "B", source: "scraped" }
+      ])
+      .returning();
+
+    // Zwei bereits FAKTURIERTE, event-gebundene Tor-Charges — beide goalIndex 0,
+    // nur über matchEventId unterschieden (exakt wie evaluate-match sie erzeugt).
+    await db.insert(charges).values([
+      {
+        pledgeId,
+        pledgeRuleId: ruleId,
+        matchId: m!.id,
+        matchEventId: ev[0]!.id,
+        triggerType: "goal_total",
+        goalIndex: 0,
+        amountCents: 500,
+        status: "invoiced",
+        confirmedAt: new Date()
+      },
+      {
+        pledgeId,
+        pledgeRuleId: ruleId,
+        matchId: m!.id,
+        matchEventId: ev[1]!.id,
+        triggerType: "goal_total",
+        goalIndex: 0,
+        amountCents: 500,
+        status: "invoiced",
+        confirmedAt: new Date()
+      }
+    ]);
+
+    // fussball.de-Korrektur nach Fakturierung → invalidate flaggt (storniert nicht).
+    const result = await invalidateChargesForMatch(m!.id, "match_updated");
+    expect(result.frozenInvoiced).toBe(2);
+    expect(result.cancelledNonInvoiced).toBe(0);
+
+    // Beide Charges bleiben invoiced + geflaggt + behalten ihre Event-Verknüpfung.
+    const after = await db.select().from(charges).where(eq(charges.matchId, m!.id));
+    expect(after).toHaveLength(2);
+    expect(after.every((c) => c.status === "invoiced")).toBe(true);
+    expect(after.every((c) => c.correctionFlaggedAt !== null)).toBe(true);
+    expect(after.every((c) => c.matchEventId !== null)).toBe(true);
+
+    // Beleg, warum der Freeze-Guard load-bearing ist: würde der Crawler jetzt die
+    // Scraped-Events löschen (updateMatchWithEvents), verwaist der FK beide
+    // invoiced-Charges auf matchEventId=NULL → Kollision im partiellen
+    // Unique-Index (rule, match, goal_total, 0) → 23505.
+    await expect(
+      db.delete(matchEvents).where(eq(matchEvents.matchId, m!.id))
+    ).rejects.toThrow();
   });
 });

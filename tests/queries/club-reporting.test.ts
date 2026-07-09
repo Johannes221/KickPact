@@ -280,12 +280,24 @@ describe.skipIf(isIntegrationDbDisabled)("club-reporting (integration)", () => {
     expect(ov).toBeNull();
   });
 
-  it("getSponsorOverviewForClub: scoped per club — other club charges nicht eingerechnet", async () => {
-    // sp_1 hat nur Pledges/Charges in club_a; in club_b sollte das Overview leer sein.
+  it("getSponsorOverviewForClub: fremder Verein ohne Pledge-Beziehung → null (Security-Fix, kein PII-Leak)", async () => {
+    // sp_1 pledged NUR in club_a. Ein Verein ohne Beziehung zu diesem Sponsor
+    // bekommt GAR KEIN Overview — vorher wurden Name + E-Mail geleakt (nur die
+    // Charge-Aggregate waren gescoped). Aus club_b heraus jetzt null.
     const ov = await getSponsorOverviewForClub("club_b", "sp_1");
-    expect(ov).not.toBeNull();
-    expect(ov!.totals.totalChargesLifetimeCents).toBe(0);
-    expect(ov!.teams.length).toBe(0);
+    expect(ov).toBeNull();
+  });
+
+  it("getSponsorOverviewForClub: kein Cross-Tenant-PII-Leak — fremder Verein bekommt null (nicht Name/E-Mail)", async () => {
+    // sp_1 pledged NUR an club_a (team_1). club_b hat keinen Bezug zu sp_1.
+    // Vor dem Fix lieferte die Query trotzdem sp_1s Stammdaten (inkl. E-Mail),
+    // weil der Stammdaten-Select nicht auf clubId gescoped war.
+    const ownView = await getSponsorOverviewForClub("club_a", "sp_1");
+    expect(ownView).not.toBeNull();
+    expect(ownView!.sponsor.email).toBe("sp1@example.com");
+
+    const foreignView = await getSponsorOverviewForClub("club_b", "sp_1");
+    expect(foreignView).toBeNull();
   });
 
   // ─── getVereinDashboardKpis ────────────────────────────────────────────────

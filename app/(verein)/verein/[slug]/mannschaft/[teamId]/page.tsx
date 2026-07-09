@@ -176,7 +176,17 @@ export default async function TeamDetailPage({
   // diesem Render erscheint (statt erst beim ersten Crawler-Step).
   // (W1.3: nur in der AKTUELLEN Saison-Ansicht — eine leere historische
   // Anzeige-Saison soll keinen Crawl auslösen.)
-  if (matchRows.length === 0 && team.fussballdeTeamId && !isCrawling && isCurrentSeasonView) {
+  // `team.isActive`: für ein deaktiviertes Team überspringt der Crawler jede
+  // Arbeit (crawl-matches filtert isActive) → crawlCompletedAt würde nie gesetzt
+  // → Dauer-Banner „Spiele werden geladen". Deaktivierte Teams also gar nicht
+  // erst on-demand crawlen.
+  if (
+    matchRows.length === 0 &&
+    team.fussballdeTeamId &&
+    team.isActive &&
+    !isCrawling &&
+    isCurrentSeasonView
+  ) {
     await markCrawlStarted(team.id);
     isCrawling = true;
     const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000));

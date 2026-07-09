@@ -66,6 +66,12 @@ vi.mock("@/lib/db/queries/subscription-status", () => ({
   getSubscriptionGateForTeam: getSubscriptionGateMock
 }));
 
+vi.mock("@/lib/db/queries/team-lifecycle", () => ({
+  // createPledge gated den Invite-Pfad auf isActive (deaktivierte Mannschaft
+  // nimmt keine neuen Pacts auf) — hier standardmäßig aktiv.
+  getTeamActivation: vi.fn().mockResolvedValue({ isActive: true, verifiedAt: new Date() })
+}));
+
 vi.mock("@/lib/billing/plan-features", () => ({
   assertCanAddSponsorToTeam: assertCanAddSponsorMock,
   PlanCapExceededError: class PlanCapExceededError extends Error {

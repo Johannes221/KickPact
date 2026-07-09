@@ -453,6 +453,20 @@ export async function getSponsorOverviewForClub(
   clubId: string,
   sponsorId: string
 ): Promise<SponsorOverview | null> {
+  // Tenant-Guard (Defense-in-Depth gegen Cross-Tenant-PII-Leak): Stammdaten
+  // (inkl. E-Mail) NUR laden, wenn der Sponsor tatsächlich an mindestens eine
+  // Mannschaft DIESES Vereins pledged hat. Sonst könnte ein Verein-Viewer über
+  // `/verein/A/sponsor/<fremde-sponsorId>` Name + E-Mail eines fremden Sponsors
+  // sehen (die Aggregate darunter sind bereits auf clubId gescoped, die
+  // Stammdaten-Query war es nicht).
+  const [rel] = await db
+    .select({ x: sql`1` })
+    .from(pledges)
+    .innerJoin(teams, eq(pledges.teamId, teams.id))
+    .where(and(eq(pledges.sponsorId, sponsorId), eq(teams.clubId, clubId)))
+    .limit(1);
+  if (!rel) return null;
+
   const [sp] = await db
     .select({
       id: sponsors.id,

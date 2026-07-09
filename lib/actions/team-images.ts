@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createId } from "@paralleldrive/cuid2";
 import { db } from "@/lib/db/client";
 import { clubs, teams } from "@/lib/db/schema";
-import { assertClubWriteAccess } from "@/lib/auth/scope";
+import { assertTeamWriteAccess } from "@/lib/auth/scope";
 import { storeDocument } from "@/lib/storage/documents";
 import { normalizeImageUpload } from "@/lib/storage/images";
 import { addTeamImage, countTeamImages, deleteTeamImage } from "@/lib/db/queries/team-images";
@@ -13,6 +13,11 @@ import { addTeamImage, countTeamImages, deleteTeamImage } from "@/lib/db/queries
 const MAX_GALLERY_IMAGES = 8;
 
 async function authTeam(teamId: string) {
+  // Team-aware Autorisierung (folgt licensedUnderClubId ?? clubId, blockt
+  // Club-Admin-Durchgriff auf autarke/lizenz-transferierte Teams). Zuerst der
+  // Guard (redirect/throw bei fehlendem Zugriff), dann den Container-clubSlug
+  // für die Pfad-Revalidierung nachladen.
+  await assertTeamWriteAccess(teamId, { clubMinRole: "admin" });
   const [row] = await db
     .select({ clubSlug: clubs.slug })
     .from(teams)
@@ -20,7 +25,6 @@ async function authTeam(teamId: string) {
     .where(eq(teams.id, teamId))
     .limit(1);
   if (!row) throw new Error("Mannschaft nicht gefunden.");
-  await assertClubWriteAccess(row.clubSlug, "admin");
   return row.clubSlug;
 }
 

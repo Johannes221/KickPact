@@ -67,6 +67,22 @@ export function isSeasonTriggerType(t: string): boolean {
   return SEASON_TRIGGER_TYPES.has(t);
 }
 
+/**
+ * Tote Trigger: haben aus Alt-Gründen noch Engine-Handler + DB-Enum-Werte, sind
+ * aber NICHT (mehr) bewettbar — die Melde-UI + validateSubtype lehnen sie ab und
+ * der Pledge-Builder blendet sie aus. Damit die Trust-Boundary
+ * (createPledge/addPledgeRule) nicht per gecraftetem API-Request eine
+ * garantiert-0-€-Regel zulässt (die dem Sponsor eine Gegenleistung vorgaukelt),
+ * werden sie hier serverseitig hart abgelehnt. Invariante: Builder-/Melde-Umfang
+ * == Validierungs-Umfang. NICHT aus TRIGGER_TYPES entfernen — DB-Enum, Alt-Daten
+ * und Engine-Cases referenzieren sie weiter.
+ */
+const DISABLED_TRIGGER_TYPES = new Set<string>(["assist", "man_of_match"]);
+
+export function isBettableTriggerType(t: string): boolean {
+  return !DISABLED_TRIGGER_TYPES.has(t);
+}
+
 export const CAP_PERIODS = ["month", "season"] as const;
 export type CapPeriod = (typeof CAP_PERIODS)[number];
 
@@ -83,6 +99,14 @@ export const pledgeRuleInputSchema = z
     params: z.record(z.unknown()).default({})
   })
   .superRefine((val, ctx) => {
+    if (DISABLED_TRIGGER_TYPES.has(val.triggerType)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Dieser Trigger ist nicht bewettbar.",
+        path: ["triggerType"]
+      });
+      return;
+    }
     if (SEASON_TRIGGER_TYPES.has(val.triggerType)) {
       if (val.capEur !== undefined || val.capPeriod !== undefined) {
         ctx.addIssue({

@@ -24,6 +24,7 @@ import {
 } from "@/lib/db/queries/crawler";
 import { classifyScrapedMatches } from "@/lib/crawler/coverage";
 import { invalidateChargesForMatch } from "@/lib/db/queries/charges";
+import { isResultCorrection } from "@/lib/crawler/match-finished-event";
 import {
   upsertScheduledMatch,
   shouldBackfillTeamHistory
@@ -92,6 +93,7 @@ export const crawlMatches = inngest.createFunction(
     let totalNewMatches = 0;
     let totalUpdatedMatches = 0;
     let totalScheduledMatches = 0;
+    let totalFrozenForCorrection = 0;
     let skippedReadOnly = 0;
     let skippedInvalid = 0;
     for (const team of targetTeams) {
@@ -273,9 +275,33 @@ export const crawlMatches = inngest.createFunction(
 
           // Match data changed on fussball.de — invalidate stale charges, then
           // re-import events and re-emit so evaluate-match can recompute.
-          await step.run(`invalidate-charges-${spiel.spielId}`, () =>
-            invalidateChargesForMatch(existing.id, "match_updated")
+          const invalidation = await step.run(
+            `invalidate-charges-${spiel.spielId}`,
+            () => invalidateChargesForMatch(existing.id, "match_updated")
           );
+
+          // Freeze-Guard (Daten-Integrität): Hat das Spiel bereits FAKTURIERTE
+          // Charges, ist der Hash-Drift ein Korrektur-Fall — die invoiced-Charges
+          // wurden gerade nur geflaggt (Review-Queue), NICHT storniert. Wir
+          // dürfen jetzt NICHT die Scraped-Events löschen/neu schreiben:
+          // updateMatchWithEvents würde per FK `matchEventId onDelete:set null`
+          // die eingefrorenen Charges verwaisen → partieller Unique-Index
+          // kollidiert (Pipeline-Crash bei ≥2 Toren) bzw. Re-Eval erzeugt eine
+          // zweite Charge fürs selbe Tor (Doppelbuchung). Score/Events bleiben
+          // eingefroren, bis der Operator die Korrektur-Queue abarbeitet.
+          if (invalidation.frozenInvoiced > 0) {
+            logger.warn(
+              "match update frozen: bereits fakturierte Charges → nur für Korrektur-Queue geflaggt, kein Auto-Update",
+              {
+                matchId: existing.id,
+                teamId: team.id,
+                frozenInvoiced: invalidation.frozenInvoiced
+              }
+            );
+            totalFrozenForCorrection++;
+            continue;
+          }
+
           await step.run(`update-${spiel.spielId}`, () =>
             updateMatchWithEvents({
               matchId: existing.id,
@@ -288,7 +314,14 @@ export const crawlMatches = inngest.createFunction(
 
           await step.sendEvent("emit-match-updated", {
             name: "match/finished",
-            data: { matchId: existing.id, teamId: team.id, updated: true }
+            data: {
+              matchId: existing.id,
+              teamId: team.id,
+              // Stub-Finalisierung (contentHash === null) ist das ERSTE Ergebnis
+              // → updated:false → Ergebnis-Push feuert (Dedupe schützt gegen
+              // Doppel). Nur echte Nachkorrektur bleibt updated:true (still).
+              updated: isResultCorrection(existing.contentHash)
+            }
           });
 
           totalUpdatedMatches++;
@@ -356,6 +389,7 @@ export const crawlMatches = inngest.createFunction(
       newMatches: totalNewMatches,
       updatedMatches: totalUpdatedMatches,
       scheduledMatches: totalScheduledMatches,
+      frozenForCorrection: totalFrozenForCorrection,
       skippedReadOnly,
       skippedInvalid
     };

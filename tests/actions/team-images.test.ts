@@ -14,7 +14,7 @@ vi.mock("@/lib/storage/documents", () => ({
 }));
 
 import { db } from "@/lib/db/client";
-import { clubs, clubMemberships, subscriptions, teams, teamLicenses, users } from "@/lib/db/schema";
+import { clubs, clubMemberships, teamMemberships, subscriptions, teams, teamLicenses, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { resetTestDb } from "../setup/db";
 import { uploadTeamCover, addTeamGalleryImage } from "@/lib/actions/team-images";
@@ -36,6 +36,10 @@ async function makeClubWithAdmin(slug: string) {
     .values({ clubId: club.id, name: "1. Herren", saison: "2526", fussballdeTeamId: `T_${slug}`, isActive: true })
     .returning({ id: teams.id });
   await db.insert(teamLicenses).values({ subscriptionClubId: club.id, teamId: team.id, plan: "pro", status: "trialing" });
+  // Team-Admin-Membership: die eigene pro-Lizenz macht das Team autark, damit
+  // greift assertTeamWriteAccess (kein Club-Durchgriff auf autarke Teams) — der
+  // Uploader muss also direkter Mannschafts-Admin sein.
+  await db.insert(teamMemberships).values({ userId, teamId: team.id, role: "admin" });
   return { teamId: team.id, clubId: club.id };
 }
 

@@ -253,6 +253,15 @@ export async function respondToInquiry(input: {
   // Annehmen erzeugt eine Einladung (= neues Sponsoring) → im Read-Only-Modus
   // blockieren. Ablehnen ist immer erlaubt (räumt nur die Inbox auf).
   if (parsed.accept) {
+    // Deaktivierte Mannschaft nimmt keine neuen Sponsorings auf (parallel zum
+    // Einladungs-/createPledge-Pfad) — sonst entstünde ein dormanter Pact.
+    if (!row.team.isActive) {
+      return {
+        ok: false,
+        message:
+          "Diese Mannschaft ist derzeit deaktiviert — eine Anfrage kann nicht angenommen werden."
+      };
+    }
     const gate = await getSubscriptionGateForTeam(row.team.id);
     if (gate.isReadOnly) {
       return {

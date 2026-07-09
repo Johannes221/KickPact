@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { clubMemberships, clubs, teams, teamMemberships } from "@/lib/db/schema";
@@ -440,11 +440,13 @@ export async function assertVereinAdminOrRedirect(
 
   // Höchsten Plan über alle team_licenses des Clubs ermitteln. "verein"
   // hat Vorrang vor "pro" hat Vorrang vor "basic".
+  // AKTIVE Teams zuerst — sonst würde der Redirect auf das älteste (evtl.
+  // deaktivierte) Team zeigen (Dauer-Banner / potenzieller Redirect-Loop).
   const teamRows = await db
     .select({ id: teams.id })
     .from(teams)
     .where(eq(teams.clubId, access.club.id))
-    .orderBy(asc(teams.createdAt))
+    .orderBy(desc(teams.isActive), asc(teams.createdAt))
     .limit(50);
   if (teamRows.length === 0) return access; // Verein ohne Teams — kein Redirect
 

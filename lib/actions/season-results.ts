@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { seasonResults, teams, clubs } from "@/lib/db/schema";
-import { assertClubWriteAccessAllowPaused } from "@/lib/auth/scope";
+import { assertTeamWriteAccess } from "@/lib/auth/scope";
 import { inngest } from "@/lib/inngest/client";
 
 const schema = z.object({
@@ -26,16 +26,26 @@ const schema = z.object({
 export async function setSeasonResult(input: z.infer<typeof schema>) {
   const parsed = schema.parse(input);
 
-  const [team] = await db
-    .select({ team: teams, clubSlug: clubs.slug })
+  // Team-aware Autorisierung (nicht der reine Container-Club-Guard): folgt
+  // licensedUnderClubId ?? clubId, blockt Club-Admin-Durchgriff auf autarke
+  // Teams und liest das Read-Only-Gate über den KONTROLLIERENDEN Verein — wichtig,
+  // weil setSeasonResult Saison-Charges auslöst. `allowPaused`: der End-Stand
+  // muss auch in der Saison-Pass-Sommerpause (paused) eintragbar sein (Saison
+  // endet 30.6., genau dann wird eingetragen).
+  await assertTeamWriteAccess(parsed.teamId, {
+    clubMinRole: "admin",
+    allowPaused: true
+  });
+
+  // Container-clubSlug für die Pfad-Revalidierung (Team-URL läuft über den
+  // Container-Verein).
+  const [ctx] = await db
+    .select({ clubSlug: clubs.slug })
     .from(teams)
     .innerJoin(clubs, eq(teams.clubId, clubs.id))
     .where(eq(teams.id, parsed.teamId))
     .limit(1);
-  if (!team) throw new Error("Mannschaft nicht gefunden");
-  // R8: Saison-Endstand muss auch in der Saison-Pass-Sommerpause (paused)
-  // eintragbar sein — die Saison endet 30.6., genau dann wird eingetragen.
-  await assertClubWriteAccessAllowPaused(team.clubSlug, "admin");
+  if (!ctx) throw new Error("Mannschaft nicht gefunden");
 
   // upsert
   const existing = await db
@@ -77,6 +87,6 @@ export async function setSeasonResult(input: z.infer<typeof schema>) {
     data: { teamId: parsed.teamId, saison: parsed.saison }
   });
 
-  revalidatePath(`/verein/${team.clubSlug}/mannschaft/${parsed.teamId}`);
-  revalidatePath(`/verein/${team.clubSlug}`);
+  revalidatePath(`/verein/${ctx.clubSlug}/mannschaft/${parsed.teamId}`);
+  revalidatePath(`/verein/${ctx.clubSlug}`);
 }

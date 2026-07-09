@@ -8,6 +8,7 @@ import {
 } from "@/lib/validations/pledge";
 import { findInvitationByToken, markInvitationUsed } from "@/lib/db/queries/invitations";
 import { getSubscriptionGateForTeam } from "@/lib/db/queries/subscription-status";
+import { getTeamActivation } from "@/lib/db/queries/team-lifecycle";
 import {
   assertCanAddSponsorToTeam,
   PlanCapExceededError
@@ -102,6 +103,20 @@ export async function createPledge(input: PledgeInput): Promise<CreatePledgeResu
   const clubId = await getClubIdForTeam(invitationTeamId);
   if (!clubId) {
     return { ok: false, message: "Mannschaft zur Einladung nicht gefunden." };
+  }
+
+  // isActive-Gate: eine deaktivierte Mannschaft nimmt keine neuen Pacts mehr auf,
+  // auch nicht über einen noch gültigen Einladungslink (30d TTL) — sonst entstünde
+  // ein „dormanter" Pact, der bei Reaktivierung unerwartet feuert. deactivateTeam
+  // verspricht dem Verein das Gegenteil. Das Read-Only-Gate darunter deckt nur
+  // pausierte Abos ab, nicht die Deaktivierung.
+  const activation = await getTeamActivation(invitationTeamId);
+  if (!activation?.isActive) {
+    return {
+      ok: false,
+      message:
+        "Diese Mannschaft ist derzeit deaktiviert — es können keine neuen Sponsoring-Pacts abgeschlossen werden."
+    };
   }
 
   const gate = await getSubscriptionGateForTeam(invitationTeamId);

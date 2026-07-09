@@ -258,11 +258,11 @@ export function groupChargesBySponsorClub<T extends { sponsorId: string; clubId:
 export async function invalidateChargesForMatch(
   matchId: string,
   reason: string
-): Promise<void> {
+): Promise<{ frozenInvoiced: number; cancelledNonInvoiced: number }> {
   // Audit 2026-05-24 Task 2.3: Approvals MÜSSEN auch expired werden, sonst
   // kann der Sponsor einen cancelled Charge via "Bestätigen" wiederbeleben
   // (siehe approvals.confirmApproval). Atomar in einer Transaction.
-  await db.transaction(async (tx) => {
+  return db.transaction(async (tx) => {
     const affectedCharges = await tx
       .select({ matchEventId: charges.matchEventId })
       .from(charges)
@@ -278,10 +278,11 @@ export async function invalidateChargesForMatch(
     // nur bei echtem Hash-Drift (crawl-matches.ts) — das Spiel hat sich also
     // tatsächlich geändert, jede invoiced-Charge darauf ist jetzt verdächtig.
     // Status bleibt `invoiced` (nicht stornieren); nur das Flag wird gesetzt.
-    await tx
+    const frozen = await tx
       .update(charges)
       .set({ correctionFlaggedAt: new Date() })
-      .where(and(eq(charges.matchId, matchId), eq(charges.status, "invoiced")));
+      .where(and(eq(charges.matchId, matchId), eq(charges.status, "invoiced")))
+      .returning({ id: charges.id });
 
     const eventIds = affectedCharges
       .map((c) => c.matchEventId)
@@ -297,6 +298,18 @@ export async function invalidateChargesForMatch(
           )
         );
     }
+
+    // frozenInvoiced steuert den Freeze-Guard im Crawler: sind schon Charges
+    // fakturiert, DARF der Aufrufer die Scraped-Events NICHT löschen/neu
+    // schreiben (updateMatchWithEvents) — der FK `matchEventId onDelete:set null`
+    // würde die eingefrorenen invoiced-Charges verwaisen → sie fallen in den
+    // partiellen Unique-Index (charges_unique_match_trigger_idx) und
+    // kollidieren (Crash) bzw. verlieren ihre Idempotenz-Identität
+    // (Doppelbuchung bei Re-Eval). Korrektur läuft manuell über die Review-Queue.
+    return {
+      frozenInvoiced: frozen.length,
+      cancelledNonInvoiced: affectedCharges.length
+    };
   });
 }
 

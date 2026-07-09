@@ -79,6 +79,25 @@ export async function getTeamInClub(teamId: string, clubId: string) {
   return team;
 }
 
+/**
+ * Nur der Aktivierungs-Status einer Mannschaft — für Sponsor-Einstiegs-Gates
+ * (createPledge via Invite, respondToInquiry-accept), die keinen Club-Scope
+ * haben. Eine deaktivierte Mannschaft (isActive=false) darf keine NEUEN
+ * Sponsoring-Pacts mehr aufnehmen, auch nicht über einen noch gültigen
+ * Einladungslink (sonst entsteht ein „dormanter" Pact, der bei Reaktivierung
+ * unerwartet feuert — deactivateTeam verspricht dem Verein das Gegenteil).
+ */
+export async function getTeamActivation(
+  teamId: string
+): Promise<{ isActive: boolean; verifiedAt: Date | null } | undefined> {
+  const [t] = await db
+    .select({ isActive: teams.isActive, verifiedAt: teams.verifiedAt })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  return t;
+}
+
 /** Manuell gesetztes Saison-Ergebnis einer Mannschaft (oder undefined). */
 export async function getSeasonResultForTeam(teamId: string, saison: string) {
   const [row] = await db
