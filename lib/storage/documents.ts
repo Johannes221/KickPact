@@ -1,4 +1,9 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -92,6 +97,30 @@ export async function storeDocument(
   const fullPath = path.join(baseDir, relPath);
   await fs.writeFile(fullPath, body);
   return `local://${relPath}`;
+}
+
+/**
+ * Löscht ein gespeichertes Dokument (DSGVO Art. 17 / Speicherbegrenzung) —
+ * Gegenstück zu storeDocument. Nimmt die von storeDocument zurückgegebene
+ * storageUrl (`r2://<bucket>/<key>` bzw. `local://<relPath>`). Best-effort für
+ * lokale Dateien; fremde URLs (z.B. OAuth-Provider-Avatare) fallen no-op durch.
+ */
+export async function deleteDocument(storageUrl: string): Promise<void> {
+  if (!storageUrl) return;
+  if (storageUrl.startsWith("r2://") && s3) {
+    const withoutScheme = storageUrl.slice("r2://".length);
+    const slashIdx = withoutScheme.indexOf("/");
+    const bucket = withoutScheme.slice(0, slashIdx);
+    const key = withoutScheme.slice(slashIdx + 1);
+    await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+    return;
+  }
+  if (storageUrl.startsWith("local://")) {
+    const relPath = storageUrl
+      .slice("local://".length)
+      .replace(/[^a-zA-Z0-9_.\-]/g, "_");
+    await fs.rm(path.join(LOCAL_DIR, relPath), { force: true }).catch(() => {});
+  }
 }
 
 /**

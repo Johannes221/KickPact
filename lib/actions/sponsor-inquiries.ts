@@ -15,6 +15,7 @@ import {
 import { requireUser } from "@/lib/auth/session";
 import { inngest } from "@/lib/inngest/client";
 import { assertTeamWriteAccess, resolveTeamAccess } from "@/lib/auth/scope";
+import { escapeHtml } from "@/lib/utils/escape-html";
 import { getSubscriptionGateForTeam } from "@/lib/db/queries/subscription-status";
 import { isTeamOpenForSponsorEntry } from "@/lib/db/queries/sponsor-discover";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
@@ -160,8 +161,8 @@ ${dashboardUrl}
 
 — KickPact`,
         html: `<p>Hallo,</p>
-<p>Ein Sponsor möchte <strong>${teamRow.team.name}</strong> unterstützen.</p>
-${parsed.message ? `<blockquote style="border-left:3px solid #01C457;padding:8px 12px;color:#525252">${parsed.message}</blockquote>` : ""}
+<p>Ein Sponsor möchte <strong>${escapeHtml(teamRow.team.name)}</strong> unterstützen.</p>
+${parsed.message ? `<blockquote style="border-left:3px solid #01C457;padding:8px 12px;color:#525252">${escapeHtml(parsed.message)}</blockquote>` : ""}
 <p><a href="${dashboardUrl}" style="background:#01C457;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Anfrage im Dashboard ansehen →</a></p>
 <p style="color:#999;font-size:12px;margin-top:24px">— KickPact</p>`
       });
@@ -315,9 +316,9 @@ ${parsed.responseMessage ? `Nachricht der Mannschaft: "${parsed.responseMessage}
 ${inviteUrl}
 
 — KickPact`,
-        html: `<p>Hi ${row.sponsorName ?? ""},</p>
-<p><strong>${row.team.name}</strong> (${row.club.name}) hat deine Anfrage angenommen!</p>
-${parsed.responseMessage ? `<blockquote style="border-left:3px solid #01C457;padding:8px 12px;color:#525252">${parsed.responseMessage}</blockquote>` : ""}
+        html: `<p>Hi ${escapeHtml(row.sponsorName ?? "")},</p>
+<p><strong>${escapeHtml(row.team.name)}</strong> (${escapeHtml(row.club.name)}) hat deine Anfrage angenommen!</p>
+${parsed.responseMessage ? `<blockquote style="border-left:3px solid #01C457;padding:8px 12px;color:#525252">${escapeHtml(parsed.responseMessage)}</blockquote>` : ""}
 <p><a href="${inviteUrl}" style="background:#01C457;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Jetzt Pact anlegen →</a></p>
 <p style="color:#999;font-size:12px;margin-top:24px">— KickPact</p>`
       });
@@ -338,9 +339,9 @@ ${row.team.name} hat deine Sponsor-Anfrage leider abgelehnt.${parsed.responseMes
 Du kannst auf KickPact andere Mannschaften entdecken: ${process.env.BETTER_AUTH_URL ?? "https://kickpact.schartl.dev"}/sponsor/discover
 
 — KickPact`,
-        html: `<p>Hi ${row.sponsorName ?? ""},</p>
-<p><strong>${row.team.name}</strong> hat deine Sponsor-Anfrage leider abgelehnt.</p>
-${parsed.responseMessage ? `<blockquote style="border-left:3px solid #ccc;padding:8px 12px;color:#525252">${parsed.responseMessage}</blockquote>` : ""}
+        html: `<p>Hi ${escapeHtml(row.sponsorName ?? "")},</p>
+<p><strong>${escapeHtml(row.team.name)}</strong> hat deine Sponsor-Anfrage leider abgelehnt.</p>
+${parsed.responseMessage ? `<blockquote style="border-left:3px solid #ccc;padding:8px 12px;color:#525252">${escapeHtml(parsed.responseMessage)}</blockquote>` : ""}
 <p>Auf <a href="${process.env.BETTER_AUTH_URL ?? "https://kickpact.schartl.dev"}/sponsor/discover">KickPact Discover</a> findest du weitere Mannschaften.</p>
 <p style="color:#999;font-size:12px;margin-top:24px">— KickPact</p>`
       });
@@ -379,6 +380,15 @@ export async function setTeamDiscoverable(input: {
   // nicht-autarke Teams, sonst Mannschaftsadmin via team_memberships.
   await assertTeamWriteAccess(input.teamId);
 
+  // Serverseitige Validierung der öffentlich gerenderten Tagline: das Client-
+  // `maxLength={280}` ist umgehbar (direkter Action-Call) → sonst unbounded
+  // Storage-Write + überdimensionierter Inhalt auf /m/{slug} + Sponsoren-Seite.
+  // Konsistent zu saveTeamPublicProfile (z.string().trim().max(280)).
+  const tagline = input.publicTagline?.trim() || null;
+  if (tagline && tagline.length > 280) {
+    throw new Error("Tagline darf höchstens 280 Zeichen haben.");
+  }
+
   // Beim Öffentlich-Schalten einen stabilen Slug erzeugen, damit die Mannschaft
   // sofort eine teilbare /m/{slug}-URL hat (egal über welchen Toggle).
   let publicSlug = teamRow.publicSlug;
@@ -394,7 +404,7 @@ export async function setTeamDiscoverable(input: {
     .update(teams)
     .set({
       discoverable: input.discoverable,
-      publicTagline: input.publicTagline ?? null,
+      publicTagline: tagline,
       publicSlug
     })
     .where(eq(teams.id, input.teamId));

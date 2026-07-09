@@ -23,7 +23,10 @@ vi.mock("@/lib/db/queries/wrapped", () => ({
   getPrevSaisonForTeam: prevSaisonMock,
   WRAPPED_MIN_MATCHES: 3
 }));
-vi.mock("@/lib/recap/standings-cache", () => ({ getCachedStandings: standingsMock }));
+vi.mock("@/lib/recap/standings-cache", () => ({
+  getCachedStandings: standingsMock,
+  getCachedStandingsForRequest: standingsMock
+}));
 
 import { GET } from "@/app/api/teams/[teamId]/wrapped-image/[slide]/route";
 

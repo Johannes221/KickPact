@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { assertPlatformAdmin } from "@/lib/auth/admin";
+import { maskEmail } from "@/lib/utils/log-pii";
 import {
   approveVerification,
   rejectVerification,
@@ -83,7 +84,7 @@ export async function approveAction(input: { verificationId: string }) {
             text: sponsorMail.text
           })
           .catch((err) =>
-            console.error("[invoice-released] mail failed for", info.sponsorEmail, err)
+            console.error("[invoice-released] mail failed for", maskEmail(info.sponsorEmail), err)
           );
       })
     );
@@ -209,7 +210,7 @@ export async function approveTeamAction(input: { verificationId: string }) {
             text: sponsorMail.text
           })
           .catch((err) =>
-            console.error("[invoice-released] mail failed for", info.sponsorEmail, err)
+            console.error("[invoice-released] mail failed for", maskEmail(info.sponsorEmail), err)
           );
       })
     );

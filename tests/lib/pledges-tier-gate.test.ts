@@ -12,7 +12,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const {
   requireUserMock,
   findInvitationMock,
-  markInvitationUsedMock,
   getSubscriptionGateMock,
   getTeamLicensePlanMock,
   countPledgeRulesMock,
@@ -28,7 +27,6 @@ const {
 } = vi.hoisted(() => ({
   requireUserMock: vi.fn(),
   findInvitationMock: vi.fn(),
-  markInvitationUsedMock: vi.fn(),
   getSubscriptionGateMock: vi.fn(),
   getTeamLicensePlanMock: vi.fn(),
   countPledgeRulesMock: vi.fn(),
@@ -58,7 +56,10 @@ vi.mock("@/lib/validations/pledge", () => ({
 
 vi.mock("@/lib/db/queries/invitations", () => ({
   findInvitationByToken: findInvitationMock,
-  markInvitationUsed: markInvitationUsedMock
+  // Einladung wird jetzt atomar VOR der Pledge-Erzeugung konsumiert; hier immer
+  // erfolgreich (true), damit die Coverage-/Tier-Gate-Tests den Consume-Guard
+  // passieren.
+  markInvitationUsed: async () => true
 }));
 
 vi.mock("@/lib/db/queries/subscription-status", () => ({
@@ -175,7 +176,6 @@ beforeEach(() => {
   createSponsorProfileMock.mockResolvedValue({ id: "sp-1" });
   getClubIdForTeamMock.mockResolvedValue("club-1");
   createPledgeWithRulesMock.mockResolvedValue({ pledgeId: "pledge-1" });
-  markInvitationUsedMock.mockResolvedValue(undefined);
   // Default: volle Daten-Coverage → kein Coverage-Gate (Bestand schonen).
   getTeamDataCoverageMock.mockResolvedValue("full");
 });

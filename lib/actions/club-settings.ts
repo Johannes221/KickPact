@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertClubWriteAccessAllowPaused } from "@/lib/auth/scope";
 import { db } from "@/lib/db/client";
 import { clubs } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
@@ -44,7 +44,10 @@ export async function updateClubSettings(
     const parsed = updateClubSchema.safeParse(input);
     if (!parsed.success) return { error: parsed.error.errors[0].message };
 
-    const { club } = await assertClubAccess(slug, "admin");
+    // Read-Only-Gate: ein cancelled/past_due-Verein darf Stammdaten (inkl. IBAN =
+    // Zahlungsziel auf Sponsor-Übersichten) NICHT mehr ändern. Sommerpause bleibt
+    // erlaubt (allowPaused).
+    const { club } = await assertClubWriteAccessAllowPaused(slug, "admin");
 
     // Pay-Links normalisieren: PayPal speichert NUR den Handle („paypal.me/foo",
     // „@foo", volle URL → „foo"), Stripe-Link muss mit https://buy.stripe.com/

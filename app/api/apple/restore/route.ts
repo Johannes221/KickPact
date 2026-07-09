@@ -80,6 +80,10 @@ export async function POST(req: NextRequest) {
       ? appleProductToPlanCycle(decoded.productId)
       : null;
     if (!planCycle || !decoded.originalTransactionId) continue;
+    // Abgelaufene Transaktionen überspringen (siehe /verify): die Signaturprüfung
+    // sagt nichts über die geschäftliche Gültigkeit — ohne diesen Filter würde ein
+    // abgelaufener „Restore" wieder vollen bezahlten Zugriff freischalten.
+    if (decoded.expiresDate && decoded.expiresDate <= Date.now()) continue;
     valid.push({
       productId: decoded.productId ?? "",
       plan: planCycle.plan,

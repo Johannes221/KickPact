@@ -220,11 +220,15 @@ export default function DatenschutzPage() {
         aus.
       </p>
       <p className="mt-3">
-        <strong>Speicherdauer:</strong> Spielereignisse und damit verbundene
-        Spielernamen werden gelöscht, sobald die zugehörige Mannschaft auf
-        KickPact deaktiviert wird, spätestens jedoch nach Ablauf der gesetzlichen
-        Aufbewahrungspflichten für die zugehörigen Rechnungsdaten (§ 147 AO,
-        10 Jahre).
+        <strong>Speicherdauer:</strong> Spielereignisse und Spielernamen bewahren
+        wir auf, solange die Mannschaft auf KickPact geführt wird — sie sind für
+        die Saison-Historie und die Abrechnung erforderlich. Ein Spieler (oder
+        die Erziehungsberechtigten) kann der Anzeige des Namens jederzeit
+        widersprechen; wir anonymisieren ihn dann in unserem System, auch in
+        bereits erfassten Spielereignissen. Wird ein Konto gelöscht, entfernen wir
+        die zugehörigen personenbezogenen Daten; steuer- und handelsrechtlich
+        aufbewahrungspflichtige Rechnungsdaten bleiben nach § 147 AO bis zu
+        10 Jahre gespeichert.
       </p>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">

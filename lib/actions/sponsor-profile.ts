@@ -47,7 +47,10 @@ export async function updateSponsorProfile(
         businessAddressJson: null,
         businessTaxId: null
       })
-      .where(eq(sponsors.userId, user.id));
+      // Auf die konkrete gefundene Profil-Zeile scopen — ein User kann mehrere
+      // Sponsor-Profile haben (DSGVO-Export ist multi-profile-aware); ein
+      // userId-weiter Update hätte ALLE auf denselben Namen überschrieben.
+      .where(eq(sponsors.id, sponsor.id));
 
     revalidatePath("/sponsor/profil");
     return {};

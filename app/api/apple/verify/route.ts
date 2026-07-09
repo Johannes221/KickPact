@@ -63,6 +63,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "unknown-product" }, { status: 400 });
   }
 
+  // Ablauf-Gate (Trust-Boundary): Die JWS-Signaturprüfung (enableOnlineChecks)
+  // validiert Zertifikatskette + Revocation, NICHT die geschäftliche Abo-
+  // Gültigkeit. Ohne diese Prüfung könnte ein Admin die JWS eines abgelaufenen
+  // Kaufs erneut einspielen und wieder „active" (voller bezahlter Zugriff)
+  // bekommen — das Gate liest appleExpiresAt nicht, nur der tägliche Reconcile
+  // würde es (und nur bei gesetzten ASC-Secrets) korrigieren.
+  if (decoded.expiresDate && decoded.expiresDate <= Date.now()) {
+    return NextResponse.json(
+      { error: "transaction-expired", message: "Dieser Kauf ist abgelaufen." },
+      { status: 409 }
+    );
+  }
+
   // Replay-Schutz: gehört diese originalTransactionId bereits einem ANDEREN
   // Club (Admin mehrerer Vereine, der eine fremde JWS einspielt), würde der
   // UPDATE die UNIQUE-Constraint auf apple_original_transaction_id verletzen.

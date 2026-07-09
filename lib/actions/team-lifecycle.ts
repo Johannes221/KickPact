@@ -16,6 +16,7 @@ import {
   users
 } from "@/lib/db/schema";
 import { assertClubWriteAccess, assertTeamWriteAccess } from "@/lib/auth/scope";
+import { anonymizePlayerMatchEvents } from "@/lib/db/queries/crawler";
 import { storeDocument } from "@/lib/storage/documents";
 import { normalizeImageUpload } from "@/lib/storage/images";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
@@ -403,6 +404,15 @@ export async function togglePlayerBlock(
     )
     .where(eq(players.id, parsed.playerId));
 
+  // DSGVO Art. 21: beim Blocken auch die denormalisierte match_events-Namenskopie
+  // scrubben (Wrapped/Share-Bild/Spielbericht/Feed lesen diese, nicht players.name).
+  if (next) {
+    await anonymizePlayerMatchEvents(parsed.playerId, {
+      legacyName: row.player.name,
+      teamId: row.teamId
+    });
+  }
+
   revalidatePath(`/verein/${row.clubSlug}/mannschaft/${row.teamId}/spieler`);
 
   if (next) {
@@ -571,6 +581,12 @@ export async function confirmPlayerOptOut(
     .update(players)
     .set({ blocked: true, name: "Anonymisiert" })
     .where(eq(players.id, payload.playerId));
+
+  // DSGVO Art. 21: denormalisierte match_events-Namenskopie mit-anonymisieren.
+  await anonymizePlayerMatchEvents(payload.playerId, {
+    legacyName: row.player.name,
+    teamId: row.teamId
+  });
 
   revalidatePath(`/verein/${row.clubSlug}/mannschaft/${row.teamId}/spieler`);
 

@@ -448,6 +448,47 @@ export async function updateMatchWithEvents(args: {
 const ANONYMIZED_NAME = "Anonymisiert";
 
 /**
+ * DSGVO Art. 21 (Spieler-Opt-out): anonymisiert die DENORMALISIERTE
+ * `match_events.player_name`-Kopie eines geblockten Spielers. `players.name` +
+ * `players.blocked` allein reichen NICHT — alle Anzeige-/Share-Pfade (Wrapped,
+ * Share-PNG, Spielbericht, Event-Feed, Approval-Inbox) lesen die
+ * match_events-Kopie. Ohne diesen Scrub bleibt der Klarname (auch von
+ * Minderjährigen) im Produkt sichtbar, entgegen der Datenschutzerklärung.
+ *
+ * Deckt FK-verknüpfte Zeilen (player_id) ab; für Alt-Zeilen ohne player_id
+ * zusätzlich per Klarname innerhalb der Spiele DIESES Teams (kein Über-Scrub
+ * fremder gleichnamiger Spieler anderer Vereine).
+ */
+export async function anonymizePlayerMatchEvents(
+  playerId: string,
+  opts?: { legacyName?: string | null; teamId?: string }
+): Promise<void> {
+  await db
+    .update(matchEvents)
+    .set({ playerName: ANONYMIZED_NAME })
+    .where(eq(matchEvents.playerId, playerId));
+
+  if (opts?.legacyName && opts.legacyName !== ANONYMIZED_NAME && opts.teamId) {
+    await db
+      .update(matchEvents)
+      .set({ playerName: ANONYMIZED_NAME })
+      .where(
+        and(
+          isNull(matchEvents.playerId),
+          eq(matchEvents.playerName, opts.legacyName),
+          inArray(
+            matchEvents.matchId,
+            db
+              .select({ id: matches.id })
+              .from(matches)
+              .where(eq(matches.teamId, opts.teamId))
+          )
+        )
+      );
+  }
+}
+
+/**
  * Audit 2026-05-24 Phase 5 / Task 5.2: writeMatchEvents batchen.
  *
  * Vorher: pro Event ein upsertPlayer-Roundtrip + ein insert(matchEvents).

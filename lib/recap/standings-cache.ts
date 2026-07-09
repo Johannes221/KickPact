@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { teams, clubs } from "@/lib/db/schema/clubs";
 import { getLeagueStandings, type LeagueStandings } from "@/lib/crawler/fussballde";
 import { getStoredStandings, storeStandings } from "@/lib/db/queries/standings";
+import { inngest } from "@/lib/inngest/client";
 
 /**
  * Read-Through-Cache auf die Liga-Tabelle einer Mannschaft (Saison).
@@ -74,5 +75,39 @@ export async function getCachedStandings(
   }
 
   // Scrape lieferte nichts: lieber die (ggf. veraltete) DB-Zeile als null.
+  return stored?.data ?? null;
+}
+
+/**
+ * Request-Pfad-Variante fürs Wrapped (Seite + Share-Bild): scrapt NIEMALS
+ * synchron. Bei Cache-Miss/stale wird der Prewarm-Job (`recap/prewarm-standings`)
+ * gefeuert und SOFORT die (ggf. veraltete) DB-Zeile bzw. `null` geliefert — die
+ * tabellenbasierten Slides füllen sich beim nächsten Aufruf. Damit launcht der
+ * Render-Pfad nie Chromium (~6–30 s). Ein stündlicher Event-Bucket dedupliziert
+ * parallele Betrachter.
+ */
+export async function getCachedStandingsForRequest(
+  teamId: string,
+  saison: string
+): Promise<LeagueStandings | null> {
+  let stored: { data: LeagueStandings; scrapedAt: Date } | null = null;
+  try {
+    stored = await getStoredStandings(teamId, saison);
+    if (stored && isFresh(stored)) return stored.data;
+  } catch {
+    // DB-Lesefehler → wie Cache-Miss behandeln.
+  }
+
+  const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000));
+  await inngest
+    .send({
+      id: `recap-prewarm-${teamId}-${saison}-${hourBucket}`,
+      name: "recap/prewarm-standings",
+      data: { teamId, saison }
+    })
+    .catch(() => {
+      // Prewarm ist best-effort; das Wrapped rendert auch ohne Tabelle.
+    });
+
   return stored?.data ?? null;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -15,6 +15,20 @@ export interface InboxItem {
   link: string | null;
   read: boolean;
   createdAtIso: string;
+}
+
+/**
+ * Stabiler, deterministischer Zeitstempel für SSR + Erstpaint — feste
+ * timeZone, KEIN Date.now(). Server- und Client-Markup sind identisch (kein
+ * Hydration-#418). Nach dem Mount ersetzt `relativeTime` diesen Wert clientseitig.
+ */
+function absoluteTime(iso: string): string {
+  return new Date(iso).toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "Europe/Berlin"
+  });
 }
 
 function relativeTime(iso: string): string {
@@ -36,6 +50,9 @@ function relativeTime(iso: string): string {
 export function NotificationInbox({ initial }: { initial: InboxItem[] }) {
   const [items, setItems] = useState<InboxItem[]>(initial);
   const [pending, startTransition] = useTransition();
+  // #418-Guard: relative Zeit (Date.now()) erst nach dem Mount rendern.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const router = useRouter();
   const hasUnread = items.some((i) => !i.read);
 
@@ -108,7 +125,9 @@ export function NotificationInbox({ initial }: { initial: InboxItem[] }) {
                       {item.title}
                     </span>
                     <span className="shrink-0 text-[0.7rem] text-brand-night-navy/45">
-                      {relativeTime(item.createdAtIso)}
+                      {mounted
+                        ? relativeTime(item.createdAtIso)
+                        : absoluteTime(item.createdAtIso)}
                     </span>
                   </span>
                   <span className="mt-0.5 block text-xs text-brand-night-navy/60">

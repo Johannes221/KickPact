@@ -219,6 +219,19 @@ export async function createPledge(input: PledgeInput): Promise<CreatePledgeResu
     return new Date(`${year}-06-30T23:59:59Z`);
   })();
 
+  // Einladung ATOMAR als Gate konsumieren, BEVOR der Pledge entsteht: ein
+  // paralleler Doppelklick / Action-Retry bekommt hier `false` und bricht ab —
+  // sonst entstünden zwei aktive Pledges aus einer Einladung (je eigene
+  // pledgeRuleId → charges_unique_event_idx dedupliziert sie NICHT) → jedes
+  // Event würde die ganze Saison doppelt abgerechnet.
+  const consumed = await markInvitationUsed(parsed.invitationToken, user.id);
+  if (!consumed) {
+    return {
+      ok: false,
+      message: "Diese Einladung wurde bereits eingelöst."
+    };
+  }
+
   const result = await createPledgeWithRules({
     pledge: {
       sponsorId: sponsorId,
@@ -241,8 +254,6 @@ export async function createPledge(input: PledgeInput): Promise<CreatePledgeResu
       requiresApproval: MANUAL_TRIGGERS.has(r.triggerType)
     }))
   });
-
-  await markInvitationUsed(parsed.invitationToken, user.id);
 
   return { ok: true, pledgeId: result.pledgeId };
 }

@@ -7,7 +7,7 @@ import {
   WRAPPED_MIN_MATCHES,
   type WrappedStats
 } from "@/lib/db/queries/wrapped";
-import { getCachedStandings } from "@/lib/recap/standings-cache";
+import { getCachedStandingsForRequest } from "@/lib/recap/standings-cache";
 import { eurWhole, seasonLabel } from "@/lib/recap/recap-format";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -89,7 +89,7 @@ export async function GET(
   // Verifizierte Voll-Saison-Tabelle best-effort dazu (gecacht); null → Wrapped
   // rechnet ehrlich aus den ausgewerteten Spielen.
   const prev = await getPrevSaisonForTeam(teamId);
-  const standings = prev ? await getCachedStandings(teamId, prev) : null;
+  const standings = prev ? await getCachedStandingsForRequest(teamId, prev) : null;
   const stats = await getWrappedStatsForPrevSeason(teamId, standings);
   if (!stats || stats.spiele < WRAPPED_MIN_MATCHES) {
     return new Response("Not found", { status: 404 });

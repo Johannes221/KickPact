@@ -490,16 +490,36 @@ export async function revokeClubMembership(
   clubId: string,
   userId: string
 ): Promise<boolean> {
-  const deleted = await db
-    .delete(clubMemberships)
-    .where(
-      and(
-        eq(clubMemberships.clubId, clubId),
-        eq(clubMemberships.userId, userId)
+  // Atomarer Letzter-Admin-Schutz: die Admin-Zeilen des Vereins FOR UPDATE
+  // sperren → zwei gleichzeitige Austritte/Entzüge serialisieren sich, statt
+  // beide count=2 zu lesen und beide zu löschen (→ 0 Admins, Verein
+  // unverwaltbar). Nicht-Admins (Trainer/Viewer) dürfen immer austreten.
+  return db.transaction(async (tx) => {
+    const admins = await tx
+      .select({ userId: clubMemberships.userId })
+      .from(clubMemberships)
+      .where(
+        and(
+          eq(clubMemberships.clubId, clubId),
+          eq(clubMemberships.role, "admin")
+        )
       )
-    )
-    .returning({ userId: clubMemberships.userId });
-  return deleted.length > 0;
+      .for("update");
+    const targetIsSoleAdmin =
+      admins.length === 1 && admins[0].userId === userId;
+    if (targetIsSoleAdmin) return false;
+
+    const deleted = await tx
+      .delete(clubMemberships)
+      .where(
+        and(
+          eq(clubMemberships.clubId, clubId),
+          eq(clubMemberships.userId, userId)
+        )
+      )
+      .returning({ userId: clubMemberships.userId });
+    return deleted.length > 0;
+  });
 }
 
 /**
@@ -558,16 +578,33 @@ export async function revokeTeamMembership(
   teamId: string,
   userId: string
 ): Promise<boolean> {
-  const deleted = await db
-    .delete(teamMemberships)
-    .where(
-      and(
-        eq(teamMemberships.teamId, teamId),
-        eq(teamMemberships.userId, userId)
+  // Atomarer Letzter-Admin-Schutz (analog revokeClubMembership).
+  return db.transaction(async (tx) => {
+    const admins = await tx
+      .select({ userId: teamMemberships.userId })
+      .from(teamMemberships)
+      .where(
+        and(
+          eq(teamMemberships.teamId, teamId),
+          eq(teamMemberships.role, "admin")
+        )
       )
-    )
-    .returning({ userId: teamMemberships.userId });
-  return deleted.length > 0;
+      .for("update");
+    const targetIsSoleAdmin =
+      admins.length === 1 && admins[0].userId === userId;
+    if (targetIsSoleAdmin) return false;
+
+    const deleted = await tx
+      .delete(teamMemberships)
+      .where(
+        and(
+          eq(teamMemberships.teamId, teamId),
+          eq(teamMemberships.userId, userId)
+        )
+      )
+      .returning({ userId: teamMemberships.userId });
+    return deleted.length > 0;
+  });
 }
 
 /**

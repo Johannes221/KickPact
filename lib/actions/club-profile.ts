@@ -4,7 +4,7 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { revalidatePath } from "next/cache";
-import { assertClubAccess } from "@/lib/auth/scope";
+import { assertClubWriteAccessAllowPaused } from "@/lib/auth/scope";
 import { db } from "@/lib/db/client";
 import { clubs } from "@/lib/db/schema";
 import { normalizeImageUpload } from "@/lib/storage/images";
@@ -37,7 +37,9 @@ export async function updateClubPublicProfile(
       return { ok: false, message: parsed.error.errors[0].message };
     }
 
-    const { club } = await assertClubAccess(slug, "admin");
+    // Read-Only-Gate (Sommerpause erlaubt): totes Abo darf das öffentliche
+    // Profil nicht mehr ändern.
+    const { club } = await assertClubWriteAccessAllowPaused(slug, "admin");
 
     await db
       .update(clubs)
@@ -80,7 +82,7 @@ export async function uploadClubHero(input: {
     .limit(1);
   if (!club) throw new Error("Verein nicht gefunden.");
 
-  await assertClubAccess(club.slug, "admin");
+  await assertClubWriteAccessAllowPaused(club.slug, "admin");
 
   const normalized = await normalizeImageUpload({
     bytes: input.bytes,

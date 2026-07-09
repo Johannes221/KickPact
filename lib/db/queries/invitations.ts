@@ -254,11 +254,29 @@ export async function findInvitationByToken(token: string) {
   return row ?? null;
 }
 
-export async function markInvitationUsed(token: string, usedByUserId: string) {
-  await db
+/**
+ * Löst eine Einladung ATOMAR ein: nur `status='pending'` → `used`, mit RETURNING.
+ * Liefert `true`, wenn DIESER Aufruf die Einladung konsumiert hat, sonst `false`
+ * (bereits eingelöst / nicht mehr pending). Wird als Gate VOR der Pledge-
+ * Erzeugung genutzt — sonst erzeugen zwei parallele Einlösungen (Doppelklick/
+ * Retry) zwei aktive Pledges aus einer Einladung → Doppel-Abrechnung die ganze
+ * Saison (sponsor_invitations hat kein Unique, das das abfängt).
+ */
+export async function markInvitationUsed(
+  token: string,
+  usedByUserId: string
+): Promise<boolean> {
+  const rows = await db
     .update(sponsorInvitations)
     .set({ status: "used", usedAt: new Date(), usedByUserId })
-    .where(eq(sponsorInvitations.token, token));
+    .where(
+      and(
+        eq(sponsorInvitations.token, token),
+        eq(sponsorInvitations.status, "pending")
+      )
+    )
+    .returning({ id: sponsorInvitations.id });
+  return rows.length > 0;
 }
 
 export async function listInvitationsForTeam(teamId: string) {

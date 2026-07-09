@@ -142,12 +142,9 @@ export async function requestAccountDeletion(): Promise<{ ok: boolean; error?: s
   try {
     const user = await requireUser();
 
-    await db
-      .update(users)
-      .set({ deletionRequestedAt: new Date() })
-      .where(eq(users.id, user.id));
-
-    // Bestätigungs-Mail an User
+    // Bestätigungs-Mail ZUERST (idempotent via Idempotency-Key): schlägt sie
+    // fehl, wird das Lösch-Flag NICHT gesetzt → der Nutzer sieht einen echten
+    // Fehler statt einer still angelaufenen 14-Tage-Anonymisierung.
     await resend.emails.send({
       from: MAIL_FROM,
       to: user.email,
@@ -166,6 +163,11 @@ export async function requestAccountDeletion(): Promise<{ ok: boolean; error?: s
         "Idempotency-Key": `dsgvo-deletion-request-${user.id}`
       }
     });
+
+    await db
+      .update(users)
+      .set({ deletionRequestedAt: new Date() })
+      .where(eq(users.id, user.id));
 
     revalidatePath("/konto");
     return { ok: true };

@@ -398,6 +398,11 @@ describe("membership management queries", () => {
     const updated = await changeTeamMembershipRole(teamId, userId, "admin");
     expect(updated?.role).toBe("admin");
 
+    // Zweiter Team-Admin, damit der atomare Letzter-Admin-Schutz in
+    // revokeTeamMembership den Austritt des ersten NICHT blockiert.
+    const userId2 = await seedUser("tm2");
+    await db.insert(teamMemberships).values({ userId: userId2, teamId, role: "admin" });
+
     const ok = await revokeTeamMembership(teamId, userId);
     expect(ok).toBe(true);
 

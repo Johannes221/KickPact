@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
+import { deleteDocument } from "@/lib/storage/documents";
 import {
   users,
   sponsors,
@@ -7,7 +8,10 @@ import {
   sessions,
   clubMemberships,
   supportTickets,
-  sponsorInquiries
+  sponsorInquiries,
+  deviceTokens,
+  notifications,
+  notificationSettings
 } from "@/lib/db/schema";
 
 export const DELETED_EMAIL_DOMAIN = "kickpact.invalid";
@@ -39,6 +43,13 @@ export async function getUserForAdmin(userId: string) {
  * - User-Row als Tombstone (email notNull+unique → deleted-<id>@invalid)
  */
 export async function anonymizeUserAccount(userId: string): Promise<void> {
+  // Avatar-Storage-Key VOR dem Nullen erfassen (Löschung nach Commit).
+  const [before] = await db
+    .select({ image: users.image })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
   await db.transaction(async (tx) => {
     await tx.delete(accounts).where(eq(accounts.userId, userId));
     await tx.delete(sessions).where(eq(sessions.userId, userId));
@@ -70,6 +81,15 @@ export async function anonymizeUserAccount(userId: string): Promise<void> {
       .update(sponsorInquiries)
       .set({ message: null, responseMessage: null })
       .where(eq(sponsorInquiries.sponsorUserId, userId));
+    // DSGVO Art. 17: Geräte-Identifier (APNs-Token) + In-App-Notifications
+    // (title/body tragen Dritt-PII wie Sponsor-/Anfrager-Namen) hart löschen —
+    // deren onDelete:cascade feuert nie, weil die users-Zeile als Tombstone
+    // erhalten bleibt.
+    await tx.delete(deviceTokens).where(eq(deviceTokens.userId, userId));
+    await tx.delete(notifications).where(eq(notifications.userId, userId));
+    await tx
+      .delete(notificationSettings)
+      .where(eq(notificationSettings.userId, userId));
     await tx
       .update(users)
       .set({
@@ -83,6 +103,12 @@ export async function anonymizeUserAccount(userId: string): Promise<void> {
       })
       .where(eq(users.id, userId));
   });
+
+  // DSGVO Art. 17 / Speicherbegrenzung: Avatar-Datei aus dem Storage entfernen
+  // (best-effort, nach Commit). Fremde OAuth-Provider-URLs fallen no-op durch.
+  if (before?.image) {
+    await deleteDocument(before.image).catch(() => {});
+  }
 }
 
 export interface UpdateUserProfileResult {
