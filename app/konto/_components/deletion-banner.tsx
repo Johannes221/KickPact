@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cancelAccountDeletion } from "@/lib/actions/dsgvo";
@@ -12,6 +12,9 @@ export interface DeletionBannerProps {
 
 export function DeletionBanner({ scheduledFor }: DeletionBannerProps) {
   const [isPending, startTransition] = useTransition();
+  // #418-Guard: Date.now()-basierte Restzeit erst nach dem Mount rechnen.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   function handleCancel() {
     startTransition(async () => {
@@ -25,10 +28,12 @@ export function DeletionBanner({ scheduledFor }: DeletionBannerProps) {
     });
   }
 
-  const daysLeft = Math.max(
-    0,
-    Math.ceil((scheduledFor.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-  );
+  const daysLeft = mounted
+    ? Math.max(
+        0,
+        Math.ceil((scheduledFor.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+      )
+    : null;
 
   return (
     <div className="rounded-2xl border border-brand-alert-red/40 bg-brand-alert-red/5 p-4 md:p-5">
@@ -49,9 +54,12 @@ export function DeletionBanner({ scheduledFor }: DeletionBannerProps) {
                   month: "long",
                   year: "numeric"
                 })}
-              </strong>{" "}
-              ({daysLeft} {daysLeft === 1 ? "Tag" : "Tage"} verbleibend). Du
-              kannst dich weiterhin einloggen und den Vorgang jederzeit stoppen.
+              </strong>
+              {daysLeft !== null
+                ? ` (${daysLeft} ${daysLeft === 1 ? "Tag" : "Tage"} verbleibend)`
+                : ""}
+              . Du kannst dich weiterhin einloggen und den Vorgang jederzeit
+              stoppen.
             </p>
           </div>
           <Button

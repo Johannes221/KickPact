@@ -496,6 +496,7 @@ export function MeinProfilEditor({
                   type="button"
                   disabled={pending}
                   onClick={() => onDeleteImage(g.id)}
+                  aria-label="Bild entfernen"
                   className="absolute right-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white transition-colors hover:bg-black/80 disabled:cursor-not-allowed"
                 >
                   ✕

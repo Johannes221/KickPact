@@ -1,7 +1,7 @@
 "use server";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import { requireUser } from "@/lib/auth/session";
+import { requireUserOrThrow } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { sponsors } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
@@ -25,7 +25,7 @@ export async function updateSponsorProfile(
   input: UpdateSponsorInput
 ): Promise<{ error?: string }> {
   try {
-    const user = await requireUser();
+    const user = await requireUserOrThrow();
     const parsed = updateSponsorSchema.safeParse(input);
     if (!parsed.success) return { error: parsed.error.errors[0].message };
 

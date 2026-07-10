@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   Card,
   CardContent,
@@ -57,6 +58,7 @@ export function SponsorsManager({
   const [pending, startTransition] = useTransition();
   const [selectedTeam, setSelectedTeam] = useState(teams[0]?.id ?? "");
   const [recipientName, setRecipientName] = useState("");
+  const { confirm, confirmDialog } = useConfirm();
 
   // Sponsoren-Gate (Design 2026-05-29 §3.5/§6): Invite ist gesperrt, bis die
   // relevante Entität der gewählten Mannschaft verifiziert ist — bei Einzel-
@@ -98,8 +100,14 @@ export function SponsorsManager({
     });
   }
 
-  function revoke(invId: string) {
-    if (!confirm("Einladung wirklich zurückziehen? Der Link wird ungültig.")) return;
+  async function revoke(invId: string) {
+    const ok = await confirm({
+      title: "Einladung zurückziehen?",
+      description: "Der Einladungslink wird sofort ungültig.",
+      confirmLabel: "Zurückziehen",
+      danger: true
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await revokeInvitationAction({ clubSlug, invitationId: invId });
@@ -129,7 +137,9 @@ export function SponsorsManager({
   }
 
   return (
-    <section>
+    <>
+      {confirmDialog}
+      <section>
       <h2 className="font-display font-bold text-2xl tracking-tight text-brand-night-navy">
         Einladungslinks
       </h2>
@@ -269,6 +279,7 @@ export function SponsorsManager({
           ))}
         </ul>
       )}
-    </section>
+      </section>
+    </>
   );
 }

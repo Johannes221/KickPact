@@ -115,11 +115,25 @@ export async function createSponsorInquiry(input: {
     };
   }
 
-  await db.insert(sponsorInquiries).values({
-    sponsorUserId: user.id,
-    teamId: parsed.teamId,
-    message: parsed.message ?? null
-  });
+  // onConflictDoNothing greift auf den partiellen Unique-Index
+  // (sponsor_inquiries_unique_pending_idx) → bei parallelem Doppelklick gewinnt
+  // genau EIN Insert; der Verlierer bekommt 0 Zeilen zurück und bricht ab (kein
+  // zweiter Mail-Fanout an die Admins). Der Read-Check oben bleibt der Fast-Path.
+  const inserted = await db
+    .insert(sponsorInquiries)
+    .values({
+      sponsorUserId: user.id,
+      teamId: parsed.teamId,
+      message: parsed.message ?? null
+    })
+    .onConflictDoNothing()
+    .returning({ id: sponsorInquiries.id });
+  if (inserted.length === 0) {
+    return {
+      ok: false,
+      message: "Du hast bereits eine offene Anfrage für diese Mannschaft."
+    };
+  }
 
   // Mail an alle, die diese Mannschaft verwalten: Club-Admins (vereinsgeführt)
   // UND direkte Team-Admins (team-only geführte Mannschaften — z.B. eine fremd
@@ -272,30 +286,43 @@ export async function respondToInquiry(input: {
     }
   }
 
-  // Bei accept erst die Einladung erzeugen, damit wir ihre ID am Inquiry
-  // verknüpfen können (Discover-Page löst darüber den Pledge-Einstieg auf).
-  let acceptedInvitation: Awaited<ReturnType<typeof createInvitation>> | null =
-    null;
-  if (parsed.accept) {
-    // Nutzt createInvitation-Helper (setzt korrekt expiresAt = +30d und
-    // einen base64url-Token statt cuid2 — konsistent mit allen anderen
-    // Invitations-Pfaden seit Audit 2026-05-24).
-    acceptedInvitation = await createInvitation({
-      teamId: row.team.id,
-      createdByUserId: user.id
-    });
-  }
-
-  await db
+  // Atomarer Status-Claim (pending → accepted/rejected) ZUERST: nur EIN
+  // paralleler Aufruf gewinnt die Transition (WHERE status='pending' RETURNING);
+  // der Verlierer bekommt 0 Zeilen und bricht ab, BEVOR eine zweite Einladung
+  // entsteht (sonst zwei Invitation-Tokens gemailt + verwaiste Einladung).
+  const claimed = await db
     .update(sponsorInquiries)
     .set({
       status: parsed.accept ? "accepted" : "rejected",
       responseMessage: parsed.responseMessage ?? null,
       respondedAt: new Date(),
-      respondedBy: user.id,
-      invitationId: acceptedInvitation?.id ?? null
+      respondedBy: user.id
     })
-    .where(eq(sponsorInquiries.id, parsed.inquiryId));
+    .where(
+      and(
+        eq(sponsorInquiries.id, parsed.inquiryId),
+        eq(sponsorInquiries.status, "pending")
+      )
+    )
+    .returning({ id: sponsorInquiries.id });
+  if (claimed.length === 0) {
+    return { ok: false, message: "Diese Anfrage wurde bereits beantwortet." };
+  }
+
+  // Nach gewonnenem Claim die Einladung erzeugen und ihre ID nachtragen
+  // (Discover-Page löst darüber den Pledge-Einstieg auf).
+  let acceptedInvitation: Awaited<ReturnType<typeof createInvitation>> | null =
+    null;
+  if (parsed.accept) {
+    acceptedInvitation = await createInvitation({
+      teamId: row.team.id,
+      createdByUserId: user.id
+    });
+    await db
+      .update(sponsorInquiries)
+      .set({ invitationId: acceptedInvitation.id })
+      .where(eq(sponsorInquiries.id, parsed.inquiryId));
+  }
 
   if (parsed.accept && acceptedInvitation) {
     // Mail an Sponsor mit dem frisch erzeugten Einladungs-Token.

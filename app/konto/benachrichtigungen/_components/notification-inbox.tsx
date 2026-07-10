@@ -58,19 +58,32 @@ export function NotificationInbox({ initial }: { initial: InboxItem[] }) {
 
   function open(item: InboxItem) {
     if (!item.read) {
-      setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, read: true } : i)));
+      const prev = items;
+      setItems((p) => p.map((i) => (i.id === item.id ? { ...i, read: true } : i)));
       startTransition(async () => {
-        await markNotificationReadAction(item.id);
+        try {
+          await markNotificationReadAction(item.id);
+        } catch {
+          // Fehler → optimistischen Read-Status zurückrollen (kein stilles Scheitern).
+          setItems(prev);
+          toast.error("Konnte nicht als gelesen markieren.");
+        }
       });
     }
     if (item.link) router.push(item.link);
   }
 
   function markAll() {
-    setItems((prev) => prev.map((i) => ({ ...i, read: true })));
+    const prev = items;
+    setItems((p) => p.map((i) => ({ ...i, read: true })));
     startTransition(async () => {
-      await markAllNotificationsReadAction();
-      toast.success("Alle als gelesen markiert");
+      try {
+        await markAllNotificationsReadAction();
+        toast.success("Alle als gelesen markiert");
+      } catch {
+        setItems(prev);
+        toast.error("Konnte nicht markieren — bitte erneut versuchen.");
+      }
     });
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Copy, RefreshCw, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { copyText } from "@/lib/platform/clipboard";
@@ -47,6 +47,9 @@ export function PendingInvitationsTable({
   showTeamColumn?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
+  // #418-Guard: Date.now()-basierte Restzeit erst nach dem Mount rendern.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   // Tracks which invitation is being acted on
   const [activeId, setActiveId] = useState<string | null>(null);
   // After refresh: store new URL per id
@@ -124,7 +127,7 @@ export function PendingInvitationsTable({
           {rows.map((row) => {
             const currentUrl = refreshedUrls[row.id] ?? inviteUrl(row.token);
             const isLoading = pending && activeId === row.id;
-            const days = daysLeft(new Date(row.expiresAt));
+            const days = mounted ? daysLeft(new Date(row.expiresAt)) : null;
 
             return (
               <tr key={row.id} className="hover:bg-brand-off-white/60 transition-colors">
@@ -150,8 +153,8 @@ export function PendingInvitationsTable({
                   </td>
                 )}
                 <td className="px-4 py-3 hidden md:table-cell">
-                  <span className={`text-xs ${days <= 3 ? "text-red-600 font-semibold" : "text-brand-night-navy/60"}`}>
-                    {days === 0 ? "Heute" : `${days}d`}
+                  <span className={`text-xs ${days !== null && days <= 3 ? "text-red-600 font-semibold" : "text-brand-night-navy/60"}`}>
+                    {days === null ? "…" : days === 0 ? "Heute" : `${days}d`}
                   </span>
                 </td>
                 <td className="px-4 py-3">

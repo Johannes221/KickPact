@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { togglePlayerBlock } from "@/lib/actions/team-lifecycle";
 import type { RosterPlayer } from "@/lib/db/queries/team-lifecycle";
 
@@ -18,13 +19,25 @@ export function RosterList({ players, canEdit }: Props) {
   const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const { confirm, confirmDialog } = useConfirm();
 
-  function handleToggle(player: RosterPlayer) {
+  async function handleToggle(player: RosterPlayer) {
     const nextBlocked = !player.blocked;
-    const ok = window.confirm(
+    const ok = await confirm(
       nextBlocked
-        ? `Spieler "${player.name}" wirklich anonymisieren? Der Name wird durch "Anonymisiert" ersetzt.`
-        : `Spieler entblocken? Beim nächsten Crawl wird der echte Name wiederhergestellt.`
+        ? {
+            title: `${player.name} anonymisieren?`,
+            description:
+              "Der Name wird überall durch Anonymisiert ersetzt — auch in bereits erfassten Spielereignissen.",
+            confirmLabel: "Anonymisieren",
+            danger: true
+          }
+        : {
+            title: "Spieler entblocken?",
+            description:
+              "Beim nächsten Datenabgleich wird der echte Name wiederhergestellt.",
+            confirmLabel: "Entblocken"
+          }
     );
     if (!ok) return;
     setBusyId(player.id);
@@ -44,7 +57,9 @@ export function RosterList({ players, canEdit }: Props) {
   }
 
   return (
-    <ul className="space-y-2">
+    <>
+      {confirmDialog}
+      <ul className="space-y-2">
       {players.map((p) => (
         <li
           key={p.id}
@@ -100,6 +115,7 @@ export function RosterList({ players, canEdit }: Props) {
           )}
         </li>
       ))}
-    </ul>
+      </ul>
+    </>
   );
 }

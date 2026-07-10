@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { revalidatePath } from "next/cache";
 import { assertClubWriteAccessAllowPaused } from "@/lib/auth/scope";
+import { rethrowIfControlFlow } from "@/lib/utils/next-errors";
 import { db } from "@/lib/db/client";
 import { clubs } from "@/lib/db/schema";
 import { normalizeImageUpload } from "@/lib/storage/images";
@@ -53,6 +54,7 @@ export async function updateClubPublicProfile(
     revalidatePath(`/v/${slug}`);
     return { ok: true };
   } catch (e) {
+    rethrowIfControlFlow(e);
     return {
       ok: false,
       message: e instanceof Error ? e.message : "Fehler beim Speichern"

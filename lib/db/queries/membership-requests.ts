@@ -222,8 +222,17 @@ export async function applyConflictTakeover(args: {
   reason?: string | null;
 }): Promise<void> {
   await db.transaction(async (tx) => {
-    // 1. Remove existing admin clubMemberships for this club
-    await tx.delete(clubMemberships).where(eq(clubMemberships.clubId, args.clubId));
+    // 1. Nur die bisherigen ADMIN-Memberships entfernen (der Konflikt-Takeover
+    //    entzieht die Kontrolle, nicht die Zugehörigkeit) — Trainer/Viewer
+    //    behalten ihren Zugriff. Vorher wurden versehentlich ALLE Rollen gelöscht.
+    await tx
+      .delete(clubMemberships)
+      .where(
+        and(
+          eq(clubMemberships.clubId, args.clubId),
+          eq(clubMemberships.role, "admin")
+        )
+      );
 
     // 2. Insert claimant as the new admin
     await tx
@@ -464,22 +473,41 @@ export async function changeClubMembershipRole(
   userId: string,
   newRole: ClubRole
 ): Promise<{ userId: string; clubId: string; role: ClubRole } | null> {
-  const [updated] = await db
-    .update(clubMemberships)
-    .set({ role: newRole })
-    .where(
-      and(
-        eq(clubMemberships.clubId, clubId),
-        eq(clubMemberships.userId, userId)
+  return db.transaction(async (tx) => {
+    // Atomarer Letzter-Admin-Schutz beim DEMOTE (admin → nicht-admin): Admin-
+    // Zeilen FOR UPDATE sperren → zwei parallele Degradierungen serialisieren
+    // sich statt beide count=2 zu lesen (→ 0 Admins). null = nicht geändert.
+    if (newRole !== "admin") {
+      const admins = await tx
+        .select({ userId: clubMemberships.userId })
+        .from(clubMemberships)
+        .where(
+          and(
+            eq(clubMemberships.clubId, clubId),
+            eq(clubMemberships.role, "admin")
+          )
+        )
+        .for("update");
+      if (admins.length === 1 && admins[0].userId === userId) return null;
+    }
+
+    const [updated] = await tx
+      .update(clubMemberships)
+      .set({ role: newRole })
+      .where(
+        and(
+          eq(clubMemberships.clubId, clubId),
+          eq(clubMemberships.userId, userId)
+        )
       )
-    )
-    .returning();
-  if (!updated) return null;
-  return {
-    userId: updated.userId,
-    clubId: updated.clubId,
-    role: updated.role as ClubRole
-  };
+      .returning();
+    if (!updated) return null;
+    return {
+      userId: updated.userId,
+      clubId: updated.clubId,
+      role: updated.role as ClubRole
+    };
+  });
 }
 
 /**
@@ -552,22 +580,39 @@ export async function changeTeamMembershipRole(
   userId: string,
   newRole: TeamRole
 ): Promise<{ userId: string; teamId: string; role: TeamRole } | null> {
-  const [updated] = await db
-    .update(teamMemberships)
-    .set({ role: newRole })
-    .where(
-      and(
-        eq(teamMemberships.teamId, teamId),
-        eq(teamMemberships.userId, userId)
+  return db.transaction(async (tx) => {
+    // Atomarer Letzter-Admin-Schutz beim DEMOTE (analog changeClubMembershipRole).
+    if (newRole !== "admin") {
+      const admins = await tx
+        .select({ userId: teamMemberships.userId })
+        .from(teamMemberships)
+        .where(
+          and(
+            eq(teamMemberships.teamId, teamId),
+            eq(teamMemberships.role, "admin")
+          )
+        )
+        .for("update");
+      if (admins.length === 1 && admins[0].userId === userId) return null;
+    }
+
+    const [updated] = await tx
+      .update(teamMemberships)
+      .set({ role: newRole })
+      .where(
+        and(
+          eq(teamMemberships.teamId, teamId),
+          eq(teamMemberships.userId, userId)
+        )
       )
-    )
-    .returning();
-  if (!updated) return null;
-  return {
-    userId: updated.userId,
-    teamId: updated.teamId,
-    role: updated.role as TeamRole
-  };
+      .returning();
+    if (!updated) return null;
+    return {
+      userId: updated.userId,
+      teamId: updated.teamId,
+      role: updated.role as TeamRole
+    };
+  });
 }
 
 /**

@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { assertClubWriteAccessAllowPaused } from "@/lib/auth/scope";
+import { rethrowIfControlFlow } from "@/lib/utils/next-errors";
 import { db } from "@/lib/db/client";
 import { clubs } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
@@ -81,6 +82,7 @@ export async function updateClubSettings(
     revalidatePath(`/verein/${slug}`);
     return {};
   } catch (e) {
+    rethrowIfControlFlow(e);
     return { error: e instanceof Error ? e.message : "Fehler beim Speichern" };
   }
 }

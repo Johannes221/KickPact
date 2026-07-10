@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import type { PlanKey } from "@/lib/stripe/pricing";
 import { FEATURE_BY_PLAN } from "@/lib/billing/plan-features-catalog";
 import { getCheckoutChannel } from "@/lib/billing/checkout-channel";
@@ -50,6 +51,12 @@ export function UpgradeGate(props: {
         });
         window.location.href = url;
       }
+    } catch (e) {
+      // Stripe-/StoreKit-Fehler nicht still scheitern lassen (kein unhandled
+      // rejection, sichtbares Feedback).
+      toast.error(
+        e instanceof Error ? e.message : "Upgrade fehlgeschlagen — bitte erneut versuchen."
+      );
     } finally {
       setBusy(false);
     }

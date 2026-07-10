@@ -413,23 +413,26 @@ describe("membership management queries", () => {
     expect(rows).toHaveLength(0);
   });
 
-  it("self-demotion guard: countClubAdmins=1 means demote / revoke must be blocked at call site", async () => {
-    // This test documents the contract used by the manage.ts server actions:
-    // when countClubAdmins(club.id) <= 1 and the acting user is the only admin,
-    // the action must refuse to change the role or revoke. The action layer
-    // owns the policy; here we just verify the building blocks behave as
-    // assumed (count==1, then a change still mechanically succeeds — meaning
-    // the guard MUST live in the action, not the query).
+  it("letzter-Admin-Schutz: Demote/Revoke des einzigen Admins wird ATOMAR auf Query-Ebene verweigert", async () => {
+    // UAT-Härtung 2026-07-08: der Letzter-Admin-Schutz lebt jetzt (zusätzlich zum
+    // Call-Site-Guard) atomar in der Query-Ebene — changeClubMembershipRole /
+    // revokeClubMembership sperren die Admin-Zeilen FOR UPDATE und verweigern die
+    // Änderung, wenn sie den einzigen Admin träfe. Damit können zwei parallele
+    // Austritte/Degradierungen keinen 0-Admin-Verein mehr erzeugen.
     const onlyAdmin = await seedUser("only");
     const { clubId } = await seedClubWithTeam("solo");
     await db.insert(clubMemberships).values({ userId: onlyAdmin, clubId, role: "admin" });
 
     expect(await countClubAdmins(clubId)).toBe(1);
 
-    // The query itself does NOT enforce the guard — that's intentional. The
-    // server action checks countClubAdmins() and refuses before calling this.
+    // Demote des einzigen Admins → verweigert (null), Admin bleibt.
     const demoted = await changeClubMembershipRole(clubId, onlyAdmin, "viewer");
-    expect(demoted?.role).toBe("viewer");
-    expect(await countClubAdmins(clubId)).toBe(0);
+    expect(demoted).toBeNull();
+    expect(await countClubAdmins(clubId)).toBe(1);
+
+    // Revoke des einzigen Admins → verweigert (false), Membership bleibt.
+    const revoked = await revokeClubMembership(clubId, onlyAdmin);
+    expect(revoked).toBe(false);
+    expect(await countClubAdmins(clubId)).toBe(1);
   });
 });

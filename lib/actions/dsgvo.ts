@@ -29,15 +29,17 @@ import {
   sponsorInquiries,
   supportTickets,
   clubVerifications,
-  teamVerifications
+  teamVerifications,
+  deviceTokens,
+  notifications
 } from "@/lib/db/schema";
-import { requireUser } from "@/lib/auth/session";
+import { requireUserOrThrow } from "@/lib/auth/session";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { maskEmail } from "@/lib/utils/log-pii";
 
 export async function requestDataExport(): Promise<{ ok: boolean; error?: string }> {
   try {
-    const user = await requireUser();
+    const user = await requireUserOrThrow();
 
     // Sammle alle User-bezogenen Daten (DSGVO Art. 15 Auskunft + Art. 20 Portabilität)
     const [userRow] = await db.select().from(users).where(eq(users.id, user.id)).limit(1);
@@ -86,6 +88,16 @@ export async function requestDataExport(): Promise<{ ok: boolean; error?: string
       .select()
       .from(teamVerifications)
       .where(eq(teamVerifications.submittedByUserId, user.id));
+    // Art. 15 Vollständigkeit: Geräte-Tokens (Push) + In-App-Benachrichtigungen
+    // tragen ebenfalls personenbezogene Daten.
+    const deviceTokenRows = await db
+      .select()
+      .from(deviceTokens)
+      .where(eq(deviceTokens.userId, user.id));
+    const notificationRows = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, user.id));
 
     const exportData = {
       generatedAt: new Date().toISOString(),
@@ -101,6 +113,8 @@ export async function requestDataExport(): Promise<{ ok: boolean; error?: string
       sponsorInquiries: sponsorInquiryRows,
       clubVerifications: clubVerificationRows,
       teamVerifications: teamVerificationRows,
+      deviceTokens: deviceTokenRows,
+      notifications: notificationRows,
       info:
         "Diese Datei enthält alle personenbezogenen Daten, die KickPact zu deinem Account speichert. " +
         "Format: JSON. Für DSGVO Art. 20 Datenübertragbarkeit. Bei Fragen: hello@kickpact.com."
@@ -140,7 +154,7 @@ export async function requestDataExport(): Promise<{ ok: boolean; error?: string
 
 export async function requestAccountDeletion(): Promise<{ ok: boolean; error?: string }> {
   try {
-    const user = await requireUser();
+    const user = await requireUserOrThrow();
 
     // Bestätigungs-Mail ZUERST (idempotent via Idempotency-Key): schlägt sie
     // fehl, wird das Lösch-Flag NICHT gesetzt → der Nutzer sieht einen echten
@@ -178,7 +192,7 @@ export async function requestAccountDeletion(): Promise<{ ok: boolean; error?: s
 
 export async function cancelAccountDeletion(): Promise<{ ok: boolean; error?: string }> {
   try {
-    const user = await requireUser();
+    const user = await requireUserOrThrow();
     await db
       .update(users)
       .set({ deletionRequestedAt: null })

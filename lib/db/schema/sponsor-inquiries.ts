@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp, pgEnum, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, pgEnum, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { users } from "./auth";
 import { teams } from "./clubs";
@@ -51,6 +52,12 @@ export const sponsorInquiries = pgTable(
   },
   (t) => ({
     teamStatusIdx: index("sponsor_inquiries_team_status_idx").on(t.teamId, t.status),
-    sponsorStatusIdx: index("sponsor_inquiries_sponsor_status_idx").on(t.sponsorUserId, t.status)
+    sponsorStatusIdx: index("sponsor_inquiries_sponsor_status_idx").on(t.sponsorUserId, t.status),
+    // Nur EINE offene Anfrage pro (Team, Sponsor) — verhindert atomar die
+    // doppelte pending-Anfrage bei Doppelklick (createSponsorInquiry nutzt
+    // onConflictDoNothing). Analog club_request_unique_pending_idx.
+    uniquePending: uniqueIndex("sponsor_inquiries_unique_pending_idx")
+      .on(t.teamId, t.sponsorUserId)
+      .where(sql`${t.status} = 'pending'`)
   })
 );
