@@ -138,6 +138,7 @@ import { createPledge } from "@/app/(sponsor)/sponsor/pledge/new/_actions/create
 
 const VALID_INPUT = {
   invitationToken: "tok-1",
+  idempotencyKey: "idem-key-abc123",
   endsAtSaisonEnd: true,
   monthlyCapEur: null,
   rules: [

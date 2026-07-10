@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, useFieldArray, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { createId } from "@paralleldrive/cuid2";
 import { Zap, Handshake, Trophy, ShieldCheck, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -134,6 +135,11 @@ export function PledgeBuilder({
   const router = useRouter();
   const params = useSearchParams();
   const invitationToken = params.get("invitation");
+  // Idempotenz-Key EINMAL pro Wizard-Session (Mount). Ein Doppelklick auf
+  // „Sponsoring starten" schickt denselben Key → createPledge legt nur EINEN
+  // Pledge an (partieller Unique-Index). Bewusst NICHT pro Submit neu, sonst
+  // greift der Doppel-Submit-Schutz nicht.
+  const [idempotencyKey] = useState(() => createId());
 
   // Spieler-Wetten nur bei `full`-Coverage (oder unklassifiziertem Bestand).
   const playerBetsAllowed = dataCoverage === "full" || dataCoverage == null;
@@ -150,6 +156,7 @@ export function PledgeBuilder({
     resolver: zodResolver(pledgeInputSchema),
     defaultValues: {
       invitationToken: invitationToken ?? "",
+      idempotencyKey,
       rules: [
         { triggerType: "goal_total", amountEur: 5, params: {} },
         { triggerType: "win", amountEur: 10, params: {} },

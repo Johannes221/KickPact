@@ -314,9 +314,12 @@ export async function respondToInquiry(input: {
   let acceptedInvitation: Awaited<ReturnType<typeof createInvitation>> | null =
     null;
   if (parsed.accept) {
+    // 1:1-Einladung: an genau diesen Sponsor gemailt → single-use. Nicht
+    // teilbar wie der Broadcast-Link (schützt die Kader-Sichtbarkeit).
     acceptedInvitation = await createInvitation({
       teamId: row.team.id,
-      createdByUserId: user.id
+      createdByUserId: user.id,
+      singleUse: true
     });
     await db
       .update(sponsorInquiries)

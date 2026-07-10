@@ -54,6 +54,52 @@ export default async function InvitationPage({
     );
   }
 
+  // Abgelaufen (30-Tage-TTL): getSponsorInvitationByToken filtert Expiry NICHT,
+  // daher hier prüfen — sonst rendert ein pending-aber-abgelaufener Token den
+  // vollen „Pact anlegen"-Flow, der erst auf der Wizard-Seite dead-endet.
+  if (invitation.expiresAt.getTime() <= Date.now()) {
+    return (
+      <main className="mx-auto max-w-md px-5 md:px-6 py-10 md:py-16">
+        <Card className="border-brand-neutral/40">
+          <CardHeader>
+            <CardTitle className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
+              Einladung abgelaufen
+            </CardTitle>
+            <CardDescription className="text-brand-night-navy/60">
+              Dieser Link ist nicht mehr gültig. Bitte den Verein um einen neuen.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </main>
+    );
+  }
+
+  // Bereits eingelöster 1:1-Link (Inquiry-Accept ist single-use). Broadcast-
+  // Links bleiben „pending" und landen nie hier — nur ein persönlicher Link,
+  // der schon zu einem Pact geführt hat, zeigt diese Karte.
+  if (invitation.status === "used") {
+    return (
+      <main className="mx-auto max-w-md px-5 md:px-6 py-10 md:py-16">
+        <Card className="border-brand-neutral/40">
+          <CardHeader>
+            <CardTitle className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
+              Einladung bereits eingelöst
+            </CardTitle>
+            <CardDescription className="text-brand-night-navy/60">
+              Über diesen Link wurde schon ein Pact angelegt. Deine bestehenden Pacts
+              findest du in deinem Sponsor-Bereich.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" asChild>
+              <Link href="/sponsor/pledge">Zu meinen Pacts</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
   const session = await getServerSession();
   const isLoggedIn = !!session?.user;
 

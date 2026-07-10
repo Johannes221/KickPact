@@ -155,6 +155,7 @@ describe("pledgeRuleInputSchema — Saison-Pflicht-Params (Wave 4)", () => {
 describe("pledgeInputSchema monthlyCapEur (C1)", () => {
   const base = {
     invitationToken: "tok",
+    idempotencyKey: "idem-key-abc123",
     rules: [rule({})]
   };
 

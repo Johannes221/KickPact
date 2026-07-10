@@ -1,5 +1,5 @@
 import {
-  pgTable, text, timestamp, jsonb, pgEnum, index
+  pgTable, text, timestamp, jsonb, pgEnum, index, uniqueIndex
 } from "drizzle-orm/pg-core";
 // pledgeProxiesJson (pledge_proxies_json) wurde mit Migration 0027 entfernt.
 // Spec §Familie-Proxy ist deprecated — Code unter lib/validations/sponsor.ts ist Reference.
@@ -52,7 +52,14 @@ export const sponsors = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
   },
   (t) => ({
-    userIdx: index("sponsors_user_idx").on(t.userId)
+    // UNIQUE (nicht nur index): genau EIN Sponsor-Profil pro User. Ohne diese
+    // Invariante ließ ein paralleler Erst-Pact-Submit (Doppelklick auf einem
+    // Broadcast-Invite) zwei Profile mit verschiedenen sponsorIds entstehen —
+    // dann griff der Pledge-Idempotenz-Index (sponsor_id, idempotency_key)
+    // nicht und der Sponsor wurde die ganze Saison doppelt abgerechnet.
+    // createSponsorProfile löst den Konflikt jetzt via onConflictDoNothing +
+    // Reselect zur stabilen sponsorId auf.
+    userIdx: uniqueIndex("sponsors_user_idx").on(t.userId)
   })
 );
 

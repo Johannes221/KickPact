@@ -10,6 +10,7 @@ import {
   charges
 } from "@/lib/db/schema";
 import type { PlanKey } from "@/lib/stripe/pricing";
+import { isUniqueViolation } from "@/lib/db/errors";
 
 /**
  * Beendet alle Pledges, deren endsAt verstrichen ist — auch PAUSIERTE
@@ -226,16 +227,43 @@ export async function getClubIdForTeam(teamId: string): Promise<string | null> {
 /**
  * Legt einen Pledge + seine Regeln in EINER Transaktion an. Die Rule-Rows werden
  * fertig gemappt übergeben (ohne pledgeId — die wird hier gesetzt).
+ *
+ * Idempotenz (Geld-Pfad): trägt `pledge.idempotencyKey` einen Wert, den es für
+ * denselben Sponsor schon gibt (Doppelklick/Action-Retry auf einem jetzt
+ * mehrfach einlösbaren Broadcast-Invite), kollidiert der INSERT am partiellen
+ * Unique-Index `pledges_idempotency_unique_idx`. Statt zu werfen (was dem
+ * Sponsor einen Fehler zeigt, obwohl sein Pact längst existiert) geben wir den
+ * bereits angelegten Pledge zurück — kein zweiter Pledge, keine Doppel-
+ * Abrechnung. Ohne idempotencyKey (Alt-Pfade/Klone) bleibt das Verhalten
+ * unverändert: Fehler eskaliert.
  */
 export async function createPledgeWithRules(args: {
   pledge: Omit<typeof pledges.$inferInsert, "id">;
   rules: Array<Omit<typeof pledgeRules.$inferInsert, "pledgeId">>;
 }): Promise<{ pledgeId: string }> {
-  return db.transaction(async (tx) => {
-    const [pledge] = await tx.insert(pledges).values(args.pledge).returning();
-    await tx
-      .insert(pledgeRules)
-      .values(args.rules.map((r) => ({ ...r, pledgeId: pledge.id })));
-    return { pledgeId: pledge.id };
-  });
+  try {
+    return await db.transaction(async (tx) => {
+      const [pledge] = await tx.insert(pledges).values(args.pledge).returning();
+      await tx
+        .insert(pledgeRules)
+        .values(args.rules.map((r) => ({ ...r, pledgeId: pledge.id })));
+      return { pledgeId: pledge.id };
+    });
+  } catch (e) {
+    const key = args.pledge.idempotencyKey;
+    if (key && isUniqueViolation(e)) {
+      const [existing] = await db
+        .select({ id: pledges.id })
+        .from(pledges)
+        .where(and(eq(pledges.sponsorId, args.pledge.sponsorId), eq(pledges.idempotencyKey, key)))
+        .limit(1);
+      if (existing) {
+        console.warn(
+          `[pledge] idempotenter Doppel-Submit abgefangen (sponsor=${args.pledge.sponsorId}) → bestehender Pledge ${existing.id}`
+        );
+        return { pledgeId: existing.id };
+      }
+    }
+    throw e;
+  }
 }

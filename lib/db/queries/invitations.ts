@@ -41,6 +41,12 @@ export async function createInvitation(args: {
   teamId: string;
   createdByUserId: string;
   recipientName?: string;
+  /**
+   * `false` (Default) = Broadcast-Link: mehrfach einlösbar, an viele Sponsoren
+   * teilbar. `true` = 1:1-Link (nur respondToInquiry): bleibt single-use und
+   * wird beim Pledge-Anlegen konsumiert. Siehe sponsorInvitations.singleUse.
+   */
+  singleUse?: boolean;
 }) {
   const token = generateToken();
   const expiresAt = new Date(Date.now() + INVITATION_TTL_DAYS * 24 * 60 * 60 * 1000);
@@ -52,6 +58,7 @@ export async function createInvitation(args: {
       createdByUserId: args.createdByUserId,
       token,
       recipientName: args.recipientName ?? null,
+      singleUse: args.singleUse ?? false,
       expiresAt
     })
     .returning();
@@ -609,6 +616,7 @@ export async function getSponsorInvitationByToken(token: string) {
     .select({
       id: sponsorInvitations.id,
       status: sponsorInvitations.status,
+      expiresAt: sponsorInvitations.expiresAt,
       recipientName: sponsorInvitations.recipientName,
       teamName: teams.name,
       clubName: clubs.name,

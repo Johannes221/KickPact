@@ -56,6 +56,18 @@ describe("invitations queries", () => {
     expect(inv.expiresAt.getTime()).toBeLessThan(upperBound);
   });
 
+  it("createInvitation ist standardmäßig Broadcast (singleUse=false)", async () => {
+    const { teamId, userId } = await seedTeam();
+    const inv = await createInvitation({ teamId, createdByUserId: userId });
+    expect(inv.singleUse).toBe(false);
+  });
+
+  it("createInvitation({ singleUse: true }) markiert den Link als 1:1", async () => {
+    const { teamId, userId } = await seedTeam();
+    const inv = await createInvitation({ teamId, createdByUserId: userId, singleUse: true });
+    expect(inv.singleUse).toBe(true);
+  });
+
   it("findInvitationByToken liefert pending Invitations", async () => {
     const { teamId, userId } = await seedTeam();
     const inv = await createInvitation({ teamId, createdByUserId: userId });

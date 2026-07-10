@@ -208,6 +208,19 @@ export function validateTriggerParams(
 
 export const pledgeInputSchema = z.object({
   invitationToken: z.string().min(1, "Einladungs-Token fehlt"),
+  /**
+   * Client-generierter Idempotenz-Key (einmal pro Wizard-Session). Schützt den
+   * Geld-Pfad gegen einen Doppel-Submit auf einem jetzt mehrfach einlösbaren
+   * Broadcast-Invite: derselbe Key → derselbe Pledge (kein Doppel-Charge, siehe
+   * pledges.idempotencyKey). Pflicht — fail-closed: ohne Key lieber ablehnen
+   * (Wizard neu laden) als den Doppel-Pledge-Schutz still verlieren. Die
+   * Meldung ist nutzerlesbar, weil sie bei Deploy-Skew (alter Client-Build ohne
+   * das Feld) als Toast beim Sponsor landet.
+   */
+  idempotencyKey: z
+    .string({ required_error: "Bitte lade die Seite neu und versuche es erneut." })
+    .min(8, "Bitte lade die Seite neu und versuche es erneut.")
+    .max(64),
   rules: z.array(pledgeRuleInputSchema).min(1, "Mindestens eine Regel"),
   // C1 (Audit 2026-06-11): muss > 0 sein — monthlyCapEur=0 hieß vorher
   // "Cap 0 €" und blockte still jede Charge des Pacts.

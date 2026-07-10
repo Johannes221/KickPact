@@ -39,6 +39,11 @@ export default async function NewPledgePage({
   // anbietet (Spieler-Wetten nur bei `full`). `createPledge` enforced das Gate
   // server-seitig hart; dies hier ist Komfort. NULL = unklassifiziert → alles.
   let dataCoverage: Coverage | null = null;
+  // Ein mitgegebener, aber nicht (mehr) einlösbarer Token (abgelaufen, vom
+  // Verein zurückgezogen oder ein bereits verbrauchter 1:1-Link) darf nicht in
+  // den vollen 4-Schritt-Wizard führen, der erst am Ende scheitert — stattdessen
+  // sofort eine klare Infokarte.
+  let invalidLink = false;
   if (invitationToken) {
     const invitation = await findInvitationByToken(invitationToken);
     if (invitation && invitation.teamId) {
@@ -67,6 +72,8 @@ export default async function NewPledgePage({
           );
         }
       }
+    } else {
+      invalidLink = true;
     }
   }
 
@@ -79,13 +86,28 @@ export default async function NewPledgePage({
         Wähle Ereignisse, lege Beträge fest. Wir zeigen dir live, worauf du dich maximal einlässt.
       </p>
       <div className="mt-6 md:mt-10">
-        {gateBanner ?? (
-          <Suspense fallback={<div className="text-brand-night-navy/60">Lade…</div>}>
-            <PledgeBuilder
-              dataCoverage={dataCoverage}
-              seasonWindowOpen={seasonWindowOpen}
-            />
-          </Suspense>
+        {invalidLink ? (
+          <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 md:p-6">
+            <p className="text-sm md:text-base text-amber-900">
+              <strong>Dieser Einladungs-Link ist nicht mehr gültig.</strong> Er wurde
+              zurückgezogen oder ist abgelaufen. Bitte den Verein um einen neuen Link.
+            </p>
+            <Link
+              href="/sponsor/discover"
+              className="mt-3 inline-flex items-center text-sm font-semibold text-amber-900 underline"
+            >
+              Andere Mannschaften entdecken →
+            </Link>
+          </div>
+        ) : (
+          gateBanner ?? (
+            <Suspense fallback={<div className="text-brand-night-navy/60">Lade…</div>}>
+              <PledgeBuilder
+                dataCoverage={dataCoverage}
+                seasonWindowOpen={seasonWindowOpen}
+              />
+            </Suspense>
+          )
         )}
       </div>
     </div>
