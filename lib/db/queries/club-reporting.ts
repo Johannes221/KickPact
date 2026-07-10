@@ -38,7 +38,7 @@ import {
   paginate,
   type PaginatedResult
 } from "@/lib/db/queries/_helpers/paginate";
-import { utcMonthWindow, chargeCountsTowardCap } from "@/lib/db/queries/evaluation";
+import { utcMonthWindow, chargeCountsTowardCap, CAP_COUNTED_STATUSES } from "@/lib/db/queries/evaluation";
 import { sponsorLabelSql } from "./sponsor-label";
 
 type SortDir = "asc" | "desc";
@@ -633,7 +633,13 @@ export async function getClubTeamStats(
       })
       .from(charges)
       .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-      .where(and(inArray(pledges.teamId, teamIds), gte(charges.createdAt, since)))
+      .where(
+        and(
+          inArray(pledges.teamId, teamIds),
+          inArray(charges.status, CAP_COUNTED_STATUSES),
+          sql`coalesce(${charges.confirmedAt}, ${charges.createdAt}) >= ${since.toISOString()}`
+        )
+      )
       .groupBy(pledges.teamId)
       .then((rows) => new Map(rows.map((r) => [r.teamId, Number(r.s)]))),
     db
@@ -705,14 +711,26 @@ export async function getVereinDashboardKpis(
         .from(charges)
         .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
         .innerJoin(teams, eq(pledges.teamId, teams.id))
-        .where(and(eq(teams.clubId, clubId), gte(charges.createdAt, weekStart)))
+        .where(
+          and(
+            eq(teams.clubId, clubId),
+            inArray(charges.status, CAP_COUNTED_STATUSES),
+            sql`coalesce(${charges.confirmedAt}, ${charges.createdAt}) >= ${weekStart.toISOString()}`
+          )
+        )
         .then((r) => Number(r[0]?.s ?? 0)),
       db
         .select({ s: sql<number>`coalesce(sum(${charges.amountCents}), 0)::int` })
         .from(charges)
         .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
         .innerJoin(teams, eq(pledges.teamId, teams.id))
-        .where(and(eq(teams.clubId, clubId), gte(charges.createdAt, monthStart)))
+        .where(
+          and(
+            eq(teams.clubId, clubId),
+            inArray(charges.status, CAP_COUNTED_STATUSES),
+            sql`coalesce(${charges.confirmedAt}, ${charges.createdAt}) >= ${monthStart.toISOString()}`
+          )
+        )
         .then((r) => Number(r[0]?.s ?? 0)),
       db
         .select({ n: sql<number>`count(*)::int` })

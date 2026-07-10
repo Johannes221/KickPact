@@ -375,12 +375,37 @@ function wasEverBehind(m: MatchInput, opts: { scrapedOnly?: boolean } = {}): boo
       return ma === mb ? a.i - b.i : ma - mb;
     });
 
-  let own = 0;
-  let opp = 0;
+  // Der Chronologie NUR vertrauen, wenn die Tor-Events den offiziellen Endstand
+  // vollständig rekonstruieren. Der Scraper persistiert ein Tor nur mit
+  // Spieler-Link (crawler.ts) — Eigentore/unbekannte Schützen fehlen als Event,
+  // bei scrapedOnly zusätzlich alle manuellen Tore. Fehlt ein EIGENES frühes Tor,
+  // entsteht sonst ein PHANTOM-Rückstand (z.B. echter Verlauf 1:0→1:1→2:1 wirkt
+  // als 0:1→…), und comeback_win würde fälschlich (auto-confirmed) feuern. Ist
+  // die Chronologie unvollständig, nur auf den verlässlichen Halbzeit-Stand
+  // (offiziell dekodiert) zurückfallen.
+  let ownGoals = 0;
+  let oppGoals = 0;
   for (const { e } of goals) {
-    if (e.side === m.teamSide) own++;
-    else opp++;
-    if (own < opp) return true;
+    if (e.side === m.teamSide) ownGoals++;
+    else oppGoals++;
+  }
+  // Ein PHANTOM-Rückstand entsteht nur, wenn EIGENE Tore FEHLEN (das frühe eigene
+  // Tor ist nicht als Event da → Tally zeigt fälschlich 0:1) ODER GEGNER-Tore
+  // ZUVIEL sind (Phantom-Gegentor). Zusätzliche eigene bzw. fehlende gegnerische
+  // Tore können keinen Rückstand erfinden (nur under-firen, sichere Richtung) —
+  // daher darf ein irrelevantes eigenes Extra-Tor die gescrapt belegte Chronologie
+  // NICHT entwerten.
+  const chronologyUnreliable =
+    ownGoals < ownScore(m) || oppGoals > opponentScore(m);
+
+  if (!chronologyUnreliable) {
+    let own = 0;
+    let opp = 0;
+    for (const { e } of goals) {
+      if (e.side === m.teamSide) own++;
+      else opp++;
+      if (own < opp) return true;
+    }
   }
 
   // Sicherheitsnetz: Halbzeit-Rückstand zählt ebenfalls als „war hinten".
@@ -395,7 +420,12 @@ function isHattrick(m: MatchInput): boolean {
   const goalsByPlayer = new Map<string, number>();
   for (const e of m.events) {
     if (e.type !== "tor" || e.side !== m.teamSide) continue;
-    const key = e.playerId ?? e.playerName ?? "unknown";
+    // Ohne konkrete Spieler-Identität NICHT auf die Hattrick-Schwelle zählen:
+    // drei anonyme (manuelle) Tore sind kein Hattrick EINES Spielers. Gescrapte
+    // Tore tragen immer eine playerId (crawler.ts) — der Fall betrifft nur
+    // manuelle Meldungen ohne Spieler.
+    const key = e.playerId ?? e.playerName;
+    if (!key) continue;
     goalsByPlayer.set(key, (goalsByPlayer.get(key) ?? 0) + 1);
   }
   for (const count of goalsByPlayer.values()) {

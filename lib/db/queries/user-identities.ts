@@ -1,5 +1,6 @@
 import { and, asc, eq, gte, inArray, notInArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
+import { CAP_COUNTED_STATUSES } from "./evaluation";
 import {
   clubs,
   clubMemberships,
@@ -226,6 +227,7 @@ export async function getUserIdentities(userId: string): Promise<UserIdentities>
   if (sponsorRow) {
     const now = new Date();
     const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 
     const [[pledgeStats], [chargeStats]] = await Promise.all([
       db
@@ -240,7 +242,18 @@ export async function getUserIdentities(userId: string): Promise<UserIdentities>
         })
         .from(charges)
         .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-        .where(and(eq(pledges.sponsorId, sponsorRow.id), gte(charges.createdAt, monthStart)))
+        // Deckungsgleich mit sponsor-dashboard.ts monthlyCents: nur gezählte
+        // Charges (confirmed+invoiced, kein cancelled/pending) und Anker
+        // COALESCE(confirmedAt, createdAt) im UTC-Monatsfenster — sonst zeigte
+        // die Rollen-Auswahl-Karte ein anderes „diesen Monat" als das Dashboard.
+        .where(
+          and(
+            eq(pledges.sponsorId, sponsorRow.id),
+            inArray(charges.status, CAP_COUNTED_STATUSES),
+            sql`coalesce(${charges.confirmedAt}, ${charges.createdAt}) >= ${monthStart.toISOString()}`,
+            sql`coalesce(${charges.confirmedAt}, ${charges.createdAt}) < ${monthEnd.toISOString()}`
+          )
+        )
     ]);
 
     sponsorResult = {

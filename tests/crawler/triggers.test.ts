@@ -182,6 +182,29 @@ describe("evaluateTriggers — comeback_win", () => {
     expect(evaluateTriggers(match, [r])).toHaveLength(1);
   });
 
+  it("kein Phantom-Comeback bei unvollständiger Chronologie (fehlendes Eigentor)", () => {
+    // Echter Verlauf 1:0 → 1:1 → 2:1 (Heimsieg, NIE hinten). Das frühe eigene
+    // Tor (Min 12) war ein Eigentor/unbekannter Schütze → wird NICHT als Event
+    // gescrapt. Die Events zeigen nur Gegentor@40 + Eigen-Tor@75 → die reine
+    // Chronologie täuscht einen 0:1-Rückstand vor. Da #Eigen-Events (1) < ownScore
+    // (2), ist die Chronologie unvollständig → nur der Halbzeit-Stand (1:0, nicht
+    // hinten) zählt → KEIN Comeback (früher feuerte es hier fälschlich).
+    const match: MatchInput = {
+      id: "syn_cb_phantom",
+      teamSide: "heim",
+      ergebnisHeim: 2,
+      ergebnisGast: 1,
+      halbzeitHeim: 1,
+      halbzeitGast: 0,
+      events: [
+        { id: "e1", type: "tor", minute: 40, side: "gast", playerName: "X", playerId: "p_x", source: "scraped" },
+        { id: "e2", type: "tor", minute: 75, side: "heim", playerName: "B", playerId: "p_b", source: "scraped" }
+      ]
+    };
+    const r = rule({ triggerType: "comeback_win", amountCents: 1500 });
+    expect(evaluateTriggers(match, [r])).toHaveLength(0);
+  });
+
   it("kein Comeback wenn zwar zwischenzeitlich hinten, aber am Ende nur Remis", () => {
     const match: MatchInput = {
       id: "syn_cb_draw",

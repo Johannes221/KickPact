@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { invoices, clubs, sponsors } from "@/lib/db/schema";
@@ -23,10 +23,28 @@ export async function markInvoicePaid(invoiceId: string) {
   if (!row) throw new Error("Rechnung nicht gefunden");
   await assertClubWriteAccess(row.clubSlug, "admin");
 
-  await db
+  // Nur eine tatsächlich VERSENDETE, nicht stornierte Rechnung kann als bezahlt
+  // markiert werden. `withheld` (unverifizierter Verein — Withhold-Gate) und
+  // `draft` (Mail-Fail) dürfen NICHT paid werden: sonst umgeht der Klick das
+  // Verifikations-Gate und die Rechnung steht `paid` mit `sentAt=NULL` (bezahlt,
+  // aber nie zugestellt). Stornobelege (cancelledAt) ebenfalls nicht. Atomar per
+  // WHERE-Guard + RETURNING.
+  const updated = await db
     .update(invoices)
     .set({ status: "paid", paidMarkedAt: new Date(), paidMarkedBy: user.id })
-    .where(eq(invoices.id, invoiceId));
+    .where(
+      and(
+        eq(invoices.id, invoiceId),
+        eq(invoices.status, "sent"),
+        isNull(invoices.cancelledAt)
+      )
+    )
+    .returning({ id: invoices.id });
+  if (updated.length === 0) {
+    throw new Error(
+      "Nur versendete, nicht stornierte Rechnungen können als bezahlt markiert werden."
+    );
+  }
 
   revalidatePath(`/verein/${row.clubSlug}/abrechnungen`);
 }

@@ -76,7 +76,11 @@ const TRIGGER_LIBRARY: LibItem[] = [
   { key: "special_goal:freistoss", type: "special_goal", subtype: "freistoss", label: "Freistoßtor (direkt)", emoji: "🎯", description: "Direkt verwandelter Freistoß", defaultEur: 12, group: "club" },
   { key: "special_goal:eckentor", type: "special_goal", subtype: "eckentor", label: "Eckentor (direkt)", emoji: "🚩", description: "Direkt verwandelter Eckstoß", defaultEur: 20, group: "club" },
   { key: "special_goal:tor_mittellinie", type: "special_goal", subtype: "tor_mittellinie", label: "Tor hinter Mittellinie", emoji: "🎯", description: "Tor aus der eigenen Hälfte", defaultEur: 25, group: "club" },
-  { key: "special_goal:sonstiges", type: "special_goal", subtype: "sonstiges", label: "Sonstiges Spezialtor", emoji: "🎭", description: "Anderes besonderes Tor — Verein beschreibt es im Kommentar", defaultEur: 10, group: "club" },
+  // `sonstiges` bewusst NICHT wählbar: der Subtyp steht nicht in
+  // SPECIAL_GOAL_SUBTYPES, die Melde-UI bietet ihn nicht an und validateSubtype
+  // lehnt ihn serverseitig ab → ein solcher Pact könnte NIE eine Charge feuern
+  // (garantiert 0 €, falsche Zusage an den Sponsor). Invariante: Builder-Umfang
+  // ⊆ Melde-/Validierungs-Umfang.
   // assist/man_of_match bewusst NICHT wählbar: die Melde-UI des Vereins bietet
   // sie nicht an und `validateSubtype` lehnt sie serverseitig ab (B3-Audit
   // 2026-06-11) — ein solcher Pact könnte nie feuern und würde dem Sponsor eine

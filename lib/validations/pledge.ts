@@ -10,7 +10,8 @@ import type { TriggerType as CanonicalTriggerType } from "@/lib/triggers/labels"
  * `special_goal`, `assist`, `man_of_match`, `yellow_card`, `red_card` sind
  * vom-Verein-gemeldete Spezialwetten (manual + requiresApproval); Spezialtore
  * werden über `params.subtype` (kopfball | hackentor | elfmeter | freistoss |
- * sonstiges) als einzelne Wetten ausgewiesen.
+ * eckentor | tor_mittellinie — SPECIAL_GOAL_SUBTYPES) als einzelne Wetten
+ * ausgewiesen. `sonstiges` ist NICHT wählbar (nicht meldbar/validierbar).
  */
 export const TRIGGER_TYPES = [
   // pro Spiel — automatisch

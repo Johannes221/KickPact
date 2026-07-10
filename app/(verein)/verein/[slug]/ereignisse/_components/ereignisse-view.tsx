@@ -8,24 +8,17 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { TriggerIcon } from "@/components/shared/trigger-icon";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { eur } from "@/lib/utils/currency";
+import { formatDateShort } from "@/lib/utils/date-format";
+import { TRIGGER_META } from "@/lib/triggers/labels";
 
-const TRIGGER_LABELS: Record<string, { label: string; emoji: string }> = {
-  goal_total:           { label: "Pro Tor",          emoji: "⚽" },
-  goal_by_player:       { label: "Spieler-Tor",       emoji: "💎" },
-  win:                  { label: "Pro Sieg",           emoji: "🏆" },
-  clean_sheet:          { label: "Zu-Null-Sieg",       emoji: "🛡️" },
-  comeback_win:         { label: "Comeback-Sieg",      emoji: "🔥" },
-  hattrick:             { label: "Hattrick",           emoji: "🎯" },
-  special_goal:         { label: "Spezial-Tor",        emoji: "🎭" },
-  goals_scored_min:     { label: "Viele Tore",         emoji: "🎉" },
-  goal_diff_min:        { label: "Hoher Sieg",         emoji: "💪" },
-  season_promotion:     { label: "Aufstieg",           emoji: "⬆️" },
-  season_no_relegation: { label: "Klassenerhalt",      emoji: "🛟" },
-  season_champion:      { label: "Meister",            emoji: "👑" },
-  season_table_position:{ label: "Tabellenplatz",      emoji: "🥇" },
-  season_cup_round:     { label: "Pokal-Runde",        emoji: "🏆" },
-  season_custom:        { label: "Saison-Ziel",        emoji: "🎺" },
-};
+// Zentrale Trigger-Labels statt einer lokalen Teilmenge: die frühere lokale Map
+// kannte loss/draw/home_win/away_win/yellow_card/red_card nicht → der Feed
+// rendert über die (jetzt entfernte) `?? r.triggerType`-Fallback-Kante sonst
+// rohe Enums wie „home_win". TRIGGER_META deckt alle Enum-Werte ab (eine Quelle).
+const TRIGGER_LABELS = TRIGGER_META as Record<
+  string,
+  { label: string; emoji: string } | undefined
+>;
 
 /** Spieler-/Ereignis-Label mit optionalem Spielernamen */
 function triggerLabel(r: EreignisRow): string {
@@ -225,13 +218,13 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
                     {matchHref ? (
                       <Link href={matchHref} className="block">
                         {r.matchDatum
-                          ? new Date(r.matchDatum).toLocaleDateString("de-DE")
-                          : new Date(r.createdAt).toLocaleDateString("de-DE")}
+                          ? formatDateShort(r.matchDatum)
+                          : formatDateShort(r.createdAt)}
                       </Link>
                     ) : (
                       r.matchDatum
-                        ? new Date(r.matchDatum).toLocaleDateString("de-DE")
-                        : new Date(r.createdAt).toLocaleDateString("de-DE")
+                        ? formatDateShort(r.matchDatum)
+                        : formatDateShort(r.createdAt)
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -324,8 +317,8 @@ export function EreignisseView({ rows, slug }: { rows: EreignisRow[]; slug: stri
               {(r.matchId || r.matchDatum) && (
                 <div className="mt-2 text-xs text-brand-night-navy/50">
                   {r.matchDatum
-                    ? new Date(r.matchDatum).toLocaleDateString("de-DE")
-                    : new Date(r.createdAt).toLocaleDateString("de-DE")}
+                    ? formatDateShort(r.matchDatum)
+                    : formatDateShort(r.createdAt)}
                   {r.heimName &&
                     ` · ${abbreviateTeamName(r.heimName)} – ${abbreviateTeamName(r.gastName ?? "")}`}
                   {r.ergebnisHeim !== null && ` · ${r.ergebnisHeim}:${r.ergebnisGast}`}

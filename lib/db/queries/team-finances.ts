@@ -1,12 +1,16 @@
 /**
  * DB-Queries für die Team-Finanzen-Page (Tab 4 im Team-Centric-Dashboard).
  *
- * "Charges" werden im Status confirmed gezählt — konsistent zur
- * Mannschaftskassen-Logik.
+ * "Charges" werden über CAP_COUNTED_STATUSES (confirmed + invoiced) gezählt —
+ * dieselbe Menge wie Sponsor-Bilanz, Verein-Reporting und Cap-Enforcement.
+ * (Vorher nur `confirmed` → die „Eingenommen insgesamt"-Headline schrumpfte bei
+ * jedem Rechnungslauf, weil fakturierte Charges herausfielen, und widersprach
+ * der Sponsor-/Verein-Ansicht derselben Mannschaft.)
  */
-import { and, eq, sql, desc } from "drizzle-orm";
+import { and, eq, inArray, sql, desc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { charges } from "@/lib/db/schema/charges";
+import { CAP_COUNTED_STATUSES } from "./evaluation";
 import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
 import { sponsors } from "@/lib/db/schema/sponsors";
 import { users } from "@/lib/db/schema/auth";
@@ -34,7 +38,7 @@ export async function getTeamConfirmedChargeRuleSums(teamId: string) {
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
     .leftJoin(users, eq(sponsors.userId, users.id))
     .leftJoin(matchesTable, eq(charges.matchId, matchesTable.id))
-    .where(and(eq(pledges.teamId, teamId), eq(charges.status, "confirmed")));
+    .where(and(eq(pledges.teamId, teamId), inArray(charges.status, CAP_COUNTED_STATUSES)));
 }
 
 /**
@@ -52,7 +56,7 @@ export async function listTeamPactRuleRows(teamId: string) {
       amountCents: pledgeRules.amountCents,
       monthlyCapCents: pledges.monthlyCapCents,
       sponsorDisplayName: sponsorLabelSql,
-      chargedSum: sql<number>`COALESCE((SELECT SUM(amount_cents) FROM ${charges} c WHERE c.pledge_rule_id = ${pledgeRules.id} AND c.status = 'confirmed'), 0)`
+      chargedSum: sql<number>`COALESCE((SELECT SUM(amount_cents) FROM ${charges} c WHERE c.pledge_rule_id = ${pledgeRules.id} AND c.status IN ('confirmed','invoiced')), 0)`
     })
     .from(pledgeRules)
     .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))

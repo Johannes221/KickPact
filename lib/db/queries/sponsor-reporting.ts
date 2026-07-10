@@ -599,7 +599,10 @@ export type SponsorRangeOption =
 
 /**
  * Liefert `{from, to}` (UTC) für die vordefinierten Range-Optionen. Saison
- * geht August → Juli (deutsche Amateur-Saison, konsistent mit der DFB-Logik).
+ * geht Juli → Juni (deutsche Amateur-Saison, Stichtag 1. Juli — identisch zu
+ * saison.ts, seasonWindowFor und der seasonToDate-Cap-Kachel). Vorher fälschlich
+ * August-basiert → eine Juli-Charge (Relegation/Nachholspiel) landete in der
+ * Bilanz in einer ANDEREN Saison als in Dashboard-Tile und Saison-Rechnung.
  *
  * `to` ist immer EXKLUSIV (= 1 ms nach Periode-Ende reicht; wir geben den
  * ersten Tag der Folgeperiode).
@@ -622,12 +625,12 @@ export function getRangeForOption(
         to: new Date(Date.UTC(year + 1, 0, 1))
       };
     case "this-season": {
-      // Saison startet 1. August. Wenn wir vor August sind, hat die Saison
-      // im letzten Jahr begonnen.
-      const seasonStartYear = month >= 7 ? year : year - 1;
+      // Saison startet 1. Juli (Monat 6, 0-indexiert). Vor Juli hat die Saison
+      // im Vorjahr begonnen. Deckungsgleich mit seasonWindowFor + seasonToDate.
+      const seasonStartYear = month >= 6 ? year : year - 1;
       return {
-        from: new Date(Date.UTC(seasonStartYear, 7, 1)),
-        to: new Date(Date.UTC(seasonStartYear + 1, 7, 1))
+        from: new Date(Date.UTC(seasonStartYear, 6, 1)),
+        to: new Date(Date.UTC(seasonStartYear + 1, 6, 1))
       };
     }
     case "all-time":

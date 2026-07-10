@@ -20,6 +20,7 @@ import {
   updateTeamCoverage,
   persistKader,
   countRosterPlayersWithId,
+  markMatchDriftFrozen,
   type ActiveTeam
 } from "@/lib/db/queries/crawler";
 import { classifyScrapedMatches } from "@/lib/crawler/coverage";
@@ -306,6 +307,14 @@ export const crawlMatches = inngest.createFunction(
               }
             );
             totalFrozenForCorrection++;
+            // contentHash fortschreiben (Events/Score bleiben eingefroren):
+            // sonst erkennt jeder Folge-Crawl denselben Drift neu, re-flaggt die
+            // invoiced-Charges und macht ein operator-seitiges „Verwerfen"
+            // (dismissChargeCorrections) jede Nacht rückgängig (Oszillation).
+            // Ein echter Re-Drift (anderer Hash) wird weiterhin erkannt.
+            await step.run(`freeze-hash-${spiel.spielId}`, () =>
+              markMatchDriftFrozen(existing.id, newHash)
+            );
             continue;
           }
 

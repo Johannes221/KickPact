@@ -350,16 +350,26 @@ describe.skipIf(isIntegrationDbDisabled)("sponsor-reporting (integration)", () =
     expect(r.to.toISOString()).toBe("2026-04-01T00:00:00.000Z");
   });
 
-  it("getRangeForOption: this-season vor August → Vorjahr-August", () => {
+  // Saison-Stichtag ist 1. Juli (nicht August) — deckungsgleich mit
+  // seasonWindowFor + seasonToDate + saison.ts + der Saison-Rechnung.
+  it("getRangeForOption: this-season vor Juli → Vorjahr-Juli", () => {
     const r = getRangeForOption("this-season", new Date(Date.UTC(2026, 2, 15)));
-    expect(r.from.toISOString()).toBe("2025-08-01T00:00:00.000Z");
-    expect(r.to.toISOString()).toBe("2026-08-01T00:00:00.000Z");
+    expect(r.from.toISOString()).toBe("2025-07-01T00:00:00.000Z");
+    expect(r.to.toISOString()).toBe("2026-07-01T00:00:00.000Z");
   });
 
-  it("getRangeForOption: this-season nach August → laufendes Jahr", () => {
+  it("getRangeForOption: this-season ab Juli → laufendes Jahr", () => {
     const r = getRangeForOption("this-season", new Date(Date.UTC(2026, 8, 15)));
-    expect(r.from.toISOString()).toBe("2026-08-01T00:00:00.000Z");
-    expect(r.to.toISOString()).toBe("2027-08-01T00:00:00.000Z");
+    expect(r.from.toISOString()).toBe("2026-07-01T00:00:00.000Z");
+    expect(r.to.toISOString()).toBe("2027-07-01T00:00:00.000Z");
+  });
+
+  it("getRangeForOption: 15. Juli fällt in die NEUE Saison (Grenzfall)", () => {
+    // Genau die Divergenz-Kante: eine Juli-Charge (Relegation/Nachholspiel) muss
+    // in dieselbe Saison fallen wie Dashboard-Tile und Saison-Rechnung.
+    const r = getRangeForOption("this-season", new Date(Date.UTC(2026, 6, 15)));
+    expect(r.from.toISOString()).toBe("2026-07-01T00:00:00.000Z");
+    expect(r.to.toISOString()).toBe("2027-07-01T00:00:00.000Z");
   });
 
   it("parseCustomRange: liefert null wenn from oder to fehlt", () => {

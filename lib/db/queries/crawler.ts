@@ -436,6 +436,23 @@ export async function updateMatchWithEvents(args: {
 }
 
 /**
+ * Schreibt NUR den `contentHash` fort, ohne Events/Score anzufassen. Für den
+ * Freeze-Fall (crawl-matches): trägt ein Spiel fakturierte Charges und driftet
+ * auf fussball.de, frieren wir Events/Score ein (kein Re-Import) — der Drift ist
+ * damit „gesehen/akzeptiert". Ohne diese Fortschreibung erkennt JEDER Folge-Crawl
+ * denselben Drift neu, re-flaggt die invoiced-Charges und macht ein operator-
+ * seitiges „Verwerfen" (dismissChargeCorrections) jede Nacht rückgängig
+ * (Endlos-Oszillation der Korrektur-Queue). Ein späterer ECHTER Re-Drift
+ * (anderer Hash) wird weiterhin erkannt.
+ */
+export async function markMatchDriftFrozen(
+  matchId: string,
+  contentHash: string
+): Promise<void> {
+  await db.update(matches).set({ contentHash }).where(eq(matches.id, matchId));
+}
+
+/**
  * Audit 2026-05-24 Phase 4 / Task 4.7: Player-Anonymisierung bei Opt-out.
  *
  * `players.blocked=true` wird vom Support gesetzt, wenn ein Spieler oder
