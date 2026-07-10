@@ -158,6 +158,23 @@ export default function DatenschutzPage() {
               <td className="p-2 border border-brand-neutral/40">Cookiefreie Webanalyse (siehe Abschnitt 7)</td>
               <td className="p-2 border border-brand-neutral/40">EU-Hosting, kein Drittlandtransfer</td>
             </tr>
+            <tr>
+              <td className="p-2 border border-brand-neutral/40">Apple Inc.</td>
+              <td className="p-2 border border-brand-neutral/40">USA / Irland</td>
+              <td className="p-2 border border-brand-neutral/40">
+                Nur in der iOS-App: Push-Benachrichtigungen (APNs, Gerätekennung),
+                „Sign in with Apple", In-App-Kauf-Abwicklung
+              </td>
+              <td className="p-2 border border-brand-neutral/40">SCC + DPF</td>
+            </tr>
+            <tr>
+              <td className="p-2 border border-brand-neutral/40">Google Ireland Ltd.</td>
+              <td className="p-2 border border-brand-neutral/40">Irland (Konzern-Mutter USA)</td>
+              <td className="p-2 border border-brand-neutral/40">
+                Optionaler Login „Mit Google fortfahren" (nur bei Nutzung)
+              </td>
+              <td className="p-2 border border-brand-neutral/40">EU-Vertragspartner; konzernintern SCC + DPF</td>
+            </tr>
           </tbody>
         </table>
       </div>

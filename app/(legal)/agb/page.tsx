@@ -133,6 +133,28 @@ export default function AgbPage() {
         zu zahlen, der dem Anteil der bis zum Widerruf bereits erbrachten
         Dienstleistungen entspricht.
       </p>
+      <div className="mt-4 rounded-xl border border-brand-neutral/40 bg-brand-off-white p-4 md:p-5">
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-night-navy/50">
+          Muster-Widerrufsformular
+        </p>
+        <p className="mt-2 text-sm text-brand-night-navy/70">
+          (Wenn du den Vertrag widerrufen willst, fülle dieses Formular aus und
+          sende es zurück — du kannst aber auch formlos per E-Mail widerrufen.)
+        </p>
+        <div className="mt-3 space-y-1.5 text-sm leading-relaxed">
+          <p>An Johannes Schartl — KickPact, Kleegarten, 69123 Heidelberg-Wieblingen, hello@kickpact.com:</p>
+          <p>
+            Hiermit widerrufe(n) ich/wir (*) den von mir/uns (*) abgeschlossenen
+            Vertrag über die Erbringung der folgenden Dienstleistung (*):
+            ____________________
+          </p>
+          <p>Bestellt am (*) / erhalten am (*): ____________________</p>
+          <p>Name des/der Verbraucher(s): ____________________</p>
+          <p>Anschrift des/der Verbraucher(s): ____________________</p>
+          <p>Datum, Unterschrift (nur bei Mitteilung auf Papier): ____________________</p>
+          <p className="text-brand-night-navy/55">(*) Unzutreffendes streichen.</p>
+        </div>
+      </div>
 
       <h2 className="mt-8 font-display font-black text-lg md:text-xl tracking-tight text-brand-night-navy">
         § 6 Vertragslaufzeit &amp; Kündigung

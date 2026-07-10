@@ -74,6 +74,16 @@ export async function addManualEvent(
   // greifen ließ). Neuanlage blockt paused (kein allowPaused).
   await assertTeamWriteAccess(target.team.id, { clubMinRole: "trainer" });
 
+  // Deaktivierte Mannschaft: der Crawler überspringt sie (crawler.ts), und die
+  // Deaktivierungs-Mail verspricht dem Verein „keine neuen Beiträge mehr". Ohne
+  // dieses Gate könnte ein Admin über ein manuelles Tor auf einem alten
+  // `finished`-Spiel die noch aktiven Pledges feuern → Charge trotz Zusage.
+  if (!target.team.isActive) {
+    throw new Error(
+      "Mannschaft ist deaktiviert — es können keine Ereignisse mehr gemeldet werden."
+    );
+  }
+
   // Bestimme teamSide via detectTeamSide-Helper — identisch zur Crawler-Pipeline,
   // damit Manual-Events nicht anders klassifiziert werden als Scraped-Events.
   // Audit 2026-05-24 Phase 2 Task 2.7: vorher split(" ")[0] → bei

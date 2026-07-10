@@ -3,10 +3,62 @@
 // https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    assertProdEnv();
     await import("./sentry.server.config");
   }
   if (process.env.NEXT_RUNTIME === "edge") {
     await import("./sentry.edge.config");
+  }
+}
+
+/**
+ * Zentrale Fail-Fast-Env-Validierung beim Boot (nur Prod, nur Node-Runtime).
+ * Ohne sie entscheidet jedes Subsystem selbst: DB/Auth/Mail crashen laut, aber
+ * Sentry/Redis/R2/Stripe degradieren STILL — ein vergessenes Env fällt erst im
+ * Incident auf. Hart-Pflicht wirft (Deploy schlägt sofort fehl); still-
+ * degradierende werden nur laut geloggt (im Coolify-Deploy-Log sichtbar).
+ */
+function assertProdEnv() {
+  if (process.env.NODE_ENV !== "production") return;
+
+  const hardRequired = [
+    "DATABASE_URL",
+    "BETTER_AUTH_SECRET",
+    "BETTER_AUTH_URL",
+    "NEXT_PUBLIC_BASE_URL",
+    "NEXT_PUBLIC_SITE_ENV",
+    "RESEND_API_KEY",
+    "MAIL_FROM",
+    "INNGEST_SIGNING_KEY"
+  ];
+  const missing = hardRequired.filter((k) => !process.env[k]);
+  if (missing.length > 0) {
+    throw new Error(
+      `[boot] Prod-Pflicht-Env fehlt: ${missing.join(", ")}. Deploy abgebrochen.`
+    );
+  }
+
+  // Origin-Konsistenz: better-auth verwirft sonst Requests / Cookie bindet an
+  // den falschen Host (App bleibt ausgeloggt, Mail-Links zeigen woanders hin).
+  if (process.env.BETTER_AUTH_URL !== process.env.NEXT_PUBLIC_BASE_URL) {
+    console.warn(
+      `[boot] ⚠️  BETTER_AUTH_URL (${process.env.BETTER_AUTH_URL}) != NEXT_PUBLIC_BASE_URL (${process.env.NEXT_PUBLIC_BASE_URL}) — beide MÜSSEN in Prod dieselbe Origin sein.`
+    );
+  }
+
+  // Still degradierende Vars: nur warnen, nicht Boot abbrechen.
+  const shouldSet: Record<string, string> = {
+    SENTRY_DSN: "Error-Tracking (Server) inaktiv",
+    NEXT_PUBLIC_SENTRY_DSN: "Error-Tracking (Client) inaktiv",
+    REDIS_URL: "Rate-Limit läuft nur In-Memory pro Instanz",
+    CLOUDFLARE_R2_ACCESS_KEY_ID: "PDFs/Uploads auf ephemerem Container-Speicher (Verlust bei Deploy)"
+  };
+  const degraded = Object.keys(shouldSet).filter((k) => !process.env[k]);
+  if (degraded.length > 0) {
+    console.warn(
+      "[boot] ⚠️  Optionale-aber-empfohlene Prod-Env fehlt:\n" +
+        degraded.map((k) => `  - ${k}: ${shouldSet[k]}`).join("\n")
+    );
   }
 }
 

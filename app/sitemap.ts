@@ -25,7 +25,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = (
     process.env.NEXT_PUBLIC_BASE_URL ?? "https://kickpact.com"
   ).replace(/\/$/, "");
-  const isProduction = baseUrl === "https://kickpact.com";
+  // An DIESELBE Bedingung wie robots.ts koppeln (NEXT_PUBLIC_SITE_ENV), nicht an
+  // einen Exakt-String-Vergleich der Base-URL — sonst fielen die dynamischen
+  // Profile bei einer abweichenden Schreibweise (www., Trailing Slash) still aus
+  // der Sitemap, während robots sie erlaubt (inkonsistent).
+  const isProduction = process.env.NEXT_PUBLIC_SITE_ENV === "production";
 
   const now = new Date();
 

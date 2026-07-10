@@ -486,7 +486,7 @@ export default function LandingPage() {
             />
             <FaqItem
               q="Sind die Beträge für den Sponsor steuerlich absetzbar?"
-              a="Ehrlich? Darum geht's beim Mitfiebern am wenigsten. Aber ja: Deine Beiträge sind freiwillige Unterstützung ohne Gegenleistung. Ist dein Verein gemeinnützig, kann er dir dafür eine Spendenbescheinigung ausstellen, frag dort einfach kurz nach. KickPact liefert dir dazu jeden Monat eine klare Zahlungsübersicht. Keine Steuerberatung, im Zweifel hilft das Finanzamt."
+              a="Ehrlich? Darum geht's beim Mitfiebern am wenigsten. KickPact macht dazu keine Zusagen und ist keine Steuerberatung. Du bekommst jeden Monat eine klare Zahlungsübersicht — ob und wie das steuerlich zählt, klärst du am besten direkt mit deinem Verein bzw. dem Finanzamt."
             />
             <FaqItem
               q="Kann ich einen Pact auf einen bestimmten Spieler binden?"
