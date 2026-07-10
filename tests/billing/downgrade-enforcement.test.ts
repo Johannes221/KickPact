@@ -68,9 +68,14 @@ async function seedClubWithSponsors(opts: {
   const sponsorIds: string[] = [];
   const base = new Date("2026-01-01T00:00:00Z").getTime();
   for (let i = 0; i < opts.sponsorCount; i++) {
+    // Jeder Sponsor ist eine eigene Person (sponsors.user_id ist UNIQUE) —
+    // mehrere Sponsoren auf demselben Team = mehrere User, nicht ein User mit
+    // mehreren Sponsor-Profilen.
+    const sponsorUserId = `u_dg_s${i}`;
+    await db.insert(users).values({ id: sponsorUserId, email: `dg-s${i}@example.com` });
     const [s] = await db
       .insert(sponsors)
-      .values({ userId: "u_dg", displayName: `Sponsor ${i + 1}`, type: "familie" })
+      .values({ userId: sponsorUserId, displayName: `Sponsor ${i + 1}`, type: "familie" })
       .returning();
     sponsorIds.push(s.id);
     const [p] = await db

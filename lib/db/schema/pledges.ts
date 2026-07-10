@@ -81,6 +81,25 @@ export const pledges = pgTable(
      */
     clonedFromPledgeId: text("cloned_from_pledge_id"),
     /**
+     * Idempotenz-Anker der Pledge-Erstellung aus dem Wizard. Der Client
+     * generiert diesen Key EINMAL pro Wizard-Session (Mount) und schickt ihn
+     * bei jedem Submit mit. Ein Doppelklick / Action-Retry trägt denselben Key
+     * → der zweite INSERT kollidiert am partiellen Unique-Index unten und wird
+     * idempotent zum bereits angelegten Pledge aufgelöst (createPledgeWithRules).
+     *
+     * Ersetzt das alte single-use-`markInvitationUsed`-Gate für Broadcast-
+     * Sponsor-Invites (jetzt mehrfach einlösbar, damit EIN Link an viele
+     * Sponsoren geteilt werden kann): der Schutz gegen zwei Pledges aus EINEM
+     * Submit hängt jetzt an diesem Key, nicht mehr am Verbrauch des Tokens.
+     *
+     * Scope bewusst (sponsorId, idempotencyKey), NICHT (sponsorId, teamId):
+     * ein Sponsor darf legitim mehrere Pacts auf demselben Team haben
+     * (verschiedene Wizard-Sessions → verschiedene Keys). NULL bei Alt-Rows und
+     * bei server-erzeugten Klonen (Saison-Renewal, eigener Guard) → Index ist
+     * partiell (WHERE idempotency_key IS NOT NULL).
+     */
+    idempotencyKey: text("idempotency_key"),
+    /**
      * True when this pledge was auto-paused by the Sommerpause cron (June 1).
      * The resume cron (August 1) only un-pauses pledges with this flag set,
      * so manually-paused pledges are never accidentally resumed.
@@ -105,7 +124,16 @@ export const pledges = pgTable(
     // aktive Clones inkl. Rules → doppelte Beiträge die ganze Saison.
     clonedFromUniqueIdx: uniqueIndex("pledges_cloned_from_unique_idx")
       .on(t.clonedFromPledgeId)
-      .where(sql`${t.clonedFromPledgeId} IS NOT NULL`)
+      .where(sql`${t.clonedFromPledgeId} IS NOT NULL`),
+    // Idempotenz-Schutz für die Wizard-Pledge-Erstellung: derselbe Submit
+    // (Doppelklick/Retry) trägt denselben idempotencyKey → der zweite INSERT
+    // kollidiert hier und wird in createPledgeWithRules idempotent aufgelöst.
+    // Scope (sponsorId, idempotencyKey), damit ein Sponsor mehrere legitime
+    // Pacts auf demselben Team behalten kann. Partiell, weil Alt-Rows/Klone
+    // NULL sind (mehrere NULLs würden sonst kollidieren).
+    idempotencyUniqueIdx: uniqueIndex("pledges_idempotency_unique_idx")
+      .on(t.sponsorId, t.idempotencyKey)
+      .where(sql`${t.idempotencyKey} IS NOT NULL`)
   })
 );
 

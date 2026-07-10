@@ -218,10 +218,30 @@ export async function findSponsorForUser(userId: string) {
   return s ?? null;
 }
 
-/** Legt ein Sponsor-Profil für einen User an und liefert die neue Sponsor-Row. */
+/**
+ * Legt ein Sponsor-Profil für einen User an und liefert die Sponsor-Row.
+ *
+ * Idempotent pro User (Race-Schutz, K1): zwei parallele Erst-Pact-Submits
+ * sehen beide `findSponsorForUser === null` und landen hier gleichzeitig. Ohne
+ * atomaren Upsert entstünden zwei Profile mit verschiedenen sponsorIds → der
+ * Pledge-Idempotenz-Index greift nicht → Doppel-Abrechnung. `onConflictDoNothing`
+ * am Unique-Index (sponsors.user_id) lässt nur EIN Profil entstehen; der
+ * Verlierer bekommt keine Zeile zurück und löst über den Reselect dieselbe
+ * stabile sponsorId auf.
+ */
 export async function createSponsorProfile(values: typeof sponsors.$inferInsert) {
-  const [sponsor] = await db.insert(sponsors).values(values).returning();
-  return sponsor;
+  const [sponsor] = await db
+    .insert(sponsors)
+    .values(values)
+    .onConflictDoNothing({ target: sponsors.userId })
+    .returning();
+  if (sponsor) return sponsor;
+  const existing = await findSponsorForUser(values.userId);
+  if (!existing) {
+    // Unique-Konflikt ohne auffindbares Profil ist ein echter Invariant-Bruch.
+    throw new Error("createSponsorProfile: user_id-Konflikt ohne bestehendes Profil");
+  }
+  return existing;
 }
 
 export interface SponsoredTeamRow {

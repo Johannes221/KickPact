@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, pgEnum, boolean } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
 import { teams, clubs } from "./clubs";
 import { users } from "./auth";
@@ -39,6 +39,18 @@ export const sponsorInvitations = pgTable("sponsor_invitations", {
   /** Optionale Empfänger-E-Mail (nur für team-member Invites informativ). */
   recipientEmail: text("recipient_email"),
   status: invitationStatusEnum("status").notNull().default("pending"),
+  /**
+   * Broadcast vs. 1:1. `false` (Default) = Broadcast-Sponsor-Link: mehrfach
+   * einlösbar, damit der Verein EINEN Link an viele Sponsoren teilen kann
+   * („am Stammtisch"); create-pledge verbraucht ihn NICHT, der Doppel-Submit-
+   * Schutz hängt an pledges.idempotencyKey. `true` = 1:1-Link (Inquiry-Accept
+   * via respondToInquiry): an genau einen Sponsor gemailt, bleibt single-use —
+   * create-pledge konsumiert ihn atomar via markInvitationUsed, damit der Kader
+   * (via /api/squad-Token) nicht durch Weiterleiten für Dritte sichtbar wird.
+   * team-member-Invites sind immer single-use (eigener Accept-Pfad, ignoriert
+   * dieses Feld).
+   */
+  singleUse: boolean("single_use").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   /**
    * Token läuft 30 Tage nach Erzeugung ab. Helper `createInvitation` setzt

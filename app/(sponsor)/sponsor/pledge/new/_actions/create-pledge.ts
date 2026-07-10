@@ -219,23 +219,32 @@ export async function createPledge(input: PledgeInput): Promise<CreatePledgeResu
     return new Date(`${year}-06-30T23:59:59Z`);
   })();
 
-  // Einladung ATOMAR als Gate konsumieren, BEVOR der Pledge entsteht: ein
-  // paralleler Doppelklick / Action-Retry bekommt hier `false` und bricht ab —
-  // sonst entstünden zwei aktive Pledges aus einer Einladung (je eigene
-  // pledgeRuleId → charges_unique_event_idx dedupliziert sie NICHT) → jedes
-  // Event würde die ganze Saison doppelt abgerechnet.
-  const consumed = await markInvitationUsed(parsed.invitationToken, user.id);
-  if (!consumed) {
-    return {
-      ok: false,
-      message: "Diese Einladung wurde bereits eingelöst."
-    };
+  // 1:1-Invite (Inquiry-Accept, singleUse=true): Token ATOMAR konsumieren,
+  // BEVOR der Pledge entsteht — ein paralleler Doppelklick bekommt hier `false`
+  // und bricht ab. Der Link ist an genau einen Sponsor gemailt und soll nicht
+  // durch Weiterleiten für Dritte einlösbar sein (Kader-Sichtbarkeit via
+  // /api/squad-Token).
+  //
+  // Broadcast-Invite (singleUse=false, Default): NICHT konsumieren — der Verein
+  // teilt EINEN Link an viele Sponsoren. Der Schutz gegen zwei Pledges aus EINEM
+  // Submit (je eigene pledgeRuleId → charges_unique_event_idx dedupliziert sie
+  // NICHT → Doppel-Abrechnung die ganze Saison) hängt jetzt am idempotencyKey,
+  // den createPledgeWithRules unten am partiellen Unique-Index erzwingt.
+  if (invitation.singleUse) {
+    const consumed = await markInvitationUsed(parsed.invitationToken, user.id);
+    if (!consumed) {
+      return {
+        ok: false,
+        message: "Diese Einladung wurde bereits eingelöst."
+      };
+    }
   }
 
   const result = await createPledgeWithRules({
     pledge: {
       sponsorId: sponsorId,
       teamId: invitationTeamId,
+      idempotencyKey: parsed.idempotencyKey,
       status: "active",
       startsAt: now,
       endsAt: parsed.endsAtSaisonEnd
