@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  */
 export default function PublicClubProfileLoading() {
   return (
-    <main className="mx-auto min-h-screen max-w-screen-sm bg-white pb-12">
+    <main className="mx-auto min-h-[100dvh] max-w-screen-sm bg-white pb-12">
       {/* Hero (dunkel) */}
       <div className="bg-brand-night-navy px-4 pb-6 pt-24">
         <Skeleton className="h-12 w-12 rounded-xl bg-white/10" />

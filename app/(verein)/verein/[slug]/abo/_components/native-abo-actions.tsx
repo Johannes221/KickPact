@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -159,6 +160,26 @@ export function NativeAboActions({
       {error && (
         <p className="text-sm font-medium text-brand-alert-red" role="alert">
           {error}
+        </p>
+      )}
+
+      {/* Apple Guideline 3.1.2: bei Auto-Renewable Subscriptions MÜSSEN am
+          Kaufpunkt Laufzeit + Auto-Renew-Hinweis + funktionierende Links zu
+          Nutzungsbedingungen (EULA) und Datenschutz stehen. */}
+      {upgradePlans.length > 0 && (
+        <p className="text-xs leading-relaxed text-brand-night-navy/55">
+          Monatsabo, das sich automatisch um einen Monat verlängert, bis du es
+          kündigst. Kündigung jederzeit in den iOS-Einstellungen (Apple-ID →
+          Abonnements), spätestens 24 Stunden vor Ablauf des laufenden Monats.
+          Mit dem Kauf akzeptierst du unsere{" "}
+          <Link href="/agb" className="underline">
+            Nutzungsbedingungen
+          </Link>{" "}
+          und{" "}
+          <Link href="/datenschutz" className="underline">
+            Datenschutzerklärung
+          </Link>
+          .
         </p>
       )}
     </div>

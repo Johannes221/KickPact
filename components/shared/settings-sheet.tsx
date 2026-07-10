@@ -27,6 +27,7 @@ import {
   SheetTitle
 } from "@/components/ui/sheet";
 import { useSession, signOut } from "@/lib/auth/client";
+import { deregisterPushToken } from "@/lib/platform/push";
 import { IdentityIcon } from "@/components/shared/identity-icon";
 import {
   activeIdentityFromPath,
@@ -320,6 +321,10 @@ export function SettingsSheet({
                   // Logout zurück auf den Onboarding-Vorscreen (Intro), nicht
                   // direkt in den Login — dafür das Intro-Flag zurücksetzen.
                   try {
+                    // DIESES Gerät von Push abmelden, bevor die Session endet
+                    // (sonst laufen die privaten Push auf geteiltem Gerät
+                    // weiter). No-Op außerhalb der iOS-App.
+                    await deregisterPushToken();
                     await signOut();
                   } finally {
                     try {

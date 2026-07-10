@@ -7,6 +7,7 @@ import {
   AccordionTrigger
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { isNativeAppRequest } from "@/lib/platform/native-server";
 
 import { PricingToggle } from "./_components/pricing-toggle";
 
@@ -99,7 +100,11 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
 // Page
 // ---------------------------------------------------------------------------
 
-export default function PreisePage() {
+export default async function PreisePage() {
+  // Apple Anti-Steering (3.1.3): in der iOS-App KEINE extern kaufbaren Preise/
+  // Pakete zeigen. Server-seitig erkennen (kein Client-Flash) und die
+  // preislastigen Blöcke (Toggle-Matrix, Vereins-Rechnung, FAQ-Preise) weglassen.
+  const isNative = await isNativeAppRequest();
   return (
     <main>
       {/* HERO + PRICING (kompakt, Pricing direkt sichtbar) */}
@@ -130,11 +135,24 @@ export default function PreisePage() {
 
           {/* Pricing-Toggle + Cards + Matrix direkt darunter */}
           <div className="mt-6 md:mt-8">
-            <PricingToggle />
+            {isNative ? (
+              <div className="mx-auto max-w-md rounded-2xl border border-brand-night-navy/15 bg-brand-off-white p-5 text-center">
+                <p className="text-sm leading-relaxed text-brand-night-navy/75">
+                  Preise &amp; Pakete siehst du im Browser. In der App ist die
+                  Buchung nicht verfügbar — du kannst KickPact aber{" "}
+                  <strong>30 Tage kostenlos testen</strong>.
+                </p>
+              </div>
+            ) : (
+              <PricingToggle />
+            )}
           </div>
         </div>
       </section>
 
+      {/* CLUB MATH + FAQ: preislastig → in der iOS-App ausblenden (3.1.3) */}
+      {!isNative && (
+        <>
       {/* CLUB MATH BLOCK */}
       <section className="bg-brand-off-white border-y border-brand-neutral/40">
         <div className="mx-auto max-w-6xl px-5 md:px-6 py-14 md:py-20">
@@ -284,7 +302,7 @@ export default function PreisePage() {
             Häufige <span className="text-accent">Fragen</span>
           </h2>
           <p className="mt-3 text-sm md:text-base text-brand-night-navy/65">
-            Noch was offen? <Link href="mailto:hallo@kickpact.de" className="text-accent-dark font-semibold underline-offset-4 hover:underline">Mail an hallo@kickpact.de</Link>. Wir antworten innerhalb von 24 h.
+            Noch was offen? <Link href="mailto:hello@kickpact.com" className="text-accent-dark font-semibold underline-offset-4 hover:underline">Mail an hello@kickpact.com</Link>. Wir antworten innerhalb von 24 h.
           </p>
         </div>
 
@@ -311,6 +329,8 @@ export default function PreisePage() {
           Juni/Juli kostenlos.
         </p>
       </section>
+        </>
+      )}
 
       {/* FINAL CTA */}
       <section className="relative overflow-hidden bg-white border-t border-brand-neutral/40">

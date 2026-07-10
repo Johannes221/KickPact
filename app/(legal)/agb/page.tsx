@@ -27,8 +27,8 @@ export default function AgbPage() {
         Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Verträge
         zwischen Johannes Schartl — KickPact (im Folgenden „KickPact" oder
         „wir") und den Nutzern der Plattform{" "}
-        <a className="text-accent hover:underline" href="https://kickpact.de">
-          kickpact.de
+        <a className="text-accent hover:underline" href="https://kickpact.com">
+          kickpact.com
         </a>{" "}
         (im Folgenden „Nutzer"). Abweichende oder ergänzende Bedingungen des
         Nutzers werden nur dann Vertragsbestandteil, wenn wir ihrer Geltung

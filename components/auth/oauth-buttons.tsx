@@ -117,9 +117,7 @@ export function OAuthButtons({ mode, enabled, role }: OAuthButtonsProps) {
         // jedem Tap einen neuen NotificationCenter-Observer registrieren.
         // clientId = iOS-OAuth-Client (aud des idTokens auf iOS); serverClientId
         // (aus capacitor.config.ts) macht den Token zusätzlich fürs Backend
-        // gültig (better-auth akzeptiert beide Audiences). Hinweis: Native Google
-        // ist aktuell per Server-Gate ausgeblendet — dieser Block läuft erst,
-        // sobald der Flow auf Gerät verifiziert ist.
+        // gültig (better-auth akzeptiert beide Audiences).
         if (!googleInitPromise) {
           googleInitPromise = GoogleAuth.initialize({
             clientId: GOOGLE_IOS_CLIENT_ID,
@@ -150,7 +148,7 @@ export function OAuthButtons({ mode, enabled, role }: OAuthButtonsProps) {
       // statt Web-OAuth (das im WKWebView nach Safari springen würde, WS-3).
       // Das native identityToken geht direkt an better-auth (Audience-Check
       // gegen APPLE_BUNDLE_ID=com.kickpact.app serverseitig).
-      if (provider === "apple" && isNativeApp()) {
+      if (provider === "apple" && isNativeApp() && hasCapacitorBridge()) {
         const { SignInWithApple } = await import("@capacitor-community/apple-sign-in");
         const result = await SignInWithApple.authorize({
           clientId: "com.kickpact.app",
@@ -163,6 +161,16 @@ export function OAuthButtons({ mode, enabled, role }: OAuthButtonsProps) {
         if (error) throw new Error(error.message ?? "Apple-Login fehlgeschlagen");
         window.location.assign(callbackURL);
         return;
+      }
+      // In der nativen App NIEMALS auf Web-OAuth zurückfallen: Google/Apple
+      // blocken OAuth im WKWebView („403 disallowed_useragent" bzw. Sprung nach
+      // Safari mit Cookie-Verlust). Ist die Bridge beim Tap noch nicht bereit
+      // (remote geladene Seite, halb-initialisiert), lieber einen freundlichen
+      // Retry-Hinweis werfen als den Nutzer in den kaputten Web-Flow zu schicken.
+      if (isNativeApp()) {
+        throw new Error(
+          "Anmeldung noch nicht bereit — bitte einen Moment warten und erneut tippen."
+        );
       }
       await signIn.social({ provider, callbackURL });
       // signIn.social löst Browser-Redirect zu Provider aus,

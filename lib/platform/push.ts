@@ -47,19 +47,58 @@ export async function getPushPermission(): Promise<PushPermission> {
 }
 
 let listenersBound = false;
+/**
+ * Zuletzt registrierter APNs-Token. Wird beim Logout gebraucht, um genau DIESES
+ * Gerät serverseitig abzumelden (`deregisterPushToken`) — sonst liefen die
+ * privaten Push des ausgeloggten Nutzers auf einem geteilten Gerät (Familien-
+ * iPad) weiter (DSGVO-Leak).
+ */
+let lastToken: string | null = null;
 
-/** Registration-/Error-Listener (idempotent) + APNs-Registrierung anstoßen. */
+/** Registration-/Error-/Tap-Listener (idempotent) + APNs-Registrierung anstoßen. */
 async function registerAndForwardToken(P: PushPlugin): Promise<void> {
   if (!listenersBound) {
     listenersBound = true;
     await P.addListener("registration", (token) => {
+      lastToken = token.value;
       void postToken(token.value);
     });
     await P.addListener("registrationError", (err) => {
       console.error("[push] registration error", err);
     });
+    // Deep-Link beim Antippen einer Notification: der Server legt das Ziel als
+    // `data.link` in die APNs-Payload (lib/notifications/deliver.ts). Ohne
+    // diesen Handler landet der Nutzer beim Kaltstart auf `/` statt beim Tor/
+    // der Rechnung — der Retention-Sinn von Push verpufft. Da die App die
+    // Web-App remote lädt, reicht clientseitiges `location.assign`.
+    await P.addListener("pushNotificationActionPerformed", (action) => {
+      const link = action.notification?.data?.link;
+      if (typeof link === "string" && link.startsWith("/")) {
+        window.location.assign(link);
+      }
+    });
   }
   await P.register();
+}
+
+/**
+ * Meldet DIESES Gerät serverseitig ab (Logout / Push-Opt-out). Muss VOR dem
+ * `signOut()` laufen, solange die Session-Cookie noch trägt (die DELETE-Route
+ * ist session-gated). No-Op außerhalb der App oder ohne bekannten Token.
+ */
+export async function deregisterPushToken(): Promise<void> {
+  if (!isNativeApp() || !lastToken) return;
+  try {
+    await fetch("/api/native/push-token", {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token: lastToken }),
+      credentials: "include"
+    });
+    lastToken = null;
+  } catch (err) {
+    console.error("[push] deregister failed", err);
+  }
 }
 
 /**

@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "@/lib/auth/client";
+import { deregisterPushToken } from "@/lib/platform/push";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -336,6 +337,10 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
             // behält den User im Cache → soft-refresh zeigt weiter "angemeldet".
             // window.location erzwingt frische Cookie-Auswertung + Store-Reset.
             try {
+              // Erst DIESES Gerät von Push abmelden (solange die Session-Cookie
+              // noch trägt), sonst laufen die privaten Push des Nutzers auf einem
+              // geteilten Gerät weiter. No-Op außerhalb der iOS-App.
+              await deregisterPushToken();
               await signOut();
             } finally {
               window.location.href = "/";

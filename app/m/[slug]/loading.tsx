@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  */
 export default function PublicTeamProfileLoading() {
   return (
-    <main className="mx-auto min-h-screen max-w-lg pb-16">
+    <main className="mx-auto min-h-[100dvh] max-w-lg pb-16">
       {/* Hero (dunkel) */}
       <div className="bg-brand-night-navy px-4 pb-8 pt-10">
         <div className="flex items-center gap-4">

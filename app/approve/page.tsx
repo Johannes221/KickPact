@@ -38,7 +38,7 @@ export default async function ApprovePage({ searchParams }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-brand-off-white flex items-center justify-center px-5 py-12">
+    <main className="min-h-[100dvh] bg-brand-off-white flex items-center justify-center px-5 py-12">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <span className="font-display font-black text-2xl tracking-tight text-brand-night-navy">

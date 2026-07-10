@@ -1,4 +1,4 @@
-import { registerPlugin } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { isIOSApp } from "@/lib/platform/native";
 
 /**
@@ -39,22 +39,58 @@ function plugin(): IAPPluginShape {
   if (!isIOSApp()) {
     throw new Error("In-App-Käufe sind nur in der iOS-App verfügbar.");
   }
+  // Versions-Skew (Remote-WebView): die Web-App wird bei jedem Deploy neu
+  // geladen, die installierte native App bleibt eingefroren. Fehlt das IAPPlugin
+  // in dieser App-Version, wirft die Bridge sonst einen rohen „not implemented"-
+  // Fehler mitten im Kauf. Früh + klar abfangen → App-Update statt Kryptik.
+  if (!Capacitor.isPluginAvailable("IAPPlugin")) {
+    throw new Error(
+      "Diese App-Version unterstützt In-App-Käufe noch nicht — bitte aktualisiere die KickPact-App im App Store."
+    );
+  }
   return IAPPlugin;
 }
 
+/**
+ * Übersetzt rohe „not implemented on ios"-Bridge-Fehler (eine später ergänzte
+ * Plugin-Methode, die in der installierten App-Version fehlt) in eine klare
+ * App-Update-Aufforderung. Wirft immer.
+ */
+function throwAsAppUpdate(err: unknown): never {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (/not implemented|unimplemented|not available/i.test(msg)) {
+    throw new Error(
+      "Diese Aktion braucht eine neuere App-Version — bitte aktualisiere die KickPact-App im App Store."
+    );
+  }
+  throw err instanceof Error ? err : new Error(msg);
+}
+
 export async function getProducts(productIds: string[]): Promise<AppleProduct[]> {
-  const { products } = await plugin().getProducts({ productIds });
-  return products;
+  try {
+    const { products } = await plugin().getProducts({ productIds });
+    return products;
+  } catch (e) {
+    throwAsAppUpdate(e);
+  }
 }
 
 /** Startet das native StoreKit-Sheet; gibt das signierte JWS zurück. */
 export async function purchase(productId: string): Promise<AppleTransaction> {
-  return plugin().purchase({ productId });
+  try {
+    return await plugin().purchase({ productId });
+  } catch (e) {
+    throwAsAppUpdate(e);
+  }
 }
 
 export async function restore(): Promise<AppleTransaction[]> {
-  const { restored } = await plugin().restore();
-  return restored;
+  try {
+    const { restored } = await plugin().restore();
+    return restored;
+  } catch (e) {
+    throwAsAppUpdate(e);
+  }
 }
 
 /** Kauf + sofortige Server-Verifikation in einem Schritt. */

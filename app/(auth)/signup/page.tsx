@@ -136,13 +136,14 @@ export default async function SignupPage({
 
   // Google: in der nativen App über das @codetrix-GoogleAuth-Plugin (iosClientId
   // aus capacitor.config — kein Web-Env nötig, Bridge-Gate im Button); im Web
-  // nur mit Web-OAuth-Creds. Apple nativ, Magic-Link als Mail-Weg.
+  // nur mit Web-OAuth-Creds. Apple läuft in der App über den NATIVEN Flow (nur
+  // Entitlement, kein Web-Secret) → in der App immer anbieten (Guideline 4.8).
   const isNativeApp = ((await headers()).get("user-agent") ?? "").includes("KickPactApp");
   const oauthEnabled = {
     google: isNativeApp
       ? true
       : Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
-    apple: isAppleConfigured()
+    apple: isNativeApp ? true : isAppleConfigured()
   };
   const anyOauth = oauthEnabled.google || oauthEnabled.apple;
 
@@ -201,19 +202,25 @@ export default async function SignupPage({
               <Suspense fallback={<div className="h-20" />}>
                 <OAuthButtons mode="signup" enabled={oauthEnabled} role={role} />
               </Suspense>
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-ios-separator" />
+              {/* Magic-Link nur im Web — in der iOS-App landet der Mail-Link in
+                  Safari und das Session-Cookie nie in der WKWebView. */}
+              {!isNativeApp && (
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-ios-separator" />
+                  </div>
+                  <div className="relative flex justify-center text-[12px] font-medium uppercase tracking-[0.08em]">
+                    <span className="bg-white px-3 text-ios-label-tertiary">oder per Mail</span>
+                  </div>
                 </div>
-                <div className="relative flex justify-center text-[12px] font-medium uppercase tracking-[0.08em]">
-                  <span className="bg-white px-3 text-ios-label-tertiary">oder per Mail</span>
-                </div>
-              </div>
+              )}
             </>
           )}
-          <Suspense fallback={<div className="h-32" />}>
-            <MagicLinkForm mode="signup" role={role} />
-          </Suspense>
+          {!isNativeApp && (
+            <Suspense fallback={<div className="h-32" />}>
+              <MagicLinkForm mode="signup" role={role} />
+            </Suspense>
+          )}
           <p className="mt-6 text-center text-[15px] text-ios-label-secondary">
             Schon dabei?{" "}
             <Link href="/login" className="font-medium text-accent-dark hover:underline">
