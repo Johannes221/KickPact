@@ -16,7 +16,8 @@ export type StornoResult =
         | "is_storno"
         | "wrong_status"
         | "no_pdf"
-        | "no_charges";
+        | "no_charges"
+        | "legacy_ust_partial";
     };
 
 function extractInvoiceNumber(pdfUrl: string | null): string | null {
@@ -74,6 +75,17 @@ async function buildReversal(
 
   const partial = opts.subsetChargeIds !== null;
   const itemSum = items.reduce((s, i) => s + i.amountCents, 0);
+
+  // Alt-Belege VOR dem Privatpersonen-Pivot (2026-07-06) tragen
+  // totalCents = Σ Netto-Zeilen + 19 % USt. Eine Teil-Gutschrift würde nur die
+  // Netto-Zeilensumme erstatten und den anteiligen USt-Betrag unterschlagen
+  // (Unter-Erstattung). Solche Belege daher nur VOLLSTÄNDIG stornieren.
+  if (partial) {
+    const allItemSum = allItems.reduce((s, i) => s + i.amountCents, 0);
+    if (orig.totalCents !== allItemSum) {
+      return { ok: false, reason: "legacy_ust_partial" };
+    }
+  }
   // Vollstorno erstattet den exakt gebuchten Betrag (inkl. evtl. Alt-USt);
   // Teil-Gutschrift erstattet genau die Summe der betroffenen Zeilen.
   const reversedTotal = partial ? -itemSum : -orig.totalCents;

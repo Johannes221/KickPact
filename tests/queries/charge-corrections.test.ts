@@ -63,7 +63,7 @@ describe.skipIf(isIntegrationDbDisabled)("charge-corrections", () => {
     await closeTestDb();
   });
 
-  it("flags invoiced charges (keeps them invoiced) and cancels non-invoiced on match drift", async () => {
+  it("freezes: flags invoiced charges and PRESERVES non-invoiced when the match already has invoiced charges", async () => {
     const db = await getTestDb();
     const { teamIds } = await seedClubFromFixture("dossenheim");
     const { pledgeId, ruleId } = await seedSponsorWithPledge({
@@ -100,17 +100,119 @@ describe.skipIf(isIntegrationDbDisabled)("charge-corrections", () => {
       })
       .returning();
 
-    await invalidateChargesForMatch(m.id, "match_updated");
+    // Crawler-Freeze-Pfad (freezeNonInvoicedIfInvoiced): der Crawler überspringt
+    // danach Re-Import + Re-Emit → non-invoiced dürfen NICHT storniert werden.
+    const result = await invalidateChargesForMatch(m.id, "match_updated", {
+      freezeNonInvoicedIfInvoiced: true
+    });
 
     const [c] = await db.select().from(charges).where(eq(charges.id, confirmed!.id));
     const [i] = await db.select().from(charges).where(eq(charges.id, invoiced!.id));
 
-    // non-invoiced → cancelled, never flagged
-    expect(c!.status).toBe("cancelled");
+    // Freeze-Fall (Review-Befund 2026-07-10): das Spiel hat invoiced-Charges →
+    // ALLES einfrieren. Die non-invoiced Charge bleibt ERHALTEN (früher wurde sie
+    // still storniert und ging verloren, weil der Crawler den Re-Emit überspringt
+    // und die invoiced-only Review-Queue sie nicht zeigt).
+    expect(c!.status).toBe("confirmed");
     expect(c!.correctionFlaggedAt).toBeNull();
     // invoiced → stays invoiced (money already billed) BUT now flagged
     expect(i!.status).toBe("invoiced");
     expect(i!.correctionFlaggedAt).toBeInstanceOf(Date);
+    expect(result.frozenInvoiced).toBe(1);
+    expect(result.cancelledNonInvoiced).toBe(0);
+  });
+
+  it("freeze is idempotent: a second drift-invalidation does not move correctionFlaggedAt", async () => {
+    const db = await getTestDb();
+    const { teamIds } = await seedClubFromFixture("dossenheim");
+    const { pledgeId, ruleId } = await seedSponsorWithPledge({
+      sponsorKey: "corr-idem",
+      teamDbId: teamIds.herren1!,
+      triggerType: "goal_total",
+      amountCents: 500
+    });
+    const m = await seedMatch(teamIds.herren1!, "IDEM001");
+    const [invoiced] = await db
+      .insert(charges)
+      .values({
+        pledgeId,
+        pledgeRuleId: ruleId,
+        matchId: m.id,
+        goalIndex: 1,
+        triggerType: "goal_total",
+        amountCents: 500,
+        status: "invoiced"
+      })
+      .returning();
+
+    const first = await invalidateChargesForMatch(m.id, "match_updated", {
+      freezeNonInvoicedIfInvoiced: true
+    });
+    const [afterFirst] = await db.select().from(charges).where(eq(charges.id, invoiced!.id));
+    const stamp = afterFirst!.correctionFlaggedAt;
+    expect(stamp).toBeInstanceOf(Date);
+
+    // Zweiter Crawl desselben (weiter eingefrorenen) Spiels: Guard feuert erneut
+    // (frozenInvoiced bleibt > 0), aber der Timestamp darf NICHT wandern.
+    const second = await invalidateChargesForMatch(m.id, "match_updated", {
+      freezeNonInvoicedIfInvoiced: true
+    });
+    const [afterSecond] = await db.select().from(charges).where(eq(charges.id, invoiced!.id));
+
+    expect(first.frozenInvoiced).toBe(1);
+    expect(second.frozenInvoiced).toBe(1);
+    expect(afterSecond!.correctionFlaggedAt?.getTime()).toBe(stamp?.getTime());
+  });
+
+  // Backfill-team-side-Korrektur ruft OHNE Freeze-Flag: die non-invoiced
+  // Alt-Charges (falsche Seite) MÜSSEN storniert werden, bevor auf der korrekten
+  // Seite neu evaluiert wird — sonst doppelt gezählt. Der Default darf dieses
+  // Verhalten nicht verändern.
+  it("default (Backfill-Modus): cancels non-invoiced even when the match has invoiced charges", async () => {
+    const db = await getTestDb();
+    const { teamIds } = await seedClubFromFixture("dossenheim");
+    const { pledgeId, ruleId } = await seedSponsorWithPledge({
+      sponsorKey: "corr-backfill",
+      teamDbId: teamIds.herren1!,
+      triggerType: "goal_total",
+      amountCents: 500
+    });
+    const m = await seedMatch(teamIds.herren1!, "BACKFILL001");
+    const [confirmed] = await db
+      .insert(charges)
+      .values({
+        pledgeId,
+        pledgeRuleId: ruleId,
+        matchId: m.id,
+        goalIndex: 1,
+        triggerType: "goal_total",
+        amountCents: 500,
+        status: "confirmed",
+        confirmedAt: new Date()
+      })
+      .returning();
+    const [invoiced] = await db
+      .insert(charges)
+      .values({
+        pledgeId,
+        pledgeRuleId: ruleId,
+        matchId: m.id,
+        goalIndex: 2,
+        triggerType: "goal_total",
+        amountCents: 500,
+        status: "invoiced"
+      })
+      .returning();
+
+    const result = await invalidateChargesForMatch(m.id, "team_side_corrected");
+
+    const [c] = await db.select().from(charges).where(eq(charges.id, confirmed!.id));
+    const [i] = await db.select().from(charges).where(eq(charges.id, invoiced!.id));
+    expect(c!.status).toBe("cancelled");
+    expect(i!.status).toBe("invoiced");
+    expect(i!.correctionFlaggedAt).toBeInstanceOf(Date);
+    expect(result.frozenInvoiced).toBe(1);
+    expect(result.cancelledNonInvoiced).toBe(1);
   });
 
   it("does not flag anything when the drifted match has no invoiced charges", async () => {

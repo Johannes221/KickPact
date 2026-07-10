@@ -169,10 +169,20 @@ export async function listSeasonEndChargesForWindow(opts: {
         eq(charges.status, "confirmed"),
         eq(charges.billingCycleSnapshot, "season_end"),
         eq(sponsors.billingCycle, "season_end"),
+        // Untere Grenze für alle (keine uralten Charges einsammeln).
         // Datum als ISO-String binden: COALESCE(...) ist ein rohes SQL-Fragment
         // ohne Spalten-Typ (vgl. getMonthlyChargedCents in evaluation.ts).
         sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${opts.windowStart.toISOString()}`,
-        sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) < ${opts.windowEnd.toISOString()}`
+        // Saison-ZIEL-Charges (saison gesetzt, matchId null) entstehen erst bei
+        // der Ergebnis-Eingabe — die passiert oft ERST am/nach dem 1.7. (Relegation
+        // Ende Juni). Mit fester oberer Fenstergrenze (< 1.7.) fielen sie raus und
+        // wurden ~12 Monate zu spät (oder nie) fakturiert. Für sie daher KEINE
+        // obere Grenze; nur die laufenden Match-Charges (saison null) bleiben im
+        // Saison-Fenster.
+        or(
+          isNotNull(charges.saison),
+          sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) < ${opts.windowEnd.toISOString()}`
+        )
       )
     );
   return rows;
@@ -254,15 +264,54 @@ export function groupChargesBySponsorClub<T extends { sponsorId: string; clubId:
  * Deshalb werden betroffene `invoiced`-Charges für die Admin-Review-Queue
  * markiert (`correctionFlaggedAt`); ein Operator entscheidet dort über eine
  * Teil-Gutschrift (siehe listChargesPendingCorrection / createCorrectionInvoice).
+ *
+ * `opts.freezeNonInvoicedIfInvoiced` (Review-Befund 2026-07-10): steuert, was mit
+ * den NICHT-fakturierten Charges passiert, wenn das Spiel invoiced-Charges trägt.
+ * - `false` (Default): non-invoiced werden IMMER storniert. Für Aufrufer, die im
+ *   Anschluss selbst neu evaluieren (Backfill-team-side-Korrektur) — die falschen
+ *   Alt-Charges MÜSSEN weg, sonst doppelt (alte Seite + neu evaluierte Seite).
+ * - `true`: trägt das Spiel invoiced-Charges → VOLL einfrieren, non-invoiced
+ *   UNANGETASTET lassen. Für den Crawler-Update-Pfad, der danach den Re-Import +
+ *   Re-Emit überspringt (Freeze-Guard). Sonst gingen non-invoiced Charges still
+ *   verloren (kein Re-Emit erzeugt sie neu; die invoiced-only Review-Queue zeigt
+ *   sie nicht — z.B. eine nach dem Rechnungslauf gemeldete Manual-Charge).
  */
 export async function invalidateChargesForMatch(
   matchId: string,
-  reason: string
+  reason: string,
+  opts: { freezeNonInvoicedIfInvoiced?: boolean } = {}
 ): Promise<{ frozenInvoiced: number; cancelledNonInvoiced: number }> {
   // Audit 2026-05-24 Task 2.3: Approvals MÜSSEN auch expired werden, sonst
   // kann der Sponsor einen cancelled Charge via "Bestätigen" wiederbeleben
   // (siehe approvals.confirmApproval). Atomar in einer Transaction.
   return db.transaction(async (tx) => {
+    // Freeze-Modus: NUR wenn der Aufrufer ihn anfordert UND das Spiel bereits
+    // fakturierte Charges trägt. Dann alles einfrieren — invoiced nur flaggen,
+    // non-invoiced unangetastet (Begründung siehe Docstring).
+    if (opts.freezeNonInvoicedIfInvoiced) {
+      const invoicedRows = await tx
+        .select({ id: charges.id, flagged: charges.correctionFlaggedAt })
+        .from(charges)
+        .where(and(eq(charges.matchId, matchId), eq(charges.status, "invoiced")));
+
+      if (invoicedRows.length > 0) {
+        // Idempotent flaggen: nur noch nicht geflaggte Charges, damit der
+        // Timestamp bei wiederholten Crawls desselben eingefrorenen Spiels nicht
+        // wandert. frozenInvoiced = ANZAHL invoiced (nicht nur neu geflaggte),
+        // damit der Freeze-Guard bei JEDEM Folge-Crawl feuert.
+        const unflagged = invoicedRows.filter((r) => r.flagged === null).map((r) => r.id);
+        if (unflagged.length > 0) {
+          await tx
+            .update(charges)
+            .set({ correctionFlaggedAt: new Date() })
+            .where(inArray(charges.id, unflagged));
+        }
+        return { frozenInvoiced: invoicedRows.length, cancelledNonInvoiced: 0 };
+      }
+    }
+
+    // Standard-Pfad: non-invoiced stornieren (Re-Eval kann neu zählen), invoiced
+    // für die Review-Queue flaggen, pending Approvals expiren.
     const affectedCharges = await tx
       .select({ matchEventId: charges.matchEventId })
       .from(charges)
@@ -273,11 +322,6 @@ export async function invalidateChargesForMatch(
       .set({ status: "cancelled", cancelledReason: reason, cancelledAt: new Date() })
       .where(and(eq(charges.matchId, matchId), ne(charges.status, "invoiced")));
 
-    // Daten-Integrität (2026-07-07): bereits fakturierte Charges dieses Spiels
-    // für die Admin-Review-Queue markieren. Der Aufrufer ruft diese Funktion
-    // nur bei echtem Hash-Drift (crawl-matches.ts) — das Spiel hat sich also
-    // tatsächlich geändert, jede invoiced-Charge darauf ist jetzt verdächtig.
-    // Status bleibt `invoiced` (nicht stornieren); nur das Flag wird gesetzt.
     const frozen = await tx
       .update(charges)
       .set({ correctionFlaggedAt: new Date() })
@@ -299,13 +343,6 @@ export async function invalidateChargesForMatch(
         );
     }
 
-    // frozenInvoiced steuert den Freeze-Guard im Crawler: sind schon Charges
-    // fakturiert, DARF der Aufrufer die Scraped-Events NICHT löschen/neu
-    // schreiben (updateMatchWithEvents) — der FK `matchEventId onDelete:set null`
-    // würde die eingefrorenen invoiced-Charges verwaisen → sie fallen in den
-    // partiellen Unique-Index (charges_unique_match_trigger_idx) und
-    // kollidieren (Crash) bzw. verlieren ihre Idempotenz-Identität
-    // (Doppelbuchung bei Re-Eval). Korrektur läuft manuell über die Review-Queue.
     return {
       frozenInvoiced: frozen.length,
       cancelledNonInvoiced: affectedCharges.length

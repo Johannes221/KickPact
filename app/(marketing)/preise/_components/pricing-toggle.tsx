@@ -260,7 +260,7 @@ export function PricingToggle() {
       </div>
 
       <p className="mt-6 md:mt-8 text-center text-xs md:text-sm text-brand-night-navy/60 max-w-2xl mx-auto">
-        Alle Preise zzgl. USt. (19 %). <strong className="font-semibold text-brand-night-navy/80">Monatsabo jederzeit zum Monatsende kündbar.</strong> Saison-Pass mit
+        Alle Preise sind Endpreise (keine USt., § 19 UStG). <strong className="font-semibold text-brand-night-navy/80">Monatsabo jederzeit zum Monatsende kündbar.</strong> Saison-Pass mit
         kostenloser Sommerpause (Juni/Juli). Trial 30 Tage, keine Kreditkarte
         beim Start.
       </p>

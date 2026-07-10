@@ -80,4 +80,28 @@ describe("goalTotal Score-Deckel (B7)", () => {
     );
     expect(proposals).toHaveLength(2);
   });
+
+  it("Teil-Spielbericht: weniger GESCRAPTE Tor-Events als Endstand → Differenz auffüllen", () => {
+    // 3:0, aber nur 2 verlinkte Torschützen (3. Tor unbekannter Schütze / Eigentor
+    // ohne Spielerlink). Muss 3 Charges ergeben, nicht 2 (sonst Unterberechnung).
+    const proposals = evaluateTriggers(
+      match([goalEvent("e1", "scraped", 15), goalEvent("e2", "scraped", 55)], 3),
+      [RULE]
+    );
+    expect(proposals).toHaveLength(3);
+    expect(proposals.filter((p) => p.matchEventId !== null)).toHaveLength(2);
+    const fill = proposals.filter((p) => p.matchEventId === null);
+    expect(fill).toHaveLength(1);
+    expect(fill[0].requiresApproval).toBe(false);
+  });
+
+  it("Teil-Spielbericht MIT manuellem Tor → kein Auto-Fill (C1-Approval-Schutz)", () => {
+    // missing=1, aber ein manuell gemeldetes Tor ist dabei → Endstand
+    // club-beeinflussbar, Auto-Fill ohne Freigabe wäre ein Bypass → nicht auffüllen.
+    const proposals = evaluateTriggers(
+      match([goalEvent("e1", "scraped", 15), goalEvent("e2", "manual", 55)], 4),
+      [RULE]
+    );
+    expect(proposals).toHaveLength(2);
+  });
 });

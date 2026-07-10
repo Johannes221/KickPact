@@ -115,9 +115,11 @@ export const pledgeRuleInputSchema = z
           path: ["capEur"]
         });
       }
-      return;
-    }
-    if (val.capEur !== undefined && val.capPeriod === undefined) {
+      // KEIN early return: die Saison-Pflicht-Params (season_table_position /
+      // season_cup_round, s.u. validateTriggerParams) müssen auch auf dem
+      // Builder-Pfad greifen — sonst ließe sich eine Saison-Wette ohne
+      // Platzierungs-Bereich / Pokalrunde anlegen (garantiert-tote Wette).
+    } else if (val.capEur !== undefined && val.capPeriod === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Bitte Cap-Periode wählen (pro Monat oder pro Saison).",
@@ -172,6 +174,32 @@ export function validateTriggerParams(
     const id = (params.playerId ?? params.player_id) as string | undefined;
     if ((!name || !name.trim()) && (!id || !id.trim())) {
       return "Bitte einen Spieler auswählen oder Namen eingeben.";
+    }
+  }
+  // Saison-Trigger mit Pflicht-Params: ohne diese feuert isTriggerHit immer
+  // `false` (tote Wette — der Sponsor glaubt gewettet zu haben, es entsteht nie
+  // eine Charge). Engine liest camelCase + snake_case (evaluate-season.ts).
+  if (triggerType === "season_table_position") {
+    const toNum = (v: unknown) =>
+      typeof v === "string" ? Number(v) : (v as number | undefined);
+    const minPos = toNum(params.minPosition ?? params.min_pos);
+    const maxPos = toNum(params.maxPosition ?? params.max_pos);
+    if (
+      minPos == null ||
+      maxPos == null ||
+      !Number.isFinite(minPos) ||
+      !Number.isFinite(maxPos)
+    ) {
+      return "Bitte den Platzierungs-Bereich angeben (von Platz X bis Platz Y).";
+    }
+    if (minPos < 1 || maxPos < 1 || minPos > maxPos) {
+      return "Ungueltiger Platzierungs-Bereich (ab Platz 1, von-Wert kleiner-gleich bis-Wert).";
+    }
+  }
+  if (triggerType === "season_cup_round") {
+    const round = (params.minRound ?? params.min_round) as string | undefined;
+    if (!round || !String(round).trim()) {
+      return "Bitte die mindestens zu erreichende Pokalrunde angeben.";
     }
   }
   return null;

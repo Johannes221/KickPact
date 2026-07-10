@@ -48,7 +48,7 @@ export const TRIGGER_META: Record<TriggerType, TriggerMeta> = {
   win: { label: "Pro Sieg", emoji: "🏆", scope: "match", auto: true },
   loss: { label: "Pro Niederlage", emoji: "😬", scope: "match", auto: true },
   draw: { label: "Pro Unentschieden", emoji: "🤝", scope: "match", auto: true },
-  clean_sheet: { label: "Pro Zu-Null", emoji: "🛡️", scope: "match", auto: true },
+  clean_sheet: { label: "Pro Zu-Null-Sieg", emoji: "🛡️", scope: "match", auto: true },
   comeback_win: { label: "Pro Comeback", emoji: "🔥", scope: "match", auto: true },
   hattrick: { label: "Pro Hattrick", emoji: "🎯", scope: "match", auto: true },
   goal_diff_min: { label: "Hoher Sieg", emoji: "📈", scope: "match", auto: true },

@@ -83,7 +83,7 @@ const FAQ_ITEMS: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Was ist mit der Umsatzsteuer?",
-    a: "Alle Lizenz-Preise zzgl. 19 % USt, auf der Lizenz-Rechnung separat ausgewiesen. Das betrifft nur die KickPact-Lizenz eures Vereins. Sponsoren-Beiträge sind private Unterstützung: da kommt keine USt drauf."
+    a: "Als Kleinunternehmer nach § 19 UStG weisen wir keine Umsatzsteuer aus — die Lizenz-Preise sind Endpreise, es kommt nichts obendrauf. Sponsoren-Beiträge sind private Unterstützung und ohnehin ohne USt."
   },
   {
     q: "Was passiert wenn ich von Basic auf Pro upgrade?",
@@ -306,8 +306,9 @@ export default function PreisePage() {
         </Accordion>
 
         <p className="mt-10 text-center text-xs md:text-sm text-brand-night-navy/55 leading-relaxed">
-          Alle Preise zzgl. USt. (19 %). Monatlich kündbar. Saison-Pass mit bis
-          zu 67 % Rabatt vs. Monatsabo. Sommerpause Juni/Juli kostenlos.
+          Alle Preise sind Endpreise (keine USt., § 19 UStG). Monatlich kündbar.
+          Saison-Pass mit bis zu 67 % Rabatt vs. Monatsabo. Sommerpause
+          Juni/Juli kostenlos.
         </p>
       </section>
 

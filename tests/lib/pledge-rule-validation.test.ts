@@ -77,6 +77,81 @@ describe("pledgeRuleInputSchema (C1)", () => {
   });
 });
 
+describe("pledgeRuleInputSchema — Saison-Pflicht-Params (Wave 4)", () => {
+  it("season_table_position ohne Bereich → Reject (Builder-Pfad)", () => {
+    expect(
+      pledgeRuleInputSchema.safeParse(
+        rule({ triggerType: "season_table_position", params: {} })
+      ).success
+    ).toBe(false);
+  });
+
+  it("season_table_position mit min > max → Reject", () => {
+    expect(
+      pledgeRuleInputSchema.safeParse(
+        rule({ triggerType: "season_table_position", params: { min_pos: 5, max_pos: 2 } })
+      ).success
+    ).toBe(false);
+  });
+
+  it("season_table_position mit Platz 0 → Reject (ab Platz 1)", () => {
+    expect(
+      pledgeRuleInputSchema.safeParse(
+        rule({ triggerType: "season_table_position", params: { min_pos: 0, max_pos: 5 } })
+      ).success
+    ).toBe(false);
+  });
+
+  it("season_table_position mit gültigem Bereich → ok (snake + camel)", () => {
+    expect(
+      pledgeRuleInputSchema.safeParse(
+        rule({ triggerType: "season_table_position", params: { min_pos: 1, max_pos: 5 } })
+      ).success
+    ).toBe(true);
+    expect(
+      pledgeRuleInputSchema.safeParse(
+        rule({ triggerType: "season_table_position", params: { minPosition: 1, maxPosition: 5 } })
+      ).success
+    ).toBe(true);
+  });
+
+  it("season_cup_round ohne Runde → Reject", () => {
+    expect(
+      pledgeRuleInputSchema.safeParse(
+        rule({ triggerType: "season_cup_round", params: {} })
+      ).success
+    ).toBe(false);
+  });
+
+  it("season_cup_round mit Runde → ok", () => {
+    expect(
+      pledgeRuleInputSchema.safeParse(
+        rule({ triggerType: "season_cup_round", params: { min_round: "Halbfinale" } })
+      ).success
+    ).toBe(true);
+  });
+
+  it("Saison-Trigger mit Cap → weiterhin Reject (Regression)", () => {
+    expect(
+      pledgeRuleInputSchema.safeParse({
+        triggerType: "season_champion",
+        amountEur: 300,
+        params: {},
+        capEur: 50,
+        capPeriod: "season"
+      }).success
+    ).toBe(false);
+  });
+
+  it("season_champion ohne Params → ok (kein Pflicht-Param)", () => {
+    expect(
+      pledgeRuleInputSchema.safeParse(
+        rule({ triggerType: "season_champion", params: {} })
+      ).success
+    ).toBe(true);
+  });
+});
+
 describe("pledgeInputSchema monthlyCapEur (C1)", () => {
   const base = {
     invitationToken: "tok",

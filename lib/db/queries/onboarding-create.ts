@@ -110,7 +110,12 @@ export async function persistDraftClubAndTeams(args: {
           fussballdeVereinId: verein.vereinId,
           onboardingStatus: "draft",
           onboardingRole: role,
-          onboardingStartedAt: new Date()
+          onboardingStartedAt: new Date(),
+          // §19-Kleinunternehmer ist der Plattform-Default (Privatpersonen-only,
+          // keine USt) — deckt sich mit den Form-Defaults. Ohne diese Zeile
+          // startet der Draft-Club auf dem DB-Default `false` und zeigt bis zum
+          // ersten Stammdaten-Speichern fälschlich den USt-Hinweis.
+          isSmallBusiness: true
         })
         .returning({ id: clubs.id, slug: clubs.slug });
       club = created;

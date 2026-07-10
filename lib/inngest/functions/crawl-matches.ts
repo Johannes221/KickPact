@@ -277,7 +277,14 @@ export const crawlMatches = inngest.createFunction(
           // re-import events and re-emit so evaluate-match can recompute.
           const invalidation = await step.run(
             `invalidate-charges-${spiel.spielId}`,
-            () => invalidateChargesForMatch(existing.id, "match_updated")
+            () =>
+              invalidateChargesForMatch(existing.id, "match_updated", {
+                // Freeze-Modus: trägt das Spiel schon fakturierte Charges, dürfen
+                // die NICHT-fakturierten NICHT storniert werden — der Freeze-Guard
+                // unten überspringt Re-Import + Re-Emit, sie würden sonst still
+                // verloren gehen (Review-Befund 2026-07-10).
+                freezeNonInvoicedIfInvoiced: true
+              })
           );
 
           // Freeze-Guard (Daten-Integrität): Hat das Spiel bereits FAKTURIERTE

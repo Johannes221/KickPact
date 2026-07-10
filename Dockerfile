@@ -33,6 +33,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
+# UTC explizit pinnen: die App rechnet Monats-/Saison-Grenzen teils lokalzeit-
+# basiert. Ohne festes TZ hängt die Korrektheit am Default des Base-Images.
+ENV TZ=UTC
 
 # Copy built app + production node_modules
 COPY --from=builder /app/public ./public

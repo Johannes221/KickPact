@@ -301,6 +301,32 @@ describe.skipIf(isIntegrationDbDisabled)(
         [SE_MATCH_CHARGE, SE_SEASON_CHARGE].sort()
       );
     });
+
+    // Wave 4: Saison-ZIEL-Charges (saison gesetzt, matchId null) entstehen oft
+    // erst bei der Ergebnis-Eingabe NACH dem 1.7. (Relegation Ende Juni /
+    // Anfang Juli). Sie dürfen NICHT an der oberen Fenstergrenze (< 1.7.)
+    // rausfallen — sonst würden sie ~12 Monate zu spät oder nie fakturiert.
+    it("nimmt eine erst NACH windowEnd bestätigte Saison-Charge trotzdem mit", async () => {
+      const tdb = await getTestDb();
+      // Saison-Charge: bestätigt 15.7.2026 → nach windowEnd 1.7.2026.
+      await tdb
+        .update(charges)
+        .set({ confirmedAt: new Date(Date.UTC(2026, 6, 15, 12, 0)) })
+        .where(eq(charges.id, SE_SEASON_CHARGE));
+      // Match-Charge (saison null): ebenfalls nach windowEnd → muss RAUSfallen.
+      await tdb
+        .update(charges)
+        .set({ confirmedAt: new Date(Date.UTC(2026, 6, 15, 12, 0)) })
+        .where(eq(charges.id, SE_MATCH_CHARGE));
+
+      const rows = await listSeasonEndChargesForWindow({
+        windowStart: new Date(Date.UTC(2025, 6, 1)),
+        windowEnd: new Date(Date.UTC(2026, 6, 1))
+      });
+      const ids = rows.map((r) => r.chargeId);
+      expect(ids).toContain(SE_SEASON_CHARGE);
+      expect(ids).not.toContain(SE_MATCH_CHARGE);
+    });
   }
 );
 

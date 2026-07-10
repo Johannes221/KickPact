@@ -236,14 +236,30 @@ describe("C1: manual goals require approval", () => {
     };
   }
 
+  // Endstand 1:0 (statt des 2:1-Default-Helpers), damit der offizielle Score
+  // exakt der Zahl der Tor-Events entspricht — sonst füllt goal_total den
+  // Teil-Spielbericht (Endstand > verlinkte Schützen) auf und die Länge-
+  // Assertion prüfte den Fill statt der C1-Approval-Semantik.
+  function oneGoalMatch(source: "scraped" | "manual"): MatchInput {
+    return {
+      id: "m_1_0",
+      teamSide: "heim",
+      ergebnisHeim: 1,
+      ergebnisGast: 0,
+      halbzeitHeim: 0,
+      halbzeitGast: 0,
+      events: [goalEvent(source)],
+    };
+  }
+
   it("goal_total: scraped goal is auto-confirmed, manual goal needs approval", () => {
-    const scraped = evaluateTriggers(syntheticMatch([goalEvent("scraped")]), [
+    const scraped = evaluateTriggers(oneGoalMatch("scraped"), [
       rule({ triggerType: "goal_total", amountCents: 500 }),
     ]);
     expect(scraped).toHaveLength(1);
     expect(scraped[0].requiresApproval).toBe(false);
 
-    const manual = evaluateTriggers(syntheticMatch([goalEvent("manual")]), [
+    const manual = evaluateTriggers(oneGoalMatch("manual"), [
       rule({ triggerType: "goal_total", amountCents: 500 }),
     ]);
     expect(manual).toHaveLength(1);

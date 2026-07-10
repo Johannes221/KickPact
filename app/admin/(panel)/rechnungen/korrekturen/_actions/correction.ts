@@ -15,7 +15,9 @@ const CORRECTION_REASONS: Record<string, string> = {
   wrong_status:
     "Nur versendete oder bezahlte Rechnungen können teil-gutgeschrieben werden — sonst verwerfen.",
   no_pdf: "Zur Rechnung fehlt das PDF/die Nummer — Gutschrift nicht möglich.",
-  no_charges: "Keine passenden offenen Charges für die Gutschrift."
+  no_charges: "Keine passenden offenen Charges für die Gutschrift.",
+  legacy_ust_partial:
+    "Alt-Beleg mit ausgewiesener USt — bitte vollständig stornieren statt teil-gutzuschreiben (sonst wird der USt-Anteil nicht mit-erstattet)."
 };
 
 const correctionSchema = z.object({

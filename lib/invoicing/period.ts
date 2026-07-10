@@ -30,8 +30,12 @@ function buildPeriod(year: number, month: number): BillingPeriod {
 }
 
 export function lastBillingPeriod(now = new Date()): BillingPeriod {
-  const y = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
-  const m = now.getMonth() === 0 ? 12 : now.getMonth();
+  // UTC-konsistent mit buildPeriod (Date.UTC) — sonst wählt der Monats-Cron auf
+  // einem Nicht-UTC-Server am Monatsersten (03:17 UTC) lokal noch den Vormonat
+  // und fakturiert den falschen Monat.
+  const y =
+    now.getUTCMonth() === 0 ? now.getUTCFullYear() - 1 : now.getUTCFullYear();
+  const m = now.getUTCMonth() === 0 ? 12 : now.getUTCMonth();
   return buildPeriod(y, m);
 }
 

@@ -194,9 +194,9 @@ function goalTotal(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[] {
   }
 
   // Liegen Tor-Events vor (voller Spielbericht), zählt jedes Event einzeln — wie
-  // bisher, inkl. der C1-Approval-Logik je Quelle. Unverändertes Verhalten.
+  // bisher, inkl. der C1-Approval-Logik je Quelle.
   if (events.length > 0) {
-    return events.map((event) => ({
+    const eventCharges = events.map((event) => ({
       pledgeId: rule.pledgeId,
       pledgeRuleId: rule.id,
       matchId: match.id,
@@ -208,6 +208,30 @@ function goalTotal(match: MatchInput, rule: PledgeRuleInput): ChargeProposal[] {
       // sponsor — otherwise a club could inject fake goals to inflate charges.
       requiresApproval: event.source === "manual"
     }));
+
+    // Teil-Spielbericht: fußball.de kennt mehr Tore als verlinkte Torschützen
+    // (unbekannter Schütze, Eigentor ohne Spielerlink) → 0 < events < Endstand.
+    // Der offizielle gescrapte Endstand ist die Wahrheit; die Differenz als
+    // anonyme Auto-Charges auffüllen, sonst zahlt der Sponsor zu wenig
+    // (z.B. 3:0 mit 2 verlinkten Schützen → sonst nur 2 statt 3 Tor-Charges).
+    // C1-Guard: NUR wenn alle vorliegenden Tor-Events gescrapt sind — ist ein
+    // manuell gemeldetes Tor dabei, ist der Endstand club-beeinflussbar und der
+    // Auto-Fill (ohne Freigabe) wäre ein Approval-Bypass → dann nicht auffüllen.
+    const missing = officialScore - events.length;
+    if (missing > 0 && events.every((e) => e.source === "scraped")) {
+      const fillCharges = Array.from({ length: missing }, (_, i) => ({
+        pledgeId: rule.pledgeId,
+        pledgeRuleId: rule.id,
+        matchId: match.id,
+        matchEventId: null,
+        triggerType: rule.triggerType,
+        amountCents: rule.amountCents,
+        requiresApproval: false,
+        goalIndex: i + 1
+      }));
+      return [...eventCharges, ...fillCharges];
+    }
+    return eventCharges;
   }
 
   // KEINE Tor-Events, aber echter Endstand → „nur Ergebnis"-Mannschaft
