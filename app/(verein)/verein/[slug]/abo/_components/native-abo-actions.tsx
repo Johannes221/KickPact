@@ -64,6 +64,15 @@ export function NativeAboActions({
   // productId → StoreKit-Produkt (inkl. displayPrice). Leer, bis geladen.
   const [products, setProducts] = useState<Record<string, AppleProduct>>({});
   const [loaded, setLoaded] = useState(false);
+  /**
+   * Grund, warum keine Produkte da sind — die zwei Fälle sehen im UI sonst
+   * identisch aus und die Meldung log den Nutzer an:
+   * - "plugin": getProducts wirft (App-Version ohne IAPPlugin) → App updaten.
+   * - "store": getProducts liefert LEER (Store-seitig nicht kaufbar, z.B.
+   *   Paid-Applications-Vertrag nicht aktiv oder Produkt ohne Preis/Metadaten)
+   *   → App-Update hilft null.
+   */
+  const [emptyReason, setEmptyReason] = useState<"plugin" | "store" | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,12 +84,14 @@ export function NativeAboActions({
         const map: Record<string, AppleProduct> = {};
         for (const p of list) map[p.productId] = p;
         setProducts(map);
+        setEmptyReason(list.length === 0 ? "store" : null);
         setLoaded(true);
       })
       .catch(() => {
-        // Plugin noch nicht bereit (ältere App-Version) oder Store nicht
-        // erreichbar → ohne Preise rendern; der Hinweis unten fängt es ab.
-        if (!cancelled) setLoaded(true);
+        // Bridge/Plugin nicht verfügbar → ältere App-Version ohne IAPPlugin.
+        if (cancelled) return;
+        setEmptyReason("plugin");
+        setLoaded(true);
       });
     return () => {
       cancelled = true;
@@ -196,9 +207,11 @@ export function NativeAboActions({
                   </div>
                 ) : (
                   <p className="text-xs leading-relaxed text-brand-night-navy/55">
-                    {loaded
-                      ? "In-App-Kauf für diesen Tarif gerade nicht verfügbar — bitte aktualisiere die KickPact-App im App Store oder versuch es später erneut."
-                      : "Preise werden geladen…"}
+                    {!loaded
+                      ? "Preise werden geladen…"
+                      : emptyReason === "plugin"
+                        ? "Diese App-Version unterstützt In-App-Käufe noch nicht — bitte aktualisiere die KickPact-App."
+                        : "Dieser Tarif ist im App Store gerade nicht kaufbar. Ein App-Update hilft hier nicht — bitte später erneut versuchen."}
                   </p>
                 )}
               </div>
