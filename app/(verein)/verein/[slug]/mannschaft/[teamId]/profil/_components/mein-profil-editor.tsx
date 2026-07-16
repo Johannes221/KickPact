@@ -74,7 +74,11 @@ export function MeinProfilEditor({
   // Lokaler State für Edit-Felder.
   const [name, setName] = useState(teamName);
   const [isPublic, setIsPublic] = useState(discoverable);
-  const [publicName, setPublicName] = useState(initialPublicName);
+  // Vorbelegt mit dem Mannschaftsnamen, solange kein eigener öffentlicher Name
+  // gesetzt ist — sonst starrt der Nutzer auf ein leeres Feld und rät, was rein
+  // soll. Nur die ANZEIGE: ein bewusst geleertes Feld wird weiterhin als
+  // „kein publicName" gespeichert (→ Fallback auf den Mannschaftsnamen).
+  const [publicName, setPublicName] = useState(initialPublicName || teamName);
   const [tagline, setTagline] = useState(initialTagline);
   const [goals, setGoals] = useState(initialGoals);
   const [editingName, setEditingName] = useState(false);
