@@ -31,7 +31,9 @@ describe("PRICING table", () => {
     expect(PLANS.basic.cycles.monthly.amountCents).toBe(499);
     expect(PLANS.basic.cycles.season_end.amountCents).toBe(1999);
     expect(PLANS.pro.cycles.monthly.amountCents).toBe(899);
-    expect(PLANS.pro.cycles.season_end.amountCents).toBe(3599);
+    // 34,99 € (nicht 35,99 €): folgt dem Apple-Preispunkt von
+    // kickpact.pro.season, damit App und Web nicht 1 € auseinanderliegen.
+    expect(PLANS.pro.cycles.season_end.amountCents).toBe(3499);
     expect(PLANS.verein.cycles.monthly.amountCents).toBe(1999);
     expect(PLANS.verein.cycles.season_end.amountCents).toBe(7999);
   });
@@ -45,7 +47,7 @@ describe("getMonthlyEquivalent", () => {
 
   it("season cycle divides by 10 (Aug–Mai aktive Monate)", () => {
     expect(getMonthlyEquivalent("basic", "season_end")).toBe(200);
-    expect(getMonthlyEquivalent("pro", "season_end")).toBe(360);
+    expect(getMonthlyEquivalent("pro", "season_end")).toBe(350);
     expect(getMonthlyEquivalent("verein", "season_end")).toBe(800);
   });
 });
@@ -59,9 +61,9 @@ describe("getSavings", () => {
   });
 
   it("pro season ≈ 67 % cheaper than 12× monthly", () => {
-    // 12 × 8,99€ = 107,88€; Saison-Pass = 35,99€ → 71,89€ Ersparnis ≈ 66,6 %
+    // 12 × 8,99€ = 107,88€; Saison-Pass = 34,99€ → 72,89€ Ersparnis ≈ 67,6 %
     const { absoluteCents, percent } = getSavings("pro", "season_end");
-    expect(absoluteCents).toBe(7189);
+    expect(absoluteCents).toBe(7289);
     expect(percent).toBeGreaterThanOrEqual(66);
     expect(percent).toBeLessThanOrEqual(68);
   });
