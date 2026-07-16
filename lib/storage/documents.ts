@@ -149,6 +149,37 @@ export async function getDocumentSignedUrl(
 }
 
 /**
+ * Liest ein gespeichertes Dokument als Bytes — für Server-seitiges Einbetten
+ * (Story-/Share-Bilder: next/og-Satori kann NUR data-URIs/absolute URLs, und
+ * eine signierte R2-URL erst zu holen und dann selbst zu fetchen wäre ein
+ * unnötiger Umweg über das Netz).
+ *
+ * Liefert `null` statt zu werfen, wenn das Dokument fehlt/unlesbar ist: die
+ * Aufrufer (Story-Wappen) fallen dann sauber auf ihr Kürzel zurück, statt dass
+ * ein fehlendes Logo das ganze Bild kippt.
+ */
+export async function readDocumentBytes(storageUrl: string): Promise<Buffer | null> {
+  if (!storageUrl) return null;
+  try {
+    if (storageUrl.startsWith("r2://") && s3) {
+      const withoutScheme = storageUrl.slice("r2://".length);
+      const slashIdx = withoutScheme.indexOf("/");
+      const bucket = withoutScheme.slice(0, slashIdx);
+      const key = withoutScheme.slice(slashIdx + 1);
+      const res = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+      const bytes = await res.Body?.transformToByteArray();
+      return bytes ? Buffer.from(bytes) : null;
+    }
+    if (storageUrl.startsWith("local://")) {
+      return await readLocalDocument(storageUrl.slice("local://".length));
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Reads a document from the local volume. Only callable via the
  * authenticated download API route (Phase E2).
  */
