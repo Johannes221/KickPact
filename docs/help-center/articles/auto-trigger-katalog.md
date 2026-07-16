@@ -38,7 +38,7 @@ Auto-Trigger sind die Trigger, die KickPact **vollautomatisch** aus Fußball.de-
 Feuert pro Tor deiner Mannschaft, unabhängig vom Torschützen. Klassischer Pact: **5 € pro Tor**.
 
 - Bei 3:1-Sieg: 3 Beiträge
-- Bei 7:1-Festspiel: 7 Beiträge (denk an Per-Match-Cap)
+- Bei 7:1-Festspiel: 7 Beiträge (denk an deinen Monats-Cap)
 
 ### `goal_player` — Tor eines Spielers
 

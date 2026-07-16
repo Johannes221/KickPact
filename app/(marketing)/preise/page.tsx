@@ -174,7 +174,7 @@ export default async function PreisePage() {
                 Break-Even pro Monatsabo
               </h3>
               <p className="mt-1 text-xs text-brand-night-navy/60">
-                Pro × n Mannschaften vs. Vereinslizenz (29 €/Mon)
+                Pro × n Mannschaften vs. Vereinslizenz (19,99 €/Mon)
               </p>
               <div className="mt-4 overflow-hidden rounded-lg ring-1 ring-brand-neutral/30">
                 <table className="w-full text-sm tabular-nums">
@@ -243,7 +243,7 @@ export default async function PreisePage() {
                 Per-Player-Pricing
               </h3>
               <p className="mt-1 text-xs text-brand-night-navy/60">
-                Vereinslizenz (29 €/Mon) geteilt durch Spieler-Anzahl
+                Vereinslizenz (19,99 €/Mon) geteilt durch Spieler-Anzahl
               </p>
               <div className="mt-4 overflow-hidden rounded-lg ring-1 ring-brand-neutral/30">
                 <table className="w-full text-sm tabular-nums">

@@ -46,8 +46,8 @@ Wenn ihr nicht weitermacht: alle Daten bleiben erhalten, ihr könnt jederzeit sp
       </p>
 
       <p style="color: #1A1A2E; margin: 0 0 24px; line-height: 1.6;">
-        Damit alles ohne Unterbrechung weiterläuft (Match-Auswertung, PDF-Rechnungen,
-        Sponsor-Pledges), hinterlege bitte eine Zahlungsmethode:
+        Damit alles ohne Unterbrechung weiterläuft (Match-Auswertung, Zahlungsübersichten,
+        Sponsor-Pacts), hinterlege bitte eine Zahlungsmethode:
       </p>
 
       <a href="${manageUrl}" style="display:inline-block; background:#01C457; color:#fff; padding: 12px 24px; border-radius:10px; font-weight:700; text-decoration:none;">Abo aktivieren →</a>

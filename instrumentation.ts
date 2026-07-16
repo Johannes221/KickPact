@@ -40,9 +40,12 @@ function assertProdEnv() {
 
   // Origin-Konsistenz: better-auth verwirft sonst Requests / Cookie bindet an
   // den falschen Host (App bleibt ausgeloggt, Mail-Links zeigen woanders hin).
+  // HART werfen statt nur warnen: eine still im Coolify-Log untergehende Warnung
+  // reicht nicht — ein Staging-Copy-Paste (schartl.dev vs kickpact.com) darf den
+  // Prod-Deploy nicht grün booten lassen.
   if (process.env.BETTER_AUTH_URL !== process.env.NEXT_PUBLIC_BASE_URL) {
-    console.warn(
-      `[boot] ⚠️  BETTER_AUTH_URL (${process.env.BETTER_AUTH_URL}) != NEXT_PUBLIC_BASE_URL (${process.env.NEXT_PUBLIC_BASE_URL}) — beide MÜSSEN in Prod dieselbe Origin sein.`
+    throw new Error(
+      `[boot] BETTER_AUTH_URL (${process.env.BETTER_AUTH_URL}) != NEXT_PUBLIC_BASE_URL (${process.env.NEXT_PUBLIC_BASE_URL}) — beide MÜSSEN in Prod dieselbe Origin sein. Deploy abgebrochen.`
     );
   }
 

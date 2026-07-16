@@ -16,28 +16,14 @@ status: "published"
 
 Caps sind dein Sicherheitsnetz. Ein Pact ohne Cap ist offen — bei einem 7:1-Festspiel oder einer wahnsinnigen Glückssträhne kann das **plötzlich teuer** werden. Caps verhindern das. Du legst fest, **wie viel du maximal monatlich oder saisonal ausgeben willst**, und KickPact stoppt automatisch, sobald das Limit erreicht ist.
 
-## Die drei Cap-Ebenen
+## Die zwei Cap-Ebenen
 
 | Cap | Wirkt auf | Beispiel |
 |---|---|---|
-| **Per-Match-Cap** | Einzelnes Spiel | "max. 20 €/Spiel" |
 | **Monats-Cap** | Kalendermonat | "max. 100 €/Monat" |
 | **Saison-Cap** | Aktuelle Saison | "max. 800 €/Saison" |
 
-Caps **kumulieren** — das heißt, alle drei können gleichzeitig aktiv sein, und es greift jeweils das schärfste Limit zuerst.
-
-## Per-Match-Cap
-
-Ein Per-Match-Cap schützt vor **Ausreißer-Spielen**. Klassisches Beispiel:
-
-- Dein Pact: 5 € pro Tor.
-- Deine Mannschaft schießt unerwartet 8 Tore beim Auswärtssieg.
-- Ohne Cap: 8 × 5 € = 40 € allein für dieses Spiel.
-- Mit Cap "max. 20 €/Spiel": 20 € — die letzten 4 Tore werden geblockt.
-
-Geblockte Tore sind sichtbar in deinem Dashboard ("4 Tore vom Per-Match-Cap geblockt"), erzeugen aber **keinen Beitrag**.
-
-**Faustregel:** Per-Match-Cap auf ~2-3× das "Normal-Spiel"-Niveau setzen. Bei 5 €/Tor und durchschnittlich 2 Toren = Per-Match-Cap 15-25 €.
+Caps **kumulieren** — beide können gleichzeitig aktiv sein, und es greift jeweils das schärfste Limit zuerst.
 
 ## Monats-Cap
 
@@ -64,10 +50,9 @@ Trigger feuern in folgender Reihenfolge:
 
 1. **Match-Event aus den Spieldaten** (z.B. 5. Tor im 7:1-Spiel)
 2. **Regel matched** (5 € pro Tor)
-3. **Per-Match-Cap geprüft:** schon ≥20 € in diesem Spiel? → Beitrag geblockt.
-4. **Monats-Cap geprüft:** mit diesem Beitrag ≥100 €? → Beitrag geblockt.
-5. **Saison-Cap geprüft:** mit diesem Beitrag ≥600 €? → Beitrag geblockt.
-6. Wenn alle Checks pass: **Beitrag erzeugt**.
+3. **Monats-Cap geprüft:** mit diesem Beitrag ≥100 €? → Beitrag geblockt.
+4. **Saison-Cap geprüft:** mit diesem Beitrag ≥600 €? → Beitrag geblockt.
+5. Wenn alle Checks pass: **Beitrag erzeugt**.
 
 Wichtig: Caps werden **monoton** geprüft. Sobald ein Cap erreicht ist, gibt's keinen Beitrag mehr für den restlichen Cap-Zeitraum. Es wird **nicht** anteilig oder fair zwischen Triggern verteilt — first come, first served.
 

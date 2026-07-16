@@ -470,7 +470,7 @@ export default function LandingPage() {
             </AccordionItem>
             <FaqItem
               q="Mannschaft oder Verein: was ist der Unterschied?"
-              a={'Jede Mannschaft ist bei KickPact eigenständig. Trainer/Betreuer melden sich für ihre Mannschaft an, verwalten Sponsoren und Pacts selbst, keine Vorstands-Politik. Hat dein Verein mehrere Teams (Herren, Jugend, Damen, Senioren) und einen Master-Admin der alles zentral steuern soll, gibt es die Vereinslizenz: 29 €/Monat all-in für alle Mannschaften des Vereins, mit konsolidierter Zahlungsübersicht und übergreifender Sponsor-Übersicht.'}
+              a={'Jede Mannschaft ist bei KickPact eigenständig. Trainer/Betreuer melden sich für ihre Mannschaft an, verwalten Sponsoren und Pacts selbst, keine Vorstands-Politik. Hat dein Verein mehrere Teams (Herren, Jugend, Damen, Senioren) und einen Master-Admin der alles zentral steuern soll, gibt es die Vereinslizenz: 19,99 €/Monat all-in für alle Mannschaften des Vereins, mit konsolidierter Zahlungsübersicht und übergreifender Sponsor-Übersicht.'}
             />
             <FaqItem
               q="Sind die Beträge irgendwie vorgegeben?"

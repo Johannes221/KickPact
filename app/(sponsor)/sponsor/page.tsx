@@ -528,7 +528,7 @@ function CapUsageTile({
             <span className="font-semibold text-brand-night-navy">
               {eur(seasonToDateCents)}
             </span>{" "}
-            · sammelt sich auf eine Rechnung am Saisonende
+            · sammelt sich auf eine Zahlungsübersicht am Saisonende
           </div>
         )}
       </div>

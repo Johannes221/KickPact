@@ -204,10 +204,12 @@ export async function createCheckoutSession(opts: {
     locale: "de"
   }, {
     // Idempotenz gegen Doppelklick: zwei identische Checkout-Sessions (selber
-    // Club/Plan/Cycle) würden sonst parallel entstehen. Key ist auf die
-    // Operation begrenzt; nach 24h (Stripe-Key-TTL) ist ein erneuter Versuch
-    // wieder frei.
-    idempotencyKey: `checkout-${club.id}-${opts.plan}-${cycle}`
+    // Club/Plan/Cycle) in schneller Folge würden sonst parallel entstehen. Das
+    // 30-Sekunden-Zeitfenster im Key dedupliziert den Doppelklick, gibt einen
+    // bewussten ERNEUTEN Versuch aber sofort wieder frei — sonst blockierte ein
+    // fester Key nach einer abgebrochenen (24h-TTL) Session jeden neuen Kauf-
+    // versuch für Plan/Cycle bis zu 24h (Sackgasse am Kauftag).
+    idempotencyKey: `checkout-${club.id}-${opts.plan}-${cycle}-${Math.floor(Date.now() / 30000)}`
   });
 
   if (!session.url) {

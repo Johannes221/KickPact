@@ -83,6 +83,20 @@ export const evaluateMatch = inngest.createFunction(
       return { proposals: 0, inserted: 0, cappedOrSkipped: 0, skippedReadOnly: true };
     }
 
+    // Symmetrie zum createPledge-/addManualEvent-Vertrag „deaktiviert = keine
+    // neuen Charges": wird ein Team deaktiviert, während ein match/finished-Event
+    // schon in der Queue liegt, dürfen trotzdem keine Charges entstehen. Der
+    // Crawler emittiert für inaktive Teams nichts mehr — dieser Guard schließt
+    // das verbleibende Queue-Fenster.
+    if (!matchData.t.isActive) {
+      logger.warn("match/evaluation-deferred — Team deaktiviert, keine Charges", {
+        teamId,
+        matchId,
+        clubId: matchData.t.clubId
+      });
+      return { proposals: 0, inserted: 0, cappedOrSkipped: 0, skippedReadOnly: true };
+    }
+
     // Eigene Spielseite DETERMINISTISCH über die fussball.de-team-id
     // (matches.heimTeamId/gastTeamId vs teams.fussballdeTeamId). Nur wenn die
     // ids fehlen (Alt-Match vor der Migration) fällt resolveTeamSide auf das

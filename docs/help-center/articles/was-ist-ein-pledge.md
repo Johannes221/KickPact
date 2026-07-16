@@ -34,9 +34,8 @@ Du kannst beliebig viele Regeln in einem Pact kombinieren. Auf Basic ist die Obe
 
 Ohne Cap ist ein Pact offen — bei einem 7:1-Sieg deiner Mannschaft mit 7 × 5 € wären das 35 € allein für ein Spiel. Caps verhindern das:
 
-- **Per-Match-Cap** pro Regel oder pro Pact
-- **Monats-Cap** pro Pact
-- **Saison-Cap** pro Pact
+- **Monats-Cap** pro Pact — dein Limit pro Kalendermonat
+- **Saison-Cap** pro Regel — dein Limit für die ganze Saison
 
 Mehr in [Caps und Monats-Limits](caps-und-monats-limits.md).
 
@@ -46,7 +45,7 @@ Im Beispiel: Mannschaft spielt am Samstag 3:1. KickPact holt das Ergebnis automa
 
 1. **3 Beiträge** mit je 5 € werden erzeugt (3 Tore = 3 × 5 €).
 2. Caps werden geprüft. Falls ein Cap erreicht ist, werden weitere Beiträge geblockt.
-3. Du siehst die Beiträge in deinem **Sponsor-Dashboard** unter "Diese Woche". Du musst nichts bestätigen — das passiert automatisch.
+3. Du siehst die Beiträge in deinem **Sponsor-Dashboard** unter "Diesen Monat". Du musst nichts bestätigen — das passiert automatisch.
 
 Bei Manual-Triggern (z.B. "Kopfball") feuert der Trigger erst, wenn der Verein das Ereignis im KickPact-System bestätigt. Sponsoren mit Manual-Trigger-Pacts haben deshalb oft **Pending Events** zum Bestätigen — siehe [Pending Events bestätigen](pending-events-bestaetigen.md).
 
