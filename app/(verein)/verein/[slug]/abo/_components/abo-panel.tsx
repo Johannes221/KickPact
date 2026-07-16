@@ -7,10 +7,16 @@ import { isStripeConfigured } from "@/lib/stripe/client";
 import {
   CYCLE_LABELS,
   normalizeBillingCycle,
+  PLANS,
   TRIAL_DAYS,
   type PlanKey,
   type BillingCycle
 } from "@/lib/stripe/pricing";
+import {
+  getSubscriptionStatusInfo,
+  type StatusTone,
+  type SubscriptionStatusInfo
+} from "@/lib/billing/subscription-status-labels";
 import { highestPlanFrom } from "@/lib/mail/reply-to-pure";
 import { getDowngradeImpact } from "@/lib/db/queries/downgrade-impact";
 import type { DowngradeImpact } from "@/lib/billing/downgrade-impact";
@@ -213,11 +219,21 @@ function CurrentSubscriptionCard({
       <div className="text-xs uppercase tracking-widest font-semibold text-brand-night-navy/50">
         Aktueller Status
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <PlanBadge plan={currentPlan} />
-        <CycleBadge cycle={currentCycle} />
-        <StatusPill status={sub.status} />
+
+      {/* Eine Aussage statt drei gleichrangiger Pills („Pro · Monatlich ·
+          Unvollständig" las sich wie drei unverbundene Fragmente): Plan +
+          Abrechnung sind der Titel, darunter EIN Status im Klartext. */}
+      <div>
+        <h3 className="font-display font-bold text-lg md:text-xl tracking-tight text-brand-night-navy">
+          {PLANS[currentPlan].label}
+          <span className="font-normal text-brand-night-navy/50">
+            {" · "}
+            {CYCLE_LABELS[currentCycle]}
+          </span>
+        </h3>
+        <StatusLine info={getSubscriptionStatusInfo(sub.status)} />
       </div>
+
       <div className="text-xs md:text-sm text-brand-night-navy/60 space-y-1">
         {trialDaysLeft !== null && sub.trialEndsAt && (
           <div className="rounded-lg bg-accent/5 border border-accent/30 px-3 py-2.5">
@@ -408,66 +424,35 @@ function UpgradePathsCard({
   );
 }
 
-function PlanBadge({ plan }: { plan: PlanKey }) {
-  const map: Record<PlanKey, { label: string; cls: string }> = {
-    basic: {
-      label: "Basic",
-      cls: "bg-brand-neutral/30 text-brand-night-navy"
-    },
-    pro: { label: "Pro", cls: "bg-accent text-white" },
-    verein: { label: "Vereinslizenz", cls: "bg-brand-night-navy text-white" }
+/**
+ * Der EINE Status-Indikator der Abo-Karte: farbiger Punkt + Klartext-Label,
+ * darunter optional der Handlungs-Satz. Die Farbe ist Beiwerk — die Aussage
+ * steht im Text (Screenreader/Farbsehschwäche verlieren nichts).
+ */
+function StatusLine({ info }: { info: SubscriptionStatusInfo }) {
+  const tone: Record<StatusTone, { dot: string; text: string }> = {
+    success: { dot: "bg-emerald-500", text: "text-emerald-800" },
+    attention: { dot: "bg-amber-500", text: "text-amber-900" },
+    neutral: { dot: "bg-brand-night-navy/40", text: "text-brand-night-navy/70" }
   };
-  const entry = map[plan];
-  return (
-    <span
-      className={
-        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide " +
-        entry.cls
-      }
-    >
-      {entry.label}
-    </span>
-  );
-}
+  const cls = tone[info.tone];
 
-function CycleBadge({ cycle }: { cycle: BillingCycle }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-brand-off-white border border-brand-neutral/40 px-2.5 py-1 text-xs font-semibold text-brand-night-navy">
-      {CYCLE_LABELS[cycle]}
-    </span>
-  );
-}
-
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    trialing: {
-      label: "Trial",
-      cls: "bg-accent/10 text-accent-dark ring-1 ring-accent/30"
-    },
-    active: { label: "Aktiv", cls: "bg-emerald-100 text-emerald-800" },
-    past_due: {
-      label: "Zahlung überfällig",
-      cls: "bg-amber-100 text-amber-900"
-    },
-    paused: { label: "Pausiert", cls: "bg-amber-100 text-amber-900" },
-    cancelled: { label: "Gekündigt", cls: "bg-neutral-100 text-neutral-700" },
-    incomplete: {
-      label: "Unvollständig",
-      cls: "bg-neutral-100 text-neutral-700"
-    }
-  };
-  const entry = map[status] ?? {
-    label: status,
-    cls: "bg-neutral-100 text-neutral-700"
-  };
-  return (
-    <span
-      className={
-        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold " +
-        entry.cls
-      }
-    >
-      {entry.label}
-    </span>
+    <div className="mt-1.5">
+      {/* items-start + Punkt-Offset: lange Labels dürfen auf schmalen
+          iPhone-Screens umbrechen, ohne dass der Punkt mitwandert. */}
+      <div className={"flex items-start gap-2 text-sm font-semibold " + cls.text}>
+        <span
+          aria-hidden
+          className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + cls.dot}
+        />
+        <span>{info.label}</span>
+      </div>
+      {info.hint && (
+        <p className="mt-1 text-xs leading-relaxed text-brand-night-navy/70">
+          {info.hint}
+        </p>
+      )}
+    </div>
   );
 }
