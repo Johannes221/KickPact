@@ -30,6 +30,8 @@ import {
 import { saisonLabel } from "@/lib/utils/saison";
 import { getClubById } from "@/lib/db/queries/club-admin";
 import { getWrappedEntryInfo } from "@/lib/db/queries/wrapped";
+import { getNextMatchForTeam } from "@/lib/db/queries/story";
+import { UpcomingMatchCard } from "./_components/upcoming-match-card";
 import { getPendingTransferRequestForTeam } from "@/lib/db/queries/license-transfers";
 import { countPledgesForTeam } from "@/lib/db/queries/pledges";
 import { getTeamLicensePlanDirect } from "@/lib/db/queries/subscriptions";
@@ -115,10 +117,13 @@ export default async function TeamDetailPage({
   const totalCharges = [...chargesSummary.values()].reduce((s, v) => s + v, 0);
 
   // Setup-Checkliste: Daten für "Anstehende Aufgaben".
-  const [clubBilling, pledgeCount, licenseRow] = await Promise.all([
+  // Dazu das nächste Spiel für die „Bevorstehendes Spiel"-Karte (#44) — null,
+  // wenn nichts ansteht (Sommerpause, Saisonende) → Karte entfällt.
+  const [clubBilling, pledgeCount, licenseRow, nextMatch] = await Promise.all([
     getClubById(club.id),
     countPledgesForTeam(team.id),
-    getTeamLicensePlanDirect(team.id)
+    getTeamLicensePlanDirect(team.id),
+    getNextMatchForTeam(team.id)
   ]);
   const hasIban = !!clubBilling?.iban;
   const hasSponsor = pledgeCount > 0;
@@ -264,6 +269,12 @@ export default async function TeamDetailPage({
             </div>
           ))}
         </div>
+      )}
+
+      {/* #44: Bevorstehendes Spiel + „Vorschau posten". Nur in der aktuellen
+          Saison — im Archiv-Blick wäre ein „nächstes Spiel" sinnlos. */}
+      {nextMatch && isCurrentSeasonView && (
+        <UpcomingMatchCard match={nextMatch} teamId={team.id} />
       )}
 
       {/* W3: Prognose — was die aktiven Pacts letzte Saison gebracht hätten +

@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { teams, clubs } from "@/lib/db/schema/clubs";
 import { getLeagueStandings, type LeagueStandings } from "@/lib/crawler/fussballde";
 import { getStoredStandings, storeStandings } from "@/lib/db/queries/standings";
+import { currentSaisonCode } from "@/lib/utils/saison";
 import { inngest } from "@/lib/inngest/client";
 
 /**
@@ -27,15 +28,26 @@ import { inngest } from "@/lib/inngest/client";
 // Treffer (Scrape lief, fand aber nichts) wird häufiger neu versucht.
 const TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 Tage
 const EMPTY_RETRY_MS = 12 * 60 * 60 * 1000; // 12 h für leere Treffer
+/**
+ * LAUFENDE Saison: die Tabelle ändert sich jedes Wochenende. Die 30-Tage-TTL
+ * oben gilt nur für abgeschlossene Saisons (Wrapped-Fall) — für die laufende
+ * Saison wäre sie ein wochenalter Tabellenplatz auf einer Story-Vorschau, also
+ * eine stille Falschaussage. Spiele sind am Wochenende, 12 h reichen völlig.
+ */
+const RUNNING_TTL_MS = 12 * 60 * 60 * 1000;
 
-function isFresh(stored: { data: LeagueStandings; scrapedAt: Date }): boolean {
+function isFresh(
+  stored: { data: LeagueStandings; scrapedAt: Date },
+  saison: string
+): boolean {
   const age = Date.now() - stored.scrapedAt.getTime();
   const hasRows = stored.data?.rows?.length > 0;
   // Zeilen aus der Zeit VOR den Liga-Extras (Torschützen/Fairness) einmalig
   // nachscrapen, damit die neuen Slides erscheinen. Ein neuer Scrape setzt
   // topScorers immer (mind. []) → danach greift wieder die normale TTL.
   if (hasRows && stored.data.topScorers === undefined) return false;
-  return age < (hasRows ? TTL_MS : EMPTY_RETRY_MS);
+  if (!hasRows) return age < EMPTY_RETRY_MS;
+  return age < (saison === currentSaisonCode() ? RUNNING_TTL_MS : TTL_MS);
 }
 
 export async function getCachedStandings(
@@ -45,7 +57,7 @@ export async function getCachedStandings(
   let stored: { data: LeagueStandings; scrapedAt: Date } | null = null;
   try {
     stored = await getStoredStandings(teamId, saison);
-    if (stored && isFresh(stored)) return stored.data;
+    if (stored && isFresh(stored, saison)) return stored.data;
   } catch {
     // DB-Lesefehler ist non-fatal — wir versuchen den Scrape direkt.
   }
@@ -93,7 +105,7 @@ export async function getCachedStandingsForRequest(
   let stored: { data: LeagueStandings; scrapedAt: Date } | null = null;
   try {
     stored = await getStoredStandings(teamId, saison);
-    if (stored && isFresh(stored)) return stored.data;
+    if (stored && isFresh(stored, saison)) return stored.data;
   } catch {
     // DB-Lesefehler → wie Cache-Miss behandeln.
   }
