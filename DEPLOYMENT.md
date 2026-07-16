@@ -7,7 +7,7 @@ KickPact hat zwei Umgebungen:
 | Umgebung | Branch | Domain | Coolify-App | Zweck |
 |---|---|---|---|---|
 | **Staging** | `main` | `kickpact.schartl.dev` | `kickpact-staging` | Entwicklung, Tests, Feature-Preview |
-| **Production** | `production` | `kickpact.com` | `kickpact-prod` _(anzulegen)_ | Live-Betrieb, Endnutzer |
+| **Production** | `production` | `kickpact.com` | `kickpact-prod` (UUID `am5tp3laz3p9t3wzh3vt8xpj`, angelegt 2026-07-16) | Live-Betrieb, Endnutzer |
 
 ---
 
@@ -45,13 +45,34 @@ git push origin feature/mein-feature
 
 ### Release auf Production
 
+Wenn auf der Demo/Test-Instanz (`main` → kickpact.schartl.dev) alles geprüft ist:
+
 ```bash
-# Staging smoke-check: https://kickpact.schartl.dev
-git checkout production
-git merge main
-git push origin production
-# Coolify deployed automatisch auf kickpact.com
+# Staging/Demo smoke-check: https://kickpact.schartl.dev
+npm run promote:prod        # = git push origin main:production (Fast-Forward)
+# Coolify (kickpact-prod) deployt automatisch auf kickpact.com
 ```
+
+`promote:prod` schiebt `main` per Fast-Forward auf `production` — kein lokaler
+Branch-Wechsel, keine Divergenz. Schlägt der Push fehl (production ist
+divergiert), NICHT force-pushen, sondern erst `main` mit production versöhnen.
+
+### iOS-Build bei einem Prod-Release
+
+Die iOS-App ist ein Remote-WebView auf kickpact.com — ein Web-Release (obiges
+Promote) geht **sofort** in die installierte App, ohne Store-Rebuild. Ein neuer
+**nativer** iOS-Build ist nur nötig, wenn sich Natives ändert (Capacitor-Plugins,
+Info.plist, Entitlements, App-Icon, `server.url`):
+
+```bash
+npm run ios:sync:prod       # CAP_SERVER_URL=https://kickpact.com → cap sync ios
+# dann: Xcode → Product → Archive → App Store Connect / TestFlight
+```
+
+`ios:sync:prod` pinnt die Prod-Domain in den Build. Der native Archive-/Upload-
+Schritt braucht macOS + Apple-Signing und läuft NICHT in Coolify — manuell in
+Xcode oder später via macOS-CI (GitHub Actions + fastlane, Apple-Keys als CI-
+Secrets). Siehe iOS-Launch-Checkliste unter `docs/superpowers/plans/`.
 
 ---
 
@@ -107,23 +128,17 @@ gesetzt werden** — dann sind die Endpoints hart deaktiviert, unabhängig vom K
 
 ---
 
-## Coolify Production-App einrichten (wenn Go-Live)
+## Coolify Production-App einrichten (Status 2026-07-16)
 
-1. **Coolify Dashboard** → New Application → Source: GitHub `Johannes221/KickPact` → Branch: `production`
-2. **Domain**: `kickpact.com` (+ `www.kickpact.com` redirect)
-3. **ENVs kopieren** von `kickpact-staging`, dann anpassen:
-   - `NEXT_PUBLIC_BASE_URL=https://kickpact.com`
-   - `NEXT_PUBLIC_SITE_ENV=production`
-   - `SENTRY_ENVIRONMENT=production`
-   - `NEXT_PUBLIC_SENTRY_ENVIRONMENT=production`
-   - `BETTER_AUTH_URL=https://kickpact.com`
-   - Neue DB-URL (Production-DB, separate Instanz)
-   - Neue Stripe Live-Keys (`sk_live_...`)
-   - **`ALLOW_TEST_AUTH` und `E2E_TEST_BYPASS_KEY` LÖSCHEN** (von Staging
-     mitkopiert → würde die Test-Auth-Endpoints auf Production scharf schalten)
-4. **Auto-Deploy**: Webhook auf Branch `production` setzen
-5. **Cloudflare DNS**: `kickpact.com` → Coolify-IP (A-Record oder CNAME)
-6. **Sentry**: Production-Environment in kickpact.sentry.io prüfen
+1. ✅ **Coolify App angelegt**: `kickpact-prod` (UUID `am5tp3laz3p9t3wzh3vt8xpj`), Source: Deploy-Key `git@github.com:Johannes221/KickPact.git` → Branch: `production`, Dockerfile-Build, Port 3000, Health-Check `/api/health`
+2. ✅ **Domain**: `kickpact.com` + `www.kickpact.com` (redirect: both) — von `kickpact-staging` entfernt (lief vorher fälschlich auf allen 3 Domains)
+3. ⏳ **ENVs**: 6 nicht-geheime Prod-Werte gesetzt (`NEXT_PUBLIC_BASE_URL`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_SITE_ENV=production`, `SENTRY_ENVIRONMENT=production`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT=production`, `APNS_PRODUCTION=true`). 53 Secret-Keys als **leere Platzhalter** angelegt (Namen 1:1 aus Staging übernommen, Werte fehlen bewusst — Claude trägt keine Secrets ein). `ALLOW_TEST_AUTH`/`E2E_TEST_BYPASS_KEY` bewusst NICHT angelegt.
+   - **Johannes-TODO**: Secret-Werte in Coolify-UI (`kickpact-prod` → Environment Variables) eintragen. Manche liegen schon in Vaultwarden: „KickPact R2 — kickpact-prod", „KickPact Sentry — Auth Token", „KickPact APNs", „KickPact — App Store Connect API (IAP)", „KickPact — Google iOS OAuth". Rest (DATABASE_URL, BETTER_AUTH_SECRET, RESEND_API_KEY, STRIPE Live-Keys + Price-IDs, INNGEST_*, GOOGLE_CLIENT_*, APPLE_CLIENT_*) selbst pflegen — **Stripe-Keys müssen `sk_live_...` sein**, nicht die Test-Keys von Staging.
+4. ⏳ **Neue Prod-Neon-DB** (EU/Frankfurt), isoliert von der geteilten Staging/Test-DB: Neon-Console → New Project „kickpact-prod", Region Frankfurt → gepoolten `-pooler`-Connection-String als `DATABASE_URL` eintragen. Migrationen 0000–0068 laufen automatisch beim ersten Deploy (Post-Deploy-Command).
+5. ⏳ **Auto-Deploy**: Webhook-Secrets sind angelegt (analog Staging); GitHub-Webhook auf dem Repo deckt vermutlich beide Branches automatisch ab (Coolify matched serverseitig auf Branch) — bei erstem Push auf `production` verifizieren, dass Deploy triggert.
+6. ⏳ **Cloudflare DNS**: `kickpact.com` ist auf Cloudflare-NS, aber NICHT im schartl-assistant-CF-Account/Token sichtbar → Johannes muss selbst A-Records setzen: `kickpact.com` + `www.kickpact.com` → `178.104.49.158` (DNS-only/nicht proxied, wie alle anderen Apps auf diesem Server). Aktuell kein DNS-Eintrag vorhanden.
+7. ⏳ **Sentry**: Production-Environment in kickpact.sentry.io prüfen
+8. ⏳ **Erster Deploy**: erst NACH Secrets+DB — ein Boot-Versuch mit leeren Secrets schlägt gewollt am Fail-Fast-Validator fehl (kein Bug).
 
 ---
 
