@@ -198,12 +198,12 @@ describe("platform-stats", () => {
     const clubSeason = await seedClub("mrr-sea");
     const teamSeason = await seedTeam(clubSeason);
     await seedSubscription(clubSeason, { status: "active", billingCycle: "season_end" });
-    await seedTeamLicense(clubSeason, teamSeason, "pro"); // 360 monthly-equiv (3599 Saison / 10)
+    await seedTeamLicense(clubSeason, teamSeason, "pro"); // 350 monthly-equiv (3499 Saison / 10)
 
     const k = await getPlatformKpis();
-    // 899 (monthly) + 360 (season_end) — season MUST NOT be 0.
-    expect(k.mrrCents).toBe(1259);
-    expect(k.mrrSeries.at(-1)?.mrrCents).toBe(1259);
+    // 899 (monthly) + 350 (season_end) — season MUST NOT be 0.
+    expect(k.mrrCents).toBe(1249);
+    expect(k.mrrSeries.at(-1)?.mrrCents).toBe(1249);
   });
 
   it("getPlatformKpis computes avg pledge amount across active pledges", async () => {
