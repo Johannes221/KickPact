@@ -40,7 +40,7 @@ export default async function TeamInvitationPage({
 
   if (!invitation || invitation.kind !== "team-member") {
     return (
-      <main className="mx-auto max-w-md px-5 md:px-6 py-10 md:py-16">
+      <main className="mx-auto max-w-md px-5 md:px-6 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-10 md:pt-16 md:pb-16">
         <Card className="border-brand-neutral/40">
           <CardHeader>
             <CardTitle className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
@@ -62,7 +62,7 @@ export default async function TeamInvitationPage({
 
   if (invitation.status === "used") {
     return (
-      <main className="mx-auto max-w-md px-5 md:px-6 py-10 md:py-16">
+      <main className="mx-auto max-w-md px-5 md:px-6 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-10 md:pt-16 md:pb-16">
         <Card className="border-brand-neutral/40">
           <CardHeader>
             <CardTitle className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
@@ -85,7 +85,7 @@ export default async function TeamInvitationPage({
 
   if (invitation.status === "revoked") {
     return (
-      <main className="mx-auto max-w-md px-5 md:px-6 py-10 md:py-16">
+      <main className="mx-auto max-w-md px-5 md:px-6 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-10 md:pt-16 md:pb-16">
         <Card className="border-brand-neutral/40">
           <CardHeader>
             <CardTitle className="font-display font-black text-2xl tracking-tight text-brand-night-navy">
@@ -102,7 +102,7 @@ export default async function TeamInvitationPage({
 
   if (invitation.expiresAt.getTime() < Date.now()) {
     return (
-      <main className="mx-auto max-w-md px-5 md:px-6 py-10 md:py-16">
+      <main className="mx-auto max-w-md px-5 md:px-6 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-10 md:pt-16 md:pb-16">
         <Card className="border-brand-neutral/40">
           <CardHeader>
             <CardTitle className="font-display font-black text-2xl tracking-tight text-brand-night-navy">

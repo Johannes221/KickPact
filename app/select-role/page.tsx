@@ -39,7 +39,10 @@ export default async function SelectRolePage() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-5 md:px-6 py-12 md:py-16">
+    // pt: Safe-Area + Luft — in der nativen App ist diese Seite chromelos
+    // (kein Header); ohne env(safe-area-inset-top) klebte der Titel direkt
+    // unter der iOS-Statusbar. Im Browser ist env()=0 → normales Padding.
+    <main className="mx-auto max-w-4xl px-5 md:px-6 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-12 md:pt-16 md:pb-16">
       <div className="mb-8 md:mb-10 text-center">
         <h1 className="font-display font-black text-3xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
           Mit welcher Rolle willst du arbeiten?

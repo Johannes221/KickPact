@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Check } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
+import { CancelOnboardingLink } from "./cancel-onboarding-link";
 import { cn } from "@/lib/utils";
 
 const STEPS_LABELS = ["Verein & Mannschaft", "Stammdaten"] as const;
@@ -19,6 +20,12 @@ interface Props {
    * „Zurück"-Pfeil (Step 2 → Step 1). Auf Step 1 weggelassen.
    */
   backHref?: string;
+  /**
+   * ClubId des aktiven Drafts (falls vorhanden) — der „Abbrechen"-Ausgang
+   * verwirft ihn dann nach Bestätigung. Ohne Draft ist Abbrechen ein simpler
+   * Link. Der Ausgang ist IMMER sichtbar — niemand darf im Wizard gefangen sein.
+   */
+  cancelClubId?: string;
 }
 
 /**
@@ -33,7 +40,7 @@ interface Props {
  * sind als Link zurück erreichbar (Step 1 ↔ Step 2), zukünftige Steps sind
  * inert — die State-Machine bleibt die Quelle der Wahrheit.
  */
-export function WizardShell({ step, role, children, userContext, backHref }: Props) {
+export function WizardShell({ step, role, children, userContext, backHref, cancelClubId }: Props) {
   const headline = role === "verein" ? "Verein anlegen" : "Mannschaft anlegen";
   const subline =
     role === "verein"
@@ -41,8 +48,11 @@ export function WizardShell({ step, role, children, userContext, backHref }: Pro
       : "2 Schritte, ca. 2 Minuten — 30 Tage Pro-Trial, keine Kreditkarte.";
 
   return (
-    <main className="mx-auto max-w-2xl px-5 pb-16 pt-4 md:px-6 md:pt-8">
-      {/* Dezente Top-Zeile: Zurück-Pfeil (nur wenn sinnvoll) links, Kontext rechts. */}
+    // pt: Safe-Area + Luft — auf Mobile (Web wie native App) gibt es hier keinen
+    // Header; ohne env(safe-area-inset-top) klebte der Inhalt in der iOS-App
+    // direkt unter der Statusbar. Im Browser ist env()=0 → einfach mehr Abstand.
+    <main className="mx-auto max-w-2xl px-5 pb-16 pt-[calc(env(safe-area-inset-top)+1.5rem)] md:px-6 md:pt-10">
+      {/* Dezente Top-Zeile: Zurück-Pfeil (nur wenn sinnvoll) links, Kontext + Abbrechen rechts. */}
       <div className="mb-5 flex min-h-7 items-center justify-between gap-3">
         {backHref ? (
           <Link
@@ -55,11 +65,14 @@ export function WizardShell({ step, role, children, userContext, backHref }: Pro
         ) : (
           <span aria-hidden />
         )}
-        {userContext ? (
-          <span className="truncate text-[13px] font-medium text-brand-night-navy/45">
-            {userContext}
-          </span>
-        ) : null}
+        <div className="flex min-w-0 items-center gap-3">
+          {userContext ? (
+            <span className="hidden truncate text-[13px] font-medium text-brand-night-navy/45 sm:inline">
+              {userContext}
+            </span>
+          ) : null}
+          <CancelOnboardingLink clubId={cancelClubId} />
+        </div>
       </div>
 
       <PageHeader title={headline} subtitle={subline} />

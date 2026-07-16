@@ -24,6 +24,7 @@ export default async function VereinFlowStep2() {
       role="verein"
       userContext={user.name || user.email}
       backHref="/onboarding/verein/verein?change=1"
+      cancelClubId={draft.clubId}
     >
       <StammdatenForm
         clubId={draft.clubId}

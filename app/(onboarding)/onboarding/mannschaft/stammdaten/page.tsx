@@ -23,6 +23,7 @@ export default async function MannschaftFlowStep2() {
       role="mannschaft"
       userContext={user.name || user.email}
       backHref="/onboarding/mannschaft/verein?change=1"
+      cancelClubId={draft.clubId}
     >
       <StammdatenForm
         clubId={draft.clubId}

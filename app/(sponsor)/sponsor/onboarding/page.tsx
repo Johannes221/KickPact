@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
 import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
@@ -32,6 +33,16 @@ export default async function SponsorOnboardingPage({
       {/* Feuert signup_completed einmal pro Session — Sponsor-Onboarding ist
           der erste authentifizierte Touchpoint für Sponsor-Signups. */}
       <SignupCompletedTracker />
+      {/* Ausgang aus dem Onboarding — niemand darf hier gefangen sein. Ziel
+          /select-role: mit Rollen der Hub, ohne Rollen bounced er zum Chooser. */}
+      <div className="mb-3">
+        <Link
+          href="/select-role"
+          className="press -ml-1 inline-flex items-center text-[15px] font-medium text-brand-night-navy/60 transition-colors hover:text-brand-night-navy"
+        >
+          ‹ Zurück
+        </Link>
+      </div>
       <h1 className="font-display font-bold text-2xl md:text-4xl lg:text-5xl tracking-tight text-brand-night-navy">
         Willkommen bei <span className="text-accent">KickPact</span>
       </h1>

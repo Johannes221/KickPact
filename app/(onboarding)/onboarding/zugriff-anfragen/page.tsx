@@ -24,7 +24,19 @@ export default async function ZugriffAnfragenPage({
   const targetLabel = fixedTeam ? fixedTeam.name : club.name;
 
   return (
-    <main className="mx-auto max-w-2xl px-5 md:px-6 py-10 md:py-16">
+    // pt: Safe-Area + Luft — Onboarding-Routen haben auf Mobile keinen Header;
+    // ohne env(safe-area-inset-top) klebte der Inhalt in der iOS-App unter der
+    // Statusbar. Im Browser ist env()=0.
+    <main className="mx-auto max-w-2xl px-5 md:px-6 pt-[calc(env(safe-area-inset-top)+2rem)] pb-10 md:pt-16 md:pb-16">
+      {/* Ausgang — niemand darf im Anfrage-Screen gefangen sein. */}
+      <div className="mb-3">
+        <Link
+          href="/select-role"
+          className="press -ml-1 inline-flex items-center text-[15px] font-medium text-brand-night-navy/60 transition-colors hover:text-brand-night-navy"
+        >
+          ‹ Zurück
+        </Link>
+      </div>
       <div className="mb-8">
         <div className="text-xs uppercase tracking-widest text-brand-night-navy/50 font-semibold">
           Zugriff anfragen

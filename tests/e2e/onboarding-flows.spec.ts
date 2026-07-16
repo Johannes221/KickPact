@@ -264,6 +264,33 @@ test.describe("Onboarding · Realistic-Data-Smokes (auth required)", () => {
   // werden sie aktiviert.
   test.skip(skipIfNoBypass(), "E2E_TEST_BYPASS_KEY nicht gesetzt — Auth-Bypass nicht verfügbar");
 
+  test("Neue-Rolle-Chooser verlinkt Wizards mit add=1 (Loop-Regression)", async ({
+    page
+  }: {
+    page: Page;
+  }) => {
+    // Regression 2026-07-16: ohne `?add=1` schickte der Wizard-Entry-Guard
+    // User mit bestehender Identity zurück zu /select-role → Endlos-Kreislauf
+    // „Neue Rolle hinzufügen" ↔ Rollen-Wahl. Der Chooser MUSS das Flag tragen.
+    const email = testEmail("addrole");
+    await loginAsTestUser(page, email, { name: "AddRole Tester" });
+
+    await page.goto("/signup?add=1");
+    await expect(
+      page.locator('a[href="/onboarding/mannschaft/verein?add=1"]')
+    ).toBeVisible();
+    await expect(
+      page.locator('a[href="/onboarding/verein/verein?add=1"]')
+    ).toBeVisible();
+
+    // Und der Wizard-Einstieg mit add=1 rendert (kein Redirect-Loop).
+    await page.goto("/onboarding/mannschaft/verein?add=1");
+    await expect(page).not.toHaveURL(/select-role|signup/);
+    await expect(
+      page.getByRole("button", { name: /Abbrechen/i }).or(page.getByRole("link", { name: /Abbrechen/i })).first()
+    ).toBeVisible();
+  });
+
   test("Verein-Onboarding-Wizard Step 1 mit FC Dossenheim (auth)", async ({
     page
   }: {

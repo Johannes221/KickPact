@@ -72,9 +72,12 @@ function isSignupRole(v: string | undefined): v is SignupRole {
  * Mapping für eingeloggte User mit 0 Identities: welche Rolle führt zu welchem
  * Onboarding-Wizard? Wird im Auth-aware-Add-Role-Chooser genutzt.
  */
+// `add=1` signalisiert dem Wizard-Entry-Guard: der User will BEWUSST eine
+// weitere Rolle anlegen — ohne das Flag schickt der Guard User mit bestehender
+// Identity zurück zu /select-role (→ Endlos-Kreislauf Chooser ↔ Rollen-Wahl).
 const ADD_ROLE_HREF: Record<SignupRole, string> = {
-  mannschaft: "/onboarding/mannschaft/verein",
-  verein: "/onboarding/verein/verein",
+  mannschaft: "/onboarding/mannschaft/verein?add=1",
+  verein: "/onboarding/verein/verein?add=1",
   sponsor: "/sponsor/onboarding"
 };
 
@@ -131,7 +134,12 @@ export default async function SignupPage({
       identities.clubs.length +
       identities.teamOnly.length +
       (identities.sponsor ? 1 : 0);
-    return <AuthenticatedRoleChooser addMode={wantsAddRole && total > 0} />;
+    return (
+      <AuthenticatedRoleChooser
+        addMode={wantsAddRole && total > 0}
+        hasSponsor={Boolean(identities.sponsor)}
+      />
+    );
   }
 
   // Google: in der nativen App über das @codetrix-GoogleAuth-Plugin (iosClientId
@@ -239,8 +247,18 @@ export default async function SignupPage({
  * 3 Rollen-Tiles, aber die Links springen direkt in den jeweiligen
  * Onboarding-Wizard — kein erneutes Magic-Link/OAuth-Theater.
  */
-function AuthenticatedRoleChooser({ addMode = false }: { addMode?: boolean }) {
-  const tiles: RoleTile[] = SIGNUP_ROLES.map((r) => ({
+function AuthenticatedRoleChooser({
+  addMode = false,
+  hasSponsor = false
+}: {
+  addMode?: boolean;
+  hasSponsor?: boolean;
+}) {
+  // Es gibt genau EIN Sponsor-Profil pro Account — wer schon Sponsor ist, kann
+  // die Rolle nicht nochmal anlegen (der Klick würde nur stumm zum Sponsor-
+  // Dashboard redirecten). Tile im Add-Modus ausblenden statt enttäuschen.
+  const roles = SIGNUP_ROLES.filter((r) => !(addMode && hasSponsor && r === "sponsor"));
+  const tiles: RoleTile[] = roles.map((r) => ({
     icon: ROLE_META[r].icon,
     title: ROLE_META[r].title,
     tagline: ROLE_SHORT[r],
@@ -256,6 +274,7 @@ function AuthenticatedRoleChooser({ addMode = false }: { addMode?: boolean }) {
           : "Du bist eingeloggt — wähle, wie du startest. Später jederzeit erweiterbar."
       }
       tiles={tiles}
+      backHref={addMode ? "/select-role" : undefined}
     />
   );
 }

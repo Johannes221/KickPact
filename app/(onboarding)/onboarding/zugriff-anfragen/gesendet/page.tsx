@@ -10,7 +10,9 @@ export default async function GesendetPage({
   const { clubName } = await searchParams;
 
   return (
-    <main className="mx-auto max-w-md px-5 md:px-6 py-16 text-center">
+    // pt: Safe-Area — Onboarding-Routen haben auf Mobile keinen Header (iOS-App:
+    // Inhalt sonst unter der Statusbar). Im Browser ist env()=0.
+    <main className="mx-auto max-w-md px-5 md:px-6 pt-[calc(env(safe-area-inset-top)+4rem)] pb-16 md:pt-16 text-center">
       <div className="text-6xl mb-4">📨</div>
       <h1 className="font-display font-black text-2xl md:text-3xl tracking-tight text-brand-night-navy">
         Anfrage gesendet

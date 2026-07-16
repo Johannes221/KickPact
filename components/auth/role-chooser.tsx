@@ -20,19 +20,33 @@ export function RoleChooser({
   heading,
   subline,
   tiles,
-  footer
+  footer,
+  backHref
 }: {
   badge?: string;
   heading: string;
   subline: string;
   tiles: RoleTile[];
   footer?: React.ReactNode;
+  /** Wenn gesetzt: dezenter „‹ Zurück"-Link über dem Titel — der User soll aus
+   *  dem Chooser jederzeit wieder rauskommen (kein Gefangen-Gefühl). */
+  backHref?: string;
 }) {
   return (
     <main className="native-shell relative w-full overflow-hidden px-6 pb-8 pt-2">
       <BrandBackdrop variant="dots" className="!fixed" />
 
       <div className="relative z-10 mx-auto w-full max-w-md">
+        {backHref && (
+          <div className="mb-3">
+            <Link
+              href={backHref}
+              className="press -ml-1 inline-flex items-center text-[15px] font-medium text-accent-dark"
+            >
+              ‹ Zurück
+            </Link>
+          </div>
+        )}
         {badge && (
           <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-accent-dark">
             {badge}

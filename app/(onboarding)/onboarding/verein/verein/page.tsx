@@ -22,16 +22,24 @@ export const metadata = { title: "Verein wählen · KickPact" };
 export default async function VereinFlowStep1({
   searchParams
 }: {
-  searchParams: Promise<{ change?: string }>;
+  searchParams: Promise<{ change?: string; add?: string }>;
 }) {
   const user = await requireUser();
-  const { change } = await searchParams;
+  const { change, add } = await searchParams;
   const draft = await getActiveDraftForUser(user.id);
   if (draft && !change) redirect(nextOnboardingStep(draft));
-  if (!draft) await redirectIfAlreadyOnboarded(user.id);
+  // `add=1` = bewusstes „Neue Rolle hinzufügen" (Chooser auf /signup?add=1).
+  // Der Guard darf dann NICHT greifen — sonst schickt er User mit bestehender
+  // Identity zurück zu /select-role und der Add-Flow wird ein Endlos-Kreislauf.
+  if (!draft && add !== "1") await redirectIfAlreadyOnboarded(user.id);
 
   return (
-    <WizardShell step={1} role="verein" userContext={user.name || user.email}>
+    <WizardShell
+      step={1}
+      role="verein"
+      userContext={user.name || user.email}
+      cancelClubId={draft?.clubId}
+    >
       {draft ? (
         <DraftChangeGate
           role="verein"

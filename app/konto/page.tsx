@@ -75,7 +75,10 @@ export default async function KontoPage() {
     : null;
 
   return (
-    <main className="mx-auto max-w-3xl px-5 md:px-6 py-8 md:py-12 space-y-6 md:space-y-8">
+    // pt: Safe-Area + Luft — /konto ist App-Shell-Route (Mobile ohne globalen
+    // Header); ohne env(safe-area-inset-top) begann der Inhalt in der iOS-App
+    // direkt unter der Statusbar. Im Browser ist env()=0.
+    <main className="mx-auto max-w-3xl px-5 md:px-6 pt-[calc(env(safe-area-inset-top)+2rem)] pb-8 md:pt-12 md:pb-12 space-y-6 md:space-y-8">
       <PageHeader
         title="Mein Konto"
         subtitle="Profil, Sicherheit und deine DSGVO-Rechte an einem Ort."
