@@ -1,8 +1,8 @@
-import { and, asc, eq, gte, inArray, isNotNull, ne } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNotNull, ne } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { matches, matchEvents } from "@/lib/db/schema/matches";
 import { teams, clubs } from "@/lib/db/schema/clubs";
-import { resolveTeamSide } from "@/lib/crawler/team-side";
+import { resolveTeamSide, matchHasNameCollision } from "@/lib/crawler/team-side";
 import { berlinDayStart } from "@/lib/story/story-content";
 
 /**
@@ -24,8 +24,24 @@ export interface StoryMatch {
   gastTeamId: string | null;
   ergebnisHeim: number | null;
   ergebnisGast: number | null;
-  /** Eigene Spielseite — team-id-first via resolveTeamSide, nicht geraten. */
+  /** Eigene Spielseite via resolveTeamSide (team-id-first, Namens-Fallback). */
   ownSide: "heim" | "gast";
+  /**
+   * Ist `ownSide` VERTRAUENSWÜRDIG?
+   *
+   * Wichtig für kommende Spiele: `upsertScheduledMatch` legt Spielplan-Stubs
+   * OHNE heim/gastTeamId an (die ids kommen erst mit dem Detail-Scrape des
+   * gespielten Spiels). Bei `scheduled` fällt `resolveTeamSide` deshalb IMMER
+   * aufs Namens-Matching zurück — und das kippt bei Reserve-Derbys („SV X II"
+   * vs „SV X III") deterministisch auf „heim", weil der Token in beiden Namen
+   * steckt. Ohne dieses Flag behauptete die Story „Heimspiel" statt
+   * „Auswärtsspiel" bzw. drehte im Rückblick Ausgang und Torschützen um.
+   *
+   * false ⇒ die Vorlage lässt alles weg, was von der Seite abhängt, statt zu
+   * raten. Erkennung über `matchHasNameCollision` — derselbe Detektor, der die
+   * Falschgeld-Fälle markiert.
+   */
+  ownSideReliable: boolean;
 }
 
 export interface StoryTeam {
@@ -61,18 +77,28 @@ function withOwnSide(
   rows: (typeof matches.$inferSelect)[],
   team: StoryTeam
 ): StoryMatch[] {
-  return rows.map((m) => ({
-    id: m.id,
-    datum: m.datum,
-    status: m.status,
-    heimName: m.heimName,
-    gastName: m.gastName,
-    heimTeamId: m.heimTeamId,
-    gastTeamId: m.gastTeamId,
-    ergebnisHeim: m.ergebnisHeim,
-    ergebnisGast: m.ergebnisGast,
-    ownSide: resolveTeamSide(m, team.fussballdeTeamId, [team.name, team.clubName])
-  }));
+  const names = [team.name, team.clubName];
+  return rows.map((m) => {
+    // Die team-id entscheidet nur, wenn sie gespeichert ist UND auf genau eine
+    // Seite passt — sonst rät resolveTeamSide über die Namen.
+    const idDecided =
+      !!team.fussballdeTeamId &&
+      (m.heimTeamId === team.fussballdeTeamId || m.gastTeamId === team.fussballdeTeamId);
+    return {
+      id: m.id,
+      datum: m.datum,
+      status: m.status,
+      heimName: m.heimName,
+      gastName: m.gastName,
+      heimTeamId: m.heimTeamId,
+      gastTeamId: m.gastTeamId,
+      ergebnisHeim: m.ergebnisHeim,
+      ergebnisGast: m.ergebnisGast,
+      ownSide: resolveTeamSide(m, team.fussballdeTeamId, names),
+      ownSideReliable:
+        idDecided || !matchHasNameCollision(names, m.heimName, m.gastName)
+    };
+  });
 }
 
 /**
@@ -116,6 +142,12 @@ export async function getNextMatchForTeam(
  * Der Filter auf `teamId` ist die Trust-Boundary: `matchId` kommt aus der URL
  * und ist damit client-kontrolliert. Ohne diese Bedingung könnte man mit einer
  * fremden matchId eine Story über ein fremdes Spiel rendern lassen.
+ *
+ * `cancelled` fällt raus — dieselbe Regel wie in getNextMatchForTeam, nur hier
+ * genauso nötig: ein abgesagtes Spiel ist nicht „gespielt" und landete sonst in
+ * der VORSCHAU-Vorlage („NÄCHSTES SPIEL"). Abgesagte Rows sind zusätzlich
+ * Tombstones ersetzter Spiele (cancelledReason "match_updated") — eine gemerkte
+ * Vorschau-URL kündigte damit ein Spiel an, das es nicht mehr gibt.
  */
 export async function getStoryMatch(
   teamId: string,
@@ -127,7 +159,13 @@ export async function getStoryMatch(
   const rows = await db
     .select()
     .from(matches)
-    .where(and(eq(matches.id, matchId), eq(matches.teamId, teamId)))
+    .where(
+      and(
+        eq(matches.id, matchId),
+        eq(matches.teamId, teamId),
+        ne(matches.status, "cancelled")
+      )
+    )
     .limit(1);
 
   return rows.length > 0 ? withOwnSide(rows, team)[0] : null;
@@ -177,15 +215,24 @@ export async function getMatchScorers(
 
 /**
  * Logo des Gegners — nur, wenn der Gegner selbst eine KickPact-Mannschaft mit
- * ÖFFENTLICHEM Profil ist (`discoverable`) und ein Logo hochgeladen hat.
+ * tatsächlich ÖFFENTLICHEM Profil ist und ein Logo hochgeladen hat.
  *
- * Warum dieses Gate: das Logo ist ein Asset eines anderen Mandanten. Bei einer
- * discoverable Mannschaft liegt es ohnehin öffentlich sichtbar auf `/m/<slug>`
- * — das ist die vorhandene Einwilligung. Für nicht-öffentliche Mannschaften
- * wird nichts übernommen; die Story zeigt dann das Kürzel.
+ * Warum überhaupt ein Gate: das Logo ist das Asset eines ANDEREN Mandanten. Die
+ * Rechtfertigung, es in unsere Story zu brennen, ist, dass es ohnehin öffentlich
+ * auf `/m/<slug>` steht. Dann muss hier aber exakt dasselbe Gate gelten wie dort
+ * — `discoverable` ALLEIN reicht nicht: `getPublicTeamProfileBySlug` verlangt
+ * zusätzlich `isActive` und `verifiedAt` (siehe isTeamOpenForSponsorEntry in
+ * sponsor-discover.ts). Ein unverifiziertes oder deaktiviertes Team liefert dort
+ * 404 — sein Logo hier zu zeigen wäre ein Leak, den die Begründung nicht deckt.
+ * (`deactivateTeam` lässt `discoverable` bewusst stehen, siehe
+ * lib/actions/sponsor-inquiries.ts.)
  *
  * Verknüpft wird über die eindeutige fussball.de-team-id, nicht über den Namen
- * (Namens-Matching kollidiert bei Reserve-Derbys/gleicher Stadt).
+ * (Namens-Matching kollidiert bei Reserve-Derbys/gleicher Stadt). Eindeutig ist
+ * aber nur (fussballde_team_id, saison) — über die Saisons hinweg gibt es also
+ * mehrere Zeilen. Deshalb die NEUESTE nehmen: sonst entschiede der Zufall,
+ * welche Saison-Zeile das Logo (und ihr discoverable-Flag) liefert, und ein
+ * heute abgeschaltetes Team leakte über seine Altsaison-Zeile weiter.
  */
 export async function getOpponentLogoUrl(
   fussballdeTeamId: string | null
@@ -198,9 +245,12 @@ export async function getOpponentLogoUrl(
       and(
         eq(teams.fussballdeTeamId, fussballdeTeamId),
         eq(teams.discoverable, true),
+        eq(teams.isActive, true),
+        isNotNull(teams.verifiedAt),
         isNotNull(teams.logoUrl)
       )
     )
+    .orderBy(desc(teams.saison))
     .limit(1);
   return row?.logoUrl ?? null;
 }

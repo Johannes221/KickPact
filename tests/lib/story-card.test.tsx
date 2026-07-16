@@ -43,6 +43,7 @@ const SAMPLES: Record<string, StoryModel> = {
     teamsInLeague: 14,
     kickoff: "Samstag",
     dateLine: "Sa., 18.07.2026",
+    heimspiel: true,
     heim: { name: "SV Sandhausen", crest: { kind: "logo", src: FAKE_LOGO }, position: 3 },
     gast: { name: "FC Bayern München", crest: { kind: "logo", src: FAKE_LOGO }, position: 7 }
   },
@@ -56,6 +57,7 @@ const SAMPLES: Record<string, StoryModel> = {
     teamsInLeague: null,
     kickoff: "Heute",
     dateLine: "Do., 16.07.2026",
+    heimspiel: false,
     heim: { name: "TSG 1899 Hoffenheim II", crest: { kind: "abbrev", text: "TSGH" }, position: null },
     gast: { name: "Sportfreunde Dossenheim", crest: { kind: "abbrev", text: "SD" }, position: null }
   },
@@ -131,6 +133,36 @@ const SAMPLES: Record<string, StoryModel> = {
     scorers: [{ name: "Maximilian Mustermann", tore: 2 }],
     heim: { name: "FC Bayern München", crest: { kind: "abbrev", text: "FCB" }, position: 7 },
     gast: { name: "SV Sandhausen", crest: { kind: "logo", src: FAKE_LOGO }, position: 3 }
+  },
+  // Reserve-Derby ohne team-ids: eigene Seite unsicher → keine Ausgangs-
+  // Headline, keine Torschützen, kein Heim/Auswärts. Der Endstand trägt.
+  "rueckblick-derby-unsicher": {
+    kind: "rueckblick",
+    matchId: "m8",
+    teamName: "SV Sandhausen III",
+    league: "Kreisklasse B",
+    ownSide: "heim",
+    teamsInLeague: 12,
+    dateLine: "So., 12.07.2026",
+    ergebnisHeim: 2,
+    ergebnisGast: 1,
+    headline: null,
+    scorers: [],
+    heim: { name: "SV Sandhausen II", crest: { kind: "abbrev", text: "SVS" }, position: 4 },
+    gast: { name: "SV Sandhausen III", crest: { kind: "abbrev", text: "SVS" }, position: 9 }
+  },
+  "vorschau-derby-unsicher": {
+    kind: "vorschau",
+    matchId: "m9",
+    teamName: "SV Sandhausen III",
+    league: "Kreisklasse B",
+    ownSide: "heim",
+    teamsInLeague: 12,
+    kickoff: "Sonntag",
+    dateLine: "So., 19.07.2026",
+    heimspiel: null,
+    heim: { name: "SV Sandhausen II", crest: { kind: "abbrev", text: "SVS" }, position: 4 },
+    gast: { name: "SV Sandhausen III", crest: { kind: "abbrev", text: "SVS" }, position: 9 }
   },
   // Überlauf-Schutz: sehr lange Namen + mehr Torschützen als Platz.
   "rueckblick-ueberlauf": {

@@ -153,7 +153,71 @@ describe("getNextMatchForTeam", () => {
   });
 });
 
+describe("ownSideReliable — nicht raten, wenn die Namen kollidieren", () => {
+  it("Reserve-Derby ohne team-ids: Seite gilt als UNSICHER", async () => {
+    // Spielplan-Stubs (upsertScheduledMatch) haben keine team-ids, und
+    // detectTeamSide findet den Token „sandhausen" in BEIDEN Namen → es würde
+    // stumpf „heim" liefern, auch für die Dritte. Genau das darf die Story
+    // nicht behaupten.
+    const team = await seedTeam({ name: "SV Sandhausen III" });
+    await seedMatch(team.id, {
+      datum: new Date("2026-09-20T12:00:00Z"),
+      heimName: "SV Sandhausen II",
+      gastName: "SV Sandhausen III"
+    });
+
+    const res = await getNextMatchForTeam(team.id, NOW);
+    expect(res?.ownSideReliable).toBe(false);
+  });
+
+  it("normales Spiel ohne Namenskollision: Seite gilt als sicher", async () => {
+    const team = await seedTeam({ name: "SV Sandhausen" });
+    await seedMatch(team.id, {
+      datum: new Date("2026-09-20T12:00:00Z"),
+      heimName: "FC Gegnerstadt",
+      gastName: "SV Sandhausen"
+    });
+
+    const res = await getNextMatchForTeam(team.id, NOW);
+    expect(res?.ownSideReliable).toBe(true);
+    expect(res?.ownSide).toBe("gast");
+  });
+
+  it("Derby MIT team-ids: die id entscheidet → wieder sicher", async () => {
+    const team = await seedTeam({
+      name: "SV Sandhausen III",
+      fussballdeTeamId: "fd-eigene"
+    });
+    const id = await seedMatch(team.id, {
+      datum: new Date("2026-09-13T12:00:00Z"),
+      status: "finished",
+      heimName: "SV Sandhausen II",
+      gastName: "SV Sandhausen III",
+      ergebnisHeim: 1,
+      ergebnisGast: 2
+    });
+    await db
+      .update(matches)
+      .set({ heimTeamId: "fd-fremde", gastTeamId: "fd-eigene" })
+      .where(eq(matches.id, id));
+
+    const res = await getStoryMatch(team.id, id);
+    expect(res?.ownSideReliable).toBe(true);
+    expect(res?.ownSide).toBe("gast");
+  });
+});
+
 describe("getStoryMatch — Tenant-Filter", () => {
+  it("rendert abgesagte Spiele nicht (sonst NÄCHSTES SPIEL für ein totes Spiel)", async () => {
+    const team = await seedTeam();
+    const id = await seedMatch(team.id, {
+      datum: new Date("2026-09-20T12:00:00Z"),
+      status: "cancelled"
+    });
+
+    expect(await getStoryMatch(team.id, id)).toBeNull();
+  });
+
   it("liefert das eigene Spiel", async () => {
     const team = await seedTeam();
     const id = await seedMatch(team.id, { datum: new Date("2026-09-20T12:00:00Z") });
@@ -233,24 +297,52 @@ describe("getMatchScorers", () => {
 });
 
 describe("getOpponentLogoUrl", () => {
-  it("übernimmt das Logo nur bei öffentlicher (discoverable) Mannschaft", async () => {
+  /** Genau das Gate, das /m/<slug> öffentlich macht (isTeamOpenForSponsorEntry). */
+  const OEFFENTLICH = {
+    logoUrl: "r2://bucket/teams/x/logo.png",
+    discoverable: true,
+    isActive: true,
+    verifiedAt: new Date("2026-01-01T00:00:00Z")
+  };
+
+  it("übernimmt das Logo einer wirklich öffentlichen Mannschaft", async () => {
     const gegner = await seedTeam({ fussballdeTeamId: "fd-gegner-1" });
-    await db
-      .update(teams)
-      .set({ logoUrl: "r2://bucket/teams/x/logo.png", discoverable: true })
-      .where(eq(teams.id, gegner.id));
+    await db.update(teams).set(OEFFENTLICH).where(eq(teams.id, gegner.id));
 
     expect(await getOpponentLogoUrl("fd-gegner-1")).toBe("r2://bucket/teams/x/logo.png");
   });
 
-  it("nicht-öffentliche Mannschaft: kein Logo (fremdes Asset, keine Einwilligung)", async () => {
+  it("nicht discoverable: kein Logo (fremdes Asset, keine Einwilligung)", async () => {
     const gegner = await seedTeam({ fussballdeTeamId: "fd-gegner-2" });
     await db
       .update(teams)
-      .set({ logoUrl: "r2://bucket/teams/y/logo.png", discoverable: false })
+      .set({ ...OEFFENTLICH, discoverable: false })
       .where(eq(teams.id, gegner.id));
 
     expect(await getOpponentLogoUrl("fd-gegner-2")).toBeNull();
+  });
+
+  it("discoverable, aber UNVERIFIZIERT: kein Logo — /m/<slug> liefert dort 404", async () => {
+    // discoverable allein ist NICHT die Einwilligung: das öffentliche Profil
+    // verlangt zusätzlich verifiedAt. Sonst leakt das Wappen eines Vereins, den
+    // öffentlich niemand sehen kann.
+    const gegner = await seedTeam({ fussballdeTeamId: "fd-gegner-3" });
+    await db
+      .update(teams)
+      .set({ ...OEFFENTLICH, verifiedAt: null })
+      .where(eq(teams.id, gegner.id));
+
+    expect(await getOpponentLogoUrl("fd-gegner-3")).toBeNull();
+  });
+
+  it("deaktivierte Mannschaft: kein Logo (deactivateTeam lässt discoverable stehen)", async () => {
+    const gegner = await seedTeam({ fussballdeTeamId: "fd-gegner-4" });
+    await db
+      .update(teams)
+      .set({ ...OEFFENTLICH, isActive: false })
+      .where(eq(teams.id, gegner.id));
+
+    expect(await getOpponentLogoUrl("fd-gegner-4")).toBeNull();
   });
 
   it("unbekannter Gegner / keine team-id → null", async () => {

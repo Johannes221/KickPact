@@ -59,9 +59,9 @@ export const STORY_SIZE = { width: 1080, height: 1920 } as const;
  */
 export function StoryCard({ model }: { model: StoryModel }) {
   // Rückblick färbt sich nach Ausgang: Sieg = Lime, Unentschieden = Orange,
-  // Niederlage = Rot. Die Vorschau bleibt Brand-Orange (noch offen).
+  // Niederlage = Rot. Vorschau und unsicherer Ausgang bleiben Brand-Orange.
   const accent =
-    model.kind === "vorschau"
+    model.kind === "vorschau" || !model.headline
       ? ORANGE
       : model.headline.outcome === "sieg"
         ? LIME
@@ -331,7 +331,6 @@ function DuelRow({
 }
 
 function PreviewBody({ model, accent }: { model: PreviewStoryProps; accent: string }) {
-  const heimspiel = model.ownSide === "heim";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 64 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -348,10 +347,13 @@ function PreviewBody({ model, accent }: { model: PreviewStoryProps; accent: stri
         >
           {model.kickoff}
         </div>
-        {/* Bewusst OHNE Anstoßzeit: die DB hat keine echte (siehe story-data.ts). */}
-        <div style={{ display: "flex", fontSize: 44, color: accent, fontWeight: 800 }}>
-          {heimspiel ? "Heimspiel" : "Auswärtsspiel"}
-        </div>
+        {/* Bewusst OHNE Anstoßzeit: die DB hat keine echte (siehe story-data.ts).
+            Heim/Auswärts nur, wenn die eigene Seite sicher ist (heimspiel !== null). */}
+        {model.heimspiel !== null && (
+          <div style={{ display: "flex", fontSize: 44, color: accent, fontWeight: 800 }}>
+            {model.heimspiel ? "Heimspiel" : "Auswärtsspiel"}
+          </div>
+        )}
       </div>
 
       <DuelRow
@@ -376,13 +378,20 @@ function PreviewBody({ model, accent }: { model: PreviewStoryProps; accent: stri
 }
 
 function RecapBody({ model, accent }: { model: RecapStoryProps; accent: string }) {
+  /**
+   * Ohne verlässliche eigene Seite (Reserve-Derby ohne team-ids) gibt es keine
+   * Ausgangs-Headline. Dann ist „Endstand" die Überschrift — neutral und
+   * unabhängig davon, auf welcher Seite wir stehen. Das Ergebnis selbst steht
+   * schon im Duell; es hier zu wiederholen wäre nur doppelt.
+   */
+  const held = model.headline?.headline ?? "Endstand";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 56 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <div
           style={{
             display: "flex",
-            fontSize: fitFontSize(model.headline.headline, 132),
+            fontSize: fitFontSize(held, 132),
             fontWeight: 900,
             color: OFF,
             letterSpacing: "-0.03em",
@@ -390,11 +399,13 @@ function RecapBody({ model, accent }: { model: RecapStoryProps; accent: string }
             textTransform: "uppercase"
           }}
         >
-          {model.headline.headline}
+          {held}
         </div>
-        <div style={{ display: "flex", fontSize: 40, color: accent, fontWeight: 800 }}>
-          {model.headline.kicker}
-        </div>
+        {model.headline && (
+          <div style={{ display: "flex", fontSize: 40, color: accent, fontWeight: 800 }}>
+            {model.headline.kicker}
+          </div>
+        )}
       </div>
 
       <DuelRow

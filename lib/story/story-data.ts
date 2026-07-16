@@ -10,6 +10,7 @@ import {
   type StoryScorer
 } from "@/lib/db/queries/story";
 import { formatDate } from "@/lib/utils/date-format";
+import { currentSaisonCode } from "@/lib/utils/saison";
 import {
   pickCrest,
   recapHeadline,
@@ -113,6 +114,12 @@ export interface PreviewStory extends StoryBase {
   kickoff: string;
   /** Volles Datum „Sa., 18.07.2026" als Zweitzeile. */
   dateLine: string;
+  /**
+   * true = Heimspiel, false = Auswärtsspiel, null = eigene Seite nicht sicher
+   * bestimmbar (Reserve-Derby ohne team-ids, s. StoryMatch.ownSideReliable) →
+   * die Vorlage schweigt dazu, statt das Falsche zu behaupten.
+   */
+  heimspiel: boolean | null;
 }
 
 /**
@@ -130,7 +137,13 @@ export interface RecapStory extends StoryBase {
   kind: "rueckblick";
   ergebnisHeim: number;
   ergebnisGast: number;
-  headline: RecapHeadline;
+  /**
+   * Ausgang aus eigener Sicht — null, wenn die eigene Seite nicht sicher
+   * bestimmbar ist (s. StoryMatch.ownSideReliable). Dann zeigt die Vorlage nur
+   * den Endstand: „Heimsieg" vs. „Niederlage" zu verwechseln wäre der
+   * schlimmste denkbare Fehler auf einer geteilten Story.
+   */
+  headline: RecapHeadline | null;
   /** Torschützen der EIGENEN Seite — oft leer (fussball.de-Coverage). */
   scorers: StoryScorer[];
   dateLine: string;
@@ -170,12 +183,17 @@ export async function buildStoryModel(
   const ownIsHeim = match.ownSide === "heim";
   const opponentFussballdeTeamId = ownIsHeim ? match.gastTeamId : match.heimTeamId;
 
-  // Tabelle nie synchron scrapen (Request-Pfad) — bei Miss kommt null zurück
-  // und der Prewarm-Job füllt für den nächsten Aufruf nach.
+  // Tabelle der Saison DES SPIELS, nicht der aktuellen Team-Saison: `matches`
+  // hat keine saison-Spalte, die Zuordnung läuft übers Datum. Sonst klebte an
+  // einem Vorsaison-Rückblick der diesjährige Tabellenplatz („Platz 3" über
+  // eine Saison, die als 11. endete).
+  // Nie synchron scrapen (Request-Pfad) — bei Miss kommt null und der
+  // Prewarm-Job füllt für den nächsten Aufruf nach.
+  const matchSaison = currentSaisonCode(match.datum);
   const [ownLogo, opponentLogo, standings] = await Promise.all([
     logoDataUrl(team.logoUrl),
     getOpponentLogoUrl(opponentFussballdeTeamId).then(logoDataUrl),
-    getCachedStandingsForRequest(teamId, team.saison).catch(() => null)
+    getCachedStandingsForRequest(teamId, matchSaison).catch(() => null)
   ]);
 
   const ownCrest = pickCrest({
@@ -219,13 +237,17 @@ export async function buildStoryModel(
   });
 
   if (isPlayed(match)) {
+    // Ohne verlässliche Seite: nur der Endstand (der stimmt immer) — keine
+    // Ausgangs-Headline, keine „unsere" Torschützen.
     return {
       ...base,
       kind: "rueckblick",
       ergebnisHeim: match.ergebnisHeim!,
       ergebnisGast: match.ergebnisGast!,
-      headline: recapHeadline(match.ownSide, match.ergebnisHeim!, match.ergebnisGast!),
-      scorers: await getMatchScorers(match.id, match.ownSide),
+      headline: match.ownSideReliable
+        ? recapHeadline(match.ownSide, match.ergebnisHeim!, match.ergebnisGast!)
+        : null,
+      scorers: match.ownSideReliable ? await getMatchScorers(match.id, match.ownSide) : [],
       dateLine
     };
   }
@@ -234,6 +256,7 @@ export async function buildStoryModel(
     ...base,
     kind: "vorschau",
     kickoff: kickoffLabel(match.datum, now),
-    dateLine
+    dateLine,
+    heimspiel: match.ownSideReliable ? match.ownSide === "heim" : null
   };
 }
