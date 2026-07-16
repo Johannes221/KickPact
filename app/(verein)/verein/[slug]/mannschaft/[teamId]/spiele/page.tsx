@@ -13,6 +13,7 @@ import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
 import { PageHeader } from "@/components/shared/page-header";
 import { getTeamCrawlState } from "@/lib/db/queries/crawler";
 import { isTeamCrawling } from "@/lib/crawler/crawl-status";
+import { hasResult } from "@/lib/matches/display-state";
 import { SpieleRefresh } from "./_components/spiele-refresh";
 import { eur } from "@/lib/utils/currency";
 
@@ -87,7 +88,7 @@ export default async function SpielePage({
   const enriched = matches.map((m) => {
     const isHeim = m.ownSide === "heim";
     const res = getResult(m, isHeim);
-    const isScheduled = m.status === "scheduled" || res === "open";
+    const isScheduled = !hasResult(m);
     return {
       ...m,
       isHeim,
@@ -293,19 +294,17 @@ export default async function SpielePage({
                 </>
               );
 
-              // Geplante Spiele haben keine Detail-Seite (kein Scrape) → kein Link.
+              // Auch geplante Spiele sind antippbar: die Detailseite rendert
+              // dann die Vorschau (Termin, Gegner, Heim/Auswärts, Liga) statt
+              // des Spielberichts — Melden-UI bleibt dort gesperrt.
               return (
                 <li key={m.id}>
-                  {m.isScheduled ? (
-                    <div className="flex items-center gap-3 md:gap-4 px-4 py-3">{inner}</div>
-                  ) : (
-                    <Link
-                      href={`/verein/${slug}/mannschaft/${team.id}/spiel/${m.id}`}
-                      className="flex items-center gap-3 md:gap-4 px-4 py-3 hover:bg-brand-off-white/50 transition-colors"
-                    >
-                      {inner}
-                    </Link>
-                  )}
+                  <Link
+                    href={`/verein/${slug}/mannschaft/${team.id}/spiel/${m.id}`}
+                    className="flex items-center gap-3 md:gap-4 px-4 py-3 hover:bg-brand-off-white/50 transition-colors"
+                  >
+                    {inner}
+                  </Link>
                 </li>
               );
             })}

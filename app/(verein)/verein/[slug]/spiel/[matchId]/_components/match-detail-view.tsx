@@ -12,6 +12,8 @@ import { ResultOverrideEditor } from "./result-override-editor";
 import { AdminNoteDisplay } from "./admin-note-display";
 import { ReportProblemButton } from "@/components/support/report-problem-button";
 import { eur } from "@/lib/utils/currency";
+import { isPlausibleLeague } from "@/lib/utils/league";
+import { canReportMatchEvents, isUpcomingMatch } from "@/lib/matches/display-state";
 
 /** "2526" → "25/26"; lässt bereits formatierte oder unbekannte Werte unangetastet. */
 function formatSaison(saison: string): string {
@@ -91,11 +93,19 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
 
   // Event-Aktionen nur bei tatsächlich gespielten Partien anbieten — nicht bei
   // zukünftigen/ungespielten (oder abgesagten/verlegten) Spielen.
-  const isPlayed =
-    match.status === "finished" ||
-    (match.datum.getTime() < Date.now() &&
-      match.status !== "cancelled" &&
-      match.status !== "postponed");
+  const isPlayed = canReportMatchEvents(match);
+
+  // Kommendes Spiel → Vorschau statt Spielbericht. Kein Ergebnis, keine Events,
+  // kein Melden-UI (das gated ohnehin auf `isPlayed`).
+  const isUpcoming = isUpcomingMatch(match);
+  const gegnerName = isHeim ? match.gastName : match.heimName;
+  const liga = isPlausibleLeague(team.league) ? team.league : null;
+  const anstossStr = match.datum.toLocaleDateString("de-DE", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
 
   return (
     <div className="space-y-8 pb-24">
@@ -121,7 +131,7 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
                 resultColors[result]
               }
             >
-              {resultLabels[result]}
+              {isUpcoming ? "Kommendes Spiel" : resultLabels[result]}
             </span>
           </div>
         </CardHeader>
@@ -250,22 +260,65 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
         )
       )}
 
-      {/* ─── SPIELVERLAUF ─── */}
-      <section>
-        <div className="flex items-baseline justify-between gap-3 mb-4">
-          <h2 className="text-2xl font-bold tracking-tight text-brand-night-navy">
-            Spielverlauf
+      {/* ─── VORSCHAU (kommendes Spiel) bzw. SPIELVERLAUF (gespielt) ─── */}
+      {isUpcoming ? (
+        <section>
+          <h2 className="mb-4 text-2xl font-bold tracking-tight text-brand-night-navy">
+            Infos zum Spiel
           </h2>
-          <span className="text-xs text-brand-night-navy/50">
-            {events.length} Event{events.length === 1 ? "" : "s"}
-          </span>
-        </div>
-        <MatchEventsList
-          events={events}
-          chargesByEvent={chargesData.rows}
-          canEdit={canEdit}
-        />
-      </section>
+          {/* Nur Felder, die wirklich in der DB stehen. Eine Anstoß-UHRZEIT und
+              einen Spielort gibt es NICHT (die Spielplan-Quelle liefert nur den
+              Kalendertag) — deshalb hier bewusst keine leeren Platzhalter. */}
+          <dl className="rounded-2xl bg-white shadow-ios-card divide-y divide-brand-neutral/15 text-sm">
+            <div className="flex items-baseline justify-between gap-4 px-4 py-3">
+              <dt className="text-brand-night-navy/60">Termin</dt>
+              <dd className="text-right font-semibold text-brand-night-navy">
+                {anstossStr}
+              </dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-4 px-4 py-3">
+              <dt className="text-brand-night-navy/60">Gegner</dt>
+              <dd className="min-w-0 text-right font-semibold text-brand-night-navy">
+                {gegnerName}
+              </dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-4 px-4 py-3">
+              <dt className="text-brand-night-navy/60">Ort</dt>
+              <dd className="text-right font-semibold text-brand-night-navy">
+                {isHeim ? "Heimspiel" : "Auswärtsspiel"}
+              </dd>
+            </div>
+            {liga && (
+              <div className="flex items-baseline justify-between gap-4 px-4 py-3">
+                <dt className="text-brand-night-navy/60">Liga</dt>
+                <dd className="min-w-0 text-right font-semibold text-brand-night-navy">
+                  {liga}
+                </dd>
+              </div>
+            )}
+          </dl>
+          <p className="mt-3 px-1 text-sm leading-snug text-brand-night-navy/60">
+            Das Spiel wurde noch nicht angepfiffen. Sobald das Ergebnis vorliegt,
+            erscheinen hier Tore, Karten und die Sponsor-Beiträge automatisch.
+          </p>
+        </section>
+      ) : (
+        <section>
+          <div className="flex items-baseline justify-between gap-3 mb-4">
+            <h2 className="text-2xl font-bold tracking-tight text-brand-night-navy">
+              Spielverlauf
+            </h2>
+            <span className="text-xs text-brand-night-navy/50">
+              {events.length} Event{events.length === 1 ? "" : "s"}
+            </span>
+          </div>
+          <MatchEventsList
+            events={events}
+            chargesByEvent={chargesData.rows}
+            canEdit={canEdit}
+          />
+        </section>
+      )}
 
       {/* Admin-Korrekturen (Audit-Trail) */}
       <AdminNoteDisplay adminNote={match.adminNote} />
@@ -292,13 +345,19 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
           ohne Edit-Rechte). Erzeugt ein Support-Ticket mit verlinktem Spiel. */}
       <section className="border-t border-brand-neutral/30 pt-6 text-center">
         <p className="mb-2 text-sm text-brand-night-navy/60">
-          Falsches Ergebnis, fehlendes Tor oder ein anderer Fehler bei diesem Spiel?
+          {isUpcoming
+            ? "Falscher Termin, falscher Gegner oder ein anderer Fehler bei diesem Spiel?"
+            : "Falsches Ergebnis, fehlendes Tor oder ein anderer Fehler bei diesem Spiel?"}
         </p>
         <div className="flex justify-center">
           <ReportProblemButton
             label="Stimmt etwas nicht?"
             title="Problem mit diesem Spiel melden"
-            description="Beschreib kurz, was nicht stimmt (z.B. falsches Ergebnis oder fehlendes Tor). Wir prüfen es und melden uns."
+            description={
+              isUpcoming
+                ? "Beschreib kurz, was nicht stimmt (z.B. falscher Termin oder falscher Gegner). Wir prüfen es und melden uns."
+                : "Beschreib kurz, was nicht stimmt (z.B. falsches Ergebnis oder fehlendes Tor). Wir prüfen es und melden uns."
+            }
             defaultCategory="spieldaten"
             variant="outline"
             context={{
@@ -307,7 +366,9 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
               clubId: data.club.id,
               teamId: team.id,
               contextMeta: {
-                label: `${match.heimName} ${match.ergebnisHeim ?? "–"}:${match.ergebnisGast ?? "–"} ${match.gastName} (${datumStr})`,
+                label: isUpcoming
+                  ? `${match.heimName} vs. ${match.gastName} (${datumStr})`
+                  : `${match.heimName} ${match.ergebnisHeim ?? "–"}:${match.ergebnisGast ?? "–"} ${match.gastName} (${datumStr})`,
                 matchId: match.id,
                 team: team.name,
                 saison: team.saison
