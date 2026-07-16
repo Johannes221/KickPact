@@ -28,7 +28,14 @@ class MainViewController: CAPBridgeViewController {
     // npm-Plugins in die packageClassList (capacitor.config.json) — ohne diese
     // explizite Registrierung bekommt das WebView keinen PluginHeader und
     // Capacitor.isPluginAvailable("InstagramStories") wäre in JS immer false.
+    //
+    // JEDES lokale Plugin MUSS hier stehen. IAPPlugin fehlte hier (2026-07-16) —
+    // die Klasse war einkompiliert (per `nm` am Archive verifiziert) und
+    // CAP_PLUGIN(IAPPlugin, ...) korrekt, aber ohne registerPluginInstance kennt
+    // die Bridge sie nicht und rejectet jeden Aufruf mit „not implemented".
+    // Der In-App-Kauf war dadurch in JEDEM Build tot.
     override func capacitorDidLoad() {
+        bridge?.registerPluginInstance(IAPPlugin())
         bridge?.registerPluginInstance(InstagramStoriesPlugin())
     }
 
