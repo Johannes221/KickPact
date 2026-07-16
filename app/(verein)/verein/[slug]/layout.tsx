@@ -7,7 +7,7 @@ import {
 } from "@/lib/db/queries/verifications";
 import { getUserIdentities } from "@/lib/db/queries/user-identities";
 import { findSponsorForUser } from "@/lib/db/queries/sponsor-dashboard";
-import { listClubsForUser, getClubById } from "@/lib/db/queries/club-admin";
+import { getClubById } from "@/lib/db/queries/club-admin";
 import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
 import { countActivePledgesForClub } from "@/lib/db/queries/club-reporting";
 import { VereinHeaderShell } from "./_components/verein-header-shell";
@@ -32,9 +32,6 @@ export default async function VereinLayout({
 
   // Hat dieser User auch ein Sponsor-Profil?
   const sponsorRow = await findSponsorForUser(user.id);
-
-  // Alle Vereine des Users (für Kontext-Switcher)
-  const myClubs = await listClubsForUser(user.id);
 
   // Effective-Plan dieses Clubs auflösen — steuert Header-Sichtbarkeit UND ob
   // die Verifizierung Mannschafts- oder Vereins-scoped läuft.
@@ -197,25 +194,11 @@ export default async function VereinLayout({
         isTeamOnly={isTeamOnly}
       />
 
-      {/* Weitere Vereins-Tabs wenn User mehrere Vereine hat */}
-      {myClubs.length > 1 && (
-        <div className="mb-5 flex flex-wrap gap-1.5">
-          {myClubs.map((c) => (
-            <Link
-              key={c.id}
-              href={`/verein/${c.slug}`}
-              className={
-                "rounded-full px-3 py-1 text-xs font-semibold transition-colors " +
-                (c.slug === slug
-                  ? "bg-brand-night-navy text-white"
-                  : "bg-white shadow-ios-card text-brand-night-navy/60 hover:text-brand-night-navy")
-              }
-            >
-              {c.name}
-            </Link>
-          ))}
-        </div>
-      )}
+      {/* Kein Vereins-Umschalter im Seitenkopf (2026-07-16, Johannes-Entscheid):
+          Der Wechsel zwischen Vereinen/Rollen gehört ausschließlich unter
+          „Konto"/Einstellungen. Im Kopf war er auf schmalen Geräten abgeschnitten
+          und hat jede Vereins-Seite mit Navigation belastet, die dort nicht
+          hingehört. */}
 
       {/* Gebündelte Status-Hinweise (Verifizierung / Trial / Zahlung) —
           kompakt, kollabierbar, wegklickbar. Ersetzt die früheren
