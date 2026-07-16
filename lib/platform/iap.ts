@@ -1,4 +1,4 @@
-import { Capacitor, registerPlugin } from "@capacitor/core";
+import { registerPlugin } from "@capacitor/core";
 import { isIOSApp } from "@/lib/platform/native";
 
 /**
@@ -39,15 +39,18 @@ function plugin(): IAPPluginShape {
   if (!isIOSApp()) {
     throw new Error("In-App-Käufe sind nur in der iOS-App verfügbar.");
   }
-  // Versions-Skew (Remote-WebView): die Web-App wird bei jedem Deploy neu
-  // geladen, die installierte native App bleibt eingefroren. Fehlt das IAPPlugin
-  // in dieser App-Version, wirft die Bridge sonst einen rohen „not implemented"-
-  // Fehler mitten im Kauf. Früh + klar abfangen → App-Update statt Kryptik.
-  if (!Capacitor.isPluginAvailable("IAPPlugin")) {
-    throw new Error(
-      "Diese App-Version unterstützt In-App-Käufe noch nicht — bitte aktualisiere die KickPact-App im App Store."
-    );
-  }
+  // KEIN Capacitor.isPluginAvailable("IAPPlugin")-Gate mehr (2026-07-16):
+  // Die Plugin-Registry ist auf der remote `server.url`-WebView unzuverlässig und
+  // meldete false, OBWOHL das native Plugin im Build steckt (per `nm` am Archive
+  // verifiziert: IAPPlugin/getProducts/jwsRepresentation) und CAP_PLUGIN korrekt
+  // registriert ist. Der Guard war damit ein Falsch-Negativ, das den Kauf
+  // komplett blockierte — dieselbe Registry-Unzuverlässigkeit, wegen der oben
+  // schon der direkte window.Capacitor.Plugins-Zugriff rausgeflogen ist.
+  //
+  // Der Versions-Skew-Fall (installierte App älter als die Web-App, Plugin fehlt
+  // wirklich) bleibt abgedeckt: dann rejectet die Bridge mit „not implemented"
+  // und throwAsAppUpdate() macht daraus die Update-Aufforderung — nur eben auf
+  // Basis eines ECHTEN Fehlers statt einer unzuverlässigen Vorab-Abfrage.
   return IAPPlugin;
 }
 
