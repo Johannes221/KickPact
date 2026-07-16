@@ -24,6 +24,14 @@ class MainViewController: CAPBridgeViewController {
     // Icons; sobald das helle App-UI gerendert hat, dunkle Icons.
     private var webContentLoaded = false
 
+    // Lokale Capacitor-Plugins hier registrieren: `cap sync` schreibt nur die
+    // npm-Plugins in die packageClassList (capacitor.config.json) — ohne diese
+    // explizite Registrierung bekommt das WebView keinen PluginHeader und
+    // Capacitor.isPluginAvailable("InstagramStories") wäre in JS immer false.
+    override func capacitorDidLoad() {
+        bridge?.registerPluginInstance(InstagramStoriesPlugin())
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 

@@ -17,6 +17,7 @@
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
 		A2F013CAE84054C5B60B06E4 /* IAPPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89843C95CF8F18EF02438BA4 /* IAPPlugin.swift */; };
+		B41C7A2E91D04F3AA6E5C201 /* InstagramStoriesPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = B41C7A2E91D04F3AA6E5C101 /* InstagramStoriesPlugin.swift */; };
 		BB0001E700000000000000A1 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0001E700000000000000A2 /* MainViewController.swift */; };
 /* End PBXBuildFile section */
 
@@ -31,6 +32,7 @@
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		89843C95CF8F18EF02438BA4 /* IAPPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IAPPlugin.swift; sourceTree = "<group>"; };
+		B41C7A2E91D04F3AA6E5C101 /* InstagramStoriesPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InstagramStoriesPlugin.swift; sourceTree = "<group>"; };
 		AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
 		BB0001E700000000000000A2 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
@@ -90,6 +92,7 @@
 				50B271D01FEDC1A000F3C39B /* public */,
 				89843C95CF8F18EF02438BA4 /* IAPPlugin.swift */,
 				DC99724DD83CC31A1D7E8C3B /* IAPPlugin.m */,
+				B41C7A2E91D04F3AA6E5C101 /* InstagramStoriesPlugin.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -220,6 +223,7 @@
 				BB0001E700000000000000A1 /* MainViewController.swift in Sources */,
 				A2F013CAE84054C5B60B06E4 /* IAPPlugin.swift in Sources */,
 				2E763D53435E593CCCD7D31F /* IAPPlugin.m in Sources */,
+				B41C7A2E91D04F3AA6E5C201 /* InstagramStoriesPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -359,7 +363,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = A5SM7VJ6M2;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
@@ -381,7 +385,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = A5SM7VJ6M2;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;

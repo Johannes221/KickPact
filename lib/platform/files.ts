@@ -21,18 +21,31 @@ async function shareServerFile(url: string, filename: string): Promise<void> {
   const { Filesystem, Directory } = await import("@capacitor/filesystem");
   const { Share } = await import("@capacitor/share");
 
-  const res = await fetch(url, { credentials: "include" });
-  if (!res.ok) {
-    throw new Error(`Datei konnte nicht geladen werden (HTTP ${res.status}).`);
-  }
-  const blob = await res.blob();
-  const base64 = await blobToBase64(blob);
+  const { base64 } = await fetchAsBase64(url);
   const written = await Filesystem.writeFile({
     path: filename,
     data: base64,
     directory: Directory.Cache
   });
   await Share.share({ title: filename, url: written.uri });
+}
+
+/**
+ * Datei mit Session-Cookie laden und base64-kodieren. `contentType` mitgeben,
+ * damit Aufrufer an der Trust-Boundary prüfen können, ob wirklich der erwartete
+ * Typ kam — `requireUser()` antwortet auf abgelaufene Sessions mit einem
+ * Redirect auf /login, d.h. fetch liefert 200 + HTML statt der Datei.
+ */
+export async function fetchAsBase64(
+  url: string
+): Promise<{ base64: string; contentType: string }> {
+  const res = await fetch(url, { credentials: "include" });
+  if (!res.ok) {
+    throw new Error(`Datei konnte nicht geladen werden (HTTP ${res.status}).`);
+  }
+  const contentType = res.headers.get("content-type") ?? "";
+  const base64 = await blobToBase64(await res.blob());
+  return { base64, contentType };
 }
 
 function blobToBase64(blob: Blob): Promise<string> {

@@ -3,10 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Share2, Volume2, VolumeX } from "lucide-react";
+import { toast } from "sonner";
 import type { WrappedStats } from "@/lib/db/queries/wrapped";
 import { eurWhole } from "@/lib/recap/recap-format";
 import { useAmbientAudio } from "./use-ambient-audio";
 import { shareImageFile } from "@/lib/platform/files";
+import {
+  canShareToInstagramStory,
+  shareImageToInstagramStory
+} from "@/lib/platform/instagram";
 
 /**
  * Saison-Wrapped Story-Player (W4, Plan 2026-06-12).
@@ -20,6 +25,17 @@ import { shareImageFile } from "@/lib/platform/files";
 
 const SLIDE_MS = 6000;
 const HOLD_MS = 200;
+
+/**
+ * Share-Fehler sichtbar machen (UI-Standard: kein stilles Scheitern) —
+ * außer der Nutzer hat das Share-Sheet selbst zugemacht (Capacitor rejected
+ * dann mit „Share canceled", das ist kein Fehler).
+ */
+function notifyShareError(err: unknown) {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (/cancel/i.test(msg)) return;
+  toast.error("Teilen hat nicht geklappt — bitte nochmal versuchen.");
+}
 
 /** Akzentfarben pro Slide — Brand-Energie: Orange / Rot / Lime im Wechsel. */
 const ACCENTS = ["#FF6A30", "#FF3127", "#A3E635"] as const;
@@ -187,12 +203,35 @@ export function WrappedPlayer({
     async (imageKey: string) => {
       // Nativ (iOS-App): Capacitor-Share-Sheet → das EXAKTE Motiv landet in
       // Instagram/Stories/WhatsApp. Web: Web-Share-API mit Datei, sonst neuer Tab.
-      await shareImageFile(
-        `${imageBase}/${imageKey}`,
-        `kickpact-wrapped-${imageKey}.png`
-      );
+      try {
+        await shareImageFile(
+          `${imageBase}/${imageKey}`,
+          `kickpact-wrapped-${imageKey}.png`
+        );
+      } catch (err) {
+        notifyShareError(err);
+      }
     },
     [imageBase]
+  );
+
+  // Direktweg in den Instagram-Story-Editor (iOS-App + Instagram installiert +
+  // Meta-App-ID konfiguriert) — umgeht Instagrams kaputte Share-Extension.
+  // Verfügbarkeit erst beim Tap prüfen: immer frisch, kein State nötig.
+  const shareToInsta = useCallback(
+    async (imageKey: string) => {
+      if (await canShareToInstagramStory()) {
+        try {
+          await shareImageToInstagramStory(`${imageBase}/${imageKey}`);
+          return;
+        } catch {
+          // Direktweg gescheitert (z.B. Instagram zwischenzeitlich gelöscht)
+          // → generisches Share-Sheet als Fallback (meldet Fehler selbst).
+        }
+      }
+      await share(imageKey);
+    },
+    [imageBase, share]
   );
 
   const slide = slides[index];
@@ -221,8 +260,11 @@ export function WrappedPlayer({
           style={{ background: accent }}
         />
 
-        {/* Progress-Bars */}
-        <div className="relative z-20 flex gap-1 px-3 pt-3">
+        {/* Progress-Bars — pt inkl. Safe-Area: in der iOS-App (viewport-fit=cover)
+            lagen die Balken sonst ÜBER der Statusleiste/Uhrzeit. Nur im mobilen
+            Vollbild — ab sm: sitzt der Phone-Frame zentriert, dort gelten die
+            Geräte-Insets nicht (z.B. iPad-App). */}
+        <div className="relative z-20 flex gap-1 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:pt-3">
           {slides.map((s, i) => (
             <div key={s.key} className="h-1 flex-1 overflow-hidden rounded-full bg-white/20">
               <div
@@ -289,12 +331,13 @@ export function WrappedPlayer({
             nextSaisonLabel={nextSaisonLabel}
             sponsorenHref={sponsorenHref}
             onShare={share}
+            onInstaShare={shareToInsta}
           />
         </div>
 
-        {/* Share-Button (pro Slide mit og-Bild) */}
+        {/* Share-Button (pro Slide mit og-Bild) — bottom inkl. Safe-Area (Home-Indicator) */}
         {slide.imageKey && (
-          <div className="absolute bottom-4 right-4 z-20">
+          <div className="absolute bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 z-20 sm:bottom-4">
             <button
               type="button"
               aria-label="Slide teilen"
@@ -309,7 +352,7 @@ export function WrappedPlayer({
         )}
 
         {/* Footer: grünes KickPact-Logo */}
-        <div className="pointer-events-none absolute bottom-4 left-0 right-0 z-10 flex justify-center opacity-70">
+        <div className="pointer-events-none absolute bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-0 right-0 z-10 flex justify-center opacity-70 sm:bottom-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/logo-green-horizontal.png" alt="KickPact" className="h-4 w-auto" />
         </div>
@@ -327,7 +370,8 @@ function SlideContent({
   saisonLabel,
   nextSaisonLabel,
   sponsorenHref,
-  onShare
+  onShare,
+  onInstaShare
 }: {
   slideKey: string;
   stats: WrappedStats;
@@ -336,6 +380,8 @@ function SlideContent({
   nextSaisonLabel: string;
   sponsorenHref: string;
   onShare: (imageKey: string) => void;
+  /** Insta-CTA: direkt in den Story-Editor, fällt intern aufs Share-Sheet zurück. */
+  onInstaShare: (imageKey: string) => void;
 }) {
   switch (slideKey) {
     case "intro":
@@ -367,7 +413,9 @@ function SlideContent({
     case "simulation":
       return <SimulationSlide stats={stats} accent={accent} />;
     case "zusammenfassung":
-      return <ZusammenfassungSlide stats={stats} accent={accent} onShare={onShare} />;
+      return (
+        <ZusammenfassungSlide stats={stats} accent={accent} onInstaShare={onInstaShare} />
+      );
     case "outro":
       return (
         <OutroSlide
@@ -772,11 +820,12 @@ function SimulationSlide({ stats, accent }: { stats: WrappedStats; accent: strin
 function ZusammenfassungSlide({
   stats,
   accent,
-  onShare
+  onInstaShare
 }: {
   stats: WrappedStats;
   accent: string;
-  onShare: (imageKey: string) => void;
+  /** Direkt in den Instagram-Story-Editor; fällt intern aufs Share-Sheet zurück. */
+  onInstaShare: (imageKey: string) => void;
 }) {
   const tiles: Array<{ label: string; value: string; sub?: string }> = [
     {
@@ -857,7 +906,7 @@ function ZusammenfassungSlide({
           type="button"
           onPointerDown={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
-          onClick={() => onShare("zusammenfassung")}
+          onClick={() => onInstaShare("zusammenfassung")}
           className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/15"
         >
           📲 Jetzt auf Insta teilen
