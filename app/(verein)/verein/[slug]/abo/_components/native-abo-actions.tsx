@@ -73,6 +73,12 @@ export function NativeAboActions({
    *   → App-Update hilft null.
    */
   const [emptyReason, setEmptyReason] = useState<"plugin" | "store" | null>(null);
+  /**
+   * Roher StoreKit-/Bridge-Fehler bzw. Lade-Ergebnis. Ohne den tappt man bei
+   * „keine Produkte" im Dunkeln (Vertrag? Plugin? Produkt-Status? Storefront?)
+   * — die Meldung allein trennt die Ursachen nicht. Bewusst sichtbar.
+   */
+  const [diag, setDiag] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,12 +91,17 @@ export function NativeAboActions({
         for (const p of list) map[p.productId] = p;
         setProducts(map);
         setEmptyReason(list.length === 0 ? "store" : null);
+        setDiag(
+          `getProducts ok · angefragt ${ALL_APPLE_PRODUCT_IDS.length} · geliefert ${list.length}` +
+            (list.length > 0 ? ` · ${list.map((p) => p.productId).join(", ")}` : "")
+        );
         setLoaded(true);
       })
-      .catch(() => {
-        // Bridge/Plugin nicht verfügbar → ältere App-Version ohne IAPPlugin.
+      .catch((e: unknown) => {
+        // Bridge/Plugin nicht verfügbar ODER StoreKit-Fehler — rohen Text zeigen.
         if (cancelled) return;
         setEmptyReason("plugin");
+        setDiag(`getProducts FEHLER · ${e instanceof Error ? e.message : String(e)}`);
         setLoaded(true);
       });
     return () => {
@@ -239,6 +250,15 @@ export function NativeAboActions({
       {error && (
         <p className="text-sm font-medium text-brand-alert-red" role="alert">
           {error}
+        </p>
+      )}
+
+      {/* Diagnose: nur solange StoreKit gar keine Produkte liefert. Zeigt, ob die
+          Bridge wirft oder der Store leer antwortet — sonst ist die Ursache
+          (Vertrag/Plugin/Produkt-Status) von aussen nicht unterscheidbar. */}
+      {diag && Object.keys(products).length === 0 && (
+        <p className="rounded-xl bg-brand-off-white px-3 py-2 font-mono text-[11px] leading-relaxed text-brand-night-navy/50 break-words">
+          {diag}
         </p>
       )}
 
