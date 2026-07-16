@@ -17,8 +17,7 @@ import {
  */
 
 describe("teamAbbreviation", () => {
-  it("Vereinstyp-Präfix + Initiale des Ortes", () => {
-    expect(teamAbbreviation("FC Bayern München")).toBe("FCB");
+  it("Vereins-Kürzel wie im Rest der App (acronymTeamName)", () => {
     expect(teamAbbreviation("SV Sandhausen")).toBe("SVS");
     expect(teamAbbreviation("1. FC Köln")).toBe("FCK");
   });
@@ -80,9 +79,9 @@ describe("pickCrest — Logo-Priorität", () => {
 
   it("entscheidet pro Seite einzeln — eigenes Logo da, Gegner nicht", () => {
     const eigen = pickCrest({ name: "SV Sandhausen", uploadedLogo: "data:image/png;base64,AAA" });
-    const gegner = pickCrest({ name: "FC Bayern München" });
+    const gegner = pickCrest({ name: "FC Sportfreunde Dossenheim" });
     expect(eigen.kind).toBe("logo");
-    expect(gegner).toEqual({ kind: "abbrev", text: "FCB" });
+    expect(gegner).toEqual({ kind: "abbrev", text: "FCSD" });
   });
 });
 

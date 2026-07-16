@@ -1,4 +1,5 @@
 import { formatDate } from "@/lib/utils/date-format";
+import { acronymTeamName } from "@/lib/utils/team-name";
 
 /**
  * Pure Textbausteine für die Instagram-Story-Vorlagen (Aufgabe #44).
@@ -19,56 +20,43 @@ export type StoryCrest =
   | { kind: "logo"; src: string }
   | { kind: "abbrev"; text: string };
 
-/** Vereinstyp-Präfixe, die als Ganzes ins Kürzel wandern („FC Köln" → „FCK"). */
-const CLUB_TYPE_TOKENS = new Set([
-  "fc", "sv", "sc", "tsv", "tsg", "vfb", "vfl", "vfr", "spvgg", "sg", "sgm",
-  "djk", "mtv", "fsv", "ssv", "asv", "bsc", "tus", "tv", "rsv", "sp", "spfr"
-]);
+/**
+ * Wörter, die eine Mannschaft nicht identifizieren und im Wappen nur Platz
+ * fressen: Rollen-/Alters-Prefixe („Herren - FC X") und römische Mannschafts-
+ * Ziffern („SV X II" → SVS, nicht SVSII).
+ */
+const NOISE_WORDS =
+  /\b(herren|damen|frauen|männer|junioren|juniorinnen|senioren|mannschaft|team)\b/gi;
+const ROMAN_SUFFIX = /\b(I{1,3}|IV|V|VI{1,3}|IX|X)\b/g;
 
-/** Wörter, die eine Mannschaft NICHT identifizieren (Rollen-/Alters-Prefixe). */
-const NOISE_WORDS = new Set([
-  "herren", "damen", "frauen", "männer", "junioren", "juniorinnen", "senioren",
-  "mannschaft", "team"
-]);
-
-/** Römische Mannschafts-Ziffern („SV X II") — kein Namensbestandteil. */
-const ROMAN_SUFFIX = /^(i{1,3}|iv|v|vi{1,3}|ix|x)$/;
+/** Wappen-Kreis fasst ~4 Zeichen — darüber wird es unleserlich klein. */
+const MAX_CREST_CHARS = 4;
 
 /**
- * Kürzel für den Kein-Logo-Fall, nach der geläufigen deutschen Vereins-Kurzform:
- *   - mit Vereinstyp-Präfix → Präfix + Initiale des Ortes („FC Bayern München"
- *     → FCB, „1. FC Köln" → FCK, „TSG Hoffenheim" → TSGH). Das Präfix trägt die
- *     Vereins-Identität, eine Orts-Initiale reicht.
- *   - ohne Präfix → Initialen aller Wörter („Sportfreunde Dossenheim" → SD).
+ * Kürzel für den Kein-Logo-Fall — „SV Sandhausen" → „SVS", „1. FC Köln" → „FCK".
  *
- * Hart auf 4 Zeichen gedeckelt (mehr läuft im Wappen-Kreis über). Liefert NIE
- * einen leeren String — die Story hätte sonst ein Loch.
+ * Nutzt bewusst {@link acronymTeamName}, das Scoreboard-Kürzel des Projekts:
+ * zwei konkurrierende Abkürzungs-Logiken würden für dieselbe Mannschaft
+ * unterschiedliche Kürzel liefern (Story „FCB", Spiele-Liste „FCBM") — genau
+ * die Art Divergenz, die niemand mehr auflöst.
+ *
+ * Ergänzt wird nur, was das WAPPEN zusätzlich braucht: Rollen-Wörter und
+ * Mannschafts-Ziffern raus (im engen Kreis zählt jedes Zeichen), harte
+ * 4-Zeichen-Grenze, und nie ein leeres Ergebnis — die Story hätte sonst ein Loch.
  */
 export function teamAbbreviation(name: string): string {
-  const words = (name ?? "")
-    .toLowerCase()
-    .split(/[\s/\\.,\-–—]+/)
-    .filter(
-      (w) =>
-        w.length > 0 &&
-        !/^\d+$/.test(w) &&          // Gründungsjahre („1916"), Spieltags-Ziffern
-        !NOISE_WORDS.has(w) &&
-        !ROMAN_SUFFIX.test(w)
-    );
+  const cleaned = (name ?? "")
+    .replace(NOISE_WORDS, " ")
+    .replace(ROMAN_SUFFIX, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
-  if (words.length === 0) {
-    // Murks-Name (nur Ziffern/Leerzeichen): lieber die ersten Buchstaben des
-    // Rohnamens als ein leeres Wappen. Notnagel „?" nur, wenn gar nichts da ist.
-    const raw = (name ?? "").replace(/\s+/g, "");
-    return raw ? raw.slice(0, 3).toUpperCase() : "?";
-  }
+  const acr = acronymTeamName(cleaned || (name ?? "").trim());
+  if (acr) return acr.slice(0, MAX_CREST_CHARS);
 
-  const [first, ...rest] = words;
-  if (CLUB_TYPE_TOKENS.has(first)) {
-    const ort = rest[0]?.[0]?.toUpperCase() ?? "";
-    return (first.toUpperCase() + ort).slice(0, 4);
-  }
-  return words.map((w) => w[0].toUpperCase()).join("").slice(0, 4);
+  // Murks-Name (leer/nur Leerzeichen): Notnagel statt leerem Wappen.
+  const raw = (name ?? "").replace(/\s+/g, "");
+  return raw ? raw.slice(0, MAX_CREST_CHARS).toUpperCase() : "?";
 }
 
 /**
