@@ -13,6 +13,13 @@ import { saveTeamPublicProfile } from "@/lib/actions/team-public-profile";
 import { setTeamShowInsights } from "@/lib/actions/team-images";
 import { renameTeam } from "@/lib/actions/team-lifecycle";
 import { saisonLabel } from "@/lib/utils/saison";
+import { UpgradeGateDialog } from "@/components/billing/upgrade-gate";
+import {
+  UpgradeRequiredError,
+  isUpgradeRequiredError,
+  type LockKind
+} from "@/lib/billing/upgrade-offer";
+import type { PlanKey } from "@/lib/stripe/pricing";
 
 // Akzeptierte Endungen (inkl. iPhone-HEIC/HEIF — Server konvertiert nach JPEG).
 // MIME-Type-Prüfung bewusst lasch: Mobile-Browser senden gelegentlich einen
@@ -47,6 +54,11 @@ interface Props {
   publicName: string;
   publicTagline: string;
   publicGoals: string;
+  /** Abo-Sperre (aus dem Subscription-Gate). `null` = alles erlaubt. */
+  lock: LockKind | null;
+  currentPlan: PlanKey;
+  /** Serverseitig ermittelt (isNativeAppRequest) — steuert nur das Wording. */
+  nativeApp: boolean;
 }
 
 export function MeinProfilEditor({
@@ -66,10 +78,30 @@ export function MeinProfilEditor({
   publicSlug,
   publicName: initialPublicName,
   publicTagline: initialTagline,
-  publicGoals: initialGoals
+  publicGoals: initialGoals,
+  lock,
+  currentPlan,
+  nativeApp
 }: Props) {
   const router = useRouter();
   const [pending, start] = useTransition();
+
+  // Gesperrte Aktion → echte Upgrade-Aufforderung (Dialog) statt Mini-Toast.
+  const [upsell, setUpsell] = useState<{
+    feature: string;
+    lock: LockKind;
+  } | null>(null);
+
+  /**
+   * Vorab-Gate: die Sperre ist serverseitig bekannt, also gar nicht erst
+   * losschicken. `true` = blockiert (Aufrufer bricht ab). Der Server bleibt die
+   * autoritative Instanz — dieser Check ist reine UX, kein Sicherheits-Gate.
+   */
+  function blockedByPlan(feature: string): boolean {
+    if (!lock) return false;
+    setUpsell({ feature, lock });
+    return true;
+  }
 
   // Lokaler State für Edit-Felder.
   const [name, setName] = useState(teamName);
@@ -92,6 +124,14 @@ export function MeinProfilEditor({
 
   // ---- Uploads (Cover / Logo / Galerie) -------------------------------------
 
+  /**
+   * Upload läuft bewusst über den Route-Handler (nicht über eine Server-Action:
+   * dort greift Nexts 1-MB-Bodylimit). HEIC→JPEG passiert serverseitig in
+   * `normalizeImageUpload` — gilt damit automatisch für jede Datei.
+   *
+   * Wirft `UpgradeRequiredError` bei HTTP 402 (Abo-Sperre), sonst `Error` mit
+   * der server-gelieferten Meldung.
+   */
   async function uploadTo(path: string, file: File) {
     if (file.size > MAX_BYTES) {
       const mb = (file.size / 1_000_000).toFixed(1);
@@ -100,13 +140,34 @@ export function MeinProfilEditor({
     const fd = new FormData();
     fd.append("file", file);
     const res = await fetch(path, { method: "POST", body: fd });
-    if (!res.ok) {
-      const d = (await res.json().catch(() => null)) as { message?: string } | null;
-      throw new Error(d?.message ?? "Upload fehlgeschlagen.");
+    if (res.ok) return;
+    const d = (await res.json().catch(() => null)) as {
+      message?: string;
+      lock?: LockKind;
+    } | null;
+    if (res.status === 402) {
+      // Server sagt „Abo fehlt" — z.B. wenn das Gate seit dem Seitenaufbau
+      // gekippt ist (abgelaufener Trial im offenen Tab).
+      throw new UpgradeRequiredError(
+        d?.lock ?? "expired",
+        d?.message ?? "Dafür braucht es ein aktives Abo."
+      );
     }
+    throw new Error(d?.message ?? "Upload fehlgeschlagen.");
+  }
+
+  /** Fehler-Feedback für Einzel-Uploads: Abo-Sperre → Dialog, sonst Toast. */
+  function reportUploadError(e: unknown, feature: string, toastId: string) {
+    if (isUpgradeRequiredError(e)) {
+      toast.dismiss(toastId);
+      setUpsell({ feature, lock: e.lock });
+      return;
+    }
+    toast.error(e instanceof Error ? e.message : "Fehler.", { id: toastId });
   }
 
   function onCover(file: File) {
+    if (blockedByPlan("Das Cover")) return;
     start(async () => {
       try {
         toast.loading("Lade Cover hoch…", { id: "cover-upload" });
@@ -114,14 +175,13 @@ export function MeinProfilEditor({
         toast.success("Cover aktualisiert.", { id: "cover-upload" });
         router.refresh();
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Fehler.", {
-          id: "cover-upload"
-        });
+        reportUploadError(e, "Das Cover", "cover-upload");
       }
     });
   }
 
   function onLogo(file: File) {
+    if (blockedByPlan("Das Logo")) return;
     start(async () => {
       try {
         toast.loading("Lade Logo hoch…", { id: "logo-upload" });
@@ -129,29 +189,78 @@ export function MeinProfilEditor({
         toast.success("Logo aktualisiert.", { id: "logo-upload" });
         router.refresh();
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Fehler.", {
-          id: "logo-upload"
-        });
+        reportUploadError(e, "Das Logo", "logo-upload");
       }
     });
   }
 
-  function onGallery(file: File) {
+  /**
+   * Mehrfach-Upload (Johannes-Wunsch): mehrere Bilder in einem Rutsch wählen.
+   *
+   * SEQUENZIELL, nicht parallel — und das ist kein Stil, sondern Korrektheit:
+   * `addTeamGalleryImage` prüft serverseitig `countTeamImages() >= 8`. Parallele
+   * Requests lesen alle denselben Vor-Zählstand (TOCTOU) und könnten das Limit
+   * gemeinsam überschreiten. Nacheinander sieht jeder Request den aktualisierten
+   * Stand. Nebeneffekt: kein RAM-Peak durch 8 × 10 MB gleichzeitig.
+   *
+   * Ein Fehler killt den Batch NICHT — was hochgeht, geht hoch; die
+   * fehlgeschlagenen Dateien werden am Ende namentlich genannt.
+   */
+  function onGallery(files: File[]) {
+    if (blockedByPlan("Die Galerie")) return;
+
+    const free = GALLERY_MAX - gallery.length;
+    const accepted = files.slice(0, Math.max(0, free));
+    const skipped = files.length - accepted.length;
+    if (accepted.length === 0) {
+      toast.error(`Galerie voll — max. ${GALLERY_MAX} Bilder.`);
+      return;
+    }
+
     start(async () => {
-      try {
-        toast.loading("Lade Bild hoch…", { id: "gallery-upload" });
-        await uploadTo(`/api/teams/${teamId}/images`, file);
-        toast.success("Bild hinzugefügt.", { id: "gallery-upload" });
+      const id = "gallery-upload";
+      const failed: string[] = [];
+      let done = 0;
+
+      for (const [i, file] of accepted.entries()) {
+        toast.loading(`Lade Bild ${i + 1}/${accepted.length} hoch…`, { id });
+        try {
+          await uploadTo(`/api/teams/${teamId}/images`, file);
+          done++;
+        } catch (e) {
+          if (isUpgradeRequiredError(e)) {
+            // Abo-Sperre gilt für alle weiteren Dateien auch → abbrechen.
+            toast.dismiss(id);
+            setUpsell({ feature: "Die Galerie", lock: e.lock });
+            break;
+          }
+          failed.push(`${file.name} (${e instanceof Error ? e.message : "Fehler"})`);
+        }
+      }
+
+      toast.dismiss(id);
+      if (done > 0) {
+        toast.success(
+          done === 1 ? "Bild hinzugefügt." : `${done} Bilder hinzugefügt.`
+        );
         router.refresh();
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Fehler.", {
-          id: "gallery-upload"
-        });
+      }
+      if (failed.length > 0) {
+        toast.error(
+          `${failed.length} Bild${failed.length === 1 ? "" : "er"} nicht hochgeladen: ${failed.join(", ")}`,
+          { duration: 8000 }
+        );
+      }
+      if (skipped > 0) {
+        toast.error(
+          `${skipped} Bild${skipped === 1 ? "" : "er"} übersprungen — max. ${GALLERY_MAX} Bilder in der Galerie.`
+        );
       }
     });
   }
 
   function onDeleteImage(id: string) {
+    if (blockedByPlan("Die Galerie")) return;
     start(async () => {
       const res = await fetch(`/api/teams/${teamId}/images/${id}`, {
         method: "DELETE"
@@ -159,9 +268,18 @@ export function MeinProfilEditor({
       if (res.ok) {
         toast.success("Bild entfernt.");
         router.refresh();
-      } else {
-        toast.error("Löschen fehlgeschlagen.");
+        return;
       }
+      // Gate seit Seitenaufbau gekippt → echte Upgrade-Aufforderung statt
+      // „Löschen fehlgeschlagen."
+      if (res.status === 402) {
+        const d = (await res.json().catch(() => null)) as {
+          lock?: LockKind;
+        } | null;
+        setUpsell({ feature: "Die Galerie", lock: d?.lock ?? "expired" });
+        return;
+      }
+      toast.error("Löschen fehlgeschlagen.");
     });
   }
 
@@ -181,6 +299,7 @@ export function MeinProfilEditor({
       setEditingName(false);
       return;
     }
+    if (blockedByPlan("Der Mannschaftsname")) return;
     start(async () => {
       try {
         await renameTeam({ teamId, newName: trimmed });
@@ -196,6 +315,7 @@ export function MeinProfilEditor({
   // ---- Insights-Toggle (setTeamShowInsights) --------------------------------
 
   function onToggleInsights(next: boolean) {
+    if (blockedByPlan("Die Saison-Insights")) return;
     start(async () => {
       try {
         await setTeamShowInsights({ teamId, show: next });
@@ -217,6 +337,7 @@ export function MeinProfilEditor({
       toast.error(`Ziele max. ${GOALS_MAX} Zeichen.`);
       return;
     }
+    if (blockedByPlan("Das öffentliche Profil")) return;
     start(async () => {
       try {
         await saveTeamPublicProfile({
@@ -241,12 +362,30 @@ export function MeinProfilEditor({
   }
 
   function onTogglePublic(next: boolean) {
+    // Gate VOR dem lokalen Flip: sonst zeigt der Schalter „öffentlich" an,
+    // obwohl serverseitig nichts gespeichert wurde.
+    if (blockedByPlan("Das öffentliche Profil")) return;
     setIsPublic(next);
     persistPublicProfile(next);
   }
 
   return (
     <div className="mx-auto max-w-screen-sm pb-12">
+      {/* Die „richtige Fehlermeldung" bei gesperrten Aktionen — EIN Dialog für
+          alle Stellen dieser Seite (Cover/Logo/Galerie/Name/Insights/Profil). */}
+      {upsell && (
+        <UpgradeGateDialog
+          open
+          onOpenChange={(o) => !o && setUpsell(null)}
+          lock={upsell.lock}
+          currentPlan={currentPlan}
+          clubSlug={slug}
+          teamId={teamId}
+          feature={upsell.feature}
+          nativeApp={nativeApp}
+        />
+      )}
+
       {/* 1. Sticky Edit-Toolbar — eine ruhige, nie quetschende Reihe; auf
           schmalen Screens bricht der Titel über die Controls. */}
       <div className="sticky top-0 z-20 -mx-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-brand-neutral/30 bg-white/90 px-4 py-2.5 backdrop-blur md:mx-0 md:rounded-t-2xl">
@@ -487,6 +626,9 @@ export function MeinProfilEditor({
               {gallery.length}/{GALLERY_MAX}
             </span>
           </div>
+          <p className="mt-1 text-xs text-brand-night-navy/50">
+            Du kannst mehrere Bilder auf einmal auswählen.
+          </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {gallery.map((g) => (
               <div key={g.id} className="relative">
@@ -515,7 +657,7 @@ export function MeinProfilEditor({
                 className="flex h-20 w-28 flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-neutral/40 text-brand-night-navy/50 transition-colors hover:border-accent/40 hover:bg-brand-off-white/40 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <span className="text-xl leading-none">＋</span>
-                <span className="mt-1 text-[11px] font-semibold">Bild</span>
+                <span className="mt-1 text-[11px] font-semibold">Bilder</span>
               </button>
             )}
           </div>
@@ -523,11 +665,12 @@ export function MeinProfilEditor({
             ref={galleryInputRef}
             type="file"
             accept={ACCEPT}
+            multiple
             disabled={pending || gallery.length >= GALLERY_MAX}
             className="sr-only"
             onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onGallery(f);
+              const files = Array.from(e.target.files ?? []);
+              if (files.length > 0) onGallery(files);
               e.currentTarget.value = "";
             }}
           />

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/session";
 import { removeTeamGalleryImage } from "@/lib/actions/team-images";
+import {
+  isUpgradeRequiredError,
+  UPGRADE_REQUIRED_CODE
+} from "@/lib/billing/upgrade-offer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,6 +29,13 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ team
   } catch (e) {
     if (isRedirectError(e)) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+    // Abo-Sperre → 402 (Client zeigt <UpgradeGate> statt Fehler-Toast).
+    if (isUpgradeRequiredError(e)) {
+      return NextResponse.json(
+        { error: UPGRADE_REQUIRED_CODE, lock: e.lock, message: e.message },
+        { status: 402 }
+      );
     }
     const message = e instanceof Error ? e.message : "Löschen fehlgeschlagen.";
     return NextResponse.json({ error: "delete-failed", message }, { status: 400 });

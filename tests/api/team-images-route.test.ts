@@ -8,6 +8,10 @@ vi.mock("@/lib/actions/team-images", () => ({
   uploadTeamCover: coverMock, addTeamGalleryImage: addMock, removeTeamGalleryImage: removeMock
 }));
 
+import {
+  UpgradeRequiredError,
+  UPGRADE_REQUIRED_CODE
+} from "@/lib/billing/upgrade-offer";
 import { POST as coverPOST } from "@/app/api/teams/[teamId]/cover/route";
 import { POST as imgPOST } from "@/app/api/teams/[teamId]/images/route";
 import { DELETE as imgDELETE } from "@/app/api/teams/[teamId]/images/[imageId]/route";
@@ -42,6 +46,28 @@ describe("team-images routes", () => {
     const res = await imgPOST(reqWithFile(), { params: Promise.resolve({ teamId: "t1" }) });
     expect(res.status).toBe(400);
     expect((await res.json()).message).toMatch(/Maximal 8/);
+  });
+
+  // Abo-Sperre muss vom Upload-Fehler unterscheidbar sein: nur so kann der
+  // Client die echte Upgrade-Aufforderung zeigen statt eines Fehler-Toasts.
+  it("cover: 402 + Lock-Grund bei Abo-Sperre (statt 400 „upload-failed“)", async () => {
+    coverMock.mockRejectedValue(
+      new UpgradeRequiredError("expired", "Diese Mannschaft ist im Read-Only-Modus.")
+    );
+    const res = await coverPOST(reqWithFile(), { params: Promise.resolve({ teamId: "t1" }) });
+    expect(res.status).toBe(402);
+    const body = await res.json();
+    expect(body.error).toBe(UPGRADE_REQUIRED_CODE);
+    expect(body.lock).toBe("expired");
+  });
+
+  it("gallery: 402 bei Abo-Sperre", async () => {
+    addMock.mockRejectedValue(
+      new UpgradeRequiredError("past_due", "Diese Mannschaft ist im Read-Only-Modus.")
+    );
+    const res = await imgPOST(reqWithFile(), { params: Promise.resolve({ teamId: "t1" }) });
+    expect(res.status).toBe(402);
+    expect((await res.json()).lock).toBe("past_due");
   });
 
   it("gallery delete: 200", async () => {
