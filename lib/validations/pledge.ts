@@ -267,3 +267,35 @@ export function normalizeTriggerParams(
   }
   return out;
 }
+
+/**
+ * Stabile Signatur EINER Regel (Trigger + Betrag + Cap + normalisierte Params),
+ * unabhängig von Schlüssel-Reihenfolge. Basis für den Doppel-Pact-Guard: zwei
+ * Regeln mit identischer Signatur sind dieselbe Wette.
+ */
+export function pledgeRuleSignature(rule: {
+  triggerType: string;
+  amountCents: number;
+  capCents?: number | null;
+  capPeriod?: string | null;
+  params?: Record<string, unknown> | null;
+}): string {
+  const p = normalizeTriggerParams(rule.params ?? {});
+  const paramStr = Object.keys(p)
+    .sort()
+    .map((k) => `${k}=${String(p[k])}`)
+    .join(",");
+  return `${rule.triggerType}|${rule.amountCents}|${rule.capCents ?? ""}|${rule.capPeriod ?? ""}|${paramStr}`;
+}
+
+/**
+ * Reihenfolge-unabhängige Signatur eines GANZEN Regelsatzes (Pact). Zwei Pacts
+ * mit gleicher Signatur sind inhaltlich identisch — der Guard blockt damit den
+ * versehentlich doppelt angelegten Broadcast-Pact, lässt aber einen inhaltlich
+ * ANDEREN Zweit-Pact (andere Beträge/Trigger) durch.
+ */
+export function pledgeRulesetSignature(
+  rules: Array<Parameters<typeof pledgeRuleSignature>[0]>
+): string {
+  return rules.map(pledgeRuleSignature).sort().join(";;");
+}

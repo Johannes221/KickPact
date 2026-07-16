@@ -54,7 +54,8 @@ vi.mock("@/lib/validations/pledge", () => ({
     parse: (v: unknown) => v,
     safeParse: (v: unknown) => ({ success: true, data: v })
   },
-  normalizeTriggerParams: (p: unknown) => p ?? {}
+  normalizeTriggerParams: (p: unknown) => p ?? {},
+  pledgeRulesetSignature: () => "sig"
 }));
 
 vi.mock("@/lib/db/queries/invitations", () => ({
@@ -78,6 +79,7 @@ vi.mock("@/lib/billing/plan-features", () => ({
 vi.mock("@/lib/db/queries/pledges", () => ({
   getTeamLicensePlan: getTeamLicensePlanMock,
   countPledgeRulesForSponsorOnTeam: countPledgeRulesMock,
+  listActivePledgeRuleRowsForSponsorOnTeam: vi.fn().mockResolvedValue([]),
   getClubIdForTeam: getClubIdForTeamMock,
   createPledgeWithRules: createPledgeWithRulesMock
 }));

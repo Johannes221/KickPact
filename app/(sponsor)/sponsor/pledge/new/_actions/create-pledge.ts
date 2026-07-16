@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth/session";
 import {
   pledgeInputSchema,
   normalizeTriggerParams,
+  pledgeRulesetSignature,
   type PledgeInput
 } from "@/lib/validations/pledge";
 import { findInvitationByToken, markInvitationUsed } from "@/lib/db/queries/invitations";
@@ -15,6 +16,7 @@ import {
 } from "@/lib/billing/plan-features";
 import {
   countPledgeRulesForSponsorOnTeam,
+  listActivePledgeRuleRowsForSponsorOnTeam,
   getTeamLicensePlan,
   getClubIdForTeam,
   createPledgeWithRules
@@ -210,6 +212,53 @@ export async function createPledge(input: PledgeInput): Promise<CreatePledgeResu
         };
       }
       throw e;
+    }
+  }
+
+  // Doppel-Pact-Guard (Broadcast): der wiederverwendbare Link kann Wochen später
+  // erneut geöffnet werden — dann würde ein VERSEHENTLICH identischer zweiter Pact
+  // die ganze Saison doppelt abgerechnet (eigene pledgeRuleId → charges_unique_*
+  // dedupliziert NICHT). Wir blocken NUR den inhaltlich identischen Zweit-Pact
+  // (gleiche Signatur); ein bewusst ANDERER (andere Beträge/Trigger) bleibt erlaubt.
+  const newSignature = pledgeRulesetSignature(
+    parsed.rules.map((r) => ({
+      triggerType: r.triggerType,
+      amountCents: Math.round(r.amountEur * 100),
+      capCents: r.capEur ? Math.round(r.capEur * 100) : null,
+      capPeriod: r.capPeriod ?? null,
+      params: r.params
+    }))
+  );
+  const existingRuleRows = await listActivePledgeRuleRowsForSponsorOnTeam(
+    sponsorId,
+    invitationTeamId
+  );
+  if (existingRuleRows.length > 0) {
+    const byPledge = new Map<string, typeof existingRuleRows>();
+    for (const row of existingRuleRows) {
+      const arr = byPledge.get(row.pledgeId) ?? [];
+      arr.push(row);
+      byPledge.set(row.pledgeId, arr);
+    }
+    const existingSignatures = new Set(
+      [...byPledge.values()].map((rows) =>
+        pledgeRulesetSignature(
+          rows.map((r) => ({
+            triggerType: r.triggerType,
+            amountCents: r.amountCents,
+            capCents: r.capCents,
+            capPeriod: r.capPeriod,
+            params: (r.params ?? {}) as Record<string, unknown>
+          }))
+        )
+      )
+    );
+    if (existingSignatures.has(newSignature)) {
+      return {
+        ok: false,
+        message:
+          "Du hast auf diese Mannschaft bereits einen identischen Pact. Du kannst ihn unter „Meine Pacts“ anpassen — ein zweiter ist nicht nötig."
+      };
     }
   }
 

@@ -66,6 +66,46 @@ export async function countPledgeRulesForSponsorOnTeam(
 }
 
 /**
+ * Rule-Rows aller AKTIVEN Pledges eines Sponsors auf einem Team (nur die aktuell
+ * gültige Regelversion). Quelle für den Doppel-Pact-Guard in createPledge: erkennt
+ * einen versehentlich identisch neu angelegten Broadcast-Pact.
+ */
+export async function listActivePledgeRuleRowsForSponsorOnTeam(
+  sponsorId: string,
+  teamId: string
+): Promise<
+  Array<{
+    pledgeId: string;
+    triggerType: string;
+    amountCents: number;
+    capCents: number | null;
+    capPeriod: string | null;
+    params: unknown;
+  }>
+> {
+  return db
+    .select({
+      pledgeId: pledges.id,
+      triggerType: pledgeRules.triggerType,
+      amountCents: pledgeRules.amountCents,
+      capCents: pledgeRules.capCents,
+      capPeriod: pledgeRules.capPeriod,
+      params: pledgeRules.triggerParamsJson
+    })
+    .from(pledgeRules)
+    .innerJoin(pledges, eq(pledgeRules.pledgeId, pledges.id))
+    .where(
+      and(
+        eq(pledges.teamId, teamId),
+        eq(pledges.sponsorId, sponsorId),
+        eq(pledges.status, "active"),
+        eq(pledgeRules.active, true),
+        isNull(pledgeRules.effectiveUntil)
+      )
+    );
+}
+
+/**
  * Liefert den effektiven Plan für ein Team, mit folgender Priorität:
  *
  * 1. Direkte `team_licenses`-Row → ihren `plan` zurückgeben.

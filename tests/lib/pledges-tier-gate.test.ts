@@ -51,7 +51,8 @@ vi.mock("@/lib/validations/pledge", () => ({
     // C1 (Audit 2026-06-11): createPledge nutzt safeParse statt parse.
     safeParse: (v: unknown) => ({ success: true, data: v })
   },
-  normalizeTriggerParams: (p: unknown) => p ?? {}
+  normalizeTriggerParams: (p: unknown) => p ?? {},
+  pledgeRulesetSignature: () => "sig"
 }));
 
 vi.mock("@/lib/db/queries/invitations", () => ({
@@ -93,6 +94,7 @@ vi.mock("@/lib/billing/plan-features", () => ({
 vi.mock("@/lib/db/queries/pledges", () => ({
   getTeamLicensePlan: getTeamLicensePlanMock,
   countPledgeRulesForSponsorOnTeam: countPledgeRulesMock,
+  listActivePledgeRuleRowsForSponsorOnTeam: vi.fn().mockResolvedValue([]),
   getClubIdForTeam: getClubIdForTeamMock,
   createPledgeWithRules: createPledgeWithRulesMock
 }));

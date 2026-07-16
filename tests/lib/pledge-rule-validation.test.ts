@@ -8,8 +8,41 @@
  * Engine-Hardening (fehlender Schwellwert ⇒ Regel feuert NICHT).
  */
 import { describe, expect, it } from "vitest";
-import { pledgeInputSchema, pledgeRuleInputSchema } from "@/lib/validations/pledge";
+import {
+  pledgeInputSchema,
+  pledgeRuleInputSchema,
+  pledgeRulesetSignature
+} from "@/lib/validations/pledge";
 import { evaluateTriggers, type MatchInput, type PledgeRuleInput } from "@/lib/crawler/triggers";
+
+describe("pledgeRulesetSignature — Doppel-Pact-Guard", () => {
+  const goal5 = { triggerType: "goal_total", amountCents: 500, params: {} };
+  const win20 = { triggerType: "win", amountCents: 2000, params: {} };
+
+  it("identischer Regelsatz → gleiche Signatur (reihenfolge-unabhängig)", () => {
+    expect(pledgeRulesetSignature([goal5, win20])).toBe(
+      pledgeRulesetSignature([win20, goal5])
+    );
+  });
+
+  it("anderer Betrag → andere Signatur (Zweit-Pact bleibt erlaubt)", () => {
+    expect(pledgeRulesetSignature([goal5])).not.toBe(
+      pledgeRulesetSignature([{ ...goal5, amountCents: 600 }])
+    );
+  });
+
+  it("Params reihenfolge-unabhängig, snake/camel normalisiert", () => {
+    const a = { triggerType: "goal_by_player", amountCents: 300, params: { player_id: "p1", player_name: "X" } };
+    const b = { triggerType: "goal_by_player", amountCents: 300, params: { playerName: "X", playerId: "p1" } };
+    expect(pledgeRulesetSignature([a])).toBe(pledgeRulesetSignature([b]));
+  });
+
+  it("unterschiedliche Trigger-Menge → andere Signatur", () => {
+    expect(pledgeRulesetSignature([goal5])).not.toBe(
+      pledgeRulesetSignature([goal5, win20])
+    );
+  });
+});
 
 function rule(over: Partial<{ triggerType: string; params: Record<string, unknown> }>) {
   return {
