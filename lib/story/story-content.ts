@@ -22,12 +22,17 @@ export type StoryCrest =
 
 /**
  * Wörter, die eine Mannschaft nicht identifizieren und im Wappen nur Platz
- * fressen: Rollen-/Alters-Prefixe („Herren - FC X") und römische Mannschafts-
- * Ziffern („SV X II" → SVS, nicht SVSII).
+ * fressen: Rollen-/Alters-Prefixe („Herren - FC X") und die römische
+ * Mannschafts-Ziffer am ENDE („SV X II" → SVS, nicht SVSII).
+ *
+ * Die Ziffer wird bewusst nur am Zeilenende und nur nach Leerzeichen entfernt:
+ * ein globales \bV\b hat das „V" aus „e.V." herausgeschnitten und damit die
+ * Rechtsform-Behandlung von acronymTeamName ausgehebelt („FC Beispiel e.V."
+ * wurde zu „FCBE" statt „FCB").
  */
 const NOISE_WORDS =
   /\b(herren|damen|frauen|männer|junioren|juniorinnen|senioren|mannschaft|team)\b/gi;
-const ROMAN_SUFFIX = /\b(I{1,3}|IV|V|VI{1,3}|IX|X)\b/g;
+const ROMAN_SUFFIX = /\s+(I{1,3}|IV|V|VI{1,3}|IX|X)\s*$/;
 
 /** Wappen-Kreis fasst ~4 Zeichen — darüber wird es unleserlich klein. */
 const MAX_CREST_CHARS = 4;
@@ -47,8 +52,9 @@ const MAX_CREST_CHARS = 4;
 export function teamAbbreviation(name: string): string {
   const cleaned = (name ?? "")
     .replace(NOISE_WORDS, " ")
-    .replace(ROMAN_SUFFIX, " ")
     .replace(/\s+/g, " ")
+    .trim()
+    .replace(ROMAN_SUFFIX, "")
     .trim();
 
   const acr = acronymTeamName(cleaned || (name ?? "").trim());

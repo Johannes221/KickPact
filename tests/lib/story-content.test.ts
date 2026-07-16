@@ -31,6 +31,17 @@ describe("teamAbbreviation", () => {
     expect(teamAbbreviation("Sportfreunde Dossenheim")).toBe("SD");
   });
 
+  it("hebelt die Rechtsform-Behandlung von acronymTeamName nicht aus", () => {
+    // Das „V" in „e.V." darf nicht als Mannschafts-Ziffer gelesen werden
+    // (sonst „FCBE" statt „FCB").
+    expect(teamAbbreviation("FC Beispiel e.V.")).toBe("FCB");
+  });
+
+  it("römische Ziffern nur am Ende — nicht mitten im Vereinsnamen", () => {
+    expect(teamAbbreviation("SV Viktoria Berlin")).toBe("SVVB");
+    expect(teamAbbreviation("FC Xanten")).toBe("FCX");
+  });
+
   it("liefert nie etwas Leeres — auch bei Murks-Namen", () => {
     expect(teamAbbreviation("1916")).not.toBe("");
     expect(teamAbbreviation("")).not.toBe("");
