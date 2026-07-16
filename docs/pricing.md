@@ -1,7 +1,19 @@
 # KickPact Pricing
 
-**Stand:** 2026-06-15 · Pricing-Rework (Spec `docs/superpowers/specs/2026-06-15-pricing-rework-design.md`) · Source of Truth für `lib/stripe/pricing.ts`, Onboarding-Wizard, `/preise`-Page, Spec §6.8 + §8.4
-> **Update 2026-06-15:** Preise gesenkt — Pro 19 → **11 €**, Verein 49 → **29 €**, Saison-Pass auf **~3 Monate gratis** (−42 % vs 12× Monat). Struktur, 0 %-Provision und 30-Tage-Trial unverändert. Vereinslizenz lohnt sich ab **3 Mannschaften**.
+**Stand:** 2026-07-16 · Apple-Preispunkt-Angleichung · **Spiegel** von [`lib/stripe/pricing.ts`](../lib/stripe/pricing.ts) für Onboarding-Wizard, `/preise`-Page, Spec §6.8 + §8.4
+
+> ## ⚠️ Beträge stehen NUR in `lib/stripe/pricing.ts`
+>
+> **Einzige Quelle der Beträge ist [`lib/stripe/pricing.ts`](../lib/stripe/pricing.ts)** (`PLANS[plan].cycles[cycle].amountCents`). Dieses Dokument **spiegelt** sie für Marketing, Wizard-Texte und Sales — es setzt sie nicht.
+>
+> - **Bei Abweichung gilt der Code, nicht diese Datei.**
+> - **Keine Beträge irgendwo sonst hardcoden** — nicht in Komponenten, Mails, PDFs, Specs oder Tests. Immer aus `PLANS` lesen; abgeleitete Werte über `getMonthlyEquivalent()` / `getSavings()`, nie selbst rechnen.
+> - **Preisänderung ⇒ Reihenfolge:** Apple (App Store Connect) + Stripe → `lib/stripe/pricing.ts` → `tests/stripe/pricing.test.ts` → diese Datei nachziehen. Nie umgekehrt.
+>
+> *Warum so explizit:* Diese Datei nannte sich bis 2026-07-16 „Source of Truth für `lib/stripe/pricing.ts`" und stand danach auf totem Stand (Pro 11 €, Verein 29 €, Saison-Pass 35/75/199 €). Genau diese toten Beträge steckten auch in den Stripe-Preisobjekten — der Web-Checkout war deshalb kaputt. Die Richtung ist jetzt umgedreht: Code führt, Doku folgt.
+
+> **Update 2026-07-16:** Preise auf **Apple-Preispunkte geglättet** und mit Stripe + App Store Connect abgeglichen (beide Seiten verifiziert): Basic **4,99 €** / **19,99 €**, Pro **8,99 €** / **34,99 €**, Verein **19,99 €** / **79,99 €**. `pro.season` ist bewusst **34,99 € statt 35,99 €** — 35,99 € existiert als Apple-Preispunkt nicht, und App und Web dürfen nicht auseinanderliegen. Diese Doku hing zuvor auf dem Stand **2026-06-15** fest; alle Beträge, Ersparnis-Prozente, Monatsäquivalente, Pro-Spieler- und Break-Even-Tabellen sind neu aus `lib/stripe/pricing.ts` gerechnet. Struktur, 0 %-Provision, 30-Tage-Trial und der 3-Mannschaften-Break-Even bleiben unverändert.
+> **Update 2026-06-15:** Preise gesenkt, Saison-Pass-Rabatt verstärkt. *(Beträge dieses Updates sind durch 2026-07-16 überholt.)*
 > **Update 2026-06-02:** Der „Annual"-Cycle (12-Monats-Lizenz) wurde komplett entfernt — nur noch **Monatlich + Saison-Pass**. Saison-Pass IST die Jahres-Bindung für den Fußball-Rhythmus.
 
 > Rationale, Recherche und verworfene Konzepte: siehe [docs/strategy/2026-05-22-pricing-strategy.md](strategy/2026-05-22-pricing-strategy.md).
@@ -13,25 +25,26 @@
 | | **Basic** | **Pro** ⭐ | **Vereinslizenz** |
 |---|---|---|---|
 | **Zielgruppe** | 1 Mannschaft, 1–5 Sponsoren aus dem direkten Umfeld | 1 Mannschaft, ernsthaftes Sponsoring, ∞ Sponsoren | Verein mit ≥ 3 Mannschaften, zentrale Verwaltung |
-| **Monatspreis** | **5 €**/Mannschaft/Monat | **11 €**/Mannschaft/Monat | **29 €**/Verein/Monat |
-| **Saison-Pass** *(Aug–Mai, 3 Monate geschenkt)* | **35 €**/Saison · ≈ 3,50 €/Mon | **75 €**/Saison · ≈ 7,50 €/Mon | **199 €**/Saison · ≈ 19,90 €/Mon |
+| **Monatspreis** | **4,99 €**/Mannschaft/Monat | **8,99 €**/Mannschaft/Monat | **19,99 €**/Verein/Monat |
+| **Saison-Pass** *(Aug–Mai, Jun/Jul pausiert)* | **19,99 €**/Saison · ≈ 2,00 €/Mon | **34,99 €**/Saison · ≈ 3,50 €/Mon | **79,99 €**/Saison · ≈ 8,00 €/Mon |
+| **Ersparnis Saison-Pass** *(vs 12× Monat)* | **67 %** (−39,89 €) | **68 %** (−72,89 €) | **67 %** (−159,89 €) |
 | **Provision auf Pledges** | **0 %** | **0 %** | **0 %** |
 | **Trial** | 30 Tage | 30 Tage | 30 Tage |
-| **Pro Spieler/Monat** *(typischer Kader)* | ~0,23 €/Spieler (22 Mann) | **< 1 €/Spieler** (22 Mann) | **< 1 €/Spieler** (50 Mann) · 0,15 € bei 200 Spielern |
+| **Pro Spieler/Monat** *(typischer Kader)* | ~0,23 €/Spieler (22 Mann) | **0,41 €/Spieler** (22 Mann) | **0,40 €/Spieler** (50 Mann) · 0,10 € bei 200 Spielern |
 
 **Headline-Versprechen:** *100 % der Einnahmen gehen an euch. KickPact stellt die Plattform — Tracking, PDFs, Sponsor-Inbox — und finanziert sich rein über Lizenzgebühren.*
 
-**Default-Empfehlung im Wizard:** Saison-Pass (Aug–Mai). Monatsabo nach 5. Spieltag der laufenden Saison.
+**Default-Empfehlung im Wizard:** Saison-Pass (Aug–Mai) — `DEFAULT_CYCLE = "season_end"`. Monatsabo nach 5. Spieltag der laufenden Saison.
 
 ---
 
-## 2. Basic — 5 €/Mannschaft/Monat
+## 2. Basic — 4,99 €/Mannschaft/Monat
 
 > **Zum Reinkommen.** Für Trainer, die mit 1–3 Sponsoren aus der Familie ehrlich testen wollen, ob's was bringt.
 
 ### Pricing
-- **Monatlich:** 5 €/Mannschaft
-- **Saison-Pass (Aug–Mai):** 35 €/Saison · ~3 Monate geschenkt · Juni/Juli automatisch kostenlos pausiert
+- **Monatlich:** 4,99 €/Mannschaft
+- **Saison-Pass (Aug–Mai):** 19,99 €/Saison · ≈ **2,00 €/Mon** · **67 % günstiger** als 12× Monatsabo (59,88 €) · Juni/Juli automatisch kostenlos pausiert
 - **0 % Provision** auf bestätigte Pledges
 
 ### Was ist drin
@@ -53,6 +66,8 @@
 | Match-Historie | nur aktuelle Saison |
 | User-Rollen | 1 Admin |
 
+*(Enforcement: `PLAN_CAPS` in `lib/stripe/pricing.ts`, validiert über `lib/billing/plan-features.ts`.)*
+
 ### Was fehlt (= Pro-Push)
 - ❌ Saison-Wetten (Aufstieg, Klassenerhalt, Pokalrunde, Meister, Tabellenplatz)
 - ❌ Custom-Trigger-Texte ("Bizeps-Tor von Mehmet")
@@ -64,20 +79,22 @@
 - ❌ Saison-Recap-PDF
 
 ### Marketing-Hook
-> *„Schau ob's was bringt. 5 € im Monat, kein Risiko. Wenn dein Sponsoring wächst, wechsel zu Pro."*
+> *„Schau ob's was bringt. 4,99 € im Monat, kein Risiko. Wenn dein Sponsoring wächst, wechsel zu Pro."*
 
 ---
 
-## 3. Pro — 11 €/Mannschaft/Monat ⭐
+## 3. Pro — 8,99 €/Mannschaft/Monat ⭐
 
 > **Beliebteste.** Für aktive Sponsoring-Setups mit ≥ 5 Sponsoren. Hier sollen 80 % der Vereine landen.
 >
-> **Bei 22-Mann-Kader: unter 1 € pro Spieler/Monat.**
+> **Bei 22-Mann-Kader: deutlich unter 1 € pro Spieler/Monat.**
 
 ### Pricing
-- **Monatlich:** 11 €/Mannschaft · bei 22-Mann-Kader **0,50 € pro Spieler/Monat**
-- **Saison-Pass (Aug–Mai):** **75 €**/Saison · effektiv 7,50 €/Mon · 42 % sparen (vs 12× Monat) · Juni/Juli kostenlos pausiert · **0,34 € pro Spieler/Monat**
+- **Monatlich:** 8,99 €/Mannschaft · bei 22-Mann-Kader **0,41 € pro Spieler/Monat**
+- **Saison-Pass (Aug–Mai):** **34,99 €**/Saison · effektiv **3,50 €/Mon** · **68 % sparen** (−72,89 € vs 12× Monat = 107,88 €) · Juni/Juli kostenlos pausiert · **0,16 € pro Spieler/Monat**
 - **0 % Provision** auf bestätigte Pledges
+
+> **Warum 34,99 € und nicht 35,99 €?** Apples IAP-Preispunkte sind diskret — 35,99 € gibt es dort nicht. Der Preis für `kickpact.pro.season` liegt bei 34,99 € (per ASC-API verifiziert, DEU). Web folgt dem Apple-Preispunkt, damit App und Web nicht 1 € auseinanderliegen. Nicht „glatt aufrunden", das bricht die Store-Parität.
 
 ### Was ist drin
 **Alles aus Basic, plus:**
@@ -103,15 +120,15 @@
 
 ---
 
-## 4. Vereinslizenz — 29 €/Verein/Monat
+## 4. Vereinslizenz — 19,99 €/Verein/Monat
 
 > **Für den ganzen Verein.** Eine Lizenz, unbegrenzt Mannschaften, alles inklusive.
 >
-> **Unter 1 € pro Spieler ab 50-Mann-Verein · ab 0,15 €/Spieler bei großen Vereinen.**
+> **Unter 1 € pro Spieler ab ~20 Spielern · ab 0,10 €/Spieler bei großen Vereinen.**
 
 ### Pricing
-- **Monatlich:** 29 €/Verein · bei 50 Spielern **0,58 € pro Spieler/Monat**
-- **Saison-Pass (Aug–Mai):** **199 €**/Saison · effektiv 19,90 €/Mon · 42 % sparen (vs 12× Monat) · Juni/Juli kostenlos pausiert · **0,40 € pro Spieler/Monat** (50 Spieler)
+- **Monatlich:** 19,99 €/Verein · bei 50 Spielern **0,40 € pro Spieler/Monat**
+- **Saison-Pass (Aug–Mai):** **79,99 €**/Saison · effektiv **8,00 €/Mon** · **67 % sparen** (−159,89 € vs 12× Monat = 239,88 €) · Juni/Juli kostenlos pausiert · **0,16 € pro Spieler/Monat** (50 Spieler)
 - **0 % Provision**
 
 ### Was ist drin
@@ -129,32 +146,32 @@
 | **Support** | Email + WhatsApp, 4 h Antwortzeit |
 
 ### Per-Player-Pricing
-| Verein-Größe | €/Spieler/Monat (Lizenz 29 €) |
-|---|---|
-| 30 Spieler | 0,97 € *„unter 1 € pro Spieler"* |
-| 50 Spieler | 0,58 € |
-| 100 Spieler | 0,29 € |
-| 200 Spieler | 0,15 € |
+| Verein-Größe | €/Spieler/Monat (Lizenz 19,99 €) | €/Spieler/Monat (Saison-Pass, 8,00 €/Mon) |
+|---|---|---|
+| 30 Spieler | 0,67 € *„unter 1 € pro Spieler"* | 0,27 € |
+| 50 Spieler | 0,40 € | 0,16 € |
+| 100 Spieler | 0,20 € | 0,08 € |
+| 200 Spieler | 0,10 € | 0,04 € |
 
 ### Wann lohnt sich Vereinslizenz gegenüber n × Pro?
 | Mannschaften | Pro × n (Monat) | Vereinslizenz (Monat) | Ersparnis |
 |---|---|---|---|
-| 2 | 22 €/Mon | 29 €/Mon | -7 € (Pro besser) |
-| **3** | 33 €/Mon | **29 €/Mon** | **+4 €/Mon** ⭐ Break-Even |
-| 4 | 44 €/Mon | 29 €/Mon | +15 €/Mon |
-| 6 | 66 €/Mon | 29 €/Mon | +37 €/Mon |
-| 10 | 110 €/Mon | 29 €/Mon | +81 €/Mon |
+| 2 | 17,98 €/Mon | 19,99 €/Mon | −2,01 € (Pro besser) |
+| **3** | 26,97 €/Mon | **19,99 €/Mon** | **+6,98 €/Mon** ⭐ Break-Even |
+| 4 | 35,96 €/Mon | 19,99 €/Mon | +15,97 €/Mon |
+| 6 | 53,94 €/Mon | 19,99 €/Mon | +33,95 €/Mon |
+| 10 | 89,90 €/Mon | 19,99 €/Mon | +69,91 €/Mon |
 
 ### Saison-Pass-Vergleich
 | Mannschaften | Pro-Pass × n | Vereinslizenz-Pass | Ersparnis |
 |---|---|---|---|
-| 2 | 150 € | 199 € | -49 € (Pro besser) |
-| **3** | 225 € | **199 €** | **+26 €** ⭐ Break-Even |
-| 4 | 300 € | 199 € | +101 € |
-| 6 | 450 € | 199 € | +251 € |
-| 10 | 750 € | 199 € | +551 € |
+| 2 | 69,98 € | 79,99 € | −10,01 € (Pro besser) |
+| **3** | 104,97 € | **79,99 €** | **+24,98 €** ⭐ Break-Even |
+| 4 | 139,96 € | 79,99 € | +59,97 € |
+| 6 | 209,94 € | 79,99 € | +129,95 € |
+| 10 | 349,90 € | 79,99 € | +269,91 € |
 
-→ Ab **3 Mannschaften** mathematisch günstiger als Pro × n, plus Master-Cockpit-Vorteile.
+→ Ab **3 Mannschaften** mathematisch günstiger als Pro × n, plus Master-Cockpit-Vorteile. Break-Even bleibt bei 3 — in beiden Billing-Cycles.
 
 ### Marketing-Hook
 > *„Der ganze Verein. Ein Tarif. Unter 1 € pro Spieler."*
@@ -166,8 +183,8 @@
 | Feature | Basic | Pro | Vereinslizenz |
 |---|---|---|---|
 | **Pricing** | | | |
-| Monatspreis | 5 € | 11 € | 29 € |
-| Saison-Pass | **35 €** | **75 €** | **199 €** |
+| Monatspreis | 4,99 € | 8,99 € | 19,99 € |
+| Saison-Pass | **19,99 €** | **34,99 €** | **79,99 €** |
 | Provision | 0 % | 0 % | 0 % |
 | Trial | 30 Tage | 30 Tage | 30 Tage |
 | **Trigger** | | | |
@@ -210,8 +227,8 @@
 
 ### Mechanik
 - **Aktive Saison:** 1. August – 31. Mai (10 Monate). Definition pro Liga/Region in `seasons`-Tabelle, default-befüllt aus DFB-Spieljahr.
-- **Preis:** ~ 7 × Monatspreis (= **3 Monate geschenkt**, ~30 % vs. 10× Monatspreis · −42 % vs. 12× Monat)
-- **Sommerpause:** 1. Juni – 31. Juli automatisch `paused` → kein Crawler, keine Charges, Daten bleiben sichtbar, **kein €** wird abgebucht
+- **Preis:** ≈ **4 × Monatspreis** für **10 aktive Monate** → 6 der 10 Saison-Monate sind geschenkt. Gegen ein durchlaufendes Monatsabo (12× Monat, das im Sommer nicht pausiert) sind das **67–68 % Ersparnis**.
+- **Sommerpause:** 1. Juni – 31. Juli automatisch `paused` → kein Crawler, keine Charges, Daten bleiben sichtbar, **kein €** wird abgebucht (`SEASON_PAUSE_MONTHS = [6, 7]`)
 - **Renewal:** zum 1. August automatisch verlängert (Stripe-Subscription `billing_cycle_anchor = next_aug_1`). Vorab-Kündigungsrecht 30 Tage (= bis 1.7.)
 - **Winterpause:** Mitte Dez – Anfang Feb. **Keine** Subscription-Pause — App läuft weiter, nur der Crawler findet 4-6 Wochen keine neuen Matches. Tabelle/Stats bleiben sichtbar.
 
@@ -222,25 +239,29 @@
 | **1. Juli – 5. Spieltag** *(~Mitte Sep)* | ✅ Voller Saison-Pass-Preis (gleicher Preis unabhängig vom Einstiegsdatum) |
 | **Ab 6. Spieltag** | ❌ nur Monatsabo möglich · Saison-Pass startet zur nächsten Saison im Juli |
 
-→ Wer Anfang August einsteigt, hat den besten Deal (volle 10 Monate für 7× Monatspreis).
+→ Wer Anfang August einsteigt, hat den besten Deal (volle 10 Monate für ~4× Monatspreis).
 → Wer im September einsteigt (bis 5. Spieltag), zahlt denselben Saison-Pass-Preis, hat aber nur noch ~8 Monate Restsaison. Kein Pro-Rated — bewusste Wahl: simpel, fair, kein "warte-bis-zum-letzten-Spieltag"-Gaming.
 
 ### Mid-Season-Einstieg
 | Onboarding-Datum | Wizard-Default |
 |---|---|
 | **Jul–Sep bis 5. Spieltag** | **Saison-Pass** vorausgewählt + Hinweis "Saison-Wetten noch buchbar" |
-| **Ab 6. Spieltag bis Mai** | **Monatsabo** vorausgewählt + Hinweis "Saison-Pass startet zur nächsten Saison im August und spart ~2 Monate" |
+| **Ab 6. Spieltag bis Mai** | **Monatsabo** vorausgewählt + Hinweis "Saison-Pass startet zur nächsten Saison im August und spart rund zwei Drittel" |
 | **Juni** *(Sommerpause)* | **Frühbucher-Saison-Pass** für nächste Saison + Trial bis 1.8., Crawler startet automatisch zum Saison-Start |
 
-**Kein Pro-Rated Saison-Pass** — macht den "2 Monate geschenkt"-Discount kompliziert und schwächt psychologisch. Mid-Season → Monatsabo → Switch auf nächsten Saison-Pass im Onboarding angeboten.
+**Kein Pro-Rated Saison-Pass** — macht den Discount kompliziert und schwächt psychologisch. Mid-Season → Monatsabo → Switch auf nächsten Saison-Pass im Onboarding angeboten.
 
 ### Saison-Pass-Preise kompakt
 
-| Tier | Monat | Saison-Pass | Ersparnis vs Monatsabo (10×) | Effektiv/Mon |
-|---|---|---|---|---|
-| Basic | 5 € | **35 €** | -15 € (~30 %) | 3,50 € |
-| Pro | 11 € | **75 €** | -35 € (~32 %) | 7,50 € |
-| Vereinslizenz | 29 € | **199 €** | -91 € (~31 %) | 19,90 € |
+Vergleichsbasis ist **12 × Monatspreis** — was ein Monatsabo über ein volles Jahr kostet (das Monatsabo pausiert im Sommer nicht). Identisch zu `getSavings()`; diese Prozente sind die `saveBadge`-Werte auf der Pricing-Card.
+
+| Tier | Monat | Saison-Pass | 12× Monat | Ersparnis | Effektiv/Mon *(Pass ÷ 10)* |
+|---|---|---|---|---|---|
+| Basic | 4,99 € | **19,99 €** | 59,88 € | −39,89 € (**67 %**) | 2,00 € |
+| Pro | 8,99 € | **34,99 €** | 107,88 € | −72,89 € (**68 %**) | 3,50 € |
+| Vereinslizenz | 19,99 € | **79,99 €** | 239,88 € | −159,89 € (**67 %**) | 8,00 € |
+
+> **Nur diese eine Vergleichsbasis kommunizieren.** Früher stand hier zusätzlich ein 10×-Vergleich mit ~30 % — zwei konkurrierende Ersparnis-Zahlen für dasselbe Produkt sind der Anfang der nächsten Divergenz. Prozente kommen aus `getSavings(plan, cycle)`, Monatsäquivalente aus `getMonthlyEquivalent(plan, cycle)` — nicht abtippen.
 
 ---
 
@@ -269,7 +290,7 @@ Saison-Wetten (6 Typen: Aufstieg, Klassenerhalt, Tabellenplatz-Range, Meister, P
 
 ## 8. Trial-Logik
 
-- **30 Tage Trial** für die **erste aktivierte Mannschaft** eines Vereins (alle Tarife)
+- **30 Tage Trial** (`TRIAL_DAYS = 30`) für die **erste aktivierte Mannschaft** eines Vereins (alle Tarife)
 - Trial startet bei Onboarding-Abschluss (nach Sponsor-Einladungslink-Erstellung)
 - Reminder: 7d / 3d / 1d vor Trial-Ende an Mannschafts-Admin
 - Nach Trial-Ende ohne Zahlungsmittel → 7d Grace-Period (read-only-Banner, alles funktioniert) → Read-Only-Mode (Crawler stoppt, keine neuen Pledges/Charges, bestehende PDFs bleiben sichtbar)
@@ -280,23 +301,26 @@ Saison-Wetten (6 Typen: Aufstieg, Klassenerhalt, Tabellenplatz-Range, Meister, P
 
 ## 9. Headline-Marketing-Hooks
 
-Wiederverwendbare Sätze für Landing, Pricing-Page, Onboarding, Sales-Pitches:
+Wiederverwendbare Sätze für Landing, Pricing-Page, Onboarding, Sales-Pitches.
+
+> **Beträge in Marketing-Copy sind Momentaufnahmen.** In gerenderter UI immer aus `PLANS` lesen — hier stehen sie nur, damit man den Ton trifft.
 
 ### Plattform-Versprechen
 > **„100 % der Einnahmen gehen an euch. 30 Tage kostenlos testen — ohne Kreditkarte."**
 
 ### Tarif-Anker
-- **Basic:** *„Zum Reinkommen. 5 € im Monat, kein Risiko."*
+- **Basic:** *„Zum Reinkommen. 4,99 € im Monat, kein Risiko."*
 - **Pro:** *„Sponsoring, das mitfiebert. Alles drin."*
 - **Vereinslizenz:** *„Der ganze Verein. Ein Tarif. Unter 1 € pro Spieler."*
 
 ### Saison-Pass-Anker
-> **„3 Monate geschenkt. Sommerpause kostet nichts."**
+> **„Zwei Drittel günstiger als Monat für Monat. Sommerpause kostet nichts."**
 
 ### Mathematik-Anker (für Pricing-FAQ)
-- Ab **3 Mannschaften** ist Vereinslizenz günstiger als 3× Pro (29 € vs. 33 €)
-- Bei **50 Spielern** zahlt der Vereinslizenz-Verein **unter 1 € pro Spieler**
-- Bei **200 Spielern** = **0,15 € pro Spieler**
+- Ab **3 Mannschaften** ist Vereinslizenz günstiger als 3× Pro (19,99 € vs. 26,97 €)
+- Bei **50 Spielern** zahlt der Vereinslizenz-Verein **0,40 € pro Spieler** — mit Saison-Pass 0,16 €
+- Bei **200 Spielern** = **0,10 € pro Spieler**
+- Saison-Pass Pro: **34,99 € für die ganze Saison** = 3,50 € pro Monat
 
 ### Saison-Auftakt-Anker
 > **„Saison 2026/27 — Pass und Saison-Wetten freischalten bis 5. Spieltag. Danach erst wieder Juli 2027."** (jährlicher Push)
@@ -322,6 +346,29 @@ Was im Code/Spec geändert werden muss, sobald dieses Pricing abgesegnet ist:
 | `app/onboarding/verein/[step]/` | Billing-Cycle-Auswahl in Schritt 2, Mid-Season-Logik (Default-Auswahl abhängig vom Datum vs. 5. Spieltag) |
 | `app/(verein)/verein/[slug]/abo/page.tsx` | 3 Tarife + 3 Billing-Cycles + Upgrade-Pfade |
 
+### Preisänderung — Reihenfolge (verbindlich)
+
+Ändert sich ein Betrag, gilt **diese Reihenfolge** — sonst wiederholt sich die Divergenz vom Juli 2026:
+
+| # | Ort | Was |
+|---|---|---|
+| 1 | **App Store Connect** | IAP-Preis je Product-ID (`APPLE_PRODUCTS`). Nur diskrete Apple-Preispunkte — der gewünschte Betrag existiert eventuell nicht. |
+| 2 | **Stripe** | Neues Price-Objekt je Plan × Cycle, Env `STRIPE_<PLAN>_<CYCLE>_PRICE_ID` umhängen. Stripe-Prices sind immutable, nie in-place ändern. |
+| 3 | **`lib/stripe/pricing.ts`** | `amountCents` + `display` + `caption` + `saveBadge`. **Die einzige Quelle im Code.** |
+| 4 | **`tests/stripe/pricing.test.ts`** | Kanonische Assertions nachziehen — der Test ist die Bremse gegen stille Drifts. |
+| 5 | **Diese Datei** | Alle Tabellen in §1–§6, §9 + Update-Notiz oben. |
+
+Alles andere (Wizard, `/preise`, Abo-Panel, Mails, PDFs) liest aus `PLANS` und braucht **keine** Änderung. Falls doch irgendwo ein Betrag hart drinsteht: das ist ein Bug, kein Pflegeaufwand.
+
+### Abgeleitete Werte — nie selbst rechnen
+| Wert | Funktion |
+|---|---|
+| Effektiv pro Monat | `getMonthlyEquivalent(plan, cycle)` — Saison-Pass ÷ 10 |
+| Ersparnis (€ + %) | `getSavings(plan, cycle)` — Basis 12 × monthly |
+| Stripe-Price-ID | `getStripePriceId(plan, cycle)` / `priceIdToPlanCycle(id)` |
+| Apple-Product-ID | `appleProductIdFor(plan, cycle)` / `appleProductToPlanCycle(id)` |
+| Tier-Caps | `PLAN_CAPS[plan]` |
+
 ---
 
 ## 11. Entscheidungs-Log
@@ -331,11 +378,13 @@ Was im Code/Spec geändert werden muss, sobald dieses Pricing abgesegnet ist:
 | 1 | Tarif-Namen | **Basic / Pro / Vereinslizenz** | ✅ entschieden |
 | 2 | Basic Sponsor-Cap | **5** | ✅ entschieden |
 | 3 | Basic Pledge-Rules-Cap pro Sponsor | **3** | ✅ entschieden |
-| 4 | Vereinslizenz-Monatspreis | **29 €** (war 49 €, gesenkt 2026-06-15) | ✅ entschieden |
+| 4 | Vereinslizenz-Monatspreis | **19,99 €** (49 € → 29 € am 2026-06-15 → 19,99 € am 2026-07-16) | ✅ entschieden |
 | 5 | Annual-Plan anbieten | **Nein** — 2026-06-02 komplett entfernt; Saison-Pass IST die Jahres-Bindung | ✅ entschieden |
-| 6 | Saison-Pass-Preise | **35 / 75 / 199 €** (~ 7× Monat, 3 Mon geschenkt) | ✅ entschieden |
+| 6 | Saison-Pass-Preise | **19,99 / 34,99 / 79,99 €** (≈ 4× Monat, 67–68 % vs 12× Monat) | ✅ entschieden |
 | 7 | Saison-Pass + Saison-Wetten Cutoff | **5. Spieltag der laufenden Saison** (gleicher Cutoff für beides) | ✅ entschieden |
 | 8 | Provision auf allen Tiers | **0 %** | ✅ entschieden |
 | 9 | Trial-Länge | **30 Tage** | ✅ entschieden |
 | 10 | Saison-Pass = Default im Wizard | **Ja** (bis 5. Spieltag), sonst Monatsabo | ✅ entschieden |
 | 11 | Onboarding-Support | **Self-Service** — Help-Center + Doku für alle Tiers, kein Call | ✅ entschieden |
+| 12 | `pro.season` = 34,99 € statt 35,99 € | **Ja** — 35,99 € ist kein Apple-Preispunkt; Web folgt Apple, damit App/Web nicht auseinanderliegen | ✅ entschieden 2026-07-16 |
+| 13 | Source of Truth für Beträge | **`lib/stripe/pricing.ts`** — diese Datei spiegelt nur. Vorher umgekehrt deklariert, das war die Wurzel der Preis-Divergenz. | ✅ entschieden 2026-07-16 |
