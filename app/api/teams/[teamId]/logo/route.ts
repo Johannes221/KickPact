@@ -3,6 +3,10 @@ import { getServerSession } from "@/lib/auth/session";
 import { getDocumentSignedUrl } from "@/lib/storage/documents";
 import { uploadTeamLogo } from "@/lib/actions/team-lifecycle";
 import { rejectOversizedUpload } from "@/lib/storage/upload-guard";
+import {
+  isUpgradeRequiredError,
+  UPGRADE_REQUIRED_CODE
+} from "@/lib/billing/upgrade-offer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -81,7 +85,15 @@ export async function POST(
         { status: 403 }
       );
     }
-    // Validierungs-/Gate-Fehler (Format, Größe, Read-Only) → nutzerlesbar.
+    // Abo-Sperre → 402, damit der Client eine echte Upgrade-Aufforderung
+    // (<UpgradeGate>) zeigen kann statt eines kryptischen Fehler-Toasts.
+    if (isUpgradeRequiredError(e)) {
+      return NextResponse.json(
+        { error: UPGRADE_REQUIRED_CODE, lock: e.lock, message: e.message },
+        { status: 402 }
+      );
+    }
+    // Validierungs-Fehler (Format, Größe) → nutzerlesbar.
     const message =
       e instanceof Error ? e.message : "Upload fehlgeschlagen.";
     return NextResponse.json({ error: "upload-failed", message }, { status: 400 });

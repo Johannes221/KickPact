@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/session";
 import { uploadTeamCover } from "@/lib/actions/team-images";
 import { rejectOversizedUpload } from "@/lib/storage/upload-guard";
+import {
+  isUpgradeRequiredError,
+  UPGRADE_REQUIRED_CODE
+} from "@/lib/billing/upgrade-offer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,6 +46,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ teamId:
   } catch (e) {
     if (isRedirectError(e)) {
       return NextResponse.json({ error: "forbidden", message: "Kein Zugriff auf diese Mannschaft." }, { status: 403 });
+    }
+    // Abo-Sperre → 402 (Client zeigt <UpgradeGate> statt Fehler-Toast).
+    if (isUpgradeRequiredError(e)) {
+      return NextResponse.json(
+        { error: UPGRADE_REQUIRED_CODE, lock: e.lock, message: e.message },
+        { status: 402 }
+      );
     }
     const message = e instanceof Error ? e.message : "Upload fehlgeschlagen.";
     return NextResponse.json({ error: "upload-failed", message }, { status: 400 });

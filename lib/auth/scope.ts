@@ -9,6 +9,26 @@ import {
   getSubscriptionGateForTeam,
   type SubscriptionGate
 } from "@/lib/db/queries/subscription-status";
+import {
+  UpgradeRequiredError,
+  lockFromGate
+} from "@/lib/billing/upgrade-offer";
+
+/**
+ * Read-Only-Sperre als typisierter `UpgradeRequiredError` — so kann die UI
+ * daraus eine echte Upgrade-Aufforderung machen (<UpgradeGate>) statt einer
+ * kryptischen Mini-Fehlermeldung. Die Message bleibt wortgleich zur früheren
+ * Fassung (Fallback für Aufrufer, die den Typ nicht auswerten).
+ */
+const READ_ONLY_MESSAGE =
+  "Diese Mannschaft ist im Read-Only-Modus. Bitte Abo reaktivieren.";
+
+function readOnlyError(gate: SubscriptionGate): UpgradeRequiredError {
+  return new UpgradeRequiredError(
+    lockFromGate(gate) ?? "expired",
+    READ_ONLY_MESSAGE
+  );
+}
 
 type Role = "admin" | "trainer" | "viewer";
 const ROLE_RANK: Record<Role, number> = { viewer: 1, trainer: 2, admin: 3 };
@@ -115,9 +135,7 @@ export async function assertClubWriteAccess(
   const ctx = await assertClubAccess(clubSlug, minRole);
   const gate = await getSubscriptionGate(ctx.club.id);
   if (gate.isReadOnly) {
-    throw new Error(
-      "Diese Mannschaft ist im Read-Only-Modus. Bitte Abo reaktivieren."
-    );
+    throw readOnlyError(gate);
   }
   return { ...ctx, gate };
 }
@@ -136,9 +154,7 @@ export async function assertClubWriteAccessAllowPaused(
   const ctx = await assertClubAccess(clubSlug, minRole);
   const gate = await getSubscriptionGate(ctx.club.id);
   if (gate.isReadOnly && gate.status !== "paused") {
-    throw new Error(
-      "Diese Mannschaft ist im Read-Only-Modus. Bitte Abo reaktivieren."
-    );
+    throw readOnlyError(gate);
   }
   return { ...ctx, gate };
 }
@@ -351,9 +367,7 @@ export async function assertTeamWriteAccess(
 
   const gate = await getSubscriptionGateForTeam(teamId);
   if (gate.isReadOnly && !(opts.allowPaused && gate.status === "paused")) {
-    throw new Error(
-      "Diese Mannschaft ist im Read-Only-Modus. Bitte Abo reaktivieren."
-    );
+    throw readOnlyError(gate);
   }
 
   return { user, access, gate };

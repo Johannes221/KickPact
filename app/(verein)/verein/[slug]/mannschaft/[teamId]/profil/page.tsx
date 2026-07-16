@@ -2,6 +2,10 @@ import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { listTeamImages } from "@/lib/db/queries/team-images";
 import { getTeamProfileForEditor } from "@/lib/db/queries/team-lifecycle";
 import { getClubNameOrt } from "@/lib/db/queries/club-admin";
+import { getSubscriptionGateForTeam } from "@/lib/db/queries/subscription-status";
+import { getTeamLicensePlan } from "@/lib/db/queries/pledges";
+import { lockFromGate } from "@/lib/billing/upgrade-offer";
+import { isNativeAppRequest } from "@/lib/platform/native-server";
 import { MeinProfilEditor } from "./_components/mein-profil-editor";
 
 export const metadata = { title: "Mein Profil · Mannschaft · KickPact" };
@@ -32,6 +36,17 @@ export default async function MeinProfilPage({
 
   const clubRow = await getClubNameOrt(club.id);
 
+  // Abo-Sperre + Tarif + Plattform serverseitig auflösen und als Props
+  // durchreichen: der Editor kann so bei jeder gesperrten Aktion sofort die
+  // echte Upgrade-Aufforderung zeigen (statt erst den Server zu fragen und
+  // einen kryptischen Fehler-Toast zu ernten). `nativeApp` MUSS serverseitig
+  // kommen (Anti-Steering-Wording ohne Hydration-Flackern).
+  const [gate, currentPlan, nativeApp] = await Promise.all([
+    getSubscriptionGateForTeam(teamId),
+    getTeamLicensePlan(teamId),
+    isNativeAppRequest()
+  ]);
+
   const gallery = (await listTeamImages(teamId)).map((g) => ({
     id: g.id,
     url: `/api/teams/${teamId}/image?slot=gallery&id=${g.id}`
@@ -61,6 +76,9 @@ export default async function MeinProfilPage({
       publicName={team.publicName ?? ""}
       publicTagline={team.publicTagline ?? ""}
       publicGoals={team.publicGoals ?? ""}
+      lock={lockFromGate(gate)}
+      currentPlan={currentPlan}
+      nativeApp={nativeApp}
       />
     </div>
   );

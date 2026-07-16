@@ -13,6 +13,13 @@ import { saveTeamPublicProfile } from "@/lib/actions/team-public-profile";
 import { setTeamShowInsights } from "@/lib/actions/team-images";
 import { renameTeam } from "@/lib/actions/team-lifecycle";
 import { saisonLabel } from "@/lib/utils/saison";
+import { UpgradeGateDialog } from "@/components/billing/upgrade-gate";
+import {
+  UpgradeRequiredError,
+  isUpgradeRequiredError,
+  type LockKind
+} from "@/lib/billing/upgrade-offer";
+import type { PlanKey } from "@/lib/stripe/pricing";
 
 // Akzeptierte Endungen (inkl. iPhone-HEIC/HEIF — Server konvertiert nach JPEG).
 // MIME-Type-Prüfung bewusst lasch: Mobile-Browser senden gelegentlich einen
@@ -47,6 +54,11 @@ interface Props {
   publicName: string;
   publicTagline: string;
   publicGoals: string;
+  /** Abo-Sperre (aus dem Subscription-Gate). `null` = alles erlaubt. */
+  lock: LockKind | null;
+  currentPlan: PlanKey;
+  /** Serverseitig ermittelt (isNativeAppRequest) — steuert nur das Wording. */
+  nativeApp: boolean;
 }
 
 export function MeinProfilEditor({
@@ -66,10 +78,30 @@ export function MeinProfilEditor({
   publicSlug,
   publicName: initialPublicName,
   publicTagline: initialTagline,
-  publicGoals: initialGoals
+  publicGoals: initialGoals,
+  lock,
+  currentPlan,
+  nativeApp
 }: Props) {
   const router = useRouter();
   const [pending, start] = useTransition();
+
+  // Gesperrte Aktion → echte Upgrade-Aufforderung (Dialog) statt Mini-Toast.
+  const [upsell, setUpsell] = useState<{
+    feature: string;
+    lock: LockKind;
+  } | null>(null);
+
+  /**
+   * Vorab-Gate: die Sperre ist serverseitig bekannt, also gar nicht erst
+   * losschicken. `true` = blockiert (Aufrufer bricht ab). Der Server bleibt die
+   * autoritative Instanz — dieser Check ist reine UX, kein Sicherheits-Gate.
+   */
+  function blockedByPlan(feature: string): boolean {
+    if (!lock) return false;
+    setUpsell({ feature, lock });
+    return true;
+  }
 
   // Lokaler State für Edit-Felder.
   const [name, setName] = useState(teamName);
@@ -88,6 +120,14 @@ export function MeinProfilEditor({
 
   // ---- Uploads (Cover / Logo / Galerie) -------------------------------------
 
+  /**
+   * Upload läuft bewusst über den Route-Handler (nicht über eine Server-Action:
+   * dort greift Nexts 1-MB-Bodylimit). HEIC→JPEG passiert serverseitig in
+   * `normalizeImageUpload` — gilt damit automatisch für jede Datei.
+   *
+   * Wirft `UpgradeRequiredError` bei HTTP 402 (Abo-Sperre), sonst `Error` mit
+   * der server-gelieferten Meldung.
+   */
   async function uploadTo(path: string, file: File) {
     if (file.size > MAX_BYTES) {
       const mb = (file.size / 1_000_000).toFixed(1);
@@ -96,13 +136,34 @@ export function MeinProfilEditor({
     const fd = new FormData();
     fd.append("file", file);
     const res = await fetch(path, { method: "POST", body: fd });
-    if (!res.ok) {
-      const d = (await res.json().catch(() => null)) as { message?: string } | null;
-      throw new Error(d?.message ?? "Upload fehlgeschlagen.");
+    if (res.ok) return;
+    const d = (await res.json().catch(() => null)) as {
+      message?: string;
+      lock?: LockKind;
+    } | null;
+    if (res.status === 402) {
+      // Server sagt „Abo fehlt" — z.B. wenn das Gate seit dem Seitenaufbau
+      // gekippt ist (abgelaufener Trial im offenen Tab).
+      throw new UpgradeRequiredError(
+        d?.lock ?? "expired",
+        d?.message ?? "Dafür braucht es ein aktives Abo."
+      );
     }
+    throw new Error(d?.message ?? "Upload fehlgeschlagen.");
+  }
+
+  /** Fehler-Feedback für Einzel-Uploads: Abo-Sperre → Dialog, sonst Toast. */
+  function reportUploadError(e: unknown, feature: string, toastId: string) {
+    if (isUpgradeRequiredError(e)) {
+      toast.dismiss(toastId);
+      setUpsell({ feature, lock: e.lock });
+      return;
+    }
+    toast.error(e instanceof Error ? e.message : "Fehler.", { id: toastId });
   }
 
   function onCover(file: File) {
+    if (blockedByPlan("Das Cover")) return;
     start(async () => {
       try {
         toast.loading("Lade Cover hoch…", { id: "cover-upload" });
@@ -110,14 +171,13 @@ export function MeinProfilEditor({
         toast.success("Cover aktualisiert.", { id: "cover-upload" });
         router.refresh();
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Fehler.", {
-          id: "cover-upload"
-        });
+        reportUploadError(e, "Das Cover", "cover-upload");
       }
     });
   }
 
   function onLogo(file: File) {
+    if (blockedByPlan("Das Logo")) return;
     start(async () => {
       try {
         toast.loading("Lade Logo hoch…", { id: "logo-upload" });
@@ -125,14 +185,13 @@ export function MeinProfilEditor({
         toast.success("Logo aktualisiert.", { id: "logo-upload" });
         router.refresh();
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Fehler.", {
-          id: "logo-upload"
-        });
+        reportUploadError(e, "Das Logo", "logo-upload");
       }
     });
   }
 
   function onGallery(file: File) {
+    if (blockedByPlan("Die Galerie")) return;
     start(async () => {
       try {
         toast.loading("Lade Bild hoch…", { id: "gallery-upload" });
@@ -140,14 +199,13 @@ export function MeinProfilEditor({
         toast.success("Bild hinzugefügt.", { id: "gallery-upload" });
         router.refresh();
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Fehler.", {
-          id: "gallery-upload"
-        });
+        reportUploadError(e, "Die Galerie", "gallery-upload");
       }
     });
   }
 
   function onDeleteImage(id: string) {
+    if (blockedByPlan("Die Galerie")) return;
     start(async () => {
       const res = await fetch(`/api/teams/${teamId}/images/${id}`, {
         method: "DELETE"
@@ -155,9 +213,18 @@ export function MeinProfilEditor({
       if (res.ok) {
         toast.success("Bild entfernt.");
         router.refresh();
-      } else {
-        toast.error("Löschen fehlgeschlagen.");
+        return;
       }
+      // Gate seit Seitenaufbau gekippt → echte Upgrade-Aufforderung statt
+      // „Löschen fehlgeschlagen."
+      if (res.status === 402) {
+        const d = (await res.json().catch(() => null)) as {
+          lock?: LockKind;
+        } | null;
+        setUpsell({ feature: "Die Galerie", lock: d?.lock ?? "expired" });
+        return;
+      }
+      toast.error("Löschen fehlgeschlagen.");
     });
   }
 
@@ -177,6 +244,7 @@ export function MeinProfilEditor({
       setEditingName(false);
       return;
     }
+    if (blockedByPlan("Der Mannschaftsname")) return;
     start(async () => {
       try {
         await renameTeam({ teamId, newName: trimmed });
@@ -192,6 +260,7 @@ export function MeinProfilEditor({
   // ---- Insights-Toggle (setTeamShowInsights) --------------------------------
 
   function onToggleInsights(next: boolean) {
+    if (blockedByPlan("Die Saison-Insights")) return;
     start(async () => {
       try {
         await setTeamShowInsights({ teamId, show: next });
@@ -213,6 +282,7 @@ export function MeinProfilEditor({
       toast.error(`Ziele max. ${GOALS_MAX} Zeichen.`);
       return;
     }
+    if (blockedByPlan("Das öffentliche Profil")) return;
     start(async () => {
       try {
         await saveTeamPublicProfile({
@@ -237,12 +307,30 @@ export function MeinProfilEditor({
   }
 
   function onTogglePublic(next: boolean) {
+    // Gate VOR dem lokalen Flip: sonst zeigt der Schalter „öffentlich" an,
+    // obwohl serverseitig nichts gespeichert wurde.
+    if (blockedByPlan("Das öffentliche Profil")) return;
     setIsPublic(next);
     persistPublicProfile(next);
   }
 
   return (
     <div className="mx-auto max-w-screen-sm pb-12">
+      {/* Die „richtige Fehlermeldung" bei gesperrten Aktionen — EIN Dialog für
+          alle Stellen dieser Seite (Cover/Logo/Galerie/Name/Insights/Profil). */}
+      {upsell && (
+        <UpgradeGateDialog
+          open
+          onOpenChange={(o) => !o && setUpsell(null)}
+          lock={upsell.lock}
+          currentPlan={currentPlan}
+          clubSlug={slug}
+          teamId={teamId}
+          feature={upsell.feature}
+          nativeApp={nativeApp}
+        />
+      )}
+
       {/* 1. Sticky Edit-Toolbar — eine ruhige, nie quetschende Reihe; auf
           schmalen Screens bricht der Titel über die Controls. */}
       <div className="sticky top-0 z-20 -mx-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-brand-neutral/30 bg-white/90 px-4 py-2.5 backdrop-blur md:mx-0 md:rounded-t-2xl">
