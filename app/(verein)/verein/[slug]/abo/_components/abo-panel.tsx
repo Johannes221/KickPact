@@ -53,6 +53,13 @@ export async function AboPanel({
       : "basic";
   const currentCycle: BillingCycle = normalizeBillingCycle(sub?.billingCycle);
 
+  // Läuft ein tatsächlich zahlender/Trial-Zugang? Nur dann bietet der native
+  // Kauf ausschließlich Upgrades an; bei gekündigt/abgelaufen/keins darf die
+  // aktuelle Stufe reaktiviert werden (Native-IAP-Flow).
+  const subActive =
+    !!sub &&
+    ["trialing", "active", "past_due", "paused"].includes(sub.status);
+
   const stripeReady = isStripeConfigured();
 
   // Loss-Framing: nur im Trial sinnvoll, und nur wenn aktuell ein Pro/Verein-Tier
@@ -98,7 +105,7 @@ export async function AboPanel({
         <NativeAboActions
           clubSlug={clubSlug}
           currentPlan={currentPlan}
-          hasSub={!!sub}
+          subActive={subActive}
         />
       ) : (
         <>

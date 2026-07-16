@@ -136,6 +136,26 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
 export const PLAN_ORDER: PlanKey[] = ["basic", "pro", "verein"];
 
 /**
+ * Welche Tarife darf der native IAP-Kauf anbieten?
+ *
+ * - `subActive` (aktiv/Trial/pausiert/überfällig) → nur echte Upgrades (Stufen
+ *   ÜBER der aktuellen); das laufende Abo doppelt zu kaufen ergibt keinen Sinn.
+ * - Gekündigt/abgelaufen/keins → die AKTUELLE Stufe darf reaktiviert werden
+ *   (+ höhere Tiers). Genau dafür: „Pro ist gekündigt → jederzeit wieder
+ *   freischalten".
+ *
+ * Ein Downgrade (tiefere Stufe) wird nie über den nativen Kauf angeboten.
+ */
+export function plansOfferedForPurchase(
+  currentPlan: PlanKey,
+  subActive: boolean
+): PlanKey[] {
+  const currentIdx = PLAN_ORDER.indexOf(currentPlan);
+  const minIdx = subActive ? currentIdx + 1 : currentIdx;
+  return PLAN_ORDER.filter((p) => PLAN_ORDER.indexOf(p) >= minIdx);
+}
+
+/**
  * Kanonische Liste ALLER Billing-Cycles — für interne Logik (Preis-Definitionen,
  * Env-Var-Iteration, Reverse-Lookup `priceIdToPlanCycle` im Stripe-Webhook).
  * Seit Entfernung von „annual" identisch mit `SELECTABLE_CYCLES`.
@@ -288,4 +308,19 @@ export function appleProductToPlanCycle(
   productId: string
 ): { plan: PlanKey; cycle: BillingCycle } | null {
   return APPLE_PRODUCTS[productId] ?? null;
+}
+
+/**
+ * Forward-Lookup (plan, cycle) → Apple-Product-ID, invertiert {@link APPLE_PRODUCTS}
+ * (einzige Quelle, kein zweites Mapping). Der native Abo-Kauf braucht die exakte
+ * Product-ID für StoreKit `getProducts`/`purchase`.
+ */
+export function appleProductIdFor(
+  plan: PlanKey,
+  cycle: BillingCycle
+): string | null {
+  for (const [productId, pc] of Object.entries(APPLE_PRODUCTS)) {
+    if (pc.plan === plan && pc.cycle === cycle) return productId;
+  }
+  return null;
 }
