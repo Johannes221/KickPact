@@ -132,6 +132,20 @@ export function recapHeadline(
 
 /* --------------------------------- Vorschau ------------------------------- */
 
+/**
+ * Untergrenze für „liegt noch an" bei DATUMS-Werten.
+ *
+ * `matches.datum` ist kein echter Zeitstempel, sondern ein Kalendertag mit
+ * fester Mittagszeit (T12:00:00Z — der Crawler liest keine Anstoßzeit).
+ * Gegen `now` verglichen fiele das Spiel des heutigen Tages ab 14:00 Berlin aus
+ * der „kommende Spiele"-Liste, obwohl angepfiffen wird — die Karte verschwände
+ * am Spieltag mittags. Also auf Tages-Ebene vergleichen: alles ab dem heutigen
+ * Kalendertag (Berlin) liegt noch an.
+ */
+export function berlinDayStart(now: Date): Date {
+  return new Date(berlinDayIndex(now) * 86_400_000);
+}
+
 /** Kalendertag-Index in Europe/Berlin — DST-fest (keine +24h-Arithmetik). */
 function berlinDayIndex(d: Date): number {
   const [day, month, year] = formatDate(d, {

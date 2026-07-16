@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { matches, matchEvents } from "@/lib/db/schema/matches";
 import { teams, clubs } from "@/lib/db/schema/clubs";
 import { resolveTeamSide } from "@/lib/crawler/team-side";
+import { berlinDayStart } from "@/lib/story/story-content";
 
 /**
  * Query-Layer für die Instagram-Story-Vorlagen (Aufgabe #44).
@@ -81,6 +82,10 @@ function withOwnSide(
  * `cancelled` ist bewusst raus (kein Ankündigen abgesagter Spiele), `live` und
  * `postponed` sind drin: ein laufendes Spiel ist noch keine Rückschau, und ein
  * verlegtes behält bis zum neuen Termin sein Datum.
+ *
+ * Verglichen wird auf TAGES-Ebene (berlinDayStart), nicht gegen `now` — siehe
+ * dort: `datum` ist ein Kalendertag mit Fake-Mittagszeit, ein Vergleich gegen
+ * die Uhrzeit ließe das heutige Spiel mittags aus der Karte verschwinden.
  */
 export async function getNextMatchForTeam(
   teamId: string,
@@ -96,7 +101,7 @@ export async function getNextMatchForTeam(
       and(
         eq(matches.teamId, teamId),
         inArray(matches.status, ["scheduled", "live", "postponed"]),
-        gte(matches.datum, now)
+        gte(matches.datum, berlinDayStart(now))
       )
     )
     .orderBy(asc(matches.datum))

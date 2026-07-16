@@ -120,6 +120,26 @@ describe("getNextMatchForTeam", () => {
     expect(await getNextMatchForTeam(team.id, NOW)).toBeNull();
   });
 
+  it("das heutige Spiel bleibt den ganzen Spieltag über anstehend", async () => {
+    // `datum` ist ein Kalendertag mit Fake-Mittagszeit (T12:00:00Z). Gegen die
+    // Uhrzeit verglichen wäre das Spiel ab 14:00 Berlin „vorbei" und die Karte
+    // verschwände mittags — vor dem echten Anstoß.
+    const team = await seedTeam();
+    const heute = await seedMatch(team.id, {
+      datum: new Date("2026-09-15T12:00:00Z")
+    });
+
+    const spaeterAmSpieltag = new Date("2026-09-15T20:00:00Z"); // 22:00 Berlin
+    expect((await getNextMatchForTeam(team.id, spaeterAmSpieltag))?.id).toBe(heute);
+  });
+
+  it("das Spiel von gestern zählt nicht mehr als anstehend", async () => {
+    const team = await seedTeam();
+    await seedMatch(team.id, { datum: new Date("2026-09-14T12:00:00Z") });
+
+    expect(await getNextMatchForTeam(team.id, NOW)).toBeNull();
+  });
+
   it("liefert die eigene Spielseite mit", async () => {
     const team = await seedTeam({ name: "SV Testkirchen" });
     await seedMatch(team.id, {
