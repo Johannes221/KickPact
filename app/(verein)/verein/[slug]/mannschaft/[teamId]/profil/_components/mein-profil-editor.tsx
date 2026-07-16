@@ -190,16 +190,67 @@ export function MeinProfilEditor({
     });
   }
 
-  function onGallery(file: File) {
+  /**
+   * Mehrfach-Upload (Johannes-Wunsch): mehrere Bilder in einem Rutsch wählen.
+   *
+   * SEQUENZIELL, nicht parallel — und das ist kein Stil, sondern Korrektheit:
+   * `addTeamGalleryImage` prüft serverseitig `countTeamImages() >= 8`. Parallele
+   * Requests lesen alle denselben Vor-Zählstand (TOCTOU) und könnten das Limit
+   * gemeinsam überschreiten. Nacheinander sieht jeder Request den aktualisierten
+   * Stand. Nebeneffekt: kein RAM-Peak durch 8 × 10 MB gleichzeitig.
+   *
+   * Ein Fehler killt den Batch NICHT — was hochgeht, geht hoch; die
+   * fehlgeschlagenen Dateien werden am Ende namentlich genannt.
+   */
+  function onGallery(files: File[]) {
     if (blockedByPlan("Die Galerie")) return;
+
+    const free = GALLERY_MAX - gallery.length;
+    const accepted = files.slice(0, Math.max(0, free));
+    const skipped = files.length - accepted.length;
+    if (accepted.length === 0) {
+      toast.error(`Galerie voll — max. ${GALLERY_MAX} Bilder.`);
+      return;
+    }
+
     start(async () => {
-      try {
-        toast.loading("Lade Bild hoch…", { id: "gallery-upload" });
-        await uploadTo(`/api/teams/${teamId}/images`, file);
-        toast.success("Bild hinzugefügt.", { id: "gallery-upload" });
+      const id = "gallery-upload";
+      const failed: string[] = [];
+      let done = 0;
+
+      for (const [i, file] of accepted.entries()) {
+        toast.loading(`Lade Bild ${i + 1}/${accepted.length} hoch…`, { id });
+        try {
+          await uploadTo(`/api/teams/${teamId}/images`, file);
+          done++;
+        } catch (e) {
+          if (isUpgradeRequiredError(e)) {
+            // Abo-Sperre gilt für alle weiteren Dateien auch → abbrechen.
+            toast.dismiss(id);
+            setUpsell({ feature: "Die Galerie", lock: e.lock });
+            break;
+          }
+          failed.push(`${file.name} (${e instanceof Error ? e.message : "Fehler"})`);
+        }
+      }
+
+      toast.dismiss(id);
+      if (done > 0) {
+        toast.success(
+          done === 1 ? "Bild hinzugefügt." : `${done} Bilder hinzugefügt.`
+        );
         router.refresh();
-      } catch (e) {
-        reportUploadError(e, "Die Galerie", "gallery-upload");
+      }
+      if (failed.length > 0) {
+        toast.error(
+          `${failed.length} Bild${failed.length === 1 ? "" : "er"} nicht hochgeladen: ${failed.join(", ")}`,
+          { duration: 8000 }
+        );
+      }
+      if (skipped > 0) {
+        toast.error(
+          `${skipped} Bild${skipped === 1 ? "" : "er"} übersprungen — max. ${GALLERY_MAX} Bilder in der Galerie.`
+        );
       }
     });
   }
@@ -571,6 +622,9 @@ export function MeinProfilEditor({
               {gallery.length}/{GALLERY_MAX}
             </span>
           </div>
+          <p className="mt-1 text-xs text-brand-night-navy/50">
+            Du kannst mehrere Bilder auf einmal auswählen.
+          </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {gallery.map((g) => (
               <div key={g.id} className="relative">
@@ -599,7 +653,7 @@ export function MeinProfilEditor({
                 className="flex h-20 w-28 flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-neutral/40 text-brand-night-navy/50 transition-colors hover:border-accent/40 hover:bg-brand-off-white/40 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <span className="text-xl leading-none">＋</span>
-                <span className="mt-1 text-[11px] font-semibold">Bild</span>
+                <span className="mt-1 text-[11px] font-semibold">Bilder</span>
               </button>
             )}
           </div>
@@ -607,11 +661,12 @@ export function MeinProfilEditor({
             ref={galleryInputRef}
             type="file"
             accept={ACCEPT}
+            multiple
             disabled={pending || gallery.length >= GALLERY_MAX}
             className="sr-only"
             onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onGallery(f);
+              const files = Array.from(e.target.files ?? []);
+              if (files.length > 0) onGallery(files);
               e.currentTarget.value = "";
             }}
           />
