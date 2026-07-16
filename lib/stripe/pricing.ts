@@ -83,11 +83,15 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
         display: "8,99 €",
         caption: "/ Mannschaft / Monat"
       },
+      // 34,99 € statt vormals 35,99 €: Apples Preispunkte sind diskret, der
+      // IAP-Preis für kickpact.pro.season liegt bei 34,99 € (per ASC-API
+      // verifiziert, DEU). Web und App dürfen nicht 1 € auseinanderliegen —
+      // deshalb folgt die Web-Tabelle dem Apple-Preispunkt, nicht umgekehrt.
       season_end: {
-        amountCents: 3599,
-        display: "35,99 €",
-        caption: "/ Saison · 3,60 €/Mon",
-        saveBadge: "67 % sparen"
+        amountCents: 3499,
+        display: "34,99 €",
+        caption: "/ Saison · 3,50 €/Mon",
+        saveBadge: "68 % sparen"
       }
     },
     features: [
