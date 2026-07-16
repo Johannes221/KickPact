@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
 import { Button } from "@/components/ui/button";
 import { TriangleAlert } from "lucide-react";
 
@@ -24,9 +25,13 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Console-Log für DevTools-Nutzer + Plausible/Sentry-Hookup-Punkt
-    // (aktuell nur console). Production-bundles strippen das nicht raus —
-    // das ist Absicht.
+    // An Sentry melden — vorher lief das NUR in die Browser-Konsole, d.h. jeder
+    // Render-Fehler beim Nutzer blieb unbemerkt (Server-Logs sehen einen
+    // Client-Throw nie). Console-Log bleibt zusätzlich für DevTools-Nutzer.
+    Sentry.captureException(error, {
+      tags: { boundary: "app-error" },
+      extra: { digest: error.digest }
+    });
     console.error("[KickPact][error-boundary]", {
       message: error.message,
       digest: error.digest,

@@ -14,6 +14,7 @@ import {
 import { highestPlanFrom } from "@/lib/mail/reply-to-pure";
 import { getDowngradeImpact } from "@/lib/db/queries/downgrade-impact";
 import type { DowngradeImpact } from "@/lib/billing/downgrade-impact";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { CheckoutButtons } from "./checkout-buttons";
 import { AboCycleToggle } from "./abo-cycle-toggle";
 import { NativeAboActions } from "./native-abo-actions";
@@ -102,11 +103,31 @@ export async function AboPanel({
           kein Stripe, kein Browser-Link (Anti-Steering 3.1.3). Der Status-Card
           oben bleibt; hier ersetzt der Kauf-Flow die frühere Sackgasse. */}
       {nativeApp ? (
-        <NativeAboActions
-          clubSlug={clubSlug}
-          currentPlan={currentPlan}
-          subActive={subActive}
-        />
+        // Der native Kauf hängt an StoreKit + der Capacitor-Bridge — beides
+        // ausserhalb unserer Kontrolle. Ohne Boundary nimmt ein Throw dort die
+        // ganze Abo-Seite mit (inkl. Status-Card), obwohl nur der Kauf-Block
+        // betroffen ist.
+        <ErrorBoundary
+          label="native-abo-actions"
+          fallback={
+            <div
+              role="alert"
+              className="rounded-2xl border border-brand-night-navy/15 bg-brand-off-white p-4 md:p-5"
+            >
+              <p className="text-sm text-brand-night-navy/70">
+                Der In-App-Kauf konnte gerade nicht geladen werden. Dein
+                aktueller Plan oben bleibt davon unberührt — versuch es später
+                noch einmal.
+              </p>
+            </div>
+          }
+        >
+          <NativeAboActions
+            clubSlug={clubSlug}
+            currentPlan={currentPlan}
+            subActive={subActive}
+          />
+        </ErrorBoundary>
       ) : (
         <>
           {sub && impact && (
