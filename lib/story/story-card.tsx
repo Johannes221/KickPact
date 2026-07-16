@@ -20,6 +20,27 @@ const LOGO_GREEN =
     "base64"
   );
 
+/** Innenbreite des Motivs (1080 − 2×80 Padding) — Basis fürs Auto-Fit. */
+export const CONTENT_WIDTH = 920;
+/**
+ * Grobe Zeichenbreite der Headline-Schrift, als Anteil der Schriftgröße
+ * (gemessen an gerenderten Motiven: ~0,58 — 0,6 lässt etwas Luft).
+ */
+export const AVG_CHAR_RATIO = 0.6;
+
+/**
+ * Schriftgröße einer einzeiligen Headline, die garantiert in die Breite passt.
+ *
+ * Satori bricht zu lange Zeilen nicht um und skaliert auch nichts — es schneidet
+ * am Rand ab. Ohne diesen Fit lief „UNENTSCHIEDEN" bei fester Größe rechts aus
+ * dem Bild (im gerenderten Motiv gesehen), und genau dieses Motiv wäre dann auf
+ * Instagram gelandet.
+ */
+export function fitFontSize(text: string, max: number): number {
+  const needed = CONTENT_WIDTH / (Math.max(text.length, 1) * AVG_CHAR_RATIO);
+  return Math.floor(Math.min(max, needed));
+}
+
 const NAVY = "#0F0F1E";
 const ORANGE = "#FF6A30";
 const RED = "#FF3127";
@@ -317,7 +338,7 @@ function PreviewBody({ model, accent }: { model: PreviewStoryProps; accent: stri
         <div
           style={{
             display: "flex",
-            fontSize: 150,
+            fontSize: fitFontSize(model.kickoff, 150),
             fontWeight: 900,
             color: OFF,
             letterSpacing: "-0.03em",
@@ -361,7 +382,7 @@ function RecapBody({ model, accent }: { model: RecapStoryProps; accent: string }
         <div
           style={{
             display: "flex",
-            fontSize: 132,
+            fontSize: fitFontSize(model.headline.headline, 132),
             fontWeight: 900,
             color: OFF,
             letterSpacing: "-0.03em",

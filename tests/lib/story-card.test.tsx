@@ -1,7 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { ImageResponse } from "next/og";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { StoryCard, STORY_SIZE } from "@/lib/story/story-card";
+import {
+  StoryCard,
+  STORY_SIZE,
+  fitFontSize,
+  CONTENT_WIDTH,
+  AVG_CHAR_RATIO
+} from "@/lib/story/story-card";
+import { recapHeadline } from "@/lib/story/story-content";
 import type { StoryModel } from "@/lib/story/story-data";
 
 /**
@@ -158,6 +165,41 @@ const SAMPLES: Record<string, StoryModel> = {
     }
   }
 };
+
+/**
+ * Regressions-Guard für einen Bug, den der Render-Smoke NICHT sieht: Satori
+ * bricht eine zu lange Headline nicht um, es SCHNEIDET sie am Bildrand ab —
+ * das PNG entsteht trotzdem, nur eben mit halbem Wort. „UNENTSCHIEDEN" lief
+ * bei fester Schriftgröße rechts raus.
+ */
+describe("Headlines passen in die Bildbreite", () => {
+  const alleHeadlines = [
+    ...(["heim", "gast"] as const).flatMap((side) =>
+      [
+        [3, 1],
+        [1, 3],
+        [2, 2]
+      ].map(([h, g]) => recapHeadline(side, h, g).headline)
+    ),
+    // Längstes mögliche Anstoß-Label (kickoffLabel) + Wochentage.
+    "Sa., 01.08.",
+    "Donnerstag",
+    "Mittwoch",
+    "Heute"
+  ];
+
+  for (const text of [...new Set(alleHeadlines)]) {
+    it(`„${text}" bleibt innerhalb ${CONTENT_WIDTH}px`, () => {
+      const size = fitFontSize(text, 150);
+      expect(size).toBeGreaterThan(0);
+      expect(text.length * AVG_CHAR_RATIO * size).toBeLessThanOrEqual(CONTENT_WIDTH);
+    });
+  }
+
+  it("kurze Headlines behalten die volle Größe (kein Schrumpfen ohne Not)", () => {
+    expect(fitFontSize("Heimsieg", 132)).toBe(132);
+  });
+});
 
 /** PNG-Magic-Bytes — beweist, dass wirklich ein Bild rausfiel. */
 function isPng(buf: Buffer): boolean {
