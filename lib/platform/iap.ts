@@ -4,7 +4,8 @@ import { isIOSApp } from "@/lib/platform/native";
 /**
  * Part B — TS-Bridge zum nativen Capacitor-IAP-Plugin (IAPPlugin.swift).
  * Web-inert: auf Web/SSR wirft jede Methode einen klaren Fehler (der Aufrufer
- * ist im iOS-Kontext über getCheckoutChannel() abgesichert).
+ * — NativeAboActions — wird nur gerendert, wenn die Abo-Seite serverseitig via
+ * isNativeAppRequest() den nativen iOS-Kontext erkannt hat).
  */
 
 /**
