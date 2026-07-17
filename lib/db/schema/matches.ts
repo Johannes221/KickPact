@@ -23,6 +23,24 @@ export const eventTypeEnum = pgEnum("event_type", [
 
 export const eventSideEnum = pgEnum("event_side", ["heim", "gast"]);
 
+/**
+ * Wettbewerbsart eines Spiels, aus dem fussball.de-Marker abgeleitet
+ * (`ME`=Meisterschaft → league, `PO`=Pokal → cup, `FS`=Freundschaftsspiel →
+ * friendly; siehe `parseCompetition` in lib/utils/league.ts).
+ *
+ * `unknown` ist der Wert für Alt-Spiele aus der Zeit vor dieser Spalte und für
+ * Spiele, deren Wettbewerbs-Zeile keinen bekannten Marker trug. Er bedeutet
+ * ausdrücklich "wir wissen es nicht" — NICHT "kein Wettbewerb". Das Geld-Gate
+ * blockt deshalb nur bei positiv erkanntem `friendly`: bei Unwissen weiter zu
+ * zahlen ist das kleinere Übel gegenüber stillem Zahlungsausfall.
+ */
+export const competitionTypeEnum = pgEnum("competition_type", [
+  "league",
+  "cup",
+  "friendly",
+  "unknown"
+]);
+
 export const eventSourceEnum = pgEnum("event_source", ["scraped", "manual"]);
 
 export const approvalStatusEnum = pgEnum("approval_status", [
@@ -56,6 +74,16 @@ export const matches = pgTable(
     halbzeitHeim: integer("halbzeit_heim"),
     halbzeitGast: integer("halbzeit_gast"),
     status: matchStatusEnum("status").notNull().default("scheduled"),
+    /**
+     * Liga-, Pokal- oder Freundschaftsspiel — aus der Wettbewerbs-Zeile des
+     * Spielplans (`ME`/`PO`/`FS`). Ohne diese Spalte war ein Testspiel im Juli
+     * von einem Ligaspiel nicht zu unterscheiden, und ein „5 € pro Tor"-Pact
+     * hätte darauf gezahlt (Entscheid 2026-07-17: Geld nur auf Liga + Pokal).
+     * Default `unknown` = Alt-Bestand, wird NICHT geblockt (siehe Enum-Doc).
+     */
+    competitionType: competitionTypeEnum("competition_type")
+      .notNull()
+      .default("unknown"),
     /**
      * Stable hash over (result, halftime, events). Set by the crawler so re-runs
      * can detect when fussball.de data has changed and we need to invalidate

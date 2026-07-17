@@ -39,6 +39,18 @@ const TYPE_MARKERS: Record<string, CompetitionType> = {
   PO: "cup"
 };
 
+/**
+ * Wettbewerbsart für die `matches.competition_type`-Spalte. Kennt der Marker
+ * uns nichts (fehlt, unbekannt, Zeile leer), ist das ehrlich `unknown` — NICHT
+ * `league`: eine Vermutung im Geld-Pfad wäre schlimmer als bekanntes Unwissen
+ * (siehe Gate in evaluate-match).
+ */
+export function competitionTypeOf(
+  raw: string | null | undefined
+): CompetitionType {
+  return parseCompetition(raw).type;
+}
+
 /** "Landesliga ME" → { name: "Landesliga", type: "league" } */
 export function parseCompetition(raw: string | null | undefined): {
   name: string;

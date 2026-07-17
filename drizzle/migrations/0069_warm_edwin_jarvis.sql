@@ -1,0 +1,2 @@
+CREATE TYPE "public"."competition_type" AS ENUM('league', 'cup', 'friendly', 'unknown');--> statement-breakpoint
+ALTER TABLE "matches" ADD COLUMN "competition_type" "competition_type" DEFAULT 'unknown' NOT NULL;
