@@ -10,27 +10,32 @@ import {
 import { getCachedStandingsForRequest } from "@/lib/recap/standings-request";
 import { eurWhole, seasonLabel } from "@/lib/recap/recap-format";
 import { scopeKicker, scopeSuffix } from "@/lib/recap/aggregate-scope";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { OG_FONTS, OG_FONT_FAMILY } from "@/lib/og/fonts";
-
-// Grünes KickPact-Logo (Mark + Wortmarke) einmalig als data-URI — next/og
-// (Satori) bettet lokale Assets nur als data-URI/absolute-URL zuverlässig ein.
-const LOGO_GREEN =
-  "data:image/png;base64," +
-  readFileSync(
-    join(process.cwd(), "public/brand/logo-green-horizontal.png")
-  ).toString("base64");
+import { OG_FONTS, BODY_FAMILY, DISPLAY_FAMILY } from "@/lib/og/fonts";
+import { ALERT_RED, GREEN, GREEN_DARK, LOGO_ON_LIGHT, LOGO_RATIO, NAVY, WHITE } from "@/lib/og/brand";
 
 // DB-Zugriff (postgres-js) → Node-Runtime, NICHT edge.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const NAVY = "#0F0F1E";
-const ORANGE = "#FF6A30";
-const RED = "#FF3127";
-const LIME = "#A3E635";
-const OFF = "#F8F7F4";
+/**
+ * Auf CI umgebaut (Johannes, 2026-07-17): weiße Fläche, Navy-Text, Grün als
+ * Akzent — Orange und Lime kommen in der KickPact-CI nicht vor.
+ *
+ * Pro Slide eine FLÄCHE (Badge-Tint, Kante) und eine TINTE (Kicker, Zahlen):
+ * Primary Green hat auf Weiß nur 2,32:1 und ist als Text unlesbar, als Fläche
+ * trägt es. Siehe lib/og/brand.ts.
+ */
+type Ton = { flaeche: string; tinte: string };
+
+const TON = {
+  gruen: { flaeche: GREEN, tinte: GREEN_DARK },
+  navy: { flaeche: NAVY, tinte: NAVY },
+  rot: { flaeche: ALERT_RED, tinte: ALERT_RED }
+} as const;
+
+/** Text auf Weiß, zurückgenommen. */
+const MUTED = "rgba(26,26,46,0.62)";
+const LOGO_WIDTH = 340;
 
 /**
  * 9:16-Share-Bild pro Wrapped-Slide (W4) — auth-gated (kein öffentlicher Leak
@@ -56,22 +61,22 @@ const SLIDE_KEYS = [
 
 type SlideKey = (typeof SLIDE_KEYS)[number];
 
-const SLIDE_ACCENTS: Record<SlideKey, string> = {
-  intro: ORANGE,
-  bilanz: RED,
-  tabellenplatz: LIME,
-  tore: LIME,
-  torschuetze: ORANGE,
-  ligatorschuetze: LIME,
-  zunull: RED,
-  comebacks: LIME,
-  heimauswaerts: ORANGE,
-  hoechstersieg: RED,
-  vstop3: ORANGE,
-  fairness: RED,
-  beitraege: LIME,
-  simulation: ORANGE,
-  zusammenfassung: ORANGE
+const SLIDE_ACCENTS: Record<SlideKey, { flaeche: string; tinte: string }> = {
+  intro: TON.gruen,
+  bilanz: TON.navy,
+  tabellenplatz: TON.gruen,
+  tore: TON.gruen,
+  torschuetze: TON.gruen,
+  ligatorschuetze: TON.gruen,
+  zunull: TON.navy,
+  comebacks: TON.gruen,
+  heimauswaerts: TON.gruen,
+  hoechstersieg: TON.gruen,
+  vstop3: TON.navy,
+  fairness: TON.navy,
+  beitraege: TON.gruen,
+  simulation: TON.gruen,
+  zusammenfassung: TON.gruen
 };
 
 export async function GET(
@@ -133,46 +138,25 @@ function WrappedCard({ stats, slide }: { stats: WrappedStats; slide: SlideKey })
       style={{
         width: 1080,
         height: 1920,
-        background: NAVY,
+        background: WHITE,
         display: "flex",
         flexDirection: "column",
         position: "relative",
         overflow: "hidden",
-        fontFamily: OG_FONT_FAMILY,
+        fontFamily: BODY_FAMILY,
         padding: "96px 80px"
       }}
     >
-      {/* Akzent-Glow */}
-      <div
-        style={{
-          position: "absolute",
-          top: -160,
-          right: -160,
-          width: 640,
-          height: 640,
-          borderRadius: "50%",
-          background: `radial-gradient(circle, ${accent}38 0%, ${accent}00 70%)`
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: -140,
-          left: -140,
-          width: 520,
-          height: 520,
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(163,230,53,0.14) 0%, rgba(163,230,53,0) 70%)"
-        }}
-      />
+      {/* Kante in der Slide-Farbe. Die früheren Glow-Kreise sind raus: auf Navy
+          trugen sie, auf Weiß werden sie zu schmutzigen Schleiern. */}
       <div
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
-          height: 10,
-          background: `linear-gradient(to right, ${ORANGE}, ${RED}, ${LIME})`
+          height: 14,
+          background: accent.flaeche
         }}
       />
 
@@ -181,11 +165,10 @@ function WrappedCard({ stats, slide }: { stats: WrappedStats; slide: SlideKey })
         <div style={{ display: "flex" }}>
           <div
             style={{
-              background: `${accent}26`,
-              border: `1px solid ${accent}59`,
+              background: `${accent.flaeche}1F`,
               borderRadius: 24,
               padding: "10px 24px",
-              color: accent,
+              color: accent.tinte,
               fontSize: 26,
               fontWeight: 700,
               letterSpacing: "0.18em"
@@ -194,15 +177,16 @@ function WrappedCard({ stats, slide }: { stats: WrappedStats; slide: SlideKey })
             SAISON-WRAPPED
           </div>
         </div>
-        <div style={{ display: "flex", fontSize: 34, color: "rgba(248,247,244,0.6)", fontWeight: 600 }}>
+        <div style={{ display: "flex", fontSize: 34, color: MUTED, fontWeight: 400 }}>
           {seasonLabel(stats.saison)}
         </div>
         <div
           style={{
             display: "flex",
+            fontFamily: DISPLAY_FAMILY,
             fontSize: 62,
             fontWeight: 900,
-            color: OFF,
+            color: NAVY,
             letterSpacing: "-0.02em",
             lineHeight: 1.05
           }}
@@ -238,14 +222,14 @@ function WrappedCard({ stats, slide }: { stats: WrappedStats; slide: SlideKey })
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={LOGO_GREEN}
-          width={395}
-          height={52}
+          src={LOGO_ON_LIGHT}
+          width={LOGO_WIDTH}
+          height={Math.round(LOGO_WIDTH / LOGO_RATIO)}
           alt="KickPact"
           style={{ objectFit: "contain" }}
         />
         <div style={{ display: "flex", flex: 1 }} />
-        <div style={{ display: "flex", fontSize: 26, color: "rgba(248,247,244,0.55)", fontWeight: 600 }}>
+        <div style={{ display: "flex", fontSize: 26, color: MUTED, fontWeight: 400 }}>
           Macht die Mannschaftskasse voll.
         </div>
       </div>
@@ -260,7 +244,7 @@ function SlideBody({
 }: {
   stats: WrappedStats;
   slide: SlideKey;
-  accent: string;
+  accent: { flaeche: string; tinte: string };
 }) {
   switch (slide) {
     case "intro":
@@ -400,7 +384,7 @@ function SlideBody({
 }
 
 /** Zusammenfassungs-Slide: mehrere Kern-Stats als Kachel-Grid (Spotify-Wrapped-Style). */
-function SummaryBody({ stats, accent }: { stats: WrappedStats; accent: string }) {
+function SummaryBody({ stats, accent }: { stats: WrappedStats; accent: Ton }) {
   const tiles: Array<{ label: string; value: string; sub: string }> = [
     {
       label: "Bilanz",
@@ -439,7 +423,7 @@ function SummaryBody({ stats, accent }: { stats: WrappedStats; accent: string })
         style={{
           display: "flex",
           fontSize: 34,
-          color: accent,
+          color: accent.tinte,
           fontWeight: 900,
           letterSpacing: "0.16em",
           textTransform: "uppercase"
@@ -458,15 +442,15 @@ function SummaryBody({ stats, accent }: { stats: WrappedStats; accent: string })
               gap: 8,
               padding: "32px 36px",
               borderRadius: 28,
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.1)"
+              background: "rgba(26,26,46,0.04)",
+              border: "1px solid rgba(26,26,46,0.1)"
             }}
           >
             <div
               style={{
                 display: "flex",
                 fontSize: 26,
-                color: "rgba(248,247,244,0.5)",
+                color: MUTED,
                 fontWeight: 700,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase"
@@ -477,9 +461,10 @@ function SummaryBody({ stats, accent }: { stats: WrappedStats; accent: string })
             <div
               style={{
                 display: "flex",
+                fontFamily: DISPLAY_FAMILY,
                 fontSize: 72,
                 fontWeight: 900,
-                color: accent,
+                color: accent.tinte,
                 letterSpacing: "-0.02em",
                 lineHeight: 1.0
               }}
@@ -490,7 +475,7 @@ function SummaryBody({ stats, accent }: { stats: WrappedStats; accent: string })
               style={{
                 display: "flex",
                 fontSize: 28,
-                color: "rgba(248,247,244,0.6)",
+                color: MUTED,
                 fontWeight: 600
               }}
             >
@@ -507,18 +492,18 @@ function SummaryBody({ stats, accent }: { stats: WrappedStats; accent: string })
             gap: 16,
             padding: "28px 36px",
             borderRadius: 28,
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)"
+            background: "rgba(26,26,46,0.04)",
+            border: "1px solid rgba(26,26,46,0.1)"
           }}
         >
-          <div style={{ display: "flex", fontSize: 60, fontWeight: 900, color: OFF }}>
+          <div style={{ display: "flex", fontFamily: DISPLAY_FAMILY, fontSize: 60, fontWeight: 900, color: NAVY }}>
             {eurWhole(moneyCents)}
           </div>
           <div
             style={{
               display: "flex",
               fontSize: 30,
-              color: "rgba(248,247,244,0.6)",
+              color: MUTED,
               fontWeight: 600
             }}
           >
@@ -542,7 +527,7 @@ function Block({
   kicker: string;
   big: string;
   sub: string;
-  accent: string;
+  accent: { flaeche: string; tinte: string };
   bigSize?: number;
 }) {
   return (
@@ -551,7 +536,7 @@ function Block({
         style={{
           display: "flex",
           fontSize: 34,
-          color: accent,
+          color: accent.tinte,
           fontWeight: 900,
           letterSpacing: "0.16em",
           textTransform: "uppercase"
@@ -562,16 +547,17 @@ function Block({
       <div
         style={{
           display: "flex",
+          fontFamily: DISPLAY_FAMILY,
           fontSize: bigSize,
           fontWeight: 900,
-          color: OFF,
+          color: NAVY,
           letterSpacing: "-0.03em",
           lineHeight: 1.02
         }}
       >
         {big}
       </div>
-      <div style={{ display: "flex", fontSize: 38, color: "rgba(248,247,244,0.7)", fontWeight: 600 }}>
+      <div style={{ display: "flex", fontSize: 38, color: MUTED, fontWeight: 600 }}>
         {sub}
       </div>
     </div>

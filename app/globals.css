@@ -77,11 +77,19 @@ input, textarea, [contenteditable] { -webkit-user-select: text; user-select: tex
 /* ───────────────────────────────────────────────────────────────────────────
    Native-Shell — der authentifizierte App-Bereich (Verein/Mannschaft/Sponsor)
    soll sich wie eine native iOS-App anfühlen, nicht wie eine Website. Tailwinds
-   `font-display`/`font-sans` lösen über die CSS-Variablen --font-display /
-   --font-sans auf. Indem wir diese Variablen im App-Teilbaum auf den Apple-
-   System-Font-Stack (SF Pro) umbiegen, rendert die GESAMTE App-UI nativ —
-   ohne jede einzelne Überschrift anfassen zu müssen. Marketing/Landing bleiben
-   bei der Display-Font (Montserrat Alternates) + Inter.
+   `font-sans` löst über die CSS-Variable --font-sans auf; sie im App-Teilbaum
+   auf den Apple-System-Font-Stack (SF Pro) umzubiegen rendert den GESAMTEN
+   Fließtext nativ, ohne jede Stelle anzufassen.
+
+   --font-display wird hier BEWUSST NICHT MEHR überschrieben (Johannes,
+   2026-07-17: „nimm orbitron überall"). Überschriften laufen also auch im
+   eingeloggten Bereich auf KickPact Display — die Marke soll überall dieselbe
+   sein, nicht nur auf der Landingpage. Fließtext bleibt SF Pro: eine Techno-
+   Display-Schrift als Lesetext wäre in einer datendichten App unlesbar, und
+   genau dieser Teil ist es, der sich nativ anfühlen muss.
+
+   Rückgängig machen = eine Zeile: --font-display hier wieder auf den SF-Pro-
+   Stack setzen, dann ist der App-Bereich wieder komplett nativ.
 
    Hinweis Portale: Radix-Sheets/Dialogs portalen nach <body> (außerhalb dieses
    Teilbaums). Solche Inhalte bekommen die System-Schrift zusätzlich über die
@@ -90,7 +98,6 @@ input, textarea, [contenteditable] { -webkit-user-select: text; user-select: tex
 .native-shell,
 .native-font {
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }

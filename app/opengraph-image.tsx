@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
-import { OG_FONTS, OG_FONT_FAMILY } from "@/lib/og/fonts";
+import { OG_FONTS, BODY_FAMILY, DISPLAY_FAMILY } from "@/lib/og/fonts";
+import { GREEN, GREEN_DARK, LOGO_ON_LIGHT, LOGO_RATIO, NAVY, WHITE } from "@/lib/og/brand";
 
 // Bewusst KEIN edge-Runtime: auf dem self-hosted Coolify-Node liefert die
 // Edge-ImageResponse 502 (kein Emoji-Font im Edge-Sandbox → Render-Crash bei
@@ -8,6 +9,29 @@ export const alt = "KickPact — Performance-Sponsoring für Amateurfußball";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+/**
+ * Das Bild, das bei jedem geteilten Link erscheint — Whatsapp, iMessage, Slack.
+ *
+ * Auf CI umgebaut (Johannes, 2026-07-17): weiße Fläche, Navy-Text, Grün als
+ * Akzent. Vorher lief es auf Navy mit #FF4500-Orange — eine Farbe, die in der
+ * KickPact-CI gar nicht vorkommt (public/brand/README.md).
+ *
+ * Der Schriftzug ist jetzt das PRIMÄRLOGO ALS BILD. Vorher stand hier ein
+ * getipptes „Kick" + „Pact" in Weiß/Orange plus ein Farbverlaufs-Kreis als
+ * Pseudo-Marke. Das war nicht das Logo, sondern eine Nachahmung davon — in den
+ * falschen Farben (echt ist: grüne Marke, KICK navy, PACT grün). Eine
+ * vektorisierte 2-farbige Wortmarke existiert nicht (README: „es gibt keine
+ * Font-/Designdatei dafür"), also gehört hier ein Bild hin, kein Text.
+ */
+const MUTED = "rgba(26,26,46,0.62)";
+const LOGO_WIDTH = 560;
+
+const PREISE = [
+  { label: "Pro Tor", value: "5 €" },
+  { label: "Pro Sieg", value: "50 €" },
+  { label: "Pro Aufstieg", value: "200 €" }
+];
+
 export default function Image() {
   return new ImageResponse(
     (
@@ -15,190 +39,92 @@ export default function Image() {
         style={{
           width: 1200,
           height: 630,
-          background: "#0F0F1E",
+          background: WHITE,
           display: "flex",
           flexDirection: "column",
           position: "relative",
           overflow: "hidden",
-          fontFamily: OG_FONT_FAMILY
+          fontFamily: BODY_FAMILY
         }}
       >
-        {/* Background accent glow — top-right */}
-        <div
-          style={{
-            position: "absolute",
-            top: -120,
-            right: -120,
-            width: 480,
-            height: 480,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(255,69,0,0.22) 0%, rgba(255,69,0,0) 70%)"
-          }}
-        />
-        {/* Background accent glow — bottom-left */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: -80,
-            left: -80,
-            width: 360,
-            height: 360,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(1,196,87,0.15) 0%, rgba(1,196,87,0) 70%)"
-          }}
-        />
-
-        {/* Top accent bar */}
+        {/* Grüne Kante — das einzige Vollton-Grün, wie im Story-Motiv. */}
         <div
           style={{
             position: "absolute",
             top: 0,
             left: 0,
             right: 0,
-            height: 6,
-            background: "linear-gradient(to right, #FF4500, #FF6A30, #01C457)"
+            height: 10,
+            background: GREEN
           }}
         />
 
-        {/* Main content */}
+        {/* Die linke Spalte ist BEGRENZT: rechts sitzen die Preis-Kacheln
+            absolut, und KickPact Display ist breit gebaut — ohne maxWidth lief
+            die Headline unter die Kacheln (im Render gesehen). */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
             padding: "0 88px",
-            height: "100%"
+            height: "100%",
+            maxWidth: 800
           }}
         >
-          {/* Badge row */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              marginBottom: 32
-            }}
-          >
-            <div
-              style={{
-                background: "rgba(1,196,87,0.15)",
-                border: "1px solid rgba(1,196,87,0.35)",
-                borderRadius: 20,
-                padding: "6px 16px",
-                color: "#01C457",
-                fontSize: 13,
-                fontWeight: 700,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase"
-              }}
-            >
-              Performance-Sponsoring
-            </div>
-            <div
-              style={{
-                background: "rgba(255,69,0,0.15)",
-                border: "1px solid rgba(255,69,0,0.35)",
-                borderRadius: 20,
-                padding: "6px 16px",
-                color: "#FF6A30",
-                fontSize: 13,
-                fontWeight: 700,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase"
-              }}
-            >
-              Amateurfußball
-            </div>
-          </div>
-
-          {/* Logo + brand name row */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 24,
-              marginBottom: 20
-            }}
-          >
-            <div
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, #FF4500, #01C457)",
-                flexShrink: 0
-              }}
-            />
+          <div style={{ display: "flex", marginBottom: 30 }}>
             <div
               style={{
                 display: "flex",
-                fontSize: 96,
-                fontWeight: 900,
-                color: "#F8F7F4",
-                letterSpacing: "-0.03em",
-                lineHeight: 1
+                background: `${GREEN}1F`,
+                borderRadius: 20,
+                padding: "8px 18px",
+                color: GREEN_DARK,
+                fontSize: 15,
+                fontWeight: 700,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase"
               }}
             >
-              <span>Kick</span>
-              <span style={{ color: "#FF4500" }}>Pact</span>
+              Performance-Sponsoring · Amateurfußball
             </div>
           </div>
 
-          {/* Accent divider */}
-          <div
-            style={{
-              width: 80,
-              height: 5,
-              background: "#FF4500",
-              borderRadius: 3,
-              marginBottom: 28
-            }}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={LOGO_ON_LIGHT}
+            width={LOGO_WIDTH}
+            height={Math.round(LOGO_WIDTH / LOGO_RATIO)}
+            alt="KickPact"
+            style={{ objectFit: "contain", marginBottom: 34 }}
           />
 
-          {/* Subtitle */}
+          {/* KEIN display:flex: in Satori wird ein Text damit zum einzeiligen
+              Flex-Item und läuft rechts raus, statt umzubrechen. Als Block
+              bricht er innerhalb der maxWidth oben um. */}
           <div
             style={{
-              fontSize: 26,
-              fontWeight: 600,
-              color: "rgba(248,247,244,0.75)",
-              letterSpacing: "-0.01em",
-              marginBottom: 16
+              fontFamily: DISPLAY_FAMILY,
+              fontSize: 44,
+              fontWeight: 900,
+              color: NAVY,
+              letterSpacing: "-0.02em",
+              lineHeight: 1.15,
+              marginBottom: 20
             }}
           >
-            Performance-Sponsoring für Amateurfußball
+            Macht die Mannschaftskasse voll.
           </div>
 
-          {/* Tagline */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10
-            }}
-          >
-            <div
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                background: "#01C457",
-                flexShrink: 0
-              }}
-            />
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 700,
-                color: "#01C457",
-                letterSpacing: "0.01em"
-              }}
-            >
-              Weniger als 1 € pro Spieler im Monat.
-            </div>
+          <div style={{ fontSize: 24, color: MUTED, marginBottom: 8, lineHeight: 1.4 }}>
+            Sponsoren zahlen pro Tor, Sieg oder Aufstieg — automatisch abgerechnet.
+          </div>
+          <div style={{ display: "flex", fontSize: 24, fontWeight: 700, color: GREEN_DARK }}>
+            Weniger als 1 € pro Spieler im Monat.
           </div>
         </div>
 
-        {/* Right side — stat badges */}
+        {/* Preis-Kacheln rechts */}
         <div
           style={{
             position: "absolute",
@@ -207,44 +133,30 @@ export default function Image() {
             transform: "translateY(-50%)",
             display: "flex",
             flexDirection: "column",
-            gap: 16,
+            gap: 14,
             alignItems: "flex-end"
           }}
         >
-          {[
-            { dot: "#FF4500", label: "Pro Tor", value: "5 €" },
-            { dot: "#FF6A30", label: "Pro Sieg", value: "50 €" },
-            { dot: "#01C457", label: "Pro Aufstieg", value: "200 €" }
-          ].map(({ dot, label, value }) => (
+          {PREISE.map(({ label, value }) => (
             <div
               key={label}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 10,
-                background: "rgba(248,247,244,0.06)",
-                border: "1px solid rgba(248,247,244,0.12)",
-                borderRadius: 12,
-                padding: "10px 18px"
+                gap: 12,
+                background: "rgba(26,26,46,0.04)",
+                border: "1px solid rgba(26,26,46,0.1)",
+                borderRadius: 14,
+                padding: "12px 20px"
               }}
             >
+              <span style={{ fontSize: 17, color: MUTED, fontWeight: 400 }}>{label}</span>
               <span
                 style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  background: dot,
-                  flexShrink: 0
-                }}
-              />
-              <span style={{ fontSize: 14, color: "rgba(248,247,244,0.65)", fontWeight: 500 }}>
-                {label}
-              </span>
-              <span
-                style={{
-                  fontSize: 16,
+                  fontFamily: DISPLAY_FAMILY,
+                  fontSize: 22,
                   fontWeight: 900,
-                  color: "#FF4500",
+                  color: NAVY,
                   marginLeft: 4
                 }}
               >
@@ -253,18 +165,6 @@ export default function Image() {
             </div>
           ))}
         </div>
-
-        {/* Bottom bar */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 3,
-            background: "rgba(255,255,255,0.06)"
-          }}
-        />
       </div>
     ),
     { width: 1200, height: 630, fonts: OG_FONTS }

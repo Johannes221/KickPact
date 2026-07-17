@@ -422,6 +422,28 @@ export interface SpielListItem {
    * der Wettbewerbs-Zeile. `null`, wenn keine Wettbewerbs-Zeile vorausging.
    */
   league: string | null;
+  /**
+   * Vereinswappen beider Seiten, direkt aus der Spielplan-Zeile — je
+   * fussball.de-team-id die URL des Wappens.
+   *
+   * Kommt gratis mit: jede Zeile trägt pro Seite ein `td.column-club
+   * a.club-wrapper` mit team-id im href und Wappen-URL im `data-responsive-image`
+   * des `.club-logo`-Spans. Es braucht dafür KEINEN zusätzlichen Request.
+   *
+   * Leeres Array, wenn die Zeile keine `club-wrapper` hat (ältere Seiten-
+   * Varianten). Das Motiv fällt dann auf das Kürzel zurück — kein Fehlerfall.
+   */
+  crests: CrestRef[];
+}
+
+/** Ein Vereinswappen von fussball.de, an seiner team-id hängend. */
+export interface CrestRef {
+  /** fussball.de-team-id — dieselbe Kennung wie `matches.heim_team_id`. */
+  teamId: string;
+  /** Absolute URL des Wappens (PNG). */
+  url: string;
+  /** Vereinsname aus `data-alt` — nur für Diagnose/Logs. */
+  name: string | null;
 }
 
 export interface SpielDetails {
@@ -697,6 +719,42 @@ const IGNORE_TDS = new Set([
  *  - Datum kommt aus `row-headline`/`row-competition`-Zeilen (carry-over).
  *  - Heim/Gast über den ":"-Separator (robust gegen Datums-/Wettbewerb-Zellen).
  */
+/**
+ * Wappen-Größe: `format/2` liefert 99×99 — das GRÖSSTE, was fussball.de hergibt
+ * (format/0 = 80, /1 und /5 = 50, /3, /4, /6 = 44, /10 = 99; live durchprobiert).
+ * Im HTML steht format/0; im Story-Motiv landet das Wappen auf 240px, da zählt
+ * jedes Pixel. Mehr als 99 gibt es nicht — das Motiv skaliert also immer hoch.
+ */
+const CREST_FORMAT = 2;
+
+/**
+ * Wappen einer Spielplan-Zeile: pro Seite ein `td.column-club a.club-wrapper`
+ * mit team-id im href und Wappen-URL im `data-responsive-image`.
+ *
+ * Defensiv: fehlt eines der Teile, wird die Seite übersprungen statt geraten.
+ * Ein falsch zugeordnetes Wappen wäre schlimmer als gar keins — es säße als
+ * fremder Verein auf einer Story, die ein echter Verein teilt.
+ */
+export function extractCrestsFromRow(tr: HTMLElement): CrestRef[] {
+  const out: CrestRef[] = [];
+  for (const a of tr.querySelectorAll("td.column-club a.club-wrapper")) {
+    const teamId = (a.getAttribute("href") || "").match(/\/team-id\/([A-Z0-9]+)/)?.[1];
+    if (!teamId) continue;
+    const span = a.querySelector(".club-logo span");
+    const raw = span?.getAttribute("data-responsive-image");
+    if (!raw) continue;
+    // Protokoll-relativ ("//www.fussball.de/...") → absolut.
+    const abs = raw.startsWith("//") ? `https:${raw}` : raw;
+    if (!/\/getLogo\/format\/\d+\/id\/[A-Z0-9]+/i.test(abs)) continue;
+    out.push({
+      teamId,
+      url: abs.replace(/\/format\/\d+\//, `/format/${CREST_FORMAT}/`),
+      name: span?.getAttribute("data-alt")?.trim() || null
+    });
+  }
+  return out;
+}
+
 function extractMatchesFromHtml(root: HTMLElement): SpielListItem[] {
   const results: SpielListItem[] = [];
   const seen = new Set<string>();
@@ -783,7 +841,8 @@ function extractMatchesFromHtml(root: HTMLElement): SpielListItem[] {
       vergangen,
       status: vergangen ? "finished" : "scheduled",
       url: fullHref,
-      league: currentLeague
+      league: currentLeague,
+      crests: extractCrestsFromRow(tr)
     });
   }
 
