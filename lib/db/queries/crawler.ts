@@ -430,7 +430,15 @@ export async function updateMatchWithEvents(args: {
       halbzeitHeim: details.halbzeit?.heim ?? null,
       halbzeitGast: details.halbzeit?.gast ?? null,
       status: "finished",
-      competitionType: competitionTypeOf(listItem.league),
+      // Wettbewerb nur NACHTRAGEN, nie auf `unknown` zurückstufen: liefert ein
+      // späterer Crawl keine Wettbewerbs-Zeile mehr (am 2026-07-17 real — eine
+      // Formatänderung ließ die Extraktion für ALLE Zeilen null liefern), würde
+      // ein erkanntes Freundschaftsspiel sonst still wieder zahlungspflichtig.
+      // Gelerntes Wissen darf nicht verloren gehen — dieselbe Regel wie beim
+      // Liga-Carry-over im Parser und im Backfill-Skript.
+      ...(competitionTypeOf(listItem.league) === "unknown"
+        ? {}
+        : { competitionType: competitionTypeOf(listItem.league) }),
       contentHash
     })
     .where(eq(matches.id, matchId));

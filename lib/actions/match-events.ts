@@ -84,6 +84,23 @@ export async function addManualEvent(
     );
   }
 
+  // Wettbewerbs-Gate (Entscheid 2026-07-17: Geld nur auf Liga + Pokal).
+  // MUSS hier eigenständig stehen: addManualEvent fügt seine Charges unten in
+  // der eigenen Transaktion ein und läuft NICHT durch evaluate-match — das
+  // dortige Gate greift für diesen Pfad also nicht. Ohne diesen Guard zahlt ein
+  // gemeldetes Tor auf einem Testspiel weiter. Besonders scharf bei der Jugend:
+  // E-/D-Junioren liefern keine gescrapten Ergebnisse, dort sind manuelle
+  // Events der einzige Weg, wie überhaupt Geld entsteht.
+  // Wie im Gate drüben: nur positiv erkanntes `friendly` blockt, `unknown`
+  // (Alt-Bestand) läuft weiter.
+  if (target.match.competitionType === "friendly") {
+    return {
+      ok: false,
+      message:
+        "Freundschaftsspiele und Turniere zählen nicht — hier entstehen keine Beiträge."
+    };
+  }
+
   // Bestimme teamSide via detectTeamSide-Helper — identisch zur Crawler-Pipeline,
   // damit Manual-Events nicht anders klassifiziert werden als Scraped-Events.
   // Audit 2026-05-24 Phase 2 Task 2.7: vorher split(" ")[0] → bei
