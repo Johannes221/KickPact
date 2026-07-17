@@ -22,10 +22,12 @@ import {
 import type { PlanKey } from "@/lib/stripe/pricing";
 
 // Akzeptierte Endungen (inkl. iPhone-HEIC/HEIF — Server konvertiert nach JPEG).
+// WebP fehlt bewusst: der Story-Renderer verträgt es nicht, der Server lehnt es
+// ab (lib/storage/images.ts) — also gar nicht erst zur Auswahl anbieten.
 // MIME-Type-Prüfung bewusst lasch: Mobile-Browser senden gelegentlich einen
 // leeren `file.type`. Der Server validiert autoritativ via lib/storage/images.
 const ACCEPT =
-  "image/png,image/jpeg,image/webp,image/heic,image/heif,.png,.jpg,.jpeg,.webp,.heic,.heif";
+  "image/png,image/jpeg,image/heic,image/heif,.png,.jpg,.jpeg,.heic,.heif";
 const MAX_BYTES = 10_000_000;
 const TAGLINE_MAX = 280;
 const GOALS_MAX = 600;
