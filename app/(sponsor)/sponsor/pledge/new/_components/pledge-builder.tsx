@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useForm, useFieldArray, type FieldErrors } from "react-hook-form";
+import { useForm, useFieldArray, useWatch, type Control, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createId } from "@paralleldrive/cuid2";
 import { Zap, Handshake, Trophy, ShieldCheck, Gauge } from "lucide-react";
@@ -111,6 +111,48 @@ function defForRule(rule: { triggerType: string; params?: Record<string, unknown
 }
 
 type WizardStep = 1 | 2 | 3 | 4;
+
+/**
+ * Eigene Komponente statt `form.watch(...)` direkt im Render-Callback des
+ * Cap-Periode-Felds: `watch()` dort hätte den GESAMTEN PledgeBuilder bei
+ * jedem Tastendruck im Cap-Feld neu gerendert (inkl. Trigger-Library,
+ * Simulation-Panel, aller anderen Regel-Zeilen) — auf dem Handy sichtbar als
+ * Eingabefeld, das nach jedem Zeichen den Fokus verliert. `useWatch` scoped
+ * das Re-Render auf genau diese kleine Komponente.
+ */
+function CapPeriodSelect({
+  control,
+  index,
+}: {
+  control: Control<PledgeInput>;
+  index: number;
+}) {
+  const capEur = useWatch({ control, name: `rules.${index}.capEur` });
+
+  return (
+    <FormField
+      control={control}
+      name={`rules.${index}.capPeriod`}
+      render={({ field: pf }) => (
+        <FormItem>
+          <FormLabel className={RULE_FIELD_LABEL_CLASS}>pro</FormLabel>
+          <FormControl>
+            <select
+              className={RULE_SELECT_CLASS}
+              value={pf.value ?? "month"}
+              disabled={capEur === undefined}
+              onChange={(e) => pf.onChange(e.target.value as "month" | "season")}
+            >
+              <option value="month">Monat</option>
+              <option value="season">Saison</option>
+            </select>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -498,27 +540,7 @@ export function PledgeBuilder({
                               </FormItem>
                             )}
                           />
-                          <FormField
-                            control={form.control}
-                            name={`rules.${index}.capPeriod`}
-                            render={({ field: pf }) => (
-                              <FormItem>
-                                <FormLabel className={RULE_FIELD_LABEL_CLASS}>pro</FormLabel>
-                                <FormControl>
-                                  <select
-                                    className={RULE_SELECT_CLASS}
-                                    value={pf.value ?? "month"}
-                                    disabled={form.watch(`rules.${index}.capEur`) === undefined}
-                                    onChange={(e) => pf.onChange(e.target.value as "month" | "season")}
-                                  >
-                                    <option value="month">Monat</option>
-                                    <option value="season">Saison</option>
-                                  </select>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          <CapPeriodSelect control={form.control} index={index} />
                         </>
                       )}
 
