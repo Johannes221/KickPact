@@ -25,7 +25,7 @@ vi.mock("@/lib/db/queries/story", () => ({
 // Kein Logo, keine Tabelle: beides ist bei Amateurvereinen der Normalfall und
 // für die Vorlagen-Wahl irrelevant.
 vi.mock("@/lib/storage/documents", () => ({ readDocumentBytes: async () => null }));
-vi.mock("@/lib/recap/standings-cache", () => ({
+vi.mock("@/lib/recap/standings-request", () => ({
   getCachedStandingsForRequest: async () => null
 }));
 
