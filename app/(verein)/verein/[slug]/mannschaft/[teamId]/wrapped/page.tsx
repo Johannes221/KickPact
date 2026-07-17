@@ -3,7 +3,7 @@ import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { assertTeamPageAccess } from "@/lib/auth/scope";
 import { getWrappedStats, WRAPPED_MIN_MATCHES } from "@/lib/db/queries/wrapped";
-import { getCachedStandingsForRequest } from "@/lib/recap/standings-cache";
+import { getCachedStandingsForRequest } from "@/lib/recap/standings-request";
 import { getFullTeamInClub } from "@/lib/db/queries/team-lifecycle";
 import { prevSaisonCode, saisonLabel } from "@/lib/utils/saison";
 import { WrappedPlayer } from "./_components/wrapped-player";

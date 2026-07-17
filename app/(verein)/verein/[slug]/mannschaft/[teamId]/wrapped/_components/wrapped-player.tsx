@@ -6,6 +6,7 @@ import { X, Share2, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import type { WrappedStats } from "@/lib/db/queries/wrapped";
 import { eurWhole } from "@/lib/recap/recap-format";
+import { scopeKicker, scopeSuffix, bilanzHeadline } from "@/lib/recap/aggregate-scope";
 import { useAmbientAudio } from "./use-ambient-audio";
 import { shareImageFile } from "@/lib/platform/files";
 import {
@@ -530,9 +531,9 @@ function BilanzSlide({ stats, accent }: { stats: WrappedStats; accent: string })
   ];
   return (
     <div>
-      <Kicker accent={accent}>{stats.spiele} Spiele auf dem Platz</Kicker>
+      <Kicker accent={accent}>{scopeKicker(stats.aggregateSource, stats.spiele)}</Kicker>
       <h2 className="wr-rise font-display text-4xl font-black tracking-tight text-white">
-        Eure Bilanz
+        {bilanzHeadline(stats.aggregateSource)}
       </h2>
       <div className="mt-8 flex items-end gap-6">
         {items.map((it, i) => (
@@ -574,7 +575,8 @@ function ToreSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
         Tore geballert ⚽
       </h2>
       <Body delay={0.6}>
-        …und {stats.toreKassiert} kassiert. Drüber reden wir nicht weiter.
+        …und {stats.toreKassiert} kassiert{scopeSuffix(stats.aggregateSource, stats.spiele)}. Drüber reden wir
+        nicht weiter.
       </Body>
     </div>
   );

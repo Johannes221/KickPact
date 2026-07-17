@@ -3,9 +3,15 @@
  * /api/teams/[teamId]/wrapped-image/[slide] liefert 200 + image/png für
  * gültige Slide-Keys, 404 für unbekannte/datenlose Slides, 403 ohne Zugriff.
  * Auth/Stats sind gemockt — gerendert wird ECHT via next/og (ImageResponse).
+ *
+ * Die Slides zum Anschauen rausschreiben (wie bei den Story-Motiven):
+ *   WRAPPED_SAMPLE_DIR=/tmp/wrapped npx vitest run tests/api/wrapped-image-route.test.ts
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mkdirSync, writeFileSync } from "node:fs";
 import type { WrappedStats } from "@/lib/db/queries/wrapped";
+
+const SAMPLE_DIR = process.env.WRAPPED_SAMPLE_DIR;
 
 const { requireUserMock, resolveTeamAccessMock, statsMock, prevSaisonMock, standingsMock } =
   vi.hoisted(() => ({
@@ -23,8 +29,7 @@ vi.mock("@/lib/db/queries/wrapped", () => ({
   getPrevSaisonForTeam: prevSaisonMock,
   WRAPPED_MIN_MATCHES: 3
 }));
-vi.mock("@/lib/recap/standings-cache", () => ({
-  getCachedStandings: standingsMock,
+vi.mock("@/lib/recap/standings-request", () => ({
   getCachedStandingsForRequest: standingsMock
 }));
 
@@ -73,7 +78,7 @@ describe("wrapped-image route", () => {
     standingsMock.mockReset().mockResolvedValue(null);
   });
 
-  it.each(["tore", "bilanz", "ligatorschuetze", "fairness"])(
+  it.each(["tore", "bilanz", "ligatorschuetze", "fairness", "zusammenfassung"])(
     "%s → 200 + image/png",
     async (slide) => {
       const res = await call(slide);
@@ -82,6 +87,11 @@ describe("wrapped-image route", () => {
       const buf = Buffer.from(await res.arrayBuffer());
       // PNG-Magic-Bytes
       expect(buf.subarray(0, 4)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+
+      if (SAMPLE_DIR) {
+        mkdirSync(SAMPLE_DIR, { recursive: true });
+        writeFileSync(`${SAMPLE_DIR}/${slide}.png`, buf);
+      }
     }
   );
 

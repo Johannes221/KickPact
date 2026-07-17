@@ -1,5 +1,5 @@
 import { readDocumentBytes } from "@/lib/storage/documents";
-import { getCachedStandingsForRequest } from "@/lib/recap/standings-cache";
+import { getCachedStandingsForRequest } from "@/lib/recap/standings-request";
 import type { LeagueStandings } from "@/lib/crawler/fussballde";
 import {
   getStoryTeam,

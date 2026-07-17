@@ -1271,6 +1271,12 @@ export async function getSquadAcrossSeasons(
 export interface LeagueStandingRow {
   position: number;
   teamName: string;
+  /**
+   * fussball.de-team-id aus dem Mannschafts-Link der Zeile (null möglich, wenn
+   * die Zeile ausnahmsweise nicht verlinkt ist). Einzig verlässlicher Anker für
+   * die eigene Zeile — siehe `selectOwnRow`.
+   */
+  teamId: string | null;
   spiele: number;
   siege: number;
   unentschieden: number;
@@ -1304,10 +1310,72 @@ export interface LeagueFairnessRow {
   quote: number;
 }
 
+/**
+ * Eigene Tabellenzeile bestimmen — team-id zuerst, Name nur als Notnagel.
+ *
+ * Das reine Namens-Matching (bis 2026-07-17) war aus zwei Gründen kaputt:
+ *  - `clubs.name` ist ein Kurzname ("FC Sportfr. Dossenheim"), die Tabelle führt
+ *    den Langnamen ("FC Sportfreunde 1910 Dossenheim") → Token "sportfr." trifft nie.
+ *  - Spielgemeinschaften heißen anders als ihr Verein ("JSG Dossenheim/…" unter
+ *    "FC Sportfr. Dossenheim") → über den Vereinsnamen prinzipiell nicht findbar.
+ * Beides endete in `ownRow = null`, worauf das Wrapped still auf die ~10
+ * gescrapten Spiele zurückfiel und sie als volle Saison auswies.
+ *
+ * Zusätzlich trennt nur die team-id Erste und Zweite zuverlässig ("ASC Neuenheim"
+ * ist Präfix von "ASC Neuenheim 2") — dieselbe Falle, die `resolveTeamSide`
+ * bereits über die team-id löst.
+ */
+export function selectOwnRow(
+  rows: ReadonlyArray<LeagueStandingRow>,
+  ownTeamId: string | null,
+  ownClubName: string
+): LeagueStandingRow | null {
+  if (ownTeamId) {
+    const byId = rows.find((r) => r.teamId === ownTeamId);
+    if (byId) return byId;
+  }
+
+  // Fallback: Zeilen ohne Link. Bewusst konservativ — lieber null als die
+  // falsche Zeile, denn eine falsche Zeile sind falsche Saison-Zahlen, und die
+  // gehen als „per Tabelle verifiziert" durch.
+  const ownTokens = normalizeTeamName(ownClubName)
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((t) => t.length > 2);
+  if (ownTokens.length === 0) return null;
+  const hits = rows.filter((r) => {
+    if (r.teamId) return false; // per id geprüft und nicht getroffen
+    const rn = r.teamName.toLowerCase();
+    return ownTokens.every((t) => rn.includes(t));
+  });
+  // Mehrdeutig heißt raten: "ASC Neuenheim" steckt auch in "ASC Neuenheim 2",
+  // und der erste Treffer wäre dann die Bilanz der falschen Mannschaft.
+  return hits.length === 1 ? hits[0] : null;
+}
+
+/**
+ * Saison-Code aus einer fussball.de-URL. Deckt beide Formen ab:
+ *  - Mannschaftsseite: "…/-/saison/2526/team-id/…"
+ *  - Staffel-Seite:    "…/spieltag/bfv-…-saison2526-baden/-/staffel/…" (im SLUG)
+ *
+ * Nötig, weil die Mannschaftsseite still auf die LAUFENDE Saison umleitet,
+ * sobald die team-id dort eine Mannschaft hat. Die Staffel-Form muss mit rein,
+ * sonst wäre der Guard auf dem Staffel-Pfad blind — und eine `staffelId` aus der
+ * falschen Saison würde ihre eigene Falschheit endlos fortschreiben.
+ * Siehe Guard in `getLeagueStandings`.
+ */
+export function saisonFromTeamPageUrl(url: string): string | null {
+  return (
+    url.match(/\/saison\/(\d{4})(?:\/|$|#)/)?.[1] ??
+    url.match(/saison(\d{4})[-/]/)?.[1] ??
+    null
+  );
+}
+
 export interface LeagueStandings {
   teamsInLeague: number;
   rows: LeagueStandingRow[];
-  /** Zeile der eigenen Mannschaft (Namens-Match), null wenn nicht gefunden. */
+  /** Zeile der eigenen Mannschaft (via team-id), null wenn nicht gefunden. */
   ownRow: LeagueStandingRow | null;
   /**
    * Wrapped-Extras (Spec 2026-07-06), best-effort im selben Browser-Lauf:
@@ -1338,17 +1406,36 @@ export async function getLeagueStandings(
   teamId: string,
   slug: string,
   saison: string,
-  ownClubName: string
+  ownClubName: string,
+  knownStaffelId?: string | null
 ): Promise<LeagueStandings | null> {
   return withPage(async (page) => {
-    const url = `https://www.fussball.de/mannschaft/${encodeURIComponent(
-      slug
-    )}/-/saison/${encodeURIComponent(saison)}/team-id/${encodeURIComponent(
-      teamId
-    )}#!/section/table`;
+    // Die Staffel-Seite ist an ihre Saison GEBUNDEN, die Mannschaftsseite nicht
+    // (siehe Saison-Guard unten). Kennen wir die Staffel aus einem früheren
+    // Scrape, ist sie daher der verlässlichere Einstieg — nur so bleibt die
+    // Tabelle einer abgeschlossenen Saison überhaupt refreshbar.
+    const url = knownStaffelId
+      ? `https://www.fussball.de/spieltag/-/staffel/${encodeURIComponent(
+          knownStaffelId
+        )}#!/section/table`
+      : `https://www.fussball.de/mannschaft/${encodeURIComponent(
+          slug
+        )}/-/saison/${encodeURIComponent(saison)}/team-id/${encodeURIComponent(
+          teamId
+        )}#!/section/table`;
     await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
     await assertNotCaptcha(page);
     await page.waitForTimeout(3000);
+
+    // Saison-Guard: fussball.de leitet die Mannschaftsseite still auf die
+    // LAUFENDE Saison um, sobald die team-id dort eine Mannschaft hat (am
+    // 2026-07-17 verifiziert: /saison/2526/ → /saison/2627/). Ohne diesen Guard
+    // landete die LEERE Tabelle der neuen Saison (alle Teams 0 Spiele, Platz 1)
+    // unter dem Key der abgeschlossenen Saison und das Wrapped zeigte "0 Spiele".
+    // Lieber nichts liefern als die falsche Saison: der Aufrufer behält dann die
+    // vorhandene (korrekte) DB-Zeile.
+    const landedSaison = saisonFromTeamPageUrl(page.url());
+    if (landedSaison && landedSaison !== saison) return null;
 
     const raw = (await page.evaluate(`(function(){
       var out = [];
@@ -1359,14 +1446,21 @@ export async function getLeagueStandings(
           if (t) tds.push(t);
         });
         // Echte Tabellenzeile: erste Zelle ist die Platzierung ("6.").
-        if (tds.length >= 6 && /^\\d+\\.$/.test(tds[0])) out.push(tds);
+        if (tds.length >= 6 && /^\\d+\\.$/.test(tds[0])) {
+          var link = null;
+          tr.querySelectorAll('a').forEach(function(a){
+            var m = (a.getAttribute('href')||'').match(/team-id\\/([A-Z0-9]+)/);
+            if (m && !link) link = m[1];
+          });
+          out.push({ tds: tds, teamId: link });
+        }
       });
       return out;
-    })()`)) as string[][];
+    })()`)) as { tds: string[]; teamId: string | null }[];
 
     const rows: LeagueStandingRow[] = [];
     const seenPos = new Set<number>();
-    for (const tds of raw) {
+    for (const { tds, teamId: rowTeamId } of raw) {
       const position = parseInt(tds[0], 10);
       if (seenPos.has(position)) continue; // Tabelle kann doppelt im DOM stehen.
       seenPos.add(position);
@@ -1375,6 +1469,7 @@ export async function getLeagueStandings(
       rows.push({
         position,
         teamName: normalizeTeamName(tds[1] ?? ""),
+        teamId: rowTeamId,
         spiele: parseInt(tds[2] ?? "0", 10) || 0,
         siege: parseInt(tds[3] ?? "0", 10) || 0,
         unentschieden: parseInt(tds[4] ?? "0", 10) || 0,
@@ -1386,18 +1481,7 @@ export async function getLeagueStandings(
     }
     if (rows.length === 0) return null;
 
-    // Eigene Zeile: alle distinktiven Tokens des Klub-Namens müssen vorkommen.
-    const ownTokens = normalizeTeamName(ownClubName)
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((t) => t.length > 2);
-    const ownRow =
-      ownTokens.length > 0
-        ? rows.find((r) => {
-            const rn = r.teamName.toLowerCase();
-            return ownTokens.every((t) => rn.includes(t));
-          }) ?? null
-        : null;
+    const ownRow = selectOwnRow(rows, teamId, ownClubName);
 
     // ── Wrapped-Extras: Staffel-ID → Torschützen + Fairness (best-effort) ──
     // Die Staffel-ID steht im Team-Seiten-HTML (u.a. in den fairness-Links).
@@ -1411,7 +1495,7 @@ export async function getLeagueStandings(
       // Die Team-Seite verlinkt mehrere Staffeln (Footer-Widgets: Bundesliga etc.).
       // Die EIGENE Liga steht im Link mit unserer team-id bzw. im Fairness-Link —
       // die naive First-Match-Regex würde eine fremde Staffel greifen.
-      staffelId = (await page.evaluate(`(function(){
+      staffelId = knownStaffelId ?? (await page.evaluate(`(function(){
         var html = document.documentElement.outerHTML;
         var own = html.match(/staffel\\/([A-Z0-9]{10,}-[A-Z])\\/team-id\\/${teamId}/);
         if (own) return own[1];
@@ -1507,13 +1591,13 @@ export async function getLeagueStandings(
           });
         }
         fairnessTeamsInLeague = fairRows.filter((r) => r.spiele > 0).length;
-        fairnessOwnRow =
-          ownTokens.length > 0
-            ? fairRows.find((r) => {
-                const rn = r.teamName.toLowerCase();
-                return ownTokens.every((t) => rn.includes(t));
-              }) ?? null
-            : null;
+        // Die Fairness-Tabelle verlinkt keine team-ids, aber via `ownRow` kennen
+        // wir jetzt unseren exakten Liga-Namen — damit ist der Namens-Vergleich
+        // hier exakt statt geraten (und funktioniert auch für Kurznamen und
+        // Spielgemeinschaften, an denen das Token-Matching scheiterte).
+        fairnessOwnRow = ownRow
+          ? fairRows.find((r) => r.teamName === ownRow.teamName) ?? null
+          : null;
       }
     } catch {
       // Extras sind best-effort — Tabelle steht auch ohne sie.

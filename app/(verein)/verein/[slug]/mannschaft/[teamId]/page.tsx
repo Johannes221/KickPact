@@ -111,8 +111,9 @@ export default async function TeamDetailPage({
       getWrappedEntryInfo(team.id)
     ]);
 
-  // Saison-Stats aus echten Matches berechnen
-  const { games, wins, draws, losses, goalsFor, goalsAgainst } =
+  // Saison-Stats: Liga-Tabelle wenn sie die volle Saison kennt, sonst die
+  // ausgewerteten Spiele (`source` sagt, was davon zutrifft).
+  const { games, wins, draws, losses, goalsFor, goalsAgainst, source: statsSource } =
     await computeTeamSeasonStats(team.id, team.name, club.name);
   const totalCharges = [...chargesSummary.values()].reduce((s, v) => s + v, 0);
 
@@ -248,7 +249,12 @@ export default async function TeamDetailPage({
       {games > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Spiele", value: games },
+            {
+              // Ohne Liga-Tabelle beziehen sich die Kacheln nur auf die
+              // ausgewerteten Spiele — das gehört ans Label, nicht verschwiegen.
+              label: statsSource === "table" ? "Spiele" : "Ausgewertet",
+              value: games
+            },
             { label: "Bilanz", value: `${wins}/${draws}/${losses}` },
             { label: "Tore", value: `${goalsFor}:${goalsAgainst}` },
             {

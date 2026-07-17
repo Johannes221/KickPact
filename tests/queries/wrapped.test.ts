@@ -25,6 +25,7 @@ import {
   getWrappedEntryInfo,
   getWrappedStatsForPrevSeason
 } from "@/lib/db/queries/wrapped";
+import type { LeagueStandingRow } from "@/lib/crawler/fussballde";
 
 const CLUB_NAME = "Sportfreunde Testkirchen";
 
@@ -236,6 +237,89 @@ describe("getWrappedStats", () => {
     expect(stats?.saison).toBe("2526");
     expect(stats?.spiele).toBe(1);
     expect(stats?.toreGeschossen).toBe(2);
+  });
+});
+
+describe("getWrappedStats — Quelle der Saison-Aggregate", () => {
+  beforeEach(async () => {
+    await resetTestDb();
+  });
+
+  function standings(ownSpiele: number, extra: Partial<LeagueStandingRow> = {}) {
+    const ownRow: LeagueStandingRow = {
+      position: 10,
+      teamName: "FC Sportfreunde 1910 Dossenheim",
+      teamId: "011MIAE8VG000000VTVG0001VTR8C1K7",
+      spiele: ownSpiele,
+      siege: 14,
+      unentschieden: 4,
+      niederlagen: 16,
+      toreFor: 62,
+      toreAgainst: 80,
+      punkte: 46,
+      ...extra
+    };
+    return { teamsInLeague: 18, rows: [ownRow], ownRow };
+  }
+
+  /**
+   * Der Normalfall Herren: die Liga-Tabelle kennt die volle Saison (34 Spiele),
+   * wir haben nur ~10 Spiele im Detail gescrapt → die Tabelle gewinnt.
+   * Echte Zahlen: Dossenheim, Landesliga Baden 25/26 (fussball.de, 2026-07-17).
+   */
+  it("nimmt die Tabelle, wenn sie mehr Spiele kennt als wir gescrapt haben", async () => {
+    const teamId = await seedTeam("2627");
+    for (const d of ["2025-08-10", "2025-08-17", "2025-08-24"]) {
+      await seedMatch(teamId, { datum: d, eh: 1, eg: 0 });
+    }
+    const stats = await getWrappedStats(teamId, "2526", standings(34));
+    expect(stats?.aggregateSource).toBe("table");
+    expect(stats?.spiele).toBe(34);
+    expect(stats?.toreGeschossen).toBe(62);
+    expect(stats?.detailMatchCount).toBe(3);
+  });
+
+  /**
+   * Regression (verifiziert 2026-07-17): Jugend-Ligen laufen in getrennten
+   * Vor-/Endrunden-Staffeln. Die B-Junioren-Kreisliga-Tabelle führt nur 8 Spiele,
+   * die Mannschaft hat aber 22 gespielt. Die Tabelle ist dort NICHT die volle
+   * Saison — sie zu übernehmen wäre eine Verschlechterung von 22 auf 8 Spiele.
+   * Kennt die Tabelle WENIGER Spiele als wir belegen können, ist sie kein
+   * Saison-Aggregat und darf die Match-Daten nicht überschreiben.
+   */
+  it("ignoriert eine Tabelle, die weniger Spiele kennt als wir belegen können", async () => {
+    const teamId = await seedTeam("2627");
+    for (const d of ["2025-08-10", "2025-08-17", "2025-08-24", "2025-09-07"]) {
+      await seedMatch(teamId, { datum: d, eh: 2, eg: 0 });
+    }
+    const stats = await getWrappedStats(teamId, "2526", standings(2));
+    expect(stats?.aggregateSource).toBe("matches");
+    expect(stats?.spiele).toBe(4);
+    expect(stats?.toreGeschossen).toBe(8); // 4 × 2:0 aus den Endständen
+    expect(stats?.siege).toBe(4);
+  });
+
+  /**
+   * Der Tabellenplatz stammt aus derselben (Teilrunden-)Tabelle. Wenn wir ihre
+   * Aggregate verwerfen, darf der Platz nicht als Saison-Platz stehenbleiben.
+   */
+  it("zeigt keinen Tabellenplatz, wenn die Tabelle verworfen wurde", async () => {
+    const teamId = await seedTeam("2627");
+    for (const d of ["2025-08-10", "2025-08-17", "2025-08-24", "2025-09-07"]) {
+      await seedMatch(teamId, { datum: d, eh: 2, eg: 0 });
+    }
+    const stats = await getWrappedStats(teamId, "2526", standings(2));
+    expect(stats?.tabellenplatz).toBeNull();
+    expect(stats?.punkte).toBeNull();
+  });
+
+  it("fällt ohne Tabelle ehrlich auf die ausgewerteten Spiele zurück", async () => {
+    const teamId = await seedTeam("2627");
+    await seedMatch(teamId, { datum: "2025-08-10", eh: 1, eg: 0 });
+    const stats = await getWrappedStats(teamId, "2526", null);
+    expect(stats?.aggregateSource).toBe("matches");
+    expect(stats?.spiele).toBe(1);
+    expect(stats?.tabellenplatz).toBeNull();
   });
 });
 

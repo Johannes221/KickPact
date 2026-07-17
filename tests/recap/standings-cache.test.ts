@@ -33,33 +33,25 @@ vi.mock("@/lib/db/client", () => ({
 }));
 
 import { getCachedStandings } from "@/lib/recap/standings-cache";
+import { currentSaisonCode } from "@/lib/utils/saison";
+
+const UNION_ROW = {
+  position: 6,
+  teamName: "FG Union",
+  teamId: "011MIEDJ70000000VTVG0001VTR8C1K7",
+  spiele: 24,
+  siege: 12,
+  unentschieden: 6,
+  niederlagen: 6,
+  toreFor: 76,
+  toreAgainst: 45,
+  punkte: 42
+};
 
 const STANDINGS: LeagueStandings = {
   teamsInLeague: 14,
-  rows: [
-    {
-      position: 6,
-      teamName: "FG Union",
-      spiele: 24,
-      siege: 12,
-      unentschieden: 6,
-      niederlagen: 6,
-      toreFor: 76,
-      toreAgainst: 45,
-      punkte: 42
-    }
-  ],
-  ownRow: {
-    position: 6,
-    teamName: "FG Union",
-    spiele: 24,
-    siege: 12,
-    unentschieden: 6,
-    niederlagen: 6,
-    toreFor: 76,
-    toreAgainst: 45,
-    punkte: 42
-  },
+  rows: [UNION_ROW],
+  ownRow: UNION_ROW,
   // Modern geformte Zeile: topScorers ist gesetzt (mind. []) → nicht upgrade-pflichtig.
   topScorers: [],
   ownTopScorers: [],
@@ -72,6 +64,17 @@ const LEGACY_STANDINGS = {
   rows: STANDINGS.rows,
   ownRow: STANDINGS.ownRow
 } as LeagueStandings;
+
+// Alt-Zeile aus der Zeit des Namens-Matchings: die Zeilen tragen keine team-ids.
+// Solche Zeilen können ein falsches (null-)ownRow enthalten → einmalig neu holen.
+const PRE_TEAMID_STANDINGS = {
+  teamsInLeague: 14,
+  rows: [{ ...UNION_ROW, teamId: undefined }],
+  ownRow: null,
+  topScorers: [],
+  ownTopScorers: [],
+  fairnessOwnRow: null
+} as unknown as LeagueStandings;
 
 describe("getCachedStandings (read-through)", () => {
   beforeEach(() => {
@@ -108,6 +111,69 @@ describe("getCachedStandings (read-through)", () => {
     expect(res).toBe(STANDINGS);
     expect(scrapeMock).toHaveBeenCalledOnce();
     expect(storeMock).toHaveBeenCalledWith("t1", "2425", STANDINGS);
+  });
+
+  /**
+   * Regression: Zeilen ohne team-ids stammen aus der Zeit des Namens-Matchings,
+   * das `ownRow` bei Kurznamen ("FC Sportfr. Dossenheim" vs. der Langname in der
+   * Tabelle) und Spielgemeinschaften still auf null setzte. Das Wrapped fiel
+   * dadurch auf die ~10 gescrapten Spiele zurück und zeigte 10 statt 34 Spiele.
+   * Solche Zeilen gelten als nicht frisch, damit sie sich einmalig selbst heilen
+   * statt bis zum TTL-Ablauf falsch zu bleiben.
+   */
+  it("Zeile ohne team-ids → einmal nachscrapen (ownRow-Reparatur)", async () => {
+    getStoredMock.mockResolvedValue({
+      data: PRE_TEAMID_STANDINGS,
+      scrapedAt: new Date()
+    });
+    scrapeMock.mockResolvedValue(STANDINGS);
+    const res = await getCachedStandings("t1", "2425");
+    expect(res).toBe(STANDINGS);
+    expect(res?.ownRow).not.toBeNull();
+    expect(scrapeMock).toHaveBeenCalledOnce();
+  });
+
+  /**
+   * Abgeschlossene Saison: die bekannte Staffel muss mitgegeben werden. Die
+   * Mannschaftsseite leitet auf die laufende Saison um — nur die Staffel-Seite
+   * ist saison-fest und damit der einzige Weg, eine alte Tabelle zu refreshen.
+   */
+  it("gibt die gespeicherte staffelId für eine ABGESCHLOSSENE Saison weiter", async () => {
+    getStoredMock.mockResolvedValue({
+      data: { ...STANDINGS, staffelId: "02TGQ5NCSC00000BVS5489BTVTLPPK10-G" },
+      scrapedAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+    });
+    scrapeMock.mockResolvedValue(STANDINGS);
+    await getCachedStandings("t1", "2425");
+    expect(scrapeMock).toHaveBeenCalledWith(
+      "12345",
+      "fg-union",
+      "2425",
+      "FG Union",
+      "02TGQ5NCSC00000BVS5489BTVTLPPK10-G"
+    );
+  });
+
+  /**
+   * Laufende Saison: KEINE Staffel vorgeben. Dort leitet nichts um, und der
+   * reguläre Weg erkennt die Staffel neu — eine im Saisonverlauf umgruppierte
+   * Mannschaft bliebe sonst an der alten Staffel kleben.
+   */
+  it("gibt für die LAUFENDE Saison keine staffelId vor", async () => {
+    const laufend = currentSaisonCode();
+    getStoredMock.mockResolvedValue({
+      data: { ...STANDINGS, staffelId: "02TGQ5NCSC00000BVS5489BTVTLPPK10-G" },
+      scrapedAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+    });
+    scrapeMock.mockResolvedValue(STANDINGS);
+    await getCachedStandings("t1", laufend);
+    expect(scrapeMock).toHaveBeenCalledWith(
+      "12345",
+      "fg-union",
+      laufend,
+      "FG Union",
+      null
+    );
   });
 
   it("Scrape scheitert, aber veraltete DB-Zeile da → veraltete zurück", async () => {

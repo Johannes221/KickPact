@@ -10,8 +10,10 @@ async function seed(showInsights: boolean) {
   const clubName = "Sportfreunde Testkirchen";
   const [club] = await db.insert(clubs).values({ slug: `c-${createId().slice(0,6)}`, name: clubName, fussballdeVereinId: createId() }).returning({ id: clubs.id });
   const [team] = await db.insert(teams).values({ clubId: club.id, name: "1. Herren", saison: "2526", fussballdeTeamId: createId(), isActive: true, showInsights }).returning({ id: teams.id, name: teams.name, saison: teams.saison });
-  // heimName uses the club's identifying token ("Sportfreunde") so detectTeamSide works
-  await db.insert(matches).values({ teamId: team.id, fussballdeSpielId: createId(), datum: new Date(), heimName: "Sportfreunde Testkirchen", gastName: "G", status: "finished", ergebnisHeim: 2, ergebnisGast: 0 });
+  // heimName uses the club's identifying token ("Sportfreunde") so detectTeamSide works.
+  // Datum INNERHALB des 2526-Fensters [2025-07-01, 2026-07-01) — `new Date()` läge
+  // je nach Testlauf-Datum außerhalb der geseedeten Saison.
+  await db.insert(matches).values({ teamId: team.id, fussballdeSpielId: createId(), datum: new Date("2025-09-14T12:00:00Z"), heimName: "Sportfreunde Testkirchen", gastName: "G", status: "finished", ergebnisHeim: 2, ergebnisGast: 0 });
   await db.insert(seasonResults).values({ teamId: team.id, saison: "2024/25", finalPosition: 2, promoted: true });
   return { teamId: team.id, teamName: team.name, clubName };
 }
