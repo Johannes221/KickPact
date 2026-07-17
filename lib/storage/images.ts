@@ -4,8 +4,15 @@
  * Warum: iPhones liefern Fotos standardmäßig als HEIC/HEIF — ein Format, das
  * Browser nicht in `<img>` rendern. Dazu schicken mobile Browser gelegentlich
  * einen leeren `file.type`. Diese Funktion bringt jeden akzeptierten Upload in
- * ein garantiert darstellbares Format (PNG/JPEG/WebP) und liefert die passende
+ * ein garantiert darstellbares Format (PNG/JPEG) und liefert die passende
  * Datei-Endung für den Storage-Key.
+ *
+ * WebP wird bewusst NICHT akzeptiert (auch wenn Browser es rendern): der
+ * Story-Renderer next/og (Satori/resvg) WIRFT an WebP-Bytes — empirisch
+ * verifiziert, nicht bloß „kann es nicht". Ein gespeichertes WebP-Logo wäre auf
+ * geteilten Stories entweder unsichtbar oder würde das ganze Motiv sprengen.
+ * Darum an der Upload-Trust-Boundary rausfiltern, damit „gespeichertes Logo ist
+ * überall renderbar" eine echte Invariante bleibt. Siehe lib/story/story-data.ts.
  *
  * Die HEIC-Dekodierung läuft über `heic-convert` (reines JS + WASM, keine
  * nativen Build-Abhängigkeiten → funktioniert im Playwright-Docker-Image). Das
@@ -13,11 +20,11 @@
  * in den Speicher kommt, wenn wirklich ein HEIC hochgeladen wird.
  */
 
-/** Eingangsformate, die wir akzeptieren (vor Konvertierung). */
+/** Eingangsformate, die wir akzeptieren (vor Konvertierung). WebP fehlt bewusst
+ *  — der Story-Renderer verträgt es nicht (siehe Modul-Doc). */
 export const ALLOWED_INPUT_MIME = new Set([
   "image/png",
   "image/jpeg",
-  "image/webp",
   "image/heic",
   "image/heif"
 ]);
@@ -26,8 +33,8 @@ export const ALLOWED_INPUT_MIME = new Set([
  *  nicht durch das 1-MB-Server-Action-Bodylimit gedeckelt. */
 export const MAX_IMAGE_BYTES = 10_000_000; // 10 MB
 
-export type OutputMime = "image/png" | "image/jpeg" | "image/webp";
-export type OutputExt = "png" | "jpg" | "webp";
+export type OutputMime = "image/png" | "image/jpeg";
+export type OutputExt = "png" | "jpg";
 
 export interface NormalizedImage {
   bytes: Buffer;
@@ -39,21 +46,18 @@ const EXT_TO_MIME: Record<string, string> = {
   png: "image/png",
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
-  webp: "image/webp",
   heic: "image/heic",
   heif: "image/heif"
 };
 
 const MIME_TO_OUTPUT: Record<string, NormalizedImage["contentType"]> = {
   "image/png": "image/png",
-  "image/jpeg": "image/jpeg",
-  "image/webp": "image/webp"
+  "image/jpeg": "image/jpeg"
 };
 
 const OUTPUT_EXT: Record<OutputMime, OutputExt> = {
   "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/webp": "webp"
+  "image/jpeg": "jpg"
 };
 
 /**
@@ -124,7 +128,7 @@ export async function normalizeImageUpload(input: {
   const mime = resolveInputMime(input.contentType, input.filename);
   if (!mime) {
     throw new Error(
-      `Format „${input.contentType || "unbekannt"}" wird nicht unterstützt — erlaubt sind PNG, JPEG, WebP oder HEIC/HEIF (iPhone).`
+      `Format „${input.contentType || "unbekannt"}" wird nicht unterstützt — erlaubt sind PNG, JPEG oder HEIC/HEIF (iPhone).`
     );
   }
 
@@ -139,9 +143,20 @@ export async function normalizeImageUpload(input: {
   // SECURITY (L3): Echte Datei-Signatur prüfen — nicht dem gemeldeten Type
   // vertrauen. Eine Datei, deren Bytes kein bekanntes Bildformat sind, wird
   // abgelehnt (auch wenn Endung/MIME „.png" behaupten).
-  if (sniffImageFormat(input.bytes) === null) {
+  const sniffed = sniffImageFormat(input.bytes);
+  if (sniffed === null) {
     throw new Error(
-      "Die Datei ist kein gültiges Bild (PNG, JPEG, WebP oder HEIC/HEIF)."
+      "Die Datei ist kein gültiges Bild (PNG, JPEG oder HEIC/HEIF)."
+    );
+  }
+
+  // WebP hier hart ablehnen — anhand der ECHTEN Bytes, nicht des gemeldeten
+  // Typs: ein WebP mit vorgetäuschtem `image/png` käme sonst durch `mime` durch
+  // und würde als „image/png" mit WebP-Bytes gespeichert → auf Stories crasht
+  // next/og daran. Der Sniff ist die Wahrheit (siehe Modul-Doc).
+  if (sniffed === "webp") {
+    throw new Error(
+      "WebP wird nicht unterstützt — bitte als PNG oder JPEG hochladen (iPhone-HEIC ist ok)."
     );
   }
 

@@ -32,10 +32,14 @@ import {
 /* ------------------------------ Wappen-Bytes ------------------------------ */
 
 /**
- * Satori (next/og) rastert nur PNG/JPEG zuverlässig — WebP kann es nicht, und
- * einen Konverter (sharp) gibt es im Stack nicht. Format über Magic Bytes
- * bestimmen statt über die Datei-Endung: die Endung ist bloß der Storage-Key,
- * die Bytes sind die Wahrheit.
+ * Satori (next/og) rastert nur PNG/JPEG. WebP kann es nicht bloß nicht — resvg
+ * WIRFT an WebP-Bytes ('u2 is not iterable', empirisch verifiziert), was das
+ * ganze Motiv killt statt nur das Wappen. Ein Konverter (sharp) ist nicht im
+ * Stack. Seit dem Upload-Fix (lib/storage/images.ts) werden neue WebP-Logos gar
+ * nicht mehr gespeichert; dieser Guard fängt nur noch VOR dem Fix hochgeladene
+ * WebP-Bestände ab → `null` → Kürzel-Fallback statt Crash.
+ * Format über Magic Bytes bestimmen, nicht über die Endung: die Endung ist bloß
+ * der Storage-Key, die Bytes sind die Wahrheit.
  */
 function imageMime(bytes: Buffer): "image/png" | "image/jpeg" | null {
   if (bytes.length > 8 && bytes.subarray(0, 4).toString("hex") === "89504e47") {
