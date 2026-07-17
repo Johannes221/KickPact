@@ -11,9 +11,10 @@ import { ManualEventEditor } from "./manual-event-editor";
 import { ResultOverrideEditor } from "./result-override-editor";
 import { AdminNoteDisplay } from "./admin-note-display";
 import { ReportProblemButton } from "@/components/support/report-problem-button";
+import { StoryShareButton } from "@/components/shared/story-share-button";
 import { eur } from "@/lib/utils/currency";
 import { isPlausibleLeague } from "@/lib/utils/league";
-import { canReportMatchEvents, isUpcomingMatch } from "@/lib/matches/display-state";
+import { canReportMatchEvents, hasResult, isUpcomingMatch } from "@/lib/matches/display-state";
 
 /** "2526" → "25/26"; lässt bereits formatierte oder unbekannte Werte unangetastet. */
 function formatSaison(saison: string): string {
@@ -179,6 +180,20 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
           </div>
         </CardContent>
       </Card>
+
+      {/* Story teilen — der Einstieg für BEIDE Vorlagen (Vorschau wie
+          Rückblick); welche es wird, entscheidet die Bild-Route selbst.
+          Das Label läuft über dasselbe `hasResult` wie die Route, damit
+          Beschriftung und geteiltes Motiv nicht auseinanderlaufen. */}
+      <div className="flex justify-center">
+        <StoryShareButton
+          teamId={team.id}
+          matchId={match.id}
+          label={hasResult(match) ? "Ergebnis posten" : "Vorschau posten"}
+          variant="accent"
+          className="w-full sm:w-auto"
+        />
+      </div>
 
       {/* ─── CHARGES-SEKTION ─── */}
       {chargesData.totalCents > 0 ? (

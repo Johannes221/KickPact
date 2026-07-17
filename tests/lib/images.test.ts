@@ -29,9 +29,16 @@ const HEIC_MAGIC = Buffer.concat([
   Buffer.from([0x00, 0x00, 0x00, 0x18]),
   Buffer.from("ftypheic", "ascii")
 ]);
+// WebP: "RIFF" + 4-Byte-Länge + "WEBP".
+const WEBP_MAGIC = Buffer.concat([
+  Buffer.from("RIFF", "ascii"),
+  Buffer.from([0x00, 0x00, 0x00, 0x00]),
+  Buffer.from("WEBP", "ascii")
+]);
 const fakePng = (suffix = "padding") => Buffer.concat([PNG_MAGIC, Buffer.from(suffix)]);
 const fakeJpeg = (suffix = "padding") => Buffer.concat([JPEG_MAGIC, Buffer.from(suffix)]);
 const fakeHeic = (suffix = "padding") => Buffer.concat([HEIC_MAGIC, Buffer.from(suffix)]);
+const fakeWebp = (suffix = "padding") => Buffer.concat([WEBP_MAGIC, Buffer.from(suffix)]);
 
 describe("normalizeImageUpload", () => {
   beforeEach(() => {
@@ -89,6 +96,34 @@ describe("normalizeImageUpload", () => {
     });
     expect(convertMock).toHaveBeenCalledTimes(1);
     expect(out.contentType).toBe("image/jpeg");
+  });
+
+  it("lehnt WebP ab — der Story-Renderer (next/og) crasht an WebP", async () => {
+    // Empirisch verifiziert: next/og/resvg wirft an WebP-Bytes ('u2 is not
+    // iterable') statt sie zu ignorieren. Ein akzeptiertes WebP-Logo wäre auf
+    // Stories entweder unsichtbar (imageMime-Guard) oder würde das ganze Motiv
+    // zerstören — also gar nicht erst annehmen.
+    await expect(
+      normalizeImageUpload({
+        bytes: fakeWebp(),
+        contentType: "image/webp",
+        filename: "logo.webp"
+      })
+    ).rejects.toThrow(/WebP|nicht unterstützt|Format/i);
+    expect(convertMock).not.toHaveBeenCalled();
+  });
+
+  it("lehnt WebP-Bytes ab, auch als .png deklariert (Sniff ist die Wahrheit)", async () => {
+    // Ohne Byte-Sniff würde ein WebP mit vorgetäuschtem image/png durchrutschen
+    // und als „image/png" gespeichert — die Story-Render-Falle bliebe offen.
+    await expect(
+      normalizeImageUpload({
+        bytes: fakeWebp(),
+        contentType: "image/png",
+        filename: "logo.png"
+      })
+    ).rejects.toThrow(/WebP/i);
+    expect(convertMock).not.toHaveBeenCalled();
   });
 
   it("lehnt nicht unterstützte Formate ab", async () => {

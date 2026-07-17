@@ -200,39 +200,36 @@ export function WrappedPlayer({
     }
   }, []);
 
+  /**
+   * DER Share-Weg des Wrapped — jeder Teilen-Button hier läuft hierüber.
+   *
+   * Wrapped-Motive werden praktisch nur auf Instagram geteilt, darum zuerst der
+   * Direktweg in den Story-Editor (iOS-App + Instagram installiert + Meta-App-ID).
+   * Instagrams eigene Share-Extension rendert das PNG aus dem generischen Sheet
+   * kaputt (leere Fläche, überlappende Buttons) — die wollen wir nie sehen.
+   * Verfügbarkeit erst beim Tap prüfen: immer frisch, kein State nötig.
+   *
+   * Fällt auf das generische Share-Sheet zurück (Web, kein Instagram, alte
+   * App-Version ohne Plugin) — dort bleibt WhatsApp/Sichern erreichbar.
+   */
   const share = useCallback(
     async (imageKey: string) => {
-      // Nativ (iOS-App): Capacitor-Share-Sheet → das EXAKTE Motiv landet in
-      // Instagram/Stories/WhatsApp. Web: Web-Share-API mit Datei, sonst neuer Tab.
+      const url = `${imageBase}/${imageKey}`;
       try {
-        await shareImageFile(
-          `${imageBase}/${imageKey}`,
-          `kickpact-wrapped-${imageKey}.png`
-        );
+        if (await canShareToInstagramStory()) {
+          try {
+            await shareImageToInstagramStory(url);
+            return;
+          } catch {
+            // z.B. Instagram zwischenzeitlich deinstalliert → Fallback unten.
+          }
+        }
+        await shareImageFile(url, `kickpact-wrapped-${imageKey}.png`);
       } catch (err) {
         notifyShareError(err);
       }
     },
     [imageBase]
-  );
-
-  // Direktweg in den Instagram-Story-Editor (iOS-App + Instagram installiert +
-  // Meta-App-ID konfiguriert) — umgeht Instagrams kaputte Share-Extension.
-  // Verfügbarkeit erst beim Tap prüfen: immer frisch, kein State nötig.
-  const shareToInsta = useCallback(
-    async (imageKey: string) => {
-      if (await canShareToInstagramStory()) {
-        try {
-          await shareImageToInstagramStory(`${imageBase}/${imageKey}`);
-          return;
-        } catch {
-          // Direktweg gescheitert (z.B. Instagram zwischenzeitlich gelöscht)
-          // → generisches Share-Sheet als Fallback (meldet Fehler selbst).
-        }
-      }
-      await share(imageKey);
-    },
-    [imageBase, share]
   );
 
   const slide = slides[index];
@@ -332,7 +329,6 @@ export function WrappedPlayer({
             nextSaisonLabel={nextSaisonLabel}
             sponsorenHref={sponsorenHref}
             onShare={share}
-            onInstaShare={shareToInsta}
           />
         </div>
 
@@ -371,8 +367,7 @@ function SlideContent({
   saisonLabel,
   nextSaisonLabel,
   sponsorenHref,
-  onShare,
-  onInstaShare
+  onShare
 }: {
   slideKey: string;
   stats: WrappedStats;
@@ -380,9 +375,8 @@ function SlideContent({
   saisonLabel: string;
   nextSaisonLabel: string;
   sponsorenHref: string;
+  /** Teilt das Slide-Motiv — Instagram-Story direkt, sonst Share-Sheet. */
   onShare: (imageKey: string) => void;
-  /** Insta-CTA: direkt in den Story-Editor, fällt intern aufs Share-Sheet zurück. */
-  onInstaShare: (imageKey: string) => void;
 }) {
   switch (slideKey) {
     case "intro":
@@ -414,9 +408,7 @@ function SlideContent({
     case "simulation":
       return <SimulationSlide stats={stats} accent={accent} />;
     case "zusammenfassung":
-      return (
-        <ZusammenfassungSlide stats={stats} accent={accent} onInstaShare={onInstaShare} />
-      );
+      return <ZusammenfassungSlide stats={stats} accent={accent} onShare={onShare} />;
     case "outro":
       return (
         <OutroSlide
@@ -822,12 +814,11 @@ function SimulationSlide({ stats, accent }: { stats: WrappedStats; accent: strin
 function ZusammenfassungSlide({
   stats,
   accent,
-  onInstaShare
+  onShare
 }: {
   stats: WrappedStats;
   accent: string;
-  /** Direkt in den Instagram-Story-Editor; fällt intern aufs Share-Sheet zurück. */
-  onInstaShare: (imageKey: string) => void;
+  onShare: (imageKey: string) => void;
 }) {
   const tiles: Array<{ label: string; value: string; sub?: string }> = [
     {
@@ -908,7 +899,7 @@ function ZusammenfassungSlide({
           type="button"
           onPointerDown={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
-          onClick={() => onInstaShare("zusammenfassung")}
+          onClick={() => onShare("zusammenfassung")}
           className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/15"
         >
           📲 Jetzt auf Insta teilen
