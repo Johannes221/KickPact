@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   pickTeamLeague,
   parseCompetition,
+  competitionTypeOf,
   isAgeGroup,
   stripLeadingTime,
   isPlausibleLeague
@@ -21,6 +22,27 @@ describe("parseCompetition", () => {
   it("lässt Werte ohne bekannten Marker unangetastet", () => {
     expect(parseCompetition("Landesliga")).toEqual({ name: "Landesliga", type: "unknown" });
     expect(parseCompetition("")).toEqual({ name: "", type: "unknown" });
+  });
+
+  /**
+   * Regression: `TU` (Vereinsturnier) kommt in den echten Fixtures 4× vor und
+   * fiel als "unknown" durch — womit ein Vereinsturnier Charges erzeugt hätte.
+   * Der Entscheid lautet „Geld nur auf Liga + Pokal"; ein Turnier ist beides
+   * nicht. Solange die Menge der bekannten Nicht-ME/PO-Marker vollständig ist,
+   * sind „alles außer FS zahlt" und „nur Liga+Pokal zahlt" deckungsgleich — TU
+   * hat bewiesen, dass sie es nicht war.
+   */
+  it("behandelt ein Vereinsturnier nicht als zahlungspflichtigen Wettbewerb", () => {
+    expect(parseCompetition("Vereinsturnier TU")).toEqual({
+      name: "Vereinsturnier",
+      type: "friendly"
+    });
+    expect(competitionTypeOf("Vereinsturnier TU")).toBe("friendly");
+  });
+
+  it("rät bei unbekanntem Marker nicht, sondern sagt unknown", () => {
+    expect(competitionTypeOf("Irgendwas XY")).toBe("unknown");
+    expect(competitionTypeOf(null)).toBe("unknown");
   });
 });
 

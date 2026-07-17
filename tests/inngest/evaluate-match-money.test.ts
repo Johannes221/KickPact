@@ -377,4 +377,54 @@ describe.skipIf(isIntegrationDbDisabled)("evaluate-match Geld-Integrität", () =
     expect(restored).toHaveLength(1);
     expect(restored[0].status).toBe("pending");
   });
+
+  /**
+   * Wettbewerbs-Gate (Entscheid 2026-07-17: Geld nur auf Liga + Pokal).
+   *
+   * Vorher trug `matches` keinen Wettbewerb — ein Testspiel im Juli war von
+   * einem Ligaspiel nicht zu unterscheiden, und ein „5 € pro Tor"-Pact zahlte
+   * darauf. Live belegt: Dossenheim 12.07.26 0:2 bei SpVgg Neckarsteinach lag
+   * als ganz normales `finished`-Match mit Ergebnis in der DB.
+   */
+  describe("Wettbewerbs-Gate", () => {
+    it("erzeugt KEINE Charges für ein Freundschaftsspiel", async () => {
+      const db = await getTestDb();
+      const { teamId } = await seedBase();
+      const m = await seedMayMatch(teamId, "friendly", 2);
+      await db
+        .update(matches)
+        .set({ competitionType: "friendly" })
+        .where(eq(matches.id, m.matchId));
+
+      const res = await runEvaluateMatch(m.matchId, teamId);
+      expect(res.inserted).toBe(0);
+      const rows = await db.select().from(charges).where(eq(charges.matchId, m.matchId));
+      expect(rows).toHaveLength(0);
+    });
+
+    it.each(["league", "cup"] as const)("erzeugt Charges für %s", async (typ) => {
+      const db = await getTestDb();
+      const { teamId } = await seedBase();
+      const m = await seedMayMatch(teamId, `comp_${typ}`, 2);
+      await db
+        .update(matches)
+        .set({ competitionType: typ })
+        .where(eq(matches.id, m.matchId));
+
+      const res = await runEvaluateMatch(m.matchId, teamId);
+      expect(res.inserted).toBeGreaterThan(0);
+    });
+
+    /**
+     * `unknown` = Alt-Bestand vor der Spalte bzw. unbekannter Marker. Bewusst
+     * NICHT geblockt: bei Unwissen weiter zu zahlen ist das kleinere Übel
+     * gegenüber stillem Zahlungsausfall über den gesamten Alt-Bestand.
+     */
+    it("zahlt bei unbekanntem Wettbewerb weiter (kein stiller Ausfall)", async () => {
+      const { teamId } = await seedBase();
+      const m = await seedMayMatch(teamId, "unknown", 2); // Default = unknown
+      const res = await runEvaluateMatch(m.matchId, teamId);
+      expect(res.inserted).toBeGreaterThan(0);
+    });
+  });
 });

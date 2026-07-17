@@ -477,6 +477,13 @@
       "when": 1783692195239,
       "tag": "0068_strong_norrin_radd",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1784283405692,
+      "tag": "0069_warm_edwin_jarvis",
+      "breakpoints": true
     }
   ]
 }

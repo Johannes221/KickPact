@@ -311,4 +311,61 @@ describe.skipIf(isIntegrationDbDisabled)("addManualEvent Geld-Integrität", () =
       .where(eq(matchEvents.matchId, seeded.matchId));
     expect(events).toHaveLength(1);
   });
+
+  /**
+   * Wettbewerbs-Gate im MANUELLEN Pfad (Review-Befund 2026-07-17).
+   *
+   * addManualEvent fügt Charges direkt in seiner eigenen Transaktion ein und
+   * läuft NICHT durch evaluate-match — das dortige Gate greift hier also nicht.
+   * Ohne eigenen Guard hätte ein gemeldetes Tor auf einem Freundschaftsspiel
+   * oder Vereinsturnier weiter gezahlt. Besonders scharf bei der Jugend: E-/D-
+   * Junioren liefern gar keine gescrapten Ergebnisse, dort sind manuelle Events
+   * der einzige Weg, wie Geld entsteht.
+   */
+  it.each(["friendly"] as const)(
+    "meldet KEIN Geld für ein manuelles Tor auf einem %s-Spiel",
+    async (typ) => {
+      const db = await getTestDb();
+      const seeded = await seedBase({ score: [2, 0] });
+      await db
+        .update(matches)
+        .set({ competitionType: typ })
+        .where(eq(matches.id, seeded.matchId));
+
+      const res = await addManualEvent({
+        matchId: seeded.matchId,
+        minute: 12,
+        type: "tor",
+        side: "heim",
+        playerName: "Max Müller"
+      });
+
+      expect(res.ok).toBe(false);
+      expect(await db.select().from(charges)).toHaveLength(0);
+      // Auch das Event selbst darf nicht entstehen — sonst steht ein Tor in der
+      // Statistik, das nie zu einem Beitrag führt (und beim Confirm nachrückt).
+      expect(await db.select().from(matchEvents)).toHaveLength(0);
+    }
+  );
+
+  it.each(["league", "cup", "unknown"] as const)(
+    "meldet ein manuelles Tor auf einem %s-Spiel normal",
+    async (typ) => {
+      const db = await getTestDb();
+      const seeded = await seedBase({ score: [2, 0] });
+      await db
+        .update(matches)
+        .set({ competitionType: typ })
+        .where(eq(matches.id, seeded.matchId));
+
+      const result = expectOk(await addManualEvent({
+        matchId: seeded.matchId,
+        minute: 12,
+        type: "tor",
+        side: "heim",
+        playerName: "Max Müller"
+      }));
+      expect(result.charges).toBe(1);
+    }
+  );
 });

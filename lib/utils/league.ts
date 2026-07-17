@@ -24,20 +24,45 @@ export function isAgeGroup(value: string | null | undefined): boolean {
 }
 
 /**
- * fussball.de hängt an jeden Wettbewerb einen Typ-Marker:
+ * fussball.de hängt an jeden Wettbewerb einen Zwei-Buchstaben-Marker:
  *   "Landesliga ME"                → ME = Meisterschaft (= die Liga)
- *   "Kreisfreundschaftsspiele FS"  → FS = Freundschaftsspiel
  *   "Verbandspokal PO"             → PO = Pokal
+ *   "Kreisfreundschaftsspiele FS"  → FS = Freundschaftsspiel
+ *   "Vereinsturnier TU"            → TU = Vereins-/Hallenturnier
  * Nur ME ist die Liga der Mannschaft. Der Marker ist Scraper-Interna und gehört
  * nicht in die Anzeige — "Landesliga ME" wäre auf einem Sponsoren-Profil Kauderwelsch.
+ *
+ * GELD hängt daran (Entscheid 2026-07-17: nur Liga + Pokal zahlen). `friendly`
+ * ist deshalb die Kategorie „kein Wettkampf im Sinne des Geld-Gates" und fasst
+ * Freundschaftsspiele UND Turniere zusammen — ein Vereinsturnier ist so wenig
+ * ein Wettkampf wie ein Testspiel. (Kein eigener Enum-Wert: `matches.
+ * competition_type` ist bereits ausgerollt, und ein ALTER TYPE ADD VALUE ist die
+ * bekannte Falle des Test-Migrators.)
+ *
+ * Ein Marker, der hier FEHLT, landet auf `unknown` und zahlt still weiter —
+ * genau so wäre TU durchgerutscht. `tests/scraper/parser/competition-markers.
+ * test.ts` schlägt an, sobald in den Captures ein unbekanntes Kürzel auftaucht.
  */
 export type CompetitionType = "league" | "friendly" | "cup" | "unknown";
 
 const TYPE_MARKERS: Record<string, CompetitionType> = {
   ME: "league",
+  PO: "cup",
   FS: "friendly",
-  PO: "cup"
+  TU: "friendly"
 };
+
+/**
+ * Wettbewerbsart für die `matches.competition_type`-Spalte. Kennt der Marker
+ * uns nichts (fehlt, unbekannt, Zeile leer), ist das ehrlich `unknown` — NICHT
+ * `league`: eine Vermutung im Geld-Pfad wäre schlimmer als bekanntes Unwissen
+ * (siehe Gate in evaluate-match).
+ */
+export function competitionTypeOf(
+  raw: string | null | undefined
+): CompetitionType {
+  return parseCompetition(raw).type;
+}
 
 /** "Landesliga ME" → { name: "Landesliga", type: "league" } */
 export function parseCompetition(raw: string | null | undefined): {

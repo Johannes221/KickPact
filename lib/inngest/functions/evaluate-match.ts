@@ -52,6 +52,23 @@ export const evaluateMatch = inngest.createFunction(
       return { m, events, t, clubName: c?.name ?? null };
     });
 
+    // Wettbewerbs-Gate (Entscheid 2026-07-17): Geld gibt es nur auf Liga- und
+    // Pokalspiele. Ein Testspiel im Juli ist kein Wettkampf — ein „5 € pro Tor"-
+    // Pact darf darauf nicht zahlen. Der Wettbewerb steht seit Migration 0069 am
+    // Match (aus dem fussball.de-Marker ME/PO/FS).
+    //
+    // Bewusst NUR bei positiv erkanntem `friendly` blocken: `unknown` (Alt-
+    // Bestand vor der Spalte, unbekannter Marker) zahlt weiter. Bei Unwissen den
+    // Zahlungsfluss zu stoppen wäre ein stiller Ausfall über den gesamten
+    // Alt-Bestand — die schlechtere Fehlerrichtung.
+    if (matchData.m.competitionType === "friendly") {
+      logger.info("skipped — Freundschaftsspiel erzeugt keine Charges", {
+        teamId,
+        matchId
+      });
+      return { proposals: 0, inserted: 0, cappedOrSkipped: 0 };
+    }
+
     // Geld-Gate (Audit 2026-06-11 / B3 + Phase 3 / R6): blockt bei
     // past_due/cancelled — NICHT bei paused. Die Saison-Pass-Sommerpause
     // pausiert nur die LIZENZ-Abbuchung; die Saison läuft bis 30.6. und
