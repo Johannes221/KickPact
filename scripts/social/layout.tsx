@@ -10,6 +10,7 @@ import {
   MARK_GREEN,
   MARK_WHITE,
   NAVY,
+  displayTextWidth,
   OFF_WHITE,
   WHITE,
   typo
@@ -311,19 +312,40 @@ export function Footer({
 
 /* -------------------------------- Typografie ------------------------------ */
 
+/** Wie viele Zeilen eine Headline höchstens haben darf, bevor sie erschlägt. */
+const MAX_LINES = 3;
+
+/** letter-spacing der Headlines. Muss zum style unten passen, sonst misst die
+ * Breitenrechnung etwas anderes, als gerendert wird. */
+const TRACKING_EM = -0.02;
+
 /**
- * Headline-Größe nach Länge. Satori bricht um, aber ein Fünfzeiler in voller
- * Größe erschlägt die Fläche. Die Stufen halten die Headline bei etwa drei
- * Zeilen, egal wie lang der Satz ist.
+ * Headline-Größe: GEMESSEN, nicht geschätzt.
  *
- * `max` sinkt, wenn unter der Headline noch Pact-Karten stehen — sonst reicht
- * die Höhe nicht und die unterste Karte läuft aus dem Bild.
+ * Vorher waren das Stufen nach Zeichenzahl, kalibriert an Montserrat Alternates.
+ * Mit dem Wechsel auf die Display-Schrift (#42, Orbitron-Basis) wären sie still
+ * falsch geworden — Orbitron läuft deutlich breiter, gleiche Zeichenzahl braucht
+ * mehr Platz, und die Headlines wären über den Rand gelaufen. Dieselbe Falle wie
+ * das alte `fitFontSize` in story-card.tsx, das an Satoris Fallback-Schrift
+ * kalibriert war.
  *
- * Montserrat Alternates Black läuft breit, die Schwellen sind daran kalibriert
- * und nicht an Inter.
+ * `displayTextWidth` misst gegen die Datei, die auch gerendert wird. Die Breite
+ * skaliert linear mit der Schriftgröße, also reicht eine Messung bei Größe 1:
+ *
+ *   - Der ganze Satz muss in MAX_LINES Zeilen passen  → size ≤ MAX_LINES·width / w(text)
+ *   - Das längste WORT muss in eine Zeile passen      → size ≤ width / w(längstesWort)
+ *
+ * Die erste Schranke ist eine Näherung (Satori bricht an Wortgrenzen, füllt also
+ * nie ganz aus), die zweite ist hart. Beide zusammen sind konservativ, und
+ * konservativ ist hier die richtige Richtung: Text minimal kleiner ist folgenlos,
+ * Text über dem Rand ist der Post.
  */
-export function headlineSize(text: string, max: number): number {
-  if (text.length <= 26) return max;
-  if (text.length <= 46) return Math.round(max * 0.8);
-  return Math.round(max * 0.65);
+export function headlineSize(text: string, max: number, width: number): number {
+  const w = (s: string) => displayTextWidth(s, 1, TRACKING_EM);
+  const longestWord = text.split(/\s+/).reduce((a, b) => (w(b) > w(a) ? b : a), "");
+
+  const byLines = (MAX_LINES * width) / Math.max(w(text), 1);
+  const byWord = width / Math.max(w(longestWord), 1);
+
+  return Math.floor(Math.min(max, byLines, byWord));
 }

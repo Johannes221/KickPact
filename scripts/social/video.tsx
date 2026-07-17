@@ -272,7 +272,7 @@ function Frame({ beat, tSec, progress }: { beat: Beat; tSec: number; progress: n
         style={{
           maxWidth: CONTENT_WIDTH,
           fontFamily: DISPLAY,
-          fontSize: headlineSize(beat.headline, hasPacts ? 78 : 104),
+          fontSize: headlineSize(beat.headline, hasPacts ? 78 : 104, CONTENT_WIDTH),
           fontWeight: 900,
           color: t.ink,
           letterSpacing: "-0.02em",

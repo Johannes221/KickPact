@@ -93,7 +93,7 @@ function SlideCard({
         style={{
           maxWidth: CONTENT_WIDTH,
           fontFamily: DISPLAY,
-          fontSize: headlineSize(slide.headline, hasPacts ? 74 : 92),
+          fontSize: headlineSize(slide.headline, hasPacts ? 74 : 92, CONTENT_WIDTH),
           fontWeight: 900,
           color: t.ink,
           letterSpacing: "-0.02em",

@@ -2,89 +2,41 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 /**
- * Die KickPact-CI für Social-Assets. EINE Quelle für Karussells (render.tsx) und
- * Videos (video.tsx) — zwei Paletten hätten garantiert zwei Grüns ergeben.
+ * Die Marken-Bausteine für die Social-Assets.
  *
- * Werte aus public/brand/README.md und tailwind.config.ts, nicht geraten.
+ * Palette und Schriften kommen aus `lib/og/*` — DERSELBEN Quelle, aus der die
+ * Story- und Wrapped-Motive der App gerendert werden. Hier steht bewusst keine
+ * eigene Kopie mehr: diese Datei hatte kurzzeitig ihre eigene Palette und ihre
+ * eigene Display-Schrift, und schon beim ersten Marken-Umbau (#42, Montserrat
+ * Alternates → KickPact Display) wäre der Marketing-Kanal in einer Schrift
+ * gelaufen, die das Produkt gerade abgelegt hat. Genau die Divergenz, gegen die
+ * die ganze Pipeline gebaut ist.
  *
- * ACHTUNG, das ist NICHT die Palette der Story-/Wrapped-Motive. Die laufen auf
- * Navy/Orange/Lime (lib/story/story-card.tsx). Johannes' Ansage vom 2026-07-17:
- * Weiß/Grün/Schwarz ist die CI, das Dunkle ist Fallback. Die Produkt-Motive
- * ziehen nach, sobald der Font-Fix drin ist (siehe docs/marketing/content-strategie.md).
+ * Hier bleibt nur, was es im Produkt nicht gibt: die K-Marke als SVG, das weiße
+ * Logo für Foto-Flächen, die Fotos, die Social-Formate.
  */
 
-/* -------------------------------- Palette --------------------------------- */
+export {
+  GREEN,
+  GREEN_DARK,
+  NAVY,
+  OFF_WHITE,
+  WHITE,
+  NEUTRAL,
+  LOGO_ON_LIGHT,
+  LOGO_RATIO
+} from "@/lib/og/brand";
 
-export const GREEN = "#01C457"; // Primary Green — FLÄCHEN, Balken, Punkte
-export const GREEN_DARK = "#00563A"; // Dark Green — grüner TEXT auf Weiß
-export const NAVY = "#1A1A2E"; // Night Navy — das „Schwarz" der Marke
-export const OFF_WHITE = "#F5F8F5";
-export const WHITE = "#FFFFFF";
-export const NEUTRAL = "#CDD2D1";
+export { OG_FONTS as FONTS, DISPLAY_FAMILY as DISPLAY, BODY_FAMILY as BODY, displayTextWidth } from "@/lib/og/fonts";
 
-/**
- * Warum zwei Grüns, und warum das nicht kosmetisch ist:
- *
- * #01C457 auf Weiß hat ~2,4:1 Kontrast. Das reißt jede WCAG-Schwelle, auch die
- * 3:1 für große Schrift. Grüner TEXT auf weißem Grund ist damit für einen Teil
- * der Leute schlicht nicht lesbar, und auf einem Handy in der Sonne für alle.
- * Deshalb steht grüner Text immer in GREEN_DARK (~8,4:1 auf Weiß), und GREEN
- * bleibt kleinen Flächen vorbehalten: Marke, Balken, Punkte.
- *
- * Falls je wieder eine grüne Vollfläche kommt (aktuell bewusst nicht, siehe
- * decks.ts): Weiß darauf wäre wieder 2,4:1, Navy darauf sind ~7:1. Grüne Fläche
- * hieße also Navy-Text, nie weißen.
- */
-
-/* --------------------------------- Fonts ---------------------------------- */
-
-const FONT_ROOT = join(process.cwd(), "public/fonts");
-
-const read = (p: string) => readFileSync(join(FONT_ROOT, p));
-
-/**
- * Display = Montserrat Alternates, Body = Inter. So macht es die App
- * (app/layout.tsx: --font-display / --font-sans). Die Brand-README nennt für
- * Display noch „Inter Black" — die ist an der Stelle veraltet, der Code gewinnt.
- *
- * Satori kann kein woff2 und braucht echte Dateien, `next/font/google` zieht die
- * Schriften aber erst beim Build. Montserrat Alternates liegt deshalb als TTF unter
- * public/fonts/ (neu dazugeholt, OFL).
- *
- * BEWUSST ohne Inter-Black: die Headlines laufen auf Montserrat Alternates 900, Inter
- * wird hier nur als 400 (Body) und 700 (Kicker) gesetzt. Inter-Black gehört dem
- * Font-Fix der Bild-Routen (lib/og/fonts.ts), der die Datei per fontkit VERMISST, um
- * Headline-Breiten zu rechnen. Zwei Sessions hatten sie unabhängig geholt, mit
- * unterschiedlicher Prüfsumme — hier eine zweite Fassung einzuchecken hieße, deren
- * Kalibrierung zu zerschießen. Wer sie braucht, holt sie sich dort.
- */
-export const FONTS = [
-  { name: "Inter", data: read("inter/Inter-Regular.ttf"), weight: 400 as const, style: "normal" as const },
-  { name: "Inter", data: read("inter/Inter-Bold.ttf"), weight: 700 as const, style: "normal" as const },
-  { name: "Montserrat Alternates", data: read("montserrat-alternates/MontserratAlternates-Bold.ttf"), weight: 700 as const, style: "normal" as const },
-  { name: "Montserrat Alternates", data: read("montserrat-alternates/MontserratAlternates-Black.ttf"), weight: 900 as const, style: "normal" as const }
-];
-
-export const DISPLAY = "Montserrat Alternates";
-export const BODY = "Inter";
-
-/* --------------------------------- Logos ---------------------------------- */
+/* --------------------------------- Assets --------------------------------- */
 
 const dataUri = (p: string) =>
   "data:image/png;base64," +
   readFileSync(join(process.cwd(), "public/brand", p)).toString("base64");
 
-/**
- * Primärlogo (2-farbig) für helle Flächen — die README ist da eindeutig: „Default
- * für alles auf hellen Hintergründen". Da alle Flächen außer den Fotos weiß sind,
- * ist das hier der Normalfall.
- */
-export const LOGO_ON_LIGHT = dataUri("logo-horizontal.png");
 /** Auf Fotos: das zweifarbige Primärlogo säuft ab, weiß steht immer. */
 export const LOGO_WHITE = dataUri("logo-white-horizontal.png");
-
-/** Seitenverhältnis des horizontalen Logos, gemessen an der PNG (912×120). */
-export const LOGO_RATIO = 912 / 120;
 
 /**
  * Die K-Marke als SVG. Satori rastert SVG-data-URIs sauber (geprüft), und als
@@ -94,7 +46,7 @@ export const LOGO_RATIO = 912 / 120;
  * Achtung laut public/brand/README.md: die einfarbigen SVGs sind mit potrace aus
  * den PNGs nachgezeichnet und können minimal von der Original-Typo abweichen.
  * Für die MARKE (reines K-Icon, keine Schrift) ist das unkritisch; für die
- * Wortmarke bleibt deshalb das PNG die Quelle (s. LOGO_ON_LIGHT).
+ * Wortmarke bleibt deshalb das PNG die Quelle (LOGO_ON_LIGHT).
  */
 const svgUri = (p: string) =>
   "data:image/svg+xml;base64," +
@@ -102,9 +54,6 @@ const svgUri = (p: string) =>
 
 export const MARK_GREEN = svgUri("mark-green.svg");
 export const MARK_WHITE = svgUri("mark-white.svg");
-
-/** Die Marke ist quadratisch (viewBox 0 0 1254 1254). */
-export const MARK_RATIO = 1;
 
 /* --------------------------------- Fotos ---------------------------------- */
 
@@ -143,10 +92,10 @@ export function photo(name: PhotoName): string {
 /**
  * Schützt Zahl und Einheit vor dem Zeilenumbruch.
  *
- * Nicht kosmetisch: im Reel „02-fuenf-euro-pro-tor" brach Satori „Außer es hängen
- * 5 € pro Tor drin." real zwischen „5" und „€" um, und zwar auf genau dem Beat,
- * der die Pointe trägt. Ein Betrag, dessen Währung in der nächsten Zeile steht,
- * liest sich als Fehler, und der Post ist der erste Eindruck der Marke.
+ * Nicht kosmetisch: in einem Reel brach Satori „Außer es hängen 5 € pro Tor
+ * drin." real zwischen „5" und „€" um, und zwar auf genau dem Beat, der die
+ * Pointe trug. Ein Betrag, dessen Währung in der nächsten Zeile steht, liest
+ * sich als Fehler, und der Post ist der erste Eindruck der Marke.
  *
  * Läuft zentral im Renderer, nicht in den Inhaltsdateien: sonst müsste jeder,
  * der einen Preis tippt, an ein unsichtbares Sonderzeichen denken, und genau das

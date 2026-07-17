@@ -94,15 +94,19 @@ Fleiß, sondern von fehlender Priorität.
 
 ## 4. Das Design-System
 
-Die Palette liegt in `scripts/social/brand.ts` und ist die einzige Quelle für
-Karussells und Videos.
+Palette und Schriften liegen in `lib/og/*` und werden von den Produkt-Motiven
+und den Social-Assets geteilt. `scripts/social/brand.ts` reicht sie nur durch und
+ergänzt, was es im Produkt nicht gibt: die K-Marke als SVG, das weiße Logo für
+Foto-Flächen, die Fotos, die Social-Formate.
 
 ```
-Primary Green  #01C457   Flächen, Balken, Punkte
+Primary Green  #01C457   Marke, Balken, Punkte — nie als Vollfläche
 Dark Green     #00563A   grüner TEXT auf Weiß
 Night Navy     #1A1A2E   das „Schwarz" der Marke
 Weiß           #FFFFFF   Grundfläche
 ```
+
+Quelle: `lib/og/brand.ts`. Nicht hier abschreiben, importieren.
 
 **Warum zwei Grüns, und warum das nicht Geschmack ist:** `#01C457` auf Weiß hat
 etwa 2,4:1 Kontrast. Das reißt jede WCAG-Schwelle, auch die 3:1 für große
@@ -147,9 +151,16 @@ den Fotos (dunkel) und den Pact-Karten (graue Blöcke). Ein Deck ohne beides wir
 flach, und dann gehört ein Foto rein, kein neuer Hintergrund. Jedes der vier
 Decks hat deshalb mindestens eins.
 
-**Schrift:** Display ist **Montserrat Alternates Black**, Body ist **Inter**. So
-macht es die App (`app/layout.tsx`). Die Brand-README nennt für Display noch
-„Inter Black", das ist veraltet, der Code gewinnt.
+**Schrift:** Display ist **KickPact Display** (Orbitron Black mit reparierter
+Null), Body ist **Inter**. Beides kommt aus `lib/og/fonts.ts`, derselben Quelle,
+aus der die Story- und Wrapped-Motive rendern.
+
+Die Palette kommt aus `lib/og/brand.ts`, ebenfalls geteilt. `scripts/social/brand.ts`
+hatte kurzzeitig eigene Kopien von beidem, und beim ersten Marken-Umbau (#42,
+Montserrat Alternates raus) wäre der Marketing-Kanal in einer Schrift gelaufen,
+die das Produkt gerade abgelegt hatte. Genau die Divergenz, gegen die die
+Pipeline gebaut ist. Wer hier Farbe oder Schrift braucht: aus `lib/og/` holen,
+nie neu definieren.
 
 ## 5. Wie Content entsteht
 
@@ -260,20 +271,11 @@ echten Plätzen stehen, sofort falsch aus. Die sieben echten Fotos unter
 
 ## 9. Was noch offen ist
 
-**Die Produkt-Motive sind noch in der alten Palette.** Story-Card und Wrapped
-laufen auf Navy/Orange/Lime (`lib/story/story-card.tsx`), nicht auf der CI. Damit
-sieht ein Feature-Beleg im Feed anders aus als der Feed drumherum. Der Umbau
-gehört gemacht, aber **erst nachdem der Font-Fix drin ist** — sonst kollidieren
-zwei Sessions in derselben Datei.
-
-**Font-Bug in den Bild-Routen, verifiziert am 2026-07-17.** Die Story- und
-Wrapped-Routen übergeben `next/og` keine Fonts. Satori fällt auf sein gebündeltes
-Noto Sans zurück, und jedes `fontWeight: 900` verpufft. Die Bilder, die eure
-Vereine teilen, rendern live dünn statt fett. Läuft als eigene Aufgabe.
-
-**Die fehlenden Schriftschnitte liegen jetzt da.** `public/fonts/inter/Inter-Black.ttf`
-und `public/fonts/montserrat-alternates/` sind neu dazugeholt (Google Fonts, OFL).
-Der Font-Fix kann sie direkt benutzen.
+**Erledigt seit der ersten Fassung:** der Font-Bug der Bild-Routen ist gefixt
+(#40), und die Produkt-Motive laufen inzwischen selbst auf der CI und der
+gemeinsamen Display-Schrift (#42). Feed und Feature-Beleg sehen damit gleich aus,
+und `scripts/social/brand.ts` zieht Palette und Schrift aus derselben Quelle wie
+die App. Die Divergenz, die hier mal als Risiko stand, ist strukturell zu.
 
 **Angle „Beweis" ist leer.** Braucht den ersten Verein, der sich zitieren lässt.
 
