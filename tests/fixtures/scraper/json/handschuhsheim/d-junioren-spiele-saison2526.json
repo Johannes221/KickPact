@@ -9,7 +9,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-tsg-rohrbach-2/-/spiel/02VVCPL6U8000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VVCPL67K000000VS5489BTVUKESBFG",
@@ -21,7 +21,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-vfb-st-leon/-/spiel/02VVCPL67K000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VVCPL6A8000000VS5489BTVUKESBFG",
@@ -33,7 +33,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-2-tsv-handschuhsheim/-/spiel/02VVCPL6A8000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VVCPL6IC000000VS5489BTVUKESBFG",
@@ -45,7 +45,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-vfb-1914-leimen/-/spiel/02VVCPL6IC000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VVCPL6O4000000VS5489BTVUKESBFG",
@@ -57,7 +57,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-astoria-walldorf-2-tsv-handschuhsheim/-/spiel/02VVCPL6O4000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VVCPL71G000000VS5489BTVUKESBFG",
@@ -69,7 +69,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fv-nussloch-2-tsv-handschuhsheim/-/spiel/02VVCPL71G000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VVCPL7D4000000VS5489BTVUKESBFG",
@@ -81,6 +81,6 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-sg-viktoria-mauer/-/spiel/02VVCPL7D4000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   }
 ]

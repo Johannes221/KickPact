@@ -11,6 +11,11 @@
  *
  * Tests skippen sichtbar (it.skipIf), solange für ein Team/Saison-Paar keine
  * Seiten-Fixtures gecaptured sind: `npm run fixtures:capture` nachholen.
+ *
+ * Wurde der Parser bewusst gefixt und liefert für dasselbe HTML ein anderes
+ * Ergebnis, sind die Golden-JSONs veraltet — offline neu ableiten mit:
+ *   REGEN_SPIELE_JSON=1 npx vitest run tests/scraper/parser/get-spiele.test.ts
+ * (danach den Diff prüfen und normal laufen lassen).
  */
 import { describe, it, expect, vi } from "vitest";
 import fs from "node:fs";
@@ -98,6 +103,21 @@ describe("getSpiele parser", () => {
             const actual = await withMockedFetch(routes, () =>
               getSpiele(team!.teamId, team!.slug, saison),
             );
+
+            // Golden-JSON aus dem GESPEICHERTEN HTML neu ableiten, wenn der
+            // Parser bewusst gefixt wurde und dasselbe HTML jetzt ein anderes
+            // (richtigeres) Ergebnis liefert — dann sind die JSONs veraltet,
+            // nicht die HTMLs. `fixtures:capture --force` wäre dafür falsch: es
+            // scrapt live neu und schriebe die HTMLs auf den heutigen Kalender
+            // um (im Juli: eine Saison ohne gespielte Spiele).
+            //   REGEN_SPIELE_JSON=1 npx vitest run tests/scraper/parser/get-spiele.test.ts
+            if (process.env.REGEN_SPIELE_JSON) {
+              await fs.promises.writeFile(
+                path.join(JSON_ROOT, jsonRel),
+                JSON.stringify(actual, null, 2) + "\n",
+              );
+              return;
+            }
 
             // Feldweiser Vergleich gegen das Capture-JSON. Einzige Ausnahme:
             // `vergangen` ist zeitabhängig (matchDate < today zur LAUFZEIT) —

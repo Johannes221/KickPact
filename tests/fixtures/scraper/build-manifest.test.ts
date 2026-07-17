@@ -29,4 +29,26 @@ describe("inferSchema", () => {
       nullable: true,
     });
   });
+
+  /**
+   * Regression 2026-07-17: `saison` bekam ein Enum aus dem Capture-Wert
+   * (`["2526"]`). getMannschaften nimmt aber gar keinen saison-Parameter,
+   * sondern liefert immer die LAUFENDE Saison — ab dem Rollover am 15.07.
+   * meldete der tägliche Drift-Job also „actual 2627" und legte ein Issue an,
+   * ohne dass sich an fussball.de etwas geändert hatte. Ein Check, der jeden
+   * Sommer garantiert falsch anschlägt, wird ignoriert und ist damit wertlos.
+   */
+  it("pinnt die Saison NICHT auf den Capture-Wert (driftet sonst jeden Sommer)", () => {
+    const schema = inferSchema("items[]", [{ saison: "2526" }, { saison: "2526" }]);
+    expect(schema["items[].saison"]).toEqual({ type: "string", pattern: "^\\d{4}$" });
+    expect(schema["items[].saison"]).not.toHaveProperty("enum");
+  });
+
+  it("lässt strukturelle Enums unangetastet", () => {
+    const schema = inferSchema("items[]", [{ status: "finished" }, { status: "scheduled" }]);
+    expect(schema["items[].status"]).toMatchObject({
+      type: "string",
+      enum: ["finished", "scheduled"],
+    });
+  });
 });

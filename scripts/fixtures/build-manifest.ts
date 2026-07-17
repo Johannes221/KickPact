@@ -19,6 +19,21 @@ export type FieldSchema =
   | { type: "object"; required?: string[]; nullable?: boolean }
   | { type: "array"; minLength?: number };
 
+/**
+ * Felder, deren WERT vom Kalender abhängt — hier darf nie ein Enum aus dem
+ * Fixture-Wert abgeleitet werden, sonst driftet der Check garantiert bei jedem
+ * Saisonwechsel, ohne dass sich an fussball.de irgendetwas geändert hat.
+ *
+ * Konkret passiert am 15.07.2026: `getMannschaften` nimmt gar keinen
+ * saison-Parameter, sondern liefert immer die LAUFENDE Saison. Das Manifest
+ * hatte daraus `enum: ["2526"]` gemacht → ab dem Rollover meldete der tägliche
+ * Drift-Job „actual 2627" und legte ein Issue an. Geprüft wird stattdessen die
+ * Struktur (4 Ziffern) — die bricht nur, wenn der Scraper wirklich kaputt ist.
+ */
+const CALENDAR_BOUND_FIELDS: Record<string, string> = {
+  saison: "^\\d{4}$",
+};
+
 export function inferSchema(
   prefix: string,
   samples: unknown[],
@@ -62,7 +77,14 @@ export function inferSchema(
     } else if (types.size === 1 && types.has("string")) {
       const strs = nonNull as string[];
       const unique = Array.from(new Set(strs));
-      if (unique.length <= 5 && unique.every((s) => s.length < 30)) {
+      const calendarPattern = CALENDAR_BOUND_FIELDS[key];
+      if (calendarPattern) {
+        out[fieldKey] = {
+          type: "string",
+          pattern: calendarPattern,
+          ...(nullable ? { nullable } : {}),
+        };
+      } else if (unique.length <= 5 && unique.every((s) => s.length < 30)) {
         out[fieldKey] = {
           type: "string",
           enum: unique,

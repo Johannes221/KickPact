@@ -9,7 +9,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-moosbrunn-tsv-handschuhsheim/-/spiel/02TP7IA308000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA3FK000000VS5489BTVV0LE4BT",
@@ -21,7 +21,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-spg-muehlhausen-3-rettigheim-2/-/spiel/02TP7IA3FK000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA40C000000VS5489BTVV0LE4BT",
@@ -33,7 +33,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-viktoria-mauer-tsv-handschuhsheim/-/spiel/02TP7IA40C000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA4M8000000VS5489BTVV0LE4BT",
@@ -45,7 +45,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-spvgg-neckarsteinach/-/spiel/02TP7IA4M8000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA53G000000VS5489BTVV0LE4BT",
@@ -57,7 +57,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/vfb-rauenberg-2-tsv-handschuhsheim/-/spiel/02TP7IA53G000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA5CK000000VS5489BTVV0LE4BT",
@@ -69,7 +69,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-fc-sportfreunde-1910-dossenheim-2/-/spiel/02TP7IA5CK000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA69C000000VS5489BTVV0LE4BT",
@@ -81,7 +81,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-hirschhorn-tsv-handschuhsheim/-/spiel/02TP7IA69C000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA6O8000000VS5489BTVV0LE4BT",
@@ -93,7 +93,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-tsg-rohrbach/-/spiel/02TP7IA6O8000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA8VC000000VS5489BTVV0LE4BT",
@@ -105,7 +105,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-fg-rohrbach/-/spiel/02TP7IA8VC000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA7K0000000VS5489BTVV0LE4BT",
@@ -117,6 +117,6 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-1986-sandhausen-tsv-handschuhsheim/-/spiel/02TP7IA7K0000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   }
 ]

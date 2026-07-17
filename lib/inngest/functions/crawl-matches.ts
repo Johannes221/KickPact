@@ -35,6 +35,7 @@ import {
   isCrawlBlockedByGate
 } from "@/lib/db/queries/subscription-status";
 import { isCrawlerSommerpause } from "@/lib/utils/sommerpause";
+import { pickTeamLeague } from "@/lib/utils/league";
 import { getCachedStandings } from "@/lib/recap/standings-cache";
 import { getStoredStandings } from "@/lib/db/queries/standings";
 
@@ -168,11 +169,11 @@ export const crawlMatches = inngest.createFunction(
       );
 
       // Liga/Spielklasse aus den Listen-Items (carry-over aus der
-      // `row-competition`-Zeile). Ersten nicht-leeren Treffer persistieren —
+      // `row-competition`-Zeile). Die HÄUFIGSTE nehmen, nicht die erste:
+      // prev.games liefert das jüngste Spiel zuerst, in der Sommerpause also ein
+      // Freundschaftsspiel — „Kreisfreundschaftsspiele FS" wäre dann die Liga.
       // updateTeamLeague überschreibt eine bestehende Liga NIE mit leer.
-      const detectedLeague =
-        spiele.find((s) => s.league && s.league.trim().length > 0)?.league ??
-        null;
+      const detectedLeague = pickTeamLeague(spiele.map((s) => s.league));
       if (detectedLeague) {
         await step.run(`league-${team.id}`, () =>
           updateTeamLeague(team.id, detectedLeague)

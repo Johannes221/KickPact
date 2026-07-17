@@ -6,10 +6,10 @@
     "heim": "Tvgg. Lorsch",
     "gast": "SG HD-Kirchheim",
     "ergebnis": "",
-    "vergangen": false,
+    "vergangen": true,
     "status": "scheduled",
     "url": "https://www.fussball.de/spiel/tvgg-lorsch-sg-hd-kirchheim/-/spiel/0312K8J110000000VS5489BUVSBBVPEU",
-    "league": null
+    "league": "Kreisfreundschaftsspiele FS"
   },
   {
     "spielId": "02TNBSVEAC000000VS5489BUVSSD35NB",
@@ -21,7 +21,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-tsv-05-reichenbach/-/spiel/02TNBSVEAC000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TNBSVEN0000000VS5489BUVSSD35NB",
@@ -33,7 +33,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-waldhof-mannheim-2-sg-hd-kirchheim/-/spiel/02TNBSVEN0000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TNBSVDM0000000VS5489BUVSSD35NB",
@@ -45,7 +45,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-astoria-walldorf-2-sg-hd-kirchheim/-/spiel/02TNBSVDM0000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TNBSVFIC000000VS5489BUVSSD35NB",
@@ -57,7 +57,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-gu-tuerk-sv-pforzheim/-/spiel/02TNBSVFIC000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TNBSVFR8000000VS5489BUVSSD35NB",
@@ -69,7 +69,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/1fc-bruchsal-1899-ev-sg-hd-kirchheim/-/spiel/02TNBSVFR8000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TNBSVG8S000000VS5489BUVSSD35NB",
@@ -81,7 +81,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-tsg-1862-09-weinheim/-/spiel/02TNBSVG8S000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TNBSVH0K000000VS5489BUVSSD35NB",
@@ -93,7 +93,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fv-fortuna-heddesheim-sg-hd-kirchheim/-/spiel/02TNBSVH0K000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TNBSVHK0000000VS5489BUVSSD35NB",
@@ -105,7 +105,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/vfb-bretten-sg-hd-kirchheim/-/spiel/02TNBSVHK0000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TNBSVIA8000000VS5489BUVSSD35NB",
@@ -117,7 +117,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-1fc-muehlhausen/-/spiel/02TNBSVIA8000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TNBSVIRS000000VS5489BUVSSD35NB",
@@ -129,6 +129,6 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-spielberg-sg-hd-kirchheim/-/spiel/02TNBSVIRS000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Verbandsliga ME"
   }
 ]

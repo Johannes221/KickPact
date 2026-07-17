@@ -9,7 +9,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-noettingen-sg-hd-kirchheim/-/spiel/02TRK3RNH0000000VS5489BTVTHCTAHT",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TRK3RNQK000000VS5489BTVTHCTAHT",
@@ -21,7 +21,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-fc-germ-friedrichstal/-/spiel/02TRK3RNQK000000VS5489BTVTHCTAHT",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TRK3RO5O000000VS5489BTVTHCTAHT",
@@ -33,7 +33,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-tsv-05-reichenbach/-/spiel/02TRK3RO5O000000VS5489BTVTHCTAHT",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TRK3ROEC000000VS5489BTVTHCTAHT",
@@ -45,7 +45,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/1cfr-pforzheim-sg-hd-kirchheim/-/spiel/02TRK3ROEC000000VS5489BTVTHCTAHT",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TRK3ROUO000000VS5489BTVTHCTAHT",
@@ -57,7 +57,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-spvgg-durlach-aue/-/spiel/02TRK3ROUO000000VS5489BTVTHCTAHT",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TRK3RP40000000VS5489BTVTHCTAHT",
@@ -69,7 +69,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsg-1862-09-weinheim-sg-hd-kirchheim/-/spiel/02TRK3RP40000000VS5489BTVTHCTAHT",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TRK3RPNS000000VS5489BTVTHCTAHT",
@@ -81,7 +81,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-sv-98-schwetzingen/-/spiel/02TRK3RPNS000000VS5489BTVTHCTAHT",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TRK3RPQ0000000VS5489BTVTHCTAHT",
@@ -93,7 +93,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fv-mosbach-sg-hd-kirchheim/-/spiel/02TRK3RPQ0000000VS5489BTVTHCTAHT",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TRK3RQH8000000VS5489BTVTHCTAHT",
@@ -105,7 +105,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-waldhof-mannheim-2-sg-hd-kirchheim/-/spiel/02TRK3RQH8000000VS5489BTVTHCTAHT",
-    "league": null
+    "league": "Verbandsliga ME"
   },
   {
     "spielId": "02TRK3RQ94000000VS5489BTVTHCTAHT",
@@ -117,6 +117,6 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-spvgg-neckarelz/-/spiel/02TRK3RQ94000000VS5489BTVTHCTAHT",
-    "league": null
+    "league": "Verbandsliga ME"
   }
 ]

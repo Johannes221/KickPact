@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generatedAt": "2026-06-10T20:10:30.796Z",
+  "generatedAt": "2026-07-17T09:49:39.295Z",
   "scraperFunctions": {
     "searchVereine": {
       "function": "searchVereine",
@@ -65,9 +65,7 @@
         },
         "items[].saison": {
           "type": "string",
-          "enum": [
-            "2526"
-          ]
+          "pattern": "^\\d{4}$"
         },
         "items[].teamId": {
           "type": "string",

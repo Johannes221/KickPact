@@ -9,7 +9,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-98-schwetzingen-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ7USO000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Landesliga ME"
   },
   {
     "spielId": "02TNNQ7VKK000000VS5489BUVSSD35NB",
@@ -21,7 +21,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-fv-1918-bruehl/-/spiel/02TNNQ7VKK000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Landesliga ME"
   },
   {
     "spielId": "02TNNQ80HC000000VS5489BUVSSD35NB",
@@ -33,7 +33,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-asc-neuenheim/-/spiel/02TNNQ80HC000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Landesliga ME"
   },
   {
     "spielId": "02TNNQ819G000000VS5489BUVSSD35NB",
@@ -45,7 +45,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-victoria-bammental-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ819G000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Landesliga ME"
   },
   {
     "spielId": "02TNNQ82D4000000VS5489BUVSSD35NB",
@@ -57,7 +57,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-fk-srbija-mannheim/-/spiel/02TNNQ82D4000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Landesliga ME"
   },
   {
     "spielId": "02TNNQ830K000000VS5489BUVSSD35NB",
@@ -69,7 +69,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-kirchardt-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ830K000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Landesliga ME"
   },
   {
     "spielId": "02TNNQ84D0000000VS5489BUVSSD35NB",
@@ -81,7 +81,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-spvgg-06-ketsch/-/spiel/02TNNQ84D0000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Landesliga ME"
   },
   {
     "spielId": "02TNNQ84PO000000VS5489BUVSSD35NB",
@@ -93,7 +93,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tuerkspor-eppingen-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ84PO000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Landesliga ME"
   },
   {
     "spielId": "02TNNQ86FK000000VS5489BUVSSD35NB",
@@ -105,7 +105,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-sc-rot-weiss-rheinau/-/spiel/02TNNQ86FK000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Landesliga ME"
   },
   {
     "spielId": "02TNNQ86MG000000VS5489BUVSSD35NB",
@@ -117,6 +117,6 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fv-nussloch-fc-sportfreunde-1910-dossenheim/-/spiel/02TNNQ86MG000000VS5489BUVSSD35NB",
-    "league": null
+    "league": "Landesliga ME"
   }
 ]
