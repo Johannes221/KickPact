@@ -6,7 +6,7 @@ import { saisonStartDate, currentSaisonCode } from "@/lib/utils/saison";
 import { decodeObfuscatedScore } from "./score-font";
 import { isReadableName } from "@/lib/players/readable-name";
 import { cleanPlayerName } from "@/lib/players/person-name";
-import { isPlausibleLeague } from "@/lib/utils/league";
+import { isPlausibleLeague, stripLeadingTime } from "@/lib/utils/league";
 
 /**
  * Audit 2026-05-24 Phase 5 / Task 5.2: User-Agent-Rotation gegen fussball.de-Bann.
@@ -214,6 +214,14 @@ export function extractLeagueFromCompetitionText(raw: string): string | null {
   } else {
     candidate = text.split(",")[0].trim();
   }
+
+  // Im aktuellen Live-Format (2026-07-17) fehlt die Altersklasse und die Liga
+  // klebt an der Uhrzeit desselben Segments ("19:00 Kreisliga ME"). Ohne das
+  // Abstreifen griff der Uhrzeit-Guard und verwarf JEDE Liga — sichtbar daran,
+  // dass 6 von 6 Live-Teams keine korrekte Liga hatten. Bleibt nach dem
+  // Abstreifen nur eine Altersklasse übrig ("14:00 Herren"), stand hier keine
+  // Liga — das fängt isPlausibleLeague ab.
+  candidate = stripLeadingTime(candidate);
 
   return isPlausibleLeague(candidate) ? candidate : null;
 }
