@@ -28,7 +28,16 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # next build überschritt das Node-Default-Heap-Limit (~2 GB) → OOM (exit 134).
 # Heap anheben, damit der Build mit dem gewachsenen Codebase durchläuft.
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN npm run build
+# DATABASE_URL/RESEND_API_KEY/MAIL_FROM werden vom Build nur auf PRÄSENZ geprüft
+# (Module-Load-Throws in lib/db/client.ts + lib/mail/client.ts) — postgres()
+# verbindet lazy, new Resend() validiert nicht. Mit den Platzhaltern hier dürfen
+# die echten Secrets in Coolify auf "Build Variable = aus" stehen und landen
+# damit nicht mehr im Klartext im Deployment-Log. `:-` greift nur, wenn die Var
+# leer/ungesetzt ist: ein echter Wert (z.B. lokal, CI) gewinnt weiterhin.
+RUN DATABASE_URL="${DATABASE_URL:-postgres://build:build@127.0.0.1:5432/build}" \
+    RESEND_API_KEY="${RESEND_API_KEY:-re_build_placeholder}" \
+    MAIL_FROM="${MAIL_FROM:-build@example.invalid}" \
+    npm run build
 
 # ---------- Runner ----------
 FROM mcr.microsoft.com/playwright:v1.48.2-jammy AS runner

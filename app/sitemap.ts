@@ -21,6 +21,13 @@ import { listVerifiedClubSlugs } from "@/lib/db/queries/club-public-profile";
  * kommen zusätzlich env-gesteuert nur in Production in die Sitemap (kein
  * Leaken von Staging-Testdaten).
  */
+// Zur Request-Zeit rendern statt beim Build: die Team-/Club-Slugs unten sind
+// DB-Queries. Prerendered bräuchte der BUILD eine erreichbare DB (→ DATABASE_URL
+// als Build-Arg, landet im Coolify-Deploy-Log im Klartext) und die Sitemap wäre
+// zusätzlich auf den Deploy-Zeitpunkt eingefroren — neue Vereine tauchten erst
+// beim nächsten Deploy auf.
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = (
     process.env.NEXT_PUBLIC_BASE_URL ?? "https://kickpact.com"
