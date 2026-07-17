@@ -8,7 +8,11 @@ WORKDIR /app
 
 # Install Node deps with the same --legacy-peer-deps override that Coolify uses
 # (drizzle-kit/orm vs better-auth peer-dep mismatch — fix later by upgrading both).
+# patches/ muss vor `npm ci` da sein, sonst läuft der postinstall-Hook
+# (patch-package) ins Leere und exitet still mit 0 — das Image hätte dann
+# ungepatchte Dependencies, ohne dass der Build fehlschlägt.
 COPY package.json package-lock.json* ./
+COPY patches ./patches
 RUN npm ci --legacy-peer-deps
 
 # ---------- Builder ----------
