@@ -12,6 +12,7 @@ import { eurWhole, seasonLabel } from "@/lib/recap/recap-format";
 import { scopeKicker, scopeSuffix } from "@/lib/recap/aggregate-scope";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { OG_FONTS, OG_FONT_FAMILY } from "@/lib/og/fonts";
 
 // Grünes KickPact-Logo (Mark + Wortmarke) einmalig als data-URI — next/og
 // (Satori) bettet lokale Assets nur als data-URI/absolute-URL zuverlässig ein.
@@ -118,7 +119,8 @@ export async function GET(
 
   return new ImageResponse(<WrappedCard stats={stats} slide={slideKey} />, {
     width: 1080,
-    height: 1920
+    height: 1920,
+    fonts: OG_FONTS
   });
 }
 
@@ -136,7 +138,7 @@ function WrappedCard({ stats, slide }: { stats: WrappedStats; slide: SlideKey })
         flexDirection: "column",
         position: "relative",
         overflow: "hidden",
-        fontFamily: "system-ui, -apple-system, sans-serif",
+        fontFamily: OG_FONT_FAMILY,
         padding: "96px 80px"
       }}
     >
@@ -438,7 +440,7 @@ function SummaryBody({ stats, accent }: { stats: WrappedStats; accent: string })
           display: "flex",
           fontSize: 34,
           color: accent,
-          fontWeight: 800,
+          fontWeight: 900,
           letterSpacing: "0.16em",
           textTransform: "uppercase"
         }}
@@ -550,7 +552,7 @@ function Block({
           display: "flex",
           fontSize: 34,
           color: accent,
-          fontWeight: 800,
+          fontWeight: 900,
           letterSpacing: "0.16em",
           textTransform: "uppercase"
         }}
