@@ -6,8 +6,9 @@ import {
   STORY_SIZE,
   fitFontSize,
   CONTENT_WIDTH,
-  AVG_CHAR_RATIO
+  HEADLINE_TRACKING
 } from "@/lib/story/story-card";
+import { OG_FONTS, blackTextWidth } from "@/lib/og/fonts";
 import { recapHeadline } from "@/lib/story/story-content";
 import type { StoryModel } from "@/lib/story/story-data";
 
@@ -224,7 +225,15 @@ describe("Headlines passen in die Bildbreite", () => {
     it(`„${text}" bleibt innerhalb ${CONTENT_WIDTH}px`, () => {
       const size = fitFontSize(text, 150);
       expect(size).toBeGreaterThan(0);
-      expect(text.length * AVG_CHAR_RATIO * size).toBeLessThanOrEqual(CONTENT_WIDTH);
+      // In der ECHTEN Headline-Schrift nachmessen, nicht in fitFontSize' eigener
+      // Formel: die frühere Fassung prüfte `länge × mittlere Zeichenbreite` —
+      // also exakt die Rechnung, die fitFontSize selbst anstellt. Damit konnte
+      // der Test gar nicht fehlschlagen und hat den realen Überlauf von
+      // „UNENTSCHIEDEN" (+50px über den Rand) glatt durchgewunken.
+      // Großgeschrieben nachmessen — so setzen die Motive die Headline.
+      expect(blackTextWidth(text.toUpperCase(), size, HEADLINE_TRACKING)).toBeLessThanOrEqual(
+        CONTENT_WIDTH
+      );
     });
   }
 
@@ -243,7 +252,14 @@ const OUT_DIR = process.env.STORY_SAMPLE_DIR;
 describe("StoryCard rendert als 1080×1920-PNG", () => {
   for (const [name, model] of Object.entries(SAMPLES)) {
     it(name, async () => {
-      const res = new ImageResponse(<StoryCard model={model} />, STORY_SIZE);
+      // MIT Fonts rendern, wie die Route es tut. Ohne `fonts` prüfte dieser
+      // Smoke ein anderes Bild als die Produktion ausliefert — genau so blieb
+      // unbemerkt, dass die Motive live in Satoris dünnem Regular-Fallback
+      // rendern statt in Inter Bold/Black.
+      const res = new ImageResponse(<StoryCard model={model} />, {
+        ...STORY_SIZE,
+        fonts: OG_FONTS
+      });
       const buf = Buffer.from(await res.arrayBuffer());
 
       expect(isPng(buf)).toBe(true);

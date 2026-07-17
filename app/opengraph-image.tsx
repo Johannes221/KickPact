@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { OG_FONTS, OG_FONT_FAMILY } from "@/lib/og/fonts";
 
 // Bewusst KEIN edge-Runtime: auf dem self-hosted Coolify-Node liefert die
 // Edge-ImageResponse 502 (kein Emoji-Font im Edge-Sandbox → Render-Crash bei
@@ -19,7 +20,7 @@ export default function Image() {
           flexDirection: "column",
           position: "relative",
           overflow: "hidden",
-          fontFamily: "system-ui, -apple-system, sans-serif"
+          fontFamily: OG_FONT_FAMILY
         }}
       >
         {/* Background accent glow — top-right */}
@@ -242,7 +243,7 @@ export default function Image() {
               <span
                 style={{
                   fontSize: 16,
-                  fontWeight: 800,
+                  fontWeight: 900,
                   color: "#FF4500",
                   marginLeft: 4
                 }}
@@ -266,6 +267,6 @@ export default function Image() {
         />
       </div>
     ),
-    { width: 1200, height: 630 }
+    { width: 1200, height: 630, fonts: OG_FONTS }
   );
 }
