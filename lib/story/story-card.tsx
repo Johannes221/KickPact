@@ -1,15 +1,17 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { OG_FONT_FAMILY, blackTextWidth } from "@/lib/og/fonts";
 import type { StoryModel, StorySide } from "@/lib/story/story-data";
 import type { StoryCrest } from "@/lib/story/story-content";
 
 /**
  * Reines Zeichnen der Story-Vorlagen (Aufgabe #44) — kein Auth, kein DB-Zugriff.
  *
- * Bewusst getrennt von der Route: so lässt sich das Motiv aus einem Skript mit
- * erfundenen Modellen rendern und ANSCHAUEN (scripts/render-story-samples.tsx),
- * insbesondere die Degradations-Fälle (kein Logo, keine Tabelle, keine
- * Torschützen), die live kaum reproduzierbar sind.
+ * Bewusst getrennt von der Route: so lassen sich die Motive mit erfundenen
+ * Modellen rendern und ANSCHAUEN — insbesondere die Degradations-Fälle (kein
+ * Logo, keine Tabelle, keine Torschützen), die live kaum reproduzierbar sind:
+ *
+ *   STORY_SAMPLE_DIR=/tmp/story npx vitest run tests/lib/story-card.test.tsx
  */
 
 // Grünes KickPact-Logo einmalig als data-URI — next/og (Satori) bettet lokale
@@ -22,11 +24,8 @@ const LOGO_GREEN =
 
 /** Innenbreite des Motivs (1080 − 2×80 Padding) — Basis fürs Auto-Fit. */
 export const CONTENT_WIDTH = 920;
-/**
- * Grobe Zeichenbreite der Headline-Schrift, als Anteil der Schriftgröße
- * (gemessen an gerenderten Motiven: ~0,58 — 0,6 lässt etwas Luft).
- */
-export const AVG_CHAR_RATIO = 0.6;
+/** letter-spacing der Headlines in em — muss zum `letterSpacing` unten passen. */
+export const HEADLINE_TRACKING = -0.03;
 
 /**
  * Schriftgröße einer einzeiligen Headline, die garantiert in die Breite passt.
@@ -35,10 +34,23 @@ export const AVG_CHAR_RATIO = 0.6;
  * am Rand ab. Ohne diesen Fit lief „UNENTSCHIEDEN" bei fester Größe rechts aus
  * dem Bild (im gerenderten Motiv gesehen), und genau dieses Motiv wäre dann auf
  * Instagram gelandet.
+ *
+ * Die Breite wird in der ECHTEN Headline-Schrift (Inter Black) vermessen statt
+ * über eine mittlere Zeichenbreite geschätzt — die Schätzung war an Satoris
+ * Regular-Fallback kalibriert und lag mit Inter Black bei „UNENTSCHIEDEN" um
+ * 50px daneben, nach draußen.
+ * `blackTextWidth` ist linear in der Schriftgröße, deshalb genügt eine Messung
+ * bei 1px als Verhältnis.
+ *
+ * Gemessen wird GROSSGESCHRIEBEN, weil beide Aufrufstellen `textTransform:
+ * uppercase` setzen. „Unentschieden" zu messen und „UNENTSCHIEDEN" zu rendern
+ * unterschätzt die Breite je nach Wort um bis zu 19% — dann greift der Fit zu
+ * spät und schneidet doch ab.
  */
 export function fitFontSize(text: string, max: number): number {
-  const needed = CONTENT_WIDTH / (Math.max(text.length, 1) * AVG_CHAR_RATIO);
-  return Math.floor(Math.min(max, needed));
+  const widthPerPx = blackTextWidth(text.toUpperCase(), 1, HEADLINE_TRACKING);
+  if (widthPerPx <= 0) return max;
+  return Math.floor(Math.min(max, CONTENT_WIDTH / widthPerPx));
 }
 
 const NAVY = "#0F0F1E";
@@ -79,7 +91,7 @@ export function StoryCard({ model }: { model: StoryModel }) {
         flexDirection: "column",
         position: "relative",
         overflow: "hidden",
-        fontFamily: "system-ui, -apple-system, sans-serif",
+        fontFamily: OG_FONT_FAMILY,
         padding: "96px 80px"
       }}
     >
@@ -262,7 +274,7 @@ function SideColumn({ side, accent }: { side: StorySide; accent: string }) {
           height: NAME_HEIGHT,
           justifyContent: "center",
           fontSize: 32,
-          fontWeight: 800,
+          fontWeight: 900,
           color: OFF,
           textAlign: "center",
           lineHeight: 1.25,
@@ -340,7 +352,7 @@ function PreviewBody({ model, accent }: { model: PreviewStoryProps; accent: stri
             fontSize: fitFontSize(model.kickoff, 150),
             fontWeight: 900,
             color: OFF,
-            letterSpacing: "-0.03em",
+            letterSpacing: `${HEADLINE_TRACKING}em`,
             lineHeight: 1.02,
             textTransform: "uppercase"
           }}
@@ -350,7 +362,7 @@ function PreviewBody({ model, accent }: { model: PreviewStoryProps; accent: stri
         {/* Bewusst OHNE Anstoßzeit: die DB hat keine echte (siehe story-data.ts).
             Heim/Auswärts nur, wenn die eigene Seite sicher ist (heimspiel !== null). */}
         {model.heimspiel !== null && (
-          <div style={{ display: "flex", fontSize: 44, color: accent, fontWeight: 800 }}>
+          <div style={{ display: "flex", fontSize: 44, color: accent, fontWeight: 900 }}>
             {model.heimspiel ? "Heimspiel" : "Auswärtsspiel"}
           </div>
         )}
@@ -394,7 +406,7 @@ function RecapBody({ model, accent }: { model: RecapStoryProps; accent: string }
             fontSize: fitFontSize(held, 132),
             fontWeight: 900,
             color: OFF,
-            letterSpacing: "-0.03em",
+            letterSpacing: `${HEADLINE_TRACKING}em`,
             lineHeight: 1.02,
             textTransform: "uppercase"
           }}
@@ -402,7 +414,7 @@ function RecapBody({ model, accent }: { model: RecapStoryProps; accent: string }
           {held}
         </div>
         {model.headline && (
-          <div style={{ display: "flex", fontSize: 40, color: accent, fontWeight: 800 }}>
+          <div style={{ display: "flex", fontSize: 40, color: accent, fontWeight: 900 }}>
             {model.headline.kicker}
           </div>
         )}
@@ -448,7 +460,7 @@ function Scorers({ model, accent }: { model: RecapStoryProps; accent: string }) 
           display: "flex",
           fontSize: 28,
           color: accent,
-          fontWeight: 800,
+          fontWeight: 900,
           letterSpacing: "0.16em",
           textTransform: "uppercase"
         }}

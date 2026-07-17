@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth/session";
 import { resolveTeamAccess } from "@/lib/auth/scope";
 import { buildStoryModel } from "@/lib/story/story-data";
 import { StoryCard, STORY_SIZE } from "@/lib/story/story-card";
+import { OG_FONTS } from "@/lib/og/fonts";
 
 // DB-Zugriff (postgres-js) → Node-Runtime, NICHT edge.
 export const runtime = "nodejs";
@@ -31,5 +32,5 @@ export async function GET(
   const model = await buildStoryModel(teamId, matchId);
   if (!model) return new Response("Not found", { status: 404 });
 
-  return new ImageResponse(<StoryCard model={model} />, STORY_SIZE);
+  return new ImageResponse(<StoryCard model={model} />, { ...STORY_SIZE, fonts: OG_FONTS });
 }
