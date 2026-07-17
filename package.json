@@ -25,7 +25,9 @@
     "stripe:prices:verify": "dotenv -e .env.local -- tsx scripts/sync-stripe-prices.ts --verify",
     "test:live": "LIVE=1 vitest run live-smoke",
     "ios:sync:prod": "CAP_SERVER_URL=https://kickpact.com npx cap sync ios",
-    "promote:prod": "git push origin main:production"
+    "promote:prod": "git push origin main:production",
+    "social:render": "tsx scripts/social/render.tsx",
+    "social:video": "tsx scripts/social/video.tsx"
   },
   "dependencies": {
     "@apple/app-store-server-library": "^3.1.0",
