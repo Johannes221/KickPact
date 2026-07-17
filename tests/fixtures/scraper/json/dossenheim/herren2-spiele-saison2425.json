@@ -9,7 +9,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/vfb-rauenberg-2-fc-sportfreunde-1910-dossenheim-2/-/spiel/02TP7IA2OK000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA37O000000VS5489BTVV0LE4BT",
@@ -21,7 +21,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-2-spg-asc-neuenheim-3-djk-handschuhsheim-1/-/spiel/02TP7IA37O000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA3PS000000VS5489BTVV0LE4BT",
@@ -33,7 +33,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-2-fc-hirschhorn/-/spiel/02TP7IA3PS000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA48S000000VS5489BTVV0LE4BT",
@@ -45,7 +45,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsg-rohrbach-fc-sportfreunde-1910-dossenheim-2/-/spiel/02TP7IA48S000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA518000000VS5489BTVV0LE4BT",
@@ -57,7 +57,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-2-fc-1986-sandhausen/-/spiel/02TP7IA518000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA5CK000000VS5489BTVV0LE4BT",
@@ -69,7 +69,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsv-handschuhsheim-fc-sportfreunde-1910-dossenheim-2/-/spiel/02TP7IA5CK000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA6C0000000VS5489BTVV0LE4BT",
@@ -81,7 +81,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-2-fg-rohrbach/-/spiel/02TP7IA6C0000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA6JC000000VS5489BTVV0LE4BT",
@@ -93,7 +93,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-dielheim-2-fc-sportfreunde-1910-dossenheim-2/-/spiel/02TP7IA6JC000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA8NC000000VS5489BTVV0LE4BT",
@@ -105,7 +105,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-sportfreunde-1910-dossenheim-2-fc-rot-2/-/spiel/02TP7IA8NC000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TP7IA974000000VS5489BTVV0LE4BT",
@@ -117,6 +117,6 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-moosbrunn-fc-sportfreunde-1910-dossenheim-2/-/spiel/02TP7IA974000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisklasse B ME"
   }
 ]

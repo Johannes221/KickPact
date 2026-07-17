@@ -9,7 +9,7 @@
     "vergangen": false,
     "status": "scheduled",
     "url": "https://www.fussball.de/spiel/sg-unter-abtsteinach-ii-sv-schriesheim/-/spiel/0312KFQ19S000000VS5489BUVSBBVPEU",
-    "league": null
+    "league": "Kreisfreundschaftsspiele FS"
   },
   {
     "spielId": "02TPJMNJDC000000VS5489BUVSPHI8RP",
@@ -21,7 +21,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fv-leutershausen-sv-schriesheim/-/spiel/02TPJMNJDC000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02TPJMNK4S000000VS5489BUVSPHI8RP",
@@ -33,7 +33,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-tsv-amicitia-viernheim-2/-/spiel/02TPJMNK4S000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02TPJMNKD8000000VS5489BUVSPHI8RP",
@@ -45,7 +45,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-1983-viernheim-sv-schriesheim/-/spiel/02TPJMNKD8000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02TPJMNKPG000000VS5489BUVSPHI8RP",
@@ -57,7 +57,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-sc-1910-kaefertal-2/-/spiel/02TPJMNKPG000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02TPJMNLGC000000VS5489BUVSPHI8RP",
@@ -69,7 +69,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsg-1862-09-weinheim-2-sv-schriesheim/-/spiel/02TPJMNLGC000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02TPJMNM1C000000VS5489BUVSPHI8RP",
@@ -81,7 +81,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsv-1887-sulzbach-sv-schriesheim/-/spiel/02TPJMNM1C000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02TPJMNML8000000VS5489BUVSPHI8RP",
@@ -93,7 +93,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-skv-sandhofen/-/spiel/02TPJMNML8000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02TPJMNN4S000000VS5489BUVSPHI8RP",
@@ -105,7 +105,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsg-91-09-luetzelsachsen-2-sv-schriesheim/-/spiel/02TPJMNN4S000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02TPJMNOBK000000VS5489BUVSPHI8RP",
@@ -117,7 +117,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hemsbach-sv-schriesheim/-/spiel/02TPJMNOBK000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02TPJMNNUS000000VS5489BUVSPHI8RP",
@@ -129,6 +129,6 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-tsv-schoenau/-/spiel/02TPJMNNUS000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse A ME"
   }
 ]

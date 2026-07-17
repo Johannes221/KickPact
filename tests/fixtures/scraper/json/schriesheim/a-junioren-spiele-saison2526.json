@@ -6,10 +6,10 @@
     "heim": "SV Schriesheim",
     "gast": "SKV Sandhofen 2",
     "ergebnis": "",
-    "vergangen": false,
+    "vergangen": true,
     "status": "scheduled",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-skv-sandhofen-2/-/spiel/02VUT1RV24000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VUT1RVFK000000VS5489BTVUKESBFG",
@@ -21,7 +21,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-jsg-hohensachsen-rippenweier/-/spiel/02VUT1RVFK000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VUT1RVBK000000VS5489BTVUKESBFG",
@@ -33,7 +33,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/jsg-sv-rohrhof-asv-feudenheim-sv-schriesheim/-/spiel/02VUT1RVBK000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VUT1RVKO000000VS5489BTVUKESBFG",
@@ -45,7 +45,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/mfc-08-lindenhof-sv-schriesheim/-/spiel/02VUT1RVKO000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VUT1RVV4000000VS5489BTVUKESBFG",
@@ -57,7 +57,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-spvgg-06-ketsch/-/spiel/02VUT1RVV4000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VUT1S0HO000000VS5489BTVUKESBFG",
@@ -69,7 +69,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sc-olympia-neulussheim-sv-schriesheim/-/spiel/02VUT1S0HO000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VUT1S0RG000000VS5489BTVUKESBFG",
@@ -81,7 +81,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-vfr-mannheim-2/-/spiel/02VUT1S0RG000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VUT1S1B4000000VS5489BTVUKESBFG",
@@ -93,7 +93,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sc-kaefertal-sv-schriesheim/-/spiel/02VUT1S1B4000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VUT1S1I0000000VS5489BTVUKESBFG",
@@ -105,7 +105,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-sc-08-reilingen/-/spiel/02VUT1S1I0000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VUT1S1S4000000VS5489BTVUKESBFG",
@@ -117,7 +117,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/djk-feudenheim-2-flex-sv-schriesheim/-/spiel/02VUT1S1S4000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   },
   {
     "spielId": "02VUT1S28C000000VS5489BTVUKESBFG",
@@ -129,6 +129,6 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-sg-oftersheim/-/spiel/02VUT1S28C000000VS5489BTVUKESBFG",
-    "league": null
+    "league": "Kreisklasse A ME"
   }
 ]

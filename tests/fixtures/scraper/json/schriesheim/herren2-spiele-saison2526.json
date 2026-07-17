@@ -9,7 +9,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/ssv-vogelstang-2-sv-schriesheim-2/-/spiel/02TPICGD5S000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TPICGDL8000000VS5489BUVSPHI8RP",
@@ -21,7 +21,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-2-fv-leutershausen-2/-/spiel/02TPICGDL8000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TPICGDRG000000VS5489BUVSPHI8RP",
@@ -33,7 +33,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-rippenweier-sv-schriesheim-2/-/spiel/02TPICGDRG000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TPICGE3S000000VS5489BUVSPHI8RP",
@@ -45,7 +45,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-2-tus-einheit-weinheim/-/spiel/02TPICGE3S000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TPICGEIO000000VS5489BUVSPHI8RP",
@@ -57,7 +57,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fv-03-ladenburg-2-sv-schriesheim-2/-/spiel/02TPICGEIO000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TPICGEUS000000VS5489BUVSPHI8RP",
@@ -69,7 +69,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hohensachsen-sv-schriesheim-2/-/spiel/02TPICGEUS000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TPICGFDC000000VS5489BUVSPHI8RP",
@@ -81,7 +81,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-2-skv-sandhofen-2/-/spiel/02TPICGFDC000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TPICGFOO000000VS5489BUVSPHI8RP",
@@ -93,7 +93,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-laudenbach-sv-schriesheim-2/-/spiel/02TPICGFOO000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TPICGGC4000000VS5489BUVSPHI8RP",
@@ -105,7 +105,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-2-tsv-schoenau-2/-/spiel/02TPICGGC4000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse B ME"
   },
   {
     "spielId": "02TPICGH0O000000VS5489BUVSPHI8RP",
@@ -117,6 +117,6 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sv-schriesheim-2-spvgg-wallstadt-3/-/spiel/02TPICGH0O000000VS5489BUVSPHI8RP",
-    "league": null
+    "league": "Kreisklasse B ME"
   }
 ]

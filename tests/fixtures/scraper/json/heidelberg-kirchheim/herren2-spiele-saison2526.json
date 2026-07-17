@@ -9,7 +9,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/heidelberger-sc-sg-hd-kirchheim-2/-/spiel/02TP86STQK000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02TP86SUES000000VS5489BTVV0LE4BT",
@@ -21,7 +21,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-2-ft-kirchheim/-/spiel/02TP86SUES000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02TP86SURK000000VS5489BTVV0LE4BT",
@@ -33,7 +33,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-horrenberg-sg-hd-kirchheim-2/-/spiel/02TP86SURK000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02TP86SVNG000000VS5489BTVV0LE4BT",
@@ -45,7 +45,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-2-vfb-rauenberg/-/spiel/02TP86SVNG000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02TP86T004000000VS5489BTVV0LE4BT",
@@ -57,7 +57,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/spvgg-baiertal-sg-hd-kirchheim-2/-/spiel/02TP86T004000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02TP86T0DC000000VS5489BTVV0LE4BT",
@@ -69,7 +69,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-2-asc-neuenheim-2/-/spiel/02TP86T0DC000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02TP86T148000000VS5489BTVV0LE4BT",
@@ -81,7 +81,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/spg-dilsberg-1-bammental-2-sg-hd-kirchheim-2/-/spiel/02TP86T148000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02TP86T1N8000000VS5489BTVV0LE4BT",
@@ -93,7 +93,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/vfb-1914-leimen-sg-hd-kirchheim-2/-/spiel/02TP86T1N8000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02TP86T3PK000000VS5489BTVV0LE4BT",
@@ -105,7 +105,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-hd-kirchheim-2-tb-rohrbach/-/spiel/02TP86T3PK000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02TP86T46K000000VS5489BTVV0LE4BT",
@@ -117,6 +117,6 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/sg-dielheim-sg-hd-kirchheim-2/-/spiel/02TP86T46K000000VS5489BTVV0LE4BT",
-    "league": null
+    "league": "Kreisliga ME"
   }
 ]

@@ -6,10 +6,10 @@
     "heim": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
     "gast": "TSG Rohrbach",
     "ergebnis": "",
-    "vergangen": false,
+    "vergangen": true,
     "status": "scheduled",
     "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-tsg-rohrbach/-/spiel/02V4O3F620000000VS5489BUVSJ2DN3Q",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02V4O3F63O000000VS5489BUVSJ2DN3Q",
@@ -18,10 +18,10 @@
     "heim": "JSG Mauer/Lobbach/Meckesheim-Mönchszell",
     "gast": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
     "ergebnis": "",
-    "vergangen": false,
+    "vergangen": true,
     "status": "scheduled",
     "url": "https://www.fussball.de/spiel/jsg-mauer-lobbach-meckesheim-moenchszell-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F63O000000VS5489BUVSJ2DN3Q",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02V4O3F6BC000000VS5489BUVSJ2DN3Q",
@@ -30,10 +30,10 @@
     "heim": "JSG St.Leon-Rot",
     "gast": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
     "ergebnis": "",
-    "vergangen": false,
+    "vergangen": true,
     "status": "scheduled",
     "url": "https://www.fussball.de/spiel/jsg-stleon-rot-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F6BC000000VS5489BUVSJ2DN3Q",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02V4O3F6L8000000VS5489BUVSJ2DN3Q",
@@ -42,10 +42,10 @@
     "heim": "JSG Dossenheim/Handschuhsheim/ Wieblingen",
     "gast": "FC 1986 Sandhausen",
     "ergebnis": "",
-    "vergangen": false,
+    "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-fc-1986-sandhausen/-/spiel/02V4O3F6L8000000VS5489BUVSJ2DN3Q",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02V4O3F76S000000VS5489BUVSJ2DN3Q",
@@ -57,7 +57,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-vfb-1914-leimen/-/spiel/02V4O3F76S000000VS5489BUVSJ2DN3Q",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02V4O3F6QO000000VS5489BUVSJ2DN3Q",
@@ -69,7 +69,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/vfb-rauenberg-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F6QO000000VS5489BUVSJ2DN3Q",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02U52J4H48000000VS5489BTVV378D77",
@@ -81,7 +81,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/eberbacher-sc-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02U52J4H48000000VS5489BTVV378D77",
-    "league": null
+    "league": "Kreispokal PO"
   },
   {
     "spielId": "02V4O3F7AK000000VS5489BUVSJ2DN3Q",
@@ -93,7 +93,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/eberbacher-sc-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F7AK000000VS5489BUVSJ2DN3Q",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02V4O3F4LG000000VS5489BUVSJ2DN3Q",
@@ -105,7 +105,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/tsg-rohrbach-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F4LG000000VS5489BUVSJ2DN3Q",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02U52J7LUK000000VS5489BTVV378D77",
@@ -117,7 +117,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/jsg-mauer-lobbach-meckesheim-moenchszell-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02U52J7LUK000000VS5489BTVV378D77",
-    "league": null
+    "league": "Kreispokal PO"
   },
   {
     "spielId": "02V4O3F4MO000000VS5489BUVSJ2DN3Q",
@@ -129,7 +129,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-jsg-mauer-lobbach-meckesheim-moenchszell/-/spiel/02V4O3F4MO000000VS5489BUVSJ2DN3Q",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02V4O3F4T4000000VS5489BUVSJ2DN3Q",
@@ -141,7 +141,7 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/jsg-dossenheim-handschuhsheim-wieblingen-jsg-stleon-rot/-/spiel/02V4O3F4T4000000VS5489BUVSJ2DN3Q",
-    "league": null
+    "league": "Kreisliga ME"
   },
   {
     "spielId": "02V4O3F558000000VS5489BUVSJ2DN3Q",
@@ -153,6 +153,6 @@
     "vergangen": true,
     "status": "finished",
     "url": "https://www.fussball.de/spiel/fc-1986-sandhausen-jsg-dossenheim-handschuhsheim-wieblingen/-/spiel/02V4O3F558000000VS5489BUVSJ2DN3Q",
-    "league": null
+    "league": "Kreisliga ME"
   }
 ]
