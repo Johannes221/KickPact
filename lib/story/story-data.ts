@@ -6,11 +6,11 @@ import {
   getStoryMatch,
   getMatchScorers,
   getOpponentLogoUrl,
-  type StoryMatch,
   type StoryScorer
 } from "@/lib/db/queries/story";
 import { formatDate } from "@/lib/utils/date-format";
 import { currentSaisonCode } from "@/lib/utils/saison";
+import { hasResult } from "@/lib/matches/display-state";
 import {
   pickCrest,
   recapHeadline,
@@ -156,20 +156,8 @@ export interface RecapStory extends StoryBase {
 export type StoryModel = PreviewStory | RecapStory;
 
 /**
- * Ist das Spiel gelaufen und gewertet? Nur dann gibt es einen Rückblick.
- *
- * TODO(#43): Aufgabe #43 legt `lib/matches/display-state.ts` mit `hasResult` /
- * `isUpcomingMatch` an. Sobald die auf main ist, diese lokale Variante durch den
- * gemeinsamen Helfer ersetzen — es darf nur EINE Definition von „gespielt" geben.
- * Hier noch lokal, weil das Modul im Worktree dieses Branches nicht existiert.
- */
-function isPlayed(m: StoryMatch): boolean {
-  return m.status === "finished" && m.ergebnisHeim !== null && m.ergebnisGast !== null;
-}
-
-/**
  * Baut das Story-Modell für ein Spiel der Mannschaft. Wählt die Vorlage selbst:
- * gewertetes Spiel → Rückblick, sonst → Vorschau.
+ * Spiel mit Endstand → Rückblick, sonst → Vorschau.
  *
  * `null`, wenn Mannschaft/Spiel nicht existieren oder das Spiel nicht zu dieser
  * Mannschaft gehört (der Tenant-Filter sitzt in getStoryMatch).
@@ -240,7 +228,12 @@ export async function buildStoryModel(
     year: "numeric"
   });
 
-  if (isPlayed(match)) {
+  // Endstand liegt vor → Rückblick, sonst Vorschau. Bewusst über den
+  // gemeinsamen `hasResult` und damit am ERGEBNIS festgemacht, nicht am Status:
+  // fussball.de trägt das Ergebnis oft erst Tage nach dem Anstoß nach, bis
+  // dahin bleibt die Row `scheduled` — die Story hätte für ein längst
+  // gespieltes Spiel eine „Vorschau" gezeigt.
+  if (hasResult(match)) {
     // Ohne verlässliche Seite: nur der Endstand (der stimmt immer) — keine
     // Ausgangs-Headline, keine „unsere" Torschützen.
     return {
