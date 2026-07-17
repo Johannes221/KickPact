@@ -36,4 +36,14 @@ describe("aggregate-scope", () => {
     expect(statsHeading("matches", 10)).toBe("Insights · 10 ausgewertete Spiele");
     expect(statsHeading("matches", 10)).not.toMatch(/Saison/i);
   });
+
+  /**
+   * Live gesehen (2026-07-17, /m/fg-union-…): „INSIGHTS · 1 AUSGEWERTETE SPIELE".
+   * scopeKicker beugt korrekt, statsHeading tat es nicht — und der Test hier
+   * benutzte nur 10, hat den Singular also nie berührt.
+   */
+  it("beugt den Singular richtig", () => {
+    expect(statsHeading("matches", 1)).toBe("Insights · 1 ausgewertetes Spiel");
+    expect(scopeSuffix("matches", 1)).toBe(" in 1 ausgewertetem Spiel");
+  });
 });

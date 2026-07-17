@@ -109,6 +109,44 @@ describe("computeTeamSeasonStats", () => {
     expect(s.goalsFor).toBe(2);
   });
 
+  /**
+   * Live gesehen (2026-07-17, /m/fg-union-…): „1 Spiele · Bilanz 0/1/0 · Tore 0:0"
+   * — das war das 0:0-TESTSPIEL vom 12.07. Freundschaftsspiele sind kein Teil
+   * der Saison-Bilanz; die Liga-Tabelle zählt sie auch nicht. Sie hier
+   * mitzuzählen macht die Kacheln nicht nur schief, sondern auch unvergleichbar
+   * mit der Tabelle, gegen die `resolveSeasonAggregate` sie hält.
+   * Pokalspiele bleiben drin: echter Wettkampf, und sie zahlen auch.
+   */
+  it("zählt Freundschaftsspiele NICHT in die Saison-Bilanz", async () => {
+    const clubName = "Sportfreunde Testkirchen";
+    const [club] = await db.insert(clubs).values({ slug: `c-${createId().slice(0,6)}`, name: clubName, fussballdeVereinId: createId() }).returning({ id: clubs.id });
+    const [team] = await db.insert(teams).values({ clubId: club.id, name: "1. Herren", saison: "2526", fussballdeTeamId: createId(), isActive: true }).returning({ id: teams.id });
+    // Ligaspiel: zählt.
+    await db.insert(matches).values({ teamId: team.id, fussballdeSpielId: createId(), datum: new Date("2025-09-14T12:00:00Z"), heimName: clubName, gastName: "Gegner A", status: "finished", ergebnisHeim: 3, ergebnisGast: 0, competitionType: "league" });
+    // Pokalspiel: zählt auch (echter Wettkampf).
+    await db.insert(matches).values({ teamId: team.id, fussballdeSpielId: createId(), datum: new Date("2025-09-21T12:00:00Z"), heimName: clubName, gastName: "Gegner B", status: "finished", ergebnisHeim: 1, ergebnisGast: 0, competitionType: "cup" });
+    // Freundschaftsspiel: darf NICHT zählen.
+    await db.insert(matches).values({ teamId: team.id, fussballdeSpielId: createId(), datum: new Date("2025-07-10T12:00:00Z"), heimName: clubName, gastName: "Gegner C", status: "finished", ergebnisHeim: 0, ergebnisGast: 5, competitionType: "friendly" });
+
+    const s = await computeTeamSeasonStats(team.id, team.name, clubName);
+    expect(s.games).toBe(2);
+    expect(s.wins).toBe(2);
+    expect(s.losses).toBe(0); // die 0:5-Klatsche im Testspiel taucht nicht auf
+    expect(s.goalsFor).toBe(4);
+    expect(s.goalsAgainst).toBe(0);
+  });
+
+  /** `unknown` (Alt-Bestand) zählt weiter — sonst verschwinden Bestandsspiele. */
+  it("zählt Spiele mit unbekanntem Wettbewerb weiter mit", async () => {
+    const clubName = "Sportfreunde Testkirchen";
+    const [club] = await db.insert(clubs).values({ slug: `c-${createId().slice(0,6)}`, name: clubName, fussballdeVereinId: createId() }).returning({ id: clubs.id });
+    const [team] = await db.insert(teams).values({ clubId: club.id, name: "1. Herren", saison: "2526", fussballdeTeamId: createId(), isActive: true }).returning({ id: teams.id });
+    await db.insert(matches).values({ teamId: team.id, fussballdeSpielId: createId(), datum: new Date("2025-09-14T12:00:00Z"), heimName: clubName, gastName: "Gegner A", status: "finished", ergebnisHeim: 2, ergebnisGast: 0 });
+
+    const s = await computeTeamSeasonStats(team.id, team.name, clubName);
+    expect(s.games).toBe(1);
+  });
+
   /** Teilrunden-Tabelle (Jugend: Vor-/Endrunde) darf belegte Spiele nicht wegwerfen. */
   it("ignoriert eine Tabelle, die weniger Spiele kennt als in der DB liegen", async () => {
     const clubName = "Sportfreunde Testkirchen";

@@ -26,13 +26,23 @@ export function isFullSeason(source: AggregateSource): boolean {
 }
 
 /**
+ * "1 ausgewertetes Spiel" / "10 ausgewertete Spiele" — im Nominativ.
+ * Zentral, weil die Beugung sonst an jeder Aufrufstelle neu (und irgendwann
+ * falsch) passiert: live stand am 2026-07-17 „1 AUSGEWERTETE SPIELE" auf einem
+ * öffentlichen Profil, weil genau eine der drei Stellen sie vergessen hatte.
+ */
+function evaluatedMatches(spiele: number): string {
+  return `${spiele} ${spiele === 1 ? "ausgewertetes Spiel" : "ausgewertete Spiele"}`;
+}
+
+/**
  * Bezugsgröße als Kicker über der Bilanz, z.B.
  *   Tabelle  → "34 Spiele auf dem Platz"
  *   Teilmenge → "10 ausgewertete Spiele"
  */
 export function scopeKicker(source: AggregateSource, spiele: number): string {
   if (isFullSeason(source)) return `${spiele} Spiele auf dem Platz`;
-  return `${spiele} ${spiele === 1 ? "ausgewertetes Spiel" : "ausgewertete Spiele"}`;
+  return evaluatedMatches(spiele);
 }
 
 /**
@@ -43,7 +53,10 @@ export function scopeKicker(source: AggregateSource, spiele: number): string {
  */
 export function scopeSuffix(source: AggregateSource, spiele: number): string {
   if (isFullSeason(source)) return "";
-  return ` in ${spiele} ausgewerteten Spielen`;
+  // Dativ: "in EINEM ausgewerteteM Spiel" / "in 10 ausgewerteteN Spielen".
+  return spiele === 1
+    ? " in 1 ausgewertetem Spiel"
+    : ` in ${spiele} ausgewerteten Spielen`;
 }
 
 /** Überschrift der Bilanz. Ohne Tabelle darf hier NICHT "Saison" stehen. */
@@ -58,5 +71,5 @@ export function bilanzHeadline(source: AggregateSource): string {
  */
 export function statsHeading(source: AggregateSource, spiele: number): string {
   if (isFullSeason(source)) return "Saison-Insights";
-  return `Insights · ${spiele} ausgewertete Spiele`;
+  return `Insights · ${evaluatedMatches(spiele)}`;
 }

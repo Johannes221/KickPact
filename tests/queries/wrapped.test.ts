@@ -60,6 +60,7 @@ type MatchSeed = {
   hzH?: number | null;
   hzG?: number | null;
   status?: "finished" | "scheduled";
+  competitionType?: "league" | "cup" | "friendly" | "unknown";
 };
 
 async function seedMatch(teamId: string, m: MatchSeed): Promise<string> {
@@ -75,7 +76,8 @@ async function seedMatch(teamId: string, m: MatchSeed): Promise<string> {
       ergebnisGast: m.eg ?? null,
       halbzeitHeim: m.hzH ?? null,
       halbzeitGast: m.hzG ?? null,
-      status: m.status ?? "finished"
+      status: m.status ?? "finished",
+      competitionType: m.competitionType ?? "unknown"
     })
     .returning({ id: matches.id });
   return row.id;
@@ -320,6 +322,23 @@ describe("getWrappedStats — Quelle der Saison-Aggregate", () => {
     expect(stats?.aggregateSource).toBe("matches");
     expect(stats?.spiele).toBe(1);
     expect(stats?.tabellenplatz).toBeNull();
+  });
+
+  /**
+   * Ein Testspiel ist kein Saison-Ereignis. Ohne Filter würde ein
+   * Freundschaftsspiel nicht nur die Bilanz verfälschen, sondern auch als
+   * „Zu Null", „Comeback" oder Tor des besten Torschützen ins Wrapped wandern —
+   * und die Liga-Tabelle, gegen die wir halten, kennt es gar nicht.
+   */
+  it("zählt Freundschaftsspiele nicht ins Wrapped", async () => {
+    const teamId = await seedTeam("2627");
+    await seedMatch(teamId, { datum: "2025-08-10", eh: 2, eg: 0 });
+    await seedMatch(teamId, { datum: "2025-07-05", eh: 0, eg: 7, competitionType: "friendly" });
+    const stats = await getWrappedStats(teamId, "2526", null);
+    expect(stats?.spiele).toBe(1);
+    expect(stats?.siege).toBe(1);
+    expect(stats?.niederlagen).toBe(0);
+    expect(stats?.toreKassiert).toBe(0);
   });
 });
 
