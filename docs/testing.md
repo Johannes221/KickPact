@@ -80,28 +80,34 @@ DATABASE_URL_TEST="postgres://test:test@localhost:54329/kickpact_test"
 (`NODE_ENV=test` oder `VITEST=true`), und routet dann auf `DATABASE_URL_TEST`.
 Außerhalb von Tests bleibt `DATABASE_URL` (Neon/Prod) unverändert.
 
-### 4) Migrations gegen die Test-DB anwenden
-
-```bash
-DATABASE_URL="$DATABASE_URL_TEST" npm run db:migrate
-```
-
-(Das `db:migrate`-Script nutzt `dotenv -e .env.local`, übersteuert wird die
-URL hier via Shell-Env. Alternativ ein separates `.env.test` mit
-`DATABASE_URL=<test-url>` anlegen und dotenv-Flag tauschen.)
-
-Integration-Tests rufen die Migration zusätzlich on-demand auf
-(`tests/setup/integration-db.ts > getTestDb()`), daher ist Schritt 4
-optional für reine Integration-Suiten — aber für die `tests/lib/*`-Tests
-(die direkt `lib/db/client.ts` nutzen) muss das Schema einmal angelegt sein.
-
-### 5) Tests laufen lassen
+### 4) Tests laufen lassen
 
 ```bash
 npm test
 ```
 
 Erwartet: alle Tests grün, ohne Race-Conditions auf shared Neon-Tabellen.
+Migrationen musst du nicht von Hand fahren — `tests/setup/global.ts` migriert
+die Test-DB beim Start jedes Laufs (idempotent, nach dem ersten Mal ein No-Op).
+
+### Slot-DBs: warum dein Lauf nicht `kickpact_test` benutzt
+
+Die URL aus `.env.local` ist nur die **Basis**. Beim Start reserviert jeder
+Lauf per Postgres-Advisory-Lock einen von acht Slots und arbeitet auf einer
+eigenen DB (`kickpact_test_s1` … `_s8`); die Konsole zeigt `[test-db] Slot N`.
+Ohne das teilen sich parallele Läufe — zweites Terminal, andere Claude-Session
+in `.claude/worktrees/*` (kopiert `.env.local`!), ein
+`dotenv -e .env.local -- tsx scripts/…` — dieselben Tabellen und truncaten
+sich gegenseitig mitten im Seed. Symptom war ein Volllauf mit schwankend
+19/96/130 FK-Fehlern (`Key (team_id)=… is not present in table teams`), dessen
+Dateien einzeln grün liefen. `singleFork` half nicht: es serialisiert nur
+innerhalb eines Laufs, nicht gegen einen zweiten Prozess.
+
+Praktisch heißt das: Slots werden wiederverwendet (Migrationen zahlt nur der
+erste Lauf pro Slot), der Lock hängt an der Verbindung (Ctrl-C gibt ihn frei),
+und sind alle acht belegt, wartet der Lauf auf einen freien Slot statt zu
+kollidieren. Willst du eine Slot-DB inspizieren:
+`docker exec kickpact-postgres-test psql -U test -d kickpact_test_s1`.
 
 ### Troubleshooting
 
