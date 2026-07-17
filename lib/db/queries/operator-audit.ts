@@ -12,7 +12,8 @@ export type OperatorAuditTargetType =
   | "charge"
   | "crawl"
   | "support"
-  | "membership";
+  | "membership"
+  | "sponsor_lead";
 
 export interface RecordOperatorActionInput {
   operatorUserId: string;
