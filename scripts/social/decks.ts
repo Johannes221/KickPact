@@ -1,32 +1,56 @@
+import type { PhotoName } from "./brand";
+
 /**
  * Der Content selbst. DAS ist die Datei, die man anfasst, um zu posten.
  *
  * Ein Deck = ein Karussell-Post. `npm run social:render` macht daraus PNGs unter
  * `out/social/<slug>/`, fertig zum Hochladen.
  *
- * Wir posten als KICKPACT, nicht als Verein (Johannes, 2026-07-17). Kein Content
- * im Namen einer Mannschaft, keine echten Spiele, keine Vorschauen oder
- * Rückblicke als Eigen-Content. Es geht immer um die App: was sie kann, wie sie
- * läuft, was sie kostet, warum man sie lädt. Ein Rückblick-Motiv darf vorkommen,
- * aber als FEATURE-Beleg („das baut dir die App"), nie als Vereins-Post.
+ * Wir posten als KICKPACT, nicht als Verein. Kein Content im Namen einer
+ * Mannschaft, keine echten Spiele. Es geht immer um die App: was sie kann, wie
+ * sie läuft, was sie kostet, warum man sie lädt.
  *
- * Leitplanke, geerbt von lib/story/story-data.ts: NICHTS ERFINDEN. Keine Zahl,
- * kein Vereinsname, kein Zitat, das nicht real ist. Erfundene Sozialbeweise
- * fliegen im Amateurfußball sofort auf, weil sich in einer Liga alle kennen.
- * Platzhalter stehen als [X] im Text und BLOCKIEREN den Render (siehe
- * assertNoPlaceholders in render.tsx) — lieber kein Post als ein erfundener.
+ * BEWORBEN WIRD DIE MANNSCHAFTSLIZENZ, nicht die Vereinslizenz (Johannes,
+ * 2026-07-17). Einstieg ist Basic mit 4,99 € pro Mannschaft und Monat — genau
+ * das, was app/(marketing)/preise/page.tsx selbst bewirbt. Die 19,99 € der
+ * Vereinslizenz gelten für einen ganzen Verein mit beliebig vielen Mannschaften
+ * und sind der falsche Einstieg für einen Post.
+ *
+ * NICHTS ERFINDEN. Alle Beträge unten sind die echten Defaults aus dem
+ * Pact-Builder (app/(sponsor)/sponsor/pledge/new/_components/pledge-builder.tsx,
+ * TRIGGER_LIBRARY), alle Preise aus lib/stripe/pricing.ts. Wer hier eine Zahl
+ * ändert, prüft sie vorher dort. Platzhalter `[X]` blockieren den Render.
+ *
+ * SPRACHE: „Pact" für das Ganze, „Regel" für die einzelne Festlegung, „Beitrag"
+ * für den ausgelösten Betrag. NIE „Wette" (Framing ist Gaudi und Community, nicht
+ * Glücksspiel), nie „Spende" (es ist Sponsoring), nie „Charge"/„Pledge" (das ist
+ * Code-Vokabular). Die Datenquelle wird NICHT namentlich genannt, nur
+ * „automatisch" — so hält es die Kunden-UI auch.
  */
 
 /**
  * Tonart einer Fläche.
- *   light = weiß, Navy-Text, grüne Akzente. Der Normalfall.
- *   green = volle grüne Fläche, Navy-Text. Für Aufschlag und Pointe.
+ *   light = weiß, Navy-Text, grüne Akzente. Der Normalfall und der Regelfall.
+ *   photo = echtes Foto mit Navy-Schleier, weißer Text. Für den Menschen dahinter.
  *
- * Ein Karussell aus sieben identischen weißen Flächen liest sich als eine einzige
- * lange Fläche, und der Daumen wischt durch. Der Tonartwechsel ist der Rhythmus.
- * Sparsam einsetzen: wenn alles knallt, knallt nichts.
+ * KEINE grüne Vollfläche. Gab es mal, ist raus (Johannes, 2026-07-17: „zu grün").
+ * Das Grün trägt als AKZENT — Marke, Kicker, Balken der Pact-Karte — nicht als
+ * Grund. Wer sie wieder einführen will: erst fragen, nicht einfach eine Tonart
+ * ergänzen.
+ *
+ * Der Rhythmus kommt trotzdem nicht aus dem Nichts: ein Karussell aus acht
+ * identischen weißen Textflächen liest sich als eine einzige lange Fläche, und
+ * der Daumen wischt durch. Er kommt jetzt aus den Fotos (dunkel) und den
+ * Pact-Karten (graue Blöcke). Ein Deck ohne beides wird flach — dann gehört ein
+ * Foto rein, kein neuer Hintergrund.
  */
-export type Tone = "light" | "green";
+export type Tone = "light" | "photo";
+
+/** Eine Beispiel-Regel als Karte. Betrag als String, damit „5 €" so bleibt. */
+export interface Pact {
+  label: string;
+  amount: string;
+}
 
 export interface Slide {
   /** Kleines Caps-Label über der Headline. */
@@ -36,6 +60,12 @@ export interface Slide {
   /** Optionale Ausführung darunter. Kurz halten, das ist kein Blogpost. */
   body?: string;
   tone?: Tone;
+  /** Pflicht bei tone: "photo". */
+  photo?: PhotoName;
+  /** Beispiel-Regeln als Karten unter der Headline. Max. 3, sonst wird es klein. */
+  pacts?: Pact[];
+  /** Statt Text: das Logo groß in die Fläche. Für Aufschlag und Abbinder. */
+  logo?: boolean;
 }
 
 export interface Deck {
@@ -59,162 +89,199 @@ const TAGS = [
   "#kickpact"
 ];
 
+/** Steht unter fast jedem Deck. Einmal formuliert, überall gleich. */
+const CTA_PREIS: Slide = {
+  kicker: "Mannschaftslizenz",
+  headline: "Ab 4,99 € im Monat.",
+  body: "Pro Mannschaft. 30 Tage kostenlos testen, ohne Kreditkarte. Und 0 % Provision auf das, was reinkommt."
+};
+
 export const DECKS: Deck[] = [
   {
-    slug: "01-so-funktioniert",
+    slug: "01-so-funktioniert-ein-pact",
     angle: "Erklärung",
     caption:
-      "Sponsoring im Amateurfußball heißt bisher: jemand überweist einmal im Jahr " +
-      "300 Euro und bekommt dafür sein Logo auf ein Banner, das keiner liest.\n\n" +
-      "KickPact dreht das um. Jemand verspricht einen Betrag pro Tor, ihr spielt, " +
-      "die App zählt mit. Am Monatsende geht die Rechnung raus.\n\n" +
-      "Alles auf kickpact.com, Link in der Bio.",
+      "Sponsoring im Amateurfußball läuft so: Einmal im Jahr 300 Euro, dafür ein " +
+      "Banner am Zaun, das keiner liest. Beim zweiten Mal sagt er ab.\n\n" +
+      "Ein Pact läuft anders. Jemand legt fest, wofür er zahlt: pro Tor, pro Sieg, " +
+      "pro Comeback. Ihr spielt, die App zählt mit, am Monatsende kommt die " +
+      "Zahlungsübersicht.\n\n" +
+      "Ab 4,99 € im Monat pro Mannschaft. 30 Tage kostenlos, ohne Kreditkarte.\n" +
+      "kickpact.com, Link in der Bio.",
     hashtags: TAGS,
     slides: [
       {
         kicker: "In 60 Sekunden",
-        headline: "So funktioniert KickPact.",
-        tone: "green"
+        headline: "So funktioniert ein Pact.",
+        logo: true
+      },
+      {
+        kicker: "Der Mensch dahinter",
+        headline: "Euer Onkel will euch unterstützen.",
+        body: "Nicht mit 50 Euro im Umschlag, einmal im Jahr. Sondern jedes Wochenende ein bisschen.",
+        tone: "photo",
+        photo: "player-and-sponsor"
       },
       {
         kicker: "Schritt 1",
-        headline: "Jemand verspricht einen Betrag pro Tor.",
-        body:
-          "Eltern, Ehemalige, der Onkel, der eh jedes Spiel schaut. Keine Firmen, " +
-          "keine Banner, kein Vertrag über drei Jahre."
+        headline: "Er legt fest, wofür er zahlt.",
+        body: "Seine Regeln, seine Beträge. Er nimmt, was ihm Spaß macht.",
+        pacts: [
+          { label: "Pro Tor", amount: "5 €" },
+          { label: "Pro Sieg", amount: "10 €" },
+          { label: "Pro Comeback-Sieg", amount: "20 €" }
+        ]
       },
       {
         kicker: "Schritt 2",
-        headline: "Ihr spielt einfach.",
-        body:
-          "Die Spieldaten holt sich die App selbst. Ihr tragt nichts ein, ihr meldet " +
-          "nichts, ihr müsst an gar nichts denken."
+        headline: "Ihr spielt. Mehr nicht.",
+        body: "Die Spieldaten kommen automatisch. Ihr tragt nichts ein, ihr meldet nichts, ihr müsst an gar nichts denken."
       },
       {
         kicker: "Schritt 3",
-        headline: "Jedes Tor zählt sich selbst.",
-        body:
-          "Tor, Sieg, Spiel ohne Gegentor. Ihr legt vorher fest, was zählt und was " +
-          "es wert ist."
+        headline: "2 Tore und ein Comeback. 30 € in der Kasse."
       },
       {
-        kicker: "Schritt 4",
-        headline: "Am Monatsende kommt die Rechnung.",
-        body:
-          "Der Sponsor zahlt, das Geld geht an den Verein. Wir behalten davon nichts ein."
+        kicker: "Und die Angst davor?",
+        headline: "Er legt sein Monatslimit selbst fest.",
+        body: "Darüber läuft nichts. Niemand wacht am Montag mit einer Überraschung auf."
       },
       {
-        kicker: "Was es kostet",
-        headline: "19,99 € im Monat. Für den ganzen Verein.",
-        body: "Weniger als 1 Euro pro Spieler. Sponsoren zahlen keine Gebühr.",
-        tone: "green"
+        kicker: "Am Monatsende",
+        headline: "Zahlungsübersicht raus, Geld an die Mannschaft.",
+        body: "Kein Kassenwart-Abend mit Excel."
       },
+      CTA_PREIS,
       {
-        kicker: "kickpact.com",
-        headline: "30 Tage testen.",
-        body: "Link in der Bio."
+        headline: "30 Tage kostenlos testen.",
+        body: "kickpact.com, Link in der Bio.",
+        logo: true
       }
     ]
   },
 
   {
-    slug: "02-fuenf-euro-pro-tor",
-    angle: "Ansporn",
+    slug: "02-was-ihr-festlegen-koennt",
+    angle: "Features",
     caption:
-      "88. Minute, ihr führt 3:1, und normalerweise schiebt jetzt nur noch jeder.\n\n" +
-      "Außer es hängen 5 Euro pro Tor drin. Dann läuft plötzlich der " +
-      "Innenverteidiger mit nach vorne.\n\n" +
-      "kickpact.com",
+      "24 Pact-Typen. Ihr nehmt, was zu euch passt.\n\n" +
+      "Von „pro Tor“ über „Tor hinter der Mittellinie“ bis „Aufstieg“. Die " +
+      "Beträge hier sind die Voreinstellungen, jeder Sponsor kann sie ändern.\n\n" +
+      "Welchen würdet ihr nehmen? Ab in die Kommentare.\n\nkickpact.com",
     hashtags: [...TAGS, "#kabine"],
     slides: [
       {
-        kicker: "88. Minute",
-        headline: "Ihr führt 3:1.",
-        body: "Normalerweise schiebt jetzt nur noch jeder."
+        kicker: "24 Typen",
+        headline: "Wofür kann euch jemand sponsern?",
+        logo: true
       },
       {
-        headline: "Außer es hängen 5 € pro Tor drin.",
-        tone: "green"
+        kicker: "Kurz vorweg",
+        headline: "Ihr legt fest, was zählt.",
+        body: "Nicht wir. Jeder Sponsor baut sich seine Regeln selbst zusammen.",
+        tone: "photo",
+        photo: "team-green"
       },
       {
-        kicker: "Dann",
-        headline: "Läuft der Innenverteidiger mit nach vorne.",
-        body: "Und der Trainer muss in der Halbzeit niemanden mehr anschreien."
+        kicker: "Die Klassiker",
+        headline: "Tore und Siege.",
+        body: "Zählt die App automatisch mit.",
+        pacts: [
+          { label: "Pro Tor", amount: "5 €" },
+          { label: "Pro Sieg", amount: "10 €" },
+          { label: "Pro Auswärtssieg", amount: "15 €" }
+        ]
       },
       {
-        kicker: "Ihr entscheidet",
-        headline: "Was zählt und was es wert ist.",
-        body:
-          "5 € pro Tor. 20 € pro Sieg. 10 €, wenn hinten die Null steht. " +
-          "Jede Regel kann jeder Sponsor selbst setzen."
+        kicker: "Für hinten",
+        headline: "Auch die Null wird bezahlt.",
+        body: "Comeback heißt: irgendwann hinten gelegen, am Ende gewonnen.",
+        pacts: [
+          { label: "Pro Zu-Null-Sieg", amount: "5 €" },
+          { label: "Pro Comeback-Sieg", amount: "20 €" }
+        ]
       },
       {
-        kicker: "Und danach",
-        headline: "Wird in der Kabine gerechnet.",
-        body: "Das ist der Teil, den vorher keiner auf dem Zettel hatte."
+        kicker: "Für einzelne Spieler",
+        headline: "Immer wenn genau der trifft.",
+        body: "Geht überall dort, wo für eure Liga die Torschützen erfasst werden.",
+        pacts: [
+          { label: "Tore von Spieler X", amount: "3 €" },
+          { label: "Pro Hattrick", amount: "25 €" }
+        ]
       },
       {
-        kicker: "kickpact.com",
-        headline: "Macht die Mannschaftskasse voll.",
-        body: "30 Tage testen. Link in der Bio.",
-        tone: "green"
-      }
+        kicker: "Für die Kunststücke",
+        headline: "Das Ding aus 50 Metern.",
+        body: "Meldet ihr selbst, der Sponsor bestätigt. Dauert zehn Sekunden.",
+        pacts: [
+          { label: "Kopfballtor", amount: "10 €" },
+          { label: "Hackentor", amount: "15 €" },
+          { label: "Tor hinter Mittellinie", amount: "25 €" }
+        ]
+      },
+      {
+        kicker: "Für die ganze Saison",
+        headline: "Das Große kommt am Ende.",
+        body: "Einmalig, wenn es klappt.",
+        pacts: [
+          { label: "Klassenerhalt", amount: "100 €" },
+          { label: "Aufstieg", amount: "200 €" },
+          { label: "Meister-Titel", amount: "300 €" }
+        ]
+      },
+      {
+        kicker: "Sogar das",
+        headline: "Gelbe Karte: 2 € in die Kasse.",
+        body: "Weil es der Mannschaftskasse egal ist, warum sie voll wird."
+      },
+      CTA_PREIS
     ]
   },
 
   {
-    slug: "03-was-die-app-kann",
-    angle: "Features",
+    slug: "03-wer-sponsert-euch",
+    angle: "Mannschaftskasse",
     caption:
-      "Was in der App drin ist, ohne Marketing-Sprech.\n\n" +
-      "Fehlt euch was? Schreibt es in die Kommentare, ich lese da wirklich mit.\n\n" +
-      "kickpact.com",
-    hashtags: [...TAGS, "#vereinsmarketing"],
+      "Ihr sucht Sponsoren beim Autohaus, beim Bäcker, beim Getränkemarkt. " +
+      "Und übersehen dabei die Leute, die eh jedes Wochenende an der Linie " +
+      "stehen.\n\n" +
+      "Keine Firmen. Eltern, Ehemalige, Onkel, Nachbarn.\n\nkickpact.com",
+    hashtags: TAGS,
     slides: [
       {
-        kicker: "Ohne Marketing-Sprech",
-        headline: "Was die App wirklich kann.",
-        tone: "green"
+        kicker: "Sponsorensuche",
+        headline: "Ihr fragt die Falschen.",
+        logo: true
       },
       {
-        kicker: "Spieldaten",
-        headline: "Kommen von allein.",
-        body:
-          "Ergebnis, Torschützen, Tabellenplatz. Was öffentlich nirgends steht, " +
-          "meldet ihr in zwei Klicks selbst."
+        kicker: "Der übliche Weg",
+        headline: "Autohaus. Bäcker. Getränkemarkt.",
+        body: "Drei Anrufe, zwei Absagen, einmal 50 Euro. Und im Sommer geht das Ganze von vorne los."
       },
       {
-        kicker: "Regeln",
-        headline: "Baut jeder Sponsor sich selbst.",
-        body: "Pro Tor, pro Sieg, pro Spiel ohne Gegentor. Mit eigenem Monatslimit."
+        kicker: "Dabei",
+        headline: "Die Richtigen stehen schon da.",
+        body: "Jeden Samstag, an der Linie, bei 3 Grad. Die fragt nur nie jemand.",
+        tone: "photo",
+        photo: "team-celebration"
       },
       {
-        kicker: "Überblick",
-        headline: "Der Verein sieht jeden Cent.",
-        body: "Wer hat was versprochen, was ist schon drin, was kommt am Monatsende."
+        kicker: "Wer das ist",
+        headline: "Eltern. Ehemalige. Der Onkel. Der Nachbar.",
+        body: "Privatleute, keine Firmen. Genau das ist der Punkt: die wollen kein Logo am Zaun, die wollen dabei sein."
       },
       {
-        kicker: "Rechnung",
-        headline: "Schreibt sich selbst.",
-        body: "PDF an den Sponsor, Geld an den Verein. Kein Kassenwart-Abend mit Excel."
+        kicker: "Was sie kriegen",
+        headline: "Einen Grund, jedes Spiel zu schauen.",
+        body: "Wer 5 € pro Tor drin hat, fragt sonntags nicht mehr, wie es ausgegangen ist. Der war da."
       },
       {
-        kicker: "Motive",
-        headline: "Fertige Bilder fürs Vereins-Konto.",
-        body:
-          "Vorschau und Rückblick zu jedem Spiel, im 9:16-Format. Antippen, teilen, fertig."
+        kicker: "Was ihr kriegt",
+        headline: "Eine Kasse, die sich selbst füllt.",
+        body: "Ohne dass jemand nochmal irgendwo klingeln muss."
       },
-      {
-        kicker: "Saison-Rückblick",
-        headline: "Am Ende kriegt ihr eure Saison als Story.",
-        body: "Tore, Serien, Bilanz. Fünfzehn Bilder, die keiner von Hand bauen will.",
-        tone: "green"
-      },
-      {
-        kicker: "kickpact.com",
-        headline: "30 Tage testen.",
-        body: "Link in der Bio."
-      }
+      CTA_PREIS
     ]
   },
 
@@ -230,41 +297,39 @@ export const DECKS: Deck[] = [
       {
         kicker: "Vorstandssitzung",
         headline: "Vier Fragen kommen immer.",
-        tone: "green"
+        logo: true
       },
       {
         kicker: "Frage 1",
         headline: "„Müssen wir dann alles eintragen?“",
-        body:
-          "Nein. Die Spieldaten kommen automatisch. Nur was öffentlich nirgends " +
-          "steht, meldet ihr selbst, und das dauert zehn Sekunden."
+        body: "Nein. Tore, Siege und Karten kommen automatisch. Nur die Kunststücke meldet ihr selbst, und das dauert zehn Sekunden."
       },
       {
         kicker: "Frage 2",
         headline: "„Und wenn wir zehn Tore schießen?“",
-        body:
-          "Jeder Sponsor setzt sein eigenes Monatslimit. Darüber läuft nichts. " +
-          "Niemand wacht mit einer Überraschung auf."
+        body: "Jeder Sponsor setzt sein eigenes Monatslimit. Darüber läuft nichts."
       },
       {
         kicker: "Frage 3",
         headline: "„Was kostet uns das?“",
-        body:
-          "19,99 € im Monat für den Verein. Sponsoren zahlen keine Gebühr, und von " +
-          "dem Geld, das reinkommt, behalten wir nichts ein."
+        body: "4,99 € im Monat für eure Mannschaft. Von dem Geld, das reinkommt, behalten wir nichts ein.",
+        pacts: [
+          { label: "Mannschaft, monatlich", amount: "4,99 €" },
+          { label: "Provision auf Pacts", amount: "0 %" }
+        ]
       },
       {
         kicker: "Frage 4",
         headline: "„Wer soll uns denn sponsern?“",
-        body:
-          "Eltern, Ehemalige, der Onkel, der eh jedes Spiel schaut. Keine Firmen. " +
-          "Genau das ist der Punkt."
+        body: "Eltern, Ehemalige, der Onkel, der eh jedes Spiel schaut. Keine Firmen.",
+        tone: "photo",
+        photo: "player-and-sponsor"
       },
       {
         kicker: "kickpact.com",
         headline: "Noch eine Frage offen?",
         body: "Ab in die Kommentare. Ich antworte da.",
-        tone: "green"
+        logo: true
       }
     ]
   }

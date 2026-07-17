@@ -26,15 +26,15 @@ export const NEUTRAL = "#CDD2D1";
  * Warum zwei Grüns, und warum das nicht kosmetisch ist:
  *
  * #01C457 auf Weiß hat ~2,4:1 Kontrast. Das reißt jede WCAG-Schwelle, auch die
- * 3:1 für große Schrift. Grüner Text auf weißem Grund ist damit für einen Teil
+ * 3:1 für große Schrift. Grüner TEXT auf weißem Grund ist damit für einen Teil
  * der Leute schlicht nicht lesbar, und auf einem Handy in der Sonne für alle.
- * Deshalb: #01C457 nur als FLÄCHE (dort trägt es), #00563A für grünen TEXT
- * (~8,4:1 auf Weiß).
+ * Deshalb steht grüner Text immer in GREEN_DARK (~8,4:1 auf Weiß), und GREEN
+ * bleibt kleinen Flächen vorbehalten: Marke, Balken, Punkte.
  *
- * Umgekehrt auf grüner Fläche: Weiß darauf wäre wieder 2,4:1. Navy darauf sind
- * ~7:1. Also grüne Fläche = Navy-Text, nie weißer.
+ * Falls je wieder eine grüne Vollfläche kommt (aktuell bewusst nicht, siehe
+ * decks.ts): Weiß darauf wäre wieder 2,4:1, Navy darauf sind ~7:1. Grüne Fläche
+ * hieße also Navy-Text, nie weißen.
  */
-export const ON_GREEN = NAVY;
 
 /* --------------------------------- Fonts ---------------------------------- */
 
@@ -76,14 +76,67 @@ const dataUri = (p: string) =>
 
 /**
  * Primärlogo (2-farbig) für helle Flächen — die README ist da eindeutig: „Default
- * für alles auf hellen Hintergründen". Auf grüner Fläche verschwindet das grüne
- * PACT, also dort das Navy-Logo.
+ * für alles auf hellen Hintergründen". Da alle Flächen außer den Fotos weiß sind,
+ * ist das hier der Normalfall.
  */
 export const LOGO_ON_LIGHT = dataUri("logo-horizontal.png");
-export const LOGO_ON_GREEN = dataUri("logo-navy-horizontal.png");
+/** Auf Fotos: das zweifarbige Primärlogo säuft ab, weiß steht immer. */
+export const LOGO_WHITE = dataUri("logo-white-horizontal.png");
 
 /** Seitenverhältnis des horizontalen Logos, gemessen an der PNG (912×120). */
 export const LOGO_RATIO = 912 / 120;
+
+/**
+ * Die K-Marke als SVG. Satori rastert SVG-data-URIs sauber (geprüft), und als
+ * Vektor skaliert sie auf jede Größe — das Primärlogo ist Pixel-only und würde
+ * groß ausfransen.
+ *
+ * Achtung laut public/brand/README.md: die einfarbigen SVGs sind mit potrace aus
+ * den PNGs nachgezeichnet und können minimal von der Original-Typo abweichen.
+ * Für die MARKE (reines K-Icon, keine Schrift) ist das unkritisch; für die
+ * Wortmarke bleibt deshalb das PNG die Quelle (s. LOGO_ON_LIGHT).
+ */
+const svgUri = (p: string) =>
+  "data:image/svg+xml;base64," +
+  readFileSync(join(process.cwd(), "public/brand", p)).toString("base64");
+
+export const MARK_GREEN = svgUri("mark-green.svg");
+export const MARK_WHITE = svgUri("mark-white.svg");
+
+/** Die Marke ist quadratisch (viewBox 0 0 1254 1254). */
+export const MARK_RATIO = 1;
+
+/* --------------------------------- Fotos ---------------------------------- */
+
+/**
+ * Die echten Fotos aus public/brand/photos/. Sieben Stück, je ~2 MB.
+ *
+ * Lazy und gecacht: alle auf einmal einzulesen wären ~19 MB Base64 im Speicher,
+ * und ein Deck benutzt selten mehr als zwei.
+ *
+ * Warum echte Fotos und keine KI-Bilder: Leute, die jedes Wochenende auf einem
+ * echten Platz stehen, sehen einem generierten Fußballplatz das sofort an.
+ */
+export type PhotoName =
+  | "player-and-sponsor"
+  | "team-celebration"
+  | "team-branded-line"
+  | "team-green"
+  | "team-hero"
+  | "team-white-mixed"
+  | "team-youth";
+
+const photoCache = new Map<string, string>();
+
+export function photo(name: PhotoName): string {
+  const hit = photoCache.get(name);
+  if (hit) return hit;
+  const uri =
+    "data:image/png;base64," +
+    readFileSync(join(process.cwd(), "public/brand/photos", `${name}.png`)).toString("base64");
+  photoCache.set(name, uri);
+  return uri;
+}
 
 /* -------------------------------- Typografie ------------------------------ */
 

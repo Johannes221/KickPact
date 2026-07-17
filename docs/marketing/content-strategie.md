@@ -15,6 +15,13 @@ baut dir die App"), nie als Spielbericht.
 Palette steht in `scripts/social/brand.ts`, die Werte kommen aus
 `public/brand/README.md` und `tailwind.config.ts`.
 
+**Beworben wird die Mannschaftslizenz, nicht die Vereinslizenz.** Einstieg ist
+Basic mit **4,99 € pro Mannschaft und Monat** (`lib/stripe/pricing.ts`), genau
+das, was `/preise` selbst bewirbt. Die 19,99 € der Vereinslizenz gelten für einen
+ganzen Verein mit beliebig vielen Mannschaften und sind der falsche Einstieg für
+einen Post: zu teuer als erste Zahl, und die meisten Interessenten sind eine
+einzelne Mannschaft, kein Vorstand.
+
 Der Sponsor ist der Onkel, der eh am Spielfeldrand steht. Den erreichen wir nicht
 über Instagram, sondern über den Verein, der ihn einlädt. Deshalb ist jeder Post
 an den Verein gerichtet.
@@ -49,6 +56,11 @@ Jeder Post läuft auf genau einem Angle. Angle rotieren, nicht mischen.
 6. **Gaudi** — Amateurfußball-Wahrheiten. Reichweite, kein Verkauf.
 7. **Einwand** — die Fragen aus der Vorstandssitzung, nüchtern beantwortet.
 8. **Beweis** — echte Vereine, echte Zahlen. **Erst, wenn es sie gibt.**
+
+Die Angles 1 und 2 tragen den Kanal. „Was kann ich als Pact festlegen" ist der
+substanzstärkste Post, den wir haben: 24 echte Typen mit echten Beträgen, vom Tor
+über das Hackentor bis zum Aufstieg. Das ist konkret, es ist wahr, und es
+beantwortet die einzige Frage, die wirklich im Weg steht.
 
 Angle 8 ist heute leer. Solange kein Verein zitierbar ist, wird nichts geschätzt
 und nichts erfunden. Sobald der erste Verein „ja" sagt, wird das der stärkste
@@ -101,12 +113,39 @@ Weiß auf Grün wären wieder 2,4:1, Navy auf Grün sind etwa 7:1. **Grüne Flä
 heißt Navy-Text, nie weißer.**
 
 **Zwei Tonarten**, mehr nicht:
-- `light` — weiße Fläche, Navy-Text, grüne Akzente. Der Normalfall.
-- `green` — volle grüne Fläche, Navy-Text. Für Aufschlag und Pointe.
+- `light` — weiße Fläche, Navy-Text, grüne Akzente. Der Regelfall.
+- `photo` — echtes Foto aus `public/brand/photos/` mit Navy-Schleier, weißer
+  Text. Für den Menschen dahinter.
 
-Ein Karussell aus sieben identischen weißen Flächen liest sich als eine einzige
-lange Fläche, und der Daumen wischt durch. Der Tonartwechsel ist der Rhythmus.
-Sparsam einsetzen: wenn alles knallt, knallt nichts.
+**Keine grüne Vollfläche.** Gab es kurz, ist raus (Johannes, 2026-07-17: „zu
+grün"). Das Grün trägt als Akzent, nicht als Grund: Marke, Kicker, Balken der
+Pact-Karte, Punkte. Wer sie zurückholen will, fragt vorher.
+
+**Vier Grafik-Bausteine** (`scripts/social/layout.tsx`), damit die Flächen leben
+statt nur Text zu tragen:
+
+| Baustein | Was | Wann |
+|---|---|---|
+| **K-Marke** | groß, angeschnitten, 7 % Deckkraft | füllt automatisch jede Fläche ohne Foto |
+| **Pact-Karten** | Label links, Betrag rechts, grüner Balken | wenn ein Slide echte Regeln zeigt |
+| **Logo groß** | statt des Wortes „KickPact" | Aufschlag und Abbinder |
+| **Foto + Schleier** | die sieben echten Fotos | Menschen, nicht Behauptungen |
+
+Die Pact-Karten sind absichtlich gebaut wie die Regel-Zeilen im Pact-Builder: wer
+den Post sieht und dann die App öffnet, erkennt es wieder.
+
+**Keine Emojis**, obwohl die Produkt-UI welche hat. Satori braucht dafür einen
+Emoji-Font oder lädt sie per CDN nach, und genau das ist in `app/opengraph-image.tsx`
+schon einmal auf die Nase gefallen (fehlender Emoji-Font auf dem Coolify-Node).
+Der grüne Balken der Pact-Karte macht denselben Job und kann nicht fehlschlagen.
+
+Wo „KickPact" stünde, steht das Logo. Ein Markenname als Fließtext ist eine
+verschenkte Wiedererkennung.
+
+Der Rhythmus kommt damit nicht mehr aus wechselnden Hintergründen, sondern aus
+den Fotos (dunkel) und den Pact-Karten (graue Blöcke). Ein Deck ohne beides wird
+flach, und dann gehört ein Foto rein, kein neuer Hintergrund. Jedes der vier
+Decks hat deshalb mindestens eins.
 
 **Schrift:** Display ist **Montserrat Alternates Black**, Body ist **Inter**. So
 macht es die App (`app/layout.tsx`). Die Brand-README nennt für Display noch

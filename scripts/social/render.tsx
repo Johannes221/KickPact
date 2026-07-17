@@ -2,22 +2,17 @@ import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:
 import { join } from "node:path";
 import React from "react";
 import { ImageResponse } from "next/og";
-import { DECKS, type Deck, type Slide, type Tone } from "./decks";
+import { DECKS, type Deck, type Slide } from "./decks";
 import {
   BODY,
   DISPLAY,
   FONTS,
-  GREEN,
-  GREEN_DARK,
-  LOGO_ON_GREEN,
-  LOGO_ON_LIGHT,
   LOGO_RATIO,
-  NAVY,
-  ON_GREEN,
   SLIDE_SIZE,
-  typo,
-  WHITE
+  photo,
+  typo
 } from "./brand";
+import { Backdrop, Footer, Kicker, PactCards, headlineSize, tone } from "./layout";
 
 /**
  * Rendert die Karussell-Posts aus `decks.ts` nach `out/social/`.
@@ -28,7 +23,7 @@ import {
  * Warum im Repo und nicht in Canva: die Motive der App sind schon React
  * (lib/story/story-card.tsx). Ein zweiter, handgepflegter Satz Vorlagen in einem
  * Design-Tool driftet garantiert weg. Hier teilen sich Post und Produkt dieselbe
- * Palette (scripts/social/brand.ts) und dieselben Schriftdateien.
+ * Palette (brand.ts) und dieselben Schriftdateien.
  */
 
 /**
@@ -40,40 +35,6 @@ import {
 
 const PAD = 88;
 const CONTENT_WIDTH = SLIDE_SIZE.width - 2 * PAD;
-
-/* -------------------------------- Tonarten -------------------------------- */
-
-/**
- * Die zwei Flächen der CI. Ein Objekt statt verstreuter Ternaries: jede Farbe
- * einer Tonart steht an einer Stelle, und ein neuer Slide-Typ ist ein Eintrag,
- * kein Refactoring.
- *
- * Kontrast ist hier die ganze Arbeit, nicht Deko — siehe brand.ts:
- * grüner Text nur als GREEN_DARK, grüne Fläche nur mit Navy-Text.
- */
-const TONES: Record<
-  Tone,
-  { bg: string; ink: string; kicker: string; body: string; logo: string; dot: string; dotOff: string }
-> = {
-  light: {
-    bg: WHITE,
-    ink: NAVY,
-    kicker: GREEN_DARK,
-    body: "rgba(26,26,46,0.66)",
-    logo: LOGO_ON_LIGHT,
-    dot: GREEN,
-    dotOff: "rgba(26,26,46,0.16)"
-  },
-  green: {
-    bg: GREEN,
-    ink: ON_GREEN,
-    kicker: "rgba(26,26,46,0.68)",
-    body: "rgba(26,26,46,0.78)",
-    logo: LOGO_ON_GREEN,
-    dot: NAVY,
-    dotOff: "rgba(26,26,46,0.28)"
-  }
-};
 
 /* ------------------------------- Karussell -------------------------------- */
 
@@ -95,7 +56,9 @@ function SlideCard({
   index: number;
   total: number;
 }) {
-  const t = TONES[slide.tone ?? "light"];
+  const t = tone(slide.tone);
+  const hasPacts = Boolean(slide.pacts?.length);
+
   return (
     <div
       style={{
@@ -111,13 +74,26 @@ function SlideCard({
         padding: PAD
       }}
     >
+      <Backdrop tone={t} photo={slide.photo ? photo(slide.photo) : null} size={SLIDE_SIZE} />
+
+      {slide.logo && (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={t.logo}
+          width={520}
+          height={Math.round(520 / LOGO_RATIO)}
+          alt="KickPact"
+          style={{ marginBottom: 44 }}
+        />
+      )}
+
       {slide.kicker && <Kicker text={slide.kicker} tone={t} />}
 
       <div
         style={{
           maxWidth: CONTENT_WIDTH,
           fontFamily: DISPLAY,
-          fontSize: headlineSize(slide.headline),
+          fontSize: headlineSize(slide.headline, hasPacts ? 74 : 92),
           fontWeight: 900,
           color: t.ink,
           letterSpacing: "-0.02em",
@@ -131,94 +107,20 @@ function SlideCard({
         <div
           style={{
             maxWidth: CONTENT_WIDTH - 40,
-            fontSize: 38,
+            fontSize: 36,
             fontWeight: 400,
             color: t.body,
             lineHeight: 1.42,
-            marginTop: 34
+            marginTop: 30
           }}
         >
           {typo(slide.body)}
         </div>
       )}
 
-      <Footer tone={t} index={index} total={total} />
-    </div>
-  );
-}
+      {slide.pacts && <PactCards pacts={slide.pacts} tone={t} width={CONTENT_WIDTH} />}
 
-/** Caps-Label mit grünem Merker davor. Der Merker ist die einzige Deko hier. */
-function Kicker({ text, tone }: { text: string; tone: (typeof TONES)[Tone] }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 26 }}>
-      <div style={{ width: 28, height: 6, borderRadius: 3, background: tone.kicker }} />
-      <div
-        style={{
-          fontSize: 26,
-          fontWeight: 700,
-          color: tone.kicker,
-          letterSpacing: "0.16em",
-          textTransform: "uppercase"
-        }}
-      >
-        {typo(text)}
-      </div>
-    </div>
-  );
-}
-
-/**
- * Headline-Größe nach Länge. Satori bricht hier zwar um (s. SlideCard), aber ein
- * Fünfzeiler in 92px erschlägt den Slide. Die Stufen halten die Headline bei etwa
- * drei Zeilen, egal wie lang der Satz ist.
- *
- * Kleiner als in der Inter-Fassung: Montserrat Alternates Black läuft deutlich
- * breiter, gleiche Zeichenzahl braucht mehr Platz.
- */
-function headlineSize(text: string): number {
-  if (text.length <= 26) return 92;
-  if (text.length <= 46) return 74;
-  return 60;
-}
-
-/** Fortschritt + Logo. Der Punkt-Strip ist der „weiterwischen"-Hinweis. */
-function Footer({
-  tone,
-  index,
-  total
-}: {
-  tone: (typeof TONES)[Tone];
-  index: number;
-  total: number;
-}) {
-  const LOGO_W = 190;
-  return (
-    <div
-      style={{
-        position: "absolute",
-        bottom: PAD,
-        left: PAD,
-        right: PAD,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between"
-      }}
-    >
-      <div style={{ display: "flex", gap: 10 }}>
-        {Array.from({ length: total }, (_, i) => (
-          <div
-            key={i}
-            style={{
-              width: i === index ? 40 : 12,
-              height: 12,
-              borderRadius: 999,
-              background: i === index ? tone.dot : tone.dotOff
-            }}
-          />
-        ))}
-      </div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={tone.logo} width={LOGO_W} height={Math.round(LOGO_W / LOGO_RATIO)} alt="KickPact" />
+      <Footer tone={t} index={index} total={total} pad={PAD} showLogo={!slide.logo} />
     </div>
   );
 }
@@ -238,11 +140,19 @@ async function png(element: React.ReactElement, size: { width: number; height: n
  * `[X]` ist die Konvention aus dem de-webcopy-Skill für „echtes Detail fehlt
  * noch". Ein durchgerutschtes `[X]` im Feed wäre nicht bloß ein Tippfehler,
  * sondern der Beweis, dass den Post nie jemand gelesen hat. Hart abbrechen.
+ *
+ * `Spieler X` ist als echtes Produkt-Label (so heißt der Trigger im Builder)
+ * explizit erlaubt — sonst schlägt der Guard auf dem eigenen Feature an.
  */
 function assertNoPlaceholders(deck: Deck): void {
   const text = [
     deck.caption,
-    ...deck.slides.flatMap((s) => [s.kicker ?? "", s.headline, s.body ?? ""])
+    ...deck.slides.flatMap((s) => [
+      s.kicker ?? "",
+      s.headline,
+      s.body ?? "",
+      ...(s.pacts ?? []).map((p) => p.label)
+    ])
   ].join(" ");
   const hit = text.match(/\[[A-Za-z0-9_ ]+\]/);
   if (hit) {
@@ -253,8 +163,18 @@ function assertNoPlaceholders(deck: Deck): void {
   }
 }
 
+/** tone: "photo" ohne Foto wäre eine leere Fläche. Früh und laut scheitern. */
+function assertPhotos(deck: Deck): void {
+  for (const [i, s] of deck.slides.entries()) {
+    if (s.tone === "photo" && !s.photo) {
+      throw new Error(`Deck "${deck.slug}", Slide ${i + 1}: tone "photo" ohne photo-Feld.`);
+    }
+  }
+}
+
 async function renderDeck(deck: Deck): Promise<number> {
   assertNoPlaceholders(deck);
+  assertPhotos(deck);
   const dir = join(OUT, deck.slug);
   mkdirSync(dir, { recursive: true });
 
@@ -298,18 +218,15 @@ async function main() {
    *
    * Real passiert am 2026-07-17: nach dem Umbau auf die CI standen die fünf
    * alten Decks im alten Navy weiter in out/social/ neben den neuen. Wer den
-   * Ordner aufmacht, sieht acht Decks und lädt irgendwann das falsche hoch —
-   * und zwar eins, das weder in der CI noch in der richtigen Tonalität ist.
+   * Ordner aufmacht, sieht acht Decks und lädt irgendwann das falsche hoch.
    * Ein Content-Ordner muss zeigen, was JETZT gilt, nicht die Geschichte.
-   *
-   * Nur beim vollen Lauf, weil nur der weiß, welche Decks es überhaupt gibt.
    */
   if (!filter.length && existsSync(OUT)) {
     const gueltig = new Set([...DECKS.map((d) => d.slug), "video"]);
     for (const eintrag of readdirSync(OUT, { withFileTypes: true })) {
       if (eintrag.isDirectory() && !gueltig.has(eintrag.name)) {
         rmSync(join(OUT, eintrag.name), { recursive: true, force: true });
-        console.log(`  ${eintrag.name.padEnd(24)} verwaist, entfernt`);
+        console.log(`  ${eintrag.name.padEnd(30)} verwaist, entfernt`);
       }
     }
   }
@@ -317,7 +234,7 @@ async function main() {
   let slides = 0;
   for (const deck of decks) {
     slides += await renderDeck(deck);
-    console.log(`  ${deck.slug.padEnd(24)} ${deck.slides.length} Slides`);
+    console.log(`  ${deck.slug.padEnd(30)} ${deck.slides.length} Slides`);
   }
 
   console.log(`\n${slides} PNGs → out/social/`);
