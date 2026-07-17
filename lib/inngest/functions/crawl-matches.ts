@@ -35,6 +35,11 @@ import {
   isCrawlBlockedByGate
 } from "@/lib/db/queries/subscription-status";
 import { isCrawlerSommerpause } from "@/lib/utils/sommerpause";
+import { getCachedStandings } from "@/lib/recap/standings-cache";
+import { getStoredStandings } from "@/lib/db/queries/standings";
+
+/** Mindestalter, bevor der Crawl die Liga-Tabelle neu holt (siehe Step unten). */
+const STANDINGS_CRAWL_MIN_AGE_MS = 20 * 60 * 60 * 1000; // 20 h → max. 1×/Tag
 
 export const crawlMatches = inngest.createFunction(
   { id: "crawl-matches", concurrency: { limit: 2 } },
@@ -173,6 +178,29 @@ export const crawlMatches = inngest.createFunction(
           updateTeamLeague(team.id, detectedLeague)
         );
       }
+
+      // Liga-Tabelle der laufenden Saison im Hintergrund warmhalten. Sie ist die
+      // einzige Quelle für die VOLLE Saison: getSpiele cappt bei ~10 Spielen,
+      // eine mitten in der Saison onboardete Mannschaft bekommt die früheren
+      // Spieltage also nie und zeigte sonst dauerhaft eine Teil-Bilanz als
+      // Saison-Bilanz (Dashboard + öffentliches Profil, /m/[slug] ist öffentlich).
+      // Der Request-Pfad liest dafür nur noch die DB.
+      //
+      // HÖCHSTENS 1×/Tag/Mannschaft: anders als der Rest dieser Schleife ist
+      // getLeagueStandings NICHT fetch-basiert, sondern der einzige Aufruf mit
+      // echtem Browser (~6–30 s Chromium-Start + bis zu 3 Seiten). Die 12h-TTL
+      // des Caches ist auf die Story-Vorschau gemünzt; mit dem Wochenend-Cron
+      // (07/13/16/19 Uhr) liefe der Scrape sonst mehrfach täglich pro Team —
+      // dieselbe Ban-Risiko-Überlegung wie beim Kader-Scrape oben. Die Tabelle
+      // ändert sich ohnehin nur, wenn gespielt wurde.
+      // Best-effort: getCachedStandings wirft nie.
+      await step.run(`standings-${team.id}`, async () => {
+        const stored = await getStoredStandings(team.id, team.saison);
+        const ageMs = stored ? Date.now() - stored.scrapedAt.getTime() : Infinity;
+        if (ageMs < STANDINGS_CRAWL_MIN_AGE_MS) return { skipped: "fresh" };
+        const s = await getCachedStandings(team.id, team.saison);
+        return { rows: s?.rows.length ?? 0, ownRow: Boolean(s?.ownRow) };
+      });
 
       // ─── Geplante (kommende) Spiele ────────────────────────────────────────
       // next.games liefert Spiele in der Zukunft. Diese werden als scheduled-

@@ -7,8 +7,9 @@ import {
   WRAPPED_MIN_MATCHES,
   type WrappedStats
 } from "@/lib/db/queries/wrapped";
-import { getCachedStandingsForRequest } from "@/lib/recap/standings-cache";
+import { getCachedStandingsForRequest } from "@/lib/recap/standings-request";
 import { eurWhole, seasonLabel } from "@/lib/recap/recap-format";
+import { scopeKicker, scopeSuffix } from "@/lib/recap/aggregate-scope";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -273,7 +274,7 @@ function SlideBody({
     case "bilanz":
       return (
         <Block
-          kicker={`${stats.spiele} Spiele auf dem Platz`}
+          kicker={scopeKicker(stats.aggregateSource, stats.spiele)}
           big={`${stats.siege} / ${stats.unentschieden} / ${stats.niederlagen}`}
           accent={accent}
           sub="Siege / Unentschieden / Niederlagen"
@@ -285,7 +286,7 @@ function SlideBody({
           kicker="Vorne hat's gescheppert"
           big={String(stats.toreGeschossen)}
           accent={accent}
-          sub={`Tore geballert ⚽ — und nur ${stats.toreKassiert} kassiert`}
+          sub={`Tore geballert ⚽ — und nur ${stats.toreKassiert} kassiert${scopeSuffix(stats.aggregateSource, stats.spiele)}`}
         />
       );
     case "torschuetze":

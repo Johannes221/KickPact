@@ -8,6 +8,7 @@ import { resolveTeamSide } from "@/lib/crawler/team-side";
 import { evaluateTriggers, type MatchInput } from "@/lib/crawler/triggers";
 import { saisonStartDate, nextSaisonCode, prevSaisonCode } from "@/lib/utils/saison";
 import { cleanPlayerName, isLikelyPlayerName } from "@/lib/players/person-name";
+import { resolveSeasonAggregate } from "@/lib/recap/season-aggregate";
 // NUR der Typ (type-only → zur Laufzeit gelöscht): so zieht wrapped.ts NICHT den
 // Chromium-Import aus fussballde.ts mit in seine (DB-/RSC-)Bundles.
 import type { LeagueStandings } from "@/lib/crawler/fussballde";
@@ -321,31 +322,28 @@ export async function getWrappedStats(
   //     transparent. KEINE Projektion: jede Zahl ist entweder Tabelle (echt) oder
   //     ausgewertete Spiele (echt). ───
   const detailMatchCount = withResult.length;
-  let aggSpiele = withResult.length;
-  let aggSiege = siege;
-  let aggUnent = unentschieden;
-  let aggNiederl = niederlagen;
-  let aggToreF = toreGeschossen;
-  let aggToreA = toreKassiert;
-  let tabellenplatz: number | null = null;
-  let teamsInLeague: number | null = null;
-  let punkte: number | null = null;
-  let aggregateSource: "table" | "matches" = "matches";
+  const agg = resolveSeasonAggregate(
+    {
+      spiele: withResult.length,
+      siege,
+      unentschieden,
+      niederlagen,
+      toreFor: toreGeschossen,
+      toreAgainst: toreKassiert
+    },
+    standings
+  );
+  const aggSpiele = agg.spiele;
+  const aggSiege = agg.siege;
+  const aggUnent = agg.unentschieden;
+  const aggNiederl = agg.niederlagen;
+  const aggToreF = agg.toreFor;
+  const aggToreA = agg.toreAgainst;
+  const { tabellenplatz, teamsInLeague, punkte, source: aggregateSource } = agg;
   let vsTop3: WrappedStats["vsTop3"] = null;
 
-  const own = standings?.ownRow ?? null;
+  const own = aggregateSource === "table" ? standings?.ownRow ?? null : null;
   if (own && standings) {
-    aggregateSource = "table";
-    aggSpiele = own.spiele;
-    aggSiege = own.siege;
-    aggUnent = own.unentschieden;
-    aggNiederl = own.niederlagen;
-    aggToreF = own.toreFor;
-    aggToreA = own.toreAgainst;
-    tabellenplatz = own.position;
-    teamsInLeague = standings.teamsInLeague;
-    punkte = own.punkte;
-
     // Bilanz gegen Top-3 — NUR aus den ausgewerteten Spielen (verifizierbar).
     const top3 = standings.rows
       .filter((r) => r.position <= 3)
@@ -367,8 +365,14 @@ export async function getWrappedStats(
 
   // Liga-Torschütze + Fairness (Staffel-weit, verifiziert) — best-effort aus
   // den Standings-Extras. Der beste eigene Spieler der Liga-Torschützenliste.
+  //
+  // An `own` gekoppelt (wie vsTop3): beide sind Aussagen ÜBER DIE STAFFEL. Haben
+  // wir die Tabelle als nicht saisondeckend verworfen (Jugend-Vorrunde: 8 Spiele
+  // in der Staffel, 22 gespielt), wäre ein Fairness- oder Torjägerplatz aus
+  // genau dieser Staffel ein Saison-Anspruch, den wir gerade zurückgewiesen
+  // haben — und stünde neben „22 ausgewertete Spiele". Lieber Slide weglassen.
   let ligaTorschuetze: WrappedStats["ligaTorschuetze"] = null;
-  const ownScorer = standings?.ownTopScorers?.[0];
+  const ownScorer = own ? standings?.ownTopScorers?.[0] : undefined;
   if (ownScorer && ownScorer.tore > 0) {
     ligaTorschuetze = {
       name: ownScorer.name,
@@ -378,7 +382,7 @@ export async function getWrappedStats(
   }
 
   let fairness: WrappedStats["fairness"] = null;
-  const fr = standings?.fairnessOwnRow ?? null;
+  const fr = own ? standings?.fairnessOwnRow ?? null : null;
   if (fr && standings?.fairnessTeamsInLeague) {
     fairness = {
       platz: fr.position,
