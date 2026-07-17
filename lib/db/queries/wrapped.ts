@@ -148,8 +148,18 @@ export async function getWrappedStats(
         lt(matches.datum, windowTo)
       )
     );
+  // Freundschaftsspiele/Turniere fliegen raus: ein Testspiel ist kein
+  // Saison-Ereignis und würde sonst nicht nur die Bilanz verfälschen, sondern
+  // auch als "Zu Null", "Comeback" oder Tor des besten Torschützen ins Wrapped
+  // wandern. Die Liga-Tabelle, gegen die `resolveSeasonAggregate` hält, kennt
+  // sie ebenfalls nicht — mitzählen machte die Grundmengen unvergleichbar.
+  // Pokal bleibt drin (echter Wettkampf, zahlt auch); `unknown` (Alt-Bestand)
+  // ebenso, sonst verschwinden Bestandsspiele aus dem Rückblick.
   const withResult = matchRows.filter(
-    (m) => m.ergebnisHeim !== null && m.ergebnisGast !== null
+    (m) =>
+      m.ergebnisHeim !== null &&
+      m.ergebnisGast !== null &&
+      m.competitionType !== "friendly"
   );
 
   // Tor-Events aller Fenster-Spiele (Torschütze + Comeback-Chronologie).

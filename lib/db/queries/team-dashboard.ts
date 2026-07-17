@@ -102,7 +102,18 @@ export async function computeTeamSeasonStats(
   if (fromDate) conditions.push(gte(matches.datum, fromDate));
   if (toDate) conditions.push(lt(matches.datum, toDate));
   const rows = await db.select().from(matches).where(and(...conditions));
-  const finished = rows.filter((m) => m.status === "finished" && m.ergebnisHeim !== null);
+  // Freundschaftsspiele gehören nicht in die Saison-Bilanz: die Liga-Tabelle
+  // zählt sie auch nicht, und ohne diesen Filter wären die beiden Grundmengen
+  // unvergleichbar (resolveSeasonAggregate hält sie gegeneinander). Live gesehen
+  // am 2026-07-17: /m/fg-union-… wies ein 0:0-Testspiel als „1 Spiele · Bilanz
+  // 0/1/0" der neuen Saison aus. Pokal zählt mit — echter Wettkampf, zahlt auch.
+  // `unknown` (Alt-Bestand) zählt weiter, sonst verschwinden Bestandsspiele.
+  const finished = rows.filter(
+    (m) =>
+      m.status === "finished" &&
+      m.ergebnisHeim !== null &&
+      m.competitionType !== "friendly"
+  );
   const names = [teamName, clubName];
   let wins = 0, draws = 0, losses = 0, goalsFor = 0, goalsAgainst = 0;
   for (const m of finished) {
