@@ -2,6 +2,7 @@ import Link from "next/link";
 import { assertPlatformAdmin } from "@/lib/auth/admin";
 import { countOpenTickets } from "@/lib/db/queries/support";
 import { countChargesPendingCorrection } from "@/lib/db/queries/charges";
+import { countOpenSponsorLeads } from "@/lib/db/queries/sponsor-leads-admin";
 import { OperatorLogoutButton } from "@/components/admin/operator-logout-button";
 
 export const metadata = { title: "Admin · KickPact" };
@@ -10,6 +11,7 @@ const NAV_ITEMS: Array<{ href: string; label: string }> = [
   { href: "/admin/dashboard", label: "Dashboard" },
   { href: "/admin/support", label: "Support" },
   { href: "/admin/verifications", label: "Verifications" },
+  { href: "/admin/leads", label: "Leads" },
   { href: "/admin/conflicts", label: "Konflikte" },
   { href: "/admin/vereine", label: "Vereine" },
   { href: "/admin/users", label: "User" },
@@ -28,10 +30,16 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const { user } = await assertPlatformAdmin();
-  const [openTickets, openCorrections] = await Promise.all([
+  const [openTickets, openCorrections, openLeads] = await Promise.all([
     countOpenTickets(),
-    countChargesPendingCorrection()
+    countChargesPendingCorrection(),
+    countOpenSponsorLeads()
   ]);
+  const badges: Record<string, number> = {
+    "/admin/support": openTickets,
+    "/admin/rechnungen/korrekturen": openCorrections,
+    "/admin/leads": openLeads
+  };
 
   return (
     <main className="mx-auto max-w-7xl px-5 md:px-6 py-8 md:py-12">
@@ -51,12 +59,7 @@ export default async function AdminLayout({
       </div>
       <nav className="mb-8 -mx-1 flex flex-wrap gap-1 rounded-2xl border border-brand-neutral/30 bg-brand-off-white p-1.5">
         {NAV_ITEMS.map((item) => {
-          const badge =
-            item.href === "/admin/support" && openTickets > 0
-              ? openTickets
-              : item.href === "/admin/rechnungen/korrekturen" && openCorrections > 0
-                ? openCorrections
-                : 0;
+          const badge = badges[item.href] ?? 0;
           return (
             <Link
               key={item.href}
