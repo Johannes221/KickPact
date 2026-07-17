@@ -11,6 +11,14 @@ import { statsHeading } from "@/lib/recap/aggregate-scope";
  */
 export function InsightsStrip({ insights }: { insights: PublicTeamInsights }) {
   const c = insights.current;
+  // Kein ausgewertetes Spiel → gar nichts zeigen, statt einen Streifen aus
+  // Nullen. Zum Saisonstart (und für frisch onboardete Mannschaften) stand hier
+  // sonst „0 ausgewertete Spiele · 0/0/0 · 0:0" — auf einer Sponsoren-Fläche
+  // sieht das nach „nichts los" aus, obwohl die Saison schlicht noch nicht
+  // begonnen hat. Das Team-Dashboard blendet seine Kacheln bei 0 Spielen
+  // genauso aus. Die Vorsaison geht nicht verloren: sie hat auf derselben Seite
+  // ihren eigenen „Letzte Saison"-Block.
+  if (c.games === 0) return null;
   // Der aktuelle Tabellenplatz ist aussagekräftiger als der des Vorjahrs —
   // aber nur, wenn die Tabelle die Quelle ist. Sonst der Vorjahres-Platz.
   const platz =
