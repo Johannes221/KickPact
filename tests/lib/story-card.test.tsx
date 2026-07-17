@@ -8,7 +8,7 @@ import {
   CONTENT_WIDTH,
   HEADLINE_TRACKING
 } from "@/lib/story/story-card";
-import { OG_FONTS, blackTextWidth } from "@/lib/og/fonts";
+import { OG_FONTS, displayTextWidth } from "@/lib/og/fonts";
 import { recapHeadline } from "@/lib/story/story-content";
 import type { StoryModel } from "@/lib/story/story-data";
 
@@ -230,8 +230,9 @@ describe("Headlines passen in die Bildbreite", () => {
       // also exakt die Rechnung, die fitFontSize selbst anstellt. Damit konnte
       // der Test gar nicht fehlschlagen und hat den realen Überlauf von
       // „UNENTSCHIEDEN" (+50px über den Rand) glatt durchgewunken.
-      // Großgeschrieben nachmessen — so setzen die Motive die Headline.
-      expect(blackTextWidth(text.toUpperCase(), size, HEADLINE_TRACKING)).toBeLessThanOrEqual(
+      // Großgeschrieben und in der Display-Schrift nachmessen — so setzen die
+      // Motive die Headline.
+      expect(displayTextWidth(text.toUpperCase(), size, HEADLINE_TRACKING)).toBeLessThanOrEqual(
         CONTENT_WIDTH
       );
     });

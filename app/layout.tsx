@@ -1,7 +1,8 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import { Inter, Montserrat_Alternates } from "next/font/google";
+import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shared/app-header";
 import { CookieBanner } from "@/components/shared/cookie-banner";
@@ -22,14 +23,27 @@ const inter = Inter({
   display: "swap"
 });
 
-// Display / Headlines: Montserrat Alternates — geometrische Sans mit
-// alternativen Buchstaben-Formen, kommt dem KickPact-Wordmark-Stil
-// (kantig, geometrisch, modern) am nächsten unter den Google Fonts.
-// Alternativen für Test: Orbitron (zu futuristisch), Russo One (zu schmal),
-// Sora Black (clean aber generisch), Bebas Neue (zu condensed).
-const displayFont = Montserrat_Alternates({
-  subsets: ["latin"],
-  weight: ["700", "800", "900"],
+/**
+ * Display / Headlines: KickPact Display — Orbitron Black mit reparierter Null.
+ *
+ * Löst Montserrat Alternates ab (Johannes, 2026-07-17): Orbitron trifft den
+ * KICKPACT-Schriftzug deutlich besser — quadratische Punzen, flach
+ * abgeschnittenes C, kantiges K.
+ *
+ * Warum nicht Orbitron direkt: es zeichnet die Null durchgestrichen. Auf dieser
+ * Seite hätte das genau die Geld-Headlines getroffen („200 € wenn der Aufstieg
+ * klappt" → „2ØØ €"). Die Null trägt deshalb jetzt die Form von Orbitrons
+ * eigenem „O". Der eigene Name ist OFL-Pflicht (Orbitron hat einen Reserved Font
+ * Name), nicht Kosmetik — s. public/fonts/kickpact-display/README.md.
+ *
+ * `next/font/local` statt `next/font/google`: die Datei liegt im Repo, weil
+ * dieselbe Datei auch die Share-Motive setzt (lib/og/fonts.ts). Satori kann kein
+ * woff2 und nichts nachladen — EINE Quelle für Web, App und Motive.
+ */
+const displayFont = localFont({
+  src: "../public/fonts/kickpact-display/KickPactDisplay-Black.ttf",
+  weight: "900",
+  style: "normal",
   variable: "--font-display",
   display: "swap"
 });
