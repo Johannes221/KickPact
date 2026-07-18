@@ -165,15 +165,52 @@ nie neu definieren.
 ## 5. Wie Content entsteht
 
 ```bash
-npm run social:render          # Karussells → out/social/<slug>/
-npm run social:render -- 02    # nur ein Deck
-npm run social:video           # Reels → out/social/video/<slug>.mp4
-npm run social:video -- 02     # nur ein Spot
+npm run social:check     # Typen prüfen — NICHT weglassen, s.u.
+npm run social:render    # Karussells + Stories (~2 Min)
+npm run social:capture   # App-Screenshots neu aufnehmen (~1 Min)
+npm run social:video     # Reels (~15 Min)
 ```
 
+Alle Render-Befehle nehmen einen Filter: `npm run social:render -- 02`.
+
+**Ausgabe, drei getrennte Ordner:**
+
+```
+out/social/karussell/   1080×1350 (4:5)   Instagram-Feed
+out/social/stories/     1080×1920 (9:16)  Highlights zum Anpinnen
+out/social/reels/       1080×1920 (9:16)  Video, mit Ton
+```
+
+**`npm run social:check` ist Pflicht.** Das Root-`tsconfig.json` schließt
+`scripts` aus (damit `next build` die Skripte nicht mitzieht), also prüft
+`tsc --noEmit` die Social-Pipeline **nicht**. Ein fehlender Import fiel deshalb
+erst beim Rendern als Laufzeitfehler auf.
+
 Content planen heißt **eine Textdatei editieren**: `scripts/social/decks.ts` für
-Karussells, die `SPOTS`-Konstante in `scripts/social/video.tsx` für Reels. Pro
-Deck fallen die PNGs plus eine `caption.txt` an, pro Spot ein MP4 plus Caption.
+Karussells, `scripts/social/stories.ts` für Highlights, die `SPOTS`-Konstante in
+`scripts/social/video.tsx` für Reels. Pro Deck fallen die PNGs plus eine
+`caption.txt` an, pro Spot ein MP4 plus Caption.
+
+### Stories sind keine hochkant gestellten Karussells
+
+Instagram legt bei Stories oben und unten je etwa 250 px eigene Bedienelemente
+über das Bild. Deshalb tragen Story-Slides **keine** Fortschrittspunkte (die
+Story hat oben schon ihre eigenen Segment-Balken) und das Logo sitzt oben statt
+im Footer — und zwar auf **jedem** Slide, nicht nur auf dem ersten: ein Highlight
+wird einzeln angetippt, jeder Slide ist damit ein Erstkontakt.
+
+### App-Screenshots
+
+`npm run social:capture` loggt sich per E2E-Bypass auf Staging ein und nimmt
+Dashboard, Spiele-Übersicht und Sponsor-Sicht auf. Die Daten kommen von
+`scripts/seed-demo-showcase.ts`: ein **erfundener** Verein (FC Beispielhausen)
+mit 15 Spielen, vier Sponsoren und Beiträgen aus der echten Trigger-Engine.
+
+Warum nicht von Hand: die sieben Screenshots, die im Repo-Root liegen, zeigen
+echte Vereinsnamen, einen Cookie-Banner, einen leeren Ladezustand und
+Trigger-Typen, die seit Juli nicht mehr buchbar sind. Ein Post damit hätte Pacts
+beworben, die garantiert nie feuern. Handgemachte Screenshots veralten still —
+die App ändert sich, das Bild nicht. Hier ist die Aufnahme ein Befehl.
 
 Warum aus dem Repo und nicht aus Canva: die Motive der App sind schon React
 (`lib/story/story-card.tsx`). Ein zweiter, handgepflegter Satz Vorlagen in einem
@@ -252,22 +289,31 @@ echten Plätzen stehen, sofort falsch aus. Die sieben echten Fotos unter
 
 ## 8. Was fertig ist
 
-**Karussells** (`npm run social:render`, 27 Slides):
+**Karussells** (`out/social/karussell/`, 34 Slides):
 
 | Deck | Angle | Slides |
 |---|---|---|
-| `01-so-funktioniert` | Erklärung | 7 |
-| `02-fuenf-euro-pro-tor` | Ansporn | 6 |
-| `03-was-die-app-kann` | Features | 8 |
+| `01-so-funktioniert-ein-pact` | Erklärung | 10 |
+| `02-was-ihr-festlegen-koennt` | Features | 10 |
+| `03-wer-sponsert-euch` | Mannschaftskasse | 8 |
 | `04-vier-fragen` | Einwand | 6 |
 
-**Reels** (`npm run social:video`, 9:16, ohne Ton):
+**Story-Highlights** (`out/social/stories/`, 23 Slides):
+
+| Highlight | Slides |
+|---|---|
+| `wie-funktioniert-das` | 6 |
+| `was-kann-ich-festlegen` | 6 |
+| `was-kostet-das` | 5 |
+| `haeufige-fragen` | 6 |
+
+**Reels** (`out/social/reels/`, mit Klangbett):
 
 | Spot | Angle | Länge |
 |---|---|---|
-| `01-so-funktioniert` | Erklärung | ~20 s |
-| `02-fuenf-euro-pro-tor` | Ansporn | ~14 s |
-| `03-kein-banner-mehr` | Kein Klinkenputzen | ~16 s |
+| `01-so-funktioniert-ein-pact` | Erklärung | 22,6 s |
+| `02-was-ihr-festlegen-koennt` | Features | 24,0 s |
+| `03-wer-sponsert-euch` | Mannschaftskasse | 18,2 s |
 
 ## 9. Was noch offen ist
 
