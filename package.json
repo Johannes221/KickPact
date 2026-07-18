@@ -27,7 +27,9 @@
     "ios:sync:prod": "CAP_SERVER_URL=https://kickpact.com npx cap sync ios",
     "promote:prod": "git push origin main:production",
     "social:render": "tsx scripts/social/render.tsx",
-    "social:video": "tsx scripts/social/video.tsx"
+    "social:video": "tsx scripts/social/video.tsx",
+    "social:check": "tsc -p scripts/social/tsconfig.json",
+    "social:capture": "dotenv -e .env.local -- tsx scripts/social/capture.ts"
   },
   "dependencies": {
     "@apple/app-store-server-library": "^3.1.0",

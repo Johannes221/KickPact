@@ -1,0 +1,10 @@
+{
+  "//": "Das Root-tsconfig schliesst scripts/ aus, damit `next build` die Skripte nicht mitzieht. Folge: `npx tsc --noEmit` hat die Social-Pipeline NIE geprueft — ein fehlender Import (VERTICAL) fiel erst beim Rendern auf, und zwar als Laufzeitfehler. Dieses Config holt genau diese Dateien zurueck in die Pruefung: `npm run social:check`.",
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": []
+}

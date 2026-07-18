@@ -2,17 +2,20 @@ import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:
 import { join } from "node:path";
 import React from "react";
 import { ImageResponse } from "next/og";
-import { DECKS, type Deck, type Slide } from "./decks";
+import { DECKS, type Deck, type Format, type Slide } from "./decks";
+import { STORIES } from "./stories";
 import {
   BODY,
   DISPLAY,
   FONTS,
   LOGO_RATIO,
   SLIDE_SIZE,
+  VERTICAL,
   photo,
+  screenshot,
   typo
 } from "./brand";
-import { Backdrop, Footer, Kicker, PactCards, headlineSize, tone } from "./layout";
+import { Backdrop, Footer, Kicker, PactCards, PhoneFrame, headlineSize, tone } from "./layout";
 
 /**
  * Rendert die Karussell-Posts aus `decks.ts` nach `out/social/`.
@@ -33,6 +36,19 @@ import { Backdrop, Footer, Kicker, PactCards, headlineSize, tone } from "./layou
  */
 (globalThis as { React?: typeof React }).React = React;
 
+/**
+ * Was pro Format anders ist. Ein Objekt statt Ternaries im Layout: ein drittes
+ * Format ist ein Eintrag, kein Umbau.
+ *
+ * Die Story hat KEINE Fortschrittspunkte und ihr Logo sitzt oben — Instagram
+ * legt bei Stories oben und unten eigene Bedienelemente über das Bild, unten
+ * links wäre das Logo verdeckt. Dieselbe Regel wie im Reel (video.tsx).
+ */
+const FORMATS: Record<Format, { size: { width: number; height: number }; dir: string; dots: boolean; logoTop: boolean }> = {
+  feed: { size: SLIDE_SIZE, dir: "karussell", dots: true, logoTop: false },
+  story: { size: VERTICAL, dir: "stories", dots: false, logoTop: true }
+};
+
 const PAD = 88;
 const CONTENT_WIDTH = SLIDE_SIZE.width - 2 * PAD;
 
@@ -50,20 +66,25 @@ const CONTENT_WIDTH = SLIDE_SIZE.width - 2 * PAD;
 function SlideCard({
   slide,
   index,
-  total
+  total,
+  format
 }: {
   slide: Slide;
   index: number;
   total: number;
+  format: Format;
 }) {
   const t = tone(slide.tone);
+  const f = FORMATS[format];
   const hasPacts = Boolean(slide.pacts?.length);
+  // Ein Handy-Rahmen frisst ~930px Höhe. Die Headline muss dafür Platz lassen.
+  const hasShot = Boolean(slide.screenshot);
 
   return (
     <div
       style={{
-        width: SLIDE_SIZE.width,
-        height: SLIDE_SIZE.height,
+        width: f.size.width,
+        height: f.size.height,
         background: t.bg,
         display: "flex",
         flexDirection: "column",
@@ -74,9 +95,25 @@ function SlideCard({
         padding: PAD
       }}
     >
-      <Backdrop tone={t} photo={slide.photo ? photo(slide.photo) : null} size={SLIDE_SIZE} />
+      <Backdrop tone={t} photo={slide.photo ? photo(slide.photo) : null} size={f.size} />
 
-      {slide.logo && (
+      {/*
+        Story: Logo auf JEDEM Slide oben links, klein.
+        Nicht nur auf dem Aufschlag: der Footer trägt es im Feed auf jedem Slide,
+        und den gibt es in der Story nicht (Instagram überdeckt unten). Ohne das
+        hier hätten vier von sechs Story-Slides gar keine Marke drauf — und ein
+        Highlight wird einzeln angetippt, jeder Slide ist also ein Erstkontakt.
+        `slide.logo` wird in der Story bewusst ignoriert: ein zweites, großes Logo
+        auf demselben Bild liest sich als Fehler.
+      */}
+      {f.logoTop && (
+        <div style={{ position: "absolute", top: PAD, left: PAD, display: "flex" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={t.logo} width={240} height={Math.round(240 / LOGO_RATIO)} alt="KickPact" />
+        </div>
+      )}
+
+      {slide.logo && !f.logoTop && (
         /* eslint-disable-next-line @next/next/no-img-element */
         <img
           src={t.logo}
@@ -93,7 +130,7 @@ function SlideCard({
         style={{
           maxWidth: CONTENT_WIDTH,
           fontFamily: DISPLAY,
-          fontSize: headlineSize(slide.headline, hasPacts ? 74 : 92, CONTENT_WIDTH),
+          fontSize: headlineSize(slide.headline, hasPacts || hasShot ? 60 : 92, CONTENT_WIDTH),
           fontWeight: 900,
           color: t.ink,
           letterSpacing: "-0.02em",
@@ -120,7 +157,18 @@ function SlideCard({
 
       {slide.pacts && <PactCards pacts={slide.pacts} tone={t} width={CONTENT_WIDTH} />}
 
-      <Footer tone={t} index={index} total={total} pad={PAD} showLogo={!slide.logo} />
+      {slide.screenshot && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 40 }}>
+          <PhoneFrame src={screenshot(slide.screenshot)} width={430} height={930} />
+        </div>
+      )}
+
+      {/* Nur im Feed. In der Story liegen unten Instagrams eigene Bedienelemente
+          drüber, ein Fortschrittsstrip dort wäre halb verdeckt und doppelt: die
+          Story hat oben schon ihre eigenen Segment-Balken. */}
+      {f.dots && (
+        <Footer tone={t} index={index} total={total} pad={PAD} showLogo={!slide.logo} />
+      )}
     </div>
   );
 }
@@ -175,13 +223,15 @@ function assertPhotos(deck: Deck): void {
 async function renderDeck(deck: Deck): Promise<number> {
   assertNoPlaceholders(deck);
   assertPhotos(deck);
-  const dir = join(OUT, deck.slug);
+  const format = deck.format ?? "feed";
+  const f = FORMATS[format];
+  const dir = join(OUT, f.dir, deck.slug);
   mkdirSync(dir, { recursive: true });
 
   for (const [i, slide] of deck.slides.entries()) {
     const buf = await png(
-      <SlideCard slide={slide} index={i} total={deck.slides.length} />,
-      SLIDE_SIZE
+      <SlideCard slide={slide} index={i} total={deck.slides.length} format={format} />,
+      f.size
     );
     writeFileSync(join(dir, `${String(i + 1).padStart(2, "0")}.png`), buf);
   }
@@ -190,51 +240,67 @@ async function renderDeck(deck: Deck): Promise<number> {
   // beim Hochladen will man nicht zwischen zwei Quellen springen.
   writeFileSync(
     join(dir, "caption.txt"),
-    `${deck.caption}\n\n${deck.hashtags.join(" ")}\n`,
+    `${deck.caption}${deck.hashtags.length ? `\n\n${deck.hashtags.join(" ")}` : ""}\n`,
     "utf8"
   );
   return deck.slides.length;
 }
 
+/**
+ * Waisen wegräumen: Ordner von Decks, die es nicht mehr gibt (umbenannt oder
+ * gestrichen).
+ *
+ * Real passiert am 2026-07-17: nach dem Umbau auf die CI standen die alten Decks
+ * im alten Navy weiter neben den neuen. Wer den Ordner aufmacht, sieht acht
+ * Decks und lädt irgendwann das falsche hoch. Ein Content-Ordner muss zeigen,
+ * was JETZT gilt, nicht die Geschichte.
+ *
+ * Läuft pro Format-Unterordner und nur beim vollen Lauf — nur der weiß, welche
+ * Decks es überhaupt gibt.
+ */
+function removeOrphans(dir: string, gueltig: Set<string>): void {
+  const abs = join(OUT, dir);
+  if (!existsSync(abs)) return;
+  for (const eintrag of readdirSync(abs, { withFileTypes: true })) {
+    if (eintrag.isDirectory() && !gueltig.has(eintrag.name)) {
+      rmSync(join(abs, eintrag.name), { recursive: true, force: true });
+      console.log(`  ${dir}/${eintrag.name.padEnd(26)} verwaist, entfernt`);
+    }
+  }
+}
+
 async function main() {
   const filter = process.argv.slice(2).filter((a) => !a.startsWith("-"));
+  const alle = [...DECKS, ...STORIES];
   const decks = filter.length
-    ? DECKS.filter((d) => filter.some((f) => d.slug.includes(f)))
-    : DECKS;
+    ? alle.filter((d) => filter.some((f) => d.slug.includes(f)))
+    : alle;
 
   if (!decks.length) {
     console.error(`Kein Deck passt auf "${filter.join(" ")}".`);
-    console.error(`Vorhanden: ${DECKS.map((d) => d.slug).join(", ")}`);
+    console.error(`Vorhanden: ${alle.map((d) => d.slug).join(", ")}`);
     process.exit(1);
   }
 
-  // Nur die gewählten Decks neu bauen — ein gefilterter Lauf darf die Videos und
+  // Nur die gewählten Decks neu bauen — ein gefilterter Lauf darf die Reels und
   // die anderen Decks nicht mitlöschen.
-  for (const deck of decks) rmSync(join(OUT, deck.slug), { recursive: true, force: true });
+  for (const deck of decks) {
+    rmSync(join(OUT, FORMATS[deck.format ?? "feed"].dir, deck.slug), {
+      recursive: true,
+      force: true
+    });
+  }
 
-  /*
-   * Beim vollen Lauf zusätzlich die Waisen wegräumen: Ordner von Decks, die es
-   * nicht mehr gibt (umbenannt oder gestrichen).
-   *
-   * Real passiert am 2026-07-17: nach dem Umbau auf die CI standen die fünf
-   * alten Decks im alten Navy weiter in out/social/ neben den neuen. Wer den
-   * Ordner aufmacht, sieht acht Decks und lädt irgendwann das falsche hoch.
-   * Ein Content-Ordner muss zeigen, was JETZT gilt, nicht die Geschichte.
-   */
-  if (!filter.length && existsSync(OUT)) {
-    const gueltig = new Set([...DECKS.map((d) => d.slug), "video"]);
-    for (const eintrag of readdirSync(OUT, { withFileTypes: true })) {
-      if (eintrag.isDirectory() && !gueltig.has(eintrag.name)) {
-        rmSync(join(OUT, eintrag.name), { recursive: true, force: true });
-        console.log(`  ${eintrag.name.padEnd(30)} verwaist, entfernt`);
-      }
-    }
+  if (!filter.length) {
+    removeOrphans("karussell", new Set(DECKS.map((d) => d.slug)));
+    removeOrphans("stories", new Set(STORIES.map((d) => d.slug)));
   }
 
   let slides = 0;
   for (const deck of decks) {
     slides += await renderDeck(deck);
-    console.log(`  ${deck.slug.padEnd(30)} ${deck.slides.length} Slides`);
+    const f = FORMATS[deck.format ?? "feed"];
+    console.log(`  ${f.dir}/${deck.slug.padEnd(26)} ${deck.slides.length} Slides`);
   }
 
   console.log(`\n${slides} PNGs → out/social/`);

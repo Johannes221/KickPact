@@ -8,7 +8,7 @@ import { BODY, DISPLAY, FONTS, LOGO_RATIO, VERTICAL, photo, typo, type PhotoName
 import { Backdrop, Kicker, PactCards, headlineSize, tone } from "./layout";
 
 /**
- * Rendert die Reels aus SPOTS nach `out/social/video/<slug>.mp4`.
+ * Rendert die Reels aus SPOTS nach `out/social/reels/<slug>.mp4`.
  *
  *   npm run social:video           alle Spots
  *   npm run social:video -- 02     nur Spots, deren Slug „02" enthält
@@ -400,7 +400,7 @@ function padArgs(sec: number, videoInputs: number): string[] {
 
 /* --------------------------------- Runner --------------------------------- */
 
-const OUT = join(process.cwd(), "out/social/video");
+const OUT = join(process.cwd(), "out/social/reels");
 
 async function renderSpot(spot: Spot): Promise<{ frames: number; sec: number }> {
   const frameDir = join(OUT, `.frames-${spot.slug}`);
@@ -504,7 +504,7 @@ async function main() {
     );
   }
 
-  console.log(`\n${spots.length} MP4 → out/social/video/`);
+  console.log(`\n${spots.length} MP4 → out/social/reels/`);
 }
 
 main().catch((err) => {

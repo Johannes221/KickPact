@@ -254,6 +254,69 @@ export function PactCards({
   );
 }
 
+/* ------------------------------ Handy-Rahmen ------------------------------ */
+
+/**
+ * Ein App-Screenshot in einem Handy-Rahmen.
+ *
+ * Der Rahmen ist nicht Deko: ein nackter Screenshot auf weißem Grund sieht aus
+ * wie ein Fehler im Layout, weil ihm der Kontext fehlt. Im Rahmen liest er sich
+ * sofort als „so sieht das auf deinem Handy aus".
+ *
+ * Bewusst SEHR einfach gehalten — abgerundetes Rechteck, dunkler Rand, kein
+ * Notch, keine Knöpfe, keine Statusleiste. Ein detailliert nachgebautes iPhone
+ * ist in zwei Jahren ein altes iPhone, und Apple mag nachgebaute Geräte in
+ * Werbung ohnehin nicht. Die Form reicht.
+ *
+ * `oben` schneidet den Screenshot oben an, statt ihn zu stauchen: eine
+ * App-Ansicht ist viel höher als der Rahmen, und Verzerren wäre schlimmer als
+ * Abschneiden. Der interessante Teil steht immer oben.
+ */
+export function PhoneFrame({
+  src,
+  width,
+  height
+}: {
+  src: string;
+  width: number;
+  height: number;
+}) {
+  const BORDER = 12;
+  const RADIUS = 54;
+  return (
+    <div
+      style={{
+        display: "flex",
+        width,
+        height,
+        borderRadius: RADIUS,
+        background: NAVY,
+        padding: BORDER,
+        overflow: "hidden"
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          width: width - 2 * BORDER,
+          height: height - 2 * BORDER,
+          borderRadius: RADIUS - BORDER,
+          overflow: "hidden",
+          background: WHITE
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          width={width - 2 * BORDER}
+          alt=""
+          style={{ objectFit: "cover", objectPosition: "top" }}
+        />
+      </div>
+    </div>
+  );
+}
+
 /* --------------------------------- Footer --------------------------------- */
 
 /**

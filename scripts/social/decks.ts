@@ -1,4 +1,4 @@
-import type { PhotoName } from "./brand";
+import type { PhotoName, ScreenshotName } from "./brand";
 
 /**
  * Der Content selbst. DAS ist die Datei, die man anfasst, um zu posten.
@@ -64,15 +64,32 @@ export interface Slide {
   photo?: PhotoName;
   /** Beispiel-Regeln als Karten unter der Headline. Max. 3, sonst wird es klein. */
   pacts?: Pact[];
+  /** Echter App-Screenshot im Handy-Rahmen. Schließt `pacts` aus (kein Platz). */
+  screenshot?: ScreenshotName;
   /** Statt Text: das Logo groß in die Fläche. Für Aufschlag und Abbinder. */
   logo?: boolean;
 }
 
+/**
+ * Wohin der Post geht. Bestimmt Maße UND Layout-Regeln, nicht nur die Größe:
+ *
+ *   feed  = 1080×1350 (4:5). Das Format, das Instagram im Feed zeigt, seit das
+ *           Grid auf Portrait steht. Quadratisch wäre das Alt-Format und
+ *           verschenkte rund ein Viertel der Fläche. Unten ist frei, also sitzen
+ *           dort Fortschrittspunkte und Logo.
+ *   story = 1080×1920 (9:16), für Highlights zum Anpinnen. Instagram legt oben
+ *           und unten je ~250 px eigene Bedienelemente drüber, deshalb KEINE
+ *           Punkte unten und das Logo oben — dieselbe Regel wie im Reel.
+ */
+export type Format = "feed" | "story";
+
 export interface Deck {
-  /** Ordnername unter out/social/. */
+  /** Ordnername unter out/social/<karussell|stories>/. */
   slug: string;
   /** Welcher Angle (siehe docs/marketing/content-strategie.md). Nur Doku. */
   angle: string;
+  /** Standard ist "feed". */
+  format?: Format;
   /** Instagram-/Facebook-Caption. Wird als caption.txt mit ausgegeben. */
   caption: string;
   hashtags: string[];
@@ -150,6 +167,12 @@ export const DECKS: Deck[] = [
         kicker: "Am Monatsende",
         headline: "Zahlungsübersicht raus, Geld an die Mannschaft.",
         body: "Kein Kassenwart-Abend mit Excel."
+      },
+      {
+        // Echter Screenshot vom Demo-Verein, nicht gezeichnet.
+        kicker: "Euer Dashboard",
+        headline: "Bilanz, Tore, Sponsor-Geld.",
+        screenshot: "dashboard"
       },
       CTA_PREIS,
       {
@@ -231,6 +254,12 @@ export const DECKS: Deck[] = [
         ]
       },
       {
+        // Echter Screenshot, aufgenommen von npm run social:capture. Kein Mockup.
+        kicker: "So sieht das aus",
+        headline: "Alle Spiele auf einen Blick.",
+        screenshot: "spiele-uebersicht"
+      },
+      {
         kicker: "Sogar das",
         headline: "Gelbe Karte: 2 € in die Kasse.",
         body: "Weil es der Mannschaftskasse egal ist, warum sie voll wird."
@@ -275,6 +304,12 @@ export const DECKS: Deck[] = [
         kicker: "Was sie kriegen",
         headline: "Einen Grund, jedes Spiel zu schauen.",
         body: "Wer 5 € pro Tor drin hat, fragt sonntags nicht mehr, wie es ausgegangen ist. Der war da."
+      },
+      {
+        // Die andere Hälfte: was beim Sponsor ankommt.
+        kicker: "Seine Sicht",
+        headline: "Er sieht, was er bewirkt hat.",
+        screenshot: "sponsor-dashboard"
       },
       {
         kicker: "Was ihr kriegt",

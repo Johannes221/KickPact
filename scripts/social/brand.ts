@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 /**
@@ -84,6 +84,35 @@ export function photo(name: PhotoName): string {
     "data:image/png;base64," +
     readFileSync(join(process.cwd(), "public/brand/photos", `${name}.png`)).toString("base64");
   photoCache.set(name, uri);
+  return uri;
+}
+
+/* ------------------------------ Screenshots ------------------------------- */
+
+/**
+ * App-Screenshots aus `docs/marketing/screenshots/`, aufgenommen von
+ * `npm run social:capture` gegen Staging mit dem Demo-Verein.
+ *
+ * NIE von Hand hineinlegen: handgemachte Screenshots veralten still. Die sieben,
+ * die vorher im Repo-Root lagen, zeigten echte Vereinsnamen, ein Cookie-Banner,
+ * einen leeren Ladezustand und Trigger-Typen, die es seit Juli nicht mehr gibt.
+ * Aufnehmen ist ein Befehl — nach jedem Redesign sind sie in zwei Minuten neu.
+ */
+export type ScreenshotName = "dashboard" | "spiele-uebersicht" | "sponsor-dashboard";
+
+const shotCache = new Map<string, string>();
+
+export function screenshot(name: ScreenshotName): string {
+  const hit = shotCache.get(name);
+  if (hit) return hit;
+  const file = join(process.cwd(), "docs/marketing/screenshots", `${name}.png`);
+  if (!existsSync(file)) {
+    throw new Error(
+      `Screenshot "${name}" fehlt (${file}). Erst aufnehmen: npm run social:capture`
+    );
+  }
+  const uri = "data:image/png;base64," + readFileSync(file).toString("base64");
+  shotCache.set(name, uri);
   return uri;
 }
 
