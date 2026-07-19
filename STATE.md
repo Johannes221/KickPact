@@ -118,6 +118,8 @@ In-App-Upsell (vorerst monthly-only, season bleibt web) · TOCTOU im provider=nu
 ## Tests
 
 `npm test` (batchweise pro Verzeichnis): **1387 passed / 42 skipped (171 Files)** · `tsc --noEmit` clean · Stand 2026-06-12.
+**CI komplett deaktiviert (2026-07-19, Actions-Minuten):** beide Jobs in `.github/workflows/ci.yml` stehen auf `if: false`. `unit-integration` lief zuvor mit `continue-on-error: true` und 69 bekannten Failures — 814 GitHub-Actions-Minuten pro Abrechnungszyklus für ein Ergebnis, das nichts geblockt hat. `e2e` war schon länger aus (Specs referenzieren den alten 5-Step-Wizard). **Heißt: aktuell kein CI-Gate auf main — lokal `npm test` + `tsc --noEmit` vor jedem Merge.** Re-Aktivierung erst mit dem Proper-Fix (~3-4h: Tests in `db.transaction(...)` wrappen, einheitlich auf `integration-db.ts`, Mail-Client lazy, Parser-Fixtures als statisches JSON), dann ohne `continue-on-error`.
+
 Test-Infra: singleFork-Volllauf über alle 171 Dateien OOMt/deadlockt (Vitest instanziiert lib/db/client + integration-db pro Datei neu → Pool-Akkumulation). Batchweise laufen: `npm test -- tests/queries tests/lib tests/simulation` etc. Pools begrenzt (client max=8, integration-db max=5, je idle_timeout=5s), Test-Container max_connections=400.
 
 ## Spec-Referenzen

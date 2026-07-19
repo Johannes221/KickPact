@@ -5,8 +5,21 @@ on:
     branches: [main]
   pull_request:
 
+# Neuer Push auf denselben Branch bricht den noch laufenden Run ab —
+# ohne das läuft pro PR-Push ein weiterer Run parallel mit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   unit-integration:
+    # Deaktiviert 2026-07-19 (Actions-Minuten). Der Job lief mit
+    # continue-on-error: true, d.h. die 69 bekannten Failures (s. Kommentar
+    # unten) haben ohnehin nichts geblockt — 814 CI-Minuten pro Zyklus für
+    # ein Ergebnis, das per Definition ignoriert wurde. Re-aktivieren zusammen
+    # mit dem Proper-Fix-Plan unten (~3-4h), dann OHNE continue-on-error,
+    # sonst ist es wieder nur teure Dekoration. Tracked in STATE.md.
+    if: false
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -29,7 +42,6 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
       - name: Run unit + integration tests
         # ⚠️ continue-on-error TEMPORÄR um Email-Spam zu stoppen.
         #
