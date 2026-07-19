@@ -8,6 +8,19 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    // Feste, von UTC ABWEICHENDE Zeitzone für alle Läufe.
+    //
+    // Die UTC-Grenzfall-Tests (Monatsfenster, Saison-Fenster, Rechnungs-
+    // Perioden) können unter TZ=UTC per Konstruktion nicht fehlschlagen: dort
+    // ist `new Date(2026,1,1)` identisch zu `Date.UTC(2026,1,1)`, ein lokaler
+    // Date-Konstruktor im Produktivcode fällt also nicht auf. Genau so lief es
+    // in CI (ubuntu-latest = UTC) — die Tests waren dort wirkungslos, während
+    // sie lokal (Europe/Berlin) griffen.
+    //
+    // New York statt Berlin: eine Zone HINTER UTC verschiebt die Monatsgrenze
+    // in die andere Richtung und fängt damit die Fehlerklasse, die eine Zone
+    // vor UTC durchrutschen lässt.
+    env: { TZ: "America/New_York" },
     globalSetup: ["tests/setup/global.ts"],
     // Pro-Datei-Teardown: schließt am Dateiende beide DB-Pools, damit keine
     // verspätete/zombie DB-Query in die nächste Datei blutet (Flake-Wurzel).

@@ -16,20 +16,39 @@ import {
 import { MrrChart } from "./_components/mrr-chart";
 import { eur } from "@/lib/utils/currency";
 
+/**
+ * Die letzten `count` Monate als "YYYY-MM", in UTC.
+ *
+ * UTC, weil die Zahlen dahinter (`getTopClubsForMonth` → `utcMonthWindow`) über
+ * UTC-Monatsfenster laufen. Mit lokaler Arithmetik wählte die Tab-Leiste am
+ * Monatsrand einen Monat aus, den das Fenster noch gar nicht erreicht hatte.
+ */
 function lastMonths(count: number): string[] {
   const out: string[] = [];
-  const d = new Date();
-  d.setDate(1);
+  const now = new Date();
+  let y = now.getUTCFullYear();
+  let m = now.getUTCMonth();
   for (let i = 0; i < count; i++) {
-    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
-    d.setMonth(d.getMonth() - 1);
+    out.push(`${y}-${String(m + 1).padStart(2, "0")}`);
+    if (m === 0) {
+      m = 11;
+      y -= 1;
+    } else {
+      m -= 1;
+    }
   }
   return out;
 }
 
 function monthLabel(m: string): string {
   const [y, mo] = m.split("-").map((n) => parseInt(n, 10));
-  return new Date(y, mo - 1, 1).toLocaleDateString("de-DE", { month: "short", year: "2-digit" });
+  // timeZone: "UTC" — der String ist UTC-basiert, ohne das Flag würde ein
+  // Server westlich von UTC den Monat beim Rendern um eins zurückdrehen.
+  return new Date(Date.UTC(y, mo - 1, 1)).toLocaleDateString("de-DE", {
+    month: "short",
+    year: "2-digit",
+    timeZone: "UTC"
+  });
 }
 
 export const metadata = { title: "Dashboard · Admin · KickPact" };

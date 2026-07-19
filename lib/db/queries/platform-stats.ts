@@ -196,7 +196,12 @@ export async function getPlatformKpis(): Promise<PlatformKpis> {
       chargeCount: sql<number>`count(*)::int`.as("charge_count")
     })
     .from(charges)
-    .where(ne(charges.status, "cancelled"))
+    // CAP_COUNTED_STATUSES statt nur „nicht storniert": mit ne(cancelled)
+    // zählten unbestätigte Manual Events (pending_approval) mit, ein Verein
+    // konnte seinen Lieblings-Trigger also allein durch Melden nach oben
+    // schieben. Kein Geldfehler (das ist ein COUNT), aber die letzte Stelle
+    // mit der alten Status-Semantik.
+    .where(inArray(charges.status, [...CAP_COUNTED_STATUSES]))
     .groupBy(charges.triggerType)
     .orderBy(desc(sql`count(*)`))
     .limit(5);
@@ -264,10 +269,18 @@ export async function getTopClubsThisMonth(limit = 5): Promise<TopClubRow[]> {
   return getTopClubsForMonth(currentMonthStr(), limit);
 }
 
-/** "YYYY-MM" des aktuellen Monats (lokale Zeit). */
+/**
+ * "YYYY-MM" des aktuellen Monats in UTC.
+ *
+ * MUSS UTC sein: `getTopClubsForMonth` fenstert über `utcMonthWindow`. Solange
+ * hier `getMonth()` (Ortszeit) stand, wählte ein Server in Europe/Berlin am
+ * 1. des Monats um 00:30 lokal bereits den neuen Monat aus, während das
+ * UTC-Fenster noch im alten lag — das Dashboard meldete „keine Charges in
+ * diesem Monat", obwohl volle Zahlen vorlagen.
+ */
 export function currentMonthStr(): string {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
 /**
