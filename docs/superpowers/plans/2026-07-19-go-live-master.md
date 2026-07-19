@@ -94,10 +94,20 @@ Zusätzlich: Inngest-Cloud-Sync zeigt auf kickpact.com, Crawler-Cron feuert, Sen
 
 ## Track B — iOS-Launch (parallel bis A5, Submit erst danach)
 
-### B1. Drei Native-Fixes (ich, im Repo)
+### B1. Drei Native-Fixes — ✅ ERLEDIGT (Commit 971a79b)
 1. **`PrivacyInfo.xcprivacy` dem Target „App" zuordnen** — Datei existiert seit 17.07., ist aber in `project.pbxproj` **null Mal referenziert**, wird also nicht gebündelt. Führt zu Upload-Reject ITMS-91053.
 2. **`aps-environment` → `production`** für die Release-Konfiguration. Aktuell `development`: ein Distribution-Build mit Sandbox-Token gegen den Prod-APNs-Host liefert bei *jeder* Push `BadDeviceToken`. Muss mit `APNS_PRODUCTION=true` im Prod-Env zusammenpassen.
 3. **`@capacitor/keyboard` installieren**, `resize: "native"`, `cap sync`. Ohne das verdeckt die Tastatur Eingabefelder in bottom-fixed Sheets (z. B. Sponsor-Discover).
+
+**Verifiziert:** `plutil -lint` + `xcodebuild -list` lesen das pbxproj, Release zieht
+`AppRelease.entitlements` und Debug weiter `App.entitlements`, Simulator-Build
+`BUILD SUCCEEDED`, und im gebauten `App.app` liegen `PrivacyInfo.xcprivacy` und
+`CapacitorKeyboard.framework`.
+
+⚠️ **Vor jedem iOS-Build:** `npx patch-package` laufen lassen. Ein `npm install` räumt
+den GoogleSignIn-7.1-Patch ab; das Symptom ist ein irreführender CocoaPods-Konflikt,
+die Folge wäre der Apple-Reject ITMS-91061 — im schlimmsten Fall erst nach Archive,
+Export und Signing.
 
 ### B2. Prod-Build bauen
 **Nur `npm run ios:sync:prod`** — der nackte `cap sync` fällt auf Staging zurück
