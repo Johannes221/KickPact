@@ -118,7 +118,11 @@ In-App-Upsell (vorerst monthly-only, season bleibt web) · TOCTOU im provider=nu
 ## Tests
 
 `npm test` (batchweise pro Verzeichnis): **1387 passed / 42 skipped (171 Files)** · `tsc --noEmit` clean · Stand 2026-06-12.
-**CI komplett deaktiviert (2026-07-19, Actions-Minuten):** beide Jobs in `.github/workflows/ci.yml` stehen auf `if: false`. `unit-integration` lief zuvor mit `continue-on-error: true` und 69 bekannten Failures — 814 GitHub-Actions-Minuten pro Abrechnungszyklus für ein Ergebnis, das nichts geblockt hat. `e2e` war schon länger aus (Specs referenzieren den alten 5-Step-Wizard). **Heißt: aktuell kein CI-Gate auf main — lokal `npm test` + `tsc --noEmit` vor jedem Merge.** Re-Aktivierung erst mit dem Proper-Fix (~3-4h: Tests in `db.transaction(...)` wrappen, einheitlich auf `integration-db.ts`, Mail-Client lazy, Parser-Fixtures als statisches JSON), dann ohne `continue-on-error`.
+**CI-Gate wieder scharf, aber nur auf Pull Requests (2026-07-19 abends):** `unit-integration` läuft wieder — ohne `continue-on-error`, also als echtes Gate. Auslöser ist nur noch `pull_request`; ein Lauf auf `push: main` käme zu spät, dort ist der Code schon gemerged.
+
+Der zuvor veranschlagte „~3-4h Proper-Fix" war nicht mehr nötig: nachgemessen mit exakt `npm run test:ci` war von den vier dokumentierten Ursachen nur noch **eine** übrig — der fehlende `RESEND_API_KEY` riss über `lib/mail/client.ts` acht Test-Files beim Modul-Load mit. Test-DB-Pollution und fehlende Migrations hatte der Slot-DB-Umbau vom 17.07. erledigt, die Parser-Fixtures liegen längst als committete Dateien vor. **Beleg: ohne die zwei Env-Variablen 8 Files rot / 1796 Tests grün, mit ihnen 240 Files grün / 1890 Tests grün.** Fix = zwei Zeilen `env:` im Workflow.
+
+`e2e` bleibt aus (Specs referenzieren den alten 5-Step-Wizard). Vor einem direkten Push auf main weiterhin lokal `npm run typecheck` + `npm test` — dort greift das Gate bewusst nicht.
 
 Test-Infra: singleFork-Volllauf über alle 171 Dateien OOMt/deadlockt (Vitest instanziiert lib/db/client + integration-db pro Datei neu → Pool-Akkumulation). Batchweise laufen: `npm test -- tests/queries tests/lib tests/simulation` etc. Pools begrenzt (client max=8, integration-db max=5, je idle_timeout=5s), Test-Container max_connections=400.
 
