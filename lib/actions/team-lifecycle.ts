@@ -94,7 +94,11 @@ const createTeamSchema = z.object({
     teamId: z.string().min(1),
     teamSlug: z.string().min(1),
     teamName: z.string().min(1).max(80),
-    saison: z.string().min(4)
+    // Kurzformat "2526" — `teams.saison` ist die Fenster-Quelle für alle
+    // saison-gefensterten Anzeigen (Bilanz, Tore, Sponsor-€). Ein abweichendes
+    // Format lässt saisonStartDate() null liefern und das Fenster still
+    // wegfallen.
+    saison: z.string().regex(/^\d{4}$/, "Saison muss im Format \"2526\" vorliegen")
   }),
   /**
    * Explizit gewählter Plan für das neue Team. Wenn Club bereits eine

@@ -6,7 +6,8 @@ import {
   ArrowDown,
   StickyNote,
   Sparkles,
-  CalendarDays
+  CalendarDays,
+  Coins
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -22,7 +23,11 @@ import {
 import { SeasonSwitcher } from "@/components/shared/season-switcher";
 import { listClubSeasonPledges } from "@/lib/db/queries/club-dashboard";
 import { getTeamPrognose } from "@/lib/db/queries/simulation";
-import { computeTeamSeasonStats } from "@/lib/db/queries/team-dashboard";
+import {
+  computeTeamSeasonStats,
+  getTeamSeasonChargeTotalCents,
+  getSeasonGoalChargeTotalCents
+} from "@/lib/db/queries/team-dashboard";
 import {
   getFullTeamInClub,
   resolveSeasonResultTarget
@@ -91,7 +96,8 @@ export default async function TeamDetailPage({
     seasonPledges,
     previousSeason,
     prognose,
-    wrappedEntry
+    wrappedEntry,
+    totalCharges
   ] =
     await Promise.all([
       listMatchesForTeam(team.id, 30, { saison: selectedSaison }),
@@ -108,24 +114,33 @@ export default async function TeamDetailPage({
       // W3: „Prognose"-Karte (Rückblick aktiver Pacts + Hochrechnung).
       getTeamPrognose(team.id),
       // Wrapped-Karte (W4): Vorsaison >= 3 Spiele UND aktuelle Saison < 5.
-      getWrappedEntryInfo(team.id)
+      getWrappedEntryInfo(team.id),
+      // „Sponsor-€"-Kachel: MUSS über dieselbe Saison laufen wie die drei
+      // Kacheln daneben (computeTeamSeasonStats → team.saison), sonst steht
+      // eine Lifetime-Zahl neben drei Saison-Zahlen. Enthält Saison-Beiträge
+      // (match_id NULL) — die fehlten hier vorher komplett.
+      getTeamSeasonChargeTotalCents(team.id, team.saison)
     ]);
 
   // Saison-Stats: Liga-Tabelle wenn sie die volle Saison kennt, sonst die
   // ausgewerteten Spiele (`source` sagt, was davon zutrifft).
   const { games, wins, draws, losses, goalsFor, goalsAgainst, source: statsSource } =
     await computeTeamSeasonStats(team.id, team.name, club.name);
-  const totalCharges = [...chargesSummary.values()].reduce((s, v) => s + v, 0);
 
   // Setup-Checkliste: Daten für "Anstehende Aufgaben".
   // Dazu das nächste Spiel für die „Bevorstehendes Spiel"-Karte (#44) — null,
   // wenn nichts ansteht (Sommerpause, Saisonende) → Karte entfällt.
-  const [clubBilling, pledgeCount, licenseRow, nextMatch] = await Promise.all([
-    getClubById(club.id),
-    countPledgesForTeam(team.id),
-    getTeamLicensePlanDirect(team.id),
-    getNextMatchForTeam(team.id)
-  ]);
+  const [clubBilling, pledgeCount, licenseRow, nextMatch, seasonGoalCharges] =
+    await Promise.all([
+      getClubById(club.id),
+      countPledgesForTeam(team.id),
+      getTeamLicensePlanDirect(team.id),
+      getNextMatchForTeam(team.id),
+      // Saisonziel-Beiträge der Saison, die der Endstand-Block bedient. Das ist
+      // im Grace-Fenster (15.7.–1.10.) die VORSAISON — dort landen die Beiträge,
+      // die die Sponsor-€-Kachel (= laufende Saison) korrekterweise nicht zeigt.
+      getSeasonGoalChargeTotalCents(team.id, seasonTarget.saison)
+    ]);
   const hasIban = !!clubBilling?.iban;
   const hasSponsor = pledgeCount > 0;
   const teamBase = `/verein/${slug}/mannschaft/${team.id}`;
@@ -386,6 +401,7 @@ export default async function TeamDetailPage({
         saison={seasonTarget.saison}
         isCurrentSeason={seasonTarget.saison === team.saison}
         result={seasonTarget.result ?? null}
+        goalChargesCents={seasonGoalCharges}
       />
 
       {/* Saison-Wrapped (W4): Story-Rückblick der Vorsaison — nur solange die
@@ -639,7 +655,8 @@ function SeasonStatusBlock({
   teamId,
   saison,
   isCurrentSeason,
-  result
+  result,
+  goalChargesCents
 }: {
   slug: string;
   teamId: string;
@@ -648,9 +665,24 @@ function SeasonStatusBlock({
   /** false = Block bedient die noch offene VORSAISON (Juli-Fenster). */
   isCurrentSeason: boolean;
   result: SeasonStatusResult | null;
+  /** Σ ausgelöster Saisonziel-Beiträge DIESER Saison (0 = noch keine). */
+  goalChargesCents: number;
 }) {
   const settingsHref = `/verein/${slug}/mannschaft/${teamId}/einstellungen/saison`;
   const label = saisonLabel(saison);
+  // Bewusst hier und nicht in der Sponsor-€-Kachel: die Kachel weist die
+  // LAUFENDE Saison aus, dieser Block ist mit `label` seiner eigenen Saison
+  // beschriftet. Im Grace-Fenster sind das zwei verschiedene Saisons.
+  const goalCharges = goalChargesCents > 0 && (
+    <p className="mt-3 flex items-center gap-1.5 text-xs md:text-sm text-brand-night-navy/70">
+      <Coins className="h-4 w-4 shrink-0 text-accent" aria-hidden />
+      <span>
+        Saisonziele {label}:{" "}
+        <strong className="text-accent">{eur(goalChargesCents)}</strong> für eure
+        Mannschaft
+      </span>
+    </p>
+  );
 
   if (!result) {
     return (
@@ -670,6 +702,7 @@ function SeasonStatusBlock({
           </Link>
           .
         </p>
+        {goalCharges}
       </section>
     );
   }
@@ -734,6 +767,7 @@ function SeasonStatusBlock({
           Bearbeiten →
         </Link>
       </div>
+      {goalCharges}
     </section>
   );
 }

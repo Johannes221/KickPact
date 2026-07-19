@@ -1,4 +1,4 @@
-import { and, eq, ne, desc, gte, lt, sql } from "drizzle-orm";
+import { and, eq, ne, desc, gte, inArray, lt, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { matches, matchEvents, teams, clubs, players } from "@/lib/db/schema";
 import {
@@ -13,6 +13,7 @@ import { pledges, pledgeRules } from "@/lib/db/schema/pledges";
 import { sponsors } from "@/lib/db/schema/sponsors";
 import { users } from "@/lib/db/schema/auth";
 import { sponsorLabelSql } from "./sponsor-label";
+import { CAP_COUNTED_STATUSES } from "./evaluation";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { resolveTeamSide } from "@/lib/crawler/team-side";
 import { saisonStartDate, nextSaisonCode } from "@/lib/utils/saison";
@@ -494,7 +495,18 @@ export async function shouldBackfillTeamHistory(teamId: string): Promise<boolean
   return totalCount === currentCount;
 }
 
-/** Liefert Charges-Summe pro Match für eine Mannschaft (für die Match-Liste). */
+/**
+ * Liefert Charges-Summe pro Match für eine Mannschaft (für die Match-Liste).
+ *
+ * Nur `confirmed`/`invoiced` (CAP_COUNTED_STATUSES) — dieselbe Menge wie
+ * Team-Finanzen, Sponsor-Bilanz und Cap-Enforcement. Ohne den Status-Filter
+ * zählte eine nach einer fussball.de-Korrektur stornierte Charge weiter als
+ * Geld und blähte die pro Spiel angezeigte Summe auf (Befund 2026-07-17).
+ *
+ * Bewusst nur Spiel-Charges: Saison-Beiträge (`match_id = NULL`) lassen sich
+ * keiner Spielzeile zuordnen. Für die Mannschafts-Gesamtsumme deshalb
+ * `getTeamSeasonChargeTotalCents` — nicht diese Map aufsummieren.
+ */
 export async function getMatchChargesSummaryForTeam(
   teamId: string
 ): Promise<Map<string, number>> {
@@ -505,7 +517,13 @@ export async function getMatchChargesSummaryForTeam(
     })
     .from(charges)
     .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
-    .where(and(eq(pledges.teamId, teamId), sql`${charges.matchId} IS NOT NULL`))
+    .where(
+      and(
+        eq(pledges.teamId, teamId),
+        inArray(charges.status, [...CAP_COUNTED_STATUSES]),
+        sql`${charges.matchId} IS NOT NULL`
+      )
+    )
     .groupBy(charges.matchId);
 
   const map = new Map<string, number>();

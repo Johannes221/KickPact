@@ -10,7 +10,12 @@ import { inngest } from "@/lib/inngest/client";
 
 const schema = z.object({
   teamId: z.string().min(1),
-  saison: z.string().min(4),
+  // Genau das Kurzformat "2526". Dieser Wert landet unverändert in
+  // `charges.saison` (evaluate-season) und entscheidet damit, ob der Beitrag in
+  // saison-gefensterten Geld-Anzeigen je wieder auftaucht. `min(4)` ließ jedes
+  // abweichende Format durch ("2025/2026", "abcd") — die Charge wäre berechnet
+  // und fakturiert, aber in keiner Anzeige mehr auffindbar.
+  saison: z.string().regex(/^\d{4}$/, "Saison muss im Format \"2526\" vorliegen"),
   finalPosition: z.number().int().min(1).max(40).optional(),
   teamsInLeague: z.number().int().min(2).max(40).optional(),
   promoted: z.boolean().optional().default(false),

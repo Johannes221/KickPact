@@ -1,6 +1,7 @@
-import { and, eq, gte, lt, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lt, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { matches, pledges, charges, sponsors, users, teams } from "@/lib/db/schema";
+import { CAP_COUNTED_STATUSES } from "./evaluation";
 import { sponsorLabelSql } from "./sponsor-label";
 import { resolveTeamSide } from "@/lib/crawler/team-side";
 import { saisonStartDate, nextSaisonCode } from "@/lib/utils/saison";
@@ -57,6 +58,107 @@ export async function listSponsorsForTeam(teamId: string): Promise<TeamSponsorRo
 }
 
 // ---------------- Season Stats ----------------
+
+/**
+ * `charges.saison` liegt in ZWEI gespeicherten Formaten vor ("2526" und
+ * "2025/26") — jede Query auf die Spalte muss beide matchen (vgl. wrapped.ts).
+ */
+function saisonVariants(saison: string): string[] {
+  return /^\d{4}$/.test(saison)
+    ? [saison, `20${saison.slice(0, 2)}/${saison.slice(2)}`]
+    : [saison];
+}
+
+/**
+ * Σ Saison-Beiträge (Aufstieg/Klassenerhalt/Meister/…) EINER Mannschaft für
+ * EINEN Saison-Code — also nur die Beiträge mit `match_id = NULL`.
+ *
+ * Existiert getrennt von `getTeamSeasonChargeTotalCents`, weil diese Beiträge
+ * regelmäßig zu einer ANDEREN Saison gehören als `teams.saison`: der
+ * Saison-Rollover bumpt `teams.saison` am 15.7., das Endstand-Formular bedient
+ * aber bis zum 1.10. bewusst die Vorsaison (resolveSeasonResultTarget). Ein im
+ * August eingetragener 25/26-Endstand erzeugt deshalb Beiträge mit
+ * `charges.saison = "2526"`, während das Team schon auf "2627" steht.
+ *
+ * Sie gehören damit in den Saison-Endstand-Block (der IST mit seiner eigenen
+ * Saison beschriftet) — nicht in die Sponsor-€-Kachel, die die laufende Saison
+ * ausweist. Sonst stünde Geld der Vorsaison unter dem Label der neuen.
+ */
+export async function getSeasonGoalChargeTotalCents(
+  teamId: string,
+  saison: string
+): Promise<number> {
+  const [row] = await db
+    .select({ total: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int` })
+    .from(charges)
+    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+    .where(
+      and(
+        eq(pledges.teamId, teamId),
+        inArray(charges.status, [...CAP_COUNTED_STATUSES]),
+        sql`${charges.matchId} IS NULL`,
+        inArray(charges.saison, saisonVariants(saison))
+      )
+    );
+  return row?.total ?? 0;
+}
+
+/**
+ * Σ Sponsor-Beiträge EINER Mannschaft in EINER Saison — die Zahl hinter der
+ * „Sponsor-€"-Kachel auf dem Mannschafts-Dashboard.
+ *
+ * Die Kachel lief vorher über `getMatchChargesSummaryForTeam` und log damit auf
+ * drei Achsen gleichzeitig (Befund 2026-07-17):
+ *  - Saison-Beiträge (`evaluate-season`, z.B. Klassenerhalt/Aufstieg) haben per
+ *    Konstruktion `match_id = NULL` und fielen aus einer match-gebundenen Summe
+ *    komplett raus. Sichtbar wird das erst NACH Saisonende — also genau bei den
+ *    Vereinen, die Saison-Ziele gebucht haben.
+ *  - Ohne Status-Filter zählten `cancelled` (fussball.de-Korrektur) und
+ *    `pending_approval` als Geld mit.
+ *  - Ohne Saison-Fenster stand eine Lifetime-Zahl neben drei Saison-Kacheln
+ *    (Spiele/Bilanz/Tore aus computeTeamSeasonStats).
+ *
+ * Fensterung deshalb identisch zu computeTeamSeasonStats: Spiel-Beiträge über
+ * das Spieldatum im halboffenen Saison-Fenster, Saison-Beiträge über die
+ * `charges.saison`-Spalte. Beide gespeicherten Saison-Formate matchen ("2526"
+ * und "2025/26") — wie in wrapped.ts.
+ */
+export async function getTeamSeasonChargeTotalCents(
+  teamId: string,
+  saison: string
+): Promise<number> {
+  const from = saisonStartDate(saison);
+  const to = saisonStartDate(nextSaisonCode(saison) ?? "");
+
+  // Ungültiger Saison-Code (from/to null) → Spiel-Beiträge bleiben ungefenstert,
+  // statt still 0 auszuweisen. Analog computeTeamSeasonStats, das die
+  // Datums-Conditions ebenfalls nur bei gültigem Code anhängt.
+  const matchWindow = [
+    sql`${charges.matchId} IS NOT NULL`,
+    from ? gte(matches.datum, from) : undefined,
+    to ? lt(matches.datum, to) : undefined
+  ].filter(Boolean);
+
+  const [row] = await db
+    .select({ total: sql<number>`COALESCE(SUM(${charges.amountCents}), 0)::int` })
+    .from(charges)
+    .innerJoin(pledges, eq(charges.pledgeId, pledges.id))
+    .leftJoin(matches, eq(charges.matchId, matches.id))
+    .where(
+      and(
+        eq(pledges.teamId, teamId),
+        inArray(charges.status, [...CAP_COUNTED_STATUSES]),
+        or(
+          and(...matchWindow),
+          and(
+            sql`${charges.matchId} IS NULL`,
+            inArray(charges.saison, saisonVariants(saison))
+          )
+        )
+      )
+    );
+  return row?.total ?? 0;
+}
 
 export interface TeamSeasonStats {
   games: number; wins: number; draws: number; losses: number;
