@@ -7,7 +7,7 @@ export function verificationRejectedEmail(args: {
 
   return {
     subject: `Bescheinigung für ${clubName} abgelehnt`,
-    text: `Hi,\n\nwir konnten deinen Vertretungs-Nachweis für ${clubName} nicht akzeptieren.\n\nBegründung: "${reason}"\n\nDu kannst eine neue Bescheinigung hochladen: ${reuploadUrl}\n\nFalls du Fragen hast, schreib uns an support@kickpact.de.\n\n— KickPact`,
+    text: `Hi,\n\nwir konnten deinen Vertretungs-Nachweis für ${clubName} nicht akzeptieren.\n\nBegründung: "${reason}"\n\nDu kannst eine neue Bescheinigung hochladen: ${reuploadUrl}\n\nFalls du Fragen hast, schreib uns an support@kickpact.com.\n\n— KickPact`,
     html: `<!doctype html>
 <html><body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif; background:#fafafa; padding: 40px 20px;">
   <table style="max-width: 520px; margin: 0 auto; background:#fff; border-radius:12px; padding: 40px;">
@@ -16,7 +16,7 @@ export function verificationRejectedEmail(args: {
       <p style="color: #525252; margin: 0 0 16px;">Wir konnten deinen Vertretungs-Nachweis für <strong>${escapeHtml(clubName)}</strong> nicht akzeptieren.</p>
       <blockquote style="border-left: 3px solid #a3a3a3; padding: 8px 16px; margin: 16px 0; color: #525252; background: #fafafa;">${escapeHtml(reason)}</blockquote>
       <a href="${reuploadUrl}" style="display: inline-block; background:#FF5722; color:#fff; text-decoration:none; padding: 14px 28px; border-radius:8px; font-weight: 600;">Neue Bescheinigung hochladen</a>
-      <p style="color: #a3a3a3; font-size: 12px; margin-top: 24px;">Fragen? Schreib uns an support@kickpact.de.</p>
+      <p style="color: #a3a3a3; font-size: 12px; margin-top: 24px;">Fragen? Schreib uns an support@kickpact.com.</p>
     </td></tr>
   </table>
 </body></html>`

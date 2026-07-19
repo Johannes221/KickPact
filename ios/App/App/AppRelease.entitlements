@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Release-Entitlements. Einziger Unterschied zu App.entitlements (Debug):
+	  aps-environment = production.
+
+	  Grund: Ein Distribution-Build zieht seine Push-Tokens aus der Sandbox, wenn
+	  hier "development" steht, spricht aber gegen den Prod-APNs-Host. Jede Push
+	  scheitert dann mit BadDeviceToken — Push ist tot, ohne dass es auffaellt.
+	  Muss mit APNS_PRODUCTION=true im Prod-Env zusammenpassen.
+
+	  Debug bleibt bewusst auf "development", sonst passt das Development-
+	  Provisioning-Profil nicht mehr und lokale Builds scheitern beim Signieren.
+	-->
+	<key>aps-environment</key>
+	<string>production</string>
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+</dict>
+</plist>

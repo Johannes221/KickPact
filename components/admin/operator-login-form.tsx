@@ -53,7 +53,7 @@ export function OperatorLoginForm() {
             <FormItem>
               <FormLabel>E-Mail</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="operator@kickpact.de" autoComplete="username" {...field} />
+                <Input type="email" placeholder="operator@kickpact.com" autoComplete="username" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

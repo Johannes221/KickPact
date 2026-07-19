@@ -23,7 +23,7 @@ Der Sponsor-Einladungslink ist dein wichtigstes Akquise-Tool. Ein Link, ein Klic
    - **Persönlicher Link** mit Name des Empfängers — beim Öffnen wird er namentlich begrüßt ("Hallo Mehmet!"). Empfohlen bei privaten Sponsoren.
    - **Generischer Link** — derselbe Link für alle. Praktisch für offene Akquise, z.B. Vereinswebsite oder WhatsApp-Gruppe.
 3. Klick auf **"Link generieren"** — KickPact erstellt einen Token. Der Link sieht so aus:
-   `kickpact.de/einladung/abc123XYZ...`
+   `kickpact.com/einladung/abc123XYZ...`
 4. Kopier den Link in Zwischenablage (Button rechts neben dem Feld), schick ihn raus.
 
 ## Wie lange ist der Link gültig?

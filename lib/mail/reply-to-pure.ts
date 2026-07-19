@@ -1,6 +1,6 @@
 import type { PlanKey } from "@/lib/stripe/pricing";
 
-export const KICKPACT_REPLY_TO = "noreply@kickpact.de";
+export const KICKPACT_REPLY_TO = "noreply@kickpact.com";
 
 const PLAN_RANK: Record<PlanKey, number> = {
   basic: 0,
@@ -20,14 +20,25 @@ export function highestPlanFrom(plans: PlanKey[]): PlanKey {
 }
 
 /**
- * Pure: leitet die Reply-To-Adresse aus dem höchsten Plan + Vereins-Slug ab.
+ * Pure: leitet die Reply-To-Adresse aus dem höchsten Plan + Vereins-Kontakt ab.
  *
- * - Basic → `noreply@kickpact.de`
- * - Pro / Vereinslizenz → `<slug>@kickpact.de` (KickPact-Alias, leitet auf den
- *   Vereins-Kontakt weiter). Wir nutzen bewusst nicht direkt die echte
- *   Vereins-Mail, damit alle Mails durch unseren Routing-Layer gehen.
+ * - Basic → `noreply@kickpact.com`
+ * - Pro / Vereinslizenz → die echte Vereins-Mail (Mail des Vereins-Admins).
+ *
+ * Vorher stand hier `<slug>@kickpact.de` mit dem Versprechen, ein Routing-Layer
+ * leite auf den Verein weiter. Den gab es nie: Antworten von Sponsoren gingen an
+ * eine nicht existierende Adresse und verschwanden ohne Bounce. Für v1 ist die
+ * echte Adresse die zustellbare Lösung; ein Catch-all-Routing kann später
+ * darüber, wenn KickPact die Kommunikation wirklich mitlesen soll.
+ *
+ * Ohne bekannte Vereins-Mail fällt es bewusst auf die System-Adresse zurück —
+ * lieber landet eine Antwort bei uns als in einem Blackhole.
  */
-export function deriveReplyTo(plan: PlanKey, clubSlug: string): string {
+export function deriveReplyTo(
+  plan: PlanKey,
+  clubContactEmail: string | null
+): string {
   if (plan === "basic") return KICKPACT_REPLY_TO;
-  return `${clubSlug}@kickpact.de`;
+  const contact = clubContactEmail?.trim();
+  return contact ? contact : KICKPACT_REPLY_TO;
 }

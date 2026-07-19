@@ -91,7 +91,7 @@ Nach Grace Period (7 weitere Tage = Tag 37 ab Trial-Start):
 
 **Nein.** Pro Verein und Mannschaft gibt es **einen Trial**. Wenn du eine Mannschaft kündigst und sechs Monate später wieder anlegst, bekommst du **keinen neuen Trial**. KickPact erkennt das über die Verein-Stammdaten.
 
-Ausnahme: Wenn der erste Trial vor dem **ersten Spielereignis** gekündigt wurde und keinerlei Daten erzeugt wurden, gewähren wir auf Anfrage einen zweiten Trial. Mail an support@kickpact.de mit Vereinsname.
+Ausnahme: Wenn der erste Trial vor dem **ersten Spielereignis** gekündigt wurde und keinerlei Daten erzeugt wurden, gewähren wir auf Anfrage einen zweiten Trial. Mail an support@kickpact.com mit Vereinsname.
 
 ## Bei Sommerpause während Trial
 

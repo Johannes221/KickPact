@@ -1,4 +1,5 @@
 import type { CapacitorConfig } from "@capacitor/cli";
+import { KeyboardResize } from "@capacitor/keyboard";
 
 /**
  * Capacitor-Konfiguration für die KickPact-iOS-App (WebView-Wrapper).
@@ -49,6 +50,13 @@ const config: CapacitorConfig = {
     cleartext: false
   },
   plugins: {
+    // Ohne dieses Plugin schiebt iOS die Tastatur über den Inhalt, statt den
+    // WebView zu verkleinern: in bottom-fixed Sheets mit Texteingabe (z.B.
+    // Sponsor-Discover) verdeckt sie genau das Feld, in das getippt wird.
+    // `native` lässt iOS den WebView-Frame animiert mitschrumpfen.
+    Keyboard: {
+      resize: KeyboardResize.Native
+    },
     // Foreground-Banner: ohne `presentationOptions` unterdrückt iOS jede Push,
     // die eintrifft WÄHREND die App offen ist (Default) — der Nutzer mit offener
     // App erfährt vom Tor/der Rechnung nichts. Banner + Sound + Badge zeigen.

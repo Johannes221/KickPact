@@ -75,7 +75,7 @@ Du hast einen Beitrag schon vor Tagen bestätigt, jetzt fällt dir auf, dass es 
 
 Verein-Admin sieht die Anfechtung, kann genauso entscheiden wie beim normalen Dispute.
 
-Nach dem 7. des Folgemonats: nur noch Support-Anfrage an support@kickpact.de mit Begründung.
+Nach dem 7. des Folgemonats: nur noch Support-Anfrage an support@kickpact.com mit Begründung.
 
 ## Audit-Log
 

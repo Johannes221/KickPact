@@ -14,7 +14,7 @@ last_updated: "2026-05-25"
 status: "published"
 ---
 
-Kurze Antworten auf die Fragen, die wir am häufigsten hören. Wenn die Antwort hier nicht passt, lies den verlinkten Tiefenartikel oder schreib an support@kickpact.de.
+Kurze Antworten auf die Fragen, die wir am häufigsten hören. Wenn die Antwort hier nicht passt, lies den verlinkten Tiefenartikel oder schreib an support@kickpact.com.
 
 ## 1. Brauche ich eine USt-ID?
 
@@ -57,7 +57,7 @@ Fußball.de korrigiert manchmal nachträglich. Unser Crawler erkennt das beim n�
 ## 9. Wie storniere ich einen falsch bestätigten Event?
 
 - **Bis zum 7. des Folgemonats**: in deinem Sponsor-Dashboard das Event anfechten, Verein-Admin entscheidet.
-- **Danach**: support@kickpact.de mit Begründung, manuelle Korrektur.
+- **Danach**: support@kickpact.com mit Begründung, manuelle Korrektur.
 
 Mehr in [Event bestreiten](event-bestreiten.md).
 
@@ -94,4 +94,4 @@ Wenn du merkst, der Markt-Fit ist nicht da: **Downgrade auf Basic** (geht jederz
 - [Trial — 30 Tage testen](trial-30-tage.md)
 - [So funktioniert die Monatsabrechnung](so-funktioniert-die-monatsrechnung.md)
 
-Wenn nichts passt: **support@kickpact.de** — wir antworten Werktag binnen 24 Stunden.
+Wenn nichts passt: **support@kickpact.com** — wir antworten Werktag binnen 24 Stunden.

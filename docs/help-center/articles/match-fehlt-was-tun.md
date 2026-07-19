@@ -39,7 +39,7 @@ Manche Vereine haben mehrere Herren-Mannschaften (Herren I + II + III). KickPact
 **Mannschaft → Einstellungen → Daten-Quelle** zeigt den letzten Crawl-Zeitstempel. Der Crawler läuft täglich, am Spieltag-Wochenende mehrfach.
 
 - Möglich: Rate-Limited oder vorübergehender Fehler. Beim nächsten Lauf löst sich's.
-- Wenn der Zeitstempel 48+ Stunden alt ist: an support@kickpact.de melden.
+- Wenn der Zeitstempel 48+ Stunden alt ist: an support@kickpact.com melden.
 
 ### Check 4 — Ist das Spielergebnis schon eingetragen?
 

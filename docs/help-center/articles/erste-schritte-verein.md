@@ -24,9 +24,9 @@ Vom ersten Login bis zum ersten Sponsor-Link in unter 10 Minuten. Wir gehen einm
 
 ## Schritt 1 — Konto anlegen via Magic Link
 
-Auf [kickpact.de](https://kickpact.de) auf **„Verein anlegen"** klicken. Mailadresse eingeben, **„Link senden"** drücken.
+Auf [kickpact.com](https://kickpact.com) auf **„Verein anlegen"** klicken. Mailadresse eingeben, **„Link senden"** drücken.
 
-Du bekommst eine Mail von `hello@kickpact.de` mit Betreff *„Dein KickPact-Login-Link"*. Klick rein, du landest direkt im Onboarding-Wizard. Kein Passwort, kein Bestätigungs-Dance.
+Du bekommst eine Mail von `hello@kickpact.com` mit Betreff *„Dein KickPact-Login-Link"*. Klick rein, du landest direkt im Onboarding-Wizard. Kein Passwort, kein Bestätigungs-Dance.
 
 ![Screenshot: Magic-Link-Mail im Posteingang](placeholder)
 
@@ -69,7 +69,7 @@ Du kannst alles später unter `/verein/[slug]/einstellungen` ändern. Bremst dic
 
 ## Schritt 5 — Ersten Sponsor-Einladungslink generieren
 
-Letzter Wizard-Schritt: Du bekommst einen **Einladungslink** in der Form `kickpact.de/einladung/xyz123`. Diesen Link teilst du mit deinen Sponsoren — WhatsApp, Mail, Vereins-Slack, was auch immer.
+Letzter Wizard-Schritt: Du bekommst einen **Einladungslink** in der Form `kickpact.com/einladung/xyz123`. Diesen Link teilst du mit deinen Sponsoren — WhatsApp, Mail, Vereins-Slack, was auch immer.
 
 ![Screenshot: Wizard Schritt 4 — Einladungslink mit Kopier-Button](placeholder)
 
