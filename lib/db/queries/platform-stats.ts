@@ -33,6 +33,7 @@ import {
   paginate,
   type PaginatedResult
 } from "@/lib/db/queries/_helpers/paginate";
+import { chargeCountsTowardCap, utcMonthWindow } from "@/lib/db/queries/evaluation";
 import {
   CYCLE_ORDER,
   PLAN_ORDER,
@@ -272,8 +273,11 @@ export function currentMonthStr(): string {
 export async function getTopClubsForMonth(month: string, limit = 5): Promise<TopClubRow[]> {
   const m = /^\d{4}-\d{2}$/.test(month) ? month : currentMonthStr();
   const [y, mo] = m.split("-").map((n) => parseInt(n, 10));
-  const monthStart = new Date(y, mo - 1, 1, 0, 0, 0, 0);
-  const monthEnd = new Date(y, mo, 1, 0, 0, 0, 0);
+  // UTC-Fenster + COALESCE(confirmedAt, createdAt) + CAP_COUNTED_STATUSES: die
+  // Rangliste zählt exakt dieselbe Menge wie Cap-Enforcement und Rechnung.
+  // Vorher lokale Monatsgrenzen (Server-TZ ≠ UTC verschob den Monatsrand) und
+  // `!= cancelled` — damit lag unbestätigtes pending_approval-Geld in der Liste.
+  const { start: monthStart, end: monthEnd } = utcMonthWindow(new Date(Date.UTC(y, mo - 1, 1)));
 
   const rows = await db
     .select({
@@ -287,13 +291,7 @@ export async function getTopClubsForMonth(month: string, limit = 5): Promise<Top
     .innerJoin(pledges, eq(pledges.id, charges.pledgeId))
     .innerJoin(teams, eq(teams.id, pledges.teamId))
     .innerJoin(clubs, eq(clubs.id, teams.clubId))
-    .where(
-      and(
-        gte(charges.createdAt, monthStart),
-        lt(charges.createdAt, monthEnd),
-        ne(charges.status, "cancelled")
-      )
-    )
+    .where(chargeCountsTowardCap(monthStart, monthEnd))
     .groupBy(clubs.id, clubs.name, clubs.slug)
     .orderBy(desc(sql`SUM(${charges.amountCents})`))
     .limit(limit);
