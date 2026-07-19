@@ -38,6 +38,17 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
+      # NICHT entfernen: der Job braucht sehr wohl einen Browser.
+      # tests/scraper/parser/_smoke.test.ts startet über die playwright-mocks
+      # einen echten Chromium (Fixture-Replay-Pipeline). Am 19.07. wurde dieser
+      # Schritt mit der Begründung "der Job braucht keinen Browser" gestrichen —
+      # lokal fiel das nicht auf, weil dort ein Browser im Cache liegt, in CI
+      # schlug genau dieser eine Test fehl:
+      #   browserType.launch: Executable doesn't exist at
+      #   /home/runner/.cache/ms-playwright/chromium-*/chrome-linux/chrome
+      # Nur chromium, nicht alle Engines. Wenn die ~1 min stört, ist der Hebel
+      # ein actions/cache auf ~/.cache/ms-playwright — nicht das Weglassen.
+      - run: npx playwright install --with-deps chromium
       - name: Run unit + integration tests
         # Echtes Gate, KEIN continue-on-error mehr (2026-07-19).
         #
