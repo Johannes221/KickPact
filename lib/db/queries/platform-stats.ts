@@ -33,7 +33,11 @@ import {
   paginate,
   type PaginatedResult
 } from "@/lib/db/queries/_helpers/paginate";
-import { chargeCountsTowardCap, utcMonthWindow } from "@/lib/db/queries/evaluation";
+import {
+  CAP_COUNTED_STATUSES,
+  chargeCountsTowardCap,
+  utcMonthWindow
+} from "@/lib/db/queries/evaluation";
 import {
   CYCLE_ORDER,
   PLAN_ORDER,
@@ -771,7 +775,14 @@ export async function getUserDetail(userId: string): Promise<UserDetail | null> 
         })
         .from(charges)
         .innerJoin(pledges, eq(pledges.id, charges.pledgeId))
-        .where(inArray(pledges.sponsorId, sponsorIds))
+        // Nur Geld, das zählt: cancelled (Storno nach fussball.de-Korrektur)
+        // und pending_approval sind keine Einnahmen.
+        .where(
+          and(
+            inArray(pledges.sponsorId, sponsorIds),
+            inArray(charges.status, [...CAP_COUNTED_STATUSES])
+          )
+        )
         .groupBy(pledges.sponsorId)
     : [];
 
