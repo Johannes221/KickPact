@@ -111,7 +111,9 @@ export default async function ChargesPage({
     },
     {
       key: "date",
-      label: "Spiel-Datum",
+      // Nicht mehr nur „Spiel-Datum": Saison-Beiträge haben kein Spiel und
+      // werden über ihren Bestätigungs-/Anlage-Zeitpunkt gefenstert.
+      label: "Zeitraum",
       type: "dateRange"
     }
   ];

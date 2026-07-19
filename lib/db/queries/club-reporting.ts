@@ -18,7 +18,6 @@ import {
   eq,
   gte,
   inArray,
-  lte,
   sql,
   type SQL
 } from "drizzle-orm";
@@ -86,6 +85,18 @@ export interface ClubChargeRow {
   confirmedAt: Date | null;
 }
 
+/**
+ * Zeit-Anker eines Beitrags für die Datums-Fensterung.
+ *
+ * `matches` hängt per LEFT JOIN: Saison-Beiträge (`match_id` NULL, dafür
+ * `saison` gesetzt — angelegt von `lib/inngest/functions/evaluate-season.ts`)
+ * haben KEIN `matches.datum`. Ein Fenster direkt auf `matches.datum` warf sie
+ * darum still aus Liste UND Summen-Kachel. Fallback deshalb auf
+ * confirmed_at → created_at (gleiche Anker-Reihenfolge wie das Cap-Fenster in
+ * `chargeCountsTowardCap`).
+ */
+const chargeDateAnchor = sql`COALESCE(${matches.datum}, ${charges.confirmedAt}, ${charges.createdAt})`;
+
 function chargeWhere(clubId: string, f: ClubChargeFilter | undefined): SQL {
   const parts: SQL[] = [eq(teams.clubId, clubId)];
   if (f?.teamId) parts.push(eq(teams.id, f.teamId));
@@ -94,7 +105,8 @@ function chargeWhere(clubId: string, f: ClubChargeFilter | undefined): SQL {
   if (f?.status) parts.push(eq(charges.status, f.status as never));
   if (f?.dateFrom) {
     const from = new Date(f.dateFrom);
-    if (!Number.isNaN(from.getTime())) parts.push(gte(matches.datum, from));
+    if (!Number.isNaN(from.getTime()))
+      parts.push(sql`${chargeDateAnchor} >= ${from.toISOString()}::timestamptz`);
   }
   if (f?.dateTo) {
     const to = new Date(f.dateTo);
@@ -103,7 +115,7 @@ function chargeWhere(clubId: string, f: ClubChargeFilter | undefined): SQL {
       if (/^\d{4}-\d{2}-\d{2}$/.test(f.dateTo)) {
         to.setUTCHours(23, 59, 59, 999);
       }
-      parts.push(lte(matches.datum, to));
+      parts.push(sql`${chargeDateAnchor} <= ${to.toISOString()}::timestamptz`);
     }
   }
   return and(...parts)!;

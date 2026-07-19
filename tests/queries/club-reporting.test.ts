@@ -101,6 +101,40 @@ describe.skipIf(isIntegrationDbDisabled)("club-reporting (integration)", () => {
     expect(amounts).toEqual([...amounts].sort((a, b) => a - b));
   });
 
+  // Saison-Beiträge (match_id NULL, saison gesetzt) hängen per LEFT JOIN ohne
+  // matches.datum. Ein Datums-Filter auf `matches.datum` würde sie still
+  // wegfiltern — Fenster daher über COALESCE(datum, confirmed_at, created_at).
+  it("listChargesForClub: Saison-Beitrag bleibt im Datums-Fenster sichtbar", async () => {
+    await insertSeasonCharge();
+    const result = await listChargesForClub("club_a", {
+      pagination: { page: 1, pageSize: 20 },
+      filter: { dateFrom: "2025-09-05", dateTo: "2025-09-12" }
+    });
+    const ids = result.rows.map((r) => r.id);
+    expect(ids).toContain("c_saison");
+    // Spiel-Charges bleiben korrekt gefenstert: nur m_2 (08.09.) liegt drin.
+    expect(ids).toContain("c_3");
+    expect(ids).not.toContain("c_1");
+    expect(result.total).toBe(2);
+  });
+
+  it("listChargesForClub: Saison-Beitrag außerhalb des Fensters fällt raus", async () => {
+    await insertSeasonCharge();
+    const result = await listChargesForClub("club_a", {
+      pagination: { page: 1, pageSize: 20 },
+      filter: { dateFrom: "2025-10-01" }
+    });
+    expect(result.rows.map((r) => r.id)).not.toContain("c_saison");
+  });
+
+  it("listChargesForClub: Saison-Beitrag ohne confirmedAt fällt auf createdAt zurück", async () => {
+    await insertSeasonCharge({ confirmedAt: null, createdAt: new Date(Date.UTC(2025, 8, 10)) });
+    const result = await listChargesForClub("club_a", {
+      filter: { dateFrom: "2025-09-05", dateTo: "2025-09-12" }
+    });
+    expect(result.map((r) => r.id)).toContain("c_saison");
+  });
+
   it("listChargesForClub: scoped per club — fremder Club leakt nicht", async () => {
     const result = await listChargesForClub("club_b", {
       pagination: { page: 1, pageSize: 10 }
@@ -319,6 +353,30 @@ describe.skipIf(isIntegrationDbDisabled)("club-reporting (integration)", () => {
     expect(kpis.activePledgeCount).toBe(0);
   });
 });
+
+/**
+ * Saison-Beitrag wie ihn `evaluate-season.ts` anlegt: kein match_id, dafür
+ * `saison` gesetzt. Wird nur in den Datums-Fenster-Tests dazugeseedet, damit die
+ * übrigen Counts (4 Charges) stabil bleiben.
+ */
+async function insertSeasonCharge(
+  opts: { confirmedAt?: Date | null; createdAt?: Date } = {}
+) {
+  const db = await getTestDb();
+  await db.insert(charges).values({
+    id: "c_saison",
+    pledgeId: "pl_1",
+    pledgeRuleId: "pr_1",
+    matchId: null,
+    saison: "2526",
+    triggerType: "goal_total",
+    amountCents: 700,
+    status: "confirmed",
+    confirmedAt:
+      opts.confirmedAt === undefined ? new Date(Date.UTC(2025, 8, 10)) : opts.confirmedAt,
+    ...(opts.createdAt ? { createdAt: opts.createdAt } : {})
+  });
+}
 
 // ───────────────────────────────────────────────────────────────────────────
 // Seed: zwei Clubs, zwei Teams, zwei Sponsoren, 2 Pledges, 2 Matches, 4 Charges
