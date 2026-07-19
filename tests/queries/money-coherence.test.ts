@@ -51,10 +51,13 @@ describe.skipIf(isIntegrationDbDisabled)("Geld-Kohärenz (integration)", () => {
     // KLICK auseinander. Die Liste war seit 3c2f8d0 gefiltert, die Detailseite
     // nicht — nach einer Wertungskorrektur zeigten sie verschiedene Beträge.
     const data = await listMatchCharges("m_1");
-    // confirmed 1000 + invoiced 500; cancelled 4400 und pending 8800 raus.
+    // confirmed 1000 + invoiced 500 = Geld. cancelled 4400 fällt ganz raus.
     expect(data.totalCents).toBe(1500);
-    expect(data.rows).toHaveLength(2);
-    // Auch die Aufschlüsselungen dürfen das Storno nicht enthalten.
+    // pending 8800 bleibt als ZEILE sichtbar (die Meldung soll die Detailseite
+    // weiterhin anzeigen), zählt aber getrennt — nicht als Geld.
+    expect(data.rows).toHaveLength(3);
+    expect(data.pendingCents).toBe(8800);
+    // Auch die Aufschlüsselungen dürfen weder Storno noch pending enthalten.
     expect(data.byTrigger.reduce((s, t) => s + t.totalCents, 0)).toBe(1500);
     expect(data.bySponsor.reduce((s, t) => s + t.totalCents, 0)).toBe(1500);
   });
