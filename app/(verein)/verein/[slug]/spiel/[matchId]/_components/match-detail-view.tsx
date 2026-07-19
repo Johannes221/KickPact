@@ -92,6 +92,24 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
     ausstehend: "Noch nicht gespielt"
   };
 
+  // Gemeldete, aber noch nicht vom Sponsor bestätigte Beiträge zählen NICHT in
+  // die Summe (das wäre Geld, das noch niemand zugesagt hat) — sie hier
+  // trotzdem ausweisen, sonst wirken gemeldete Events für den Verein
+  // verschwunden.
+  const pendingNote =
+    chargesData.pendingCents > 0 ? (
+      <div
+        className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-4 mb-4 text-sm text-brand-night-navy/70"
+        role="status"
+      >
+        <strong className="font-semibold text-brand-night-navy">
+          {eur(chargesData.pendingCents)}
+        </strong>{" "}
+        wurden gemeldet, warten aber noch auf die Bestätigung der Sponsoren — sie zählen noch nicht
+        als Beitrag.
+      </div>
+    ) : null;
+
   // Event-Aktionen nur bei tatsächlich gespielten Partien anbieten — nicht bei
   // zukünftigen/ungespielten (oder abgesagten/verlegten) Spielen.
   const isPlayed = canReportMatchEvents(match);
@@ -207,6 +225,8 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
             </span>
           </div>
 
+          {pendingNote}
+
           {/* Trigger-Breakdown */}
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 mb-4">
             {chargesData.byTrigger.map((t) => (
@@ -266,6 +286,8 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
             </table>
           </div>
         </section>
+      ) : chargesData.pendingCents > 0 ? (
+        pendingNote
       ) : (
         match.status === "finished" && (
           <div className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-5 text-sm text-brand-night-navy/60">
