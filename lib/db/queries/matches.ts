@@ -545,7 +545,10 @@ export interface MatchChargeRow {
 
 export interface MatchChargesData {
   rows: MatchChargeRow[];
+  /** Verdientes Geld: NUR confirmed + invoiced (CAP_COUNTED_STATUSES). */
   totalCents: number;
+  /** Gemeldet, aber noch nicht vom Sponsor bestätigt — separat ausweisen. */
+  pendingCents: number;
   /** Pro Trigger-Typ aggregiert */
   byTrigger: Array<{
     triggerType: string;
@@ -577,14 +580,31 @@ export async function listMatchCharges(matchId: string): Promise<MatchChargesDat
     .innerJoin(pledges, eq(chargesTable.pledgeId, pledges.id))
     .innerJoin(sponsors, eq(pledges.sponsorId, sponsors.id))
     .leftJoin(users, eq(sponsors.userId, users.id))
-    .where(eq(chargesTable.matchId, matchId))
+    .where(
+      and(
+        eq(chargesTable.matchId, matchId),
+        // `cancelled` sind durch eine fussball.de-Neuwertung ersetzte
+        // Alt-Charges (invalidateChargesForMatch) — ohne diesen Filter zeigte
+        // die Detailseite nach einer Korrektur alte UND neue Generation.
+        // `pending_approval` bleibt drin, wird unten aber nur in pendingCents
+        // gezählt, damit die Event-Zeilen die Meldung weiterhin anzeigen.
+        inArray(chargesTable.status, [...CAP_COUNTED_STATUSES, "pending_approval"])
+      )
+    )
     .orderBy(chargesTable.triggerType);
 
-  const totalCents = rows.reduce((s, r) => s + r.amountCents, 0);
+  // Nur bestätigtes/faktuiertes Geld zählt in die Aggregate — pending separat.
+  const countedRows = rows.filter((r) =>
+    (CAP_COUNTED_STATUSES as readonly string[]).includes(r.status)
+  );
+  const totalCents = countedRows.reduce((s, r) => s + r.amountCents, 0);
+  const pendingCents = rows
+    .filter((r) => r.status === "pending_approval")
+    .reduce((s, r) => s + r.amountCents, 0);
 
   // Gruppierung nach Trigger
   const triggerMap = new Map<string, { count: number; total: number }>();
-  for (const r of rows) {
+  for (const r of countedRows) {
     const existing = triggerMap.get(r.triggerType) ?? { count: 0, total: 0 };
     triggerMap.set(r.triggerType, {
       count: existing.count + 1,
@@ -604,7 +624,7 @@ export async function listMatchCharges(matchId: string): Promise<MatchChargesDat
 
   // Gruppierung nach Sponsor
   const sponsorMap = new Map<string, { total: number; triggers: Set<string> }>();
-  for (const r of rows) {
+  for (const r of countedRows) {
     const existing = sponsorMap.get(r.sponsorDisplayName) ?? { total: 0, triggers: new Set() };
     existing.total += r.amountCents;
     const meta = (TRIGGER_META as Record<string, { label: string; emoji: string } | undefined>)[
@@ -619,7 +639,7 @@ export async function listMatchCharges(matchId: string): Promise<MatchChargesDat
     triggerSummary: [...v.triggers].join(", ")
   }));
 
-  return { rows, totalCents, byTrigger, bySponsor };
+  return { rows, totalCents, pendingCents, byTrigger, bySponsor };
 }
 
 /**
