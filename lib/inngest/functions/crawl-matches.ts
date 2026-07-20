@@ -232,7 +232,37 @@ export const crawlMatches = inngest.createFunction(
         const ageMs = stored ? Date.now() - stored.scrapedAt.getTime() : Infinity;
         if (ageMs < STANDINGS_CRAWL_MIN_AGE_MS) return { skipped: "fresh" };
         const s = await getCachedStandings(team.id, team.saison);
-        return { rows: s?.rows.length ?? 0, ownRow: Boolean(s?.ownRow) };
+
+        // Wappen ALLER Ligavereine aus der Tabelle cachen — nicht nur die
+        // Gegner aus dem Spielplan (die oben schon gelaufen sind). So zeigt die
+        // Story-Vorschau auch für noch nicht angesetzte Ligagegner ihr echtes
+        // Wappen statt des Kürzels. syncClubCrests lädt jedes Wappen höchstens
+        // einmal (sourceUrl-Guard) → kein Download-Sturm. Best-effort: ein
+        // Wappen ist kosmetisch, ein Fehler darf den Standings-Step nicht kippen.
+        let crestsSynced = 0;
+        try {
+          const crests = (s?.rows ?? [])
+            .filter((r): r is typeof r & { teamId: string; crestUrl: string } =>
+              Boolean(r.teamId) && Boolean(r.crestUrl)
+            )
+            .map((r) => ({ teamId: r.teamId, url: r.crestUrl, name: r.teamName }));
+          crestsSynced = await syncClubCrests(crests, async (crest) => {
+            const dl = await fetchCrestBytes(crest.url);
+            if (!dl) return null;
+            return storeDocument(`crests/${crest.teamId}.png`, dl.bytes, dl.contentType);
+          });
+        } catch (err) {
+          logger.warn("league-table crest sync failed (non-fatal)", {
+            teamId: team.id,
+            err: String(err)
+          });
+        }
+
+        return {
+          rows: s?.rows.length ?? 0,
+          ownRow: Boolean(s?.ownRow),
+          crestsSynced
+        };
       });
 
       // ─── Geplante (kommende) Spiele ────────────────────────────────────────

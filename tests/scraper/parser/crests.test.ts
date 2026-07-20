@@ -16,7 +16,10 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "node-html-parser";
-import { extractCrestsFromRow as extractCrestsForTest } from "../../../lib/crawler/fussballde";
+import {
+  extractCrestsFromRow as extractCrestsForTest,
+  normalizeCrestUrl
+} from "../../../lib/crawler/fussballde";
 
 const HTML_DIR = join(process.cwd(), "tests/fixtures/scraper/html");
 
@@ -117,5 +120,77 @@ describe("Wappen aus der Spielplan-Zeile", () => {
            data-responsive-image="//www.fussball.de/export.media/-/action/getBanner/format/2/id/XYZ"></span></div></a></td></tr>`
     ).querySelector("tr")!;
     expect(extractCrestsForTest(tr)).toEqual([]);
+  });
+});
+
+describe("normalizeCrestUrl", () => {
+  it("macht protokoll-relative getLogo-URLs absolut und hebt sie auf format/2", () => {
+    expect(
+      normalizeCrestUrl(
+        "//www.fussball.de/export.media/-/action/getLogo/format/0/id/00ES8GNA0G000018VV0AG08LVUPGND5I"
+      )
+    ).toBe(
+      "https://www.fussball.de/export.media/-/action/getLogo/format/2/id/00ES8GNA0G000018VV0AG08LVUPGND5I"
+    );
+  });
+
+  it("lässt eine bereits absolute URL absolut und bumpt nur das Format", () => {
+    expect(
+      normalizeCrestUrl(
+        "https://www.fussball.de/export.media/-/action/getLogo/format/5/id/ABC123"
+      )
+    ).toBe("https://www.fussball.de/export.media/-/action/getLogo/format/2/id/ABC123");
+  });
+
+  it("verwirft nicht-getLogo-Bilder (Banner/Tracking) und Leerwerte", () => {
+    expect(
+      normalizeCrestUrl("//www.fussball.de/export.media/-/action/getBanner/format/2/id/XYZ")
+    ).toBeNull();
+    expect(normalizeCrestUrl(undefined)).toBeNull();
+    expect(normalizeCrestUrl(null)).toBeNull();
+    expect(normalizeCrestUrl("")).toBeNull();
+  });
+});
+
+/**
+ * Der Tabellen-Scrape (`getLeagueStandings`) läuft im echten Browser
+ * (`page.evaluate`), lässt sich also nicht wie der fetch-Pfad gegen eine
+ * gespeicherte Fixture fahren. Dieser Test prüft dieselbe Extraktions-Logik, die
+ * die evaluate nutzt — `span[data-responsive-image]` mit „getLogo" → an
+ * `normalizeCrestUrl` — gegen eine repräsentative Tabellenzeile, damit eine
+ * Struktur-Änderung an fussball.de nicht still ins Leere läuft.
+ *
+ * ACHTUNG: Die exakte Tabellen-Markup-Struktur ist mangels Fixture NICHT
+ * live verifiziert (Selektor bewusst breit gehalten + getLogo-Guard).
+ */
+describe("Wappen aus der Liga-Tabellenzeile", () => {
+  function crestFromStandingsRow(tr: ReturnType<typeof parse>): string | null {
+    const span = tr
+      .querySelectorAll("span[data-responsive-image]")
+      .find((sp) => (sp.getAttribute("data-responsive-image") || "").includes("getLogo"));
+    return normalizeCrestUrl(span?.getAttribute("data-responsive-image"));
+  }
+
+  it("liest das getLogo-Wappen einer Tabellenzeile auf format/2", () => {
+    const tr = parse(
+      `<tr>
+        <td class="column-rank">6.</td>
+        <td class="column-club"><a href="/mannschaft/x/-/team-id/011MIB6294000000VTVG0001VTR8C1K7" class="club-wrapper">
+          <div class="club-logo"><span data-alt="ASC Neuenheim"
+            data-responsive-image="//www.fussball.de/export.media/-/action/getLogo/format/0/id/00ES8GNA0G000018VV0AG08LVUPGND5I"></span></div>
+          <span class="club-name">ASC Neuenheim</span></a></td>
+        <td>34</td><td>14</td><td>6</td><td>14</td><td>69:66</td><td>48</td>
+      </tr>`
+    ).querySelector("tr")!;
+    expect(crestFromStandingsRow(tr)).toBe(
+      "https://www.fussball.de/export.media/-/action/getLogo/format/2/id/00ES8GNA0G000018VV0AG08LVUPGND5I"
+    );
+  });
+
+  it("liefert null für eine Zeile ohne Wappen (Story fällt aufs Kürzel zurück)", () => {
+    const tr = parse(
+      `<tr><td class="column-rank">7.</td><td class="column-club">SV Ohne Wappen</td><td>34</td></tr>`
+    ).querySelector("tr")!;
+    expect(crestFromStandingsRow(tr)).toBeNull();
   });
 });
