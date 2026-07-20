@@ -193,30 +193,14 @@ export function Kicker({ text, tone: t }: { text: string; tone: ToneSpec }) {
  * Coolify-Node), das Layout dort ist seitdem bewusst emoji-frei. Der grüne
  * Balken macht denselben Job und kann nicht fehlschlagen.
  */
-/**
- * Zählt einen ganzzahligen Betrag von 0 hoch — die Wrapped-Geste im Reel. Nur
- * saubere Ganzzahlen (mit optionalem Suffix wie „ €" oder „."): „34" zählt,
- * „3." zählt zu „3.", „4,99 €" bleibt stehen (ein hochzählender Komma-Preis
- * sähe kaputt aus). Nur der Reel-Renderer gibt `reveal` mit; ohne bleibt der
- * Betrag statisch — Karussells und Stories rendern damit exakt wie bisher.
- */
-function countUp(amount: string, p: number): string {
-  const m = amount.match(/^(\d+)(\D*)$/);
-  if (!m) return amount;
-  return `${Math.round(parseInt(m[1], 10) * Math.min(1, Math.max(0, p)))}${m[2]}`;
-}
-
 export function PactCards({
   pacts,
   tone: t,
-  width,
-  reveal
+  width
 }: {
   pacts: Pact[];
   tone: ToneSpec;
   width: number;
-  /** 0…1 — nur Reels: Beträge zählen bis hierhin hoch. Undefined = statisch. */
-  reveal?: number;
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 38 }}>
@@ -262,7 +246,7 @@ export function PactCards({
               letterSpacing: "-0.02em"
             }}
           >
-            {typo(reveal === undefined ? p.amount : countUp(p.amount, reveal))}
+            {typo(p.amount)}
           </div>
         </div>
       ))}
