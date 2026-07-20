@@ -122,6 +122,16 @@ export async function getSeasonGoalChargeTotalCents(
  * das Spieldatum im halboffenen Saison-Fenster, Saison-Beiträge über die
  * `charges.saison`-Spalte. Beide gespeicherten Saison-Formate matchen ("2526"
  * und "2025/26") — wie in wrapped.ts.
+ *
+ * BEWUSST NICHT gefiltert: `competitionType = 'friendly'`. computeTeamSeasonStats
+ * schließt Freundschaftsspiele aus der Bilanz aus, diese Summe nicht — für
+ * Neu-Beiträge folgenlos (das Gate aus Mig 0069 verhindert sie an beiden
+ * Insert-Pfaden), für Altbestand von VOR dem Gate stünde hier Geld neben einer
+ * Spielzahl, die das Spiel nicht zählt. Nicht wegfiltern: der Betrag wurde real
+ * berechnet und fakturiert, ihn aus der Anzeige zu nehmen wäre die schlechtere
+ * Lüge. Wie viele solcher Zeilen es gibt, beantwortet:
+ *   select count(*) from charges c join matches m on m.id = c.match_id
+ *   where m.competition_type = 'friendly' and c.status in ('confirmed','invoiced');
  */
 export async function getTeamSeasonChargeTotalCents(
   teamId: string,

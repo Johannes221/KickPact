@@ -6,6 +6,7 @@ import {
   CLUB_CHARGE_SORT_KEYS,
   type ClubChargeSortKey
 } from "@/lib/db/queries/club-reporting";
+import { CAP_COUNTED_STATUSES } from "@/lib/db/queries/evaluation";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { FilterBar, type FilterDefinition } from "@/components/shared/filter-bar";
 import { CsvExportButton } from "@/components/shared/csv-export-button";
@@ -71,7 +72,14 @@ export default async function ChargesPage({
     dir
   });
 
-  const sumOnPageCents = result.rows.reduce((sum, r) => sum + r.amountCents, 0);
+  // Die LISTE bleibt bewusst vollständig (ein Verein will offene und stornierte
+  // Beiträge sehen), die GELD-Kachel zählt aber nur bestätigtes Geld. Vorher
+  // summierte sie stumpf alle Zeilen: eine stornierte Charge trieb die Kachel
+  // hoch, während direkt daneben in derselben Tabelle das Storno-Badge stand.
+  const COUNTED: readonly string[] = CAP_COUNTED_STATUSES;
+  const sumOnPageCents = result.rows
+    .filter((r) => COUNTED.includes(r.status))
+    .reduce((sum, r) => sum + r.amountCents, 0);
 
   const filterDefs: FilterDefinition[] = [
     {
@@ -134,7 +142,7 @@ export default async function ChargesPage({
         <StatCard
           label="Summe Seite"
           value={eur(sumOnPageCents)}
-          hint={`Seite ${result.page}/${result.totalPages}`}
+          hint={`Seite ${result.page}/${result.totalPages} · nur bestätigt`}
         />
         <StatCard
           label="Filter aktiv"

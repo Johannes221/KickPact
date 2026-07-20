@@ -1,8 +1,11 @@
 name: CI
 
+# NUR bei Pull Requests (2026-07-19, Actions-Budget). Ein Lauf auf `push: main`
+# käme zu spät — da ist der Code bereits gemerged, das Gate kann nichts mehr
+# verhindern. Der PR-Lauf ist der Zeitpunkt, an dem das Ergebnis noch zählt.
+# Zusammen mit dem concurrency-Block und dem entfernten Playwright-Install
+# ungefähr halber Verbrauch gegenüber vorher, bei vollem Schutz vor dem Merge.
 on:
-  push:
-    branches: [main]
   pull_request:
 
 # Neuer Push auf denselben Branch bricht den noch laufenden Run ab —
@@ -13,13 +16,6 @@ concurrency:
 
 jobs:
   unit-integration:
-    # Deaktiviert 2026-07-19 (Actions-Minuten). Der Job lief mit
-    # continue-on-error: true, d.h. die 69 bekannten Failures (s. Kommentar
-    # unten) haben ohnehin nichts geblockt — 814 CI-Minuten pro Zyklus für
-    # ein Ergebnis, das per Definition ignoriert wurde. Re-aktivieren zusammen
-    # mit dem Proper-Fix-Plan unten (~3-4h), dann OHNE continue-on-error,
-    # sonst ist es wieder nur teure Dekoration. Tracked in STATE.md.
-    if: false
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -42,29 +38,39 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
+      # NICHT entfernen: der Job braucht sehr wohl einen Browser.
+      # tests/scraper/parser/_smoke.test.ts startet über die playwright-mocks
+      # einen echten Chromium (Fixture-Replay-Pipeline). Am 19.07. wurde dieser
+      # Schritt mit der Begründung "der Job braucht keinen Browser" gestrichen —
+      # lokal fiel das nicht auf, weil dort ein Browser im Cache liegt, in CI
+      # schlug genau dieser eine Test fehl:
+      #   browserType.launch: Executable doesn't exist at
+      #   /home/runner/.cache/ms-playwright/chromium-*/chrome-linux/chrome
+      # Nur chromium, nicht alle Engines. Wenn die ~1 min stört, ist der Hebel
+      # ein actions/cache auf ~/.cache/ms-playwright — nicht das Weglassen.
+      - run: npx playwright install --with-deps chromium
       - name: Run unit + integration tests
-        # ⚠️ continue-on-error TEMPORÄR um Email-Spam zu stoppen.
+        # Echtes Gate, KEIN continue-on-error mehr (2026-07-19).
         #
-        # Stand 2026-05-25 Abend: 69 von 690 Tests fail in CI über
-        # 13 Test-Files. Mehrere unabhängige Ursachen:
-        #   1. Test-DB-Pollution in tests/setup/db.ts (non-transactional
-        #      db.delete) — singleFork hilft nur teilweise
-        #   2. Schema-Migrations laufen nicht für Tests die tests/setup/db.ts
-        #      nutzen statt tests/setup/integration-db.ts (kein migrate-Call)
-        #   3. tests/lib/scope-team.test.ts collected 0 tests — Import-Time-
-        #      Error vermutlich aus lib/mail/client.ts (RESEND_API_KEY)
-        #   4. tests/scraper/parser/* (16 fails) — wahrscheinlich Fixture-
-        #      oder Network-Pfad in CI anders
+        # Der alte Kommentar hier veranschlagte für die 69 Failures aus 13
+        # Files einen „~3-4h Proper-Fix-Plan" (Test-DB-Pollution, fehlende
+        # Migrations, Parser-Fixtures, RESEND_API_KEY). Nachgemessen am
+        # 19.07. mit exakt diesem Befehl: davon war nur noch EINE Ursache
+        # übrig — der fehlende RESEND_API_KEY riss über lib/mail/client.ts
+        # acht Test-Files beim Modul-Load mit. Die anderen drei hatten sich
+        # zwischenzeitlich von selbst erledigt (Slot-DB-Umbau vom 17.07. für
+        # 1+2, committete Fixtures für 4).
         #
-        # Proper-Fix-Plan: Tests in db.transaction(...) wrappen, einheitlich
-        # auf integration-db.ts setup migrieren, Mail-Client lazy machen,
-        # Parser-Fixtures als statische JSON committen. ~3-4h Arbeit.
-        # Bis dahin: Tests laufen aber Failures blocken die CI nicht (sonst
-        # Email pro Push). Tracked in STATE.md.
-        continue-on-error: true
+        # Beleg: ohne die zwei Variablen 8 Files rot / 1796 Tests grün,
+        # mit ihnen 240 Files grün / 1890 Tests grün.
+        #
+        # Die Werte sind bewusst Dummies: kein Test verschickt echte Mail,
+        # die Module prüfen beim Import nur auf Anwesenheit.
         run: npm run test:ci
         env:
           DATABASE_URL_TEST: postgres://test:test@localhost:54329/kickpact_test
+          RESEND_API_KEY: re_dummy_ci_no_mail_is_sent
+          MAIL_FROM: "KickPact CI <noreply@example.invalid>"
 
   e2e:
     # Temporär deaktiviert: die E2E-Specs (tests/e2e/01-onboarding.spec.ts,

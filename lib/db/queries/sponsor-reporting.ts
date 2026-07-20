@@ -36,11 +36,19 @@ import {
 } from "@/lib/db/queries/_helpers/paginate";
 import {
   utcMonthWindow,
-  chargeCountsTowardCap
+  chargeCountsTowardCap,
+  CAP_COUNTED_STATUSES
 } from "@/lib/db/queries/evaluation";
 import type { TriggerType } from "@/lib/triggers/labels";
 
-const ACTIVE_STATUSES = ["confirmed", "invoiced"] as const;
+/**
+ * Alias auf die EINE Quelle. Vorher stand hier eine eigene Kopie
+ * `["confirmed","invoiced"]` — inhaltsgleich, aber unabhängig: käme ein
+ * Status dazu (die Gutschrift-Logik unter lib/invoicing/storno.ts deutet
+ * dorthin), hätte man ihn an einer Stelle nachgezogen und an der anderen
+ * vergessen, ohne dass ein Test das merkt.
+ */
+const ACTIVE_STATUSES = CAP_COUNTED_STATUSES;
 
 export interface DateRange {
   from: Date;
@@ -311,8 +319,19 @@ function buildChargeFilters(
   if (filters?.statuses && filters.statuses.length > 0) {
     conds.push(inArray(charges.status, filters.statuses));
   }
-  if (filters?.from) conds.push(gte(charges.createdAt, filters.from));
-  if (filters?.to) conds.push(lt(charges.createdAt, filters.to));
+  // Anker COALESCE(confirmed_at, created_at) — identisch zu getSponsorBalance.
+  // Vorher nacktes created_at: ein im März angelegtes, im April bestätigtes
+  // Event lag in der Bilanz unter April, in DIESER Liste und im CSV-Export
+  // aber unter März. Der Sponsor exportiert das CSV zum Rechnungsabgleich,
+  // genau dort fiel die Abweichung auf.
+  if (filters?.from)
+    conds.push(
+      sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${filters.from.toISOString()}::timestamptz`
+    );
+  if (filters?.to)
+    conds.push(
+      sql`COALESCE(${charges.confirmedAt}, ${charges.createdAt}) < ${filters.to.toISOString()}::timestamptz`
+    );
   return and(...conds) as SQL;
 }
 
