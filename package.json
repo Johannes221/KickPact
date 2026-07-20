@@ -33,7 +33,8 @@
     "social:capture": "dotenv -e .env.local -- tsx scripts/social/capture.ts",
     "social:publish": "dotenv -e .env.local -- tsx scripts/social/publish.ts",
     "social:token": "dotenv -e .env.local -- tsx scripts/social/token.ts",
-    "social:queue": "dotenv -e .env.local -- tsx scripts/social/queue.ts"
+    "social:queue": "dotenv -e .env.local -- tsx scripts/social/queue.ts",
+    "social:postmappe": "tsx scripts/social/postmappe.ts"
   },
   "dependencies": {
     "@apple/app-store-server-library": "^3.1.0",
