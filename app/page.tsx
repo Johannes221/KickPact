@@ -370,7 +370,7 @@ export default function LandingPage() {
             </h2>
             <p className="mt-2 text-brand-night-navy/60 text-xs md:text-sm max-w-xl">
               Pro Mannschaft eigenständig, oder Vereinslizenz für alle Teams.
-              <strong className="text-brand-night-navy"> Erste 30 Tage gratis.</strong>{" "}
+              <strong className="text-brand-night-navy"> In der Sommerpause kostenlos, dann 30 Tage gratis ab Saisonstart.</strong>{" "}
               Monatlich kündbar. KickPact zwackt nie was vom Sponsoren-Geld ab.
             </p>
           </div>
@@ -533,7 +533,8 @@ export default function LandingPage() {
             <span className="text-accent">Impact pro Spiel?</span>
           </h2>
           <p className="mt-3 text-sm md:text-base text-brand-night-navy/70 max-w-xl mx-auto">
-            30 Tage gratis. Kein Vertrag. Kein Risiko für deine Mannschaft.
+            In der Sommerpause kostenlos, danach 30 Tage gratis ab Saisonstart.
+            Kein Vertrag, kein Risiko für deine Mannschaft.
           </p>
           <div className="mt-6 md:mt-7 flex flex-col sm:flex-row gap-3 justify-center">
             <MagneticCTA
