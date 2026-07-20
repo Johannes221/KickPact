@@ -30,6 +30,13 @@ vi.mock("@/lib/storage/documents", () => ({
   getDocumentSignedUrl: vi.fn().mockImplementation(async (k: string) => k)
 }));
 
+// Inngest-Client stubben: createTeamForExistingClub triggert nach der Anlage
+// einen Crawl (crawler/team.crawl) — Tests dürfen kein echtes Event senden.
+const { inngestSend } = vi.hoisted(() => ({ inngestSend: vi.fn().mockResolvedValue(undefined) }));
+vi.mock("@/lib/inngest/client", () => ({
+  inngest: { send: inngestSend }
+}));
+
 // Default-Secret für opt-out token signing (Tests laufen ohne .env.local-Wert)
 process.env.BETTER_AUTH_SECRET ??= "test-secret-test-secret-test-secret-test-secret";
 
@@ -137,6 +144,21 @@ async function makeClubWithAdmin(slug: string, planForFirstTeam: "basic" | "pro"
 describe("createTeamForExistingClub", () => {
   beforeEach(async () => {
     await resetTestDb();
+    inngestSend.mockClear();
+  });
+
+  it("triggert einen Crawl für das neue Team (Wappen/Kader/Spiele sofort)", async () => {
+    const { clubSlug } = await makeClubWithAdmin("club-crawl-1", "pro");
+
+    const res = await createTeamForExistingClub({
+      clubSlug,
+      team: { teamId: "T_CRAWL_1", teamSlug: "2-herren", teamName: "2. Herren", saison: "2526" }
+    });
+
+    expect(inngestSend).toHaveBeenCalledWith({
+      name: "crawler/team.crawl",
+      data: { teamId: res.teamId }
+    });
   });
 
   it("legt ein neues Team mit gewähltem Plan an", async () => {
