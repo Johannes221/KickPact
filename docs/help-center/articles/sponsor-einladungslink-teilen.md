@@ -7,10 +7,10 @@ prio: "MUSS"
 audience: ["verein-admin", "trainer"]
 related_articles:
   - "sponsor-einladung-oeffnen"
-  - "einladungslinks-tracken"
+  - "was-ist-ein-pledge"
   - "ersten-pledge-anlegen"
-  - "sponsor-pitch-vorlage"
-last_updated: "2026-05-25"
+  - "faq"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -43,12 +43,12 @@ Pro Sponsor solltest du **maximal einen aktiven Link** haben. Wenn du einen neue
 | Letzter Klick | Wann er den Link zuletzt geöffnet hat (Tracking via Token) |
 | Monats-Pact | Aktueller Worst-Case-Betrag für den laufenden Monat |
 
-Mehr zum Tracking in [Einladungslinks tracken](einladungslinks-tracken.md).
+Die Spalte "Letzter Klick" ist dein Tracking: Du siehst, ob und wann der Empfänger den Link geöffnet hat.
 
 ## Empfohlene Kanäle
 
 - **WhatsApp** (am häufigsten): kurzer persönlicher Text, dann der Link. Mobile-Klickrate >70 %.
-- **E-Mail**: Mustertext in [Sponsor-Pitch-Vorlage](sponsor-pitch-vorlage.md). Klickrate ca. 40 %.
+- **E-Mail**: kurzer persönlicher Text plus Link. Klickrate ca. 40 %.
 - **Vereins-WhatsApp-Gruppe**: nur mit generischem Link, nicht mit Persönlichkeits-Token. Sonst klickt der falsche Onkel.
 - **Vereinswebsite**: den generischen Link als Button oder Textlink einbauen, z.B. "Unterstütze die Herren II — 5 € pro Tor".
 - **Druck (Flyer, Aushang)**: QR-Code-Funktion in der Sponsoren-Tabelle (Druck-Icon). 3-Klick-Download als PDF.
@@ -75,5 +75,4 @@ Sponsor antwortet nicht, oder du willst es aktiv beenden? **Sponsoren-Tabelle �
 
 Weiter lesen:
 - [Sponsor-Einladung öffnen](sponsor-einladung-oeffnen.md)
-- [Einladungslinks tracken](einladungslinks-tracken.md)
-- [Sponsor-Pitch-Vorlage](sponsor-pitch-vorlage.md)
+- [Ersten Pact anlegen](ersten-pledge-anlegen.md)

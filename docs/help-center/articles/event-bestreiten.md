@@ -10,7 +10,7 @@ related_articles:
   - "manual-trigger-katalog"
   - "disputes-und-trust"
   - "reminder-logik"
-last_updated: "2026-05-25"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -21,7 +21,7 @@ Trainer meldet ein Manual-Event, du als Sponsor zweifelst. Kein Drama — du kan
 - **Du warst beim Spiel** und das gemeldete Ereignis ist objektiv falsch ("Tim hat kein Kopfball-Tor geschossen, das war ein Volley").
 - Das Manual-Event passt **nicht zur Spielsituation** ("Spieler des Spiels war Tim, der hatte aber drei Fehlpässe und ist früh ausgewechselt worden").
 - Du hast Hinweise von Beobachtern, dass etwas nicht stimmt.
-- Trigger-Konfiguration matched nicht: "Ich habe den Pact nur für **Pflichtspiele** abgeschlossen, das war aber ein Freundschaftsspiel."
+- Das gemeldete Ereignis passt nicht zu deinem Pact — z.B. ein Manual-Event für einen Spieler, auf den dein Pact gar nicht läuft.
 
 ## Wann es nicht sinnvoll ist
 
@@ -75,7 +75,7 @@ Du hast einen Beitrag schon vor Tagen bestätigt, jetzt fällt dir auf, dass es 
 
 Verein-Admin sieht die Anfechtung, kann genauso entscheiden wie beim normalen Dispute.
 
-Nach dem 7. des Folgemonats: nur noch Support-Anfrage an support@kickpact.com mit Begründung.
+Nach dem 7. des Folgemonats: nur noch Support-Anfrage an hello@kickpact.com mit Begründung.
 
 ## Audit-Log
 

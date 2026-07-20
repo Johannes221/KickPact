@@ -7,10 +7,9 @@ prio: "MUSS"
 audience: ["verein-admin", "vereinslizenz-admin"]
 related_articles:
   - "fussballde-verknuepfung"
-  - "vereinslizenz-break-even"
-  - "10-admin-slots-verteilen"
   - "welcher-tarif-passt"
-last_updated: "2026-05-25"
+  - "master-cockpit-uebersicht"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -23,14 +22,14 @@ Pro Mannschaft brauchst du eine Lizenz. Was du hast:
 - **Basic / Pro:** Eine Lizenz pro Mannschaft, separate Abrechnung pro Team. Du kannst beliebig viele Teams in **einem Verein** anlegen, jede zahlt ihr eigenes Abo.
 - **Vereinslizenz:** Ein Abo deckt alle Mannschaften ab. Stripe wickelt 1× Abo pro Monat ab, nicht 5×.
 
-Wenn du nicht weißt, was günstiger ist: [Vereinslizenz Break-Even](vereinslizenz-break-even.md) rechnet es dir vor.
+Wenn du nicht weißt, was günstiger ist: [Welcher Tarif passt zu deinem Verein?](welcher-tarif-passt.md) rechnet es dir vor — ab drei Mannschaften ist die Vereinslizenz günstiger als drei einzelne Pro-Abos.
 
 ## So legst du eine neue Mannschaft an
 
 1. Gehe auf **Verein → Mannschaften → "+ Mannschaft hinzufügen"**.
 2. Der Wizard öffnet sich — derselbe wie beim ersten Setup, nur Schritt 1 (Vereinsdaten) entfällt.
 3. **Schritt 2: Fußball.de-Verknüpfung** — Verein ist schon ausgewählt, du wählst nur die Mannschaft aus der Liste. Wenn die Mannschaft nicht auftaucht, siehe [Fußball.de-Verknüpfung](fussballde-verknuepfung.md).
-4. **Schritt 3: Tarif** — wenn du Vereinslizenz hast, ist das nur ein Bestätigungsschritt (die Mannschaft wird automatisch abgedeckt). Bei Basic/Pro wählst du den Tarif für diese Mannschaft separat. Trial-Bonus: jede neue Mannschaft kriegt nochmal **14 Tage Trial** auf den gewählten Tarif (statt 30, weil du den Verein schon kennst).
+4. **Schritt 3: Tarif** — wenn du Vereinslizenz hast, ist das nur ein Bestätigungsschritt (die Mannschaft wird automatisch abgedeckt). Bei Basic/Pro wählst du den Tarif für diese Mannschaft separat. Trial: jede neue Mannschaft läuft unter derselben **30-Tage-Pro-Trial-Logik** wie die erste — es gibt keinen kürzeren Zweit-Trial.
 5. **Schritt 4: Sponsoren einladen** — optional, kannst du auch später machen.
 
 Nach Schritt 4 landest du auf der **neuen Mannschafts-Seite** mit leerem Spielplan. Spätestens beim nächsten täglichen Lauf importiert der Crawler die Spiele.
@@ -48,7 +47,7 @@ Beide Wege erzeugen einen **eigenen Pact** mit eigenen Triggern und Caps. Der al
 
 ## Team-Membership separat verwalten
 
-Pro Mannschaft kannst du Trainer und Viewer einzeln einladen — siehe [User-Rollen Admin/Trainer/Viewer](user-rollen-admin-trainer-viewer.md). Vereins-Admins haben automatisch Zugriff auf alle Mannschaften. Ein Jugendtrainer hingegen sieht nur seine eine Mannschaft.
+Pro Mannschaft kannst du Trainer und Viewer einzeln einladen (Rollen: Admin, Trainer, Viewer). Vereins-Admins haben automatisch Zugriff auf alle Mannschaften. Ein Jugendtrainer hingegen sieht nur seine eine Mannschaft.
 
 Best Practice in größeren Vereinen:
 
@@ -63,5 +62,5 @@ Best Practice in größeren Vereinen:
 
 Weiter lesen:
 - [Fußball.de-Verknüpfung](fussballde-verknuepfung.md)
-- [Vereinslizenz Break-Even](vereinslizenz-break-even.md)
-- [10 Admin-Slots verteilen](10-admin-slots-verteilen.md)
+- [Welcher Tarif passt zu deinem Verein?](welcher-tarif-passt.md)
+- [Master-Cockpit — alle Mannschaften auf einen Blick](master-cockpit-uebersicht.md)

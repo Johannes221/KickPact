@@ -8,9 +8,9 @@ audience: ["verein-admin", "vereinslizenz-admin"]
 related_articles:
   - "pdf-rechnung-lesen"
   - "ust-und-kleinunternehmer"
-  - "vereins-mail-absender-einrichten"
+  - "so-funktioniert-die-monatsrechnung"
   - "erste-schritte-verein"
-last_updated: "2026-05-25"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -73,4 +73,3 @@ Bei Basic/Pro ist nur das Mannschafts-Logo verfügbar.
 Weiter lesen:
 - [Zahlungsübersicht lesen](pdf-rechnung-lesen.md)
 - [USt und Steuern](ust-und-kleinunternehmer.md)
-- [Vereins-Mail-Absender einrichten](vereins-mail-absender-einrichten.md)

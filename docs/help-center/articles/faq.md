@@ -1,5 +1,5 @@
 ---
-title: "FAQ — die 15 häufigsten Fragen"
+title: "FAQ — die häufigsten Fragen"
 slug: "faq"
 category: "faq"
 category_label: "FAQ"
@@ -10,11 +10,11 @@ related_articles:
   - "was-ist-ein-pledge"
   - "trial-30-tage"
   - "so-funktioniert-die-monatsrechnung"
-last_updated: "2026-05-25"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
-Kurze Antworten auf die Fragen, die wir am häufigsten hören. Wenn die Antwort hier nicht passt, lies den verlinkten Tiefenartikel oder schreib an support@kickpact.com.
+Kurze Antworten auf die Fragen, die wir am häufigsten hören. Wenn die Antwort hier nicht passt, lies den verlinkten Tiefenartikel oder schreib an hello@kickpact.com.
 
 ## 1. Brauche ich eine USt-ID?
 
@@ -57,7 +57,7 @@ Fußball.de korrigiert manchmal nachträglich. Unser Crawler erkennt das beim n�
 ## 9. Wie storniere ich einen falsch bestätigten Event?
 
 - **Bis zum 7. des Folgemonats**: in deinem Sponsor-Dashboard das Event anfechten, Verein-Admin entscheidet.
-- **Danach**: support@kickpact.com mit Begründung, manuelle Korrektur.
+- **Danach**: hello@kickpact.com mit Begründung, manuelle Korrektur.
 
 Mehr in [Event bestreiten](event-bestreiten.md).
 
@@ -67,7 +67,7 @@ Mehr in [Event bestreiten](event-bestreiten.md).
 
 ## 11. Kann ich Pacts pausieren?
 
-**Ja, jederzeit.** Im Sponsor-Dashboard auf den Pact klicken → "Pausieren". Während der Pause feuern keine Trigger. Du kannst die Pause jederzeit beenden, der Pact läuft wieder. Mehr in [Pact pausiert und beendet](pledge-paused-und-beendet.md).
+**Ja, jederzeit.** Im Sponsor-Dashboard auf den Pact klicken → "Pausieren". Während der Pause feuern keine Trigger. Du kannst die Pause jederzeit beenden, der Pact läuft wieder. Mehr in [Kündigung und Pause](kuendigung-und-pause.md).
 
 ## 12. Funktioniert KickPact auch ohne Fußball.de-Verknüpfung?
 
@@ -87,6 +87,10 @@ Du zahlst trotzdem die Lizenz, auch wenn 0 Sponsoren aktiv sind. KickPact ist ke
 
 Wenn du merkst, der Markt-Fit ist nicht da: **Downgrade auf Basic** (geht jederzeit) oder **kündigen am Saison-Ende**. Mehr in [Kündigung und Pause](kuendigung-und-pause.md).
 
+## 16. Zahlt ein Sponsor auch für Freundschaftsspiele?
+
+**Nein.** Beiträge entstehen nur bei **Liga- und Pokalspielen**. Freundschaftsspiele und Turniere lösen keine Beiträge aus — auch dann nicht, wenn sie auf Fußball.de mit Ergebnis und Torschützen erfasst sind. Mehr in [Freundschaftsspiele zahlen nicht](freundschaftsspiele-zahlen-nicht.md).
+
 ## Weitere Fragen
 
 - [Was ist ein Pact?](was-ist-ein-pledge.md)
@@ -94,4 +98,4 @@ Wenn du merkst, der Markt-Fit ist nicht da: **Downgrade auf Basic** (geht jederz
 - [Trial — 30 Tage testen](trial-30-tage.md)
 - [So funktioniert die Monatsabrechnung](so-funktioniert-die-monatsrechnung.md)
 
-Wenn nichts passt: **support@kickpact.com** — wir antworten Werktag binnen 24 Stunden.
+Wenn nichts passt: **hello@kickpact.com** — wir antworten Werktag binnen 24 Stunden.

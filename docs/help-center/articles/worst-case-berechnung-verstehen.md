@@ -9,7 +9,7 @@ related_articles:
   - "caps-und-monats-limits"
   - "ersten-pledge-anlegen"
   - "was-ist-ein-pledge"
-last_updated: "2026-05-25"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -31,10 +31,10 @@ Jede Zahl berücksichtigt deine gesetzten Caps — der Worst-Case kann **nie** d
 
 Wir nehmen an, **alle Trigger feuern auf Maximum**:
 
-- `goal_team` mit 5 € → 10 Tore (sehr hoch angesetzt) × 5 € = 50 €
-- `win` mit 20 € → 1 × 20 € = 20 €
-- `hat_trick` mit 25 € → 1 × 25 € = 25 €
-- Per-Match-Cap (z.B. 30 €) → **30 €** Worst-Case-Match
+- "Pro Tor" mit 5 € → 10 Tore (sehr hoch angesetzt) × 5 € = 50 €
+- "Pro Sieg" mit 20 € → 1 × 20 € = 20 €
+- "Pro Hattrick" mit 25 € → 1 × 25 € = 25 €
+- Summe: **95 €** Worst-Case-Match. Es gibt keinen Cap pro Spiel — begrenzt wird ausschließlich über den Monats-Cap.
 
 ### Monats-Worst-Case
 
@@ -42,7 +42,7 @@ Wir nehmen an, **alle Trigger feuern auf Maximum**:
 - Jedes Spiel = Pro-Match-Worst-Case
 - Summe vs. Monats-Cap, das niedrigere gewinnt
 
-Beispiel: 4 × 30 € = 120 € → Monats-Cap 100 € → **100 €** Worst-Case-Monat
+Beispiel: 4 × 95 € = 380 € → Monats-Cap 100 € → **100 €** Worst-Case-Monat
 
 ### Saison-Worst-Case
 
@@ -56,10 +56,10 @@ Beispiel: 10 × 100 € = 1000 € → Saison-Cap 600 € → **600 €** Worst-
 Wir sind **bewusst pessimistisch**:
 
 - 4 Spiele/Monat (real oft 3, im Sommer manchmal 2)
-- Alle Auto-Trigger feuern (z.B. immer Comeback + Clean Sheet + Win)
+- Alle Auto-Trigger feuern (z.B. immer Comeback + Zu-Null-Sieg + Sieg)
 - Bei Spieler-Pacts: Spieler trifft so oft wie der gesamte Mannschafts-Schnitt
 - Manuelle Trigger werden alle gemeldet **und** vom Sponsor approved
-- Per-Match-Cap wird ausgereizt
+- Der Monats-Cap wird voll ausgereizt
 
 Real liegt der **Erwartungswert bei 30-60 %** des Worst-Case. Wenn dein Worst-Case z.B. 100 €/Monat ist, zahlst du im Schnitt ca. 35-60 €.
 
@@ -67,21 +67,19 @@ Real liegt der **Erwartungswert bei 30-60 %** des Worst-Case. Wenn dein Worst-Ca
 
 Pact "Tim's Eltern":
 
-- Regel 1: `goal_player` (Tim), 10 €
-- Regel 2: `assist`, 5 € (Manual, gilt mit Approval)
-- Regel 3: `man_of_the_match`, 20 € (Manual)
-- Per-Match-Cap: 40 €
+- Regel 1: "Tor von Spieler" (Tim), 10 €
+- Regel 2: Spezial-Tor Kopfball, 5 € (Manual, gilt mit Approval)
+- Regel 3: Rote Karte, 20 € (Manual, gilt mit Approval)
 - Monats-Cap: 80 €
 
 **Pro-Match-Worst-Case:**
 - Tim schießt 5 Tore: 5 × 10 € = 50 €
-- 2 Assists: 2 × 5 € = 10 €
-- Player of the match: 20 €
-- Sum: 80 € → Per-Match-Cap 40 €
-- Resultat: **40 € pro Spiel max.**
+- 2 Kopfball-Tore: 2 × 5 € = 10 €
+- 1 Rote Karte: 20 €
+- Summe: **80 € pro Spiel** (es gibt keinen Cap pro Spiel)
 
 **Monats-Worst-Case:**
-- 4 × 40 € = 160 € → Monats-Cap 80 €
+- 4 × 80 € = 320 € → Monats-Cap 80 €
 - Resultat: **80 € pro Monat max.**
 
 **Saison-Worst-Case:**

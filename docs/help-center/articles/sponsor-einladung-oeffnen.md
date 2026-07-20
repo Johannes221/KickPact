@@ -7,9 +7,9 @@ prio: "MUSS"
 audience: ["sponsor"]
 related_articles:
   - "ersten-pledge-anlegen"
-  - "sponsor-dashboard-verstehen"
+  - "sponsor-einladungslink-teilen"
   - "was-ist-ein-pledge"
-last_updated: "2026-05-25"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -75,4 +75,4 @@ Du hast kein Passwort — also auch keins zu verlieren. Jeder Login geht über e
 
 Weiter lesen:
 - [Ersten Pact anlegen](ersten-pledge-anlegen.md)
-- [Sponsor-Dashboard verstehen](sponsor-dashboard-verstehen.md)
+- [Worst-Case verstehen](worst-case-berechnung-verstehen.md)

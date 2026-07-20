@@ -9,19 +9,15 @@ related_articles:
   - "welcher-tarif-passt"
   - "saison-pass-vs-monatlich"
   - "kuendigung-und-pause"
-last_updated: "2026-05-25"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
-Jeder Verein, der KickPact zum ersten Mal startet, bekommt **30 Tage Trial** auf dem gewählten Tarif. Volle Funktionalität, keine Kreditkarten-Vorab-Belastung, keine versteckten Sperren. So funktioniert es.
+Jeder Verein, der KickPact zum ersten Mal startet, bekommt **30 Tage Trial** — mit vollem **Pro-Funktionsumfang**. Volle Funktionalität, keine Kreditkarte nötig, keine versteckten Sperren. So funktioniert es.
 
 ## Was im Trial drin ist
 
-Alles, was im gewählten Tarif drin ist. Heißt:
-
-- **Basic-Trial**: 5 Sponsoren, 3 Regeln pro Sponsor, Standard-Trigger.
-- **Pro-Trial**: Unbegrenzte Sponsoren und Regeln, Saison-Ziele, Custom-Trigger.
-- **Vereinslizenz-Trial**: Pro-Funktionen × beliebige Mannschaften, Master-Cockpit, 10 Admin-Slots.
+Der Trial startet immer mit dem vollen **Pro-Funktionsumfang** — egal, welchen Tarif du am Ende buchst. Heißt: unbegrenzte Sponsoren und Regeln, Saison-Ziele, Custom-Trigger und (bei mehreren Mannschaften) das Master-Cockpit. So kannst du im Trial alles testen und erst zum Abo-Start entscheiden, welcher Tarif zu dir passt.
 
 Du kannst Sponsoren einladen, Pacts aktivieren, Beiträge erzeugen — wie wenn du bezahlt hättest. Im Trial-Zeitraum erstellte Pacts und Beiträge bleiben **auch nach Konvertierung zum Bezahl-Abo erhalten**.
 
@@ -29,7 +25,9 @@ Du kannst Sponsoren einladen, Pacts aktivieren, Beiträge erzeugen — wie wenn 
 
 Mit dem **ersten erfolgreichen Onboarding-Schritt** — also wenn du den Vereins-Wizard abgeschlossen hast und auf das Dashboard kommst. Nicht mit dem Signup, nicht mit dem ersten Login. Erst wenn die Mannschaft fertig konfiguriert ist.
 
-KickPact merkt sich das Trial-Startdatum pro Mannschaft. Wenn du später eine zweite Mannschaft hinzufügst, bekommst du für diese **noch 14 Tage Trial** zusätzlich (siehe [Mannschaft hinzufügen](mannschaft-hinzufuegen.md)).
+Der Trial endet **frühestens 30 Tage nach dem Saisonstart**. Wenn du im Sommer onboardest, während auf Fußball.de noch nichts läuft, verlierst du also keine Trial-Tage — die Uhr für die 30 Tage läuft erst, wenn die Saison rollt.
+
+KickPact merkt sich das Trial-Startdatum pro Mannschaft. Fügst du später eine zweite Mannschaft hinzu, läuft die genauso unter der **30-Tage-Pro-Trial-Logik** — es gibt keinen kürzeren Zweit-Trial (siehe [Mannschaft hinzufügen](mannschaft-hinzufuegen.md)).
 
 ## Reminder-Mails während Trial
 
@@ -84,14 +82,14 @@ Nach Grace Period (7 weitere Tage = Tag 37 ab Trial-Start):
 
 ## Down- und Upgrade während Trial
 
-- **Du startest mit Basic-Trial und merkst, du brauchst Pro?** Wechsel direkt im Tarif-Dialog. Der neue Trial gilt für den neuen Tarif, du verlierst keine Tage.
-- **Du startest mit Pro-Trial und merkst, Basic reicht?** Analog. Pacts, die Pro-Features nutzen (Saison-Ziele, Custom-Trigger), werden beim Downgrade **pausiert** mit Erklärung — sie sind nicht weg, nur inaktiv.
+- **Du hast Basic als Zieltarif gewählt und merkst, du brauchst dauerhaft Pro?** Wechsel den Zieltarif direkt im Tarif-Dialog. Im Trial testest du ohnehin die vollen Pro-Funktionen — du legst nur fest, was ab Abo-Start berechnet wird. Du verlierst keine Tage.
+- **Du hast Pro gewählt und merkst, Basic reicht?** Analog. Pacts, die Pro-Features nutzen (Saison-Ziele, Custom-Trigger), werden erst ab dem Downgrade zum Bezahl-Abo **pausiert** mit Erklärung — sie sind nicht weg, nur inaktiv.
 
 ## Trial-Mehrfach-Nutzung — geht das?
 
 **Nein.** Pro Verein und Mannschaft gibt es **einen Trial**. Wenn du eine Mannschaft kündigst und sechs Monate später wieder anlegst, bekommst du **keinen neuen Trial**. KickPact erkennt das über die Verein-Stammdaten.
 
-Ausnahme: Wenn der erste Trial vor dem **ersten Spielereignis** gekündigt wurde und keinerlei Daten erzeugt wurden, gewähren wir auf Anfrage einen zweiten Trial. Mail an support@kickpact.com mit Vereinsname.
+Ausnahme: Wenn der erste Trial vor dem **ersten Spielereignis** gekündigt wurde und keinerlei Daten erzeugt wurden, gewähren wir auf Anfrage einen zweiten Trial. Mail an hello@kickpact.com mit Vereinsname.
 
 ## Bei Sommerpause während Trial
 
