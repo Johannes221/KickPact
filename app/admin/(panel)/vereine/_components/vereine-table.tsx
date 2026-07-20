@@ -6,6 +6,7 @@ import {
   type DataTableColumn,
   type SortDirection
 } from "@/components/ui/data-table";
+import { Badge } from "@/components/ui/badge";
 import type { AdminVereinRow, AdminVereinSortKey } from "@/lib/db/queries/platform-stats";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -97,6 +98,17 @@ export function VereineTable({
       label: "Status",
       sortable: true,
       render: (row) => <StatusPill status={row.subscriptionStatus} />
+    },
+    {
+      key: "pendingRequestCount",
+      label: "Anfragen",
+      align: "right",
+      render: (row) =>
+        row.pendingRequestCount > 0 ? (
+          <Badge tone="warning">{row.pendingRequestCount}</Badge>
+        ) : (
+          <span className="text-brand-night-navy/40">—</span>
+        )
     },
     {
       key: "verified",
