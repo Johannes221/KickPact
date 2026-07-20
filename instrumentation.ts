@@ -21,6 +21,9 @@ export async function register() {
 function assertProdEnv() {
   if (process.env.NODE_ENV !== "production") return;
 
+  // Boot-Pflicht: ohne diese kann die App keine korrekte Runde drehen. RESEND/
+  // MAIL_FROM bleiben hart, weil der Login (Magic-Links) sonst nicht funktioniert
+  // — ein bootender, aber login-loser Server ist schlimmer als ein Fail-Fast.
   const hardRequired = [
     "DATABASE_URL",
     "BETTER_AUTH_SECRET",
@@ -28,8 +31,7 @@ function assertProdEnv() {
     "NEXT_PUBLIC_BASE_URL",
     "NEXT_PUBLIC_SITE_ENV",
     "RESEND_API_KEY",
-    "MAIL_FROM",
-    "INNGEST_SIGNING_KEY"
+    "MAIL_FROM"
   ];
   const missing = hardRequired.filter((k) => !process.env[k]);
   if (missing.length > 0) {
@@ -51,6 +53,10 @@ function assertProdEnv() {
 
   // Still degradierende Vars: nur warnen, nicht Boot abbrechen.
   const shouldSet: Record<string, string> = {
+    // Bewusst KEIN Boot-Blocker (2026-07-19): /api/inngest ist fail-closed (503
+    // ohne Key), die App bootet also sicher. Bis der Key gesetzt ist, laufen nur
+    // KEINE Hintergrund-Jobs (Crawling, Rechnungslauf, Erinnerungs-Mails).
+    INNGEST_SIGNING_KEY: "Hintergrund-Jobs (Crawling/Rechnungen/Mails) laufen NICHT",
     SENTRY_DSN: "Error-Tracking (Server) inaktiv",
     NEXT_PUBLIC_SENTRY_DSN: "Error-Tracking (Client) inaktiv",
     REDIS_URL: "Rate-Limit läuft nur In-Memory pro Instanz",
