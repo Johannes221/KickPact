@@ -9,7 +9,7 @@ related_articles:
   - "pdf-rechnung-lesen"
   - "als-bezahlt-markieren"
   - "ust-und-kleinunternehmer"
-  - "reminder-an-sponsor"
+  - "reminder-logik"
 last_updated: "2026-05-25"
 status: "published"
 ---

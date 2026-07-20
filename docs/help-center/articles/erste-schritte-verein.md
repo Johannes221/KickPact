@@ -10,7 +10,7 @@ related_articles:
   - "vereins-stammdaten-und-logo"
   - "sponsor-einladungslink-teilen"
   - "welcher-tarif-passt"
-last_updated: "2026-05-24"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -42,13 +42,13 @@ Im nächsten Schritt erscheinen alle Mannschaften deines Vereins. Wähle die Man
 
 ![Screenshot: Wizard Schritt 2 — Mannschaftsauswahl](placeholder)
 
-**Findest du deine Mannschaft nicht?** → [Hilfe: Mein Verein existiert nicht auf Fußball.de](hilfe-mein-verein-existiert-nicht-auf-fussballde.md). In 95 % der Fälle liegt es am Schreibfehler bei der Suche.
+**Findest du deine Mannschaft nicht?** → [Fußball.de-Verknüpfung — wie sie funktioniert](fussballde-verknuepfung.md). In 95 % der Fälle liegt es am Schreibfehler bei der Suche.
 
 ## Schritt 3 — Tarif wählen
 
 KickPact schlägt dir basierend auf dem Datum den passenden Tarif vor:
 
-- **Vor dem 5. Spieltag der laufenden Saison** → Saison-Pass empfohlen (42–43 % günstiger als 12 Monatsraten, Sommerpause kostenlos).
+- **Vor dem 5. Spieltag der laufenden Saison** → Saison-Pass empfohlen (rund 67 % günstiger als 12 Monatsraten, Sommerpause kostenlos).
 - **Ab 6. Spieltag** → Monatsabo (Saison-Pass für die nächste Saison ab 1. Juli wieder buchbar).
 - **Im Juni** → Frühbucher-Saison-Pass für die nächste Saison.
 
@@ -98,4 +98,4 @@ Der Fußball.de-Crawler läuft täglich im Hintergrund, am Spieltag-Wochenende m
 Weiter lesen:
 - [Fußball.de-Verknüpfung — wie sie funktioniert](fussballde-verknuepfung.md)
 - [Sponsor-Einladungslink — Verteilen und tracken](sponsor-einladungslink-teilen.md)
-- [User-Rollen — Admin, Trainer, Viewer](user-rollen-admin-trainer-viewer.md)
+- User-Rollen — Admin, Trainer, Viewer

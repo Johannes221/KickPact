@@ -7,10 +7,10 @@ prio: "MUSS"
 audience: ["verein-admin"]
 related_articles:
   - "so-funktioniert-die-monatsrechnung"
-  - "reminder-an-sponsor"
+  - "reminder-logik"
   - "pdf-rechnung-lesen"
-  - "csv-export-fuer-buchhaltung"
-last_updated: "2026-05-25"
+  - "vereins-stammdaten-und-logo"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -54,7 +54,7 @@ Du exportierst:
 - Aus dem **Online-Banking** die CSV mit Zahlungseingängen.
 - Aus **KickPact → Abrechnungen → Export → CSV** die offenen Zahlungsübersichten.
 
-Beide enthalten Referenznummern. Über Excel oder Buchhaltungs-Software einen Abgleich machen, dann in KickPact die passenden als bezahlt markieren. Mehr in [CSV-Export für Buchhaltung](csv-export-fuer-buchhaltung.md).
+Beide enthalten Referenznummern. Über Excel oder Buchhaltungs-Software einen Abgleich machen, dann in KickPact die passenden als bezahlt markieren.
 
 ### Workflow 3 — Vereins-Schatzmeister-Doppelcheck
 
@@ -101,4 +101,3 @@ Wenn ein Sponsor mehrere Mannschaften unterstützt und du Vereinslizenz hast, gi
 Weiter lesen:
 - [So funktioniert die Monatsabrechnung](so-funktioniert-die-monatsrechnung.md)
 - [Zahlungsübersicht lesen](pdf-rechnung-lesen.md)
-- [CSV-Export für Buchhaltung](csv-export-fuer-buchhaltung.md)

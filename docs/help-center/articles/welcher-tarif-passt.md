@@ -7,10 +7,10 @@ prio: "MUSS"
 audience: ["verein-admin", "vereinslizenz-admin"]
 related_articles:
   - "saison-pass-vs-monatlich"
-  - "vereinslizenz-break-even"
+  - "master-cockpit-uebersicht"
   - "5-spieltag-cutoff"
   - "trial-30-tage"
-last_updated: "2026-05-24"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -20,18 +20,18 @@ Drei Tarife, drei Antworten. Du brauchst kein Sales-Call — die Entscheidung h�
 
 | Deine Lage | Empfehlung |
 |---|---|
-| **1 Mannschaft, 1–5 Sponsoren** (Familie, Freunde, ein paar Fans) | **Basic** — 5 €/Monat oder 35 €/Saison-Pass |
-| **1 Mannschaft, mehr als 5 Sponsoren** oder du willst öffentlich Sponsoren werben | **Pro** — 11 €/Monat oder 75 €/Saison-Pass |
+| **1 Mannschaft, 1–5 Sponsoren** (Familie, Freunde, ein paar Fans) | **Basic** — 4,99 €/Monat oder 19,99 €/Saison-Pass |
+| **1 Mannschaft, mehr als 5 Sponsoren** oder du willst öffentlich Sponsoren werben | **Pro** — 8,99 €/Monat oder 34,99 €/Saison-Pass |
 | **2 Mannschaften** | Rechne nach. Bei aktiver Akquise meist **2× Pro**. Bei reinen Familien-Pacts reichen **2× Basic**. |
-| **3 oder mehr Mannschaften** | **Vereinslizenz** — 29 €/Monat oder 199 €/Saison-Pass. Mathematisch günstiger ab Mannschaft 3. |
+| **3 oder mehr Mannschaften** | **Vereinslizenz** — 19,99 €/Monat oder 79,99 €/Saison-Pass. Mathematisch günstiger ab Mannschaft 3. |
 
 ## Entscheidungsbaum
 
 **Frage 1: Hast du mehr als eine Mannschaft im Verein, die KickPact nutzen soll?**
 
 - **Nein** → weiter zu Frage 2.
-- **Ja, 2 Mannschaften** → weiter zu Frage 2, aber rechne beide Mannschaften separat. Wenn beide bei **Pro** landen würden (= 22 €/Monat zusammen), ist die Vereinslizenz mit 29 €/Monat etwas teurer, gibt dir aber das Master-Cockpit und die Sammelabrechnung. Rein rechnerisch bleiben 2× Pro günstiger — die Lizenz lohnt sich bei 2 Mannschaften nur, wenn dir diese Extras den Aufpreis wert sind.
-- **Ja, 3+ Mannschaften** → **Vereinslizenz** ohne weiteres Rechnen. 3× Pro kostet 33 €/Monat, die Vereinslizenz 29 €/Monat. Ab Mannschaft 4 ist die Ersparnis schon 15 €/Monat.
+- **Ja, 2 Mannschaften** → weiter zu Frage 2, aber rechne beide Mannschaften separat. Wenn beide bei **Pro** landen würden (= 17,98 €/Monat zusammen), ist die Vereinslizenz mit 19,99 €/Monat etwas teurer, gibt dir aber das Master-Cockpit und die Sammelabrechnung. Rein rechnerisch bleiben 2× Pro günstiger — die Lizenz lohnt sich bei 2 Mannschaften nur, wenn dir diese Extras den Aufpreis wert sind.
+- **Ja, 3+ Mannschaften** → **Vereinslizenz** ohne weiteres Rechnen. 3× Pro kostet 26,97 €/Monat, die Vereinslizenz 19,99 €/Monat. Ab Mannschaft 4 ist die Ersparnis schon rund 16 €/Monat.
 
 **Frage 2: Wie groß ist dein Sponsoren-Kreis realistisch?**
 
@@ -48,15 +48,15 @@ Drei Tarife, drei Antworten. Du brauchst kein Sales-Call — die Entscheidung h�
 
 **Beispiel 1 — Trainer Müller, FC Beispieldorf, Herren II**
 14 Mann Kader, 4 Sponsoren (2 Eltern, 1 Onkel, der Opa vom Kapitän). Keine Saison-Ziele geplant.
-→ **Basic Saison-Pass 35 €** für die komplette Saison. Effektiv 3,50 €/Monat. Ende der Diskussion.
+→ **Basic Saison-Pass 19,99 €** für die komplette Saison. Effektiv rund 2 €/Monat. Ende der Diskussion.
 
 **Beispiel 2 — TSV Musterstadt, Herren I**
 22 Mann Kader, der Vorstand will aktiv 10–15 Sponsoren aus dem Umfeld gewinnen (Eltern, Ehemalige, Fans), plant ein Aufstiegs-Ziel (250 €/Sponsor) und will das Vereinslogo prominent zeigen.
-→ **Pro Saison-Pass 75 €**. 7,50 €/Monat. Sobald die ersten 6 Sponsoren da sind, hat sich das Abo durch einen einzigen Tor-Beitrag bezahlt gemacht.
+→ **Pro Saison-Pass 34,99 €**. Rund 3,50 €/Monat. Sobald die ersten Sponsoren da sind, hat sich das Abo durch einen einzigen Tor-Beitrag bezahlt gemacht.
 
 **Beispiel 3 — SV Großverein, 5 Mannschaften**
 Herren I, Herren II, A-Jugend, B-Jugend, Damen. Jede Mannschaft soll mitmachen.
-→ **Vereinslizenz Saison-Pass 199 €**. 5× Pro-Saison-Pass wäre 375 €. Ersparnis: 176 € pro Saison plus Master-Cockpit, Sammelabrechnung für Sponsoren, die mehrere Teams unterstützen, und 10 Admin-Slots für Trainer und Vorstand.
+→ **Vereinslizenz Saison-Pass 79,99 €**. 5× Pro-Saison-Pass wäre 174,95 €. Ersparnis: rund 95 € pro Saison plus Master-Cockpit, Sammelabrechnung für Sponsoren, die mehrere Teams unterstützen, und bis zu 10 Admin-Slots für Trainer und Vorstand.
 
 ## Was du nicht aktiv entscheiden musst
 
@@ -70,5 +70,5 @@ Default-Regel: **Im Zweifel Pro für 30 Tage Trial testen**. Wenn du nach 30 Tag
 
 Weiter lesen:
 - [Saison-Pass vs Monatlich — was lohnt wann?](saison-pass-vs-monatlich.md)
-- [Vereinslizenz Break-Even — ab wann lohnt sie sich?](vereinslizenz-break-even.md)
+- [Master-Cockpit — alle Mannschaften auf einen Blick](master-cockpit-uebersicht.md)
 - [Der 5-Spieltag-Cutoff — was bedeutet er?](5-spieltag-cutoff.md)

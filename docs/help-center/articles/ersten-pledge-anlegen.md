@@ -11,7 +11,7 @@ related_articles:
   - "manual-trigger-katalog"
   - "caps-und-monats-limits"
   - "worst-case-berechnung-verstehen"
-last_updated: "2026-05-25"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -32,10 +32,9 @@ Tipp: **Pro Trigger-Logik ein eigener Pact.** Ein Pact nur für Tore deines Sohn
 
 Du siehst eine Liste aller verfügbaren Trigger, gruppiert in:
 
-- **Auto-Trigger** — Fußball.de-Daten, läuft automatisch. Siehe [Auto-Trigger-Katalog](auto-trigger-katalog.md). 10 Optionen: Tor, Sieg, Unentschieden, Niederlage, Clean Sheet, Hattrick, Comeback, Tordifferenz, Gesamttore, Spieler-Tor.
-- **Manual-Trigger** — Trainer pflegt sie nach Spielende. Siehe [Manual-Trigger-Katalog](manual-trigger-katalog.md). Beispiele: Kopfball, Volley, Hackentor, Karten, Assists, Spieler des Spiels.
+- **Auto-Trigger** — Fußball.de-Daten, läuft automatisch. Siehe [Auto-Trigger-Katalog](auto-trigger-katalog.md). 10 Optionen: Pro Tor, Tor von Spieler, Pro Sieg, Pro Heimsieg, Pro Auswärtssieg, Pro Zu-Null-Sieg, Pro Hattrick, Pro Comeback, Hoher Sieg, Viele eigene Tore.
+- **Manual-Trigger** — Trainer pflegt sie nach Spielende. Siehe [Manual-Trigger-Katalog](manual-trigger-katalog.md). Beispiele: Spezial-Tor (Kopfball, Hackentor, Elfmeter, Freistoß), Gelbe Karte, Rote Karte.
 - **Saison-Ziele** (Pro / Vereinslizenz) — einmaliger großer Betrag: Aufstieg, Klassenerhalt, Tabellenplatz, Pokalrunde.
-- **Custom-Trigger** (Pro / Vereinslizenz) — du formulierst eigene Texte ("Trainer-Frisur-Lob: 5 €").
 
 Wähle einen oder mehrere. Du kannst später jederzeit weitere hinzufügen.
 
@@ -45,11 +44,10 @@ Für jeden Trigger:
 
 - **Betrag pro Vorkommen** (z.B. 5 € pro Tor).
 - **Optionaler Spieler-Filter** (nur bei Spieler-Triggern): z.B. "nur Tore von Tim Schmidt".
-- **Per-Match-Cap** (optional): "Maximal 20 € pro Spiel" — Schutz vor 7:1-Festspielen.
 
 Auf Pact-Ebene:
 
-- **Monats-Cap** (optional aber empfohlen): "Maximal 100 €/Monat über alle Trigger zusammen".
+- **Monats-Cap** (optional aber empfohlen): "Maximal 100 €/Monat über alle Trigger zusammen". Das ist dein Schutz vor 7:1-Festspielen.
 - **Saison-Cap** (optional): "Maximal 800 €/Saison".
 
 Caps sind weiche Limits: Wenn das Cap erreicht ist, werden keine weiteren Beiträge für diesen Monat erzeugt. Trigger laufen weiter, sind aber als "vom Cap geblockt" markiert (Sponsor sieht das im Dashboard, Verein auch).
@@ -60,7 +58,7 @@ Mehr in [Caps und Monats-Limits](caps-und-monats-limits.md).
 
 Bevor du **Pact aktivieren** drückst, zeigt KickPact dir:
 
-- **Pro-Match-Worst-Case** — was kannst du maximal in einem einzelnen Spiel auslösen, wenn alle Trigger maximal feuern (ohne Per-Match-Cap)
+- **Pro-Match-Worst-Case** — was kannst du maximal in einem einzelnen Spiel auslösen, wenn alle Trigger maximal feuern
 - **Monats-Worst-Case** — was kannst du maximal in einem Monat verlieren, basierend auf typischer Spielfrequenz
 - **Saison-Hochrechnung** — Spannweite (z.B. "zwischen 240 € und 480 €")
 
@@ -75,7 +73,7 @@ Klick **"Pact aktivieren"**. Ab diesem Moment werden alle zukünftigen Trigger-E
 - Beträge hochsetzen — neue Beträge gelten ab dem Änderungs-Zeitpunkt
 - Beträge runtersetzen — analog
 - Trigger entfernen — keine neuen Beiträge für diesen Trigger
-- Pact pausieren / beenden — siehe [Pact pausieren](pledge-paused-und-beendet.md)
+- Pact pausieren / beenden — siehe [Pact pausieren](kuendigung-und-pause.md)
 
 Was du **nicht** ändern kannst: bereits erzeugte Beiträge. Wenn du einen Trigger falsch konfiguriert hattest, kannst du nur **die nachfolgenden Spiele** anpassen, nicht den 5 €-Tor-Beitrag von gestern.
 

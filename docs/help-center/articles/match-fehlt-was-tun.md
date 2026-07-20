@@ -9,7 +9,7 @@ related_articles:
   - "wie-der-crawler-funktioniert"
   - "fussballde-verknuepfung"
   - "fussballde-aendert-daten"
-last_updated: "2026-05-25"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -21,7 +21,7 @@ Du erwartest ein Spiel im KickPact-Spielplan, es taucht aber nicht auf. Bevor du
 
 Geh direkt auf fussball.de, such deine Mannschaft, sieh den Spielplan an. Wenn das Spiel **dort nicht steht**, kann der Crawler es auch nicht holen. Häufige Gründe:
 
-- **Freundschaftsspiel** — wird oft nicht auf Fußball.de geführt.
+- **Freundschaftsspiel** — wird oft nicht auf Fußball.de geführt. Und selbst wenn es dort steht, entstehen dafür keine Beiträge: Nur Liga- und Pokalspiele zahlen, siehe [Freundschaftsspiele zahlen nicht](freundschaftsspiele-zahlen-nicht.md).
 - **Hallenturnier** — meist gar nicht abgebildet.
 - **Nachholtermin** noch nicht eingetragen.
 - **Spielklassen-Verschiebung** — Liga-Wechsel mitten in der Saison, alte Spielklasse leer.
@@ -39,7 +39,7 @@ Manche Vereine haben mehrere Herren-Mannschaften (Herren I + II + III). KickPact
 **Mannschaft → Einstellungen → Daten-Quelle** zeigt den letzten Crawl-Zeitstempel. Der Crawler läuft täglich, am Spieltag-Wochenende mehrfach.
 
 - Möglich: Rate-Limited oder vorübergehender Fehler. Beim nächsten Lauf löst sich's.
-- Wenn der Zeitstempel 48+ Stunden alt ist: an support@kickpact.com melden.
+- Wenn der Zeitstempel 48+ Stunden alt ist: an hello@kickpact.com melden.
 
 ### Check 4 — Ist das Spielergebnis schon eingetragen?
 

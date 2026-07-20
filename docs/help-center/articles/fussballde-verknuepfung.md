@@ -9,8 +9,8 @@ related_articles:
   - "erste-schritte-verein"
   - "wie-der-crawler-funktioniert"
   - "mannschaft-hinzufuegen"
-  - "hilfe-mein-verein-existiert-nicht-auf-fussballde"
-last_updated: "2026-05-25"
+  - "match-fehlt-was-tun"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -38,7 +38,7 @@ Mehrere Gründe sind denkbar:
 - **Verband ist nicht auf Fußball.de** — etwa B-Ligen mancher Hobby-Verbände. → Auch hier: Manueller Modus.
 - **Tippfehler in deiner Suche.** Probier Abkürzungen ("TSV" statt "Turn- und Sportverein") oder den Ort als Zusatz ("FC Musterstadt 1923").
 
-Mehr dazu in [Hilfe: Mein Verein existiert nicht auf Fußball.de](hilfe-mein-verein-existiert-nicht-auf-fussballde.md).
+Bleibt der Verein unauffindbar, hilft nur der manuelle Modus: Mannschaft anlegen und Spiele selbst eintragen.
 
 ## Wenn die falsche Mannschaft verknüpft ist
 

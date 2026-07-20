@@ -10,7 +10,7 @@ related_articles:
   - "auto-trigger-katalog"
   - "match-fehlt-was-tun"
   - "fussballde-aendert-daten"
-last_updated: "2026-05-25"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -50,6 +50,10 @@ Diese fehlenden Daten sind die **Manual-Trigger** und werden vom Trainer nach Sp
 5. Pro neuem Match-Event wird die **Trigger-Engine** gefeuert: alle aktiven Pacts der Mannschaft werden geprüft, passende Beiträge erzeugt.
 
 Das ganze ist **transaktional** — entweder alle Events eines Crawls werden konsistent verarbeitet, oder nichts.
+
+## Nicht jedes erkannte Spiel erzeugt Beiträge
+
+Der Crawler holt auch Freundschaftsspiele und Turniere ein, wenn sie auf Fußball.de stehen. Beiträge entstehen daraus aber nicht: Nur Liga- und Pokalspiele lösen Trigger aus. Ein erkanntes Freundschaftsspiel taucht also im Spielplan auf, kostet den Sponsor aber nichts. Mehr in [Freundschaftsspiele zahlen nicht](freundschaftsspiele-zahlen-nicht.md).
 
 ## Was ist mit nachträglichen Korrekturen?
 
