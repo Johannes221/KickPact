@@ -4,8 +4,14 @@ import {
   getSpielDetails,
   computeMatchHash,
   getSquadAcrossSeasons,
+  fetchCrestBytes,
   type SpielDetails
 } from "@/lib/crawler/fussballde";
+import {
+  syncClubCrests,
+  backfillTeamLogoFromCrest
+} from "@/lib/db/queries/club-crests";
+import { storeDocument } from "@/lib/storage/documents";
 import { validateSpielListItem, validateSpielDetails } from "@/lib/crawler/validator";
 import {
   getActiveTeams,
@@ -179,6 +185,32 @@ export const crawlMatches = inngest.createFunction(
           updateTeamLeague(team.id, detectedLeague)
         );
       }
+
+      // Vereinswappen aus den Spielplan-Zeilen cachen — beide Seiten jeder
+      // Partie, also auch die GEGNER, die selbst keine KickPact-Mannschaft sind.
+      // syncClubCrests lädt jedes Wappen höchstens einmal (Guard auf
+      // sourceUrl) → kein Download-Sturm bei jedem Cron. Best-effort: ein
+      // Wappen ist kosmetisch, ein Fehler darf den Match-Crawl nicht kippen.
+      await step.run(`crests-${team.id}`, async () => {
+        try {
+          const crests = spiele.flatMap((s) => s.crests);
+          const synced = await syncClubCrests(crests, async (crest) => {
+            const dl = await fetchCrestBytes(crest.url);
+            if (!dl) return null;
+            return storeDocument(`crests/${crest.teamId}.png`, dl.bytes, dl.contentType);
+          });
+          // Eigenes Wappen automatisch als Team-Logo setzen, solange keins
+          // hochgeladen wurde (Upload gewinnt, wird nie überschrieben).
+          await backfillTeamLogoFromCrest(team.id, team.fussballdeTeamId);
+          return synced;
+        } catch (err) {
+          logger.warn("crest sync failed (non-fatal)", {
+            teamId: team.id,
+            err: String(err)
+          });
+          return 0;
+        }
+      });
 
       // Liga-Tabelle der laufenden Saison im Hintergrund warmhalten. Sie ist die
       // einzige Quelle für die VOLLE Saison: getSpiele cappt bei ~10 Spielen,

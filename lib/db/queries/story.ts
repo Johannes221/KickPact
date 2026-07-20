@@ -4,6 +4,7 @@ import { matches, matchEvents } from "@/lib/db/schema/matches";
 import { teams, clubs } from "@/lib/db/schema/clubs";
 import { resolveTeamSide, matchHasNameCollision } from "@/lib/crawler/team-side";
 import { berlinDayStart } from "@/lib/story/story-content";
+import { getClubCrestLogoUrl } from "@/lib/db/queries/club-crests";
 
 /**
  * Query-Layer für die Instagram-Story-Vorlagen (Aufgabe #44).
@@ -214,25 +215,26 @@ export async function getMatchScorers(
 }
 
 /**
- * Logo des Gegners — nur, wenn der Gegner selbst eine KickPact-Mannschaft mit
- * tatsächlich ÖFFENTLICHEM Profil ist und ein Logo hochgeladen hat.
+ * Wappen des Gegners — dieselbe SINGLE SOURCE OF TRUTH wie überall sonst: pro
+ * Mannschaft gilt genau EIN Wappen, und es ist dasselbe, egal ob die Mannschaft
+ * gerade das eigene Team oder der Gegner ist. Für KickPact-Mannschaften ist das
+ * `teams.logoUrl` (hochgeladen ODER per Crawl aus dem Crest-Cache gesetzt), das
+ * jede Anzeigefläche ohnehin schon liest.
  *
- * Warum überhaupt ein Gate: das Logo ist das Asset eines ANDEREN Mandanten. Die
- * Rechtfertigung, es in unsere Story zu brennen, ist, dass es ohnehin öffentlich
- * auf `/m/<slug>` steht. Dann muss hier aber exakt dasselbe Gate gelten wie dort
- * — `discoverable` ALLEIN reicht nicht: `getPublicTeamProfileBySlug` verlangt
- * zusätzlich `isActive` und `verifiedAt` (siehe isTeamOpenForSponsorEntry in
- * sponsor-discover.ts). Ein unverifiziertes oder deaktiviertes Team liefert dort
- * 404 — sein Logo hier zu zeigen wäre ein Leak, den die Begründung nicht deckt.
- * (`deactivateTeam` lässt `discoverable` bewusst stehen, siehe
- * lib/actions/sponsor-inquiries.ts.)
+ *   1) Hat der Gegner eine KickPact-Mannschaft mit gesetztem `teams.logoUrl`,
+ *      gilt DAS — ohne Gate. Ändert der Gegner sein Wappen (Upload), zieht der
+ *      nächste Post automatisch das neue (Johannes' Vorgabe: Wiesloch ↔
+ *      Dossenheim). Bewusste Produkt-Entscheidung: das Vereinswappen ist im
+ *      Kontext eines realen Spiels öffentlich, deshalb KEINE discoverable-/
+ *      verified-Sperre mehr (früher gated — 2026-07-20 abgeschafft).
+ *   2) Sonst das gescrapte fussball.de-Wappen aus dem Crest-Cache. Die
+ *      allermeisten Gegner sind gar keine KickPact-Mannschaft und hätten sonst
+ *      dauerhaft nur ein Namens-Kürzel im Bild.
  *
  * Verknüpft wird über die eindeutige fussball.de-team-id, nicht über den Namen
  * (Namens-Matching kollidiert bei Reserve-Derbys/gleicher Stadt). Eindeutig ist
  * aber nur (fussballde_team_id, saison) — über die Saisons hinweg gibt es also
- * mehrere Zeilen. Deshalb die NEUESTE nehmen: sonst entschiede der Zufall,
- * welche Saison-Zeile das Logo (und ihr discoverable-Flag) liefert, und ein
- * heute abgeschaltetes Team leakte über seine Altsaison-Zeile weiter.
+ * mehrere Zeilen. Deshalb die NEUESTE mit gesetztem Wappen nehmen.
  */
 export async function getOpponentLogoUrl(
   fussballdeTeamId: string | null
@@ -241,16 +243,10 @@ export async function getOpponentLogoUrl(
   const [row] = await db
     .select({ logoUrl: teams.logoUrl })
     .from(teams)
-    .where(
-      and(
-        eq(teams.fussballdeTeamId, fussballdeTeamId),
-        eq(teams.discoverable, true),
-        eq(teams.isActive, true),
-        isNotNull(teams.verifiedAt),
-        isNotNull(teams.logoUrl)
-      )
-    )
+    .where(and(eq(teams.fussballdeTeamId, fussballdeTeamId), isNotNull(teams.logoUrl)))
     .orderBy(desc(teams.saison))
     .limit(1);
-  return row?.logoUrl ?? null;
+  if (row?.logoUrl) return row.logoUrl;
+  // Keine KickPact-Mannschaft mit eigenem Wappen → gescraptes fussball.de-Wappen.
+  return getClubCrestLogoUrl(fussballdeTeamId);
 }
