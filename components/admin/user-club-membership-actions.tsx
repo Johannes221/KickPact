@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   setClubRoleAction,
   removeClubMembershipAction
@@ -21,6 +22,7 @@ export function UserClubMembershipActions({
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const { confirm, confirmDialog } = useConfirm();
 
   async function changeRole(role: ClubRole) {
     if (role === currentRole || pending) return;
@@ -36,7 +38,12 @@ export function UserClubMembershipActions({
   }
 
   async function remove() {
-    if (!window.confirm("Diese Club-Membership entfernen?")) return;
+    const ok = await confirm({
+      title: "Diese Club-Membership entfernen?",
+      confirmLabel: "Entfernen",
+      danger: true
+    });
+    if (!ok) return;
     setPending(true);
     const res = await removeClubMembershipAction({ userId, clubId });
     setPending(false);
@@ -50,6 +57,7 @@ export function UserClubMembershipActions({
 
   return (
     <div className="flex items-center gap-2">
+      {confirmDialog}
       <select
         value={currentRole}
         disabled={pending}

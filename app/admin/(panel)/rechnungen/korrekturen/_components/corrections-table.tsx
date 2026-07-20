@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { eur } from "@/lib/utils/currency";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   createCorrectionAction,
   dismissCorrectionAction
@@ -36,6 +37,7 @@ function GroupCard({ group }: { group: CorrectionGroup }) {
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(group.items.map((i) => i.chargeId))
   );
+  const { confirm, confirmDialog } = useConfirm();
 
   const selectedIds = useMemo(() => [...selected], [selected]);
   const selectedSum = group.items
@@ -51,16 +53,17 @@ function GroupCard({ group }: { group: CorrectionGroup }) {
     });
   }
 
-  function onCredit() {
+  async function onCredit() {
     if (selectedIds.length === 0) return;
-    if (
-      !window.confirm(
-        `Gutschrift über ${eur(-selectedSum)} für ${selectedIds.length} Charge(s) erzeugen? ` +
-          `Es entsteht ein Korrekturbeleg; die betroffenen Charges werden storniert. ` +
-          `Die Original-Rechnung ${group.invoiceNumber ?? ""} bleibt für die übrigen Zeilen gültig.`
-      )
-    )
-      return;
+    const ok = await confirm({
+      title: `Gutschrift über ${eur(-selectedSum)} für ${selectedIds.length} Charge(s) erzeugen?`,
+      description:
+        `Es entsteht ein Korrekturbeleg; die betroffenen Charges werden storniert. ` +
+        `Die Original-Rechnung ${group.invoiceNumber ?? ""} bleibt für die übrigen Zeilen gültig.`,
+      confirmLabel: "Gutschrift erstellen",
+      danger: true
+    });
+    if (!ok) return;
     startTransition(async () => {
       const res = await createCorrectionAction({
         invoiceId: group.invoiceId,
@@ -75,15 +78,16 @@ function GroupCard({ group }: { group: CorrectionGroup }) {
     });
   }
 
-  function onDismiss() {
+  async function onDismiss() {
     if (selectedIds.length === 0) return;
-    if (
-      !window.confirm(
-        `Markierung für ${selectedIds.length} Charge(s) verwerfen? ` +
-          `Nutze das nur, wenn die Ergebnis-Änderung ein Scrape-Fehler war und keine Gutschrift nötig ist.`
-      )
-    )
-      return;
+    const ok = await confirm({
+      title: `Markierung für ${selectedIds.length} Charge(s) verwerfen?`,
+      description:
+        "Nutze das nur, wenn die Ergebnis-Änderung ein Scrape-Fehler war und keine Gutschrift nötig ist.",
+      confirmLabel: "Verwerfen",
+      danger: true
+    });
+    if (!ok) return;
     startTransition(async () => {
       const res = await dismissCorrectionAction({ chargeIds: selectedIds });
       if (res.ok) {
@@ -97,6 +101,7 @@ function GroupCard({ group }: { group: CorrectionGroup }) {
 
   return (
     <li className="rounded-2xl border border-amber-200 bg-amber-50/40 p-5">
+      {confirmDialog}
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
         <div>
           <div className="font-display text-lg font-black tracking-tight text-brand-night-navy">
