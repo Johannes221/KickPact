@@ -22,6 +22,7 @@ import {
   getVereinDetail,
   getUserDetail
 } from "@/lib/db/queries/platform-stats";
+import { createRequest } from "@/lib/db/queries/membership-requests";
 import { resetTestDb } from "../setup/db";
 
 async function seedUser(suffix: string): Promise<string> {
@@ -346,6 +347,32 @@ describe("platform-stats", () => {
     expect(row.sponsorCount).toBe(1);
   });
 
+  it("listVereineForAdmin returns pendingRequestCount per club", async () => {
+    const requester = await seedUser("pend");
+    const clubWithRequest = await seedClub("pending-req");
+    await createRequest({
+      userId: requester,
+      clubId: clubWithRequest,
+      requestedRole: "trainer",
+      requestedTeamId: null,
+      message: null
+    });
+    await seedClub("clean-club");
+
+    const withPending = await listVereineForAdmin({
+      pagination: { page: 1, pageSize: 10 },
+      filter: { search: "pending-req" }
+    });
+    expect(withPending.rows.length).toBe(1);
+    expect(withPending.rows[0].pendingRequestCount).toBe(1);
+
+    const withoutPending = await listVereineForAdmin({
+      pagination: { page: 1, pageSize: 10 },
+      filter: { search: "clean-club" }
+    });
+    expect(withoutPending.rows[0].pendingRequestCount).toBe(0);
+  });
+
   it("listUsersForAdmin filters by hasSponsor", async () => {
     const userWith = await seedUser("with");
     await seedSponsor(userWith);
@@ -401,6 +428,30 @@ describe("platform-stats", () => {
 
     const missing = await getVereinDetail("nope-nope-nope");
     expect(missing).toBeNull();
+  });
+
+  it("getVereinDetail includes pendingRequests for the club", async () => {
+    const requester = await seedUser("detail-pend");
+    const clubA = await seedClub("detail-pend");
+
+    await createRequest({
+      userId: requester,
+      clubId: clubA,
+      requestedRole: "viewer",
+      requestedTeamId: null,
+      message: "Bitte um Zugriff"
+    });
+
+    const [club] = await db
+      .select({ slug: clubs.slug })
+      .from(clubs)
+      .where((await import("drizzle-orm")).eq(clubs.id, clubA))
+      .limit(1);
+    const detail = await getVereinDetail(club.slug);
+
+    expect(detail?.pendingRequests.length).toBe(1);
+    expect(detail?.pendingRequests[0].requestedRole).toBe("viewer");
+    expect(detail?.pendingRequests[0].message).toBe("Bitte um Zugriff");
   });
 
   it("getUserDetail aggregates sponsor / pledge / membership info", async () => {

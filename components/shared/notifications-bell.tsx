@@ -73,7 +73,13 @@ function relTime(iso: string): string {
  * Badge = offene Hinweise + ungelesene Events. Beim Öffnen werden Events als
  * gelesen markiert.
  */
-export function NotificationsBell() {
+interface NotificationsBellProps {
+  /** "mobile" (Default) = Glocke in der nativen AppNavBar, Bottom-Sheet.
+   *  "desktop" = Glocke in der Desktop-Tab-Leiste, rechtsseitiges Panel. */
+  placement?: "mobile" | "desktop";
+}
+
+export function NotificationsBell({ placement = "mobile" }: NotificationsBellProps) {
   const statusItems = useStatusItems();
   const pathname = usePathname() ?? "/";
   const [open, setOpen] = useState(false);
@@ -116,7 +122,12 @@ export function NotificationsBell() {
         type="button"
         onClick={() => handleOpenChange(true)}
         aria-label={badge > 0 ? `Benachrichtigungen (${badge})` : "Benachrichtigungen"}
-        className="relative -ml-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-full text-accent transition-colors active:bg-brand-off-white"
+        className={cn(
+          "relative grid h-11 w-11 shrink-0 place-items-center rounded-full text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
+          placement === "desktop"
+            ? "hidden md:grid hover:bg-brand-off-white"
+            : "-ml-0.5 active:bg-brand-off-white"
+        )}
       >
         <Bell className="h-[1.4rem] w-[1.4rem]" strokeWidth={2} aria-hidden />
         {badge > 0 ? (
@@ -131,6 +142,7 @@ export function NotificationsBell() {
         onOpenChange={handleOpenChange}
         statusItems={statusItems}
         notifs={notifs}
+        side={placement === "desktop" ? "right" : "bottom"}
       />
     </>
   );
@@ -140,21 +152,30 @@ function NotificationsSheet({
   open,
   onOpenChange,
   statusItems,
-  notifs
+  notifs,
+  side
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   statusItems: StatusItem[];
   notifs: Notif[];
+  side: "bottom" | "right";
 }) {
   const empty = statusItems.length === 0 && notifs.length === 0;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        side="bottom"
-        className="native-font max-h-[88vh] overflow-y-auto rounded-t-3xl border-brand-neutral/30 bg-white px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]"
+        side={side}
+        className={cn(
+          "native-font overflow-y-auto border-brand-neutral/30 bg-white",
+          side === "bottom"
+            ? "max-h-[88vh] rounded-t-3xl px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]"
+            : "px-5 pt-6 pb-6"
+        )}
       >
-        <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-brand-neutral/40" aria-hidden />
+        {side === "bottom" ? (
+          <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-brand-neutral/40" aria-hidden />
+        ) : null}
         <SheetHeader className="px-1">
           <SheetTitle className="text-left text-lg font-bold text-brand-night-navy">
             Benachrichtigungen
