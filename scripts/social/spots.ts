@@ -193,5 +193,56 @@ export const SPOTS: Spot[] = [
         sec: 2.8
       }
     ]
+  },
+
+  {
+    // Der virale Aufhänger: der Saison-Rückblick (Wrapped-Stil). Leute sehen ihn,
+    // wollen ihren eigenen — und laden dafür die App. Zahlen sind bewusst als
+    // Vorschau/Beispiel gerahmt („so sieht euer Rückblick aus"), keine Behauptung
+    // über eine echte Mannschaft.
+    slug: "04-saison-rueckblick",
+    angle: "Saison-Rückblick",
+    caption:
+      "Am Saisonende kriegt ihr euren Rückblick — wie Spotify Wrapped, nur für " +
+      "eure Mannschaft. Tore, Serien, Torschützen, Bilanz. Alles automatisch " +
+      "gezählt, die ganze Saison.\n\n" +
+      "Und den teilt ihr in eurer Story.\n\n" +
+      "Mach deinen mit KickPact. kickpact.com",
+    beats: [
+      { headline: "Eure Saison. Als Rückblick.", logo: true, sec: 2.6 },
+      { kicker: "Wie Spotify Wrapped", headline: "Nur für eure Mannschaft.", sec: 2.6 },
+      {
+        kicker: "Eure Saison in Zahlen",
+        headline: "Alles automatisch gezählt.",
+        pacts: [
+          { label: "Tore", amount: "34" },
+          { label: "Siege", amount: "12" },
+          { label: "Endplatz", amount: "3." }
+        ],
+        sec: 4.0
+      },
+      {
+        kicker: "Euer Toptorjäger",
+        headline: "Steht am Ende fest.",
+        body: "Wer wie oft getroffen hat — die App weiß es.",
+        sec: 3.2
+      },
+      { headline: "5 Comebacks. 8-mal zu null.", sec: 2.8 },
+      {
+        kicker: "Fertig gestaltet",
+        headline: "15 Bilder für eure Story.",
+        body: "Ein Tipp, und der Rückblick ist geteilt.",
+        tone: "photo",
+        photo: "team-celebration",
+        sec: 3.2
+      },
+      {
+        kicker: "Mach deinen",
+        headline: "Saison-Rückblick mit KickPact.",
+        body: "30 Tage kostenlos. kickpact.com",
+        logo: true,
+        sec: 3.2
+      }
+    ]
   }
 ];

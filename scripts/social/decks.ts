@@ -354,5 +354,62 @@ export const DECKS: Deck[] = [
         logo: true
       }
     ]
+  },
+
+  {
+    // Der Saison-Rückblick als Karussell — das virale Feature zum Durchwischen.
+    // Zahlen als Vorschau/Beispiel, keine Behauptung über eine echte Mannschaft.
+    slug: "05-saison-rueckblick",
+    angle: "Saison-Rückblick",
+    caption:
+      "Am Saisonende kriegt ihr euren Rückblick — wie Spotify Wrapped, nur für " +
+      "eure Mannschaft. Tore, Serien, Torschützen, Bilanz. Alles automatisch " +
+      "gezählt, fertig gestaltet, direkt in eure Story.\n\n" +
+      "Das ist der Moment, den ihr teilt. Mach deinen mit KickPact.\n\n" +
+      "kickpact.com",
+    slides: [
+      {
+        kicker: "Am Saisonende",
+        headline: "Euer Rückblick. Wie Spotify Wrapped.",
+        logo: true
+      },
+      {
+        kicker: "Der Clou",
+        headline: "Ihr müsst nichts sammeln.",
+        body: "Tore, Siege, Serien, Torschützen — alles automatisch mitgezählt, die ganze Saison über."
+      },
+      {
+        kicker: "Eure Saison in Zahlen",
+        headline: "Auf einen Blick.",
+        pacts: [
+          { label: "Tore", amount: "34" },
+          { label: "Siege", amount: "12" },
+          { label: "Spiele zu null", amount: "8" }
+        ]
+      },
+      {
+        kicker: "Der Star der Saison",
+        headline: "Euer Toptorjäger, offiziell.",
+        body: "Wer am häufigsten getroffen hat — schwarz auf weiß, nicht aus dem Bauch."
+      },
+      {
+        kicker: "Die Momente",
+        headline: "Comebacks, Kantersiege, die Null hinten.",
+        body: "Genau die Geschichten, die eine Saison ausmachen.",
+        tone: "photo",
+        photo: "team-celebration"
+      },
+      {
+        kicker: "Zum Teilen gemacht",
+        headline: "15 fertige Bilder für eure Story.",
+        body: "Ein Tipp, und der ganze Verein sieht, was ihr geleistet habt."
+      },
+      {
+        kicker: "kickpact.com",
+        headline: "Mach deinen Saison-Rückblick.",
+        body: "30 Tage kostenlos testen. Link in der Bio.",
+        logo: true
+      }
+    ]
   }
 ];

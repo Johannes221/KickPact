@@ -39,14 +39,20 @@ export interface PlanItem {
 }
 
 export const PLAN: PlanItem[] = [
-  /* ── Feed: ein Angle nach dem anderen ─────────────────────────────────── */
-  { group: "feed", at: "2026-07-20", kind: "reel", slug: "01-so-funktioniert-ein-pact", title: "So funktioniert ein Pact", angle: "Erklärung", manual: true },
+  /* ── Feed: ein Angle nach dem anderen ─────────────────────────────────────
+   * Priorität vorn: der Saison-Rückblick (Wrapped). Das ist der virale Aufhänger
+   * — Leute wollen ihren eigenen und laden dafür die App. Deshalb Reel zuerst,
+   * Karussell früh danach (mit Abstand und anderem Format).
+   */
+  { group: "feed", at: "2026-07-20", kind: "reel", slug: "04-saison-rueckblick", title: "Saison-Rückblick (Wrapped)", angle: "Saison-Rückblick", manual: true },
   { group: "feed", at: "2026-07-22", kind: "karussell", slug: "04-vier-fragen", title: "Vier Fragen aus dem Vorstand", angle: "Einwand" },
-  { group: "feed", at: "2026-07-24", kind: "reel", slug: "02-was-ihr-festlegen-koennt", title: "Was ihr festlegen könnt", angle: "Features", manual: true },
-  { group: "feed", at: "2026-07-27", kind: "reel", slug: "03-wer-sponsert-euch", title: "Wer sponsert euch", angle: "Mannschaftskasse", manual: true },
-  { group: "feed", at: "2026-07-29", kind: "karussell", slug: "01-so-funktioniert-ein-pact", title: "So funktioniert ein Pact", angle: "Erklärung" },
-  { group: "feed", at: "2026-07-31", kind: "karussell", slug: "03-wer-sponsert-euch", title: "Wer sponsert euch", angle: "Mannschaftskasse" },
-  { group: "feed", at: "2026-08-03", kind: "karussell", slug: "02-was-ihr-festlegen-koennt", title: "Was ihr festlegen könnt", angle: "Features" },
+  { group: "feed", at: "2026-07-24", kind: "reel", slug: "01-so-funktioniert-ein-pact", title: "So funktioniert ein Pact", angle: "Erklärung", manual: true },
+  { group: "feed", at: "2026-07-26", kind: "karussell", slug: "05-saison-rueckblick", title: "Saison-Rückblick (Wrapped)", angle: "Saison-Rückblick" },
+  { group: "feed", at: "2026-07-28", kind: "reel", slug: "02-was-ihr-festlegen-koennt", title: "Was ihr festlegen könnt", angle: "Features", manual: true },
+  { group: "feed", at: "2026-07-30", kind: "karussell", slug: "03-wer-sponsert-euch", title: "Wer sponsert euch", angle: "Mannschaftskasse" },
+  { group: "feed", at: "2026-08-02", kind: "karussell", slug: "01-so-funktioniert-ein-pact", title: "So funktioniert ein Pact", angle: "Erklärung" },
+  { group: "feed", at: "2026-08-04", kind: "reel", slug: "03-wer-sponsert-euch", title: "Wer sponsert euch", angle: "Mannschaftskasse", manual: true },
+  { group: "feed", at: "2026-08-06", kind: "karussell", slug: "02-was-ihr-festlegen-koennt", title: "Was ihr festlegen könnt", angle: "Features" },
 
   /* ── Highlights: einmal einrichten und anpinnen (Woche 1) ──────────────── */
   { group: "highlight", at: "2026-07-21", kind: "story", slug: "wie-funktioniert-das", title: "Wie funktioniert das", angle: "Erklärung", manual: true },
