@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { DECKS } from "./decks";
 import { STORIES } from "./stories";
 import { SPOTS } from "./spots";
+import { loadPosted, markPosted, postKey } from "./state";
 
 /**
  * Veröffentlicht die fertigen Assets über die Instagram Content Publishing API.
@@ -57,12 +58,12 @@ const STORY_SECONDS = 5;
 const POLL_TIMEOUT_MS = 5 * 60_000;
 const POLL_INTERVAL_MS = 3_000;
 
-interface Config {
+export interface Config {
   igUserId: string;
   token: string;
 }
 
-function config(): Config {
+export function loadConfig(): Config {
   const igUserId = process.env.IG_USER_ID;
   const token = process.env.IG_ACCESS_TOKEN;
   if (!igUserId || !token) {
@@ -192,7 +193,7 @@ async function publishContainer(cfg: Config, containerId: string): Promise<strin
  * Slides und damit ebenso viele Posts — bei mehreren Highlights am Stück ist
  * das Kontingent schneller relevant, als man denkt.
  */
-async function remainingQuota(cfg: Config): Promise<string> {
+export async function remainingQuota(cfg: Config): Promise<string> {
   try {
     const json = await graph(
       `/${cfg.igUserId}/content_publishing_limit`,
@@ -238,7 +239,7 @@ function pngToStoryVideo(png: string, dir: string): string {
 
 /* ------------------------------- Abläufe ---------------------------------- */
 
-interface Job {
+export interface Job {
   /** Was in der Vorschau steht. */
   label: string;
   /** Führt den Post aus. Wird nur bei --live aufgerufen. */
@@ -253,6 +254,11 @@ function reelJob(slug: string): Job {
   return {
     label: `Reel "${slug}" (${(statSync(mp4).size / 1e6).toFixed(1)} MB, Caption ${caption.length} Zeichen)`,
     run: async (cfg) => {
+      const key = postKey("reel", slug);
+      if (loadPosted().has(key)) {
+        console.log("    schon gepostet — übersprungen. (Zum erneuten Posten die Zeile aus scripts/social/state/posted.jsonl entfernen.)");
+        return;
+      }
       const id = await createContainer(cfg, {
         media_type: "REELS",
         upload_type: "resumable",
@@ -263,6 +269,7 @@ function reelJob(slug: string): Job {
       console.log("    hochgeladen, warte auf Verarbeitung …");
       await waitForContainer(id, cfg.token);
       const mediaId = await publishContainer(cfg, id);
+      markPosted({ key, mediaId, at: new Date().toISOString() });
       console.log(`    ✓ veröffentlicht, Media-ID ${mediaId}`);
     }
   };
@@ -277,9 +284,15 @@ function storyJob(slug: string): Job {
   return {
     label: `Story-Highlight "${slug}" — ${slides.length} Slides, also ${slides.length} einzelne Stories`,
     run: async (cfg) => {
+      const done = loadPosted();
       const tmp = mkdtempSync(join(tmpdir(), "kickpact-story-"));
       try {
         for (const [i, file] of slides.entries()) {
+          const key = postKey("story", slug, i);
+          if (done.has(key)) {
+            console.log(`    Slide ${i + 1}/${slides.length} schon gepostet — übersprungen.`);
+            continue;
+          }
           const mp4 = pngToStoryVideo(join(dir, file), tmp);
           const id = await createContainer(cfg, {
             media_type: "STORIES",
@@ -288,6 +301,8 @@ function storyJob(slug: string): Job {
           await uploadVideo(id, mp4, cfg.token);
           await waitForContainer(id, cfg.token);
           const mediaId = await publishContainer(cfg, id);
+          markPosted({ key, mediaId, at: new Date().toISOString() });
+          done.add(key);
           console.log(`    ✓ Slide ${i + 1}/${slides.length} → ${mediaId}`);
         }
         console.log(
@@ -316,6 +331,17 @@ function carouselJob(slug: string): Job {
       );
     }
   };
+}
+
+/**
+ * kind + Slug → Job. Eine Stelle, damit der Einzel-Publisher (main) und der
+ * Zeitplan-Runner (queue.ts) garantiert dieselbe Post-Logik fahren.
+ */
+export function buildJob(kind: string, slug: string): Job {
+  if (kind === "reel") return reelJob(slug);
+  if (kind === "story") return storyJob(slug);
+  if (kind === "karussell") return carouselJob(slug);
+  throw new Error(`Unbekannte Art "${kind}". Erlaubt: reel, story, karussell.`);
 }
 
 /* --------------------------------- Runner --------------------------------- */
@@ -361,8 +387,7 @@ async function main() {
   }
   const slug = findSlug(kind, needle ?? "");
 
-  const job =
-    kind === "reel" ? reelJob(slug) : kind === "story" ? storyJob(slug) : carouselJob(slug);
+  const job = buildJob(kind, slug);
 
   console.log(`\n  ${job.label}`);
 
@@ -374,14 +399,20 @@ async function main() {
     return;
   }
 
-  const cfg = config();
+  const cfg = loadConfig();
   console.log(`  Tageskontingent verbraucht: ${await remainingQuota(cfg)}`);
   console.log("  → poste jetzt wirklich …\n");
   await job.run(cfg);
   console.log("");
 }
 
-main().catch((err) => {
-  console.error(`\n  ${err.message ?? err}\n`);
-  process.exit(1);
-});
+// NUR als eigenständiger Befehl ausführen. queue.ts importiert aus dieser
+// Datei (buildJob, loadConfig) — liefe main() beim Import mit, würde der Import
+// die Argumente des Aufrufers als Post-Befehl fehldeuten. Dieselbe Falle wie
+// bei den Renderern, hier mit einer irreversiblen Aktion am anderen Ende.
+if (process.argv[1]?.endsWith("publish.ts")) {
+  main().catch((err) => {
+    console.error(`\n  ${err.message ?? err}\n`);
+    process.exit(1);
+  });
+}

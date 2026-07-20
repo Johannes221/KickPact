@@ -175,31 +175,53 @@ Verbrauch vor jedem Lauf an.
 
 ---
 
-## Planen
+## Planen und freigeben
 
-Der Publisher ist ein Befehl. Wie er ausgelöst wird, ist frei:
+Der Ablauf ist absichtlich zweigeteilt: ein Timer *erinnert*, du *gibst frei*.
+Kein Automatismus postet je von selbst — jeder Post braucht dein „j".
 
-**Von Hand.** Ein Einzeiler, wenn du posten willst. Für sechs Posts pro Woche
-völlig ausreichend und ohne jede weitere Bewegung.
+**Der Zeitplan** steht in `scripts/social/schedule.ts` — eine Liste aus
+Datum, Uhrzeit, Art und Slug. Das ist die Datei, die du anfasst, um den Kalender
+zu ändern. Voreingestellt sind die drei Reels und die vier Story-Highlights über
+etwa zwei Wochen (Karussells fehlen, bis R2 steht).
 
-**Meta Business Suite.** Kostenlos, kann Reels und Stories planen, am Desktop
-und in der App. Braucht diese ganze Einrichtung nicht — aber auch keine
-Automatik, du lädst von Hand hoch.
+**Freigeben und posten:**
 
-**n8n auf dem Server.** Der ehrliche Haken: die Assets liegen lokal, nicht auf
-dem Server. Entweder werden sie dorthin gespiegelt, oder n8n stößt den Lauf per
-Webhook an. Ohne diese Frage geklärt ist es kein Autopilot.
+```bash
+npm run social:queue            # fällige Posts einzeln freigeben
+npm run social:queue -- --list  # nur zeigen, was fällig/geplant ist
+```
 
-**GitHub Actions.** Cron in der Cloud, kostenlos für private Repos, Zugangsdaten
-als Secrets. Braucht die Assets im Repo (14 MB, verkraftbar) oder rendert sie im
-Lauf. Das ist der sauberste vollautomatische Weg.
+`social:queue` geht die fälligen Posts durch, öffnet zu jedem die Vorschau
+(Reel im Player, Story-Ordner im Finder), zeigt die Caption und fragt
+„jetzt posten? [j/N]". Nur bei `j` geht es raus. Übersprungenes bleibt fällig und
+kommt beim nächsten Lauf wieder.
 
-> Vorher ehrlich abwägen: aktuell gibt es elf Assets. Ein Zeitplan hätte die in
-> gut zwei Wochen durch und liefe danach leer. Automatisches Posten lohnt sich
-> ab dem Punkt, wo laufend Content nachkommt — vorher automatisiert man vor
-> allem das Warten.
+Zwei harte Riegel: ohne Terminal wird nichts gepostet (Schutz gegen
+unbeaufsichtigtes Feuern), und was einmal draußen ist, wird nie wiederholt
+(`scripts/social/state/posted.jsonl` merkt sich jeden Post, bis auf den einzelnen
+Story-Slide genau).
 
----
+**Der Timer** (macOS launchd) erinnert dich, wenn etwas fällig ist — er postet
+nichts:
+
+```bash
+cp scripts/social/launchd/com.kickpact.social-notify.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.kickpact.social-notify.plist
+```
+
+Er feuert 12:00 und 18:00 (die Fälligkeitszeiten im Plan) und schickt eine
+Desktop-Meldung, wenn Posts warten. Dann öffnest du ein Terminal und gibst mit
+`npm run social:queue` frei. Vorher im Plist den Repo-Pfad prüfen.
+
+> **Assets müssen gerendert vorliegen.** `out/social/` wird bei jedem Render neu
+> gebaut und ist nicht dauerhaft. Vor dem Posten einmal `npm run social:render`
+> (Karussells/Stories, ~2 Min) und `npm run social:video` (Reels, ~15 Min)
+> laufen lassen, falls der Ordner leer ist. Der Runner sagt es, wenn eine Datei
+> fehlt.
+
+> **Reihenfolge zum Loslegen:** erst die Meta-Einrichtung oben (einmalig), dann
+> `npm run social:token` zur Kontrolle, dann rendern, dann `npm run social:queue`.
 
 ## Wenn es klemmt
 

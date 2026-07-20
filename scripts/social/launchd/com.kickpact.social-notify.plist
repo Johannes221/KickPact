@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS-Timer, der dich erinnert, wenn Posts fällig sind. Er POSTET NICHTS —
+  er ruft nur `social:queue --notify`, das zählt und eine Meldung schickt. Das
+  Freigeben und Posten machst du danach von Hand (npm run social:queue).
+
+  Feuert 12:00 und 18:00 — die Zeiten, zu denen der Zeitplan Stories (12:00) und
+  Reels (18:00) fällig macht. Läuft nur, wenn der Mac an ist; ein verpasster
+  Termin wird beim nächsten Lauf nachgeholt.
+
+  Aktivieren:
+    cp scripts/social/launchd/com.kickpact.social-notify.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.kickpact.social-notify.plist
+  Abschalten:
+    launchctl unload ~/Library/LaunchAgents/com.kickpact.social-notify.plist
+
+  PFAD PRÜFEN: unten steht /Users/johan/KickPact (der Haupt-Checkout). Falls dein
+  Repo woanders liegt, hier anpassen. -lc lädt deine zsh-Login-Umgebung, damit
+  node/npm im PATH sind.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.kickpact.social-notify</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>-lc</string>
+    <string>cd /Users/johan/KickPact &amp;&amp; npm run social:queue -- --notify</string>
+  </array>
+
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>0</integer></dict>
+  </array>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/kickpact-social-notify.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/kickpact-social-notify.err</string>
+</dict>
+</plist>

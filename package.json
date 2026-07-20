@@ -32,7 +32,8 @@
     "social:check": "tsc -p scripts/social/tsconfig.json",
     "social:capture": "dotenv -e .env.local -- tsx scripts/social/capture.ts",
     "social:publish": "dotenv -e .env.local -- tsx scripts/social/publish.ts",
-    "social:token": "dotenv -e .env.local -- tsx scripts/social/token.ts"
+    "social:token": "dotenv -e .env.local -- tsx scripts/social/token.ts",
+    "social:queue": "dotenv -e .env.local -- tsx scripts/social/queue.ts"
   },
   "dependencies": {
     "@apple/app-store-server-library": "^3.1.0",
