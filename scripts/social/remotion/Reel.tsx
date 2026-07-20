@@ -133,8 +133,7 @@ const StatCard: React.FC<{
   target: number;
   suffix?: string;
   index: number;
-  ball?: boolean;
-}> = ({ label, target, suffix = "", index, ball }) => {
+}> = ({ label, target, suffix = "", index }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const delay = 12 + index * 9;
@@ -157,11 +156,6 @@ const StatCard: React.FC<{
     >
       <div style={{ width: 12, height: 100, background: GREEN, borderRadius: 6, marginRight: 30 }} />
       <div style={{ flex: 1, fontSize: 46, fontWeight: 700, color: NAVY }}>{label}</div>
-      {ball && (
-        <div style={{ marginRight: 22, display: "flex" }}>
-          <SoccerBall size={58} rotation={frame * 7} />
-        </div>
-      )}
       <div style={{ fontFamily: DISPLAY, fontSize: 68, fontWeight: 900, color: GREEN_DARK }}>
         {value}
         {suffix}
@@ -170,15 +164,22 @@ const StatCard: React.FC<{
   );
 };
 
-/** Ein großer „X Comebacks"-Block, der mit Overshoot aufpoppt. */
-const BigStat: React.FC<{ value: string; label: string; delay: number }> = ({ value, label, delay }) => {
+/** Ein großer Block, der mit Overshoot aufpoppt UND hochzählt. */
+const BigStat: React.FC<{ target: number; suffix?: string; label: string; delay: number }> = ({
+  target,
+  suffix = "",
+  label,
+  delay
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const s = spring({ frame: frame - delay, fps, config: { damping: 11, mass: 0.8 } });
+  const pop = spring({ frame: frame - delay, fps, config: { damping: 12, mass: 0.8 } });
+  const count = spring({ frame: frame - delay, fps, config: { damping: 200 } });
   return (
-    <div style={{ transform: `scale(${s})`, opacity: Math.min(1, s), textAlign: "center" }}>
+    <div style={{ transform: `scale(${pop})`, opacity: Math.min(1, pop), textAlign: "center" }}>
       <div style={{ fontFamily: DISPLAY, fontSize: 180, fontWeight: 900, color: GREEN, lineHeight: 1 }}>
-        {value}
+        {Math.round(target * count)}
+        {suffix}
       </div>
       <div style={{ fontSize: 40, fontWeight: 700, color: WHITE, marginTop: 10 }}>{label}</div>
     </div>
@@ -187,18 +188,52 @@ const BigStat: React.FC<{ value: string; label: string; delay: number }> = ({ va
 
 /* --------------------------------- Szenen --------------------------------- */
 
-/** Ball, der über den unteren Rand rollt (Intro + CTA). */
-const RollingBall: React.FC<{ size?: number; y: number }> = ({ size = 150, y }) => {
+/**
+ * Ball, der ins Bild rollt und dann STEHT — die Drehung folgt dem echten Weg
+ * (Umfang = π·Größe) und hört auf, sobald der Ball hält. Kein Dauer-Drehen.
+ * Mit weichem Kontaktschatten, damit er auf dem Boden liegt statt zu schweben.
+ */
+const RollingBall: React.FC<{ size?: number; y: number; from?: "left" | "right" }> = ({
+  size = 150,
+  y,
+  from = "left"
+}) => {
   const frame = useCurrentFrame();
   const { width } = useVideoConfig();
-  const x = interpolate(frame, [0, 60], [-size, width * 0.5 - size / 2], {
+  const target = width * 0.5 - size / 2;
+  const start = from === "left" ? -size - 40 : width + 40;
+  const x = interpolate(frame, [0, 62], [start, target], {
+    extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: (t) => 1 - Math.pow(1 - t, 3)
   });
+  const rotation = ((x - start) / (size * Math.PI)) * 360;
   return (
-    <div style={{ position: "absolute", left: x, top: y, display: "flex" }}>
-      <SoccerBall size={size} rotation={(x / (size * Math.PI)) * 360} />
-    </div>
+    <>
+      <div
+        style={{
+          position: "absolute",
+          left: x,
+          top: y + size * 0.86,
+          width: size,
+          display: "flex",
+          justifyContent: "center"
+        }}
+      >
+        <div
+          style={{
+            width: size * 0.78,
+            height: size * 0.16,
+            borderRadius: "50%",
+            background: "rgba(26,26,46,0.22)",
+            filter: "blur(9px)"
+          }}
+        />
+      </div>
+      <div style={{ position: "absolute", left: x, top: y, display: "flex" }}>
+        <SoccerBall size={size} rotation={rotation} />
+      </div>
+    </>
   );
 };
 
@@ -233,41 +268,31 @@ const Stats: React.FC = () => (
       Alles automatisch gezählt.
     </Headline>
     <div style={{ marginTop: 46 }}>
-      <StatCard label="Tore" target={34} index={0} ball />
+      <StatCard label="Tore" target={34} index={0} />
       <StatCard label="Siege" target={12} index={1} />
       <StatCard label="Endplatz" target={3} suffix="." index={2} />
     </div>
   </Scene>
 );
 
-const Toptorjaeger: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  // Ball hüpft: |sin| als „Absprung", mit abklingender Höhe.
-  const bounce = Math.abs(Math.sin((frame / fps) * 3.4)) * 70;
-  return (
-    <Scene bg={WHITE}>
-      <div style={{ position: "absolute", top: 300, left: "50%", marginLeft: -70 }}>
-        <div style={{ transform: `translateY(${-bounce}px)`, display: "flex" }}>
-          <SoccerBall size={140} rotation={frame * 5} />
-        </div>
-      </div>
-      <div style={{ marginTop: 240 }}>
-        <Kicker text="Euer Toptorjäger" delay={2} />
-        <Headline size={88} delay={8}>
-          Steht am Ende fest.
-        </Headline>
-        <Body delay={16}>Wer wie oft getroffen hat — die App weiß es.</Body>
-      </div>
-    </Scene>
-  );
-};
+const Toptorjaeger: React.FC = () => (
+  <Scene bg={WHITE}>
+    <RollingBall y={250} size={150} from="right" />
+    <div style={{ marginTop: 300 }}>
+      <Kicker text="Euer Toptorjäger" delay={2} />
+      <Headline size={88} delay={8}>
+        Steht am Ende fest.
+      </Headline>
+      <Body delay={16}>Wer wie oft getroffen hat — die App weiß es.</Body>
+    </div>
+  </Scene>
+);
 
 const Comebacks: React.FC = () => (
   <Scene bg={NAVY}>
     <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center" }}>
-      <BigStat value="5" label="Comebacks" delay={6} />
-      <BigStat value="8×" label="zu null" delay={16} />
+      <BigStat target={5} label="Comebacks" delay={6} />
+      <BigStat target={8} suffix="×" label="zu null" delay={16} />
     </div>
   </Scene>
 );

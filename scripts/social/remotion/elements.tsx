@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import { interpolate, random, useCurrentFrame, useVideoConfig } from "remotion";
 import { GREEN, NAVY, WHITE } from "./theme";
 
@@ -24,40 +24,59 @@ const pentagon = (cx: number, cy: number, r: number, rotDeg = 0): string =>
   }).join(" ");
 
 export const SoccerBall: React.FC<{ size: number; rotation?: number }> = ({ size, rotation = 0 }) => {
-  // Zentrales Fünfeck + fünf kleinere am Rand, alle regelmäßig gerechnet. Die
-  // Nähte verbinden die Ecken des Zentrums mit den Rand-Fünfecken — das ist die
-  // klassische Panel-Anmutung, ohne die spinnenartigen Handformen von vorher.
+  // Eindeutige Gradient-IDs pro Instanz, sonst greifen mehrere Bälle auf denselben
+  // Verlauf zu (url(#id) trifft den ersten im Dokument).
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  const sphere = `sph${uid}`;
+  const shade = `shd${uid}`;
+
+  // Zentrales Fünfeck + fünf am Rand, regelmäßig gerechnet, mit Nähten dazwischen.
   const edge = Array.from({ length: 5 }, (_, i) => {
-    const a = ((-90 + i * 72) * Math.PI) / 180; // Richtung einer Zentrums-Ecke
+    const a = ((-90 + i * 72) * Math.PI) / 180;
     return {
-      // Ecke des zentralen Fünfecks (r=19) …
-      vx: 50 + 19 * Math.cos(a),
-      vy: 50 + 19 * Math.sin(a),
-      // … zum Rand-Fünfeck (Mittelpunkt bei r=37), das nach außen zeigt.
-      cx: 50 + 37 * Math.cos(a),
-      cy: 50 + 37 * Math.sin(a),
+      vx: 50 + 18 * Math.cos(a),
+      vy: 50 + 18 * Math.sin(a),
+      cx: 50 + 35 * Math.cos(a),
+      cy: 50 + 35 * Math.sin(a),
       rot: -90 + i * 72 + 180
     };
   });
+
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 100 100"
-      style={{ transform: `rotate(${rotation}deg)` }}
-    >
-      <circle cx="50" cy="50" r="47" fill={WHITE} stroke={NAVY} strokeWidth="3.5" />
-      <g stroke={NAVY} strokeWidth="3.5" strokeLinecap="round">
-        {edge.map((e, i) => (
-          <line key={i} x1={e.vx} y1={e.vy} x2={e.cx} y2={e.cy} />
-        ))}
+    <svg width={size} height={size} viewBox="0 0 100 100">
+      <defs>
+        {/* Kugel-Verlauf: Licht oben-links → real wirkendes Volumen. */}
+        <radialGradient id={sphere} cx="38%" cy="32%" r="72%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="62%" stopColor="#eef1ef" />
+          <stop offset="100%" stopColor="#ccd5d1" />
+        </radialGradient>
+        {/* Schatten unten-rechts, als eigene Schicht ÜBER dem Muster — bleibt
+            fix, während das Muster rotiert (Licht dreht nicht mit). */}
+        <radialGradient id={shade} cx="66%" cy="72%" r="80%">
+          <stop offset="52%" stopColor={NAVY} stopOpacity="0" />
+          <stop offset="100%" stopColor={NAVY} stopOpacity="0.3" />
+        </radialGradient>
+      </defs>
+
+      <circle cx="50" cy="50" r="47" fill={`url(#${sphere})`} stroke="#c4ccc8" strokeWidth="1" />
+
+      {/* Nur das PANEL-Muster rotiert. */}
+      <g transform={`rotate(${rotation} 50 50)`}>
+        <g stroke={NAVY} strokeWidth="2.6" strokeLinecap="round">
+          {edge.map((e, i) => (
+            <line key={i} x1={e.vx} y1={e.vy} x2={e.cx} y2={e.cy} />
+          ))}
+        </g>
+        <polygon points={pentagon(50, 50, 18)} fill={NAVY} />
+        <g fill={NAVY}>
+          {edge.map((e, i) => (
+            <polygon key={i} points={pentagon(e.cx, e.cy, 8.5, e.rot)} />
+          ))}
+        </g>
       </g>
-      <polygon points={pentagon(50, 50, 19)} fill={NAVY} />
-      <g fill={NAVY}>
-        {edge.map((e, i) => (
-          <polygon key={i} points={pentagon(e.cx, e.cy, 9, e.rot)} />
-        ))}
-      </g>
+
+      <circle cx="50" cy="50" r="47" fill={`url(#${shade})`} />
     </svg>
   );
 };
