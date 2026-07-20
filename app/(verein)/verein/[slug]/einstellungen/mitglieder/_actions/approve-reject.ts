@@ -10,38 +10,10 @@ import {
   getRequestById
 } from "@/lib/db/queries/membership-requests";
 import { getTeamInClub } from "@/lib/db/queries/team-lifecycle";
-import { getUserEmailById } from "@/lib/db/queries/account";
 import { getClubById } from "@/lib/db/queries/club-admin";
-import { resend, MAIL_FROM } from "@/lib/mail/client";
+import { sendRequesterMail } from "@/lib/mail/access-request-mail";
 import { accessRequestApprovedEmail } from "@/lib/mail/templates/access-request-approved";
 import { accessRequestRejectedEmail } from "@/lib/mail/templates/access-request-rejected";
-
-type MailContent = { subject: string; html: string; text: string };
-
-/**
- * Schickt dem Antragsteller die Entscheidungs-Mail und wirft bei einem
- * Provider-Fehler (`resend` liefert `{ error }` statt zu werfen — sonst still
- * verschluckt). Als `beforeCommit` an approve/reject übergeben, damit der
- * Status erst nach erfolgreichem Versand kippt. Kein Empfänger → No-op.
- */
-async function sendRequesterMail(
-  requesterUserId: string,
-  buildMail: () => MailContent
-): Promise<void> {
-  const requesterEmail = await getUserEmailById(requesterUserId);
-  if (!requesterEmail) return;
-  const mail = buildMail();
-  const { error } = await resend.emails.send({
-    from: MAIL_FROM,
-    to: requesterEmail,
-    subject: mail.subject,
-    html: mail.html,
-    text: mail.text
-  });
-  if (error) {
-    throw new Error(`access-request mail failed: ${error.message ?? "unknown"}`);
-  }
-}
 
 const approveSchema = z.object({ requestId: z.string().min(1), clubSlug: z.string().min(1) });
 const rejectSchema = z.object({
