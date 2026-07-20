@@ -13,7 +13,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { createId } from "@paralleldrive/cuid2";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { clubs, teams, matches, matchEvents } from "@/lib/db/schema";
+import { clubs, teams, matches, matchEvents, clubCrests } from "@/lib/db/schema";
 import { resetTestDb } from "../setup/db";
 import {
   getNextMatchForTeam,
@@ -297,52 +297,63 @@ describe("getMatchScorers", () => {
 });
 
 describe("getOpponentLogoUrl", () => {
-  /** Genau das Gate, das /m/<slug> öffentlich macht (isTeamOpenForSponsorEntry). */
-  const OEFFENTLICH = {
-    logoUrl: "r2://bucket/teams/x/logo.png",
-    discoverable: true,
-    isActive: true,
-    verifiedAt: new Date("2026-01-01T00:00:00Z")
-  };
+  // SINGLE SOURCE OF TRUTH (Johannes, 2026-07-20): pro Mannschaft gilt EIN
+  // Wappen — hochgeladenes teams.logoUrl gewinnt, sonst das gescrapte. Dasselbe
+  // Wappen, egal ob die Mannschaft eigenes Team oder Gegner ist. Das frühere
+  // Einwilligungs-Gate (discoverable/verified/active) ist bewusst abgeschafft.
+  beforeEach(async () => {
+    await db.delete(clubCrests); // resetTestDb truncatet den Cache nicht mit
+  });
 
-  it("übernimmt das Logo einer wirklich öffentlichen Mannschaft", async () => {
+  it("nimmt das hochgeladene Wappen einer KickPact-Mannschaft", async () => {
     const gegner = await seedTeam({ fussballdeTeamId: "fd-gegner-1" });
-    await db.update(teams).set(OEFFENTLICH).where(eq(teams.id, gegner.id));
+    await db
+      .update(teams)
+      .set({ logoUrl: "r2://bucket/teams/x/logo.png" })
+      .where(eq(teams.id, gegner.id));
 
     expect(await getOpponentLogoUrl("fd-gegner-1")).toBe("r2://bucket/teams/x/logo.png");
   });
 
-  it("nicht discoverable: kein Logo (fremdes Asset, keine Einwilligung)", async () => {
+  it("zeigt das Wappen auch bei NICHT öffentlicher Mannschaft (kein Gate mehr)", async () => {
+    // Kernszenario: Dossenheim hat sein Wappen hochgeladen, aber sein Profil
+    // nicht öffentlich gestellt. Im Wiesloch-Post zieht trotzdem DIESES Wappen.
     const gegner = await seedTeam({ fussballdeTeamId: "fd-gegner-2" });
     await db
       .update(teams)
-      .set({ ...OEFFENTLICH, discoverable: false })
+      .set({
+        logoUrl: "r2://bucket/teams/x/logo.png",
+        discoverable: false,
+        isActive: false,
+        verifiedAt: null
+      })
       .where(eq(teams.id, gegner.id));
 
-    expect(await getOpponentLogoUrl("fd-gegner-2")).toBeNull();
+    expect(await getOpponentLogoUrl("fd-gegner-2")).toBe("r2://bucket/teams/x/logo.png");
   });
 
-  it("discoverable, aber UNVERIFIZIERT: kein Logo — /m/<slug> liefert dort 404", async () => {
-    // discoverable allein ist NICHT die Einwilligung: das öffentliche Profil
-    // verlangt zusätzlich verifiedAt. Sonst leakt das Wappen eines Vereins, den
-    // öffentlich niemand sehen kann.
-    const gegner = await seedTeam({ fussballdeTeamId: "fd-gegner-3" });
+  it("hochgeladenes Wappen schlägt das gescrapte fussball.de-Wappen", async () => {
+    const gegner = await seedTeam({ fussballdeTeamId: "fd-both" });
     await db
       .update(teams)
-      .set({ ...OEFFENTLICH, verifiedAt: null })
+      .set({ logoUrl: "r2://bucket/teams/x/logo.png" })
       .where(eq(teams.id, gegner.id));
+    await db.insert(clubCrests).values({
+      fussballdeTeamId: "fd-both",
+      logoUrl: "r2://bucket/crests/fremd.png",
+      sourceUrl: "https://f.de/getLogo/fremd"
+    });
 
-    expect(await getOpponentLogoUrl("fd-gegner-3")).toBeNull();
+    expect(await getOpponentLogoUrl("fd-both")).toBe("r2://bucket/teams/x/logo.png");
   });
 
-  it("deaktivierte Mannschaft: kein Logo (deactivateTeam lässt discoverable stehen)", async () => {
-    const gegner = await seedTeam({ fussballdeTeamId: "fd-gegner-4" });
-    await db
-      .update(teams)
-      .set({ ...OEFFENTLICH, isActive: false })
-      .where(eq(teams.id, gegner.id));
-
-    expect(await getOpponentLogoUrl("fd-gegner-4")).toBeNull();
+  it("Gegner ohne eigenes Wappen: nimmt das gescrapte fussball.de-Wappen", async () => {
+    await db.insert(clubCrests).values({
+      fussballdeTeamId: "fd-fremd-1",
+      logoUrl: "r2://bucket/crests/fremd.png",
+      sourceUrl: "https://f.de/getLogo/fremd"
+    });
+    expect(await getOpponentLogoUrl("fd-fremd-1")).toBe("r2://bucket/crests/fremd.png");
   });
 
   it("unbekannter Gegner / keine team-id → null", async () => {

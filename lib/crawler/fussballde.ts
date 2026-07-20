@@ -755,6 +755,40 @@ export function extractCrestsFromRow(tr: HTMLElement): CrestRef[] {
   return out;
 }
 
+/**
+ * Lädt ein Vereinswappen (getLogo-PNG) herunter. Bewusst dasselbe undici-fetch
+ * wie {@link fetchHtml} (Next.js patcht globalThis.fetch; im Inngest-Kontext
+ * liefert der Patch leere Responses) plus rotierender User-Agent gegen den
+ * fussball.de-Bann. Kein Retry-Sturm: ein fehlendes Wappen ist kosmetisch, die
+ * Story fällt sauber aufs Kürzel zurück — bei Fehler `null`, nicht werfen.
+ *
+ * Nur echte Bild-Antworten (`image/*`) zählen: eine Block-/HTML-Seite käme
+ * sonst als „Logo" durch und landete als kaputtes Motiv im Story-Bild.
+ */
+export async function fetchCrestBytes(
+  url: string
+): Promise<{ bytes: Buffer; contentType: string } | null> {
+  try {
+    const res = await undiciFetch(url, {
+      headers: {
+        "User-Agent": pickUserAgent(),
+        Accept: "image/avif,image/webp,image/png,image/*;q=0.8,*/*;q=0.5",
+        "Accept-Language": "de-DE,de;q=0.9,en;q=0.8"
+      },
+      redirect: "follow",
+      signal: AbortSignal.timeout(10_000)
+    });
+    if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.startsWith("image/")) return null;
+    const bytes = Buffer.from(await res.arrayBuffer());
+    if (bytes.length === 0) return null;
+    return { bytes, contentType };
+  } catch {
+    return null;
+  }
+}
+
 function extractMatchesFromHtml(root: HTMLElement): SpielListItem[] {
   const results: SpielListItem[] = [];
   const seen = new Set<string>();

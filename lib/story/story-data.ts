@@ -188,16 +188,17 @@ export async function buildStoryModel(
     getCachedStandingsForRequest(teamId, matchSaison).catch(() => null)
   ]);
 
+  // Eigenes Wappen: der Crawl setzt das fussball.de-Wappen automatisch auf
+  // teams.logoUrl (nur solange keins hochgeladen ist) — es kommt hier also
+  // schon über ownLogo. Gegner-Wappen: getOpponentLogoUrl liefert das
+  // hochgeladene ODER (fallback) das öffentliche fussball.de-Wappen.
   const ownCrest = pickCrest({
     name: ownIsHeim ? match.heimName : match.gastName,
-    uploadedLogo: ownLogo,
-    // fussball.de liefert (noch) keine Wappen — siehe pickCrest-Doc.
-    fussballdeLogo: null
+    uploadedLogo: ownLogo
   });
   const opponentCrest = pickCrest({
     name: ownIsHeim ? match.gastName : match.heimName,
-    uploadedLogo: opponentLogo,
-    fussballdeLogo: null
+    uploadedLogo: opponentLogo
   });
 
   const heim: StorySide = {
