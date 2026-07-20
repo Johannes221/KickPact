@@ -16,6 +16,7 @@ import {
   typo
 } from "./brand";
 import { Backdrop, Footer, Kicker, PactCards, PhoneFrame, headlineSize, tone } from "./layout";
+import { HASHTAG_LINE } from "./tags";
 
 /**
  * Rendert die Karussell-Posts aus `decks.ts` nach `out/social/`.
@@ -240,7 +241,9 @@ async function renderDeck(deck: Deck): Promise<number> {
   // beim Hochladen will man nicht zwischen zwei Quellen springen.
   writeFileSync(
     join(dir, "caption.txt"),
-    `${deck.caption}${deck.hashtags.length ? `\n\n${deck.hashtags.join(" ")}` : ""}\n`,
+    // Hashtags nur unter Feed-Posts (Karussells) — Stories haben keine
+    // Feed-Caption; dort nimmt man Hashtag-Sticker in der App.
+    `${deck.caption}${(deck.format ?? "feed") === "feed" ? `\n\n${HASHTAG_LINE}` : ""}\n`,
     "utf8"
   );
   return deck.slides.length;

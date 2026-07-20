@@ -32,7 +32,6 @@ export const STORIES: Deck[] = [
     angle: "Erklärung",
     format: "story",
     caption: "Highlight: Wie funktioniert das",
-    hashtags: [],
     slides: [
       {
         kicker: "Highlight",
@@ -73,7 +72,6 @@ export const STORIES: Deck[] = [
     angle: "Features",
     format: "story",
     caption: "Highlight: Was kann ich festlegen",
-    hashtags: [],
     slides: [
       {
         kicker: "Highlight",
@@ -121,7 +119,6 @@ export const STORIES: Deck[] = [
     angle: "Preis",
     format: "story",
     caption: "Highlight: Was kostet das",
-    hashtags: [],
     slides: [
       {
         kicker: "Highlight",
@@ -155,7 +152,6 @@ export const STORIES: Deck[] = [
     angle: "Einwand",
     format: "story",
     caption: "Highlight: Häufige Fragen",
-    hashtags: [],
     slides: [
       {
         kicker: "Highlight",

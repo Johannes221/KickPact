@@ -4,6 +4,7 @@ import { join } from "node:path";
 import React from "react";
 import { ImageResponse } from "next/og";
 import { BODY, DISPLAY, FONTS, LOGO_RATIO, VERTICAL, photo, typo, type PhotoName } from "./brand";
+import { HASHTAG_LINE } from "./tags";
 import { SPOTS, type Beat, type Spot } from "./spots";
 import { Backdrop, Kicker, PactCards, headlineSize, tone } from "./layout";
 
@@ -224,7 +225,7 @@ async function renderSpot(spot: Spot): Promise<{ frames: number; sec: number }> 
   );
 
   rmSync(frameDir, { recursive: true, force: true });
-  writeFileSync(join(OUT, `${spot.slug}.caption.txt`), `${spot.caption}\n`, "utf8");
+  writeFileSync(join(OUT, `${spot.slug}.caption.txt`), `${spot.caption}\n\n${HASHTAG_LINE}\n`, "utf8");
 
   return { frames: frame, sec };
 }

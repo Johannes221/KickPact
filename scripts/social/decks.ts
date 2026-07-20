@@ -90,21 +90,12 @@ export interface Deck {
   angle: string;
   /** Standard ist "feed". */
   format?: Format;
-  /** Instagram-/Facebook-Caption. Wird als caption.txt mit ausgegeben. */
+  /** Instagram-/Facebook-Caption. Hashtags kommen zentral aus tags.ts dazu. */
   caption: string;
-  hashtags: string[];
   slides: Slide[];
 }
 
 /* -------------------------------------------------------------------------- */
-
-const TAGS = [
-  "#amateurfußball",
-  "#kreisliga",
-  "#vereinsleben",
-  "#mannschaftskasse",
-  "#kickpact"
-];
 
 /** Steht unter fast jedem Deck. Einmal formuliert, überall gleich. */
 const CTA_PREIS: Slide = {
@@ -125,7 +116,6 @@ export const DECKS: Deck[] = [
       "Zahlungsübersicht.\n\n" +
       "Ab 4,99 € im Monat pro Mannschaft. 30 Tage kostenlos, ohne Kreditkarte.\n" +
       "kickpact.com, Link in der Bio.",
-    hashtags: TAGS,
     slides: [
       {
         kicker: "In 60 Sekunden",
@@ -191,7 +181,6 @@ export const DECKS: Deck[] = [
       "Von „pro Tor“ über „Tor hinter der Mittellinie“ bis „Aufstieg“. Die " +
       "Beträge hier sind die Voreinstellungen, jeder Sponsor kann sie ändern.\n\n" +
       "Welchen würdet ihr nehmen? Ab in die Kommentare.\n\nkickpact.com",
-    hashtags: [...TAGS, "#kabine"],
     slides: [
       {
         kicker: "24 Typen",
@@ -276,7 +265,6 @@ export const DECKS: Deck[] = [
       "Und übersehen dabei die Leute, die eh jedes Wochenende an der Linie " +
       "stehen.\n\n" +
       "Keine Firmen. Eltern, Ehemalige, Onkel, Nachbarn.\n\nkickpact.com",
-    hashtags: TAGS,
     slides: [
       {
         kicker: "Sponsorensuche",
@@ -327,7 +315,6 @@ export const DECKS: Deck[] = [
       "Die vier Fragen, die im Vorstand immer kommen. Kurz beantwortet.\n\n" +
       "Wenn eure nicht dabei ist: ab in die Kommentare, ich antworte da.\n\n" +
       "kickpact.com",
-    hashtags: TAGS,
     slides: [
       {
         kicker: "Vorstandssitzung",
