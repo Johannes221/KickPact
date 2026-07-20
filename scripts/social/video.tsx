@@ -35,21 +35,58 @@ const CONTENT_WIDTH = VERTICAL.width - 2 * PAD;
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 /** Schnell rein, weich aus. Linear sieht nach Powerpoint aus. */
 const easeOut = (t: number) => 1 - Math.pow(1 - clamp01(t), 3);
+/**
+ * Wie easeOut, aber schießt kurz über 1 hinaus und setzt sich dann — die
+ * „Feder". Genau das lässt fremde Reels lebendig wirken statt gestanzt: ein
+ * Element kommt nicht sauber zum Stehen, es überschwingt minimal. Nur auf
+ * Position/Größe anwenden, NIE auf Deckkraft (>1 wäre sinnlos).
+ */
+const easeOutBack = (t: number) => {
+  const c1 = 1.70158;
+  const x = clamp01(t);
+  return 1 + (c1 + 1) * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+};
 
-const ENTER_SEC = 0.42;
+const ENTER_SEC = 0.46;
 /** Elemente laufen versetzt ein, sonst springt der Block als Klotz. */
-const STAGGER_SEC = 0.09;
+const STAGGER_SEC = 0.1;
+/** So lange vor dem Beat-Ende beginnt der Inhalt weich rauszugleiten. */
+const EXIT_SEC = 0.34;
 
-/** Einblendung eines Elements: Position im Beat (s) → Versatz + Deckkraft. */
+/** Einblendung eines Elements: Versatz + leichter Feder-Overshoot + Deckkraft. */
 function enter(tSec: number, order: number) {
-  const p = easeOut((tSec - order * STAGGER_SEC) / ENTER_SEC);
-  return { opacity: p, transform: `translateY(${(1 - p) * 34}px)` };
+  const local = (tSec - order * STAGGER_SEC) / ENTER_SEC;
+  const back = easeOutBack(local);
+  return {
+    opacity: easeOut(local),
+    transform: `translateY(${(1 - back) * 40}px) scale(${0.94 + 0.06 * back})`
+  };
 }
 
-function Frame({ beat, tSec, progress }: { beat: Beat; tSec: number; progress: number }) {
+function Frame({
+  beat,
+  tSec,
+  beatSec,
+  progress
+}: {
+  beat: Beat;
+  tSec: number;
+  beatSec: number;
+  progress: number;
+}) {
   const t = tone(beat.tone);
   const hasPacts = Boolean(beat.pacts?.length);
   let order = 0;
+
+  // Nichts steht still: Der Inhalt driftet über den Beat langsam nach oben, der
+  // Hintergrund zoomt sanft dagegen (Ken Burns / Parallaxe). Das allein nimmt
+  // den „eingefroren"-Eindruck, der aus reinen Standbildern entsteht.
+  const n = clamp01(tSec / Math.max(beatSec, 0.01));
+  const driftY = -16 * n;
+  // Am Beat-Ende gleitet der Inhalt weich raus, statt hart wegzuschneiden —
+  // dadurch fließen die Beats ineinander.
+  const outP = clamp01((beatSec - tSec) / EXIT_SEC);
+  const bgScale = 1 + 0.05 * n;
 
   return (
     <div
@@ -66,57 +103,88 @@ function Frame({ beat, tSec, progress }: { beat: Beat; tSec: number; progress: n
         padding: PAD
       }}
     >
-      <Backdrop tone={t} photo={beat.photo ? photo(beat.photo) : null} size={VERTICAL} />
-
-      {beat.logo && (
-        <div style={{ display: "flex", marginBottom: 40, ...enter(tSec, order++) }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={t.logo} width={560} height={Math.round(560 / LOGO_RATIO)} alt="KickPact" />
-        </div>
-      )}
-
-      {beat.kicker && (
-        <div style={{ display: "flex", ...enter(tSec, order++) }}>
-          <Kicker text={beat.kicker} tone={t} />
-        </div>
-      )}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: VERTICAL.width,
+          height: VERTICAL.height,
+          display: "flex",
+          transform: `scale(${bgScale}) translateY(${6 * n}px)`,
+          transformOrigin: "center"
+        }}
+      >
+        <Backdrop tone={t} photo={beat.photo ? photo(beat.photo) : null} size={VERTICAL} />
+      </div>
 
       <div
         style={{
-          maxWidth: CONTENT_WIDTH,
-          fontFamily: DISPLAY,
-          fontSize: headlineSize(beat.headline, hasPacts ? 78 : 104, CONTENT_WIDTH),
-          fontWeight: 900,
-          color: t.ink,
-          letterSpacing: "-0.02em",
-          lineHeight: 1.04,
-          ...enter(tSec, order++)
+          display: "flex",
+          flexDirection: "column",
+          opacity: outP,
+          transform: `translateY(${driftY + (1 - outP) * -44}px) scale(${0.985 + 0.015 * outP})`,
+          transformOrigin: "center"
         }}
       >
-        {typo(beat.headline)}
-      </div>
+        {beat.logo && (
+          <div style={{ display: "flex", marginBottom: 40, ...enter(tSec, order++) }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={t.logo} width={560} height={Math.round(560 / LOGO_RATIO)} alt="KickPact" />
+          </div>
+        )}
 
-      {beat.body && (
+        {beat.kicker && (
+          <div style={{ display: "flex", ...enter(tSec, order++) }}>
+            <Kicker text={beat.kicker} tone={t} />
+          </div>
+        )}
+
         <div
           style={{
-            maxWidth: CONTENT_WIDTH - 40,
-            fontSize: 40,
-            fontWeight: 400,
-            color: t.body,
-            lineHeight: 1.4,
-            marginTop: 32,
+            maxWidth: CONTENT_WIDTH,
+            fontFamily: DISPLAY,
+            fontSize: headlineSize(beat.headline, hasPacts ? 78 : 104, CONTENT_WIDTH),
+            fontWeight: 900,
+            color: t.ink,
+            letterSpacing: "-0.02em",
+            lineHeight: 1.04,
             ...enter(tSec, order++)
           }}
         >
-          {typo(beat.body)}
+          {typo(beat.headline)}
         </div>
-      )}
 
-      {beat.pacts && (
-        <div style={{ display: "flex", ...enter(tSec, order++) }}>
-          <PactCards pacts={beat.pacts} tone={t} width={CONTENT_WIDTH} />
-        </div>
-      )}
+        {beat.body && (
+          <div
+            style={{
+              maxWidth: CONTENT_WIDTH - 40,
+              fontSize: 40,
+              fontWeight: 400,
+              color: t.body,
+              lineHeight: 1.4,
+              marginTop: 32,
+              ...enter(tSec, order++)
+            }}
+          >
+            {typo(beat.body)}
+          </div>
+        )}
+
+        {beat.pacts &&
+          (() => {
+            // Die Beträge zählen hoch, während die Karten einlaufen — die
+            // Wrapped-Geste. Etwas länger als die Einblendung, damit die Zahl
+            // sichtbar „rennt" und nicht nur kurz zuckt.
+            const o = order++;
+            const rev = easeOut((tSec - o * STAGGER_SEC) / 0.72);
+            return (
+              <div style={{ display: "flex", ...enter(tSec, o) }}>
+                <PactCards pacts={beat.pacts} tone={t} width={CONTENT_WIDTH} reveal={rev} />
+              </div>
+            );
+          })()}
+      </div>
 
       {/* Fortschritt über den GANZEN Spot. Zeigt dem Daumen, dass gleich Schluss
           ist — der stärkste Hebel gegen Wegwischen in der Mitte. */}
@@ -190,7 +258,12 @@ async function renderSpot(spot: Spot): Promise<{ frames: number; sec: number }> 
     const beatFrames = Math.round(beat.sec * FPS);
     for (let i = 0; i < beatFrames; i++) {
       const res = new ImageResponse(
-        <Frame beat={beat} tSec={i / FPS} progress={(elapsed + i / FPS) / totalSec} />,
+        <Frame
+          beat={beat}
+          tSec={i / FPS}
+          beatSec={beat.sec}
+          progress={(elapsed + i / FPS) / totalSec}
+        />,
         { ...VERTICAL, fonts: FONTS }
       );
       writeFileSync(
