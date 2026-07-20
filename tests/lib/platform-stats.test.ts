@@ -430,6 +430,30 @@ describe("platform-stats", () => {
     expect(missing).toBeNull();
   });
 
+  it("getVereinDetail includes pendingRequests for the club", async () => {
+    const requester = await seedUser("detail-pend");
+    const clubA = await seedClub("detail-pend");
+
+    await createRequest({
+      userId: requester,
+      clubId: clubA,
+      requestedRole: "viewer",
+      requestedTeamId: null,
+      message: "Bitte um Zugriff"
+    });
+
+    const [club] = await db
+      .select({ slug: clubs.slug })
+      .from(clubs)
+      .where((await import("drizzle-orm")).eq(clubs.id, clubA))
+      .limit(1);
+    const detail = await getVereinDetail(club.slug);
+
+    expect(detail?.pendingRequests.length).toBe(1);
+    expect(detail?.pendingRequests[0].requestedRole).toBe("viewer");
+    expect(detail?.pendingRequests[0].message).toBe("Bitte um Zugriff");
+  });
+
   it("getUserDetail aggregates sponsor / pledge / membership info", async () => {
     const userA = await seedUser("ud");
     const clubA = await seedClub("ud");

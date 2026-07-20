@@ -38,6 +38,10 @@ import {
   PLAN_ORDER,
   getMonthlyEquivalent
 } from "@/lib/stripe/pricing";
+import {
+  listPendingRequestsForClub,
+  type PendingRequestRow
+} from "@/lib/db/queries/membership-requests";
 
 /**
  * Platform-Admin Statistics.
@@ -504,6 +508,7 @@ export interface VereinDetail {
     sponsorDisplayName: string;
     teamName: string;
   }>;
+  pendingRequests: PendingRequestRow[];
 }
 
 export async function getVereinDetail(slug: string): Promise<VereinDetail | null> {
@@ -563,6 +568,8 @@ export async function getVereinDetail(slug: string): Promise<VereinDetail | null
     .orderBy(desc(charges.createdAt))
     .limit(20);
 
+  const pendingRequests = await listPendingRequestsForClub(club.id);
+
   return {
     club: {
       id: club.id,
@@ -590,7 +597,8 @@ export async function getVereinDetail(slug: string): Promise<VereinDetail | null
       : null,
     members,
     teams: teamRows,
-    recentCharges
+    recentCharges,
+    pendingRequests
   };
 }
 
