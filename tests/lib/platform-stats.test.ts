@@ -22,6 +22,7 @@ import {
   getVereinDetail,
   getUserDetail
 } from "@/lib/db/queries/platform-stats";
+import { createRequest } from "@/lib/db/queries/membership-requests";
 import { resetTestDb } from "../setup/db";
 
 async function seedUser(suffix: string): Promise<string> {
@@ -344,6 +345,32 @@ describe("platform-stats", () => {
     expect(row.teamCount).toBe(2);
     expect(row.memberCount).toBe(1);
     expect(row.sponsorCount).toBe(1);
+  });
+
+  it("listVereineForAdmin returns pendingRequestCount per club", async () => {
+    const requester = await seedUser("pend");
+    const clubWithRequest = await seedClub("pending-req");
+    await createRequest({
+      userId: requester,
+      clubId: clubWithRequest,
+      requestedRole: "trainer",
+      requestedTeamId: null,
+      message: null
+    });
+    await seedClub("clean-club");
+
+    const withPending = await listVereineForAdmin({
+      pagination: { page: 1, pageSize: 10 },
+      filter: { search: "pending-req" }
+    });
+    expect(withPending.rows.length).toBe(1);
+    expect(withPending.rows[0].pendingRequestCount).toBe(1);
+
+    const withoutPending = await listVereineForAdmin({
+      pagination: { page: 1, pageSize: 10 },
+      filter: { search: "clean-club" }
+    });
+    expect(withoutPending.rows[0].pendingRequestCount).toBe(0);
   });
 
   it("listUsersForAdmin filters by hasSponsor", async () => {

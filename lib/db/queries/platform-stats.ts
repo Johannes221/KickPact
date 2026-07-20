@@ -331,6 +331,7 @@ export interface AdminVereinRow {
   teamCount: number;
   memberCount: number;
   sponsorCount: number;
+  pendingRequestCount: number;
   topPlan: string | null;
 }
 
@@ -404,6 +405,10 @@ export async function listVereineForAdmin(
       INNER JOIN teams t ON t.id = pl.team_id
       WHERE t.club_id = "clubs"."id"
     )`.as("sponsor_count"),
+    pendingRequestCount: sql<number>`(
+      SELECT COUNT(*)::int FROM club_membership_requests r
+      WHERE r.club_id = "clubs"."id" AND r.status = 'pending'
+    )`.as("pending_request_count"),
     topPlan: sql<string>`(
       SELECT tl.plan::text FROM team_licenses tl
       WHERE tl.subscription_club_id = "clubs"."id"
