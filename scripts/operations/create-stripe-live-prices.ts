@@ -28,16 +28,17 @@ import {
   type BillingCycle
 } from "../../lib/stripe/pricing";
 
-const key = process.env.STRIPE_SECRET_KEY;
+const dryRun = process.argv.includes("--dry-run");
+
+const key = process.env.STRIPE_SECRET_KEY ?? (dryRun ? "sk_dry_run" : "");
 if (!key) {
   console.error("STRIPE_SECRET_KEY fehlt. Aufruf:");
   console.error(
     "  STRIPE_SECRET_KEY=sk_live_... npx tsx scripts/operations/create-stripe-live-prices.ts"
   );
+  console.error("  (oder ohne Key mit --dry-run fuer eine reine Vorschau)");
   process.exit(1);
 }
-
-const dryRun = process.argv.includes("--dry-run");
 
 if (!key.startsWith("sk_live_") && !dryRun) {
   console.error(
@@ -48,6 +49,16 @@ if (!key.startsWith("sk_live_") && !dryRun) {
 }
 
 const stripe = new Stripe(key, { apiVersion: "2025-02-24.acacia" });
+
+const WEBHOOK_URL = "https://kickpact.com/api/stripe/webhook";
+const WEBHOOK_EVENTS: Stripe.WebhookEndpointCreateParams.EnabledEvent[] = [
+  "customer.subscription.created",
+  "customer.subscription.updated",
+  "customer.subscription.deleted",
+  "customer.subscription.trial_will_end",
+  "invoice.paid",
+  "invoice.payment_failed"
+];
 
 /** Stabiler Schluessel pro Plan+Cycle — Anker fuer die Idempotenz. */
 function metaKey(plan: PlanKey, cycle: BillingCycle) {
@@ -97,6 +108,14 @@ async function main() {
       const mk = metaKey(plan, cycle);
       const productName = `KickPact ${PLANS[plan].label}`;
 
+      if (dryRun) {
+        console.log(
+          `  ${productName} · ${def.display} / ${recurringFor(cycle).interval} -> ${envName(plan, cycle)}`
+        );
+        results.push(envName(plan, cycle));
+        continue;
+      }
+
       let product = await findProduct(mk);
       if (!product) {
         if (dryRun) {
@@ -111,13 +130,6 @@ async function main() {
         }
       } else {
         console.log(`  vorhanden: Produkt ${productName} (${product.id})`);
-      }
-
-      if (dryRun) {
-        console.log(
-          `  [neu] Preis ${def.display} / ${recurringFor(cycle).interval} -> ${envName(plan, cycle)}\n`
-        );
-        continue;
       }
 
       const existing = product ? await findPrice(product.id, def.amountCents, cycle) : null;
@@ -141,13 +153,46 @@ async function main() {
     }
   }
 
-  if (dryRun) return;
+  if (dryRun) {
+    console.log(
+      "\n[dry-run] Wuerde ausserdem einen Webhook auf " +
+        `${WEBHOOK_URL} anlegen (6 Events).`
+    );
+    return;
+  }
 
-  console.log("\n=== Diese 6 Zeilen in die Coolify-Env von kickpact-prod ===\n");
+  // --- Webhook-Endpoint ---
+  // Idempotent ueber die URL: existiert schon einer auf diese URL, nutzen wir ihn.
+  // ACHTUNG: das Signing-Secret (whsec_) gibt Stripe NUR bei der Erstanlage zurueck,
+  // nie beim Auflisten. Existiert der Endpoint bereits, muss das Secret im Stripe-
+  // Dashboard (Webhook -> "Signing secret" -> Reveal) geholt werden.
+  let webhookSecret: string | null = null;
+  const existingHooks = await stripe.webhookEndpoints.list({ limit: 100 });
+  const already = existingHooks.data.find((h) => h.url === WEBHOOK_URL);
+  if (already) {
+    console.log(`  vorhanden: Webhook ${already.id} -> ${WEBHOOK_URL}`);
+    console.log(
+      "  (Secret nicht erneut abrufbar — im Dashboard unter 'Signing secret' holen.)"
+    );
+  } else {
+    const hook = await stripe.webhookEndpoints.create({
+      url: WEBHOOK_URL,
+      enabled_events: WEBHOOK_EVENTS,
+      description: "KickPact Prod — Abo-/Rechnungs-Sync"
+    });
+    webhookSecret = hook.secret ?? null;
+    console.log(`  angelegt: Webhook ${hook.id} -> ${WEBHOOK_URL}`);
+  }
+
+  console.log("\n=== In die Coolify-Env von kickpact-prod ===\n");
   for (const line of results) console.log(line);
-  console.log(
-    "\nDanach fehlen dort nur noch STRIPE_SECRET_KEY und STRIPE_WEBHOOK_SECRET."
-  );
+  if (webhookSecret) console.log(`STRIPE_WEBHOOK_SECRET=${webhookSecret}`);
+  console.log(`STRIPE_SECRET_KEY=<dein sk_live_ Key>`);
+  if (!webhookSecret) {
+    console.log(
+      "STRIPE_WEBHOOK_SECRET=<im Dashboard beim Webhook 'Signing secret' -> Reveal>"
+    );
+  }
 }
 
 main().catch((err) => {
