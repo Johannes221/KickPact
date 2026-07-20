@@ -3,15 +3,16 @@ import { join } from "node:path";
 import { PLAN, type PlanItem } from "./plan";
 
 /**
- * Baut die „Postmappe": einen durchnummerierten Ordner in Posting-Reihenfolge,
- * jedes Stück komplett beisammen (Datei(en) + Caption + eine INFO, was zu tun
- * ist). Zweck: nicht mehr zwischen Karussell-/Story-/Reel-Ordnern springen,
- * sondern der Reihe nach abarbeiten.
+ * Baut die „Postmappe": ein Ordner zum der Reihe nach Abarbeiten, jedes Stück
+ * komplett beisammen (Datei(en) + Caption + INFO mit dem Was-tun).
  *
  *   npm run social:postmappe
  *
- * Quelle ist plan.ts und die gerenderten Assets unter out/social/. Wer den Plan
- * ändert (Datum, Reihenfolge), ändert plan.ts und lässt das hier neu laufen.
+ * Zwei Bereiche, wie im Plan (plan.ts):
+ *   - 00_HIGHLIGHTS: einmal einrichten und ans Profil pinnen (kein Feed).
+ *   - 01…N: der Feed, in Reihenfolge, ein Angle nach dem anderen.
+ *
+ * Quelle sind plan.ts und die gerenderten Assets unter out/social/.
  */
 
 const SRC = join(process.cwd(), "out/social");
@@ -21,87 +22,85 @@ const WD = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 const weekday = (at: string) => WD[new Date(`${at}T12:00:00`).getDay()];
 const KIND_LABEL = { reel: "REEL", story: "STORY", karussell: "KARUSSELL" } as const;
 
-/** Slides eines Ordners sortiert kopieren, umbenannt zu slide-01.png … */
 function copySlides(fromDir: string, toDir: string): number {
   const pngs = readdirSync(fromDir).filter((f) => f.endsWith(".png")).sort();
-  pngs.forEach((f, i) => {
-    copyFileSync(join(fromDir, f), join(toDir, `slide-${String(i + 1).padStart(2, "0")}.png`));
-  });
+  pngs.forEach((f, i) =>
+    copyFileSync(join(fromDir, f), join(toDir, `slide-${String(i + 1).padStart(2, "0")}.png`))
+  );
   return pngs.length;
 }
 
-/** Die „was tun"-Notiz je Stück — der eigentliche Wegweiser. */
-function info(nr: number, p: PlanItem, count: number): string {
-  const kopf = `NR ${String(nr).padStart(2, "0")} · ${KIND_LABEL[p.kind]} · ${weekday(p.at)} ${p.at}\n${p.title}\n`;
-
+/** Assets + Caption eines Stücks in `dir` legen. Gibt die Bild-/Videozahl. */
+function copyAssets(p: PlanItem, dir: string): number {
   if (p.kind === "reel") {
-    return (
-      kopf +
-      "\nDU POSTEST DIESES VON HAND — mit Musik.\n" +
-      "(Die Automatik kann keine Musik, und bei Reels zählt Musik am meisten.)\n\n" +
-      "So:\n" +
-      "  1. video.mp4 per AirDrop aufs iPhone (in Fotos sichern)\n" +
-      "  2. Instagram → + → Reel → das Video wählen\n" +
-      "  3. Noten-Symbol → Musik aus dem Katalog\n" +
-      "  4. Text aus caption.txt einfügen → Teilen\n"
-    );
+    copyFileSync(join(SRC, "reels", `${p.slug}.mp4`), join(dir, "video.mp4"));
+    copyFileSync(join(SRC, "reels", `${p.slug}.caption.txt`), join(dir, "caption.txt"));
+    return 1;
   }
+  const sub = p.kind === "story" ? "stories" : "karussell";
+  const n = copySlides(join(SRC, sub, p.slug), dir);
+  copyFileSync(join(SRC, sub, p.slug, "caption.txt"), join(dir, "caption.txt"));
+  return n;
+}
 
-  if (p.kind === "story") {
-    return (
-      kopf +
-      `\nLÄUFT AUTOMATISCH — Freigabe über:  npm run social:queue\n\n` +
-      `Enthält ${count} Slides. Die Automatik postet sie nacheinander als Stories.\n` +
-      "Danach in der App zu einem Highlight bündeln und anpinnen (das kann nur die App).\n\n" +
-      "Von Hand (Alternative): die Slides in Reihenfolge als Story posten.\n"
-    );
-  }
-
+function reelInfo(p: PlanItem, nr: string): string {
   return (
-    kopf +
-    `\nLÄUFT AUTOMATISCH — Freigabe über:  npm run social:queue\n\n` +
+    `NR ${nr} · REEL · ${weekday(p.at)} ${p.at} · Angle: ${p.angle}\n${p.title}\n` +
+    "\nDU POSTEST DIESES VON HAND — mit Musik.\n" +
+    "(Die Automatik kann keine Musik, und bei Reels zählt Musik am meisten.)\n\n" +
+    "So:\n" +
+    "  1. video.mp4 per AirDrop aufs iPhone (in Fotos sichern)\n" +
+    "  2. Instagram → + → Reel → das Video wählen\n" +
+    "  3. Noten-Symbol → Musik aus dem Katalog\n" +
+    "  4. Text aus caption.txt einfügen → Teilen\n"
+  );
+}
+
+function karussellInfo(p: PlanItem, nr: string, count: number): string {
+  return (
+    `NR ${nr} · KARUSSELL · ${weekday(p.at)} ${p.at} · Angle: ${p.angle}\n${p.title}\n` +
+    "\nLÄUFT AUTOMATISCH — Freigabe über:  npm run social:queue\n\n" +
     `${count} Bilder in Reihenfolge. Caption steht in caption.txt.\n\n` +
     "Von Hand (Alternative): Instagram → + → Beitrag → alle Bilder in Reihenfolge\n" +
     "auswählen → caption.txt einfügen → Teilen.\n"
   );
 }
 
-function buildItem(nr: number, p: PlanItem): { line: string } {
-  const nn = String(nr).padStart(2, "0");
-  const dir = join(OUT, `${nn}_${p.at}_${KIND_LABEL[p.kind]}_${p.slug}`);
-  mkdirSync(dir, { recursive: true });
+function highlightInfo(p: PlanItem, count: number): string {
+  const last = `slide-${String(count).padStart(2, "0")}`;
+  return `HIGHLIGHT · ${p.title} · Angle: ${p.angle}
 
-  let count = 1;
-  if (p.kind === "reel") {
-    copyFileSync(join(SRC, "reels", `${p.slug}.mp4`), join(dir, "video.mp4"));
-    copyFileSync(join(SRC, "reels", `${p.slug}.caption.txt`), join(dir, "caption.txt"));
-  } else {
-    const sub = p.kind === "story" ? "stories" : "karussell";
-    count = copySlides(join(SRC, sub, p.slug), dir);
-    copyFileSync(join(SRC, sub, p.slug, "caption.txt"), join(dir, "caption.txt"));
-  }
+EINMAL EINRICHTEN UND ANS PROFIL PINNEN — das ist kein Feed-Post, sondern
+dein dauerhaftes Erklär-Regal oben am Profil.
 
-  writeFileSync(join(dir, "INFO.txt"), info(nr, p, count), "utf8");
+Enthält ${count} Slides.
 
-  const modus = p.manual ? "DU (mit Musik)" : "Automatik";
-  const inhalt = p.kind === "reel" ? "1 Video" : `${count} Bilder`;
-  return {
-    line: `  ${nn}  ${p.at} (${weekday(p.at)})  ${KIND_LABEL[p.kind].padEnd(9)} ${modus.padEnd(15)} ${inhalt.padEnd(10)} ${p.title}`
-  };
+So:
+  1. Die Slides der Reihe nach als Story posten (slide-01 … ${last}).
+  2. Danach: dein Profil → Hervorheben → diese Story-Slides auswählen →
+     als Highlight anpinnen, Titel z.B. ${p.title}.
+
+(Anpinnen kann nur die App — deshalb von Hand.)
+`;
 }
 
-function overview(lines: string[]): string {
+function overview(feedLines: string[], hlLines: string[]): string {
   return (
     "KICKPACT — POSTPLAN\n" +
     "===================\n\n" +
-    "Der Reihe nach abarbeiten. Jeder Ordner enthält die Datei(en), die Caption\n" +
-    "und eine INFO.txt mit dem Was-tun.\n\n" +
-    "REELS postest du selbst mit Musik (siehe INFO im jeweiligen Ordner).\n" +
-    "STORIES und KARUSSELLS laufen automatisch über  npm run social:queue\n" +
-    "(du gibst jeden Post frei) — oder du postest sie ebenfalls von Hand.\n\n" +
-    "  NR  DATUM (Tag)    TYP       WER             INHALT     TITEL\n" +
-    "  " + "-".repeat(74) + "\n" +
-    lines.join("\n") +
+    "Zwei Bereiche:\n\n" +
+    "1) 00_HIGHLIGHTS — einmal einrichten und ans Profil PINNEN. Kein Feed, das\n" +
+    "   ist dein dauerhaftes Erklär-Regal. Am besten in Woche 1 erledigen.\n\n" +
+    "2) 01…" + String(feedLines.length).padStart(2, "0") +
+    " — der FEED, der Reihe nach. Ein Angle nach dem anderen, kein\n" +
+    "   Thema doppelt nebeneinander. REELS postest du selbst mit Musik,\n" +
+    "   KARUSSELLS laufen automatisch (npm run social:queue, du gibst frei).\n\n" +
+    "── HIGHLIGHTS (einmal, anpinnen) ──────────────────────────────────────\n" +
+    hlLines.join("\n") +
+    "\n\n── FEED (der Reihe nach) ──────────────────────────────────────────────\n" +
+    "  NR  DATUM (Tag)    TYP        ANGLE            WER            TITEL\n" +
+    "  " + "-".repeat(76) + "\n" +
+    feedLines.join("\n") +
     "\n\nSamstage sind bewusst leer. Plan ändern: scripts/social/plan.ts\n"
   );
 }
@@ -110,11 +109,37 @@ function main() {
   rmSync(OUT, { recursive: true, force: true });
   mkdirSync(OUT, { recursive: true });
 
-  const lines = PLAN.map((p, i) => buildItem(i + 1, p).line);
-  writeFileSync(join(OUT, "00_UEBERSICHT.txt"), overview(lines), "utf8");
+  const feed = PLAN.filter((p) => p.group === "feed");
+  const highlights = PLAN.filter((p) => p.group === "highlight");
 
-  console.log(`  ${PLAN.length} Posts → out/social/postmappe/`);
-  console.log(overview(lines));
+  // Feed, durchnummeriert.
+  const feedLines = feed.map((p, i) => {
+    const nr = String(i + 1).padStart(2, "0");
+    const dir = join(OUT, `${nr}_${p.at}_${KIND_LABEL[p.kind]}_${p.slug}`);
+    mkdirSync(dir, { recursive: true });
+    const count = copyAssets(p, dir);
+    const infoText = p.kind === "reel" ? reelInfo(p, nr) : karussellInfo(p, nr, count);
+    writeFileSync(join(dir, "INFO.txt"), infoText, "utf8");
+    const wer = p.manual ? "DU (mit Musik)" : "Automatik";
+    return `  ${nr}  ${p.at} (${weekday(p.at)})  ${KIND_LABEL[p.kind].padEnd(9)} ${p.angle.padEnd(15)} ${wer.padEnd(14)} ${p.title}`;
+  });
+
+  // Highlights in einem eigenen Bereich.
+  const hlParent = join(OUT, "00_HIGHLIGHTS_einmal-anpinnen");
+  mkdirSync(hlParent, { recursive: true });
+  const hlLines = highlights.map((p, i) => {
+    const letter = String.fromCharCode(65 + i); // A, B, C, …
+    const dir = join(hlParent, `${letter}_${p.slug}`);
+    mkdirSync(dir, { recursive: true });
+    const count = copyAssets(p, dir);
+    writeFileSync(join(dir, "INFO.txt"), highlightInfo(p, count), "utf8");
+    return `  ${letter})  ${p.title.padEnd(24)} (${p.angle})`;
+  });
+
+  writeFileSync(join(OUT, "00_UEBERSICHT.txt"), overview(feedLines, hlLines), "utf8");
+
+  console.log(`  ${feed.length} Feed-Posts + ${highlights.length} Highlights → out/social/postmappe/`);
+  console.log(overview(feedLines, hlLines));
 }
 
 main();

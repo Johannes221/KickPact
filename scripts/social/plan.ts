@@ -1,20 +1,30 @@
 /**
  * Der Redaktionsplan — DIE eine Quelle, wann was rausgeht.
  *
- * Daraus ergeben sich zwei Dinge, damit nichts auseinanderläuft:
- *   - schedule.ts: die AUTOMATISCH geposteten Stücke (alles außer Reels) für den
- *     Freigabe-Runner (queue.ts).
- *   - postmappe.ts: der durchnummerierte Ordner zum Durchklicken (alle Stücke).
+ * Zwei getrennte Spuren, damit nichts doppelt wirkt:
  *
- * Reels laufen `manual: true` — die postest du selbst aus der App mit Musik (die
- * API kann keine Musik, und bei Reels zählt sie). Stories und Karussells laufen
- * automatisch.
+ *   group "highlight" — die vier Story-Highlights. KEIN Feed: einmal posten und
+ *     ans Profil PINNEN (das „Erklär-Regal", immer sichtbar). Sie stehen neben
+ *     dem Feed, nicht drin — Stories tauchen im Raster ohnehin nicht auf.
  *
- * Samstage sind bewusst leer (alle sind am Platz). Reihenfolge: erst der Einstieg
- * „was ist ein Pact", dann abwechselnd erklären / zeigen / Einwände.
+ *   group "feed" — die Beiträge im Raster (Reels + Karussells), in Reihenfolge.
+ *     Regel: nie zweimal dasselbe Thema direkt hintereinander, und jeder Post ein
+ *     anderer ANGLE als der davor. Ein Thema darf als Reel UND als Karussell
+ *     vorkommen — aber mit Wochen Abstand, als Format-Abwechslung, nie am Stück.
+ *
+ * Reels laufen `manual` (du postest sie mit Musik — die API kann keine).
+ * Highlights ebenfalls `manual` (Posten + Anpinnen macht man in einem Rutsch in
+ * der App). Automatisch läuft nur, was im Feed steht und nicht manual ist: die
+ * Karussells.
+ *
+ * Reihenfolge der Angles im Feed:
+ *   Erklärung → Einwand → Features → Kasse → Erklärung → Kasse → Features
+ * Kein Angle doppelt nebeneinander; Wiederholungen liegen ≥8 Tage auseinander und
+ * wechseln das Format (erst Reel, später Karussell).
  */
 
 export interface PlanItem {
+  group: "feed" | "highlight";
   /** Ortszeit-Datum "YYYY-MM-DD". */
   at: string;
   kind: "reel" | "story" | "karussell";
@@ -22,20 +32,25 @@ export interface PlanItem {
   slug: string;
   /** Klartext-Titel für die Übersicht. */
   title: string;
-  /** true = du postest von Hand (mit Musik). Nur Reels. */
+  /** Der Angle — steht in der Übersicht, damit die Abwechslung sichtbar ist. */
+  angle: string;
+  /** true = du postest von Hand. Reels (Musik) und Highlights (Anpinnen). */
   manual?: boolean;
 }
 
 export const PLAN: PlanItem[] = [
-  { at: "2026-07-20", kind: "reel", slug: "01-so-funktioniert-ein-pact", title: "So funktioniert ein Pact", manual: true },
-  { at: "2026-07-21", kind: "story", slug: "wie-funktioniert-das", title: "Highlight: Wie funktioniert das" },
-  { at: "2026-07-22", kind: "karussell", slug: "01-so-funktioniert-ein-pact", title: "So funktioniert ein Pact" },
-  { at: "2026-07-23", kind: "reel", slug: "02-was-ihr-festlegen-koennt", title: "Was ihr festlegen könnt", manual: true },
-  { at: "2026-07-24", kind: "story", slug: "was-kostet-das", title: "Highlight: Was kostet das" },
-  { at: "2026-07-26", kind: "karussell", slug: "03-wer-sponsert-euch", title: "Wer sponsert euch" },
-  { at: "2026-07-27", kind: "karussell", slug: "02-was-ihr-festlegen-koennt", title: "Was ihr festlegen könnt" },
-  { at: "2026-07-28", kind: "reel", slug: "03-wer-sponsert-euch", title: "Wer sponsert euch", manual: true },
-  { at: "2026-07-29", kind: "story", slug: "was-kann-ich-festlegen", title: "Highlight: Was kann ich festlegen" },
-  { at: "2026-07-31", kind: "karussell", slug: "04-vier-fragen", title: "Vier Fragen aus dem Vorstand" },
-  { at: "2026-08-02", kind: "story", slug: "haeufige-fragen", title: "Highlight: Häufige Fragen" }
+  /* ── Feed: ein Angle nach dem anderen ─────────────────────────────────── */
+  { group: "feed", at: "2026-07-20", kind: "reel", slug: "01-so-funktioniert-ein-pact", title: "So funktioniert ein Pact", angle: "Erklärung", manual: true },
+  { group: "feed", at: "2026-07-22", kind: "karussell", slug: "04-vier-fragen", title: "Vier Fragen aus dem Vorstand", angle: "Einwand" },
+  { group: "feed", at: "2026-07-24", kind: "reel", slug: "02-was-ihr-festlegen-koennt", title: "Was ihr festlegen könnt", angle: "Features", manual: true },
+  { group: "feed", at: "2026-07-27", kind: "reel", slug: "03-wer-sponsert-euch", title: "Wer sponsert euch", angle: "Mannschaftskasse", manual: true },
+  { group: "feed", at: "2026-07-29", kind: "karussell", slug: "01-so-funktioniert-ein-pact", title: "So funktioniert ein Pact", angle: "Erklärung" },
+  { group: "feed", at: "2026-07-31", kind: "karussell", slug: "03-wer-sponsert-euch", title: "Wer sponsert euch", angle: "Mannschaftskasse" },
+  { group: "feed", at: "2026-08-03", kind: "karussell", slug: "02-was-ihr-festlegen-koennt", title: "Was ihr festlegen könnt", angle: "Features" },
+
+  /* ── Highlights: einmal einrichten und anpinnen (Woche 1) ──────────────── */
+  { group: "highlight", at: "2026-07-21", kind: "story", slug: "wie-funktioniert-das", title: "Wie funktioniert das", angle: "Erklärung", manual: true },
+  { group: "highlight", at: "2026-07-23", kind: "story", slug: "was-kostet-das", title: "Was kostet das", angle: "Preis", manual: true },
+  { group: "highlight", at: "2026-07-25", kind: "story", slug: "was-kann-ich-festlegen", title: "Was kann ich festlegen", angle: "Features", manual: true },
+  { group: "highlight", at: "2026-07-26", kind: "story", slug: "haeufige-fragen", title: "Häufige Fragen", angle: "Einwand", manual: true }
 ];
