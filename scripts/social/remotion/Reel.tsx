@@ -9,6 +9,7 @@ import {
   useVideoConfig
 } from "remotion";
 import {
+  appShot,
   BODY,
   DISPLAY,
   GREEN,
@@ -35,8 +36,10 @@ import { ConfettiBurst, Equalizer, SoccerBall } from "./elements";
  * keine Behauptung über eine echte Mannschaft.
  */
 
-/** Szenenlängen in Frames (@30 fps). Summe = Composition-Dauer, s. Root.tsx. */
-export const SCENES = [78, 72, 138, 90, 84, 96, 96] as const;
+/** Szenenlängen in Frames (@30 fps). Summe = Composition-Dauer, s. Root.tsx.
+ *  Reihenfolge: Intro, WrappedLike, Stats, Phone, Toptorjäger, Comebacks,
+ *  Celebration, CTA. */
+export const SCENES = [78, 72, 138, 102, 90, 84, 96, 96] as const;
 export const DURATION = SCENES.reduce((a, b) => a + b, 0);
 
 /* ------------------------------- Bausteine -------------------------------- */
@@ -341,6 +344,72 @@ const CTA: React.FC = () => (
   </Scene>
 );
 
+/* ----------------------------- iPhone-Mockup ------------------------------ */
+
+/**
+ * Ein echter App-Screenshot im iPhone-Rahmen — „so sieht deine Saison in der App
+ * aus". Schwebt sanft und kippt minimal in 3D, kommt mit Feder von unten rein.
+ * Der Screenshot zeigt das Demo-Dashboard: Bilanz, Tore, Sponsor-€ — echte Zahlen.
+ */
+const PhoneMockup: React.FC<{ src: string; width: number; delay?: number }> = ({
+  src,
+  width,
+  delay = 0
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const height = width * (2532 / 1170); // iPhone @3x
+  const s = spring({ frame: frame - delay, fps, config: { damping: 16, mass: 0.9 } });
+  const settled = Math.min(1, s);
+  const float = Math.sin((frame / fps) * 1.6) * 8;
+  const tilt = Math.sin((frame / fps) * 1.05) * 1.4;
+  const bezel = width * 0.028;
+  const radius = width * 0.14;
+  return (
+    <div
+      style={{
+        width,
+        height,
+        opacity: settled,
+        transform: `perspective(1600px) translateY(${(1 - s) * 130 + float}px) rotateY(${tilt}deg) scale(${0.9 + 0.1 * settled})`,
+        transformOrigin: "center",
+        background: NAVY,
+        borderRadius: radius,
+        padding: bezel,
+        boxShadow: "0 30px 60px rgba(26,26,46,0.28)",
+        display: "flex"
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          borderRadius: radius - bezel,
+          overflow: "hidden",
+          display: "flex",
+          background: WHITE
+        }}
+      >
+        <Img src={src} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }} />
+      </div>
+    </div>
+  );
+};
+
+const PhoneScene: React.FC = () => (
+  <Scene bg={OFF_WHITE}>
+    <div style={{ marginBottom: 40 }}>
+      <Kicker text="In der App" delay={2} />
+      <Headline size={82} delay={6}>
+        Alles an einem Ort.
+      </Headline>
+    </div>
+    <div style={{ display: "flex", justifyContent: "center" }}>
+      <PhoneMockup src={appShot("dashboard")} width={450} delay={10} />
+    </div>
+  </Scene>
+);
+
 /* ------------------------------ Fortschritt ------------------------------- */
 
 const Progress: React.FC = () => {
@@ -379,15 +448,18 @@ export const Reel: React.FC = () => {
           <Stats />
         </Series.Sequence>
         <Series.Sequence durationInFrames={SCENES[3]}>
-          <Toptorjaeger />
+          <PhoneScene />
         </Series.Sequence>
         <Series.Sequence durationInFrames={SCENES[4]}>
-          <Comebacks />
+          <Toptorjaeger />
         </Series.Sequence>
         <Series.Sequence durationInFrames={SCENES[5]}>
-          <Celebration />
+          <Comebacks />
         </Series.Sequence>
         <Series.Sequence durationInFrames={SCENES[6]}>
+          <Celebration />
+        </Series.Sequence>
+        <Series.Sequence durationInFrames={SCENES[7]}>
           <CTA />
         </Series.Sequence>
       </Series>

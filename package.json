@@ -31,6 +31,7 @@
     "social:video": "tsx scripts/social/video.tsx",
     "social:check": "tsc -p scripts/social/tsconfig.json",
     "social:capture": "dotenv -e .env.local -- tsx scripts/social/capture.ts",
+    "social:capture-wrapped": "dotenv -e .env.local -- tsx scripts/social/capture-wrapped.ts",
     "social:publish": "dotenv -e .env.local -- tsx scripts/social/publish.ts",
     "social:token": "dotenv -e .env.local -- tsx scripts/social/token.ts",
     "social:queue": "dotenv -e .env.local -- tsx scripts/social/queue.ts",

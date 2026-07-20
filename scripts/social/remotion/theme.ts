@@ -46,6 +46,14 @@ export type PhotoName =
 
 export const photoSrc = (name: PhotoName): string => staticFile(`brand/photos/${name}.png`);
 
+/**
+ * Echte App-Screenshots (iPhone 390×844 @3x) aus docs/marketing/screenshots,
+ * gespiegelt nach public/brand/app für staticFile. Aufgenommen mit dem Demo-
+ * Verein (npm run social:capture) — echte Saison-Daten, keine echten Vereine.
+ */
+export type AppShot = "dashboard" | "spiele-uebersicht" | "sponsor-dashboard";
+export const appShot = (name: AppShot): string => staticFile(`brand/app/${name}.png`);
+
 /* -------------------------------- Typografie ------------------------------ */
 
 /**
