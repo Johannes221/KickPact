@@ -70,7 +70,10 @@ export async function adminApproveRequestAction(input: { requestId: string; club
           });
         })
     });
-  } catch {
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith("request not pending")) {
+      return { ok: false as const, error: "Anfrage wurde bereits bearbeitet." };
+    }
     return {
       ok: false as const,
       error: "Benachrichtigung konnte nicht gesendet werden. Bitte erneut versuchen."
@@ -120,7 +123,10 @@ export async function adminRejectRequestAction(input: {
           })
         )
     });
-  } catch {
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith("request not pending")) {
+      return { ok: false as const, error: "Anfrage wurde bereits bearbeitet." };
+    }
     return {
       ok: false as const,
       error: "Benachrichtigung konnte nicht gesendet werden. Bitte erneut versuchen."
