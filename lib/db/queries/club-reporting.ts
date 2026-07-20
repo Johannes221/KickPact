@@ -92,8 +92,16 @@ export interface ClubChargeRow {
  * `saison` gesetzt — angelegt von `lib/inngest/functions/evaluate-season.ts`)
  * haben KEIN `matches.datum`. Ein Fenster direkt auf `matches.datum` warf sie
  * darum still aus Liste UND Summen-Kachel. Fallback deshalb auf
- * confirmed_at → created_at (gleiche Anker-Reihenfolge wie das Cap-Fenster in
- * `chargeCountsTowardCap`).
+ * confirmed_at → created_at.
+ *
+ * ACHTUNG, bewusste Abweichung: `chargeCountsTowardCap` (evaluation.ts) und die
+ * Rechnung (`lib/db/queries/charges.ts`) fenstern über confirmed_at OHNE
+ * `matches.datum`. Dieser Filter hier ist der einzige, der den SPIELTAG als
+ * ersten Anker nimmt — weil der Verein hier nach Spielen sucht, nicht nach
+ * Buchungen. Folge: ein Spiel vom 30.6., das der Sponsor am 2.7. bestätigt,
+ * erscheint hier unter Juni, auf der Juli-Rechnung aber unter Juli. Wer die
+ * Liste zum Rechnungsabgleich nutzt, muss das wissen — deshalb steht es am
+ * Filter-Label.
  */
 const chargeDateAnchor = sql`COALESCE(${matches.datum}, ${charges.confirmedAt}, ${charges.createdAt})`;
 
@@ -111,11 +119,17 @@ function chargeWhere(clubId: string, f: ClubChargeFilter | undefined): SQL {
   if (f?.dateTo) {
     const to = new Date(f.dateTo);
     if (!Number.isNaN(to.getTime())) {
-      // Wenn nur Datum (kein Time) → bis Tagesende.
       if (/^\d{4}-\d{2}-\d{2}$/.test(f.dateTo)) {
-        to.setUTCHours(23, 59, 59, 999);
+        // Reines Datum → halboffen bis zum NÄCHSTEN Tag, nicht `<= 23:59:59.999`.
+        // Postgres speichert Mikrosekunden, `created_at` kommt aus defaultNow():
+        // ein Beitrag um 23:59:59.999742 fiel aus dem inklusiven Ende heraus.
+        // Gleiche Korrektur wie in lib/invoicing/period.ts.
+        to.setUTCHours(0, 0, 0, 0);
+        to.setUTCDate(to.getUTCDate() + 1);
+        parts.push(sql`${chargeDateAnchor} < ${to.toISOString()}::timestamptz`);
+      } else {
+        parts.push(sql`${chargeDateAnchor} <= ${to.toISOString()}::timestamptz`);
       }
-      parts.push(sql`${chargeDateAnchor} <= ${to.toISOString()}::timestamptz`);
     }
   }
   return and(...parts)!;
@@ -135,9 +149,17 @@ function chargeOrder(sort?: ClubChargeSortKey, dir?: SortDir): SQL[] {
     case "teamName":
       return [d(teams.name), desc(charges.createdAt)];
     case "matchDate":
-      return [d(matches.datum), desc(charges.createdAt)];
+      // NULLS LAST: Saison-Beiträge haben kein Spieldatum. Postgres sortiert
+      // bei DESC per Default NULLS FIRST — sie klemmten sonst oben, obwohl der
+      // Nutzer nach Spieldatum sortiert hat.
+      return [sql`${matches.datum} ${dir === "asc" ? sql`asc` : sql`desc`} nulls last`, desc(charges.createdAt)];
     default:
-      return [desc(matches.datum), desc(charges.createdAt)];
+      // Default-Sort über denselben Anker wie der Datumsfilter. Vorher stand
+      // hier `desc(matches.datum)`: Saison-Beiträge (datum NULL) landeten per
+      // NULLS FIRST dauerhaft auf Seite 1 und verdrängten die Spiel-Beiträge
+      // des gefilterten Zeitraums — der Datumsfilter-Fix wurde dadurch wieder
+      // unbrauchbar, und „Summe Seite" zeigte die Saison- statt der Monatssumme.
+      return [sql`${chargeDateAnchor} desc`, desc(charges.createdAt)];
   }
 }
 
@@ -546,9 +568,14 @@ export async function getSponsorOverviewForClub(
       lifetime: sql<number>`COALESCE(SUM(${charges.amountCents}) FILTER (
         WHERE ${charges.status} IN ('confirmed','invoiced')
       ), 0)::int`,
+      // Anker COALESCE(confirmed_at, created_at) wie überall sonst. Nacktes
+      // confirmed_at ließ jede Charge ohne Bestätigungszeitstempel aus dem
+      // Jahr fallen — dieselbe Kachel („dieses Jahr") zeigt der Sponsor sich
+      // selbst über sponsor-dashboard.ts mit dem COALESCE-Anker, die beiden
+      // Ansichten desselben Sponsors wichen also voneinander ab.
       ytd: sql<number>`COALESCE(SUM(${charges.amountCents}) FILTER (
         WHERE ${charges.status} IN ('confirmed','invoiced')
-          AND ${charges.confirmedAt} >= ${yearStart.toISOString()}
+          AND COALESCE(${charges.confirmedAt}, ${charges.createdAt}) >= ${yearStart.toISOString()}
       ), 0)::int`
     })
     .from(charges)

@@ -9,6 +9,7 @@ import { evaluateTriggers, type MatchInput } from "@/lib/crawler/triggers";
 import { saisonStartDate, nextSaisonCode, prevSaisonCode } from "@/lib/utils/saison";
 import { cleanPlayerName, isLikelyPlayerName } from "@/lib/players/person-name";
 import { resolveSeasonAggregate } from "@/lib/recap/season-aggregate";
+import { CAP_COUNTED_STATUSES } from "@/lib/db/queries/evaluation";
 // NUR der Typ (type-only → zur Laufzeit gelöscht): so zieht wrapped.ts NICHT den
 // Chromium-Import aus fussballde.ts mit in seine (DB-/RSC-)Bundles.
 import type { LeagueStandings } from "@/lib/crawler/fussballde";
@@ -100,7 +101,8 @@ export interface WrappedStats {
  * wird auf der Invoice markiert. confirmed+invoiced deckt damit auch alle
  * bezahlten Beiträge ab.
  */
-const COUNTED_CHARGE_STATUSES = ["confirmed", "invoiced"] as const;
+/** Alias auf die EINE Quelle (vorher eine unabhängige Kopie, s. sponsor-reporting.ts). */
+const COUNTED_CHARGE_STATUSES = CAP_COUNTED_STATUSES;
 
 /** Mindestzahl gespielter Vorsaison-Spiele, ab der das Wrapped gezeigt wird. */
 export const WRAPPED_MIN_MATCHES = 3;
