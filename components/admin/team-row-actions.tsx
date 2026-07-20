@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   updateTeamAction,
   manualVerifyTeamAction
@@ -23,6 +24,7 @@ export function TeamRowActions({
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const { confirm, confirmDialog } = useConfirm();
 
   async function run(fn: () => Promise<{ ok: boolean; error?: string }>, msg: string) {
     setPending(true);
@@ -42,8 +44,19 @@ export function TeamRowActions({
     run(() => updateTeamAction({ teamId, name: next.trim() }), "Name gespeichert");
   }
 
+  async function verifyTeam() {
+    const ok = await confirm({
+      title: "Team manuell verifizieren?",
+      description: "Zurückgehaltene Rechnungen werden freigegeben.",
+      confirmLabel: "Verifizieren"
+    });
+    if (!ok) return;
+    run(() => manualVerifyTeamAction({ teamId }), "Team verifiziert");
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-1.5">
+      {confirmDialog}
       <button
         type="button"
         disabled={pending}
@@ -74,11 +87,7 @@ export function TeamRowActions({
         <button
           type="button"
           disabled={pending}
-          onClick={() => {
-            if (!window.confirm("Team manuell verifizieren? Zurückgehaltene Rechnungen werden freigegeben."))
-              return;
-            run(() => manualVerifyTeamAction({ teamId }), "Team verifiziert");
-          }}
+          onClick={verifyTeam}
           className="rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
         >
           Verifizieren
