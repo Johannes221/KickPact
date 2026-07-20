@@ -9,9 +9,8 @@ import {
   rejectRequest,
   getRequestById
 } from "@/lib/db/queries/membership-requests";
-import { getUserEmailById } from "@/lib/db/queries/account";
 import { getClubById } from "@/lib/db/queries/club-admin";
-import { resend, MAIL_FROM } from "@/lib/mail/client";
+import { sendRequesterMail } from "@/lib/mail/access-request-mail";
 import { accessRequestApprovedEmail } from "@/lib/mail/templates/access-request-approved";
 import { accessRequestRejectedEmail } from "@/lib/mail/templates/access-request-rejected";
 
@@ -20,34 +19,6 @@ type ActionResult = { ok: true } | { ok: false; error: string };
 const NO_PERMISSION = "Keine Berechtigung für diese Mannschaft.";
 const MAIL_FAILED =
   "Benachrichtigung konnte nicht gesendet werden. Bitte erneut versuchen.";
-
-type MailContent = { subject: string; html: string; text: string };
-
-/**
- * Schickt dem Antragsteller die Entscheidungs-Mail und wirft bei Provider-
- * Fehler (`resend` liefert `{ error }` statt zu werfen). Als `beforeCommit`
- * an approve/reject übergeben → Status kippt erst nach erfolgreichem Versand,
- * sonst bleibt der Request "pending" und ist wiederholbar. Kein Empfänger →
- * No-op.
- */
-async function sendRequesterMail(
-  requesterUserId: string,
-  buildMail: () => MailContent
-): Promise<void> {
-  const requesterEmail = await getUserEmailById(requesterUserId);
-  if (!requesterEmail) return;
-  const mail = buildMail();
-  const { error } = await resend.emails.send({
-    from: MAIL_FROM,
-    to: requesterEmail,
-    subject: mail.subject,
-    html: mail.html,
-    text: mail.text
-  });
-  if (error) {
-    throw new Error(`access-request mail failed: ${error.message ?? "unknown"}`);
-  }
-}
 
 const approveSchema = z.object({
   requestId: z.string().min(1),
