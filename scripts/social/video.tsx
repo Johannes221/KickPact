@@ -157,58 +157,20 @@ function Frame({ beat, tSec, progress }: { beat: Beat; tSec: number; progress: n
 
 /* --------------------------------- Audio ---------------------------------- */
 
-/**
- * Der Klangteppich: derselbe A-Dur-Pad, den das Saison-Wrapped im Produkt spielt
- * (app/.../wrapped/_components/use-ambient-audio.ts).
+/*
+ * REELS SIND STUMM — bewusst.
  *
- * WARUM SYNTHETISIERT UND KEINE MUSIKDATEI: exakt aus dem Grund, den das Wrapped
- * schon dokumentiert — kein Lizenz- oder Copyright-Risiko, kein fremdes Asset im
- * Repo. Ein zugekaufter Track müsste lizenziert, bezahlt und verwaltet werden;
- * ein „irgendwo runtergeladener" wäre eine Abmahnung mit Anlauf. Das hier gehört
- * uns, klingt in jedem Reel gleich und ist damit nebenbei ein Wiedererkennungs-
- * merkmal.
+ * Kurz gab es hier einen reingebackenen A-Dur-Pad (aus dem Saison-Wrapped). Auf
+ * dem geposteten Reel klang der Dauer-Ton unter einem Fußball-Clip schräg
+ * (Johannes, 2026-07-20). Und der eigentliche Grund wiegt schwerer: echte
+ * Instagram-Musik kann die API nicht (Copyright), und ein per API geposteter Reel
+ * lässt sich nachträglich nicht mehr vertonen.
  *
- * Nachgebaut aus dem Wrapped-Pad: A-Dur über zwei Oktaven (A2, C#3, E3, A3),
- * minimal verstimmt für Breite, Lowpass bei 700 Hz, sanfter Ein- und Ausfader.
- * Eine Vereinfachung gegenüber dem Produkt: dort moduliert ein LFO langsam den
- * Filter-Cutoff, das lässt ffmpeg so nicht zu. Über 20 Sekunden hört man den
- * Unterschied nicht, der Pad steht ohnehin fast still.
- *
- * Das ist ein BETT, kein Song. Es soll unter dem Text liegen und nicht auffallen.
- * Wer auf Instagram einen Track aus dem lizenzierten Katalog drüberlegt,
- * überschreibt es einfach.
+ * Konsequenz: Reels rendern OHNE Ton. Für Reichweite werden sie ohnehin von Hand
+ * gepostet und in der App mit echter Katalog-Musik unterlegt — dafür ist eine
+ * stumme Quelle genau richtig. Die Automatik trägt Stories und Karussells, wo
+ * Musik keine Rolle spielt.
  */
-const PAD_HZ = [109.62, 138.43, 165.0, 220.76];
-const PAD_WEIGHTS = [0.5, 0.3, 0.3, 0.3];
-/**
- * Leise genug, um nicht aufzufallen, laut genug, um da zu sein: gemessen ~-21 dB
- * Spitze, der uebliche Bereich fuer ein Hintergrundbett ohne Sprecher. Mit dem
- * Wert des Wrapped-Pads (0.05 Master) waere es auf dem Handy unhoerbar gewesen —
- * dort liegt der Pad unter einer bedienten Oberflaeche, hier traegt er allein.
- */
-const PAD_GAIN = 0.5;
-const FADE = 1.5;
-
-/**
- * ffmpeg-Argumente fuer den Pad. `videoInputs` = wie viele Eingaenge VOR den
- * Sinus-Toenen liegen; die Filter-Labels muessen daran vorbei zaehlen, sonst
- * mischt ffmpeg die Bildsequenz als Audio (real passiert: [0] war das Video).
- */
-function padArgs(sec: number, videoInputs: number): string[] {
-  const inputs = PAD_HZ.flatMap((hz) => [
-    "-f", "lavfi",
-    "-i", `sine=frequency=${hz}:duration=${sec.toFixed(3)}`
-  ]);
-  const fadeOutStart = Math.max(0, sec - FADE);
-  // normalize=0: amix würde sonst die Summe durch die Eingangszahl teilen und
-  // die Gewichte damit wirkungslos machen.
-  const labels = PAD_HZ.map((_, i) => `[${videoInputs + i}]`).join("");
-  const filter =
-    `${labels}amix=inputs=${PAD_HZ.length}:weights=${PAD_WEIGHTS.join(" ")}:normalize=0,` +
-    `lowpass=f=700,volume=${PAD_GAIN},` +
-    `afade=t=in:st=0:d=${FADE},afade=t=out:st=${fadeOutStart.toFixed(3)}:d=${FADE}[a]`;
-  return [...inputs, "-filter_complex", filter, "-map", "0:v", "-map", "[a]"];
-}
 
 /* --------------------------------- Runner --------------------------------- */
 
@@ -243,21 +205,18 @@ async function renderSpot(spot: Spot): Promise<{ frames: number; sec: number }> 
 
   // yuv420p + High-Profile: ohne das zeigen Instagram und QuickTime das Video
   // schlicht nicht an. faststart zieht den Index nach vorn (Web-Abspielen).
-  // Audio als AAC 128k — der Standard, den jede Plattform annimmt.
+  // -an: kein Ton (s.o.).
   execFileSync(
     "ffmpeg",
     [
       "-y", "-loglevel", "error",
       "-framerate", String(FPS),
       "-i", join(frameDir, "%05d.png"),
-      ...padArgs(sec, 1),
       "-c:v", "libx264",
       "-profile:v", "high",
       "-pix_fmt", "yuv420p",
       "-crf", "18",
-      "-c:a", "aac",
-      "-b:a", "128k",
-      "-shortest",
+      "-an",
       "-movflags", "+faststart",
       join(OUT, `${spot.slug}.mp4`)
     ],
