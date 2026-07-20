@@ -1,4 +1,5 @@
-import React, { useId } from "react";
+import React from "react";
+import { SoccerBall as PhSoccerBall } from "@phosphor-icons/react";
 import { interpolate, random, useCurrentFrame, useVideoConfig } from "remotion";
 import { GREEN, NAVY, WHITE } from "./theme";
 
@@ -12,74 +13,41 @@ import { GREEN, NAVY, WHITE } from "./theme";
 /* ------------------------------- Fußball ---------------------------------- */
 
 /**
- * Ein klassischer Fußball als Vektor: weiße Kugel, Navy-Muster (Kontrast, wie
- * ein echter Ball) — kein grünes Muster, das auf Weiß nur ~2,3:1 hätte. Dreht
- * und rollt über die `rotation`/Position, die der Aufrufer setzt.
+ * Der Fußball: professionelles Muster aus der Phosphor-Icon-Library (MIT) auf
+ * einer schattierten Kugel-Basis. Das handgezeichnete Muster von vorher sah
+ * unecht aus (Johannes) — die Library liefert einen sauber gestalteten Ball.
+ *
+ * Aufbau in drei Schichten, damit er auf HELL wie DUNKEL funktioniert und beim
+ * Rollen echt wirkt:
+ *   1. weiße Kugel mit CSS-Verlauf + Innenschatten (Volumen, festes Licht),
+ *   2. das Phosphor-Muster in Navy, das MITdreht (nur diese Schicht rotiert),
+ *   3. der weiße Ball trägt das Navy-Muster — sichtbar auf jedem Hintergrund.
  */
-/** Punkte eines regelmäßigen Fünfecks als SVG-`points`-String. */
-const pentagon = (cx: number, cy: number, r: number, rotDeg = 0): string =>
-  Array.from({ length: 5 }, (_, i) => {
-    const a = ((-90 + rotDeg + i * 72) * Math.PI) / 180;
-    return `${(cx + r * Math.cos(a)).toFixed(2)},${(cy + r * Math.sin(a)).toFixed(2)}`;
-  }).join(" ");
-
-export const SoccerBall: React.FC<{ size: number; rotation?: number }> = ({ size, rotation = 0 }) => {
-  // Eindeutige Gradient-IDs pro Instanz, sonst greifen mehrere Bälle auf denselben
-  // Verlauf zu (url(#id) trifft den ersten im Dokument).
-  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
-  const sphere = `sph${uid}`;
-  const shade = `shd${uid}`;
-
-  // Zentrales Fünfeck + fünf am Rand, regelmäßig gerechnet, mit Nähten dazwischen.
-  const edge = Array.from({ length: 5 }, (_, i) => {
-    const a = ((-90 + i * 72) * Math.PI) / 180;
-    return {
-      vx: 50 + 18 * Math.cos(a),
-      vy: 50 + 18 * Math.sin(a),
-      cx: 50 + 35 * Math.cos(a),
-      cy: 50 + 35 * Math.sin(a),
-      rot: -90 + i * 72 + 180
-    };
-  });
-
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100">
-      <defs>
-        {/* Kugel-Verlauf: Licht oben-links → real wirkendes Volumen. */}
-        <radialGradient id={sphere} cx="38%" cy="32%" r="72%">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="62%" stopColor="#eef1ef" />
-          <stop offset="100%" stopColor="#ccd5d1" />
-        </radialGradient>
-        {/* Schatten unten-rechts, als eigene Schicht ÜBER dem Muster — bleibt
-            fix, während das Muster rotiert (Licht dreht nicht mit). */}
-        <radialGradient id={shade} cx="66%" cy="72%" r="80%">
-          <stop offset="52%" stopColor={NAVY} stopOpacity="0" />
-          <stop offset="100%" stopColor={NAVY} stopOpacity="0.3" />
-        </radialGradient>
-      </defs>
-
-      <circle cx="50" cy="50" r="47" fill={`url(#${sphere})`} stroke="#c4ccc8" strokeWidth="1" />
-
-      {/* Nur das PANEL-Muster rotiert. */}
-      <g transform={`rotate(${rotation} 50 50)`}>
-        <g stroke={NAVY} strokeWidth="2.6" strokeLinecap="round">
-          {edge.map((e, i) => (
-            <line key={i} x1={e.vx} y1={e.vy} x2={e.cx} y2={e.cy} />
-          ))}
-        </g>
-        <polygon points={pentagon(50, 50, 18)} fill={NAVY} />
-        <g fill={NAVY}>
-          {edge.map((e, i) => (
-            <polygon key={i} points={pentagon(e.cx, e.cy, 8.5, e.rot)} />
-          ))}
-        </g>
-      </g>
-
-      <circle cx="50" cy="50" r="47" fill={`url(#${shade})`} />
-    </svg>
-  );
-};
+export const SoccerBall: React.FC<{ size: number; rotation?: number }> = ({ size, rotation = 0 }) => (
+  <div style={{ position: "relative", width: size, height: size }}>
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        borderRadius: "50%",
+        background: "radial-gradient(circle at 38% 32%, #ffffff 0%, #eef1ef 58%, #ccd5d1 100%)",
+        boxShadow: "inset -9px -11px 20px rgba(26,26,46,0.22), 0 2px 6px rgba(26,26,46,0.14)"
+      }}
+    />
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transform: `rotate(${rotation}deg)`
+      }}
+    >
+      <PhSoccerBall size={size} weight="duotone" color={NAVY} />
+    </div>
+  </div>
+);
 
 /* ------------------------------- Konfetti --------------------------------- */
 
