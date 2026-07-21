@@ -54,6 +54,15 @@ export const photoSrc = (name: PhotoName): string => staticFile(`brand/photos/${
 export type AppShot = "dashboard" | "spiele-uebersicht" | "sponsor-dashboard";
 export const appShot = (name: AppShot): string => staticFile(`brand/app/${name}.png`);
 
+/**
+ * Die ECHTEN Saison-Wrapped-Karten (9:16), die ein Verein aus der App teilt —
+ * geholt von der `wrapped-image`-Route des Demo-Vereins (scripts/social/
+ * capture-wrapped.ts). Im Reel zeigen wir sie im iPhone-Rahmen: „so sieht dein
+ * Rückblick echt aus". Echte Demo-Daten, kein realer Verein.
+ */
+export type WrappedSlide = "intro" | "bilanz" | "tabellenplatz" | "tore" | "torschuetze" | "zusammenfassung";
+export const wrappedShot = (slide: WrappedSlide): string => staticFile(`brand/wrapped/${slide}.png`);
+
 /* -------------------------------- Typografie ------------------------------ */
 
 /**

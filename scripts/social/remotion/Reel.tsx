@@ -9,7 +9,14 @@ import {
   useVideoConfig
 } from "remotion";
 import {
-  appShot,
+  ArrowsClockwise,
+  Medal,
+  Shield,
+  SoccerBall as PhSoccerBall,
+  Target,
+  Trophy
+} from "@phosphor-icons/react";
+import {
   BODY,
   DISPLAY,
   GREEN,
@@ -21,25 +28,26 @@ import {
   OFF_WHITE,
   photoSrc,
   typo,
-  WHITE
+  WHITE,
+  wrappedShot
 } from "./theme";
 import { ConfettiBurst, Equalizer, SoccerBall } from "./elements";
 
 /**
  * Das Saison-Rückblick-Reel (Wrapped) — der virale Aufhänger, jetzt mit echter
- * Motion: ein Ball rollt und springt, Zahlen zählen hoch, beim Jubel regnet
- * Konfetti. Handgebaute Szenen (kein generisches Beat-Mapping) — der Hero-Reel
- * darf die beste Choreografie kriegen; die Verallgemeinerung auf die übrigen
- * Spots kommt, wenn der Look sitzt.
+ * Motion UND vollen Slides: ein dichtes Recap-Raster (mehrere Widgets auf einem
+ * Bild statt einer Zahl pro Karte), ein Toptorjäger-Leaderboard und ein iPhone,
+ * das durch die ECHTEN Wrapped-Karten der App wischt. Der Hero-Reel kriegt die
+ * beste Choreografie; die Verallgemeinerung auf die übrigen Spots kommt danach.
  *
  * Alle Zahlen sind bewusst Beispiel/Vorschau („so sieht euer Rückblick aus"),
  * keine Behauptung über eine echte Mannschaft.
  */
 
 /** Szenenlängen in Frames (@30 fps). Summe = Composition-Dauer, s. Root.tsx.
- *  Reihenfolge: Intro, WrappedLike, Stats, Phone, Toptorjäger, Comebacks,
+ *  Reihenfolge: Intro, WrappedTitle, RecapGrid, PhoneSwipe, Leaderboard,
  *  Celebration, CTA. */
-export const SCENES = [78, 72, 138, 102, 90, 84, 96, 96] as const;
+export const SCENES = [72, 60, 156, 168, 108, 90, 96] as const;
 export const DURATION = SCENES.reduce((a, b) => a + b, 0);
 
 /* ------------------------------- Bausteine -------------------------------- */
@@ -130,64 +138,168 @@ const Logo: React.FC<{ src: string; width?: number; delay?: number }> = ({
   </div>
 );
 
-/** Karte mit grünem Balken, Label und hochzählendem Wert. */
-const StatCard: React.FC<{
-  label: string;
-  target: number;
-  suffix?: string;
-  index: number;
-}> = ({ label, target, suffix = "", index }) => {
+/** Hochzähler: 0 → target, weich ausgebremst (kein Nachwippen bei Zahlen). */
+function useCount(target: number, delay: number): number {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const delay = 12 + index * 9;
+  const c = spring({ frame: frame - delay, fps, config: { damping: 200 } });
+  return Math.round(target * c);
+}
+
+type PhIcon = React.ComponentType<{ size?: number; weight?: "duotone" | "fill" | "bold"; color?: string }>;
+
+/* --------------------------- Recap-Raster --------------------------------- */
+
+/**
+ * EIN Widget im Raster: Icon, hochzählende Zahl, Label — kompakt, damit sechs
+ * davon auf eine Slide passen (das war der Wunsch: voller, ein kompletter Recap,
+ * nicht eine Zahl pro Bild). Kommt gestaffelt mit Feder rein.
+ */
+const StatTile: React.FC<{
+  icon: PhIcon;
+  target: number;
+  suffix?: string;
+  label: string;
+  index: number;
+}> = ({ icon: Icon, target, suffix = "", label, index }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const delay = 14 + index * 7;
+  const pop = spring({ frame: frame - delay, fps, config: { damping: 13, mass: 0.7 } });
+  const value = useCount(target, delay);
+  return (
+    <div
+      style={{
+        background: OFF_WHITE,
+        borderRadius: 34,
+        padding: "40px 36px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        opacity: Math.min(1, pop),
+        transform: `scale(${0.86 + 0.14 * Math.min(1, pop)})`,
+        transformOrigin: "center"
+      }}
+    >
+      <Icon size={66} weight="duotone" color={GREEN_DARK} />
+      <div style={{ fontFamily: DISPLAY, fontSize: 96, fontWeight: 900, color: NAVY, lineHeight: 1 }}>
+        {value}
+        {suffix}
+      </div>
+      <div style={{ fontSize: 34, fontWeight: 700, color: "rgba(26,26,46,0.6)" }}>{label}</div>
+    </div>
+  );
+};
+
+const RECAP_TILES: { icon: PhIcon; target: number; suffix?: string; label: string }[] = [
+  { icon: PhSoccerBall, target: 34, label: "Tore" },
+  { icon: Trophy, target: 9, label: "Siege" },
+  { icon: Shield, target: 6, label: "Zu null" },
+  { icon: ArrowsClockwise, target: 4, label: "Comebacks" },
+  { icon: Target, target: 87, suffix: "%", label: "Quote" },
+  { icon: Medal, target: 2, suffix: ".", label: "Endplatz" }
+];
+
+const RecapGrid: React.FC = () => (
+  <Scene bg={WHITE}>
+    <Kicker text="Eure Saison in Zahlen" delay={2} />
+    <Headline size={78} delay={6}>
+      Alles automatisch gezählt.
+    </Headline>
+    <div
+      style={{
+        marginTop: 52,
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: 24
+      }}
+    >
+      {RECAP_TILES.map((t, i) => (
+        <StatTile key={t.label} {...t} index={i} />
+      ))}
+    </div>
+  </Scene>
+);
+
+/* ------------------------------ Leaderboard ------------------------------- */
+
+/** Eine Zeile im Torschützen-Ranking: Rang-Medaille, Name, Balken, Torzahl. */
+const RankRow: React.FC<{ rank: number; name: string; goals: number; max: number; index: number }> = ({
+  rank,
+  name,
+  goals,
+  max,
+  index
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const delay = 16 + index * 12;
   const slide = spring({ frame: frame - delay, fps, config: { damping: 15, mass: 0.7 } });
-  const count = spring({ frame: frame - delay, fps, config: { damping: 200 } });
-  const value = Math.round(target * count);
+  const grow = spring({ frame: frame - delay - 4, fps, config: { damping: 200 } });
+  const count = useCount(goals, delay);
+  const medal = ["#F5B301", "#B8C0C8", "#CD7F32"][rank - 1] ?? OFF_WHITE;
   return (
     <div
       style={{
         display: "flex",
         alignItems: "center",
-        width: "100%",
-        background: OFF_WHITE,
-        borderRadius: 26,
-        padding: "28px 36px",
-        marginBottom: 20,
+        gap: 26,
+        marginBottom: 22,
         opacity: Math.min(1, Math.max(0, slide)),
-        transform: `translateX(${(1 - slide) * 90}px)`
+        transform: `translateX(${(1 - slide) * 80}px)`
       }}
     >
-      <div style={{ width: 12, height: 100, background: GREEN, borderRadius: 6, marginRight: 30 }} />
-      <div style={{ flex: 1, fontSize: 46, fontWeight: 700, color: NAVY }}>{label}</div>
-      <div style={{ fontFamily: DISPLAY, fontSize: 68, fontWeight: 900, color: GREEN_DARK }}>
-        {value}
-        {suffix}
+      <div
+        style={{
+          width: 74,
+          height: 74,
+          borderRadius: "50%",
+          background: medal,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          fontFamily: DISPLAY,
+          fontSize: 40,
+          fontWeight: 900,
+          color: NAVY
+        }}
+      >
+        {rank}
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 44, fontWeight: 700, color: NAVY, marginBottom: 12 }}>{name}</div>
+        <div style={{ height: 18, borderRadius: 9, background: OFF_WHITE, overflow: "hidden" }}>
+          <div
+            style={{
+              width: `${(goals / max) * 100 * Math.min(1, grow)}%`,
+              height: "100%",
+              borderRadius: 9,
+              background: GREEN
+            }}
+          />
+        </div>
+      </div>
+      <div style={{ fontFamily: DISPLAY, fontSize: 66, fontWeight: 900, color: GREEN_DARK, width: 120, textAlign: "right" }}>
+        {count}
       </div>
     </div>
   );
 };
 
-/** Ein großer Block, der mit Overshoot aufpoppt UND hochzählt. */
-const BigStat: React.FC<{ target: number; suffix?: string; label: string; delay: number }> = ({
-  target,
-  suffix = "",
-  label,
-  delay
-}) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const pop = spring({ frame: frame - delay, fps, config: { damping: 12, mass: 0.8 } });
-  const count = spring({ frame: frame - delay, fps, config: { damping: 200 } });
-  return (
-    <div style={{ transform: `scale(${pop})`, opacity: Math.min(1, pop), textAlign: "center" }}>
-      <div style={{ fontFamily: DISPLAY, fontSize: 180, fontWeight: 900, color: GREEN, lineHeight: 1 }}>
-        {Math.round(target * count)}
-        {suffix}
-      </div>
-      <div style={{ fontSize: 40, fontWeight: 700, color: WHITE, marginTop: 10 }}>{label}</div>
+const Leaderboard: React.FC = () => (
+  <Scene bg={WHITE}>
+    <Kicker text="Eure Toptorjäger" delay={2} />
+    <Headline size={80} delay={6}>
+      Steht am Ende fest.
+    </Headline>
+    <div style={{ marginTop: 60 }}>
+      <RankRow rank={1} name="Jonas Brandt" goals={14} max={14} index={0} />
+      <RankRow rank={2} name="Leon Weber" goals={9} max={14} index={1} />
+      <RankRow rank={3} name="Tim Schuster" goals={6} max={14} index={2} />
     </div>
-  );
-};
+  </Scene>
+);
 
 /* --------------------------------- Szenen --------------------------------- */
 
@@ -252,51 +364,15 @@ const Intro: React.FC = () => (
   </Scene>
 );
 
-const WrappedLike: React.FC = () => (
+const WrappedTitle: React.FC = () => (
   <Scene bg={WHITE}>
     <div style={{ marginBottom: 56 }}>
       <Equalizer bars={5} width={26} maxHeight={150} />
     </div>
     <Kicker text="Wie Spotify Wrapped" delay={4} />
-    <Headline size={104} delay={10}>
+    <Headline size={100} delay={10}>
       Nur für eure Mannschaft.
     </Headline>
-  </Scene>
-);
-
-const Stats: React.FC = () => (
-  <Scene bg={WHITE}>
-    <Kicker text="Eure Saison in Zahlen" delay={2} />
-    <Headline size={80} delay={6}>
-      Alles automatisch gezählt.
-    </Headline>
-    <div style={{ marginTop: 46 }}>
-      <StatCard label="Tore" target={34} index={0} />
-      <StatCard label="Siege" target={12} index={1} />
-      <StatCard label="Endplatz" target={3} suffix="." index={2} />
-    </div>
-  </Scene>
-);
-
-const Toptorjaeger: React.FC = () => (
-  <Scene bg={WHITE}>
-    <RollingBall y={250} size={150} from="right" />
-    <div style={{ marginTop: 300 }}>
-      <Kicker text="Euer Toptorjäger" delay={2} />
-      <Headline size={88} delay={8}>
-        Steht am Ende fest.
-      </Headline>
-      <Body delay={16}>Wer wie oft getroffen hat — die App weiß es.</Body>
-    </div>
-  </Scene>
-);
-
-const Comebacks: React.FC = () => (
-  <Scene bg={NAVY}>
-    <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center" }}>
-      <BigStat target={5} label="Comebacks" delay={6} />
-      <BigStat target={8} suffix="×" label="zu null" delay={16} />
-    </div>
   </Scene>
 );
 
@@ -347,20 +423,19 @@ const CTA: React.FC = () => (
 /* ----------------------------- iPhone-Mockup ------------------------------ */
 
 /**
- * Ein echter App-Screenshot im iPhone-Rahmen — „so sieht deine Saison in der App
- * aus". Schwebt sanft und kippt minimal in 3D, kommt mit Feder von unten rein.
- * Der Screenshot zeigt das Demo-Dashboard: Bilanz, Tore, Sponsor-€ — echte Zahlen.
+ * Ein iPhone-Rahmen, der durch die ECHTEN Wrapped-Karten der App WISCHT — drei
+ * Screens hintereinander, jeder gleitet rein und wieder raus. So sieht man, dass
+ * der Rückblick ein fertiges App-Feature ist (mit Wappen, echten Zahlen), nicht
+ * nur Motion-Grafik. Der Rahmen schwebt sanft und kippt minimal in 3D.
  */
-const PhoneMockup: React.FC<{ src: string; width: number; delay?: number }> = ({
-  src,
+const PhoneFrame: React.FC<{ width: number; children: React.ReactNode; settled: number; frame: number; fps: number }> = ({
   width,
-  delay = 0
+  children,
+  settled,
+  frame,
+  fps
 }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
   const height = width * (2532 / 1170); // iPhone @3x
-  const s = spring({ frame: frame - delay, fps, config: { damping: 16, mass: 0.9 } });
-  const settled = Math.min(1, s);
   const float = Math.sin((frame / fps) * 1.6) * 8;
   const tilt = Math.sin((frame / fps) * 1.05) * 1.4;
   const bezel = width * 0.028;
@@ -371,7 +446,7 @@ const PhoneMockup: React.FC<{ src: string; width: number; delay?: number }> = ({
         width,
         height,
         opacity: settled,
-        transform: `perspective(1600px) translateY(${(1 - s) * 130 + float}px) rotateY(${tilt}deg) scale(${0.9 + 0.1 * settled})`,
+        transform: `perspective(1600px) translateY(${(1 - settled) * 130 + float}px) rotateY(${tilt}deg) scale(${0.9 + 0.1 * settled})`,
         transformOrigin: "center",
         background: NAVY,
         borderRadius: radius,
@@ -386,29 +461,69 @@ const PhoneMockup: React.FC<{ src: string; width: number; delay?: number }> = ({
           height: "100%",
           borderRadius: radius - bezel,
           overflow: "hidden",
-          display: "flex",
+          position: "relative",
           background: WHITE
         }}
       >
-        <Img src={src} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }} />
+        {children}
       </div>
     </div>
   );
 };
 
-const PhoneScene: React.FC = () => (
-  <Scene bg={OFF_WHITE}>
-    <div style={{ marginBottom: 40 }}>
-      <Kicker text="In der App" delay={2} />
-      <Headline size={82} delay={6}>
-        Alles an einem Ort.
-      </Headline>
-    </div>
-    <div style={{ display: "flex", justifyContent: "center" }}>
-      <PhoneMockup src={appShot("dashboard")} width={450} delay={10} />
-    </div>
-  </Scene>
-);
+/** Die drei stärksten Recap-Karten, die im Telefon durchgewischt werden. */
+const SWIPE_SLIDES = ["bilanz", "tore", "torschuetze"] as const;
+
+const PhoneSwipe: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const enter = spring({ frame: frame - 8, fps, config: { damping: 16, mass: 0.9 } });
+  const settled = Math.min(1, enter);
+  const width = 500;
+  // Ein Filmstreifen (3 Karten nebeneinander), der in ganzen Screen-Schritten
+  // nach links geschoben wird — so ist IMMER genau eine Karte mittig, der
+  // Wechsel ist ein sauberer Push (kein Doppelbild).
+  const offset = interpolate(frame, [64, 78, 122, 136], [0, -1, -1, -2], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  return (
+    <Scene bg={OFF_WHITE}>
+      <div style={{ marginBottom: 36 }}>
+        <Kicker text="So sieht's in der App aus" delay={2} />
+        <Headline size={76} delay={6}>
+          Dein Rückblick zum Teilen.
+        </Headline>
+      </div>
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <PhoneFrame width={width} settled={settled} frame={frame} fps={fps}>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              transform: `translateX(${offset * 100}%)`
+            }}
+          >
+            {SWIPE_SLIDES.map((slide) => (
+              <Img
+                key={slide}
+                src={wrappedShot(slide)}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  flexShrink: 0,
+                  objectFit: "contain",
+                  background: WHITE
+                }}
+              />
+            ))}
+          </div>
+        </PhoneFrame>
+      </div>
+    </Scene>
+  );
+};
 
 /* ------------------------------ Fortschritt ------------------------------- */
 
@@ -442,24 +557,21 @@ export const Reel: React.FC = () => {
           <Intro />
         </Series.Sequence>
         <Series.Sequence durationInFrames={SCENES[1]}>
-          <WrappedLike />
+          <WrappedTitle />
         </Series.Sequence>
         <Series.Sequence durationInFrames={SCENES[2]}>
-          <Stats />
+          <RecapGrid />
         </Series.Sequence>
         <Series.Sequence durationInFrames={SCENES[3]}>
-          <PhoneScene />
+          <PhoneSwipe />
         </Series.Sequence>
         <Series.Sequence durationInFrames={SCENES[4]}>
-          <Toptorjaeger />
+          <Leaderboard />
         </Series.Sequence>
         <Series.Sequence durationInFrames={SCENES[5]}>
-          <Comebacks />
-        </Series.Sequence>
-        <Series.Sequence durationInFrames={SCENES[6]}>
           <Celebration />
         </Series.Sequence>
-        <Series.Sequence durationInFrames={SCENES[7]}>
+        <Series.Sequence durationInFrames={SCENES[6]}>
           <CTA />
         </Series.Sequence>
       </Series>
