@@ -71,22 +71,39 @@ export async function submitSupportTicket(input: z.infer<typeof schema>) {
   // Operator-Benachrichtigung (best-effort, blockiert die Antwort nicht).
   try {
     const adminEmails = await listPlatformAdminEmails();
-    if (adminEmails.length > 0) {
-      const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
-      const mail = supportNewTicketEmail({
-        category: parsed.data.category,
-        subject: parsed.data.subject,
-        fromName: parsed.data.name,
-        fromEmail: parsed.data.email,
-        adminUrl: `${base}/admin/support/${ticketId}`
-      });
-      await resend.emails.send({
-        from: MAIL_FROM,
-        to: adminEmails,
-        subject: mail.subject,
-        html: mail.html,
-        text: mail.text
-      });
+    // Fallback gegen stillen Verlust: ist (noch) kein Operator per
+    // is_platform_admin geflaggt, geht die Benachrichtigung an die dokumentierte
+    // Support-Adresse. Sonst würde das Ticket zwar angelegt, aber niemand
+    // informiert (Form meldet trotzdem „ok"). Override via SUPPORT_INBOX_EMAIL.
+    const supportInbox = process.env.SUPPORT_INBOX_EMAIL ?? "support@kickpact.com";
+    // Support-Postfach IMMER benachrichtigen, plus jeden geflaggten Operator.
+    // So kommt die Meldung auch dann an, wenn (noch) kein is_platform_admin
+    // gesetzt ist oder der Versand an eine Operator-Adresse scheitert.
+    const recipients = Array.from(new Set([...adminEmails, supportInbox]));
+    if (adminEmails.length === 0) {
+      console.warn(
+        `[support] kein Platform-Admin geflaggt — Benachrichtigung nur an ${supportInbox}`
+      );
+    }
+    const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+    const mail = supportNewTicketEmail({
+      category: parsed.data.category,
+      subject: parsed.data.subject,
+      fromName: parsed.data.name,
+      fromEmail: parsed.data.email,
+      adminUrl: `${base}/admin/support/${ticketId}`
+    });
+    // resend.emails.send wirft bei API-Fehlern NICHT, sondern liefert { error }.
+    // Ohne diese Prüfung scheitert der Versand komplett still (kein Log).
+    const { error } = await resend.emails.send({
+      from: MAIL_FROM,
+      to: recipients,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text
+    });
+    if (error) {
+      console.error("[support] operator notification resend error", error);
     }
   } catch (err) {
     console.error("[support] operator notification failed", err);
