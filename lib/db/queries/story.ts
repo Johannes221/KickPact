@@ -4,7 +4,7 @@ import { matches, matchEvents } from "@/lib/db/schema/matches";
 import { teams, clubs } from "@/lib/db/schema/clubs";
 import { resolveTeamSide, matchHasNameCollision } from "@/lib/crawler/team-side";
 import { berlinDayStart } from "@/lib/story/story-content";
-import { getClubCrestLogoUrl } from "@/lib/db/queries/club-crests";
+import { getClubCrestLogoUrl, getClubCrestLogoUrlByName } from "@/lib/db/queries/club-crests";
 
 /**
  * Query-Layer für die Instagram-Story-Vorlagen (Aufgabe #44).
@@ -237,16 +237,23 @@ export async function getMatchScorers(
  * mehrere Zeilen. Deshalb die NEUESTE mit gesetztem Wappen nehmen.
  */
 export async function getOpponentLogoUrl(
-  fussballdeTeamId: string | null
+  fussballdeTeamId: string | null,
+  opponentName?: string | null
 ): Promise<string | null> {
-  if (!fussballdeTeamId) return null;
-  const [row] = await db
-    .select({ logoUrl: teams.logoUrl })
-    .from(teams)
-    .where(and(eq(teams.fussballdeTeamId, fussballdeTeamId), isNotNull(teams.logoUrl)))
-    .orderBy(desc(teams.saison))
-    .limit(1);
-  if (row?.logoUrl) return row.logoUrl;
-  // Keine KickPact-Mannschaft mit eigenem Wappen → gescraptes fussball.de-Wappen.
-  return getClubCrestLogoUrl(fussballdeTeamId);
+  if (fussballdeTeamId) {
+    const [row] = await db
+      .select({ logoUrl: teams.logoUrl })
+      .from(teams)
+      .where(and(eq(teams.fussballdeTeamId, fussballdeTeamId), isNotNull(teams.logoUrl)))
+      .orderBy(desc(teams.saison))
+      .limit(1);
+    if (row?.logoUrl) return row.logoUrl;
+    // Gescraptes fussball.de-Wappen per team-id.
+    const byId = await getClubCrestLogoUrl(fussballdeTeamId);
+    if (byId) return byId;
+  }
+  // Fallback per NAME: externe Gegner haben am Match-Record keine team-id
+  // (matches speichern nur den Namen) — sonst zeigte die Vorschau trotz
+  // gecachtem Wappen das Kürzel.
+  return getClubCrestLogoUrlByName(opponentName ?? null);
 }

@@ -8,6 +8,7 @@ import {
   getOpponentLogoUrl,
   type StoryScorer
 } from "@/lib/db/queries/story";
+import { getClubCrestLogoUrl } from "@/lib/db/queries/club-crests";
 import { formatDate } from "@/lib/utils/date-format";
 import { currentSaisonCode } from "@/lib/utils/saison";
 import { hasResult } from "@/lib/matches/display-state";
@@ -174,6 +175,10 @@ export async function buildStoryModel(
 
   const ownIsHeim = match.ownSide === "heim";
   const opponentFussballdeTeamId = ownIsHeim ? match.gastTeamId : match.heimTeamId;
+  // Gegner-Name als Fallback für die Wappen-Auflösung: matches speichern für
+  // externe Gegner keine team-id (nur den Namen), also muss das Wappen notfalls
+  // per Name aus dem club_crests-Cache kommen.
+  const opponentName = ownIsHeim ? match.gastName : match.heimName;
 
   // Tabelle der Saison DES SPIELS, nicht der aktuellen Team-Saison: `matches`
   // hat keine saison-Spalte, die Zuordnung läuft übers Datum. Sonst klebte an
@@ -183,8 +188,12 @@ export async function buildStoryModel(
   // Prewarm-Job füllt für den nächsten Aufruf nach.
   const matchSaison = currentSaisonCode(match.datum);
   const [ownLogo, opponentLogo, standings] = await Promise.all([
-    logoDataUrl(team.logoUrl),
-    getOpponentLogoUrl(opponentFussballdeTeamId).then(logoDataUrl),
+    // Eigenes Wappen: hochgeladenes Logo — sonst (Fallback) das gescrapte
+    // Wappen per eigener team-id, falls kein Logo hochgeladen/lesbar ist.
+    logoDataUrl(team.logoUrl).then(
+      async (l) => l ?? logoDataUrl(await getClubCrestLogoUrl(team.fussballdeTeamId))
+    ),
+    getOpponentLogoUrl(opponentFussballdeTeamId, opponentName).then(logoDataUrl),
     getCachedStandingsForRequest(teamId, matchSaison).catch(() => null)
   ]);
 

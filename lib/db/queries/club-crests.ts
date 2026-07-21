@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { clubCrests, teams } from "@/lib/db/schema";
 import type { CrestRef } from "@/lib/crawler/fussballde";
@@ -12,6 +12,25 @@ export async function getClubCrestLogoUrl(
     .select({ logoUrl: clubCrests.logoUrl })
     .from(clubCrests)
     .where(eq(clubCrests.fussballdeTeamId, fussballdeTeamId))
+    .limit(1);
+  return row?.logoUrl ?? null;
+}
+
+/**
+ * Wie {@link getClubCrestLogoUrl}, aber per NAME. Nötig, weil `matches`
+ * externe Gegner nur mit NAMEN speichert, nicht mit deren fussballde_team_id
+ * (heim_team_id/gast_team_id sind nur gesetzt, wenn der Gegner selbst ein
+ * KickPact-Team ist). Ohne diesen Fallback fand die Story-Vorschau das gecachte
+ * Gegner-Wappen nie und zeigte das Kürzel. Beide Namen laufen durch
+ * normalizeTeamName → case-insensitiver, whitespace-normalisierter Vergleich.
+ */
+export async function getClubCrestLogoUrlByName(name: string | null): Promise<string | null> {
+  const norm = (name ?? "").replace(/ /g, " ").replace(/\s+/g, " ").trim();
+  if (!norm) return null;
+  const [row] = await db
+    .select({ logoUrl: clubCrests.logoUrl })
+    .from(clubCrests)
+    .where(and(sql`lower(${clubCrests.name}) = lower(${norm})`, isNotNull(clubCrests.logoUrl)))
     .limit(1);
   return row?.logoUrl ?? null;
 }
