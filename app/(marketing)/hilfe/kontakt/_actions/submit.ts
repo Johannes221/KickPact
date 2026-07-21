@@ -2,10 +2,9 @@
 
 import { z } from "zod";
 import { getServerSession } from "@/lib/auth/session";
-import { listPlatformAdminEmails } from "@/lib/auth/admin";
 import { createSupportTicket, countRecentTicketsByEmail } from "@/lib/db/queries/support";
-import { resend, MAIL_FROM } from "@/lib/mail/client";
 import { supportNewTicketEmail } from "@/lib/mail/templates/support-new-ticket";
+import { notifyOperators } from "@/lib/mail/notify-operators";
 import { rateLimit, getClientIp } from "@/lib/utils/rate-limit";
 
 const schema = z.object({
@@ -70,24 +69,15 @@ export async function submitSupportTicket(input: z.infer<typeof schema>) {
 
   // Operator-Benachrichtigung (best-effort, blockiert die Antwort nicht).
   try {
-    const adminEmails = await listPlatformAdminEmails();
-    if (adminEmails.length > 0) {
-      const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
-      const mail = supportNewTicketEmail({
-        category: parsed.data.category,
-        subject: parsed.data.subject,
-        fromName: parsed.data.name,
-        fromEmail: parsed.data.email,
-        adminUrl: `${base}/admin/support/${ticketId}`
-      });
-      await resend.emails.send({
-        from: MAIL_FROM,
-        to: adminEmails,
-        subject: mail.subject,
-        html: mail.html,
-        text: mail.text
-      });
-    }
+    const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+    const mail = supportNewTicketEmail({
+      category: parsed.data.category,
+      subject: parsed.data.subject,
+      fromName: parsed.data.name,
+      fromEmail: parsed.data.email,
+      adminUrl: `${base}/admin/support/${ticketId}`
+    });
+    await notifyOperators(mail);
   } catch (err) {
     console.error("[support] operator notification failed", err);
   }
