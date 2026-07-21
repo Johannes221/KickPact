@@ -152,10 +152,12 @@ export default async function TeamDetailPage({
       href: `${teamBase}/einstellungen#zahlungsdaten`
     },
     {
-      done: !!team.logoUrl,
-      label: "Logo hinzufügen",
-      hint: "Euer Wappen erscheint auf dem öffentlichen Profil.",
-      href: `${teamBase}/profil#logo`
+      // „Über uns" befüllt = Kurzbeschreibung ODER Ziele gesetzt (beide werden
+      // von saveTeamPublicProfile geschrieben, getFullTeamInClub liefert sie).
+      done: !!(team.publicTagline || team.publicGoals),
+      label: "Mannschaftsinfos hinzufügen",
+      hint: "Über-uns, Ziele & Beschreibung fürs öffentliche Profil.",
+      href: `${teamBase}/profil#ueber-uns`
     },
     {
       done: hasSponsor,

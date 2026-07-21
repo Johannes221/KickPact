@@ -16,6 +16,7 @@ import { sponsorLabelSql } from "./sponsor-label";
 import { CAP_COUNTED_STATUSES } from "./evaluation";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { resolveTeamSide } from "@/lib/crawler/team-side";
+import { isUpcomingMatch } from "@/lib/matches/display-state";
 import { saisonStartDate, nextSaisonCode } from "@/lib/utils/saison";
 
 export async function getMatchById(matchId: string, clubSlug: string) {
@@ -45,7 +46,14 @@ export async function listMatchEvents(matchId: string) {
 }
 
 /**
- * Liefert ALLE Spiele einer Mannschaft (vergangen + kommend), neueste zuerst.
+ * Liefert ALLE Spiele einer Mannschaft (vergangen + kommend), NÄCHSTES zuerst.
+ *
+ * Sortierung: erst die anstehenden Spiele aufsteigend (das zeitlich nächste
+ * ganz oben), danach die gespielten/vergangenen absteigend (jüngstes zuerst).
+ * „Anstehend" = `isUpcomingMatch` (kein Ergebnis, Anstoß noch vor `now`, nicht
+ * abgesagt/verlegt) — dieselbe Definition wie in der Detailansicht. In einer
+ * reinen Vergangenheits-Saison (Archiv-Blick) ist die Anstehend-Gruppe leer und
+ * es bleibt bei „jüngstes zuerst".
  *
  * Kein Status-Filter — geplante (`scheduled`) Spiele kommen genauso zurück wie
  * gespielte (`finished`). Die UI im `app/`-Layer baut darauf ihre Filter (Heim/
@@ -105,10 +113,24 @@ export async function listMatchesForTeam(
   // falsche Seite kippen — ein zentraler Punkt statt pro Seite neu geraten.
   const names = t ? [t.name, t.clubName] : [];
   const ownFussballdeTeamId = t?.fussballdeTeamId ?? null;
-  return rows.map((m) => ({
+  const enriched = rows.map((m) => ({
     ...m,
     ownSide: resolveTeamSide(m, ownFussballdeTeamId, names)
   }));
+
+  // Nächstes-zuerst: anstehende Spiele aufsteigend (das zeitlich nächste oben),
+  // dann die vergangenen absteigend (jüngstes zuerst). ≤ limit Zeilen, deshalb
+  // in JS statt per SQL-CASE — der DB-Sort oben (desc datum) hält nur die
+  // limit-Auswahl deterministisch (die neuesten N Spiele).
+  const now = new Date();
+  enriched.sort((a, b) => {
+    const aUp = isUpcomingMatch(a, now);
+    const bUp = isUpcomingMatch(b, now);
+    if (aUp !== bUp) return aUp ? -1 : 1;
+    const diff = a.datum.getTime() - b.datum.getTime();
+    return aUp ? diff : -diff;
+  });
+  return enriched;
 }
 
 /**

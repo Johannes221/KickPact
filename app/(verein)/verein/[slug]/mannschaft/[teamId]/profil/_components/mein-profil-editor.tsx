@@ -685,7 +685,7 @@ export function MeinProfilEditor({
         </div>
 
         {/* 6. Über uns */}
-        <div className="space-y-5 rounded-2xl bg-white shadow-ios-card p-4">
+        <div id="ueber-uns" className="scroll-mt-24 space-y-5 rounded-2xl bg-white shadow-ios-card p-4">
           <h3 className="text-[15px] font-semibold text-brand-night-navy">
             Über uns
           </h3>

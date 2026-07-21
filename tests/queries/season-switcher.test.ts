@@ -52,6 +52,18 @@ async function seedMatch(teamId: string, datum: string) {
   });
 }
 
+/** Anstehendes (noch nicht gespieltes) Spiel: kein Ergebnis, status scheduled. */
+async function seedUpcomingMatch(teamId: string, datum: string) {
+  await db.insert(matches).values({
+    teamId,
+    fussballdeSpielId: createId(),
+    datum: new Date(`${datum}T12:00:00Z`),
+    heimName: "SV Switchertest",
+    gastName: "Gegner",
+    status: "scheduled"
+  });
+}
+
 describe("listMatchesForTeam — saison-Option (W1.3)", () => {
   beforeEach(async () => {
     await resetTestDb();
@@ -90,6 +102,45 @@ describe("listMatchesForTeam — saison-Option (W1.3)", () => {
     const rows = await listMatchesForTeam(teamId, 20, { saison: "kaputt" });
     expect(rows.map((r) => r.datum.toISOString().slice(0, 10))).toEqual([
       "2026-08-01"
+    ]);
+  });
+});
+
+describe("listMatchesForTeam — Sortierung nächstes-zuerst", () => {
+  beforeEach(async () => {
+    await resetTestDb();
+  });
+
+  // Fake-Timer scheiden aus (blockieren den pg-Treiber) → Termine relativ zur
+  // echten Uhr seeden. team.saison auf eine lange vergangene Saison, damit das
+  // Display-Gate (>= Saisonstart, keine Obergrenze) alle vier Spiele durchlässt.
+  const DAY = 86_400_000;
+  const iso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+  function seasonCodeFor(d: Date): string {
+    const y = d.getUTCFullYear();
+    const startYear = d.getUTCMonth() + 1 >= 7 ? y : y - 1;
+    const pad = (n: number) => String(n % 100).padStart(2, "0");
+    return `${pad(startYear)}${pad(startYear + 1)}`;
+  }
+
+  it("anstehende aufsteigend (nächstes oben), dann vergangene absteigend", async () => {
+    const now = Date.now();
+    const teamId = await seedTeam(seasonCodeFor(new Date(now - 180 * DAY)));
+    const past2 = iso(now - 20 * DAY);
+    const past1 = iso(now - 5 * DAY);
+    const next1 = iso(now + 5 * DAY);
+    const next2 = iso(now + 20 * DAY);
+    await seedMatch(teamId, past2); // vergangen (finished)
+    await seedMatch(teamId, past1); // vergangen (finished)
+    await seedUpcomingMatch(teamId, next2); // anstehend
+    await seedUpcomingMatch(teamId, next1); // anstehend (näher)
+
+    const rows = await listMatchesForTeam(teamId, 20);
+    expect(rows.map((r) => r.datum.toISOString().slice(0, 10))).toEqual([
+      next1, // nächstes anstehendes zuerst
+      next2,
+      past1, // dann vergangene, jüngstes zuerst
+      past2
     ]);
   });
 });
