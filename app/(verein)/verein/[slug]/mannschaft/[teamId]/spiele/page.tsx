@@ -277,17 +277,13 @@ export default async function SpielePage({
                     size={26}
                     shape="squircle"
                   />
-                  {/* Status ganz rechts, dezent — verdrängt die Namen nicht. */}
-                  {m.isScheduled ? (
-                    <span className="shrink-0 text-[0.6rem] font-semibold uppercase tracking-wide text-brand-night-navy/45">
-                      Kommend
+                  {/* Kein „Kommend"-Label mehr — nur der €-Betrag bei ausgelösten
+                      Beiträgen (gespielte Spiele). Dass ein Spiel ansteht, zeigt
+                      schon das fehlende Ergebnis. */}
+                  {!m.isScheduled && m.chargesSum > 0 && (
+                    <span className="shrink-0 text-xs font-semibold text-accent-dark tabular-nums">
+                      {eur(m.chargesSum)}
                     </span>
-                  ) : (
-                    m.chargesSum > 0 && (
-                      <span className="shrink-0 text-xs font-semibold text-accent-dark tabular-nums">
-                        {eur(m.chargesSum)}
-                      </span>
-                    )
                   )}
                 </>
               );
