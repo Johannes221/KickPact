@@ -3,7 +3,6 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireUserOrThrow, SESSION_EXPIRED_MESSAGE } from "@/lib/auth/session";
-import { listPlatformAdminEmails } from "@/lib/auth/admin";
 import {
   createSupportTicket,
   countRecentTicketsByEmail,
@@ -12,6 +11,7 @@ import {
   ticketReference
 } from "@/lib/db/queries/support";
 import { resend, MAIL_FROM } from "@/lib/mail/client";
+import { notifyOperators } from "@/lib/mail/notify-operators";
 import { supportNewTicketEmail } from "@/lib/mail/templates/support-new-ticket";
 import { supportTicketReceivedEmail } from "@/lib/mail/templates/support-ticket-received";
 import { supportCustomerRepliedEmail } from "@/lib/mail/templates/support-customer-replied";
@@ -106,25 +106,16 @@ export async function submitProblemReport(input: ReportInput) {
 
   // Operator-Benachrichtigung (best-effort).
   try {
-    const adminEmails = await listPlatformAdminEmails();
-    if (adminEmails.length > 0) {
-      const mail = supportNewTicketEmail({
-        category: d.category,
-        subject: d.subject,
-        fromName: d.name,
-        fromEmail: d.email,
-        adminUrl: `${baseUrl()}/admin/support/${ticketId}`,
-        priority: d.priority ?? "normal",
-        context: ctx
-      });
-      await resend.emails.send({
-        from: MAIL_FROM,
-        to: adminEmails,
-        subject: mail.subject,
-        html: mail.html,
-        text: mail.text
-      });
-    }
+    const mail = supportNewTicketEmail({
+      category: d.category,
+      subject: d.subject,
+      fromName: d.name,
+      fromEmail: d.email,
+      adminUrl: `${baseUrl()}/admin/support/${ticketId}`,
+      priority: d.priority ?? "normal",
+      context: ctx
+    });
+    await notifyOperators(mail);
   } catch (err) {
     console.error("[support] operator notification failed", err);
   }
@@ -186,23 +177,14 @@ export async function addCustomerReplyAction(input: { ticketId: string; body: st
 
   // Operatoren benachrichtigen (best-effort).
   try {
-    const adminEmails = await listPlatformAdminEmails();
-    if (adminEmails.length > 0) {
-      const mail = supportCustomerRepliedEmail({
-        reference: ticketReference(ticket.id),
-        subject: ticket.subject,
-        fromName: ticket.name,
-        excerpt: parsed.data.body,
-        adminUrl: `${baseUrl()}/admin/support/${ticket.id}`
-      });
-      await resend.emails.send({
-        from: MAIL_FROM,
-        to: adminEmails,
-        subject: mail.subject,
-        html: mail.html,
-        text: mail.text
-      });
-    }
+    const mail = supportCustomerRepliedEmail({
+      reference: ticketReference(ticket.id),
+      subject: ticket.subject,
+      fromName: ticket.name,
+      excerpt: parsed.data.body,
+      adminUrl: `${baseUrl()}/admin/support/${ticket.id}`
+    });
+    await notifyOperators(mail);
   } catch (err) {
     console.error("[support] customer-reply notification failed", err);
   }
