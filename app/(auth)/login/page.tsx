@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { MagicLinkForm } from "@/components/auth/magic-link-form";
+import { PasswordLoginForm } from "@/components/auth/password-login-form";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAppleConfigured } from "@/lib/auth/apple-client-secret";
@@ -90,6 +91,11 @@ export default async function LoginPage({
               <MagicLinkForm mode="login" />
             </Suspense>
           )}
+
+          {/* Passwort-Login (aufklappbar, zurückgenommen): Operator-Accounts und
+              der App-Store-Review-Zugang. In der nativen App der einzige
+              E-Mail-basierte Weg (Magic-Link läuft dort über Safari). */}
+          <PasswordLoginForm />
 
           {/* Registrieren — eigener, klar sichtbarer Weg statt versteckter Link. */}
           <Link
