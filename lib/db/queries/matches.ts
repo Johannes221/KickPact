@@ -118,17 +118,17 @@ export async function listMatchesForTeam(
     ownSide: resolveTeamSide(m, ownFussballdeTeamId, names)
   }));
 
-  // Nächstes-zuerst: anstehende Spiele aufsteigend (das zeitlich nächste oben),
-  // dann die vergangenen absteigend (jüngstes zuerst). ≤ limit Zeilen, deshalb
-  // in JS statt per SQL-CASE — der DB-Sort oben (desc datum) hält nur die
-  // limit-Auswahl deterministisch (die neuesten N Spiele).
+  // Reihenfolge (Johannes): GESPIELTE Spiele zuerst, absteigend (das zuletzt
+  // gespielte oben), DANN die anstehenden, aufsteigend (das zeitlich nächste
+  // zuerst). ≤ limit Zeilen, deshalb in JS statt per SQL-CASE — der DB-Sort oben
+  // (desc datum) hält nur die limit-Auswahl deterministisch (die neuesten N).
   const now = new Date();
   enriched.sort((a, b) => {
     const aUp = isUpcomingMatch(a, now);
     const bUp = isUpcomingMatch(b, now);
-    if (aUp !== bUp) return aUp ? -1 : 1;
+    if (aUp !== bUp) return aUp ? 1 : -1; // gespielte oben, anstehende darunter
     const diff = a.datum.getTime() - b.datum.getTime();
-    return aUp ? diff : -diff;
+    return aUp ? diff : -diff; // anstehende aufsteigend, gespielte absteigend
   });
   return enriched;
 }

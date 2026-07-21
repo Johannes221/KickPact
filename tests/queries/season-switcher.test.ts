@@ -123,7 +123,7 @@ describe("listMatchesForTeam — Sortierung nächstes-zuerst", () => {
     return `${pad(startYear)}${pad(startYear + 1)}`;
   }
 
-  it("anstehende aufsteigend (nächstes oben), dann vergangene absteigend", async () => {
+  it("gespielte zuerst absteigend (zuletzt oben), dann anstehende aufsteigend (nächstes zuerst)", async () => {
     const now = Date.now();
     const teamId = await seedTeam(seasonCodeFor(new Date(now - 180 * DAY)));
     const past2 = iso(now - 20 * DAY);
@@ -137,10 +137,10 @@ describe("listMatchesForTeam — Sortierung nächstes-zuerst", () => {
 
     const rows = await listMatchesForTeam(teamId, 20);
     expect(rows.map((r) => r.datum.toISOString().slice(0, 10))).toEqual([
-      next1, // nächstes anstehendes zuerst
-      next2,
-      past1, // dann vergangene, jüngstes zuerst
-      past2
+      past1, // gespielte zuerst, jüngstes oben
+      past2,
+      next1, // dann anstehende, nächstes zuerst
+      next2
     ]);
   });
 });
