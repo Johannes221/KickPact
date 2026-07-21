@@ -97,8 +97,18 @@ export function photo(name: PhotoName): string {
  * die vorher im Repo-Root lagen, zeigten echte Vereinsnamen, ein Cookie-Banner,
  * einen leeren Ladezustand und Trigger-Typen, die es seit Juli nicht mehr gibt.
  * Aufnehmen ist ein Befehl — nach jedem Redesign sind sie in zwei Minuten neu.
+ *
+ * `spiel-vorschau` / `spiel-rueckblick` sind KEINE App-Screenshots, sondern die
+ * echten 1080×1920-Story-Motive, die die App aus der story-image-Route liefert
+ * (Vorschau eines kommenden, Rückblick eines gespielten Demo-Spiels, „presented
+ * by KickPact" schon drauf). Auch die holt `npm run social:capture` von Staging.
  */
-export type ScreenshotName = "dashboard" | "spiele-uebersicht" | "sponsor-dashboard";
+export type ScreenshotName =
+  | "dashboard"
+  | "spiele-uebersicht"
+  | "sponsor-dashboard"
+  | "spiel-vorschau"
+  | "spiel-rueckblick";
 
 const shotCache = new Map<string, string>();
 

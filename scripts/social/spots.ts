@@ -1,5 +1,5 @@
 import type { Pact, Tone } from "./decks";
-import type { PhotoName } from "./brand";
+import type { PhotoName, ScreenshotName } from "./brand";
 
 /**
  * Die Reel-Inhalte. Getrennt von video.tsx, weil dort `main()` auf Modulebene
@@ -15,6 +15,12 @@ export interface Beat {
   tone?: Tone;
   photo?: PhotoName;
   pacts?: Pact[];
+  /**
+   * Echtes App-Motiv im Handy-Rahmen — dieselbe Idee wie `Slide.screenshot` im
+   * Karussell (decks.ts), damit ein Reel das reale Produkt zeigen kann statt es
+   * nur zu behaupten. Schließt `pacts` aus (kein Platz).
+   */
+  screenshot?: ScreenshotName;
   logo?: boolean;
   /** Standzeit in Sekunden, inklusive Einblendung. */
   sec: number;
@@ -242,6 +248,42 @@ export const SPOTS: Spot[] = [
         body: "30 Tage kostenlos. kickpact.com",
         logo: true,
         sec: 3.2
+      }
+    ]
+  },
+
+  {
+    // Feature #44: „Spiel ankündigen". Die Motive in Beat 3 und 5 sind die
+    // ECHTEN Story-Bilder aus der story-image-Route (via social:capture geholt),
+    // nicht nachgebaut — der ganze Pitch ist „die App macht die fertige Story".
+    slug: "06-spiel-ankuendigen",
+    angle: "Features",
+    caption:
+      "Spieltag, und keiner baut die Grafik? Macht die App: ein Tipp, fertige " +
+      "Instagram-Story fürs nächste Spiel. Ab 4,99 € pro Mannschaft im Monat.\n" +
+      "kickpact.com",
+    beats: [
+      { headline: "Spieltag. Und wieder bastelt keiner die Grafik.", logo: true, sec: 2.8 },
+      { headline: "Ein Tipp in der App.", sec: 2.2 },
+      {
+        kicker: "Vorschau",
+        headline: "Fertige Story. Gegner, Datum, Heim oder Auswärts, Tabellenplatz. Automatisch drauf.",
+        screenshot: "spiel-vorschau",
+        sec: 4.4
+      },
+      { headline: "Teilen. Auf Instagram, in zehn Sekunden.", sec: 2.6 },
+      {
+        kicker: "Rückblick",
+        headline: "Nach dem Abpfiff dasselbe: Ergebnis und Torschützen.",
+        screenshot: "spiel-rueckblick",
+        sec: 3.8
+      },
+      { headline: "Unten steht immer: presented by KickPact.", sec: 2.8 },
+      {
+        kicker: "Mannschaftslizenz",
+        headline: "Ab 4,99 € pro Mannschaft im Monat.",
+        logo: true,
+        sec: 3.0
       }
     ]
   }

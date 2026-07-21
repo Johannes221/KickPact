@@ -186,5 +186,37 @@ export const STORIES: Deck[] = [
       },
       CTA
     ]
+  },
+
+  {
+    // Feature #44 als Highlight zum Anpinnen. Slide 2 und 3 zeigen die echten
+    // Story-Motive (story-image-Route) im Handy-Rahmen. Eigener Abbinder statt
+    // des geteilten CTA, weil die Kernbotschaft hier „presented by KickPact" ist.
+    slug: "spieltag-story",
+    angle: "Features",
+    format: "story",
+    caption: "Highlight: So kündigt ihr euer Spiel an",
+    slides: [
+      {
+        kicker: "Spieltag-Story",
+        headline: "So kündigt ihr euer Spiel an.",
+        logo: true
+      },
+      {
+        headline: "Ein Tipp. Fertige Story.",
+        body: "Gegner, Datum, Tabellenplatz automatisch drauf.",
+        screenshot: "spiel-vorschau"
+      },
+      {
+        headline: "Nach dem Abpfiff: Ergebnis und Torschützen.",
+        screenshot: "spiel-rueckblick"
+      },
+      {
+        kicker: "Loslegen",
+        headline: "Presented by KickPact.",
+        body: "Ab 4,99 € pro Mannschaft und Monat.",
+        logo: true
+      }
+    ]
   }
 ];

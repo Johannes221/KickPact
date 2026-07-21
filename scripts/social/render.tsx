@@ -160,7 +160,19 @@ function SlideCard({
 
       {slide.screenshot && (
         <div style={{ display: "flex", justifyContent: "center", marginTop: 40 }}>
-          <PhoneFrame src={screenshot(slide.screenshot)} width={430} height={930} />
+          {/*
+            930 für die hochkanten App-Screenshots (dashboard/spiele/sponsor) —
+            die sind höher als 9:16, der große Rahmen zeigt oben am meisten.
+            Die 9:16-Story-Motive (#44) dagegen in einen 9:16-Rahmen (≈760):
+            sonst kollidiert bei dreizeiliger Headline + Body der Text mit dem zu
+            hohen Rahmen (Satori zentriert, der Slide läuft über). Die Motive
+            haben immer einen Body — daran hängt die Fallunterscheidung.
+          */}
+          <PhoneFrame
+            src={screenshot(slide.screenshot)}
+            width={430}
+            height={slide.body ? 760 : 930}
+          />
         </div>
       )}
 

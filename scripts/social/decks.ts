@@ -411,5 +411,45 @@ export const DECKS: Deck[] = [
         logo: true
       }
     ]
+  },
+
+  {
+    // Feature #44: „Spiel ankündigen". Slide 2 und 3 zeigen die ECHTEN
+    // Story-Motive aus der App (story-image-Route, via social:capture geholt) im
+    // Handy-Rahmen — kein nachgebautes Mockup.
+    slug: "06-spiel-ankuendigen",
+    angle: "Features",
+    caption:
+      "Spieltag, und wieder soll irgendwer schnell eine Grafik basteln? Macht die " +
+      "App. Ein Tipp, fertige Instagram-Story fürs nächste Spiel: Gegner, Datum, " +
+      "Heim oder Auswärts, Tabellenplatz. Teilen, fertig. Nach dem Abpfiff dasselbe " +
+      "mit Ergebnis und Torschützen. Ab 4,99 € pro Mannschaft im Monat.\n\n" +
+      "kickpact.com",
+    slides: [
+      {
+        kicker: "Spieltag",
+        headline: "Euer nächstes Spiel, angekündigt in zehn Sekunden.",
+        body: "Ein Tipp in der App, fertige Story, teilen. Ohne dass jemand eine Grafik baut."
+      },
+      {
+        headline: "Gegner, Datum, Heim oder Auswärts. Automatisch drauf.",
+        body: "Und der Tabellenplatz, wenn er schon feststeht.",
+        screenshot: "spiel-vorschau"
+      },
+      {
+        headline: "Nach dem Spiel: Ergebnis und Torschützen.",
+        body: "Heimsieg, Auswärtssieg oder Remis. Die Story weiß, was ihr gespielt habt.",
+        screenshot: "spiel-rueckblick"
+      },
+      {
+        headline: "Unten steht immer: presented by KickPact.",
+        body: "Ihr kündigt euer Spiel an, wir fahren mit. Deshalb bleibt es günstig."
+      },
+      {
+        headline: "Weniger als 1 € pro Spieler im Monat.",
+        body: "KickPact laden, Mannschaft anlegen, loslegen. Ab 4,99 € pro Mannschaft und Monat.",
+        logo: true
+      }
+    ]
   }
 ];
