@@ -7,7 +7,6 @@ import {
   getTeamForMatchesPage
 } from "@/lib/db/queries/matches";
 import { SeasonSwitcher } from "@/components/shared/season-switcher";
-import { saisonLabel } from "@/lib/utils/saison";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
 import { PageHeader } from "@/components/shared/page-header";
@@ -134,14 +133,7 @@ export default async function SpielePage({
 
   return (
     <div className="space-y-5 pb-24 md:pb-0">
-      <PageHeader
-        title="Spiele"
-        subtitle={`${team.name} · Saison ${saisonLabel(selectedSaison)}`}
-      />
-      <p className="-mt-3 text-sm leading-snug text-brand-night-navy/60">
-        Vergangene und kommende Spiele dieser Mannschaft, gefiltert nach Zeit,
-        Ort und Saison-Hälfte.
-      </p>
+      <PageHeader title="Spiele" subtitle={team.name} />
 
       <SpieleRefresh
         slug={slug}

@@ -1,14 +1,5 @@
 import Link from "next/link";
-import {
-  Trophy,
-  Medal,
-  ArrowUp,
-  ArrowDown,
-  StickyNote,
-  Sparkles,
-  CalendarDays,
-  Coins
-} from "lucide-react";
+import { Sparkles, CalendarDays, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TriggerIcon } from "@/components/shared/trigger-icon";
@@ -292,6 +283,38 @@ export default async function TeamDetailPage({
         </div>
       )}
 
+      {/* Saison-Wrapped (W4): Story-Rückblick der Vorsaison — nur solange die
+          neue Saison noch jung ist (<5 Spiele) und Vorsaison-Daten existieren.
+          Bewusst weit oben: das ist der Hero-Moment am Saisonstart. */}
+      {wrappedEntry && (
+        <section
+          aria-label="Saison-Wrapped"
+          className="rounded-2xl bg-brand-night-navy p-4 md:p-5 shadow-ios-card"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-[#A3E635]">
+                <Sparkles className="h-[1.15rem] w-[1.15rem]" aria-hidden />
+              </span>
+              <div className="min-w-0">
+                <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-white">
+                  ✨ Euer Saison-Rückblick {saisonLabel(wrappedEntry.prevSaison)} ist da
+                </h3>
+                <p className="text-xs md:text-sm text-white/70">
+                  Tore, Comebacks, Knipser — eure Saison als durchswipebare Story.
+                </p>
+              </div>
+            </div>
+            <Link
+              href={`${teamBase}/wrapped`}
+              className="text-xs md:text-sm font-semibold text-[#A3E635] hover:underline shrink-0"
+            >
+              Story ansehen →
+            </Link>
+          </div>
+        </section>
+      )}
+
       {/* #44: Bevorstehendes Spiel + „Vorschau posten". Nur in der aktuellen
           Saison — im Archiv-Blick wäre ein „nächstes Spiel" sinnlos. */}
       {nextMatch && isCurrentSeasonView && (
@@ -403,37 +426,6 @@ export default async function TeamDetailPage({
         result={seasonTarget.result ?? null}
         goalChargesCents={seasonGoalCharges}
       />
-
-      {/* Saison-Wrapped (W4): Story-Rückblick der Vorsaison — nur solange die
-          neue Saison noch jung ist (<5 Spiele) und Vorsaison-Daten existieren. */}
-      {wrappedEntry && (
-        <section
-          aria-label="Saison-Wrapped"
-          className="rounded-2xl bg-brand-night-navy p-4 md:p-5 shadow-ios-card"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-[#A3E635]">
-                <Sparkles className="h-[1.15rem] w-[1.15rem]" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-white">
-                  ✨ Euer Saison-Rückblick {saisonLabel(wrappedEntry.prevSaison)} ist da
-                </h3>
-                <p className="text-xs md:text-sm text-white/70">
-                  Tore, Comebacks, Knipser — eure Saison als durchswipebare Story.
-                </p>
-              </div>
-            </div>
-            <Link
-              href={`${teamBase}/wrapped`}
-              className="text-xs md:text-sm font-semibold text-[#A3E635] hover:underline shrink-0"
-            >
-              Story ansehen →
-            </Link>
-          </div>
-        </section>
-      )}
 
       {/* Spiele */}
       <section id="spiele">
@@ -684,89 +676,27 @@ function SeasonStatusBlock({
     </p>
   );
 
-  if (!result) {
-    return (
-      <section
-        aria-label={`Saison-Endstand ${label}`}
-        className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-4 md:p-5"
-      >
-        <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
-          Saison-Endstand {label}
-        </h3>
-        <p className="mt-1 text-xs md:text-sm text-brand-night-navy/70">
-          {isCurrentSeason
-            ? "Saison läuft noch — Endstand wird am Saisonende automatisch übernommen."
-            : `Die Saison ${label} ist vorbei — der Endstand wird automatisch übernommen, sobald die Daten vorliegen.`}{" "}
-          <Link href={settingsHref} className="text-accent hover:underline font-semibold">
-            Manuell setzen
-          </Link>
-          .
-        </p>
-        {goalCharges}
-      </section>
-    );
-  }
+  // „Nur zeigen wenn leer": sobald ein Endstand eingetragen/übernommen ist,
+  // verschwindet der Block ganz — kein read-only Dauer-Zustand mehr.
+  if (result) return null;
 
   return (
     <section
       aria-label={`Saison-Endstand ${label}`}
-      className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5"
+      className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-4 md:p-5"
     >
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
-            Saison-Endstand {label}
-          </h3>
-          <div className="mt-2 text-xs md:text-sm text-brand-night-navy/70 space-y-1">
-            {result.finalPosition && (
-              <div className="flex items-center gap-1.5">
-                <Medal className="h-4 w-4 shrink-0 text-brand-night-navy/40" aria-hidden />
-                <span>
-                  Endplatz: <strong>{result.finalPosition}</strong>
-                  {result.teamsInLeague && ` von ${result.teamsInLeague}`}
-                </span>
-              </div>
-            )}
-            {result.promoted && (
-              <div className="flex items-center gap-1.5">
-                <ArrowUp className="h-4 w-4 shrink-0 text-accent-dark" aria-hidden />
-                <span>Aufstieg geschafft</span>
-              </div>
-            )}
-            {result.relegated && (
-              <div className="flex items-center gap-1.5">
-                <ArrowDown className="h-4 w-4 shrink-0 text-brand-alert-red" aria-hidden />
-                <span>Abgestiegen</span>
-              </div>
-            )}
-            {result.cupRoundReached && (
-              <div className="flex items-center gap-1.5">
-                <Trophy className="h-4 w-4 shrink-0 text-brand-night-navy/40" aria-hidden />
-                <span>Pokal: {result.cupRoundReached}</span>
-              </div>
-            )}
-            {result.customNotes && (
-              <div className="flex items-center gap-1.5">
-                <StickyNote className="h-4 w-4 shrink-0 text-brand-night-navy/40" aria-hidden />
-                <span>{result.customNotes}</span>
-              </div>
-            )}
-            {!result.finalPosition &&
-              !result.promoted &&
-              !result.relegated &&
-              !result.cupRoundReached &&
-              !result.customNotes && (
-                <div className="text-brand-night-navy/50">Noch keine Details eingetragen.</div>
-              )}
-          </div>
-        </div>
-        <Link
-          href={settingsHref}
-          className="text-xs md:text-sm font-semibold text-accent hover:underline shrink-0"
-        >
-          Bearbeiten →
+      <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
+        Saison-Endstand {label}
+      </h3>
+      <p className="mt-1 text-xs md:text-sm text-brand-night-navy/70">
+        {isCurrentSeason
+          ? "Saison läuft noch — Endstand wird am Saisonende automatisch übernommen."
+          : `Die Saison ${label} ist vorbei — der Endstand wird automatisch übernommen, sobald die Daten vorliegen.`}{" "}
+        <Link href={settingsHref} className="text-accent hover:underline font-semibold">
+          Manuell setzen
         </Link>
-      </div>
+        .
+      </p>
       {goalCharges}
     </section>
   );
