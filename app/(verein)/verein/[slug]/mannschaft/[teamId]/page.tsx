@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles, CalendarDays, Coins } from "lucide-react";
+import { Sparkles, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TriggerIcon } from "@/components/shared/trigger-icon";
@@ -16,13 +16,9 @@ import { listClubSeasonPledges } from "@/lib/db/queries/club-dashboard";
 import { getTeamPrognose } from "@/lib/db/queries/simulation";
 import {
   computeTeamSeasonStats,
-  getTeamSeasonChargeTotalCents,
-  getSeasonGoalChargeTotalCents
+  getTeamSeasonChargeTotalCents
 } from "@/lib/db/queries/team-dashboard";
-import {
-  getFullTeamInClub,
-  resolveSeasonResultTarget
-} from "@/lib/db/queries/team-lifecycle";
+import { getFullTeamInClub } from "@/lib/db/queries/team-lifecycle";
 import { saisonLabel } from "@/lib/utils/saison";
 import { getClubById } from "@/lib/db/queries/club-admin";
 import { getWrappedEntryInfo } from "@/lib/db/queries/wrapped";
@@ -83,7 +79,6 @@ export default async function TeamDetailPage({
   const [
     matchRows,
     chargesSummary,
-    seasonTarget,
     seasonPledges,
     previousSeason,
     prognose,
@@ -93,11 +88,6 @@ export default async function TeamDetailPage({
     await Promise.all([
       listMatchesForTeam(team.id, 30, { saison: selectedSaison }),
       getMatchChargesSummaryForTeam(team.id),
-      // B8 (Audit 2026-06-11): welche Saison der Endstand-Block bedient,
-      // entscheidet der Resolver — nach dem Saison-Bump (Juli) gehört das
-      // offene Ergebnis zur VORSAISON („Saison-Endstand 25/26" statt
-      // „26/27 läuft noch").
-      resolveSeasonResultTarget(team.id, team.saison),
       listClubSeasonPledges(club.id).then((rows) => rows.filter((r) => r.teamId === team.id)),
       // „Letzte Saison"-Block: nur befüllt, solange die aktuelle Saison < 3
       // gespielte Spiele hat UND Vorsaison-Historie (Backfill) existiert.
@@ -121,17 +111,12 @@ export default async function TeamDetailPage({
   // Setup-Checkliste: Daten für "Anstehende Aufgaben".
   // Dazu das nächste Spiel für die „Bevorstehendes Spiel"-Karte (#44) — null,
   // wenn nichts ansteht (Sommerpause, Saisonende) → Karte entfällt.
-  const [clubBilling, pledgeCount, licenseRow, nextMatch, seasonGoalCharges] =
-    await Promise.all([
-      getClubById(club.id),
-      countPledgesForTeam(team.id),
-      getTeamLicensePlanDirect(team.id),
-      getNextMatchForTeam(team.id),
-      // Saisonziel-Beiträge der Saison, die der Endstand-Block bedient. Das ist
-      // im Grace-Fenster (15.7.–1.10.) die VORSAISON — dort landen die Beiträge,
-      // die die Sponsor-€-Kachel (= laufende Saison) korrekterweise nicht zeigt.
-      getSeasonGoalChargeTotalCents(team.id, seasonTarget.saison)
-    ]);
+  const [clubBilling, pledgeCount, licenseRow, nextMatch] = await Promise.all([
+    getClubById(club.id),
+    countPledgesForTeam(team.id),
+    getTeamLicensePlanDirect(team.id),
+    getNextMatchForTeam(team.id)
+  ]);
   const hasIban = !!clubBilling?.iban;
   const hasSponsor = pledgeCount > 0;
   const teamBase = `/verein/${slug}/mannschaft/${team.id}`;
@@ -416,17 +401,6 @@ export default async function TeamDetailPage({
         </section>
       )}
 
-      {/* Saison-Endstand: read-only Block, Bearbeitung in Einstellungen/Saison.
-          Spiegelt die Resolver-Saison (B8): im Juli die noch offene Vorsaison. */}
-      <SeasonStatusBlock
-        slug={slug}
-        teamId={team.id}
-        saison={seasonTarget.saison}
-        isCurrentSeason={seasonTarget.saison === team.saison}
-        result={seasonTarget.result ?? null}
-        goalChargesCents={seasonGoalCharges}
-      />
-
       {/* Spiele */}
       <section id="spiele">
         <div className="flex items-baseline justify-between gap-3 mb-3">
@@ -633,71 +607,4 @@ function PreviousSeasonSection({
   );
 }
 
-interface SeasonStatusResult {
-  finalPosition: number | null;
-  teamsInLeague: number | null;
-  promoted: boolean;
-  relegated: boolean;
-  cupRoundReached: string | null;
-  customNotes: string | null;
-}
 
-function SeasonStatusBlock({
-  slug,
-  teamId,
-  saison,
-  isCurrentSeason,
-  result,
-  goalChargesCents
-}: {
-  slug: string;
-  teamId: string;
-  /** Saison-Code aus resolveSeasonResultTarget — kann die Vorsaison sein. */
-  saison: string;
-  /** false = Block bedient die noch offene VORSAISON (Juli-Fenster). */
-  isCurrentSeason: boolean;
-  result: SeasonStatusResult | null;
-  /** Σ ausgelöster Saisonziel-Beiträge DIESER Saison (0 = noch keine). */
-  goalChargesCents: number;
-}) {
-  const settingsHref = `/verein/${slug}/mannschaft/${teamId}/einstellungen/saison`;
-  const label = saisonLabel(saison);
-  // Bewusst hier und nicht in der Sponsor-€-Kachel: die Kachel weist die
-  // LAUFENDE Saison aus, dieser Block ist mit `label` seiner eigenen Saison
-  // beschriftet. Im Grace-Fenster sind das zwei verschiedene Saisons.
-  const goalCharges = goalChargesCents > 0 && (
-    <p className="mt-3 flex items-center gap-1.5 text-xs md:text-sm text-brand-night-navy/70">
-      <Coins className="h-4 w-4 shrink-0 text-accent" aria-hidden />
-      <span>
-        Saisonziele {label}:{" "}
-        <strong className="text-accent">{eur(goalChargesCents)}</strong> für eure
-        Mannschaft
-      </span>
-    </p>
-  );
-
-  // „Nur zeigen wenn leer": sobald ein Endstand eingetragen/übernommen ist,
-  // verschwindet der Block ganz — kein read-only Dauer-Zustand mehr.
-  if (result) return null;
-
-  return (
-    <section
-      aria-label={`Saison-Endstand ${label}`}
-      className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-4 md:p-5"
-    >
-      <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
-        Saison-Endstand {label}
-      </h3>
-      <p className="mt-1 text-xs md:text-sm text-brand-night-navy/70">
-        {isCurrentSeason
-          ? "Saison läuft noch — Endstand wird am Saisonende automatisch übernommen."
-          : `Die Saison ${label} ist vorbei — der Endstand wird automatisch übernommen, sobald die Daten vorliegen.`}{" "}
-        <Link href={settingsHref} className="text-accent hover:underline font-semibold">
-          Manuell setzen
-        </Link>
-        .
-      </p>
-      {goalCharges}
-    </section>
-  );
-}
