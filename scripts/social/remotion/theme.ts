@@ -63,6 +63,14 @@ export const appShot = (name: AppShot): string => staticFile(`brand/app/${name}.
 export type WrappedSlide = "intro" | "bilanz" | "tabellenplatz" | "tore" | "torschuetze" | "zusammenfassung";
 export const wrappedShot = (slide: WrappedSlide): string => staticFile(`brand/wrapped/${slide}.png`);
 
+/**
+ * Die ECHTEN Story-Bilder aus der App (9:16) — Spiel-Vorschau und -Rückblick,
+ * geholt via scripts/social/capture.ts von der story-image-Route. Fürs
+ * „Spiel ankündigen"-Reel: das Produkt zeigen statt behaupten.
+ */
+export type StoryShot = "spiel-vorschau" | "spiel-rueckblick";
+export const storyShot = (name: StoryShot): string => staticFile(`brand/story/${name}.png`);
+
 /* -------------------------------- Typografie ------------------------------ */
 
 /**
