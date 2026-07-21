@@ -1572,14 +1572,16 @@ export async function getLeagueStandings(
             var m = (a.getAttribute('href')||'').match(/team-id\\/([A-Z0-9]+)/);
             if (m && !link) link = m[1];
           });
-          // Wappen der Zeile: dieselbe getLogo-Quelle wie im Spielplan
-          // (data-responsive-image des Vereins-Spans). Breiter Selektor +
-          // getLogo-Guard unten → nur ein echtes Wappen kommt durch, egal ob
-          // die Tabellenzelle exakt wie die Spielplanzelle aufgebaut ist.
+          // Wappen der Zeile: getLogo-Quelle. ACHTUNG: der Spielplan liefert
+          // statisches HTML (Span mit data-responsive-image bleibt stehen), die
+          // Tabelle rendert live (Angular ERSETZT den Span durch ein echtes
+          // <img src=getLogo> — am DOM verifiziert: spans:0, imgs:1). Deshalb
+          // beide Quellen prüfen: span[data-responsive-image] UND img src/data-src.
+          // getLogo-Guard unten → nur ein echtes Wappen kommt durch.
           var crest = null;
-          tr.querySelectorAll('span[data-responsive-image]').forEach(function(sp){
+          tr.querySelectorAll('span[data-responsive-image], img').forEach(function(el){
             if (crest) return;
-            var r = sp.getAttribute('data-responsive-image') || '';
+            var r = el.getAttribute('data-responsive-image') || el.getAttribute('src') || el.getAttribute('data-src') || '';
             if (r.indexOf('getLogo') !== -1) crest = r;
           });
           out.push({ tds: tds, teamId: link, crest: crest });

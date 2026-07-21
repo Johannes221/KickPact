@@ -230,7 +230,13 @@ export const crawlMatches = inngest.createFunction(
       await step.run(`standings-${team.id}`, async () => {
         const stored = await getStoredStandings(team.id, team.saison);
         const ageMs = stored ? Date.now() - stored.scrapedAt.getTime() : Infinity;
-        if (ageMs < STANDINGS_CRAWL_MIN_AGE_MS) return { skipped: "fresh" };
+        // Wappen-Backfill hat Vorrang vor dem Freshness-Guard: hat die
+        // gespeicherte Tabelle noch KEINE Wappen (Alt-Daten von vor dem
+        // Liga-Wappen-Feature), einmal neu scrapen, auch wenn sie „frisch" ist —
+        // sonst zeigt die Story-Vorschau bis zu 20 h weiter Kürzel. Sobald die
+        // Wappen einmal drin sind, greift der Guard wieder normal (selbstlimitierend).
+        const hasCrests = Boolean(stored?.data.rows.some((r) => r.crestUrl));
+        if (ageMs < STANDINGS_CRAWL_MIN_AGE_MS && hasCrests) return { skipped: "fresh" };
         const s = await getCachedStandings(team.id, team.saison);
 
         // Wappen ALLER Ligavereine aus der Tabelle cachen — nicht nur die
