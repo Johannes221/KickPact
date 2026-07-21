@@ -28,6 +28,7 @@ import { reconcileAppleSubscriptions } from "./reconcile-apple-subscriptions";
 import { recoverDeferredCharges } from "./recover-deferred-charges";
 import { backfillMatchTeamIds } from "./backfill-match-team-ids";
 import { prewarmStandings } from "./prewarm-standings";
+import { morningBriefing } from "./morning-briefing";
 
 export const functions = [
   crawlMatches,
@@ -60,5 +61,6 @@ export const functions = [
   reconcileAppleSubscriptions,
   recoverDeferredCharges,
   backfillMatchTeamIds,
-  prewarmStandings
+  prewarmStandings,
+  morningBriefing
 ];
