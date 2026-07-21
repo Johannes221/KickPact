@@ -43,6 +43,9 @@ const SPONSOR_EMAIL = "klaus.berger@kickpact.example";
  * eigener Verein (Login unten = sein Admin-Account), also keine fremden Daten.
  * Die App-UI-Screenshots (Dashboard/Spiele/Sponsor) bleiben der fiktive Demo.
  */
+// Herren 3: hat ein echtes hochgeladenes Wappen (das blaue „100 Jahre"-Wappen).
+// Ein früherer Capture zeigte einen orangen Kasten — das war ein Timing-Glitch
+// (Wappen frisch hochgeladen/noch nicht durchgerendert), kein fehlendes Logo.
 const STORY_MOTIF_TEAM_PATH =
   "/verein/fc-sportfr-dossenheim-uq0c/mannschaft/x6sei99gf3p4sgh77tvjhlwm";
 const STORY_MOTIF_TEAM_ID = "x6sei99gf3p4sgh77tvjhlwm";
