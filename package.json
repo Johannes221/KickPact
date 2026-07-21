@@ -31,10 +31,12 @@
     "social:video": "tsx scripts/social/video.tsx",
     "social:check": "tsc -p scripts/social/tsconfig.json",
     "social:capture": "dotenv -e .env.local -- tsx scripts/social/capture.ts",
+    "social:capture-wrapped": "dotenv -e .env.local -- tsx scripts/social/capture-wrapped.ts",
     "social:publish": "dotenv -e .env.local -- tsx scripts/social/publish.ts",
     "social:token": "dotenv -e .env.local -- tsx scripts/social/token.ts",
     "social:queue": "dotenv -e .env.local -- tsx scripts/social/queue.ts",
-    "social:postmappe": "tsx scripts/social/postmappe.ts"
+    "social:postmappe": "tsx scripts/social/postmappe.ts",
+    "social:reel": "remotion render scripts/social/remotion/index.ts wrapped out/social/reels/04-saison-rueckblick.mp4 --log=error"
   },
   "dependencies": {
     "@apple/app-store-server-library": "^3.1.0",
@@ -53,6 +55,7 @@
     "@hookform/resolvers": "^3.10.0",
     "@neondatabase/serverless": "0.10.4",
     "@paralleldrive/cuid2": "^3.3.0",
+    "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -100,6 +103,8 @@
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^6.2.1",
     "@playwright/test": "1.48.2",
+    "@remotion/cli": "4.0.399",
+    "@remotion/fonts": "4.0.399",
     "@types/fontkit": "^2.0.9",
     "@types/heic-convert": "^2.1.0",
     "@types/node": "22.9.0",
@@ -116,6 +121,7 @@
     "patch-package": "^8.0.1",
     "pdf-parse": "^2.4.5",
     "postcss": "8.4.49",
+    "remotion": "4.0.399",
     "tailwindcss": "3.4.14",
     "tsx": "4.19.2",
     "typescript": "5.6.3",
