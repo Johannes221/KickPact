@@ -32,13 +32,15 @@ export default function AppLandingPage() {
       />
 
       <div className="relative z-10 w-full max-w-md text-center">
+        {/* Primärlogo (2-farbig: grüne Marke + KICK navy + PACT grün) —
+            Brand-Default für helle Hintergründe, s. public/brand/README.md. */}
         <Image
-          src="/brand/logo-navy-stacked.svg"
+          src="/brand/logo-stacked.png"
           alt="KickPact"
-          width={132}
-          height={132}
+          width={1358}
+          height={796}
           priority
-          className="mx-auto h-24 w-auto"
+          className="mx-auto h-20 w-auto sm:h-24"
         />
 
         <h1 className="mt-6 font-display font-black text-3xl sm:text-4xl leading-[1.1] tracking-tight text-brand-night-navy">
