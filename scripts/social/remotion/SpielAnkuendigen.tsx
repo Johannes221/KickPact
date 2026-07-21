@@ -166,7 +166,7 @@ const CTA: React.FC = () => (
     <Headline size={84} delay={8}>
       Eine fertige Story zu jedem Spiel.
     </Headline>
-    <Body delay={18}>Ab 4,99 € im Monat pro Mannschaft. 30 Tage kostenlos. kickpact.com</Body>
+    <Body delay={18}>Ab 4,99 € pro Mannschaft. Jetzt runterladen: kickpact.com</Body>
   </Scene>
 );
 

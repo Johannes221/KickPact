@@ -51,7 +51,7 @@ const Intro: React.FC = () => (
       <Logo src={LOGO_WHITE} width={520} delay={4} />
     </div>
     <Headline color={WHITE} size={98} delay={10}>
-      Wofür kann euch jemand sponsern?
+      Wofür würdet ihr euch bezahlen lassen?
     </Headline>
   </Scene>
 );
@@ -91,7 +91,7 @@ const CTA: React.FC = () => (
     <Headline size={84} delay={10}>
       Ihr legt fest, was zählt.
     </Headline>
-    <Body delay={20}>Ab 4,99 € im Monat pro Mannschaft. 30 Tage kostenlos. kickpact.com</Body>
+    <Body delay={20}>Ab 4,99 € pro Mannschaft. 30 Tage kostenlos testen. Link in Bio.</Body>
   </Scene>
 );
 
@@ -102,7 +102,11 @@ export const WasFestlegen: React.FC = () => (
         <Intro />
       </Series.Sequence>
       <Series.Sequence durationInFrames={SCENES[1]}>
-        <PhotoScene src={photoSrc("team-green")} kicker="Kurz vorweg" headline="Ihr legt fest, was zählt. Nicht wir." />
+        <PhotoScene
+          src={photoSrc("team-green")}
+          kicker="Die Idee dahinter"
+          headline="Jemand zahlt euch pro Ereignis. Ihr legt fest, welche."
+        />
       </Series.Sequence>
       <Series.Sequence durationInFrames={SCENES[2]}>
         <PactGroup
