@@ -32,5 +32,13 @@ export async function GET(
   const model = await buildStoryModel(teamId, matchId);
   if (!model) return new Response("Not found", { status: 404 });
 
-  return new ImageResponse(<StoryCard model={model} />, { ...STORY_SIZE, fonts: OG_FONTS });
+  // no-store: das Motiv hängt an live-veränderlichen Daten (frisch gecachte
+  // Vereinswappen nach einem Crawl, hochgeladenes Logo). ImageResponse setzt
+  // sonst per Default einen langen immutable-Cache → die App zeigte nach dem
+  // Crawl weiter das ALTE Bild mit Kürzel statt der neuen Wappen.
+  return new ImageResponse(<StoryCard model={model} />, {
+    ...STORY_SIZE,
+    fonts: OG_FONTS,
+    headers: { "cache-control": "no-store, max-age=0, must-revalidate" }
+  });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Share2, Loader2, ImageDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -59,7 +59,19 @@ export function StoryShareButton({
   const [failed, setFailed] = useState(false);
   const [sharing, setSharing] = useState(false);
 
-  const imageUrl = `/api/teams/${teamId}/story-image/${matchId}`;
+  // Cache-Buster: bei jedem Öffnen der Vorschau frisch. Ohne ihn zeigte die App
+  // nach einem Crawl (neue Vereinswappen) das alte gecachte Bild mit Kürzel.
+  // Stabil, solange der Dialog offen ist → Anzeige und geteiltes Bild sind gleich.
+  const [bust, setBust] = useState(0);
+  useEffect(() => {
+    if (open) {
+      setBust(Date.now());
+      setLoaded(false);
+      setFailed(false);
+    }
+  }, [open]);
+
+  const imageUrl = `/api/teams/${teamId}/story-image/${matchId}${bust ? `?v=${bust}` : ""}`;
   const filename = `kickpact-story-${matchId}.png`;
 
   const share = useCallback(async () => {

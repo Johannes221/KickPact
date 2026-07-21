@@ -125,7 +125,10 @@ export async function GET(
   return new ImageResponse(<WrappedCard stats={stats} slide={slideKey} />, {
     width: 1080,
     height: 1920,
-    fonts: OG_FONTS
+    fonts: OG_FONTS,
+    // no-store: hängt an live-veränderlichen Daten (Wappen, Stats) — sonst
+    // liefert ImageResponse einen langen immutable-Cache und die App zeigt Altes.
+    headers: { "cache-control": "no-store, max-age=0, must-revalidate" }
   });
 }
 
