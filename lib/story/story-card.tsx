@@ -84,7 +84,18 @@ export const STORY_SIZE = { width: 1080, height: 1920 } as const;
  *
  * Welche Vorlage, entscheidet `buildStoryModel` anhand des Spielstatus.
  */
-export function StoryCard({ model }: { model: StoryModel }) {
+export function StoryCard({
+  model,
+  hideBranding = false
+}: {
+  model: StoryModel;
+  /**
+   * Blendet „presented by KickPact" aus. NUR für interne Marketing-Captures
+   * (der Post ist selbst schon KickPact-gebrandet → die Zeile wäre doppelt).
+   * Default false — im Produkt bleibt der Werbekanal-Footer immer an (#44).
+   */
+  hideBranding?: boolean;
+}) {
   // Rückblick färbt sich nach Ausgang. Vorschau und unsicherer Ausgang laufen
   // grün — die Marke, nicht das Ergebnis: vor dem Anpfiff gibt es keins, und
   // bei unsicherer eigener Seite dürfen wir keins behaupten.
@@ -140,7 +151,7 @@ export function StoryCard({ model }: { model: StoryModel }) {
         )}
       </div>
 
-      <PresentedBy />
+      {!hideBranding && <PresentedBy />}
     </div>
   );
 }

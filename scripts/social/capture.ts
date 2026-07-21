@@ -36,6 +36,18 @@ const VEREIN_EMAIL = "demo-showcase@kickpact.example";
 /** Ein Sponsor sieht den Pact-Builder — der Vereins-Admin kommt da nicht rein. */
 const SPONSOR_EMAIL = "klaus.berger@kickpact.example";
 
+/*
+ * NUR fürs Story-Motiv (Spiel-ankündigen-Post): ein ECHTES Team mit ECHTEN
+ * Wappen. Der Demo-Verein hat keine Logos → Kürzel; Johannes will für dieses
+ * eine Motiv die echten Vereinswappen sehen (2026-07-21). Dossenheim ist sein
+ * eigener Verein (Login unten = sein Admin-Account), also keine fremden Daten.
+ * Die App-UI-Screenshots (Dashboard/Spiele/Sponsor) bleiben der fiktive Demo.
+ */
+const STORY_MOTIF_TEAM_PATH =
+  "/verein/fc-sportfr-dossenheim-uq0c/mannschaft/x6sei99gf3p4sgh77tvjhlwm";
+const STORY_MOTIF_TEAM_ID = "x6sei99gf3p4sgh77tvjhlwm";
+const STORY_MOTIF_EMAIL = "dattel71@gmail.com";
+
 /**
  * Handy-Viewport. 390×844 ist ein iPhone 14/15 in CSS-Pixeln; mit
  * deviceScaleFactor 3 kommen 1170×2532 echte Pixel raus — genug, um im
@@ -176,7 +188,7 @@ function seasonCodes(hrefs: string[]): string[] {
  */
 async function captureStoryMotifs(page: Page, key: string): Promise<number> {
   await page.context().clearCookies();
-  await login(page, key, VEREIN_EMAIL);
+  await login(page, key, STORY_MOTIF_EMAIL);
 
   const linksOn = async (path: string): Promise<string[]> => {
     await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
@@ -187,7 +199,7 @@ async function captureStoryMotifs(page: Page, key: string): Promise<number> {
   // aus dem Switcher lesen. Je nach Saison-Rollover-Stand (Stichtag 15.7.) liegt
   // „gespielt" mal in der aktuellen, mal in der Vorsaison — deshalb über ALLE
   // verfügbaren Saisons suchen, statt eine Jahreszahl zu verdrahten.
-  const firstLinks = await linksOn(`${TEAM_PATH}/spiele?zeit=gespielt&result=win`);
+  const firstLinks = await linksOn(`${STORY_MOTIF_TEAM_PATH}/spiele?zeit=gespielt&result=win`);
   const seasons: Array<string | undefined> = [undefined, ...seasonCodes(firstLinks)];
 
   const findMatch = async (query: string, preloaded?: string[]): Promise<string | undefined> => {
@@ -195,7 +207,7 @@ async function captureStoryMotifs(page: Page, key: string): Promise<number> {
       const links =
         i === 0 && preloaded
           ? preloaded
-          : await linksOn(`${TEAM_PATH}/spiele?${query}${s ? `&saison=${s}` : ""}`);
+          : await linksOn(`${STORY_MOTIF_TEAM_PATH}/spiele?${query}${s ? `&saison=${s}` : ""}`);
       const id = firstMatchId(links);
       if (id) return id;
     }
@@ -220,7 +232,8 @@ async function captureStoryMotifs(page: Page, key: string): Promise<number> {
   ];
   let ok = 0;
   for (const m of motifs) {
-    const url = `${BASE}/api/teams/${STORY_TEAM}/story-image/${m.matchId}`;
+    // ?brand=0 = ohne „presented by KickPact" (im KickPact-eigenen Post doppelt).
+    const url = `${BASE}/api/teams/${STORY_MOTIF_TEAM_ID}/story-image/${m.matchId}?brand=0`;
     const r = await page.request.get(url);
     const type = r.headers()["content-type"] ?? "";
     if (r.ok() && type.includes("image")) {
