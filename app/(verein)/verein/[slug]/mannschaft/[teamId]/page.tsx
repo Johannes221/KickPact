@@ -30,6 +30,8 @@ import { getTeamLicensePlanDirect } from "@/lib/db/queries/subscriptions";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { inngest } from "@/lib/inngest/client";
 import { isTeamCrawling } from "@/lib/crawler/crawl-status";
+import { TeamCrest } from "@/components/shared/team-crest";
+import { crestSrc } from "@/lib/utils/crest-url";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { markCrawlStarted } from "@/lib/db/queries/crawler";
 import { TeamSetupChecklist } from "./_components/team-setup-checklist";
@@ -515,14 +517,30 @@ export default async function TeamDetailPage({
                             Lange Vereinsnamen werden gekürzt + truncate, das
                             Ergebnis bleibt in seiner festen Spalte sichtbar. */}
                         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm font-semibold text-brand-night-navy">
-                          <span className="min-w-0 truncate text-right" title={m.heimName}>
-                            {abbreviateTeamName(m.heimName)}
+                          <span
+                            className="min-w-0 flex items-center justify-end gap-1.5"
+                            title={m.heimName}
+                          >
+                            <span className="truncate">{abbreviateTeamName(m.heimName)}</span>
+                            <TeamCrest
+                              name={m.heimName}
+                              src={crestSrc(m.heimName, m.heimTeamId)}
+                              size={20}
+                            />
                           </span>
                           <span className="font-mono tabular-nums text-accent whitespace-nowrap">
                             {m.ergebnisHeim ?? "—"}:{m.ergebnisGast ?? "—"}
                           </span>
-                          <span className="min-w-0 truncate text-left" title={m.gastName}>
-                            {abbreviateTeamName(m.gastName)}
+                          <span
+                            className="min-w-0 flex items-center justify-start gap-1.5"
+                            title={m.gastName}
+                          >
+                            <TeamCrest
+                              name={m.gastName}
+                              src={crestSrc(m.gastName, m.gastTeamId)}
+                              size={20}
+                            />
+                            <span className="truncate">{abbreviateTeamName(m.gastName)}</span>
                           </span>
                         </div>
                       </div>

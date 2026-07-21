@@ -1,4 +1,4 @@
-import { readDocumentBytes } from "@/lib/storage/documents";
+import { readDocumentBytes, imageMime } from "@/lib/storage/documents";
 import { getCachedStandingsForRequest } from "@/lib/recap/standings-request";
 import type { LeagueStandings } from "@/lib/crawler/fussballde";
 import {
@@ -31,26 +31,6 @@ import {
  */
 
 /* ------------------------------ Wappen-Bytes ------------------------------ */
-
-/**
- * Satori (next/og) rastert nur PNG/JPEG. WebP kann es nicht bloß nicht — resvg
- * WIRFT an WebP-Bytes ('u2 is not iterable', empirisch verifiziert), was das
- * ganze Motiv killt statt nur das Wappen. Ein Konverter (sharp) ist nicht im
- * Stack. Seit dem Upload-Fix (lib/storage/images.ts) werden neue WebP-Logos gar
- * nicht mehr gespeichert; dieser Guard fängt nur noch VOR dem Fix hochgeladene
- * WebP-Bestände ab → `null` → Kürzel-Fallback statt Crash.
- * Format über Magic Bytes bestimmen, nicht über die Endung: die Endung ist bloß
- * der Storage-Key, die Bytes sind die Wahrheit.
- */
-function imageMime(bytes: Buffer): "image/png" | "image/jpeg" | null {
-  if (bytes.length > 8 && bytes.subarray(0, 4).toString("hex") === "89504e47") {
-    return "image/png";
-  }
-  if (bytes.length > 3 && bytes.subarray(0, 3).toString("hex") === "ffd8ff") {
-    return "image/jpeg";
-  }
-  return null;
-}
 
 /**
  * Logo als data-URI laden. `null` bei fehlendem/unlesbarem/nicht einbettbarem

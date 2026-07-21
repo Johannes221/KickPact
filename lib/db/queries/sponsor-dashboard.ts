@@ -115,6 +115,9 @@ export interface SponsoredTeamMatch {
   datum: Date;
   heimName: string;
   gastName: string;
+  /** fussball.de-team-id des Gegners, falls bekannt — für die Wappen-Auflösung. */
+  heimTeamId: string | null;
+  gastTeamId: string | null;
   ergebnisHeim: number | null;
   ergebnisGast: number | null;
   status: string;
@@ -135,6 +138,8 @@ const MATCH_COLS = {
   datum: matches.datum,
   heimName: matches.heimName,
   gastName: matches.gastName,
+  heimTeamId: matches.heimTeamId,
+  gastTeamId: matches.gastTeamId,
   ergebnisHeim: matches.ergebnisHeim,
   ergebnisGast: matches.ergebnisGast,
   status: matches.status

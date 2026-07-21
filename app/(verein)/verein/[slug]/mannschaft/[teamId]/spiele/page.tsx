@@ -7,6 +7,8 @@ import {
   getTeamForMatchesPage
 } from "@/lib/db/queries/matches";
 import { SeasonSwitcher } from "@/components/shared/season-switcher";
+import { TeamCrest } from "@/components/shared/team-crest";
+import { crestSrc } from "@/lib/utils/crest-url";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
 import { PageHeader } from "@/components/shared/page-header";
@@ -251,10 +253,15 @@ export default async function SpielePage({
                       werden gekürzt + truncate statt das Resultat zu verdrängen. */}
                   <span className="flex-1 min-w-0 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm">
                     <span
-                      className={`min-w-0 truncate text-right ${m.isHeim ? "font-semibold" : "text-brand-night-navy/70"}`}
+                      className={`min-w-0 flex items-center justify-end gap-1.5 ${m.isHeim ? "font-semibold" : "text-brand-night-navy/70"}`}
                       title={m.heimName}
                     >
-                      {abbreviateTeamName(m.heimName)}
+                      <span className="truncate">{abbreviateTeamName(m.heimName)}</span>
+                      <TeamCrest
+                        name={m.heimName}
+                        src={crestSrc(m.heimName, m.heimTeamId)}
+                        size={18}
+                      />
                     </span>
                     {m.isScheduled ? (
                       <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/60 whitespace-nowrap">
@@ -266,10 +273,15 @@ export default async function SpielePage({
                       </span>
                     )}
                     <span
-                      className={`min-w-0 truncate text-left ${!m.isHeim ? "font-semibold" : "text-brand-night-navy/70"}`}
+                      className={`min-w-0 flex items-center justify-start gap-1.5 ${!m.isHeim ? "font-semibold" : "text-brand-night-navy/70"}`}
                       title={m.gastName}
                     >
-                      {abbreviateTeamName(m.gastName)}
+                      <TeamCrest
+                        name={m.gastName}
+                        src={crestSrc(m.gastName, m.gastTeamId)}
+                        size={18}
+                      />
+                      <span className="truncate">{abbreviateTeamName(m.gastName)}</span>
                     </span>
                   </span>
                   {m.isScheduled ? (
