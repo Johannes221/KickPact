@@ -17,22 +17,61 @@ export async function getClubCrestLogoUrl(
 }
 
 /**
+ * Reduziert einen Vereins-/Mannschaftsnamen auf den CLUB-Kern, unter dem sein
+ * Wappen im Cache liegt.
+ *
+ * WARUM: Ein Wappen ist ein CLUB-Asset — die Reserve-Mannschaften eines Vereins
+ * teilen sich EIN Wappen. `matches` trägt aber den vollen Mannschaftsnamen inkl.
+ * Reserve-Suffix („1.FC Mühlhausen 2"), während der Cache den Vereinsnamen aus
+ * `data-alt`/der Tabellenzeile führt — oft OHNE Suffix („1.FC Mühlhausen").
+ * Der frühere exakte `lower(name) = lower(name)`-Vergleich verfehlte deshalb das
+ * gecachte Wappen und zeigte das Kürzel (verifiziert: „1M" statt Mühlhausen-Logo
+ * auf einem angesetzten Reserve-Spiel, dessen Stub keine team-id trägt → nur der
+ * Name bleibt als Schlüssel).
+ *
+ * Normalisiert: lowercase, Whitespace kollabiert, und am ENDE entfernt:
+ *   - „zg."/„zurückgezogen" (fussball.de-Marker),
+ *   - eine schließende Klammer-Annotation („(flex)", „(U19)"),
+ *   - die Mannschafts-Nummer (arabische 1–2-stellige Zahl ODER römische Ziffer).
+ * Bewusst NICHT gröber: ein zu weiter Kamm ordnete ein FALSCHES Wappen zu — das
+ * wäre schlimmer als gar keins. Die 4-stellige Gründungsjahr-Zahl („1899") bleibt
+ * dank der {1,2}-Grenze erhalten.
+ */
+export function normalizeCrestName(name: string | null): string {
+  let s = (name ?? "").toLowerCase().replace(/\s+/g, " ").trim();
+  s = s.replace(/[\s.]+zg\.?$/, "").trim(); // „… zg." (zurückgezogen)
+  s = s.replace(/\s*\([^)]*\)$/, "").trim(); // „(flex)" o.ä. am Ende
+  s = s.replace(/\s+(?:[0-9]{1,2}|i{1,3}|iv|v|vi{1,3}|ix|x)$/, "").trim(); // Reserve-Nr.
+  return s;
+}
+
+/**
  * Wie {@link getClubCrestLogoUrl}, aber per NAME. Nötig, weil `matches`
  * externe Gegner nur mit NAMEN speichert, nicht mit deren fussballde_team_id
  * (heim_team_id/gast_team_id sind nur gesetzt, wenn der Gegner selbst ein
- * KickPact-Team ist). Ohne diesen Fallback fand die Story-Vorschau das gecachte
- * Gegner-Wappen nie und zeigte das Kürzel. Beide Namen laufen durch
- * normalizeTeamName → case-insensitiver, whitespace-normalisierter Vergleich.
+ * KickPact-Team ist; angesetzte Stub-Spiele haben GAR keine team-id). Ohne
+ * diesen Fallback fand die Story-Vorschau das gecachte Gegner-Wappen nie.
+ *
+ * Gematcht wird über {@link normalizeCrestName} — CLUB-Kern gegen CLUB-Kern,
+ * damit „1.FC Mühlhausen 2" das unter „1.FC Mühlhausen" gecachte Wappen findet.
+ * Kandidaten werden per Präfix vorgefiltert (billig, hält die Menge klein), die
+ * eigentliche Gleichheit prüft dann {@link normalizeCrestName} in JS — so bleibt
+ * die (getestete) Normalisierung die EINE Wahrheit, ohne SQL-Regex-Drift.
+ * Zu kurze Kerne (< 3 Zeichen) werden nicht gematcht: „SV 2" → „sv" träfe sonst
+ * beliebige Vereine.
  */
 export async function getClubCrestLogoUrlByName(name: string | null): Promise<string | null> {
-  const norm = (name ?? "").replace(/ /g, " ").replace(/\s+/g, " ").trim();
-  if (!norm) return null;
-  const [row] = await db
-    .select({ logoUrl: clubCrests.logoUrl })
+  const base = normalizeCrestName(name);
+  if (base.length < 3) return null;
+  // LIKE-Sonderzeichen im Präfix maskieren (Default-Escape ist Backslash).
+  const likePattern = base.replace(/([\\%_])/g, "\\$&") + "%";
+  const candidates = await db
+    .select({ name: clubCrests.name, logoUrl: clubCrests.logoUrl })
     .from(clubCrests)
-    .where(and(sql`lower(${clubCrests.name}) = lower(${norm})`, isNotNull(clubCrests.logoUrl)))
-    .limit(1);
-  return row?.logoUrl ?? null;
+    .where(and(isNotNull(clubCrests.logoUrl), sql`lower(${clubCrests.name}) like ${likePattern}`))
+    .limit(20);
+  const hit = candidates.find((r) => normalizeCrestName(r.name) === base);
+  return hit?.logoUrl ?? null;
 }
 
 /**
