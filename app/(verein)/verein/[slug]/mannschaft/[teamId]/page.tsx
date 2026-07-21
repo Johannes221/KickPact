@@ -500,59 +500,63 @@ export default async function TeamDetailPage({
                 <li key={m.id}>
                   <Link
                     href={`/verein/${slug}/mannschaft/${team.id}/spiel/${m.id}`}
-                    className={`block rounded-lg border bg-white p-3 md:p-4 hover:bg-brand-off-white/60 transition-colors ${resultColor}`}
+                    className={`flex items-center gap-2.5 rounded-lg border bg-white p-3 md:p-4 hover:bg-brand-off-white/60 transition-colors ${resultColor}`}
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="hidden sm:block text-xs text-brand-night-navy/50 mb-1">
-                          {m.datum.toLocaleDateString("de-DE", {
-                            weekday: "short",
-                            day: "2-digit",
-                            month: "short",
-                            year: "2-digit"
-                          })}
-                        </div>
-                        {/* Score-Zeile: Heim (gekürzt/rechtsbündig) — Ergebnis
-                            (fix mittig, tabular-nums) — Gast (gekürzt/linksbündig).
-                            Lange Vereinsnamen werden gekürzt + truncate, das
-                            Ergebnis bleibt in seiner festen Spalte sichtbar. */}
-                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm font-semibold text-brand-night-navy">
-                          <span
-                            className="min-w-0 flex items-center justify-end gap-1.5"
-                            title={m.heimName}
-                          >
-                            <span className="truncate">{abbreviateTeamName(m.heimName)}</span>
-                            <TeamCrest
-                              name={m.heimName}
-                              src={crestSrc(m.heimName, m.heimTeamId)}
-                              size={20}
-                            />
+                    {/* Heim-Wappen ganz links, Gast-Wappen ganz rechts — die
+                        Namen füllen die Zeile (kein gekürztes „FC Spor…"). */}
+                    <TeamCrest
+                      name={m.heimName}
+                      src={crestSrc(m.heimName, m.heimTeamId)}
+                      size={26}
+                      shape="squircle"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="hidden sm:block text-xs text-brand-night-navy/50 mb-1 text-center">
+                        {m.datum.toLocaleDateString("de-DE", {
+                          weekday: "short",
+                          day: "2-digit",
+                          month: "short",
+                          year: "2-digit"
+                        })}
+                      </div>
+                      {/* Score-Zeile: Heim (rechtsbündig) — Ergebnis/„vs" (fix
+                          mittig) — Gast (linksbündig); Namen truncate erst am
+                          Rand. */}
+                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm font-semibold text-brand-night-navy">
+                        <span
+                          className="min-w-0 truncate text-right"
+                          title={m.heimName}
+                        >
+                          {abbreviateTeamName(m.heimName)}
+                        </span>
+                        {gF === null ? (
+                          <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/50 whitespace-nowrap">
+                            vs
                           </span>
+                        ) : (
                           <span className="font-mono tabular-nums text-accent whitespace-nowrap">
                             {m.ergebnisHeim ?? "—"}:{m.ergebnisGast ?? "—"}
                           </span>
-                          <span
-                            className="min-w-0 flex items-center justify-start gap-1.5"
-                            title={m.gastName}
-                          >
-                            <TeamCrest
-                              name={m.gastName}
-                              src={crestSrc(m.gastName, m.gastTeamId)}
-                              size={20}
-                            />
-                            <span className="truncate">{abbreviateTeamName(m.gastName)}</span>
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        {matchCharges > 0 && (
-                          <span className="font-mono tabular-nums text-xs font-semibold text-accent">
-                            {eur(matchCharges)}
-                          </span>
                         )}
-                        <span className="text-brand-night-navy/30">→</span>
+                        <span
+                          className="min-w-0 truncate text-left"
+                          title={m.gastName}
+                        >
+                          {abbreviateTeamName(m.gastName)}
+                        </span>
                       </div>
                     </div>
+                    <TeamCrest
+                      name={m.gastName}
+                      src={crestSrc(m.gastName, m.gastTeamId)}
+                      size={26}
+                      shape="squircle"
+                    />
+                    {matchCharges > 0 && (
+                      <span className="shrink-0 font-mono tabular-nums text-xs font-semibold text-accent">
+                        {eur(matchCharges)}
+                      </span>
+                    )}
                   </Link>
                 </li>
               );

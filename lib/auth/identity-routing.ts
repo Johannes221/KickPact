@@ -98,6 +98,12 @@ export interface IdentityEntry {
   href: string;
   label: string;
   subline: string;
+  /**
+   * Nur bei `kind === "team"` gesetzt: fussball.de-team-id für das Vereinswappen
+   * im Rollen-Switcher (statt generischem Icon). `null`, wenn unbekannt →
+   * Auflösung dann per Name über `/api/crest`.
+   */
+  fussballdeTeamId?: string | null;
   matches: (a: ActiveIdentity) => boolean;
 }
 
@@ -124,6 +130,7 @@ export function flattenIdentities(ids: UserIdentities): IdentityEntry[] {
         href: `/verein/${slug}/mannschaft/${teamId}`,
         label: c.firstTeamName ?? c.name,
         subline: ROLE_LABEL[c.role],
+        fussballdeTeamId: c.firstTeamFussballdeTeamId,
         matches: (a) =>
           a.kind === "team" && a.slug === slug && a.teamId === teamId
       });
@@ -146,6 +153,7 @@ export function flattenIdentities(ids: UserIdentities): IdentityEntry[] {
       href: `/verein/${t.clubSlug}/mannschaft/${t.teamId}`,
       label: t.teamName,
       subline: `${t.clubName} · ${ROLE_LABEL[t.role]}`,
+      fussballdeTeamId: t.fussballdeTeamId,
       matches: (a) =>
         a.kind === "team" && a.slug === t.clubSlug && a.teamId === t.teamId
     });

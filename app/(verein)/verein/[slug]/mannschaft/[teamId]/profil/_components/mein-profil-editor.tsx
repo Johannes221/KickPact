@@ -13,6 +13,8 @@ import { saveTeamPublicProfile } from "@/lib/actions/team-public-profile";
 import { setTeamShowInsights } from "@/lib/actions/team-images";
 import { renameTeam } from "@/lib/actions/team-lifecycle";
 import { saisonLabel } from "@/lib/utils/saison";
+import { TeamCrest } from "@/components/shared/team-crest";
+import { crestSrc } from "@/lib/utils/crest-url";
 import { UpgradeGateDialog } from "@/components/billing/upgrade-gate";
 import {
   UpgradeRequiredError,
@@ -42,6 +44,8 @@ interface Props {
   slug: string;
   teamId: string;
   teamName: string;
+  /** fussball.de-team-id — löst das Vereinswappen auf (Upload vor gescraptem Wappen). */
+  fussballdeTeamId: string | null;
   saison: string;
   league: string | null;
   clubName: string;
@@ -67,6 +71,7 @@ export function MeinProfilEditor({
   slug,
   teamId,
   teamName,
+  fussballdeTeamId,
   saison,
   league,
   clubName,
@@ -479,16 +484,17 @@ export function MeinProfilEditor({
         />
 
         <div className="absolute inset-x-4 bottom-4">
-          {/* Logo-Badge + ändern */}
+          {/* Logo-Badge + ändern: hochgeladenes Logo hat Vorrang, sonst das
+              (gescrapte) Vereinswappen via /api/crest — erst wenn beides fehlt,
+              greift der saubere Platzhalter von TeamCrest. */}
           <div className="relative inline-block">
-            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-accent text-xl font-bold text-brand-night-navy shadow-lg">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={logoUrl ?? "/brand/team-crest-fallback.png"}
-                alt="Logo"
-                className="h-full w-full object-cover"
-              />
-            </div>
+            <TeamCrest
+              name={teamName}
+              src={logoUrl ?? crestSrc(teamName, fussballdeTeamId)}
+              size={56}
+              shape="squircle"
+              className="shadow-lg ring-2 ring-white/15"
+            />
             <button
               type="button"
               disabled={pending}
