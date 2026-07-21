@@ -5,6 +5,9 @@ import { DURATION, Reel } from "./Reel";
 import { DURATION as SPONSOR_DUR, WerSponsert } from "./WerSponsert";
 import { DURATION as FESTLEGEN_DUR, WasFestlegen } from "./WasFestlegen";
 import { DURATION as SPIEL_DUR, SpielAnkuendigen } from "./SpielAnkuendigen";
+import { DURATION as KASSE_DUR, LeereKasse } from "./LeereKasse";
+import { DURATION as GELD_DUR, KeinerGibtGeld } from "./KeinerGibtGeld";
+import { DURATION as FAMILIE_DUR, FamilieFiebert } from "./FamilieFiebert";
 
 /**
  * Die registrierten Reels — je eine Composition, alle 1080×1920, 30 fps, stumm
@@ -39,5 +42,8 @@ export const RemotionRoot: React.FC = () => (
       width={1080}
       height={1920}
     />
+    <Composition id="leere-kasse" component={LeereKasse} durationInFrames={KASSE_DUR} fps={30} width={1080} height={1920} />
+    <Composition id="keiner-gibt-geld" component={KeinerGibtGeld} durationInFrames={GELD_DUR} fps={30} width={1080} height={1920} />
+    <Composition id="familie-fiebert-mit" component={FamilieFiebert} durationInFrames={FAMILIE_DUR} fps={30} width={1080} height={1920} />
   </>
 );

@@ -403,6 +403,37 @@ export const PhoneSwipe: React.FC<{ shots: string[]; width?: number; hold?: numb
   );
 };
 
+/** Generische Icon-Kachel (Icon oben, Label drunter), poppt gestaffelt rein. */
+export const IconTile: React.FC<{ icon: PhIcon; label: string; index: number }> = ({
+  icon: Icon,
+  label,
+  index
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const delay = 14 + index * 10;
+  const pop = spring({ frame: frame - delay, fps, config: { damping: 13, mass: 0.7 } });
+  return (
+    <div
+      style={{
+        flex: 1,
+        background: OFF_WHITE,
+        borderRadius: 30,
+        padding: "40px 20px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 18,
+        opacity: Math.min(1, pop),
+        transform: `scale(${0.8 + 0.2 * Math.min(1, pop)})`
+      }}
+    >
+      <Icon size={84} weight="duotone" color={GREEN_DARK} />
+      <div style={{ fontSize: 38, fontWeight: 700, color: NAVY, textAlign: "center" }}>{label}</div>
+    </div>
+  );
+};
+
 /**
  * Vollbild-Foto mit dunklem Verlauf und unten sitzendem Text — für den
  * „Mensch dahinter"-Beat. Foto zoomt langsam (Ken-Burns), Text kommt mit Feder.
