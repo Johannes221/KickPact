@@ -113,12 +113,15 @@ export default function LandingPage() {
                 "linear-gradient(to bottom, rgba(26,26,46,0.35) 0%, rgba(26,26,46,0.05) 12%, rgba(255,255,255,0) 38%, rgba(255,255,255,0.55) 60%, rgba(255,255,255,0.92) 78%, rgba(255,255,255,1) 92%)"
             }}
           />
-          {/* Desktop: stark links deckend weiß bis ~50%, dann fade out nach rechts */}
+          {/* Desktop: leichter Weiß-Wash links (Video scheint durch → mehr Bild
+              sichtbar), hält aber hinter der Textspalte genug Deckkraft für
+              Kontrast ≥4.5:1 auf dem dunklen Text und gibt die rechte Bildhälfte
+              ab ~62% komplett frei. */}
           <div
             className="absolute inset-0 hidden md:block"
             style={{
               background:
-                "linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0.98) 32%, rgba(255,255,255,0.7) 48%, rgba(255,255,255,0) 70%)"
+                "linear-gradient(to right, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.8) 34%, rgba(255,255,255,0.4) 54%, rgba(255,255,255,0) 66%)"
             }}
           />
         </div>
