@@ -88,6 +88,21 @@ export default function LandingPage() {
             className="object-cover animate-ken-burns"
             style={{ objectPosition: "center 28%" }}
           />
+          {/* Hero-Video über dem Foto: Foto bleibt als Ladephase- und
+              prefers-reduced-motion-Fallback sichtbar. Stumm + playsInline
+              sind Pflicht für Autoplay auf iOS. */}
+          <video
+            className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+            tabIndex={-1}
+          >
+            <source src="/brand/hero-video.mp4" type="video/mp4" />
+          </video>
           {/* Mobile: dezenter Top-Wash für Header-Lesbarkeit + früher und
               dichter einsetzender Weiß-Wash in der Textzone, damit der dunkle
               Body-Text Kontrast ≥4.5:1 erreicht (kein harter Cut). */}
