@@ -4,7 +4,13 @@
 # anything manually.
 
 FROM mcr.microsoft.com/playwright:v1.48.2-jammy AS deps
-WORKDIR /app
+# WORKDIR darf NIE /app heißen: mit Projektpfad /app kollidiert Next.js'
+# Modul-Auflösung mit dem App-Router-Verzeichnis (/app/app) und der Route
+# app/app/ (/app/app/app) — next build hängt dann still das Modul von
+# app/app/page.tsx an die Root-Route "/". Kostete uns die Landingpage auf
+# Staging UND Prod (Root zeigte die /app-Splash). Reproduzierbar: Build in
+# /app → Splash an /, identischer Build in /srv/kickpact → korrekt.
+WORKDIR /srv/kickpact
 
 # Install Node deps with the same --legacy-peer-deps override that Coolify uses
 # (drizzle-kit/orm vs better-auth peer-dep mismatch — fix later by upgrading both).
@@ -17,9 +23,9 @@ RUN npm ci --legacy-peer-deps
 
 # ---------- Builder ----------
 FROM mcr.microsoft.com/playwright:v1.48.2-jammy AS builder
-WORKDIR /app
+WORKDIR /srv/kickpact
 
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /srv/kickpact/node_modules ./node_modules
 COPY . .
 
 # Build-time env vars need to be in scope here for Next.js prerender pages
@@ -41,7 +47,7 @@ RUN DATABASE_URL="${DATABASE_URL:-postgres://build:build@127.0.0.1:5432/build}" 
 
 # ---------- Runner ----------
 FROM mcr.microsoft.com/playwright:v1.48.2-jammy AS runner
-WORKDIR /app
+WORKDIR /srv/kickpact
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -51,16 +57,16 @@ ENV PORT=3000
 ENV TZ=UTC
 
 # Copy built app + production node_modules
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/drizzle ./drizzle
-COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
-COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /srv/kickpact/public ./public
+COPY --from=builder /srv/kickpact/.next ./.next
+COPY --from=builder /srv/kickpact/node_modules ./node_modules
+COPY --from=builder /srv/kickpact/package.json ./package.json
+COPY --from=builder /srv/kickpact/drizzle ./drizzle
+COPY --from=builder /srv/kickpact/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder /srv/kickpact/scripts ./scripts
 # Help-Center liest Markdown via fs.readdir aus docs/help-center/articles/.
 # Ohne diese Zeile crashed /hilfe mit ENOENT zur Runtime.
-COPY --from=builder /app/docs/help-center ./docs/help-center
+COPY --from=builder /srv/kickpact/docs/help-center ./docs/help-center
 
 EXPOSE 3000
 CMD ["npm", "start"]
