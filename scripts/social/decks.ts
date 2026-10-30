@@ -90,21 +90,12 @@ export interface Deck {
   angle: string;
   /** Standard ist "feed". */
   format?: Format;
-  /** Instagram-/Facebook-Caption. Wird als caption.txt mit ausgegeben. */
+  /** Instagram-/Facebook-Caption. Hashtags kommen zentral aus tags.ts dazu. */
   caption: string;
-  hashtags: string[];
   slides: Slide[];
 }
 
 /* -------------------------------------------------------------------------- */
-
-const TAGS = [
-  "#amateurfußball",
-  "#kreisliga",
-  "#vereinsleben",
-  "#mannschaftskasse",
-  "#kickpact"
-];
 
 /** Steht unter fast jedem Deck. Einmal formuliert, überall gleich. */
 const CTA_PREIS: Slide = {
@@ -125,7 +116,6 @@ export const DECKS: Deck[] = [
       "Zahlungsübersicht.\n\n" +
       "Ab 4,99 € im Monat pro Mannschaft. 30 Tage kostenlos, ohne Kreditkarte.\n" +
       "kickpact.com, Link in der Bio.",
-    hashtags: TAGS,
     slides: [
       {
         kicker: "In 60 Sekunden",
@@ -191,7 +181,6 @@ export const DECKS: Deck[] = [
       "Von „pro Tor“ über „Tor hinter der Mittellinie“ bis „Aufstieg“. Die " +
       "Beträge hier sind die Voreinstellungen, jeder Sponsor kann sie ändern.\n\n" +
       "Welchen würdet ihr nehmen? Ab in die Kommentare.\n\nkickpact.com",
-    hashtags: [...TAGS, "#kabine"],
     slides: [
       {
         kicker: "24 Typen",
@@ -276,7 +265,6 @@ export const DECKS: Deck[] = [
       "Und übersehen dabei die Leute, die eh jedes Wochenende an der Linie " +
       "stehen.\n\n" +
       "Keine Firmen. Eltern, Ehemalige, Onkel, Nachbarn.\n\nkickpact.com",
-    hashtags: TAGS,
     slides: [
       {
         kicker: "Sponsorensuche",
@@ -327,7 +315,6 @@ export const DECKS: Deck[] = [
       "Die vier Fragen, die im Vorstand immer kommen. Kurz beantwortet.\n\n" +
       "Wenn eure nicht dabei ist: ab in die Kommentare, ich antworte da.\n\n" +
       "kickpact.com",
-    hashtags: TAGS,
     slides: [
       {
         kicker: "Vorstandssitzung",
@@ -364,6 +351,103 @@ export const DECKS: Deck[] = [
         kicker: "kickpact.com",
         headline: "Noch eine Frage offen?",
         body: "Ab in die Kommentare. Ich antworte da.",
+        logo: true
+      }
+    ]
+  },
+
+  {
+    // Der Saison-Rückblick als Karussell — das virale Feature zum Durchwischen.
+    // Zahlen als Vorschau/Beispiel, keine Behauptung über eine echte Mannschaft.
+    slug: "05-saison-rueckblick",
+    angle: "Saison-Rückblick",
+    caption:
+      "Am Saisonende kriegt ihr euren Rückblick — wie Spotify Wrapped, nur für " +
+      "eure Mannschaft. Tore, Serien, Torschützen, Bilanz. Alles automatisch " +
+      "gezählt, fertig gestaltet, direkt in eure Story.\n\n" +
+      "Das ist der Moment, den ihr teilt. Mach deinen mit KickPact.\n\n" +
+      "kickpact.com",
+    slides: [
+      {
+        kicker: "Am Saisonende",
+        headline: "Euer Rückblick. Wie Spotify Wrapped.",
+        logo: true
+      },
+      {
+        kicker: "Der Clou",
+        headline: "Ihr müsst nichts sammeln.",
+        body: "Tore, Siege, Serien, Torschützen — alles automatisch mitgezählt, die ganze Saison über."
+      },
+      {
+        kicker: "Eure Saison in Zahlen",
+        headline: "Auf einen Blick.",
+        pacts: [
+          { label: "Tore", amount: "34" },
+          { label: "Siege", amount: "12" },
+          { label: "Spiele zu null", amount: "8" }
+        ]
+      },
+      {
+        kicker: "Der Star der Saison",
+        headline: "Euer Toptorjäger, offiziell.",
+        body: "Wer am häufigsten getroffen hat — schwarz auf weiß, nicht aus dem Bauch."
+      },
+      {
+        kicker: "Die Momente",
+        headline: "Comebacks, Kantersiege, die Null hinten.",
+        body: "Genau die Geschichten, die eine Saison ausmachen.",
+        tone: "photo",
+        photo: "team-celebration"
+      },
+      {
+        kicker: "Zum Teilen gemacht",
+        headline: "15 fertige Bilder für eure Story.",
+        body: "Ein Tipp, und der ganze Verein sieht, was ihr geleistet habt."
+      },
+      {
+        kicker: "kickpact.com",
+        headline: "Mach deinen Saison-Rückblick.",
+        body: "30 Tage kostenlos testen. Link in der Bio.",
+        logo: true
+      }
+    ]
+  },
+
+  {
+    // Feature #44: „Spiel ankündigen". Slide 2 und 3 zeigen die ECHTEN
+    // Story-Motive aus der App (story-image-Route, via social:capture geholt) im
+    // Handy-Rahmen — kein nachgebautes Mockup.
+    slug: "06-spiel-ankuendigen",
+    angle: "Features",
+    caption:
+      "Spieltag, und wieder soll irgendwer schnell eine Grafik basteln? Macht die " +
+      "App. Ein Tipp, fertige Instagram-Story fürs nächste Spiel: Gegner, Datum, " +
+      "Heim oder Auswärts, Tabellenplatz. Teilen, fertig. Nach dem Abpfiff dasselbe " +
+      "mit Ergebnis und Torschützen. Ab 4,99 € pro Mannschaft im Monat.\n\n" +
+      "kickpact.com",
+    slides: [
+      {
+        kicker: "Spieltag",
+        headline: "Euer nächstes Spiel, angekündigt in zehn Sekunden.",
+        body: "Ein Tipp in der App, fertige Story, teilen. Ohne dass jemand eine Grafik baut."
+      },
+      {
+        headline: "Gegner, Datum, Heim oder Auswärts. Automatisch drauf.",
+        body: "Und der Tabellenplatz, wenn er schon feststeht.",
+        screenshot: "spiel-vorschau"
+      },
+      {
+        headline: "Nach dem Spiel: Ergebnis und Torschützen.",
+        body: "Heimsieg, Auswärtssieg oder Remis. Die Story weiß, was ihr gespielt habt.",
+        screenshot: "spiel-rueckblick"
+      },
+      {
+        headline: "Unten steht immer: presented by KickPact.",
+        body: "Ihr kündigt euer Spiel an, wir fahren mit. Deshalb bleibt es günstig."
+      },
+      {
+        headline: "Weniger als 1 € pro Spieler im Monat.",
+        body: "KickPact laden, Mannschaft anlegen, loslegen. Ab 4,99 € pro Mannschaft und Monat.",
         logo: true
       }
     ]

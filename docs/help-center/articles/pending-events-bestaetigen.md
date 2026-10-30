@@ -9,8 +9,8 @@ related_articles:
   - "event-bestreiten"
   - "manual-trigger-katalog"
   - "reminder-logik"
-  - "expired-am-saison-ende"
-last_updated: "2026-05-25"
+  - "disputes-und-trust"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -66,7 +66,7 @@ Du als Sponsor siehst die Konfiguration in deinem Dashboard transparent: "Pendin
 
 ## Empfehlung: Wöchentlich kurz reingucken
 
-Wenn dein Verein viel meldet (Kopfball-Pacts, Spieler des Spiels), kommen pro Spieltag mehrere Pending Events. Einmal pro Woche 5 Minuten:
+Wenn dein Verein viel meldet (Kopfball-Pacts, Karten), kommen pro Spieltag mehrere Pending Events. Einmal pro Woche 5 Minuten:
 
 1. Inbox öffnen.
 2. Alle plausiblen Events markieren + **Bestätigen**.

@@ -15,11 +15,68 @@ const { convertMock } = vi.hoisted(() => ({ convertMock: vi.fn() }));
 
 vi.mock("heic-convert", () => ({ default: convertMock }));
 
+import { deflateSync } from "node:zlib";
 import {
   normalizeImageUpload,
   sniffImageFormat,
+  isSolidColorPng,
   MAX_IMAGE_BYTES
 } from "@/lib/storage/images";
+
+/**
+ * Baut ein echtes, minimales PNG (8-bit RGB, Filter 0) — nötig, weil
+ * `isSolidColorPng` die Pixel wirklich dekomprimiert (Magic-Bytes-Padding
+ * genügt hier nicht). `pixel(x,y)` liefert [r,g,b].
+ */
+function makeRgbPng(
+  width: number,
+  height: number,
+  pixel: (x: number, y: number) => [number, number, number]
+): Buffer {
+  const stride = width * 3;
+  const raw = Buffer.alloc((stride + 1) * height);
+  for (let y = 0; y < height; y++) {
+    raw[y * (stride + 1)] = 0; // Filter „None"
+    for (let x = 0; x < width; x++) {
+      const [r, g, b] = pixel(x, y);
+      const p = y * (stride + 1) + 1 + x * 3;
+      raw[p] = r;
+      raw[p + 1] = g;
+      raw[p + 2] = b;
+    }
+  }
+  const crcTable: number[] = [];
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    crcTable[n] = c >>> 0;
+  }
+  const crc32 = (buf: Buffer): number => {
+    let crc = 0xffffffff;
+    for (let i = 0; i < buf.length; i++) crc = crcTable[(crc ^ buf[i]) & 0xff] ^ (crc >>> 8);
+    return (crc ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type: string, data: Buffer): Buffer => {
+    const len = Buffer.alloc(4);
+    len.writeUInt32BE(data.length, 0);
+    const tb = Buffer.from(type, "ascii");
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(crc32(Buffer.concat([tb, data])), 0);
+    return Buffer.concat([len, tb, data, crc]);
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8; // bitDepth
+  ihdr[9] = 2; // colorType RGB
+  const sig = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  return Buffer.concat([
+    sig,
+    chunk("IHDR", ihdr),
+    chunk("IDAT", deflateSync(raw)),
+    chunk("IEND", Buffer.alloc(0))
+  ]);
+}
 
 // Gültige Datei-Signaturen (Magic-Bytes) + Padding, damit der L3-Content-Sniff
 // greift. Die Tests prüfen die Verzweigungslogik, nicht echte Bilddekodierung.
@@ -180,5 +237,53 @@ describe("sniffImageFormat (L3)", () => {
   it("gibt null für Nicht-Bilder und zu kurze Buffer zurück", () => {
     expect(sniffImageFormat(Buffer.from("%PDF-1.7 not an image"))).toBeNull();
     expect(sniffImageFormat(Buffer.from("ab"))).toBeNull();
+  });
+});
+
+describe("isSolidColorPng", () => {
+  it("erkennt ein einfarbiges PNG (Platzhalter-Fall)", () => {
+    // Der reale Fall: ein 256×256-#EA580C-Quadrat, das als Team-Logo hochgeladen
+    // wurde und das echte Wappen verdeckte.
+    expect(isSolidColorPng(makeRgbPng(256, 256, () => [0xea, 0x58, 0x0c]))).toBe(true);
+  });
+
+  it("erkennt auch ein kleines/1×1 einfarbiges PNG", () => {
+    expect(isSolidColorPng(makeRgbPng(1, 1, () => [0, 0, 0]))).toBe(true);
+    expect(isSolidColorPng(makeRgbPng(8, 8, () => [12, 34, 56]))).toBe(true);
+  });
+
+  it("lässt ein mehrfarbiges Bild durch (kein Fehlalarm)", () => {
+    // Zwei-Farben-Logo, Verlauf und ein einzelnes abweichendes Pixel: alles echt.
+    expect(isSolidColorPng(makeRgbPng(64, 64, (x) => (x < 32 ? [10, 20, 30] : [200, 200, 200])))).toBe(false);
+    expect(isSolidColorPng(makeRgbPng(64, 64, (x, y) => [x * 3, y * 3, 128]))).toBe(false);
+    expect(
+      isSolidColorPng(makeRgbPng(16, 16, (x, y) => (x === 0 && y === 0 ? [1, 2, 3] : [9, 9, 9])))
+    ).toBe(false);
+  });
+
+  it("gibt bei Nicht-PNG / kaputten Bytes false zurück (keine Aussage)", () => {
+    expect(isSolidColorPng(Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4]))).toBe(false); // JPEG-Signatur
+    expect(isSolidColorPng(Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from("short")]))).toBe(false);
+    expect(isSolidColorPng(Buffer.from("not an image at all"))).toBe(false);
+  });
+});
+
+describe("normalizeImageUpload — einfarbiges Logo", () => {
+  it("lehnt ein solides Farbquadrat ab (Platzhalter verdeckt sonst das Wappen)", async () => {
+    const solid = makeRgbPng(256, 256, () => [0xea, 0x58, 0x0c]);
+    await expect(
+      normalizeImageUpload({ bytes: solid, contentType: "image/png", filename: "logo.png" })
+    ).rejects.toThrow(/einfarbig|echtes/i);
+  });
+
+  it("lässt ein echtes (mehrfarbiges) PNG unverändert durch", async () => {
+    const real = makeRgbPng(64, 64, (x, y) => [x * 3, y * 3, 100]);
+    const out = await normalizeImageUpload({
+      bytes: real,
+      contentType: "image/png",
+      filename: "wappen.png"
+    });
+    expect(out.contentType).toBe("image/png");
+    expect(out.bytes).toEqual(real);
   });
 });

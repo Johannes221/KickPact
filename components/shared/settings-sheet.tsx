@@ -209,7 +209,14 @@ export function SettingsSheet({
                   onClick={close}
                   className="flex items-center gap-3 border-t border-brand-neutral/25 bg-accent/8 px-3.5 py-3"
                 >
-                  <IdentityIcon kind={currentEntry.kind} className="h-7 w-7 shrink-0" />
+                  <IdentityIcon
+                    kind={currentEntry.kind}
+                    crest={{
+                      name: currentEntry.label,
+                      fussballdeTeamId: currentEntry.fussballdeTeamId
+                    }}
+                    className="h-7 w-7 shrink-0"
+                  />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[15px] font-semibold text-brand-night-navy">
                       {currentEntry.label}
@@ -231,7 +238,11 @@ export function SettingsSheet({
                   onClick={close}
                   className="flex items-center gap-3 border-t border-brand-neutral/25 px-3.5 py-3 text-brand-night-navy active:bg-brand-off-white"
                 >
-                  <IdentityIcon kind={e.kind} className="h-7 w-7 shrink-0" />
+                  <IdentityIcon
+                    kind={e.kind}
+                    crest={{ name: e.label, fussballdeTeamId: e.fussballdeTeamId }}
+                    className="h-7 w-7 shrink-0"
+                  />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[15px] font-medium">
                       {e.label}

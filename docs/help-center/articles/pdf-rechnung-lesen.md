@@ -9,7 +9,7 @@ related_articles:
   - "so-funktioniert-die-monatsrechnung"
   - "ust-und-kleinunternehmer"
   - "als-bezahlt-markieren"
-  - "csv-export-fuer-buchhaltung"
+  - "vereins-stammdaten-und-logo"
 last_updated: "2026-07-06"
 status: "published"
 ---

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { CalendarClock, Trophy } from "lucide-react";
+import { TeamCrest } from "@/components/shared/team-crest";
+import { crestSrc } from "@/lib/utils/crest-url";
 import type {
   SponsoredTeamMatches,
   SponsoredTeamMatch
@@ -90,8 +92,12 @@ function MatchRow({
       </span>
       {match ? (
         <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
-          <span className="min-w-0 truncate text-xs text-brand-night-navy/80">
-            {match.heimName} – {match.gastName}
+          <span className="flex min-w-0 items-center gap-1.5 text-xs text-brand-night-navy/80">
+            <TeamCrest name={match.heimName} src={crestSrc(match.heimName, match.heimTeamId)} size={16} />
+            <span className="min-w-0 truncate">
+              {match.heimName} – {match.gastName}
+            </span>
+            <TeamCrest name={match.gastName} src={crestSrc(match.gastName, match.gastTeamId)} size={16} />
           </span>
           <span className="shrink-0 text-xs font-semibold text-brand-night-navy">
             {score(match) ?? formatDate(match.datum)}

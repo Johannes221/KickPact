@@ -3,8 +3,9 @@ import { mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import React from "react";
 import { ImageResponse } from "next/og";
-import type { Pact, Tone } from "./decks";
 import { BODY, DISPLAY, FONTS, LOGO_RATIO, VERTICAL, photo, typo, type PhotoName } from "./brand";
+import { HASHTAG_LINE } from "./tags";
+import { SPOTS, type Beat, type Spot } from "./spots";
 import { Backdrop, Kicker, PactCards, headlineSize, tone } from "./layout";
 
 /**
@@ -28,194 +29,6 @@ const PAD = 96;
 const CONTENT_WIDTH = VERTICAL.width - 2 * PAD;
 
 /* -------------------------------- Inhalte --------------------------------- */
-
-interface Beat {
-  kicker?: string;
-  headline: string;
-  body?: string;
-  tone?: Tone;
-  photo?: PhotoName;
-  pacts?: Pact[];
-  logo?: boolean;
-  /** Standzeit in Sekunden, inklusive Einblendung. */
-  sec: number;
-}
-
-interface Spot {
-  slug: string;
-  /** Kurzbeschreibung fürs Log. Nur Doku. */
-  angle: string;
-  caption: string;
-  beats: Beat[];
-}
-
-/**
- * Lesezeit ist die Grenze, nicht der Geschmack: bei ~3 Wörtern pro Sekunde
- * braucht eine Headline mit Body real 3 Sekunden, sonst wischt der Daumen
- * weiter, bevor der Satz angekommen ist. Beats mit Pact-Karten brauchen mehr,
- * weil drei Karten drei Blicke sind.
- *
- * Alle Beträge sind die echten Defaults aus dem Pact-Builder (TRIGGER_LIBRARY),
- * alle Preise aus lib/stripe/pricing.ts. Nichts geschätzt. Beworben wird die
- * MANNSCHAFTSLIZENZ (Basic, 4,99 €/Monat), nicht die Vereinslizenz.
- */
-export const SPOTS: Spot[] = [
-  {
-    slug: "01-so-funktioniert-ein-pact",
-    angle: "Erklärung",
-    caption:
-      "Sponsoring im Amateurfußball läuft so: einmal im Jahr 300 Euro, dafür ein " +
-      "Banner am Zaun, das keiner liest.\n\n" +
-      "Ein Pact läuft anders.\n\n" +
-      "Ab 4,99 € im Monat pro Mannschaft, 30 Tage kostenlos.\nkickpact.com",
-    beats: [
-      { headline: "So funktioniert ein Pact.", logo: true, sec: 2.4 },
-      {
-        kicker: "Der Mensch dahinter",
-        headline: "Euer Onkel will euch unterstützen.",
-        body: "Nicht mit 50 Euro im Umschlag, einmal im Jahr.",
-        tone: "photo",
-        photo: "player-and-sponsor",
-        sec: 3.4
-      },
-      {
-        kicker: "Schritt 1",
-        headline: "Seine Regeln, seine Beträge.",
-        pacts: [
-          { label: "Pro Tor", amount: "5 €" },
-          { label: "Pro Sieg", amount: "10 €" },
-          { label: "Pro Comeback-Sieg", amount: "20 €" }
-        ],
-        sec: 4.2
-      },
-      {
-        kicker: "Schritt 2",
-        headline: "Ihr spielt. Mehr nicht.",
-        body: "Die Spieldaten kommen automatisch. Ihr tragt nichts ein.",
-        sec: 3.2
-      },
-      { headline: "2 Tore und ein Comeback. 30 € in der Kasse.", sec: 3.0 },
-      {
-        kicker: "Und die Angst davor?",
-        headline: "Er setzt sein Monatslimit selbst.",
-        body: "Darüber läuft nichts.",
-        sec: 3.0
-      },
-      {
-        kicker: "Mannschaftslizenz",
-        headline: "Ab 4,99 € im Monat.",
-        body: "30 Tage kostenlos testen, ohne Kreditkarte.",
-        logo: true,
-        sec: 3.4
-      }
-    ]
-  },
-
-  {
-    slug: "02-was-ihr-festlegen-koennt",
-    angle: "Features",
-    caption:
-      "24 Pact-Typen. Von „pro Tor“ bis „Tor hinter der Mittellinie“.\n\n" +
-      "Die Beträge sind Voreinstellungen, jeder Sponsor ändert sie selbst.\n\n" +
-      "Welchen würdet ihr nehmen?\nkickpact.com",
-    beats: [
-      { headline: "Wofür kann euch jemand sponsern?", logo: true, sec: 2.6 },
-      {
-        kicker: "Kurz vorweg",
-        headline: "Ihr legt fest, was zählt.",
-        body: "Nicht wir.",
-        tone: "photo",
-        photo: "team-green",
-        sec: 3.0
-      },
-      {
-        kicker: "Die Klassiker",
-        headline: "Tore und Siege.",
-        pacts: [
-          { label: "Pro Tor", amount: "5 €" },
-          { label: "Pro Sieg", amount: "10 €" },
-          { label: "Pro Auswärtssieg", amount: "15 €" }
-        ],
-        sec: 3.8
-      },
-      {
-        kicker: "Für hinten",
-        headline: "Auch die Null wird bezahlt.",
-        pacts: [
-          { label: "Pro Zu-Null-Sieg", amount: "5 €" },
-          { label: "Pro Comeback-Sieg", amount: "20 €" }
-        ],
-        sec: 3.4
-      },
-      {
-        kicker: "Für die Kunststücke",
-        headline: "Das Ding aus 50 Metern.",
-        pacts: [
-          { label: "Kopfballtor", amount: "10 €" },
-          { label: "Hackentor", amount: "15 €" },
-          { label: "Tor hinter Mittellinie", amount: "25 €" }
-        ],
-        sec: 4.0
-      },
-      {
-        kicker: "Für die ganze Saison",
-        headline: "Das Große kommt am Ende.",
-        pacts: [
-          { label: "Klassenerhalt", amount: "100 €" },
-          { label: "Aufstieg", amount: "200 €" },
-          { label: "Meister-Titel", amount: "300 €" }
-        ],
-        sec: 4.0
-      },
-      {
-        kicker: "24 Typen",
-        headline: "Ab 4,99 € im Monat.",
-        body: "Pro Mannschaft. 30 Tage kostenlos.",
-        logo: true,
-        sec: 3.2
-      }
-    ]
-  },
-
-  {
-    slug: "03-wer-sponsert-euch",
-    angle: "Mannschaftskasse",
-    caption:
-      "Ihr sucht Sponsoren beim Autohaus und übersehen die Leute, die eh jedes " +
-      "Wochenende an der Linie stehen.\n\nkickpact.com",
-    beats: [
-      { headline: "Ihr fragt die Falschen.", logo: true, sec: 2.4 },
-      {
-        kicker: "Der übliche Weg",
-        headline: "Autohaus. Bäcker. Getränkemarkt.",
-        body: "Drei Anrufe, zwei Absagen, einmal 50 Euro.",
-        sec: 3.2
-      },
-      {
-        kicker: "Dabei",
-        headline: "Die Richtigen stehen schon da.",
-        body: "Jeden Samstag, an der Linie, bei 3 Grad.",
-        tone: "photo",
-        photo: "team-celebration",
-        sec: 3.4
-      },
-      {
-        kicker: "Wer das ist",
-        headline: "Eltern. Ehemalige. Der Onkel.",
-        body: "Privatleute, keine Firmen. Genau das ist der Punkt.",
-        sec: 3.2
-      },
-      { headline: "Die wollen kein Logo am Zaun. Die wollen dabei sein.", sec: 3.2 },
-      {
-        kicker: "Mannschaftslizenz",
-        headline: "Ab 4,99 € im Monat.",
-        body: "30 Tage kostenlos testen.",
-        logo: true,
-        sec: 2.8
-      }
-    ]
-  }
-];
 
 /* ------------------------------- Animation -------------------------------- */
 
@@ -345,58 +158,20 @@ function Frame({ beat, tSec, progress }: { beat: Beat; tSec: number; progress: n
 
 /* --------------------------------- Audio ---------------------------------- */
 
-/**
- * Der Klangteppich: derselbe A-Dur-Pad, den das Saison-Wrapped im Produkt spielt
- * (app/.../wrapped/_components/use-ambient-audio.ts).
+/*
+ * REELS SIND STUMM — bewusst.
  *
- * WARUM SYNTHETISIERT UND KEINE MUSIKDATEI: exakt aus dem Grund, den das Wrapped
- * schon dokumentiert — kein Lizenz- oder Copyright-Risiko, kein fremdes Asset im
- * Repo. Ein zugekaufter Track müsste lizenziert, bezahlt und verwaltet werden;
- * ein „irgendwo runtergeladener" wäre eine Abmahnung mit Anlauf. Das hier gehört
- * uns, klingt in jedem Reel gleich und ist damit nebenbei ein Wiedererkennungs-
- * merkmal.
+ * Kurz gab es hier einen reingebackenen A-Dur-Pad (aus dem Saison-Wrapped). Auf
+ * dem geposteten Reel klang der Dauer-Ton unter einem Fußball-Clip schräg
+ * (Johannes, 2026-07-20). Und der eigentliche Grund wiegt schwerer: echte
+ * Instagram-Musik kann die API nicht (Copyright), und ein per API geposteter Reel
+ * lässt sich nachträglich nicht mehr vertonen.
  *
- * Nachgebaut aus dem Wrapped-Pad: A-Dur über zwei Oktaven (A2, C#3, E3, A3),
- * minimal verstimmt für Breite, Lowpass bei 700 Hz, sanfter Ein- und Ausfader.
- * Eine Vereinfachung gegenüber dem Produkt: dort moduliert ein LFO langsam den
- * Filter-Cutoff, das lässt ffmpeg so nicht zu. Über 20 Sekunden hört man den
- * Unterschied nicht, der Pad steht ohnehin fast still.
- *
- * Das ist ein BETT, kein Song. Es soll unter dem Text liegen und nicht auffallen.
- * Wer auf Instagram einen Track aus dem lizenzierten Katalog drüberlegt,
- * überschreibt es einfach.
+ * Konsequenz: Reels rendern OHNE Ton. Für Reichweite werden sie ohnehin von Hand
+ * gepostet und in der App mit echter Katalog-Musik unterlegt — dafür ist eine
+ * stumme Quelle genau richtig. Die Automatik trägt Stories und Karussells, wo
+ * Musik keine Rolle spielt.
  */
-const PAD_HZ = [109.62, 138.43, 165.0, 220.76];
-const PAD_WEIGHTS = [0.5, 0.3, 0.3, 0.3];
-/**
- * Leise genug, um nicht aufzufallen, laut genug, um da zu sein: gemessen ~-21 dB
- * Spitze, der uebliche Bereich fuer ein Hintergrundbett ohne Sprecher. Mit dem
- * Wert des Wrapped-Pads (0.05 Master) waere es auf dem Handy unhoerbar gewesen —
- * dort liegt der Pad unter einer bedienten Oberflaeche, hier traegt er allein.
- */
-const PAD_GAIN = 0.5;
-const FADE = 1.5;
-
-/**
- * ffmpeg-Argumente fuer den Pad. `videoInputs` = wie viele Eingaenge VOR den
- * Sinus-Toenen liegen; die Filter-Labels muessen daran vorbei zaehlen, sonst
- * mischt ffmpeg die Bildsequenz als Audio (real passiert: [0] war das Video).
- */
-function padArgs(sec: number, videoInputs: number): string[] {
-  const inputs = PAD_HZ.flatMap((hz) => [
-    "-f", "lavfi",
-    "-i", `sine=frequency=${hz}:duration=${sec.toFixed(3)}`
-  ]);
-  const fadeOutStart = Math.max(0, sec - FADE);
-  // normalize=0: amix würde sonst die Summe durch die Eingangszahl teilen und
-  // die Gewichte damit wirkungslos machen.
-  const labels = PAD_HZ.map((_, i) => `[${videoInputs + i}]`).join("");
-  const filter =
-    `${labels}amix=inputs=${PAD_HZ.length}:weights=${PAD_WEIGHTS.join(" ")}:normalize=0,` +
-    `lowpass=f=700,volume=${PAD_GAIN},` +
-    `afade=t=in:st=0:d=${FADE},afade=t=out:st=${fadeOutStart.toFixed(3)}:d=${FADE}[a]`;
-  return [...inputs, "-filter_complex", filter, "-map", "0:v", "-map", "[a]"];
-}
 
 /* --------------------------------- Runner --------------------------------- */
 
@@ -431,21 +206,18 @@ async function renderSpot(spot: Spot): Promise<{ frames: number; sec: number }> 
 
   // yuv420p + High-Profile: ohne das zeigen Instagram und QuickTime das Video
   // schlicht nicht an. faststart zieht den Index nach vorn (Web-Abspielen).
-  // Audio als AAC 128k — der Standard, den jede Plattform annimmt.
+  // -an: kein Ton (s.o.).
   execFileSync(
     "ffmpeg",
     [
       "-y", "-loglevel", "error",
       "-framerate", String(FPS),
       "-i", join(frameDir, "%05d.png"),
-      ...padArgs(sec, 1),
       "-c:v", "libx264",
       "-profile:v", "high",
       "-pix_fmt", "yuv420p",
       "-crf", "18",
-      "-c:a", "aac",
-      "-b:a", "128k",
-      "-shortest",
+      "-an",
       "-movflags", "+faststart",
       join(OUT, `${spot.slug}.mp4`)
     ],
@@ -453,7 +225,7 @@ async function renderSpot(spot: Spot): Promise<{ frames: number; sec: number }> 
   );
 
   rmSync(frameDir, { recursive: true, force: true });
-  writeFileSync(join(OUT, `${spot.slug}.caption.txt`), `${spot.caption}\n`, "utf8");
+  writeFileSync(join(OUT, `${spot.slug}.caption.txt`), `${spot.caption}\n\n${HASHTAG_LINE}\n`, "utf8");
 
   return { frames: frame, sec };
 }

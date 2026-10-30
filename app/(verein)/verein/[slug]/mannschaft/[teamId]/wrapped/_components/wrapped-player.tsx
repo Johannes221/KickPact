@@ -22,10 +22,53 @@ import {
  * Schließen-X → Dashboard. CSS-Keyframes + requestAnimationFrame-Count-Up —
  * bewusst KEINE neue Dependency. Mobile = echtes Vollbild, Desktop = zentrierter
  * 9:16-Phone-Rahmen.
+ *
+ * Auf die weiße KickPact-CI umgestellt (2026-07-20): weiße Fläche, Navy-Text,
+ * Grün als Akzent — identisch zum Share-Bild (app/api/.../wrapped-image). Orange
+ * und Lime kommen in der Marke nicht vor. Grün #01C457 hat auf Weiß nur 2,3:1 →
+ * als TEXT nie Grün, sondern Green-Dark #00563A; Grün nur als Fläche/Balken.
  */
 
 const SLIDE_MS = 6000;
 const HOLD_MS = 200;
+
+// CI-Farben (hart, KEIN Import aus lib/og/brand.ts — das liest beim Modul-Load
+// Dateien von der Platte und crasht im Client-Bundle).
+const GREEN = "#01C457"; // Fläche/Balken/Badges
+const GREEN_DARK = "#00563A"; // grüner Text auf Weiß (lesbar)
+const NAVY = "#1A1A2E"; // Text + „Schwarz" der Marke
+const ALERT_RED = "#FF3127";
+const NEUTRAL = "#CDD2D1";
+
+/**
+ * Pro Slide eine FLÄCHE (Kante, Glow, Button-Fill) und eine TINTE (Kicker, große
+ * Zahlen). Spiegelt SLIDE_ACCENTS im Share-Bild 1:1.
+ */
+type Ton = { flaeche: string; tinte: string };
+
+const TON = {
+  gruen: { flaeche: GREEN, tinte: GREEN_DARK },
+  navy: { flaeche: NAVY, tinte: NAVY },
+  rot: { flaeche: ALERT_RED, tinte: ALERT_RED }
+} as const;
+
+const SLIDE_ACCENTS: Record<string, Ton> = {
+  intro: TON.gruen,
+  bilanz: TON.navy,
+  tabellenplatz: TON.gruen,
+  tore: TON.gruen,
+  torschuetze: TON.gruen,
+  ligatorschuetze: TON.gruen,
+  zunull: TON.navy,
+  comebacks: TON.gruen,
+  heimauswaerts: TON.gruen,
+  hoechstersieg: TON.gruen,
+  vstop3: TON.navy,
+  fairness: TON.navy,
+  beitraege: TON.gruen,
+  simulation: TON.gruen,
+  zusammenfassung: TON.gruen
+};
 
 /**
  * Share-Fehler sichtbar machen (UI-Standard: kein stilles Scheitern) —
@@ -37,9 +80,6 @@ function notifyShareError(err: unknown) {
   if (/cancel/i.test(msg)) return;
   toast.error("Teilen hat nicht geklappt — bitte nochmal versuchen.");
 }
-
-/** Akzentfarben pro Slide — Brand-Energie: Orange / Rot / Lime im Wechsel. */
-const ACCENTS = ["#FF6A30", "#FF3127", "#A3E635"] as const;
 
 interface WrappedPlayerProps {
   stats: WrappedStats;
@@ -233,10 +273,10 @@ export function WrappedPlayer({
   );
 
   const slide = slides[index];
-  const accent = ACCENTS[index % ACCENTS.length];
+  const accent = SLIDE_ACCENTS[slide.key] ?? TON.gruen;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F0F1E]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#F5F8F5]">
       <style>{`
         @keyframes wrapped-rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes wrapped-pop { 0% { opacity: 0; transform: scale(0.6); } 70% { transform: scale(1.06); } 100% { opacity: 1; transform: scale(1); } }
@@ -249,13 +289,14 @@ export function WrappedPlayer({
       {/* 9:16-Inhalt: mobil Vollbild, Desktop Phone-Rahmen */}
       <div
         ref={frameRef}
-        className="relative flex h-full w-full flex-col overflow-hidden bg-gradient-to-b from-[#16162B] via-[#0F0F1E] to-[#0F0F1E] sm:h-[min(92vh,860px)] sm:w-auto sm:aspect-[9/16] sm:max-w-[430px] sm:rounded-[2rem] sm:border sm:border-white/10 sm:shadow-2xl"
+        className="relative flex h-full w-full flex-col overflow-hidden bg-gradient-to-b from-white via-white to-[#F5F8F5] sm:h-[min(92vh,860px)] sm:w-auto sm:aspect-[9/16] sm:max-w-[430px] sm:rounded-[2rem] sm:border sm:border-[#1A1A2E]/10 sm:shadow-2xl"
       >
-        {/* Akzent-Glow oben */}
+        {/* Akzent-Kante oben in der Slide-Farbe — zurückhaltend statt Glow-Kreis,
+            der auf Weiß zu einem schmutzigen Schleier würde (wie im Share-Bild). */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-32 -right-32 h-80 w-80 rounded-full opacity-25 blur-3xl transition-colors duration-700"
-          style={{ background: accent }}
+          className="pointer-events-none absolute inset-x-0 top-0 z-0 h-1.5 transition-colors duration-700"
+          style={{ background: accent.flaeche }}
         />
 
         {/* Progress-Bars — pt inkl. Safe-Area: in der iOS-App (viewport-fit=cover)
@@ -264,9 +305,9 @@ export function WrappedPlayer({
             Geräte-Insets nicht (z.B. iPad-App). */}
         <div className="relative z-20 flex gap-1 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:pt-3">
           {slides.map((s, i) => (
-            <div key={s.key} className="h-1 flex-1 overflow-hidden rounded-full bg-white/20">
+            <div key={s.key} className="h-1 flex-1 overflow-hidden rounded-full bg-[#1A1A2E]/15">
               <div
-                className="h-full rounded-full bg-white"
+                className="h-full rounded-full bg-[#1A1A2E]"
                 style={{
                   width: `${i < index ? 100 : i === index ? progress * 100 : 0}%`
                 }}
@@ -277,7 +318,7 @@ export function WrappedPlayer({
 
         {/* Kopfzeile: Saison-Badge + Schließen */}
         <div className="relative z-20 flex items-center justify-between px-4 pt-3">
-          <span className="rounded-full bg-white/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/80">
+          <span className="rounded-full bg-[#1A1A2E]/[0.06] px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[#1A1A2E]/70">
             Wrapped {saisonLabel}
           </span>
           <div className="flex items-center gap-2">
@@ -289,7 +330,7 @@ export function WrappedPlayer({
                 onPointerDown={(e) => e.stopPropagation()}
                 onPointerUp={(e) => e.stopPropagation()}
                 onClick={ambient.toggle}
-                className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white/90 transition-colors hover:bg-white/20"
+                className="grid h-9 w-9 place-items-center rounded-full bg-[#1A1A2E]/[0.06] text-[#1A1A2E] transition-colors hover:bg-[#1A1A2E]/10"
               >
                 {ambient.on ? (
                   <Volume2 className="h-5 w-5" aria-hidden />
@@ -304,7 +345,7 @@ export function WrappedPlayer({
               onPointerDown={(e) => e.stopPropagation()}
               onPointerUp={(e) => e.stopPropagation()}
               onClick={() => router.push(dashboardHref)}
-              className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white/90 transition-colors hover:bg-white/20"
+              className="grid h-9 w-9 place-items-center rounded-full bg-[#1A1A2E]/[0.06] text-[#1A1A2E] transition-colors hover:bg-[#1A1A2E]/10"
             >
               <X className="h-5 w-5" aria-hidden />
             </button>
@@ -341,17 +382,17 @@ export function WrappedPlayer({
               onPointerDown={(e) => e.stopPropagation()}
               onPointerUp={(e) => e.stopPropagation()}
               onClick={() => void share(slide.imageKey!)}
-              className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white/90 transition-colors hover:bg-white/20"
+              className="grid h-10 w-10 place-items-center rounded-full bg-[#1A1A2E]/[0.06] text-[#1A1A2E] transition-colors hover:bg-[#1A1A2E]/10"
             >
               <Share2 className="h-5 w-5" aria-hidden />
             </button>
           </div>
         )}
 
-        {/* Footer: grünes KickPact-Logo */}
+        {/* Footer: navy KickPact-Logo (auf Weiß lesbar) */}
         <div className="pointer-events-none absolute bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-0 right-0 z-10 flex justify-center opacity-70 sm:bottom-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo-green-horizontal.png" alt="KickPact" className="h-4 w-auto" />
+          <img src="/brand/logo-navy-horizontal.png" alt="KickPact" className="h-4 w-auto" />
         </div>
       </div>
     </div>
@@ -371,7 +412,7 @@ function SlideContent({
 }: {
   slideKey: string;
   stats: WrappedStats;
-  accent: string;
+  accent: Ton;
   saisonLabel: string;
   nextSaisonLabel: string;
   sponsorenHref: string;
@@ -423,11 +464,11 @@ function SlideContent({
   }
 }
 
-function Kicker({ children, accent }: { children: React.ReactNode; accent: string }) {
+function Kicker({ children, accent }: { children: React.ReactNode; accent: Ton }) {
   return (
     <div
       className="wr-rise mb-3 text-xs font-bold uppercase tracking-[0.22em]"
-      style={{ color: accent }}
+      style={{ color: accent.tinte }}
     >
       {children}
     </div>
@@ -440,16 +481,16 @@ function BigNumber({
   suffix
 }: {
   value: number | string;
-  accent: string;
+  accent: Ton;
   suffix?: string;
 }) {
   return (
     <div
       className="wr-pop font-display text-[5.5rem] font-black leading-none tracking-tight sm:text-[6.5rem]"
-      style={{ color: accent, animationDelay: "0.15s" }}
+      style={{ color: accent.tinte, animationDelay: "0.15s" }}
     >
       {value}
-      {suffix && <span className="text-[0.4em] font-bold text-white/70"> {suffix}</span>}
+      {suffix && <span className="text-[0.4em] font-bold text-[#1A1A2E]/60"> {suffix}</span>}
     </div>
   );
 }
@@ -457,7 +498,7 @@ function BigNumber({
 function Body({ children, delay = 0.35 }: { children: React.ReactNode; delay?: number }) {
   return (
     <p
-      className="wr-rise mt-4 max-w-[18rem] text-lg font-semibold leading-snug text-white/85"
+      className="wr-rise mt-4 max-w-[18rem] text-lg font-semibold leading-snug text-[#1A1A2E]/80"
       style={{ animationDelay: `${delay}s` }}
     >
       {children}
@@ -471,10 +512,11 @@ function IntroSlide({
   saisonLabel
 }: {
   stats: WrappedStats;
-  accent: string;
+  accent: Ton;
   saisonLabel: string;
 }) {
-  // Confetti-artige Akzente — pure CSS, kein Canvas.
+  // Confetti-artige Akzente — pure CSS, kein Canvas. CI-Palette (Grün, Green-Dark,
+  // Navy, Neutral) — kein Orange/Lime.
   const confetti: Array<{
     top: string;
     left?: string;
@@ -483,11 +525,11 @@ function IntroSlide({
     delay: string;
     rotate: string;
   }> = [
-    { top: "12%", left: "12%", color: "#FF6A30", delay: "0s", rotate: "12deg" },
-    { top: "20%", right: "16%", color: "#A3E635", delay: "0.4s", rotate: "-18deg" },
-    { top: "62%", left: "8%", color: "#FF3127", delay: "0.8s", rotate: "24deg" },
-    { top: "72%", right: "12%", color: "#FF6A30", delay: "1.2s", rotate: "-8deg" },
-    { top: "40%", right: "6%", color: "#A3E635", delay: "1.6s", rotate: "30deg" }
+    { top: "12%", left: "12%", color: GREEN, delay: "0s", rotate: "12deg" },
+    { top: "20%", right: "16%", color: GREEN_DARK, delay: "0.4s", rotate: "-18deg" },
+    { top: "62%", left: "8%", color: NAVY, delay: "0.8s", rotate: "24deg" },
+    { top: "72%", right: "12%", color: GREEN, delay: "1.2s", rotate: "-8deg" },
+    { top: "40%", right: "6%", color: NEUTRAL, delay: "1.6s", rotate: "30deg" }
   ];
   return (
     <div className="relative">
@@ -509,12 +551,12 @@ function IntroSlide({
         />
       ))}
       <Kicker accent={accent}>Euer Saison-Rückblick</Kicker>
-      <h1 className="wr-pop font-display text-5xl font-black leading-[1.05] tracking-tight text-white sm:text-6xl">
+      <h1 className="wr-pop font-display text-5xl font-black leading-[1.05] tracking-tight text-[#1A1A2E] sm:text-6xl">
         EURE
         <br />
         SAISON
         <br />
-        <span style={{ color: accent }}>{saisonLabel}</span>
+        <span style={{ color: accent.tinte }}>{saisonLabel}</span>
       </h1>
       <Body>
         {stats.teamName} — lehnt euch zurück, das hier ist eure Highlight-Rolle. 🎬
@@ -523,7 +565,7 @@ function IntroSlide({
   );
 }
 
-function BilanzSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+function BilanzSlide({ stats, accent }: { stats: WrappedStats; accent: Ton }) {
   const items = [
     { label: "Siege", value: stats.siege },
     { label: "Unentschieden", value: stats.unentschieden },
@@ -532,7 +574,7 @@ function BilanzSlide({ stats, accent }: { stats: WrappedStats; accent: string })
   return (
     <div>
       <Kicker accent={accent}>{scopeKicker(stats.aggregateSource, stats.spiele)}</Kicker>
-      <h2 className="wr-rise font-display text-4xl font-black tracking-tight text-white">
+      <h2 className="wr-rise font-display text-4xl font-black tracking-tight text-[#1A1A2E]">
         {bilanzHeadline(stats.aggregateSource)}
       </h2>
       <div className="mt-8 flex items-end gap-6">
@@ -540,11 +582,11 @@ function BilanzSlide({ stats, accent }: { stats: WrappedStats; accent: string })
           <div key={it.label} className="wr-pop" style={{ animationDelay: `${0.2 + i * 0.15}s` }}>
             <div
               className="font-display text-6xl font-black leading-none tracking-tight"
-              style={{ color: i === 0 ? accent : "#fff" }}
+              style={{ color: i === 0 ? accent.tinte : NAVY }}
             >
               {it.value}
             </div>
-            <div className="mt-2 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/60">
+            <div className="mt-2 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[#1A1A2E]/55">
               {it.label}
             </div>
           </div>
@@ -559,17 +601,17 @@ function BilanzSlide({ stats, accent }: { stats: WrappedStats; accent: string })
   );
 }
 
-function ToreSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+function ToreSlide({ stats, accent }: { stats: WrappedStats; accent: Ton }) {
   const value = useCountUp(stats.toreGeschossen, true);
   return (
     <div>
       <Kicker accent={accent}>Vorne hat&apos;s gescheppert</Kicker>
-      <h2 className="wr-rise font-display text-3xl font-black tracking-tight text-white">
+      <h2 className="wr-rise font-display text-3xl font-black tracking-tight text-[#1A1A2E]">
         Ihr habt
       </h2>
       <BigNumber value={value} accent={accent} />
       <h2
-        className="wr-rise font-display text-3xl font-black tracking-tight text-white"
+        className="wr-rise font-display text-3xl font-black tracking-tight text-[#1A1A2E]"
         style={{ animationDelay: "0.25s" }}
       >
         Tore geballert ⚽
@@ -582,13 +624,13 @@ function ToreSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
   );
 }
 
-function TorschuetzeSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+function TorschuetzeSlide({ stats, accent }: { stats: WrappedStats; accent: Ton }) {
   const ts = stats.besterTorschuetze!;
   const value = useCountUp(ts.tore, true, 1200);
   return (
     <div>
       <Kicker accent={accent}>Euer Knipser</Kicker>
-      <h2 className="wr-pop font-display text-5xl font-black leading-tight tracking-tight text-white">
+      <h2 className="wr-pop font-display text-5xl font-black leading-tight tracking-tight text-[#1A1A2E]">
         {ts.name}
       </h2>
       <BigNumber value={value} accent={accent} suffix={ts.tore === 1 ? "Tor" : "Tore"} />
@@ -597,13 +639,13 @@ function TorschuetzeSlide({ stats, accent }: { stats: WrappedStats; accent: stri
   );
 }
 
-function ZuNullSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+function ZuNullSlide({ stats, accent }: { stats: WrappedStats; accent: Ton }) {
   return (
     <div>
       <Kicker accent={accent}>Hinten dicht</Kicker>
       <BigNumber value={`${stats.zuNull}×`} accent={accent} />
       <h2
-        className="wr-rise font-display text-3xl font-black tracking-tight text-white"
+        className="wr-rise font-display text-3xl font-black tracking-tight text-[#1A1A2E]"
         style={{ animationDelay: "0.25s" }}
       >
         zu Null gewonnen
@@ -613,13 +655,13 @@ function ZuNullSlide({ stats, accent }: { stats: WrappedStats; accent: string })
   );
 }
 
-function ComebacksSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+function ComebacksSlide({ stats, accent }: { stats: WrappedStats; accent: Ton }) {
   return (
     <div>
       <Kicker accent={accent}>Niemals aufgeben</Kicker>
       <BigNumber value={stats.comebacks} accent={accent} />
       <h2
-        className="wr-rise font-display text-3xl font-black tracking-tight text-white"
+        className="wr-rise font-display text-3xl font-black tracking-tight text-[#1A1A2E]"
         style={{ animationDelay: "0.25s" }}
       >
         Comeback-Sieg{stats.comebacks === 1 ? "" : "e"}
@@ -631,7 +673,7 @@ function ComebacksSlide({ stats, accent }: { stats: WrappedStats; accent: string
   );
 }
 
-function HeimAuswaertsSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+function HeimAuswaertsSlide({ stats, accent }: { stats: WrappedStats; accent: Ton }) {
   const auswaertsStark = stats.auswaertssiege >= stats.heimsiege;
   return (
     <div>
@@ -644,11 +686,11 @@ function HeimAuswaertsSlide({ stats, accent }: { stats: WrappedStats; accent: st
           <div key={it.label} className="wr-pop" style={{ animationDelay: `${0.15 + i * 0.2}s` }}>
             <div
               className="font-display text-7xl font-black leading-none tracking-tight"
-              style={{ color: it.hot ? accent : "#fff" }}
+              style={{ color: it.hot ? accent.tinte : NAVY }}
             >
               {it.value}
             </div>
-            <div className="mt-2 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/60">
+            <div className="mt-2 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[#1A1A2E]/55">
               {it.label}
             </div>
           </div>
@@ -663,13 +705,13 @@ function HeimAuswaertsSlide({ stats, accent }: { stats: WrappedStats; accent: st
   );
 }
 
-function TabellenplatzSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+function TabellenplatzSlide({ stats, accent }: { stats: WrappedStats; accent: Ton }) {
   return (
     <div>
       <Kicker accent={accent}>In der Tabelle</Kicker>
       <BigNumber value={`Platz ${stats.tabellenplatz}`} accent={accent} />
       <h2
-        className="wr-rise font-display text-2xl font-black tracking-tight text-white"
+        className="wr-rise font-display text-2xl font-black tracking-tight text-[#1A1A2E]"
         style={{ animationDelay: "0.25s" }}
       >
         von {stats.teamsInLeague} Teams · {stats.punkte} Punkte
@@ -678,18 +720,18 @@ function TabellenplatzSlide({ stats, accent }: { stats: WrappedStats; accent: st
     </div>
   );
 }
-function LigaTorschuetzeSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+function LigaTorschuetzeSlide({ stats, accent }: { stats: WrappedStats; accent: Ton }) {
   const lt = stats.ligaTorschuetze!;
   const isNr1 = lt.ligaPlatz === 1;
   return (
     <div>
       <Kicker accent={accent}>In der ganzen Liga</Kicker>
-      <h2 className="wr-pop font-display text-4xl font-black leading-tight tracking-tight text-white">
+      <h2 className="wr-pop font-display text-4xl font-black leading-tight tracking-tight text-[#1A1A2E]">
         {lt.name}
       </h2>
       <BigNumber value={`Nr. ${lt.ligaPlatz}`} accent={accent} />
       <h2
-        className="wr-rise font-display text-2xl font-black tracking-tight text-white"
+        className="wr-rise font-display text-2xl font-black tracking-tight text-[#1A1A2E]"
         style={{ animationDelay: "0.25s" }}
       >
         der Liga-Torschützen · {lt.tore} Tore
@@ -703,7 +745,7 @@ function LigaTorschuetzeSlide({ stats, accent }: { stats: WrappedStats; accent: 
   );
 }
 
-function FairnessSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+function FairnessSlide({ stats, accent }: { stats: WrappedStats; accent: Ton }) {
   const f = stats.fairness!;
   const sauber = f.platz <= Math.ceil(f.teamsInLeague / 3);
   return (
@@ -711,7 +753,7 @@ function FairnessSlide({ stats, accent }: { stats: WrappedStats; accent: string 
       <Kicker accent={accent}>Fairnesstabelle</Kicker>
       <BigNumber value={`Platz ${f.platz}`} accent={accent} />
       <h2
-        className="wr-rise font-display text-2xl font-black tracking-tight text-white"
+        className="wr-rise font-display text-2xl font-black tracking-tight text-[#1A1A2E]"
         style={{ animationDelay: "0.25s" }}
       >
         von {f.teamsInLeague} · {f.gelb} Gelbe{f.rot > 0 ? `, ${f.rot} Rote` : ""}
@@ -720,20 +762,20 @@ function FairnessSlide({ stats, accent }: { stats: WrappedStats; accent: string 
         {sauber
           ? "Fair geblieben, die ganze Saison. Sauber gespielt. 🤝"
           : "Vollgas mit Herzblut. Der Schiri kennt euch. 😅"}{" "}
-        <span className="text-white/55">({f.quote.toLocaleString("de-DE")} Karten/Spiel)</span>
+        <span className="text-[#1A1A2E]/50">({f.quote.toLocaleString("de-DE")} Karten/Spiel)</span>
       </Body>
     </div>
   );
 }
 
-function VsTop3Slide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+function VsTop3Slide({ stats, accent }: { stats: WrappedStats; accent: Ton }) {
   const v = stats.vsTop3!;
   return (
     <div>
       <Kicker accent={accent}>Gegen die Top 3</Kicker>
       <BigNumber value={`${v.siege}/${v.unentschieden}/${v.niederlagen}`} accent={accent} />
       <h2
-        className="wr-rise font-display text-2xl font-black tracking-tight text-white"
+        className="wr-rise font-display text-2xl font-black tracking-tight text-[#1A1A2E]"
         style={{ animationDelay: "0.25s" }}
       >
         S/U/N gegen die Spitze
@@ -744,23 +786,23 @@ function VsTop3Slide({ stats, accent }: { stats: WrappedStats; accent: string })
           : v.siege === 0 && v.niederlagen > 0
             ? "Gegen die Spitze noch ausbaufähig — nächste Saison. 😤"
             : "Auf Augenhöhe mit den Besten."}{" "}
-        <span className="text-white/55">(aus {v.spiele} ausgewerteten Spielen)</span>
+        <span className="text-[#1A1A2E]/50">(aus {v.spiele} ausgewerteten Spielen)</span>
       </Body>
     </div>
   );
 }
-function HoechsterSiegSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+function HoechsterSiegSlide({ stats, accent }: { stats: WrappedStats; accent: Ton }) {
   const hs = stats.hoechsterSieg!;
   return (
     <div>
       <Kicker accent={accent}>Euer höchster Sieg</Kicker>
       <BigNumber value={hs.ergebnis} accent={accent} />
       <p
-        className="wr-rise mt-5 text-lg font-bold leading-snug text-white"
+        className="wr-rise mt-5 text-lg font-bold leading-snug text-[#1A1A2E]"
         style={{ animationDelay: "0.35s" }}
       >
         {hs.heimName}
-        <span className="px-2 text-white/40">vs</span>
+        <span className="px-2 text-[#1A1A2E]/40">vs</span>
         {hs.gastName}
       </p>
       <Body delay={0.6}>An diesem Tag hat einfach alles gepasst. 🎯</Body>
@@ -768,17 +810,17 @@ function HoechsterSiegSlide({ stats, accent }: { stats: WrappedStats; accent: st
   );
 }
 
-function BeitraegeSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+function BeitraegeSlide({ stats, accent }: { stats: WrappedStats; accent: Ton }) {
   const value = useCountUp(Math.round(stats.beitraegeSummeCents / 100), true, 1800);
   return (
     <div>
       <Kicker accent={accent}>Eure Sponsoren</Kicker>
-      <h2 className="wr-rise font-display text-3xl font-black tracking-tight text-white">
+      <h2 className="wr-rise font-display text-3xl font-black tracking-tight text-[#1A1A2E]">
         Eure Sponsoren haben
       </h2>
       <BigNumber value={`${value.toLocaleString("de-DE")} €`} accent={accent} />
       <h2
-        className="wr-rise font-display text-3xl font-black tracking-tight text-white"
+        className="wr-rise font-display text-3xl font-black tracking-tight text-[#1A1A2E]"
         style={{ animationDelay: "0.25s" }}
       >
         beigesteuert 🧡
@@ -791,17 +833,17 @@ function BeitraegeSlide({ stats, accent }: { stats: WrappedStats; accent: string
   );
 }
 
-function SimulationSlide({ stats, accent }: { stats: WrappedStats; accent: string }) {
+function SimulationSlide({ stats, accent }: { stats: WrappedStats; accent: Ton }) {
   const value = useCountUp(Math.round((stats.simulationFallbackCents ?? 0) / 100), true, 1800);
   return (
     <div>
       <Kicker accent={accent}>Mal kurz träumen</Kicker>
-      <h2 className="wr-rise font-display text-3xl font-black tracking-tight text-white">
+      <h2 className="wr-rise font-display text-3xl font-black tracking-tight text-[#1A1A2E]">
         Mit einem 1-€-pro-Tor-Pact wären das
       </h2>
       <BigNumber value={`${value.toLocaleString("de-DE")} €`} accent={accent} />
       <h2
-        className="wr-rise font-display text-3xl font-black tracking-tight text-white"
+        className="wr-rise font-display text-3xl font-black tracking-tight text-[#1A1A2E]"
         style={{ animationDelay: "0.25s" }}
       >
         gewesen 👀
@@ -817,7 +859,7 @@ function ZusammenfassungSlide({
   onShare
 }: {
   stats: WrappedStats;
-  accent: string;
+  accent: Ton;
   onShare: (imageKey: string) => void;
 }) {
   const tiles: Array<{ label: string; value: string; sub?: string }> = [
@@ -855,52 +897,53 @@ function ZusammenfassungSlide({
   return (
     <div>
       <Kicker accent={accent}>Die ganze Saison</Kicker>
-      <h2 className="wr-rise font-display text-4xl font-black leading-tight tracking-tight text-white">
+      <h2 className="wr-rise font-display text-4xl font-black leading-tight tracking-tight text-[#1A1A2E]">
         Auf einen Blick
       </h2>
       <div className="mt-6 grid grid-cols-2 gap-3">
         {tiles.map((t, i) => (
           <div
             key={t.label}
-            className="wr-pop rounded-2xl border border-white/10 bg-white/5 p-4"
+            className="wr-pop rounded-2xl border border-[#1A1A2E]/10 bg-[#1A1A2E]/[0.04] p-4"
             style={{ animationDelay: `${0.15 + i * 0.1}s` }}
           >
-            <div className="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-white/50">
+            <div className="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-[#1A1A2E]/50">
               {t.label}
             </div>
             <div
               className="mt-1 font-display text-2xl font-black leading-tight tracking-tight"
-              style={{ color: accent }}
+              style={{ color: accent.tinte }}
             >
               {t.value}
             </div>
-            {t.sub && <div className="mt-0.5 text-[0.7rem] text-white/45">{t.sub}</div>}
+            {t.sub && <div className="mt-0.5 text-[0.7rem] text-[#1A1A2E]/45">{t.sub}</div>}
           </div>
         ))}
       </div>
       {moneyCents > 0 && (
         <div
-          className="wr-rise mt-4 rounded-2xl bg-white/5 p-4 text-center"
+          className="wr-rise mt-4 rounded-2xl bg-[#1A1A2E]/[0.04] p-4 text-center"
           style={{ animationDelay: "0.5s" }}
         >
-          <span className="font-display text-xl font-black text-white">
+          <span className="font-display text-xl font-black text-[#1A1A2E]">
             {eurWhole(moneyCents)}
           </span>
-          <span className="text-white/60">
+          <span className="text-[#1A1A2E]/60">
             {stats.beitraegeSummeCents > 0
               ? " in die Mannschaftskasse 💰"
               : " wären drin gewesen 💰"}
           </span>
         </div>
       )}
-      {/* Dezenter Insta-CTA — das Motiv teilt sich in einem Tap. */}
+      {/* Dezenter Insta-CTA — das Motiv teilt sich in einem Tap. Grüne Fläche,
+          Navy-Text (Grün auf Weiß wäre als Text unlesbar). */}
       <div className="mt-6 flex justify-center">
         <button
           type="button"
           onPointerDown={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
           onClick={() => onShare("zusammenfassung")}
-          className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/15"
+          className="inline-flex items-center gap-2 rounded-full bg-[#01C457] px-5 py-2.5 text-sm font-bold text-[#1A1A2E] transition-opacity hover:opacity-90"
         >
           📲 Jetzt auf Insta teilen
         </button>
@@ -915,7 +958,7 @@ function OutroSlide({
   sponsorenHref,
   onShare
 }: {
-  accent: string;
+  accent: Ton;
   nextSaisonLabel: string;
   sponsorenHref: string;
   onShare: (imageKey: string) => void;
@@ -923,10 +966,10 @@ function OutroSlide({
   return (
     <div>
       <Kicker accent={accent}>Das war&apos;s — fast</Kicker>
-      <h2 className="wr-pop font-display text-4xl font-black leading-tight tracking-tight text-white">
+      <h2 className="wr-pop font-display text-4xl font-black leading-tight tracking-tight text-[#1A1A2E]">
         Auf geht&apos;s in die
         <br />
-        Saison <span style={{ color: accent }}>{nextSaisonLabel}</span>
+        Saison <span style={{ color: accent.tinte }}>{nextSaisonLabel}</span>
       </h2>
       <Body delay={0.4}>Neue Saison, neue Tore, volle Mannschaftskasse. Holt eure Fans an Bord.</Body>
       <div
@@ -937,15 +980,15 @@ function OutroSlide({
       >
         <a
           href={sponsorenHref}
-          className="rounded-full px-6 py-3.5 text-center text-sm font-bold text-[#0F0F1E] transition-opacity hover:opacity-90"
-          style={{ background: accent }}
+          className="rounded-full px-6 py-3.5 text-center text-sm font-bold text-[#1A1A2E] transition-opacity hover:opacity-90"
+          style={{ background: accent.flaeche }}
         >
           Sponsoren für {nextSaisonLabel} einladen
         </a>
         <button
           type="button"
           onClick={() => onShare("intro")}
-          className="rounded-full border border-white/25 bg-white/5 px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/15"
+          className="rounded-full border border-[#1A1A2E]/25 px-6 py-3.5 text-sm font-bold text-[#1A1A2E] transition-colors hover:bg-[#1A1A2E]/[0.06]"
         >
           Teilen
         </button>

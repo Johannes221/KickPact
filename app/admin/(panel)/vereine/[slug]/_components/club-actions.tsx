@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useConfirm, type ConfirmOptions } from "@/components/ui/confirm-dialog";
 import {
   blockClubAction,
   pauseClubSubscriptionAction,
@@ -21,14 +22,15 @@ export function ClubActions({
   subStatus: string | null;
 }) {
   const [pending, startTransition] = useTransition();
+  const { confirm, confirmDialog } = useConfirm();
   const canResume = subStatus === "paused" || subStatus === "cancelled";
 
-  function run<T extends { ok: boolean; error?: string }>(
+  async function run<T extends { ok: boolean; error?: string }>(
     fn: () => Promise<T>,
     successMsg: string,
-    confirmMsg?: string
+    confirmOpts?: ConfirmOptions
   ) {
-    if (confirmMsg && !window.confirm(confirmMsg)) return;
+    if (confirmOpts && !(await confirm(confirmOpts))) return;
     startTransition(async () => {
       try {
         const res = await fn();
@@ -42,6 +44,7 @@ export function ClubActions({
 
   return (
     <div className="flex flex-wrap gap-2">
+      {confirmDialog}
       {!verified && (
         <Button
           size="sm"
@@ -51,7 +54,11 @@ export function ClubActions({
             run(
               () => manualVerifyClubAction({ clubSlug }),
               "Verein manuell verifiziert",
-              "Verein OHNE Dokument manuell verifizieren? Zurückgehaltene Rechnungen werden freigegeben."
+              {
+                title: "Verein ohne Dokument manuell verifizieren?",
+                description: "Zurückgehaltene Rechnungen werden freigegeben.",
+                confirmLabel: "Verifizieren"
+              }
             )
           }
         >
@@ -67,7 +74,11 @@ export function ClubActions({
             run(
               () => resumeSubscriptionAction({ clubSlug }),
               "Abo fortgesetzt (active)",
-              "Abo wirklich fortsetzen (status=active)?"
+              {
+                title: "Abo wirklich fortsetzen?",
+                description: "Status wird auf 'active' gesetzt.",
+                confirmLabel: "Fortsetzen"
+              }
             )
           }
         >
@@ -82,7 +93,10 @@ export function ClubActions({
           run(
             () => pauseClubSubscriptionAction({ clubSlug }),
             "Subscription pausiert",
-            "Subscription wirklich pausieren?"
+            {
+              title: "Subscription wirklich pausieren?",
+              confirmLabel: "Pausieren"
+            }
           )
         }
       >
@@ -96,7 +110,12 @@ export function ClubActions({
           run(
             () => revokeClubVerificationAction({ clubSlug }),
             "Verifikation revoked",
-            "Verifikation wirklich revoken? Verein muss neu hochladen."
+            {
+              title: "Verifikation wirklich revoken?",
+              description: "Verein muss neu hochladen.",
+              confirmLabel: "Revoken",
+              danger: true
+            }
           )
         }
       >
@@ -110,7 +129,12 @@ export function ClubActions({
           run(
             () => blockClubAction({ clubSlug }),
             "Verein blockiert (sub=cancelled)",
-            "Verein wirklich blocken? Subscription wird auf 'cancelled' gesetzt."
+            {
+              title: "Verein wirklich blocken?",
+              description: "Subscription wird auf 'cancelled' gesetzt.",
+              confirmLabel: "Blocken",
+              danger: true
+            }
           )
         }
       >

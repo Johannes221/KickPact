@@ -4,8 +4,31 @@ import {
   getSpielDetails,
   computeMatchHash,
   getSquadAcrossSeasons,
-  type SpielDetails
+  fetchCrestBytes,
+  type SpielDetails,
+  type CrestRef
 } from "@/lib/crawler/fussballde";
+import {
+  syncClubCrests,
+  backfillTeamLogoFromCrest
+} from "@/lib/db/queries/club-crests";
+import { storeDocument } from "@/lib/storage/documents";
+
+/**
+ * Lädt + cacht eine Menge gescrapter Wappen in `club_crests` (Key =
+ * fussballde_team_id). Zentral, weil identisch aus DREI Pfaden gebraucht:
+ * Spielplan-Zeilen, frisch gescrapte Liga-Tabelle UND die bereits gespeicherte
+ * Tabelle (Fresh-Guard). `syncClubCrests` lädt dank sourceUrl-Guard jedes Wappen
+ * höchstens einmal (kein Download-Sturm), `fetchCrestBytes` + der image/*-Guard
+ * weisen Block-/HTML-Antworten ab, ein Download-Fehler legt keinen Eintrag an.
+ */
+async function syncScrapedCrests(crests: CrestRef[]): Promise<number> {
+  return syncClubCrests(crests, async (crest) => {
+    const dl = await fetchCrestBytes(crest.url);
+    if (!dl) return null;
+    return storeDocument(`crests/${crest.teamId}.png`, dl.bytes, dl.contentType);
+  });
+}
 import { validateSpielListItem, validateSpielDetails } from "@/lib/crawler/validator";
 import {
   getActiveTeams,
@@ -180,6 +203,39 @@ export const crawlMatches = inngest.createFunction(
         );
       }
 
+      // Vereinswappen aus den Spielplan-Zeilen cachen — beide Seiten jeder
+      // Partie, also auch die GEGNER, die selbst keine KickPact-Mannschaft sind.
+      // syncClubCrests lädt jedes Wappen höchstens einmal (Guard auf
+      // sourceUrl) → kein Download-Sturm bei jedem Cron. Best-effort: ein
+      // Wappen ist kosmetisch, ein Fehler darf den Match-Crawl nicht kippen.
+      await step.run(`crests-${team.id}`, async () => {
+        try {
+          const crests = spiele.flatMap((s) => s.crests);
+          const synced = await syncScrapedCrests(crests);
+          // Diagnose: der fetch-basierte Spielplan liefert in Prod (Datacenter-IP)
+          // teils Markup OHNE die club-logo-Spans → `crests` bleibt leer und das
+          // EIGENE Wappen landet nie über diesen Pfad im Cache (Liga-Tabelle unten
+          // fängt es dann in-season ab). Diese Zeile macht die sonst stille Lücke
+          // sichtbar (extracted=0 bzw. ownFound=false ⇒ Spielplan-Markup gestrippt).
+          logger.info("crest sync (schedule)", {
+            teamId: team.id,
+            extracted: crests.length,
+            ownFound: crests.some((c) => c.teamId === team.fussballdeTeamId),
+            synced
+          });
+          // Eigenes Wappen automatisch als Team-Logo setzen, solange keins
+          // hochgeladen wurde (Upload gewinnt, wird nie überschrieben).
+          await backfillTeamLogoFromCrest(team.id, team.fussballdeTeamId);
+          return synced;
+        } catch (err) {
+          logger.warn("crest sync failed (non-fatal)", {
+            teamId: team.id,
+            err: String(err)
+          });
+          return 0;
+        }
+      });
+
       // Liga-Tabelle der laufenden Saison im Hintergrund warmhalten. Sie ist die
       // einzige Quelle für die VOLLE Saison: getSpiele cappt bei ~10 Spielen,
       // eine mitten in der Saison onboardete Mannschaft bekommt die früheren
@@ -198,9 +254,64 @@ export const crawlMatches = inngest.createFunction(
       await step.run(`standings-${team.id}`, async () => {
         const stored = await getStoredStandings(team.id, team.saison);
         const ageMs = stored ? Date.now() - stored.scrapedAt.getTime() : Infinity;
-        if (ageMs < STANDINGS_CRAWL_MIN_AGE_MS) return { skipped: "fresh" };
+        // Wappen-Backfill hat Vorrang vor dem Freshness-Guard: hat die
+        // gespeicherte Tabelle noch KEINE Wappen (Alt-Daten von vor dem
+        // Liga-Wappen-Feature), einmal neu scrapen, auch wenn sie „frisch" ist —
+        // sonst zeigt die Story-Vorschau bis zu 20 h weiter Kürzel. Sobald die
+        // Wappen einmal drin sind, greift der Guard wieder normal (selbstlimitierend).
+        const hasCrests = Boolean(stored?.data.rows.some((r) => r.crestUrl));
+        if (ageMs < STANDINGS_CRAWL_MIN_AGE_MS && hasCrests) {
+          // „fresh": KEIN teurer Browser-Rescrape — aber die Wappen der bereits
+          // GESPEICHERTEN Tabelle trotzdem nach club_crests spiegeln. Sonst
+          // überspringt der Guard den Crest-Sync bis zu 20 h, und ein einmal
+          // fehlgeschlagener Download (oder ein erst nachträglich befülltes
+          // club_crests) bliebe eine Lücke — genau die Klasse „im Cache fehlt,
+          // obwohl die Tabelle das Wappen führt". Dank sourceUrl-Guard lädt das
+          // nur die noch fehlenden; kein Download-Sturm. Best-effort.
+          let crestsSynced = 0;
+          try {
+            const crests = (stored?.data.rows ?? [])
+              .filter((r): r is typeof r & { teamId: string; crestUrl: string } =>
+                Boolean(r.teamId) && Boolean(r.crestUrl)
+              )
+              .map((r) => ({ teamId: r.teamId, url: r.crestUrl, name: r.teamName }));
+            crestsSynced = await syncScrapedCrests(crests);
+          } catch (err) {
+            logger.warn("stored-standings crest backfill failed (non-fatal)", {
+              teamId: team.id,
+              err: String(err)
+            });
+          }
+          return { skipped: "fresh", crestsSynced };
+        }
         const s = await getCachedStandings(team.id, team.saison);
-        return { rows: s?.rows.length ?? 0, ownRow: Boolean(s?.ownRow) };
+
+        // Wappen ALLER Ligavereine aus der Tabelle cachen — nicht nur die
+        // Gegner aus dem Spielplan (die oben schon gelaufen sind). So zeigt die
+        // Story-Vorschau auch für noch nicht angesetzte Ligagegner ihr echtes
+        // Wappen statt des Kürzels. syncScrapedCrests lädt jedes Wappen höchstens
+        // einmal (sourceUrl-Guard) → kein Download-Sturm. Best-effort: ein
+        // Wappen ist kosmetisch, ein Fehler darf den Standings-Step nicht kippen.
+        let crestsSynced = 0;
+        try {
+          const crests = (s?.rows ?? [])
+            .filter((r): r is typeof r & { teamId: string; crestUrl: string } =>
+              Boolean(r.teamId) && Boolean(r.crestUrl)
+            )
+            .map((r) => ({ teamId: r.teamId, url: r.crestUrl, name: r.teamName }));
+          crestsSynced = await syncScrapedCrests(crests);
+        } catch (err) {
+          logger.warn("league-table crest sync failed (non-fatal)", {
+            teamId: team.id,
+            err: String(err)
+          });
+        }
+
+        return {
+          rows: s?.rows.length ?? 0,
+          ownRow: Boolean(s?.ownRow),
+          crestsSynced
+        };
       });
 
       // ─── Geplante (kommende) Spiele ────────────────────────────────────────

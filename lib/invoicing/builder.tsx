@@ -132,7 +132,7 @@ export interface InvoiceData {
   issuedAt: Date;
   /**
    * Pricing v2: Tier des Teams. Steuert Footer-Branding:
-   *   - basic → KickPact-Footer "Powered by KickPact · kickpact.de"
+   *   - basic → KickPact-Footer "Powered by KickPact · kickpact.com"
    *   - pro / verein → Vereins-Footer ohne KickPact-Branding
    * Falls undefined → Default `basic` (sichere Annahme).
    */
@@ -326,7 +326,7 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
             : `Zugesagter Unterstützungsbeitrag: bitte innerhalb von 14 Tagen überweisen${data.club.iban ? ` (IBAN ${data.club.iban})` : ""}.`}
           {"\n"}
           {(data.plan ?? "basic") === "basic"
-            ? "Erzeugt mit KickPact · Performance-Sponsoring im Amateurfußball · kickpact.de"
+            ? "Erzeugt mit KickPact · Performance-Sponsoring im Amateurfußball · kickpact.com"
             : `${data.club.name} · ${data.club.address.zip} ${data.club.address.city}`}
         </Text>
       </Page>

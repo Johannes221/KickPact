@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { BottomTabBar } from "@/components/shared/bottom-tab-bar";
 import { AppNavBar } from "@/components/shared/app-nav-bar";
+import { NotificationsBell } from "@/components/shared/notifications-bell";
 import type { SettingsNavItem } from "@/components/shared/settings-sheet";
 
 type Tab = { label: string; href: string; icon: LucideIcon };
@@ -106,27 +107,30 @@ export function VereinSubNav({ slug, clubName }: { slug: string; clubName: strin
         />
       )}
 
-      {/* Desktop: horizontale Tab-Leiste (alle Tabs) */}
-      <nav className="hidden md:flex gap-1 rounded-2xl border border-brand-neutral/30 bg-brand-off-white p-1.5 overflow-x-auto">
-        {ALL_TABS.map(({ label, href }) => {
-          const fullHref = `${base}${href}`;
-          const isActive = activeTab?.href === href;
-          return (
-            <Link
-              key={href}
-              href={fullHref}
-              className={cn(
-                "shrink-0 rounded-xl px-4 py-2 text-sm font-semibold transition-all whitespace-nowrap",
-                isActive
-                  ? "bg-white text-brand-night-navy shadow-ios-card ring-1 ring-brand-neutral/20"
-                  : "text-brand-night-navy/60 hover:text-brand-night-navy hover:bg-white/70"
-              )}
-            >
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
+      {/* Desktop: horizontale Tab-Leiste (alle Tabs) + Benachrichtigungs-Glocke */}
+      <div className="hidden md:flex items-center gap-2">
+        <nav className="flex min-w-0 flex-1 gap-1 rounded-2xl border border-brand-neutral/30 bg-brand-off-white p-1.5 overflow-x-auto">
+          {ALL_TABS.map(({ label, href }) => {
+            const fullHref = `${base}${href}`;
+            const isActive = activeTab?.href === href;
+            return (
+              <Link
+                key={href}
+                href={fullHref}
+                className={cn(
+                  "shrink-0 rounded-xl px-4 py-2 text-sm font-semibold transition-all whitespace-nowrap",
+                  isActive
+                    ? "bg-white text-brand-night-navy shadow-ios-card ring-1 ring-brand-neutral/20"
+                    : "text-brand-night-navy/60 hover:text-brand-night-navy hover:bg-white/70"
+                )}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+        <NotificationsBell placement="desktop" />
+      </div>
 
       {/* Mobile: nur Bottom-Tab-Bar. Verwaltung/Konto liegen im Zahnrad auf der
           Übersicht — nicht auf jedem Screen. */}

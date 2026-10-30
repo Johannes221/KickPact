@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { BottomTabBar } from "@/components/shared/bottom-tab-bar";
 import { AppNavBar } from "@/components/shared/app-nav-bar";
+import { NotificationsBell } from "@/components/shared/notifications-bell";
 import type { SettingsNavItem } from "@/components/shared/settings-sheet";
 
 type Tab = { label: string; href: string; icon: LucideIcon };
@@ -82,26 +83,29 @@ export function SponsorSubNav({ pendingCount }: { pendingCount: number }) {
         }}
       />
 
-      {/* Desktop: horizontaler Tab-Streifen (alle Tabs) */}
-      <nav className="hidden md:flex gap-0.5 overflow-x-auto rounded-xl bg-brand-night-navy/5 p-1 no-scrollbar">
-        {ALL_TABS.map(({ label, href }) => {
-          const isActive = activeTab?.href === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "relative shrink-0 rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors whitespace-nowrap",
-                isActive
-                  ? "bg-white text-brand-night-navy shadow-ios-card"
-                  : "text-brand-night-navy/50 hover:text-brand-night-navy hover:bg-white/60"
-              )}
-            >
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
+      {/* Desktop: horizontaler Tab-Streifen (alle Tabs) + Benachrichtigungs-Glocke */}
+      <div className="hidden md:flex items-center gap-2">
+        <nav className="flex min-w-0 flex-1 gap-0.5 overflow-x-auto rounded-xl bg-brand-night-navy/5 p-1 no-scrollbar">
+          {ALL_TABS.map(({ label, href }) => {
+            const isActive = activeTab?.href === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "relative shrink-0 rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors whitespace-nowrap",
+                  isActive
+                    ? "bg-white text-brand-night-navy shadow-ios-card"
+                    : "text-brand-night-navy/50 hover:text-brand-night-navy hover:bg-white/60"
+                )}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+        <NotificationsBell placement="desktop" />
+      </div>
 
       {/* Mobile: nur Bottom-Tab-Bar. Verwaltung/Konto liegen im Profil-Tab. */}
       <div className="md:hidden">

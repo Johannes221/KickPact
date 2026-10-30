@@ -1,4 +1,4 @@
-import { readDocumentBytes } from "@/lib/storage/documents";
+import { readDocumentBytes, imageMime } from "@/lib/storage/documents";
 import { getCachedStandingsForRequest } from "@/lib/recap/standings-request";
 import type { LeagueStandings } from "@/lib/crawler/fussballde";
 import {
@@ -8,6 +8,7 @@ import {
   getOpponentLogoUrl,
   type StoryScorer
 } from "@/lib/db/queries/story";
+import { getClubCrestLogoUrl } from "@/lib/db/queries/club-crests";
 import { formatDate } from "@/lib/utils/date-format";
 import { currentSaisonCode } from "@/lib/utils/saison";
 import { hasResult } from "@/lib/matches/display-state";
@@ -30,26 +31,6 @@ import {
  */
 
 /* ------------------------------ Wappen-Bytes ------------------------------ */
-
-/**
- * Satori (next/og) rastert nur PNG/JPEG. WebP kann es nicht bloß nicht — resvg
- * WIRFT an WebP-Bytes ('u2 is not iterable', empirisch verifiziert), was das
- * ganze Motiv killt statt nur das Wappen. Ein Konverter (sharp) ist nicht im
- * Stack. Seit dem Upload-Fix (lib/storage/images.ts) werden neue WebP-Logos gar
- * nicht mehr gespeichert; dieser Guard fängt nur noch VOR dem Fix hochgeladene
- * WebP-Bestände ab → `null` → Kürzel-Fallback statt Crash.
- * Format über Magic Bytes bestimmen, nicht über die Endung: die Endung ist bloß
- * der Storage-Key, die Bytes sind die Wahrheit.
- */
-function imageMime(bytes: Buffer): "image/png" | "image/jpeg" | null {
-  if (bytes.length > 8 && bytes.subarray(0, 4).toString("hex") === "89504e47") {
-    return "image/png";
-  }
-  if (bytes.length > 3 && bytes.subarray(0, 3).toString("hex") === "ffd8ff") {
-    return "image/jpeg";
-  }
-  return null;
-}
 
 /**
  * Logo als data-URI laden. `null` bei fehlendem/unlesbarem/nicht einbettbarem
@@ -174,6 +155,10 @@ export async function buildStoryModel(
 
   const ownIsHeim = match.ownSide === "heim";
   const opponentFussballdeTeamId = ownIsHeim ? match.gastTeamId : match.heimTeamId;
+  // Gegner-Name als Fallback für die Wappen-Auflösung: matches speichern für
+  // externe Gegner keine team-id (nur den Namen), also muss das Wappen notfalls
+  // per Name aus dem club_crests-Cache kommen.
+  const opponentName = ownIsHeim ? match.gastName : match.heimName;
 
   // Tabelle der Saison DES SPIELS, nicht der aktuellen Team-Saison: `matches`
   // hat keine saison-Spalte, die Zuordnung läuft übers Datum. Sonst klebte an
@@ -183,21 +168,26 @@ export async function buildStoryModel(
   // Prewarm-Job füllt für den nächsten Aufruf nach.
   const matchSaison = currentSaisonCode(match.datum);
   const [ownLogo, opponentLogo, standings] = await Promise.all([
-    logoDataUrl(team.logoUrl),
-    getOpponentLogoUrl(opponentFussballdeTeamId).then(logoDataUrl),
+    // Eigenes Wappen: hochgeladenes Logo — sonst (Fallback) das gescrapte
+    // Wappen per eigener team-id, falls kein Logo hochgeladen/lesbar ist.
+    logoDataUrl(team.logoUrl).then(
+      async (l) => l ?? logoDataUrl(await getClubCrestLogoUrl(team.fussballdeTeamId))
+    ),
+    getOpponentLogoUrl(opponentFussballdeTeamId, opponentName).then(logoDataUrl),
     getCachedStandingsForRequest(teamId, matchSaison).catch(() => null)
   ]);
 
+  // Eigenes Wappen: der Crawl setzt das fussball.de-Wappen automatisch auf
+  // teams.logoUrl (nur solange keins hochgeladen ist) — es kommt hier also
+  // schon über ownLogo. Gegner-Wappen: getOpponentLogoUrl liefert das
+  // hochgeladene ODER (fallback) das öffentliche fussball.de-Wappen.
   const ownCrest = pickCrest({
     name: ownIsHeim ? match.heimName : match.gastName,
-    uploadedLogo: ownLogo,
-    // fussball.de liefert (noch) keine Wappen — siehe pickCrest-Doc.
-    fussballdeLogo: null
+    uploadedLogo: ownLogo
   });
   const opponentCrest = pickCrest({
     name: ownIsHeim ? match.gastName : match.heimName,
-    uploadedLogo: opponentLogo,
-    fussballdeLogo: null
+    uploadedLogo: opponentLogo
   });
 
   const heim: StorySide = {

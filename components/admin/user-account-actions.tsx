@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   resendMagicLinkAction,
   setUserDeletionAction,
@@ -21,6 +22,7 @@ export function UserAccountActions({
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
+  const { confirm, confirmDialog } = useConfirm();
 
   async function run(key: string, fn: () => Promise<{ ok: boolean; error?: string }>, successMsg: string) {
     setPending(key);
@@ -34,8 +36,20 @@ export function UserAccountActions({
     }
   }
 
+  async function anonymize() {
+    const ok = await confirm({
+      title: "Diesen Account jetzt anonymisieren?",
+      description: "Das ist nicht umkehrbar.",
+      confirmLabel: "Anonymisieren",
+      danger: true
+    });
+    if (!ok) return;
+    run("anon", () => anonymizeUserNowAction({ userId }), "Account anonymisiert");
+  }
+
   return (
     <div className="space-y-4">
+      {confirmDialog}
       <div className="flex flex-wrap gap-2">
         {!isPlatformAdmin && (
           <Button
@@ -89,15 +103,7 @@ export function UserAccountActions({
           variant="destructive"
           className="mt-3"
           disabled={pending !== null}
-          onClick={() => {
-            if (
-              !window.confirm(
-                "Diesen Account JETZT anonymisieren? Das ist nicht umkehrbar."
-              )
-            )
-              return;
-            run("anon", () => anonymizeUserNowAction({ userId }), "Account anonymisiert");
-          }}
+          onClick={anonymize}
         >
           {pending === "anon" ? "Anonymisiere..." : "Jetzt anonymisieren"}
         </Button>

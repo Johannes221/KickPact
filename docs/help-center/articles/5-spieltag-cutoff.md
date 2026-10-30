@@ -7,9 +7,8 @@ prio: "MUSS"
 audience: ["verein-admin", "sponsor", "vereinslizenz-admin"]
 related_articles:
   - "saison-pass-vs-monatlich"
-  - "mid-season-einstieg"
   - "welcher-tarif-passt"
-last_updated: "2026-05-25"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -28,7 +27,7 @@ Sobald die Mannschaft **6 oder mehr Punktspiele** in der laufenden Saison absolv
 
 Drei Gründe:
 
-1. **Fairness gegenüber Sponsoren der ersten Stunde** — wer im August einen Saison-Pass abschließt, hat 30+ Spiele vor sich. Wer im Oktober den Saison-Pass für 35 € (Basic) abschließen könnte, hätte nur noch 20 Spiele zum gleichen Preis. Das wäre unfair.
+1. **Fairness gegenüber Sponsoren der ersten Stunde** — wer im August einen Saison-Pass abschließt, hat 30+ Spiele vor sich. Wer im Oktober den Saison-Pass für 19,99 € (Basic) abschließen könnte, hätte nur noch 20 Spiele zum gleichen Preis. Das wäre unfair.
 2. **Saison-Ziele brauchen einen offenen Ausgang** — ein Aufstiegs-Ziel nach 8 Spieltagen, wenn der Tabellenstand schon klar ist, ist kein echtes Ziel mehr. Sponsoren würden nur noch zusagen, wenn die Mannschaft schon oben steht — das wäre asymmetrisch zu Lasten des Vereins.
 3. **Operative Sauberkeit** — wir wollen klare "Saison-Phasen": Pre-Season (Ziele anlegen, Pässe kaufen), In-Season (passiv), Post-Season (Auswertung, Vorbereitung neue Saison).
 
@@ -58,7 +57,7 @@ Wenn du im Oktober anfängst und schon 8 Spieltage vorbei sind:
 2. **Pacts mit Auto- und Manual-Triggern aufsetzen** — keine Einschränkungen.
 3. **Zur neuen Saison upgraden** — du bekommst rechtzeitig eine Mail mit Erinnerung, du kannst dann auf Saison-Pass wechseln und Saison-Ziele anbieten.
 
-Mehr dazu in [Mid-Season-Einstieg](mid-season-einstieg.md).
+Mehr dazu im Abschnitt Mid-Season-Onboarding weiter oben.
 
 ## Wann genau der Cutoff greift
 
@@ -79,4 +78,4 @@ Wir kriegen ab und an Anfragen "wir sind erst am 6. Spieltag, könnt ihr nicht e
 
 Weiter lesen:
 - [Saison-Pass vs Monatlich](saison-pass-vs-monatlich.md)
-- [Mid-Season-Einstieg](mid-season-einstieg.md)
+- [Welcher Tarif passt zu deinem Verein?](welcher-tarif-passt.md)

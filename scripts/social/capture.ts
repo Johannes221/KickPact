@@ -29,10 +29,27 @@ const OUT = join(process.cwd(), "docs/marketing/screenshots");
 
 /** Angelegt von scripts/seed-demo-showcase.ts. Alles erfunden, nichts real. */
 const TEAM_PATH = "/verein/fc-beispielhausen-demo/mannschaft/demoshowcaseteam000000001";
+/** Die Team-ID (letztes Segment von TEAM_PATH) — für die story-image-Route. */
+const STORY_TEAM = "demoshowcaseteam000000001";
 /** Der Vereins-Admin sieht Dashboard und Spiele. */
 const VEREIN_EMAIL = "demo-showcase@kickpact.example";
 /** Ein Sponsor sieht den Pact-Builder — der Vereins-Admin kommt da nicht rein. */
 const SPONSOR_EMAIL = "klaus.berger@kickpact.example";
+
+/*
+ * NUR fürs Story-Motiv (Spiel-ankündigen-Post): ein ECHTES Team mit ECHTEN
+ * Wappen. Der Demo-Verein hat keine Logos → Kürzel; Johannes will für dieses
+ * eine Motiv die echten Vereinswappen sehen (2026-07-21). Dossenheim ist sein
+ * eigener Verein (Login unten = sein Admin-Account), also keine fremden Daten.
+ * Die App-UI-Screenshots (Dashboard/Spiele/Sponsor) bleiben der fiktive Demo.
+ */
+// Herren 3: hat ein echtes hochgeladenes Wappen (das blaue „100 Jahre"-Wappen).
+// Ein früherer Capture zeigte einen orangen Kasten — das war ein Timing-Glitch
+// (Wappen frisch hochgeladen/noch nicht durchgerendert), kein fehlendes Logo.
+const STORY_MOTIF_TEAM_PATH =
+  "/verein/fc-sportfr-dossenheim-uq0c/mannschaft/x6sei99gf3p4sgh77tvjhlwm";
+const STORY_MOTIF_TEAM_ID = "x6sei99gf3p4sgh77tvjhlwm";
+const STORY_MOTIF_EMAIL = "dattel71@gmail.com";
 
 /**
  * Handy-Viewport. 390×844 ist ein iPhone 14/15 in CSS-Pixeln; mit
@@ -64,10 +81,13 @@ const SHOTS: Shot[] = [
   },
   {
     // Das, worum es geht: alle Spiele mit Ergebnis, Saison-Filter, Bilanz.
+    // waitFor = der „Aktualisieren"-Button der Spiele-Seite: eindeutig, immer da,
+    // und nur im Inhalt (kein Nav-Link). Der frühere Text „Vergangene und
+    // kommende Spiele" existiert seit dem Seiten-Redesign nicht mehr.
     name: "spiele-uebersicht",
     path: `${TEAM_PATH}/spiele`,
     as: VEREIN_EMAIL,
-    waitFor: "Vergangene und kommende Spiele"
+    waitFor: "Aktualisieren"
   },
   {
     /*
@@ -136,6 +156,100 @@ async function collapseChecklist(page: Page): Promise<void> {
   await page.waitForTimeout(400);
 }
 
+/* ----------------------------- Story-Motive ------------------------------- */
+
+/** Erste echte matchId aus einer Liste von Spiel-Detail-Links (/spiel/<id>). */
+function firstMatchId(hrefs: string[]): string | undefined {
+  for (const h of hrefs) {
+    const after = h.split("/spiel/")[1];
+    if (after) return after.split(/[/?#]/)[0];
+  }
+  return undefined;
+}
+
+/** Saison-Codes (4-stellig) aus den Switcher-Links der Spiele-Seite. */
+function seasonCodes(hrefs: string[]): string[] {
+  const codes = new Set<string>();
+  for (const h of hrefs) {
+    const m = h.match(/[?&]saison=(\d{4})/);
+    if (m) codes.add(m[1]);
+  }
+  return [...codes];
+}
+
+/**
+ * Holt die zwei ECHTEN Story-Motive (Vorschau + Rückblick) des Demo-Vereins aus
+ * der story-image-Route (Feature #44) und legt sie zu den anderen Screenshots.
+ *
+ * matchIds sind cuid2 (nicht stabil), also zur Laufzeit ermittelt: die
+ * Spiele-Seite scrapen. Kommende Spiele liegen in der FOLGE-Saison (der Seed legt
+ * sie in 26/27), deshalb die Saison-Codes vom Switcher lesen statt die Jahreszahl
+ * fest zu verdrahten. Vergangenes = jüngster Sieg (garantiert Torschützen).
+ *
+ * Auth als Vereins-Admin (VEREIN_EMAIL) — der hat viewer-Zugriff, den die Route
+ * verlangt.
+ */
+async function captureStoryMotifs(page: Page, key: string): Promise<number> {
+  await page.context().clearCookies();
+  await login(page, key, STORY_MOTIF_EMAIL);
+
+  const linksOn = async (path: string): Promise<string[]> => {
+    await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
+    return page.$$eval("a[href]", (as) => as.map((a) => a.getAttribute("href") ?? ""));
+  };
+
+  // Erste Runde: gespielte Siege der Default-Saison holen UND die Saison-Codes
+  // aus dem Switcher lesen. Je nach Saison-Rollover-Stand (Stichtag 15.7.) liegt
+  // „gespielt" mal in der aktuellen, mal in der Vorsaison — deshalb über ALLE
+  // verfügbaren Saisons suchen, statt eine Jahreszahl zu verdrahten.
+  const firstLinks = await linksOn(`${STORY_MOTIF_TEAM_PATH}/spiele?zeit=gespielt&result=win`);
+  const seasons: Array<string | undefined> = [undefined, ...seasonCodes(firstLinks)];
+
+  const findMatch = async (query: string, preloaded?: string[]): Promise<string | undefined> => {
+    for (const [i, s] of seasons.entries()) {
+      const links =
+        i === 0 && preloaded
+          ? preloaded
+          : await linksOn(`${STORY_MOTIF_TEAM_PATH}/spiele?${query}${s ? `&saison=${s}` : ""}`);
+      const id = firstMatchId(links);
+      if (id) return id;
+    }
+    return undefined;
+  };
+
+  // Vergangenes Motiv: jüngster Sieg → garantiert Ergebnis + Torschützen.
+  const pastId = await findMatch("zeit=gespielt&result=win", firstLinks);
+  // Kommendes Motiv: das nächste angesetzte Spiel.
+  const upcomingId = await findMatch("zeit=kommend");
+
+  if (!pastId || !upcomingId) {
+    throw new Error(
+      `Demo-Spiele nicht gefunden (vergangen=${pastId ?? "—"}, kommend=${upcomingId ?? "—"}). ` +
+        "Lief der Seed? scripts/seed-demo-showcase.ts"
+    );
+  }
+
+  const motifs = [
+    { name: "spiel-vorschau", matchId: upcomingId },
+    { name: "spiel-rueckblick", matchId: pastId }
+  ];
+  let ok = 0;
+  for (const m of motifs) {
+    // ?brand=0 = ohne „presented by KickPact" (im KickPact-eigenen Post doppelt).
+    const url = `${BASE}/api/teams/${STORY_MOTIF_TEAM_ID}/story-image/${m.matchId}?brand=0`;
+    const r = await page.request.get(url);
+    const type = r.headers()["content-type"] ?? "";
+    if (r.ok() && type.includes("image")) {
+      writeFileSync(join(OUT, `${m.name}.png`), await r.body());
+      console.log(`  ${m.name.padEnd(24)} story-image/${m.matchId}`);
+      ok++;
+    } else {
+      console.log(`  ✗ ${m.name.padEnd(22)} HTTP ${r.status()} (${type || "—"})`);
+    }
+  }
+  return ok;
+}
+
 async function main() {
   const key = process.env.E2E_TEST_BYPASS_KEY;
   if (!key) {
@@ -178,8 +292,12 @@ async function main() {
     console.log(`  ${shot.name.padEnd(24)} ${shot.path}`);
   }
 
+  // Die echten Story-Motive (#44) — anderer Mechanismus (Bild-Route statt
+  // Seiten-Screenshot), deshalb eine eigene Runde.
+  const motifCount = await captureStoryMotifs(page, key);
+
   await browser.close();
-  console.log(`\n${SHOTS.length} Screenshots → docs/marketing/screenshots/`);
+  console.log(`\n${SHOTS.length} Screenshots + ${motifCount} Story-Motive → docs/marketing/screenshots/`);
 }
 
 main().catch((err) => {

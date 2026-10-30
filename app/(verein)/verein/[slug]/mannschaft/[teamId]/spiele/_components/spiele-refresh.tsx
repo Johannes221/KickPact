@@ -15,6 +15,11 @@ interface Props {
   isCrawling: boolean;
   /** Aktuell gerenderte Spiele (für „neue Spiele erschienen"-Erkennung). */
   matchCount: number;
+  /**
+   * Optionaler Inhalt links vom Button (z.B. Saison-Switcher-Pills) — teilt sich
+   * die Zeile mit „Aktualisieren", statt eine eigene Zeile darüber zu belegen.
+   */
+  leading?: React.ReactNode;
 }
 
 /**
@@ -23,7 +28,7 @@ interface Props {
  * Crawl-Status. Sobald neue Spiele da sind oder der Crawl fertig ist →
  * `router.refresh()` (neue Spiele erscheinen automatisch).
  */
-export function SpieleRefresh({ slug, teamId, isCrawling, matchCount }: Props) {
+export function SpieleRefresh({ slug, teamId, isCrawling, matchCount, leading }: Props) {
   const router = useRouter();
   const [crawling, setCrawling] = useState(isCrawling);
   const matchCountRef = useRef(matchCount);
@@ -75,14 +80,17 @@ export function SpieleRefresh({ slug, teamId, isCrawling, matchCount }: Props) {
       {/* Native iOS-Geste: Runterziehen am oberen Rand löst denselben Crawl aus
           wie der Button. Im Browser rendert die Komponente nichts. */}
       <PullToRefresh onRefresh={handleRefresh} disabled={crawling} />
-      <div className="flex justify-end">
+      {/* Eine Zeile: Saison-Pills (falls vorhanden) links, Aktualisieren rechts
+          — spart die frühere eigene Switcher-Zeile darüber. */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">{leading}</div>
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={handleRefresh}
           disabled={crawling}
-          className="gap-1.5"
+          className="shrink-0 gap-1.5"
         >
           {crawling ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />

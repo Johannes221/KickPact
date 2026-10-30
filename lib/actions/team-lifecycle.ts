@@ -16,6 +16,7 @@ import {
   users
 } from "@/lib/db/schema";
 import { assertClubWriteAccess, assertTeamWriteAccess } from "@/lib/auth/scope";
+import { inngest } from "@/lib/inngest/client";
 import { anonymizePlayerMatchEvents } from "@/lib/db/queries/crawler";
 import { storeDocument } from "@/lib/storage/documents";
 import { normalizeImageUpload } from "@/lib/storage/images";
@@ -199,6 +200,16 @@ export async function createTeamForExistingClub(
 
     return insertedTeam.id;
   });
+
+  // Crawl sofort triggern — wie beim Onboarding (create-draft-club.ts): der
+  // Lauf zieht Wappen (club_crests), Kader/Spielernamen (persistKader) und
+  // Spiele, statt bis zum nächsten Cron zu warten. Fire-and-forget, damit ein
+  // Inngest-Fehler (z.B. fehlender Signing-Key) die Team-Anlage nicht blockt.
+  await inngest
+    .send({ name: "crawler/team.crawl", data: { teamId } })
+    .catch((err) => {
+      console.error("[createTeam] crawler-trigger failed", { teamId, err });
+    });
 
   revalidatePath(`/verein/${parsed.clubSlug}`);
   revalidatePath(`/verein/${parsed.clubSlug}/mannschaften`);

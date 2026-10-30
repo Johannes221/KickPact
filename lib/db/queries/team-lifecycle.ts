@@ -186,6 +186,7 @@ export async function getTeamProfileForEditor(teamId: string, clubId: string) {
       name: teams.name,
       saison: teams.saison,
       league: teams.league,
+      fussballdeTeamId: teams.fussballdeTeamId,
       discoverable: teams.discoverable,
       publicSlug: teams.publicSlug,
       publicName: teams.publicName,

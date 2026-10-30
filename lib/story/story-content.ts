@@ -75,10 +75,11 @@ export function teamAbbreviation(name: string): string {
  * nicht. Leere Strings zählen als „kein Logo": ein `src=""` würde im Bild als
  * kaputtes Motiv landen statt sauber auf das Kürzel zu fallen.
  *
- * HINWEIS zu (2): `fussballdeLogo` ist heute IMMER null — der Crawler liest
- * keine Wappen-URLs von fussball.de (Scraper-Erweiterung ist out of scope).
- * Der Parameter hält die von Johannes vorgegebene Priorität explizit offen;
- * sobald es eine Quelle gibt, wird nur der Aufrufer befüllt.
+ * Zu (2): Der Crawler cacht die fussball.de-Wappen (club_crests). Der Aufrufer
+ * darf sie über `fussballdeLogo` reinreichen; das eigene Team bekommt sein
+ * Wappen aber schon per Backfill auf `teams.logoUrl` (→ `uploadedLogo`), und
+ * der Gegner-Fallback steckt in `getOpponentLogoUrl` — deshalb ist der
+ * Parameter aktuell meist ungenutzt, bleibt für die Priorität aber offen.
  */
 export function pickCrest(args: {
   name: string;

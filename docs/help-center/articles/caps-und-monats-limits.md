@@ -10,7 +10,7 @@ related_articles:
   - "worst-case-berechnung-verstehen"
   - "was-ist-ein-pledge"
   - "auto-trigger-katalog"
-last_updated: "2026-05-25"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -63,28 +63,27 @@ Wichtig: Caps werden **monoton** geprüft. Sobald ein Cap erreicht ist, gibt's k
 - **Saison:** Erreicht vs. Cap als Balken
 - **Worst-Case-Hochrechnung:** Wenn die Mannschaft maximal performt, was passiert dann mit deinem Cap
 
-## Pact-Beispiel mit allen drei Caps
+## Pact-Beispiel mit beiden Caps
 
 Pact "Familien-Pact für FC Musterstadt Herren":
 
 - **Regel 1:** 5 € pro Tor, kein Filter
 - **Regel 2:** 10 € pro Sieg
 - **Regel 3:** 25 € pro Hattrick (jeder Spieler)
-- **Per-Match-Cap:** 30 €
 - **Monats-Cap:** 100 €
 - **Saison-Cap:** 600 €
 
-In einem realistischen Monat mit 4 Spielen, 2 Siegen, 1 Unentschieden, 1 Niederlage, durchschn. 2,5 Tore pro Spiel:
+In einem realistischen Monat mit 4 Spielen, 2 Siegen, durchschn. 2,5 Tore pro Spiel:
 - Tore: 4 × 2,5 × 5 € = 50 €
 - Siege: 2 × 10 € = 20 €
 - Hattricks: 0 (selten) = 0 €
 - **Summe: ~70 €** — Cap nicht erreicht, alle Trigger gefeuert.
 
 Im **Worst-Case-Monat** (alles auf Maximum, jedes Spiel mit 5 Toren, alle Siege):
-- Tore: 4 × 5 × 5 € = 100 € → aber Per-Match-Cap 30 € pro Spiel = 4 × 30 € = 120 €
+- Tore: 4 × 5 × 5 € = 100 €
 - Siege: 4 × 10 € = 40 €
-- Aber Monats-Cap 100 €: Beitrags-Stopp nach dem ~14. erfolgreichen Trigger.
-- **Resultat:** Genau 100 €. Wie geplant.
+- Rechnerisch also 140 €, aber der **Monats-Cap greift bei 100 €**: Beitrags-Stopp, sobald 100 € erreicht sind.
+- **Resultat:** Genau 100 €. Wie geplant. Genau dafür ist der Monats-Cap der Schutz gegen 7:1-Festspiele.
 
 ## Caps ändern — wann gilt was?
 

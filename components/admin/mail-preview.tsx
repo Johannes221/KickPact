@@ -51,7 +51,7 @@ export function MailPreview({
           type="email"
           value={to}
           onChange={(e) => setTo(e.target.value)}
-          placeholder="test@kickpact.de"
+          placeholder="test@kickpact.com"
           className="w-56"
         />
         <Button variant="outline" onClick={sendTest} disabled={pending || !selected || !to}>

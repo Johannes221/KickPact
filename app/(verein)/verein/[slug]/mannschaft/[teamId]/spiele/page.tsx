@@ -7,7 +7,8 @@ import {
   getTeamForMatchesPage
 } from "@/lib/db/queries/matches";
 import { SeasonSwitcher } from "@/components/shared/season-switcher";
-import { saisonLabel } from "@/lib/utils/saison";
+import { TeamCrest } from "@/components/shared/team-crest";
+import { crestSrc } from "@/lib/utils/crest-url";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { FilterRow, FilterChip } from "@/components/shared/filter-chip";
 import { PageHeader } from "@/components/shared/page-header";
@@ -134,27 +135,24 @@ export default async function SpielePage({
 
   return (
     <div className="space-y-5 pb-24 md:pb-0">
-      <PageHeader
-        title="Spiele"
-        subtitle={`${team.name} · Saison ${saisonLabel(selectedSaison)}`}
-      />
-      <p className="-mt-3 text-sm leading-snug text-brand-night-navy/60">
-        Vergangene und kommende Spiele dieser Mannschaft, gefiltert nach Zeit,
-        Ort und Saison-Hälfte.
-      </p>
+      <PageHeader title="Spiele" subtitle={team.name} />
 
+      {/* Saison-Pills teilen sich die Zeile mit „Aktualisieren" (spart die
+          früher eigene Switcher-Zeile). SeasonSwitcher rendert nichts bei nur
+          einer Saison → dann steht der Button allein rechts. */}
       <SpieleRefresh
         slug={slug}
         teamId={team.id}
         isCrawling={isCrawling}
         matchCount={matches.length}
-      />
-
-      {/* Saison-Switcher (W1.3) — rendert nur bei mehreren Saisons. */}
-      <SeasonSwitcher
-        seasons={availableSeasons}
-        current={selectedSaison}
-        hrefFor={(s) => buildHref({ saison: s === team.saison ? "" : s })}
+        leading={
+          <SeasonSwitcher
+            className="my-0"
+            seasons={availableSeasons}
+            current={selectedSaison}
+            hrefFor={(s) => buildHref({ saison: s === team.saison ? "" : s })}
+          />
+        }
       />
 
       {/* Filter — auf Mobile eingeklappt (spart Platz), per <details> ohne JS.
@@ -234,62 +232,58 @@ export default async function SpielePage({
         <div className="rounded-2xl bg-white shadow-ios-card overflow-hidden">
           <ul className="divide-y divide-brand-neutral/15">
             {filtered.map((m) => {
-              const badge = m.isScheduled
-                ? { label: "·", cls: "bg-brand-night-navy/10 text-brand-night-navy/60" }
-                : m.result === "win"
-                  ? { label: "S", cls: "bg-accent/15 text-accent-dark" }
-                  : m.result === "loss"
-                    ? { label: "N", cls: "bg-brand-alert-red/15 text-brand-alert-red" }
-                    : { label: "U", cls: "bg-neutral-200 text-neutral-700" };
-
+              // Kein grauer S/N/U-Badge mehr: Heim-Wappen ganz links, Gast-
+              // Wappen ganz rechts, dazwischen die Namen um „vs"/Ergebnis — so
+              // bekommen die Namen die volle Zeilenbreite (weniger Truncation).
               const inner = (
                 <>
-                  <span
-                    className={`shrink-0 inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${badge.cls}`}
-                    aria-hidden
-                  >
-                    {badge.label}
-                  </span>
-                  <span className="hidden sm:block shrink-0 text-xs text-brand-night-navy/50 w-24">
+                  <span className="hidden md:block shrink-0 w-20 text-xs text-brand-night-navy/50">
                     {fmtDate(m.datum)}
                   </span>
-                  {/* Score-Block: Heim (gekürzt/rechtsbündig) — Ergebnis (fix
-                      mittig, tabular-nums) — Gast (gekürzt/linksbündig). Feste
-                      mittlere Spalte hält das Ergebnis sichtbar; lange Namen
-                      werden gekürzt + truncate statt das Resultat zu verdrängen. */}
+                  <TeamCrest
+                    name={m.heimName}
+                    src={crestSrc(m.heimName, m.heimTeamId)}
+                    size={26}
+                    shape="squircle"
+                  />
+                  {/* Namen füllen die Zeile; Ergebnis/„vs" fix mittig. Lange
+                      Namen werden erst am Rand gekürzt (truncate). */}
                   <span className="flex-1 min-w-0 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm">
                     <span
-                      className={`min-w-0 truncate text-right ${m.isHeim ? "font-semibold" : "text-brand-night-navy/70"}`}
+                      className={`min-w-0 truncate text-right ${m.isHeim ? "font-semibold text-brand-night-navy" : "text-brand-night-navy/70"}`}
                       title={m.heimName}
                     >
                       {abbreviateTeamName(m.heimName)}
                     </span>
                     {m.isScheduled ? (
-                      <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/60 whitespace-nowrap">
+                      <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/50 whitespace-nowrap">
                         vs
                       </span>
                     ) : (
-                      <span className="font-bold tabular-nums whitespace-nowrap">
+                      <span className="font-bold tabular-nums whitespace-nowrap text-brand-night-navy">
                         {m.ergebnisHeim ?? "—"}:{m.ergebnisGast ?? "—"}
                       </span>
                     )}
                     <span
-                      className={`min-w-0 truncate text-left ${!m.isHeim ? "font-semibold" : "text-brand-night-navy/70"}`}
+                      className={`min-w-0 truncate text-left ${!m.isHeim ? "font-semibold text-brand-night-navy" : "text-brand-night-navy/70"}`}
                       title={m.gastName}
                     >
                       {abbreviateTeamName(m.gastName)}
                     </span>
                   </span>
-                  {m.isScheduled ? (
-                    <span className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/60">
-                      Kommend
+                  <TeamCrest
+                    name={m.gastName}
+                    src={crestSrc(m.gastName, m.gastTeamId)}
+                    size={26}
+                    shape="squircle"
+                  />
+                  {/* Kein „Kommend"-Label mehr — nur der €-Betrag bei ausgelösten
+                      Beiträgen (gespielte Spiele). Dass ein Spiel ansteht, zeigt
+                      schon das fehlende Ergebnis. */}
+                  {!m.isScheduled && m.chargesSum > 0 && (
+                    <span className="shrink-0 text-xs font-semibold text-accent-dark tabular-nums">
+                      {eur(m.chargesSum)}
                     </span>
-                  ) : (
-                    m.chargesSum > 0 && (
-                      <span className="hidden sm:inline-block shrink-0 text-xs font-semibold text-accent-dark tabular-nums">
-                        {eur(m.chargesSum)}
-                      </span>
-                    )
                   )}
                 </>
               );
@@ -301,7 +295,7 @@ export default async function SpielePage({
                 <li key={m.id}>
                   <Link
                     href={`/verein/${slug}/mannschaft/${team.id}/spiel/${m.id}`}
-                    className="flex items-center gap-3 md:gap-4 px-4 py-3 hover:bg-brand-off-white/50 transition-colors"
+                    className="flex items-center gap-2.5 md:gap-3 px-4 py-3 hover:bg-brand-off-white/50 transition-colors"
                   >
                     {inner}
                   </Link>

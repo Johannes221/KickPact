@@ -6,11 +6,10 @@ category_label: "Vereinslizenz-Spezial"
 prio: "MUSS"
 audience: ["vereinslizenz-admin"]
 related_articles:
-  - "cross-team-sponsor-view"
-  - "10-admin-slots-verteilen"
-  - "vereinslizenz-break-even"
-  - "vereinslizenz-sammelrechnung"
-last_updated: "2026-05-25"
+  - "welcher-tarif-passt"
+  - "saison-pass-vs-monatlich"
+  - "so-funktioniert-die-monatsrechnung"
+last_updated: "2026-07-20"
 status: "published"
 ---
 
@@ -32,12 +31,12 @@ Die Startseite ist in vier Kacheln aufgeteilt:
 ### Kachel 2 — Sponsoren-Total
 - Gesamtzahl Sponsoren über alle Mannschaften
 - "Top 10 Sponsoren" nach Pact-Volumen
-- Sponsoren, die **mehrere Mannschaften** unterstützen (z.B. Onkel-Schmidt = Herren II + A-Jugend), siehe [Cross-Team-Sponsor-View](cross-team-sponsor-view.md)
+- Sponsoren, die **mehrere Mannschaften** unterstützen (z.B. Onkel-Schmidt = Herren II + A-Jugend)
 
 ### Kachel 3 — Aktueller Monat
 - Live-Beiträge für den laufenden Monat über alle Mannschaften zusammen
 - Vergleich zum Vormonat (Trend ↑↓)
-- Top-Trigger-Typen (z.B. "60 % der Beiträge sind goal_team")
+- Top-Trigger-Typen (z.B. "60 % der Beiträge sind Pro Tor")
 
 ### Kachel 4 — Saison-Hochrechnung
 - Worst-Case-Total über alle Mannschaften
@@ -61,7 +60,7 @@ Praktisch zum Tracken, was im Verein gerade läuft. Du kannst den Feed filtern (
 ## Admin-Aktionen direkt aus dem Cockpit
 
 - **Neue Mannschaft anlegen** (Plus-Button oben rechts)
-- **Admin-Slots verwalten** — siehe [10 Admin-Slots verteilen](10-admin-slots-verteilen.md)
+- **Admin-Slots verwalten** — bis zu 10 Admins pro Vereinslizenz
 - **Mannschaft deaktivieren** (wenn ein Team pausiert, aber Vereinslizenz weiterlaufen soll)
 - **Globale Stammdaten** ändern (Verein-Adresse, Logo, IBAN) — gilt für alle Mannschaften
 
@@ -88,6 +87,6 @@ Master-Cockpit ist auf bis zu **30 Mannschaften** optimiert. Bei größeren Vere
 Cockpit funktioniert auf dem Handy, ist aber primär für **Desktop / Tablet** gebaut. Die vier Kacheln stapeln sich vertikal, der Aktivitäts-Feed ist als Tab unter den Kacheln verfügbar.
 
 Weiter lesen:
-- [Cross-Team-Sponsor-View](cross-team-sponsor-view.md)
-- [10 Admin-Slots verteilen](10-admin-slots-verteilen.md)
-- [Vereinslizenz Break-Even](vereinslizenz-break-even.md)
+- [Welcher Tarif passt?](welcher-tarif-passt.md)
+- [Saison-Pass vs. monatlich](saison-pass-vs-monatlich.md)
+- [So funktioniert die Monatsrechnung](so-funktioniert-die-monatsrechnung.md)

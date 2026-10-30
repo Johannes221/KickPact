@@ -62,6 +62,7 @@ export default async function MeinProfilPage({
       slug={slug}
       teamId={team.id}
       teamName={team.name}
+      fussballdeTeamId={team.fussballdeTeamId}
       saison={team.saison}
       league={team.league}
       clubName={clubRow?.name ?? ""}

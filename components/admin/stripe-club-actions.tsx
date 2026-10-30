@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   extendTrialAction,
   refundLatestAction
@@ -20,6 +21,7 @@ export function StripeClubActions({
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
+  const { confirm, confirmDialog } = useConfirm();
 
   if (!stripeConfigured) {
     return <p className="text-xs text-brand-night-navy/50">Stripe ist nicht konfiguriert.</p>;
@@ -40,8 +42,20 @@ export function StripeClubActions({
     }
   }
 
+  async function refund() {
+    const ok = await confirm({
+      title: "Letzte bezahlte Rechnung vollständig erstatten?",
+      description: "Das ist nicht reversibel.",
+      confirmLabel: "Erstatten",
+      danger: true
+    });
+    if (!ok) return;
+    run("refund", () => refundLatestAction({ clubSlug }), "Erstattet");
+  }
+
   return (
     <div className="flex flex-wrap gap-2 pt-2">
+      {confirmDialog}
       <Button
         size="sm"
         variant="outline"
@@ -62,11 +76,7 @@ export function StripeClubActions({
         size="sm"
         variant="destructive"
         disabled={pending !== null}
-        onClick={() => {
-          if (!window.confirm("Letzte bezahlte Rechnung VOLLSTÄNDIG erstatten? Das ist nicht reversibel."))
-            return;
-          run("refund", () => refundLatestAction({ clubSlug }), "Erstattet");
-        }}
+        onClick={refund}
       >
         {pending === "refund" ? "Erstatte..." : "Letzte Zahlung erstatten"}
       </Button>

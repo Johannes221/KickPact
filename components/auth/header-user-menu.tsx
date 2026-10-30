@@ -214,7 +214,14 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
               className="cursor-pointer text-brand-night-navy bg-accent/5 focus:bg-accent/10 focus:text-accent-dark"
             >
               <Link href={currentEntry.href}>
-                <IdentityIcon kind={currentEntry.kind} className="mr-2 h-7 w-7" />
+                <IdentityIcon
+                  kind={currentEntry.kind}
+                  crest={{
+                    name: currentEntry.label,
+                    fussballdeTeamId: currentEntry.fussballdeTeamId
+                  }}
+                  className="mr-2 h-7 w-7"
+                />
                 <span className="flex-1 min-w-0">
                   <span className="block break-words font-semibold">{currentEntry.label}</span>
                   <span className="block truncate text-[0.7rem] text-brand-night-navy/60">
@@ -241,7 +248,11 @@ export function HeaderUserMenu({ onHero = false }: { onHero?: boolean }) {
                 className="cursor-pointer text-brand-night-navy focus:bg-accent/10 focus:text-accent-dark"
               >
                 <Link href={e.href}>
-                  <IdentityIcon kind={e.kind} className="mr-2 h-7 w-7" />
+                  <IdentityIcon
+                    kind={e.kind}
+                    crest={{ name: e.label, fussballdeTeamId: e.fussballdeTeamId }}
+                    className="mr-2 h-7 w-7"
+                  />
                   <span className="flex-1 min-w-0">
                     <span className="block break-words font-medium">{e.label}</span>
                     <span className="block truncate text-[0.7rem] text-brand-night-navy/60">

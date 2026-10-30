@@ -1,4 +1,5 @@
 import "server-only";
+import { normalizeApplePrivateKey } from "@/lib/apple/normalize-key";
 import {
   AppStoreServerAPIClient,
   Environment,
@@ -72,7 +73,7 @@ function getClient(): AppStoreServerAPIClient {
         ? Environment.PRODUCTION
         : Environment.SANDBOX;
     _client = new AppStoreServerAPIClient(
-      process.env.APPLE_IAP_PRIVATE_KEY ?? "",
+      normalizeApplePrivateKey(process.env.APPLE_IAP_PRIVATE_KEY ?? ""),
       process.env.APPLE_IAP_KEY_ID ?? "",
       process.env.APPLE_IAP_ISSUER_ID ?? "",
       process.env.APPLE_IAP_BUNDLE_ID ?? "",

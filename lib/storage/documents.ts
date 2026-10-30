@@ -180,6 +180,23 @@ export async function readDocumentBytes(storageUrl: string): Promise<Buffer | nu
 }
 
 /**
+ * Bestimmt den Bild-MIME-Typ eines Blobs über die Magic Bytes — NICHT über eine
+ * Endung (die ist bloß der Storage-Key, die Bytes sind die Wahrheit). Nur PNG
+ * und JPEG: das ist, was next/og-Satori rastern kann und was der Crest-Endpoint
+ * ausliefert. Alles andere (v.a. WebP, an dem der Story-Renderer crasht) → null
+ * → der Aufrufer fällt sauber auf den Kürzel-/Platzhalter-Fallback zurück.
+ */
+export function imageMime(bytes: Buffer): "image/png" | "image/jpeg" | null {
+  if (bytes.length > 8 && bytes.subarray(0, 4).toString("hex") === "89504e47") {
+    return "image/png";
+  }
+  if (bytes.length > 3 && bytes.subarray(0, 3).toString("hex") === "ffd8ff") {
+    return "image/jpeg";
+  }
+  return null;
+}
+
+/**
  * Reads a document from the local volume. Only callable via the
  * authenticated download API route (Phase E2).
  */

@@ -101,7 +101,7 @@ describe("Invoice PDF — InvoicePdf component", () => {
     );
     const text = await extractText(buffer);
     expect(text).toContain("KickPact");
-    expect(text).toContain("kickpact.de");
+    expect(text).toContain("kickpact.com");
   }, 30_000);
 
   it("pro plan: footer does NOT contain 'KickPact' branding (Vereins-Footer only)", async () => {
@@ -113,7 +113,7 @@ describe("Invoice PDF — InvoicePdf component", () => {
     expect(text).toContain(INVOICE_FIXTURE.club.address.city);
     // KickPact-Hinweis darf NICHT mehr im Footer-Bereich auftauchen
     // (das Wort "KickPact" steht sonst nirgends auf der Rechnung)
-    expect(text).not.toContain("kickpact.de");
+    expect(text).not.toContain("kickpact.com");
   }, 30_000);
 
   it("verein plan: footer does NOT contain 'KickPact' branding", async () => {
@@ -121,7 +121,7 @@ describe("Invoice PDF — InvoicePdf component", () => {
       <InvoicePdf data={{ ...INVOICE_FIXTURE, plan: "verein" }} />
     );
     const text = await extractText(buffer);
-    expect(text).not.toContain("kickpact.de");
+    expect(text).not.toContain("kickpact.com");
   }, 30_000);
 
   it("pay-box renders IBAN + Verwendungszweck (invoice number)", async () => {

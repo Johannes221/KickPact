@@ -38,6 +38,8 @@ export interface UserIdentityClub {
    * statt des Vereinsnamens, weil die Mannschaft dort der primäre Kontext ist.
    */
   firstTeamName: string | null;
+  /** fussball.de-team-id des ersten Teams — für das Wappen im Rollen-Switcher. */
+  firstTeamFussballdeTeamId: string | null;
 }
 
 export interface UserIdentityTeamOnly {
@@ -47,6 +49,8 @@ export interface UserIdentityTeamOnly {
   clubName: string;
   role: "admin" | "viewer";
   saison: string;
+  /** fussball.de-team-id — für das Wappen im Rollen-Switcher. */
+  fussballdeTeamId: string | null;
 }
 
 export interface UserIdentitySponsor {
@@ -127,21 +131,32 @@ export async function getUserIdentities(userId: string): Promise<UserIdentities>
             ),
       // First active team per club, ordered by created_at (oldest first).
       clubIds.length === 0
-        ? Promise.resolve(new Map<string, { id: string; name: string }>())
+        ? Promise.resolve(
+            new Map<string, { id: string; name: string; fussballdeTeamId: string | null }>()
+          )
         : db
             .select({
               clubId: teams.clubId,
               teamId: teams.id,
               teamName: teams.name,
+              fussballdeTeamId: teams.fussballdeTeamId,
               createdAt: teams.createdAt
             })
             .from(teams)
             .where(and(inArray(teams.clubId, clubIds), eq(teams.isActive, true)))
             .orderBy(asc(teams.createdAt), asc(teams.id))
             .then((rows) => {
-              const m = new Map<string, { id: string; name: string }>();
+              const m = new Map<
+                string,
+                { id: string; name: string; fussballdeTeamId: string | null }
+              >();
               for (const r of rows) {
-                if (!m.has(r.clubId)) m.set(r.clubId, { id: r.teamId, name: r.teamName });
+                if (!m.has(r.clubId))
+                  m.set(r.clubId, {
+                    id: r.teamId,
+                    name: r.teamName,
+                    fussballdeTeamId: r.fussballdeTeamId
+                  });
               }
               return m;
             }),
@@ -188,7 +203,9 @@ export async function getUserIdentities(userId: string): Promise<UserIdentities>
     sponsorCount: sponsorCountsByClub.get(r.clubId) ?? 0,
     effectivePlan: highestPlan(plansByClub.get(r.clubId)),
     firstTeamId: firstTeamByClub.get(r.clubId)?.id ?? null,
-    firstTeamName: firstTeamByClub.get(r.clubId)?.name ?? null
+    firstTeamName: firstTeamByClub.get(r.clubId)?.name ?? null,
+    firstTeamFussballdeTeamId:
+      firstTeamByClub.get(r.clubId)?.fussballdeTeamId ?? null
   }));
 
   // ── Team-only memberships (excluding teams whose club is already above) ─
@@ -199,7 +216,8 @@ export async function getUserIdentities(userId: string): Promise<UserIdentities>
       clubSlug: clubs.slug,
       clubName: clubs.name,
       role: teamMemberships.role,
-      saison: teams.saison
+      saison: teams.saison,
+      fussballdeTeamId: teams.fussballdeTeamId
     })
     .from(teamMemberships)
     .innerJoin(teams, eq(teamMemberships.teamId, teams.id))

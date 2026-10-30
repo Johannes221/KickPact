@@ -18,7 +18,7 @@ export interface RenderedTemplate {
   text: string;
 }
 
-const SAMPLE_URL = "https://kickpact.de/example-link";
+const SAMPLE_URL = "https://kickpact.com/example-link";
 
 /**
  * Rendert eine kuratierte Auswahl der Mail-Templates mit Beispieldaten — für
@@ -29,7 +29,7 @@ const SAMPLE_URL = "https://kickpact.de/example-link";
 export function renderTemplatePreviews(): RenderedTemplate[] {
   const items: Array<{ key: string; label: string; mail: { subject: string; html: string; text: string } }> = [
     { key: "magic-link", label: "Magic-Link (Login)", mail: magicLinkEmail({ url: SAMPLE_URL, email: "max@beispiel.de" }) },
-    { key: "admin-password-reset", label: "Operator Passwort-Reset", mail: adminPasswordResetEmail({ url: SAMPLE_URL, email: "operator@kickpact.de" }) },
+    { key: "admin-password-reset", label: "Operator Passwort-Reset", mail: adminPasswordResetEmail({ url: SAMPLE_URL, email: "operator@kickpact.com" }) },
     {
       key: "support-reply",
       label: "Support-Antwort",
@@ -53,7 +53,7 @@ export function renderTemplatePreviews(): RenderedTemplate[] {
     {
       key: "support-assigned",
       label: "Ticket zugewiesen (an Operator)",
-      mail: supportAssignedEmail({ reference: "KP-7F8A2C", subject: "Ergebnis stimmt nicht", priority: "Hoch", assignedBy: "operator@kickpact.de", adminUrl: SAMPLE_URL })
+      mail: supportAssignedEmail({ reference: "KP-7F8A2C", subject: "Ergebnis stimmt nicht", priority: "Hoch", assignedBy: "operator@kickpact.com", adminUrl: SAMPLE_URL })
     },
     {
       key: "support-overdue-digest",

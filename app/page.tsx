@@ -88,6 +88,21 @@ export default function LandingPage() {
             className="object-cover animate-ken-burns"
             style={{ objectPosition: "center 28%" }}
           />
+          {/* Hero-Video über dem Foto: Foto bleibt als Ladephase- und
+              prefers-reduced-motion-Fallback sichtbar. Stumm + playsInline
+              sind Pflicht für Autoplay auf iOS. */}
+          <video
+            className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+            tabIndex={-1}
+          >
+            <source src="/brand/hero-video.mp4" type="video/mp4" />
+          </video>
           {/* Mobile: dezenter Top-Wash für Header-Lesbarkeit + früher und
               dichter einsetzender Weiß-Wash in der Textzone, damit der dunkle
               Body-Text Kontrast ≥4.5:1 erreicht (kein harter Cut). */}
@@ -98,12 +113,15 @@ export default function LandingPage() {
                 "linear-gradient(to bottom, rgba(26,26,46,0.35) 0%, rgba(26,26,46,0.05) 12%, rgba(255,255,255,0) 38%, rgba(255,255,255,0.55) 60%, rgba(255,255,255,0.92) 78%, rgba(255,255,255,1) 92%)"
             }}
           />
-          {/* Desktop: stark links deckend weiß bis ~50%, dann fade out nach rechts */}
+          {/* Desktop: leichter Weiß-Wash links (Video scheint durch → mehr Bild
+              sichtbar), hält aber hinter der Textspalte genug Deckkraft für
+              Kontrast ≥4.5:1 auf dem dunklen Text und gibt die rechte Bildhälfte
+              ab ~62% komplett frei. */}
           <div
             className="absolute inset-0 hidden md:block"
             style={{
               background:
-                "linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0.98) 32%, rgba(255,255,255,0.7) 48%, rgba(255,255,255,0) 70%)"
+                "linear-gradient(to right, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.8) 34%, rgba(255,255,255,0.4) 54%, rgba(255,255,255,0) 66%)"
             }}
           />
         </div>
@@ -370,7 +388,7 @@ export default function LandingPage() {
             </h2>
             <p className="mt-2 text-brand-night-navy/60 text-xs md:text-sm max-w-xl">
               Pro Mannschaft eigenständig, oder Vereinslizenz für alle Teams.
-              <strong className="text-brand-night-navy"> Erste 30 Tage gratis.</strong>{" "}
+              <strong className="text-brand-night-navy"> In der Sommerpause kostenlos, dann 30 Tage gratis ab Saisonstart.</strong>{" "}
               Monatlich kündbar. KickPact zwackt nie was vom Sponsoren-Geld ab.
             </p>
           </div>
@@ -533,7 +551,8 @@ export default function LandingPage() {
             <span className="text-accent">Impact pro Spiel?</span>
           </h2>
           <p className="mt-3 text-sm md:text-base text-brand-night-navy/70 max-w-xl mx-auto">
-            30 Tage gratis. Kein Vertrag. Kein Risiko für deine Mannschaft.
+            In der Sommerpause kostenlos, danach 30 Tage gratis ab Saisonstart.
+            Kein Vertrag, kein Risiko für deine Mannschaft.
           </p>
           <div className="mt-6 md:mt-7 flex flex-col sm:flex-row gap-3 justify-center">
             <MagneticCTA

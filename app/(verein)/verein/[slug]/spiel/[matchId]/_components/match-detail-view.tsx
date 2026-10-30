@@ -5,6 +5,8 @@ import { resolveTeamAccess } from "@/lib/auth/scope";
 import { getMatchById, listMatchEvents, listMatchCharges } from "@/lib/db/queries/matches";
 import { resolveTeamSide } from "@/lib/crawler/team-side";
 import { FitTeamName } from "@/components/shared/fit-team-name";
+import { TeamCrest } from "@/components/shared/team-crest";
+import { crestSrc } from "@/lib/utils/crest-url";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MatchEventsList } from "./match-events-list";
 import { ManualEventEditor } from "./manual-event-editor";
@@ -162,6 +164,14 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-4">
             {/* Heim */}
             <div className={`min-w-0 text-right ${isHeim ? "font-semibold" : ""}`}>
+              <div className="mb-2 flex justify-end">
+                <TeamCrest
+                  name={match.heimName}
+                  src={crestSrc(match.heimName, match.heimTeamId)}
+                  size={44}
+                  shape="squircle"
+                />
+              </div>
               <FitTeamName
                 name={match.heimName}
                 className="truncate text-base sm:text-lg font-bold tracking-tight text-brand-night-navy leading-snug"
@@ -187,6 +197,14 @@ export async function MatchDetailView({ slug, matchId, backHref }: MatchDetailVi
 
             {/* Gast */}
             <div className={`min-w-0 text-left ${!isHeim ? "font-semibold" : ""}`}>
+              <div className="mb-2 flex justify-start">
+                <TeamCrest
+                  name={match.gastName}
+                  src={crestSrc(match.gastName, match.gastTeamId)}
+                  size={44}
+                  shape="squircle"
+                />
+              </div>
               <FitTeamName
                 name={match.gastName}
                 className="truncate text-base sm:text-lg font-bold tracking-tight text-brand-night-navy leading-snug"

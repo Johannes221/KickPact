@@ -163,7 +163,7 @@ async function main(): Promise<void> {
   log(`Skip Crawler:  ${args.skipCrawler ? "JA (kein fussball.de-Lookup)" : "NEIN"}`);
 
   const baseUrl =
-    process.env.BETTER_AUTH_URL ?? "https://app.kickpact.de";
+    process.env.BETTER_AUTH_URL ?? "https://kickpact.com";
   const slug = `${slugifyName(args.name)}-${randomSlugSuffix()}`;
   const invitationToken = randomToken();
   const userId = randomId();

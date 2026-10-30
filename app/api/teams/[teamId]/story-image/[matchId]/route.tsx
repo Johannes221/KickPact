@@ -18,10 +18,15 @@ export const dynamic = "force-dynamic";
  * — die Route ist keine öffentliche og:image-Quelle.
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ teamId: string; matchId: string }> }
 ) {
   const { teamId, matchId } = await params;
+
+  // ?brand=0 blendet „presented by KickPact" aus — nur für interne
+  // Marketing-Captures (der Post ist selbst schon KickPact-gebrandet). Der
+  // Produkt-Default (kein Param) behält den Werbekanal-Footer.
+  const hideBranding = new URL(req.url).searchParams.get("brand") === "0";
 
   const user = await requireUser();
   const access = await resolveTeamAccess(user.id, teamId, "viewer");
@@ -32,5 +37,13 @@ export async function GET(
   const model = await buildStoryModel(teamId, matchId);
   if (!model) return new Response("Not found", { status: 404 });
 
-  return new ImageResponse(<StoryCard model={model} />, { ...STORY_SIZE, fonts: OG_FONTS });
+  // no-store: das Motiv hängt an live-veränderlichen Daten (frisch gecachte
+  // Vereinswappen nach einem Crawl, hochgeladenes Logo). ImageResponse setzt
+  // sonst per Default einen langen immutable-Cache → die App zeigte nach dem
+  // Crawl weiter das ALTE Bild mit Kürzel statt der neuen Wappen.
+  return new ImageResponse(<StoryCard model={model} hideBranding={hideBranding} />, {
+    ...STORY_SIZE,
+    fonts: OG_FONTS,
+    headers: { "cache-control": "no-store, max-age=0, must-revalidate" }
+  });
 }

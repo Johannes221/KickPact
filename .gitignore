@@ -63,3 +63,6 @@ drift-report.md
 
 # Wegwerf-Test-/Seed-Skripte (lokal, nie committen)
 scripts/zzz-*
+
+# Instagram-Post-Log (was schon veröffentlicht wurde)
+scripts/social/state/

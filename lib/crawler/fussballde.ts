@@ -728,6 +728,21 @@ const IGNORE_TDS = new Set([
 const CREST_FORMAT = 2;
 
 /**
+ * Roh-Wert eines `data-responsive-image` → absolute getLogo-URL auf format/2,
+ * oder null, wenn es kein Vereinswappen ist. Ein Guard genügt für beide Pfade
+ * (Spielplan-Zeile via {@link extractCrestsFromRow} UND Liga-Tabellen-Zeile in
+ * {@link getLeagueStandings}) — so kann nur eine echte getLogo-URL durch, egal
+ * aus welcher Zelle sie stammt.
+ */
+export function normalizeCrestUrl(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  // Protokoll-relativ ("//www.fussball.de/...") → absolut.
+  const abs = raw.startsWith("//") ? `https:${raw}` : raw;
+  if (!/\/getLogo\/format\/\d+\/id\/[A-Z0-9]+/i.test(abs)) return null;
+  return abs.replace(/\/format\/\d+\//, `/format/${CREST_FORMAT}/`);
+}
+
+/**
  * Wappen einer Spielplan-Zeile: pro Seite ein `td.column-club a.club-wrapper`
  * mit team-id im href und Wappen-URL im `data-responsive-image`.
  *
@@ -741,18 +756,49 @@ export function extractCrestsFromRow(tr: HTMLElement): CrestRef[] {
     const teamId = (a.getAttribute("href") || "").match(/\/team-id\/([A-Z0-9]+)/)?.[1];
     if (!teamId) continue;
     const span = a.querySelector(".club-logo span");
-    const raw = span?.getAttribute("data-responsive-image");
-    if (!raw) continue;
-    // Protokoll-relativ ("//www.fussball.de/...") → absolut.
-    const abs = raw.startsWith("//") ? `https:${raw}` : raw;
-    if (!/\/getLogo\/format\/\d+\/id\/[A-Z0-9]+/i.test(abs)) continue;
+    const url = normalizeCrestUrl(span?.getAttribute("data-responsive-image"));
+    if (!url) continue;
     out.push({
       teamId,
-      url: abs.replace(/\/format\/\d+\//, `/format/${CREST_FORMAT}/`),
+      url,
       name: span?.getAttribute("data-alt")?.trim() || null
     });
   }
   return out;
+}
+
+/**
+ * Lädt ein Vereinswappen (getLogo-PNG) herunter. Bewusst dasselbe undici-fetch
+ * wie {@link fetchHtml} (Next.js patcht globalThis.fetch; im Inngest-Kontext
+ * liefert der Patch leere Responses) plus rotierender User-Agent gegen den
+ * fussball.de-Bann. Kein Retry-Sturm: ein fehlendes Wappen ist kosmetisch, die
+ * Story fällt sauber aufs Kürzel zurück — bei Fehler `null`, nicht werfen.
+ *
+ * Nur echte Bild-Antworten (`image/*`) zählen: eine Block-/HTML-Seite käme
+ * sonst als „Logo" durch und landete als kaputtes Motiv im Story-Bild.
+ */
+export async function fetchCrestBytes(
+  url: string
+): Promise<{ bytes: Buffer; contentType: string } | null> {
+  try {
+    const res = await undiciFetch(url, {
+      headers: {
+        "User-Agent": pickUserAgent(),
+        Accept: "image/avif,image/webp,image/png,image/*;q=0.8,*/*;q=0.5",
+        "Accept-Language": "de-DE,de;q=0.9,en;q=0.8"
+      },
+      redirect: "follow",
+      signal: AbortSignal.timeout(10_000)
+    });
+    if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.startsWith("image/")) return null;
+    const bytes = Buffer.from(await res.arrayBuffer());
+    if (bytes.length === 0) return null;
+    return { bytes, contentType };
+  } catch {
+    return null;
+  }
 }
 
 function extractMatchesFromHtml(root: HTMLElement): SpielListItem[] {
@@ -1351,6 +1397,13 @@ export interface LeagueStandingRow {
   toreFor: number;
   toreAgainst: number;
   punkte: number;
+  /**
+   * Absolute Wappen-URL (getLogo, format/2) aus der Tabellenzeile — dieselbe
+   * Quelle wie {@link CrestRef}. Fehlt (undefined), wenn die Zeile kein Wappen
+   * trägt. Nur zum Befüllen des `club_crests`-Caches, damit auch noch nicht
+   * angesetzte Ligagegner in der Story-Vorschau ihr echtes Wappen zeigen.
+   */
+  crestUrl?: string;
 }
 
 /** Eine Zeile der Liga-Torschützenliste (Staffel-weit). */
@@ -1519,15 +1572,27 @@ export async function getLeagueStandings(
             var m = (a.getAttribute('href')||'').match(/team-id\\/([A-Z0-9]+)/);
             if (m && !link) link = m[1];
           });
-          out.push({ tds: tds, teamId: link });
+          // Wappen der Zeile: getLogo-Quelle. ACHTUNG: der Spielplan liefert
+          // statisches HTML (Span mit data-responsive-image bleibt stehen), die
+          // Tabelle rendert live (Angular ERSETZT den Span durch ein echtes
+          // <img src=getLogo> — am DOM verifiziert: spans:0, imgs:1). Deshalb
+          // beide Quellen prüfen: span[data-responsive-image] UND img src/data-src.
+          // getLogo-Guard unten → nur ein echtes Wappen kommt durch.
+          var crest = null;
+          tr.querySelectorAll('span[data-responsive-image], img').forEach(function(el){
+            if (crest) return;
+            var r = el.getAttribute('data-responsive-image') || el.getAttribute('src') || el.getAttribute('data-src') || '';
+            if (r.indexOf('getLogo') !== -1) crest = r;
+          });
+          out.push({ tds: tds, teamId: link, crest: crest });
         }
       });
       return out;
-    })()`)) as { tds: string[]; teamId: string | null }[];
+    })()`)) as { tds: string[]; teamId: string | null; crest: string | null }[];
 
     const rows: LeagueStandingRow[] = [];
     const seenPos = new Set<number>();
-    for (const { tds, teamId: rowTeamId } of raw) {
+    for (const { tds, teamId: rowTeamId, crest } of raw) {
       const position = parseInt(tds[0], 10);
       if (seenPos.has(position)) continue; // Tabelle kann doppelt im DOM stehen.
       seenPos.add(position);
@@ -1543,7 +1608,8 @@ export async function getLeagueStandings(
         niederlagen: parseInt(tds[5] ?? "0", 10) || 0,
         toreFor: tm ? parseInt(tm[1], 10) : 0,
         toreAgainst: tm ? parseInt(tm[2], 10) : 0,
-        punkte: parseInt(tds[tds.length - 1] ?? "0", 10) || 0
+        punkte: parseInt(tds[tds.length - 1] ?? "0", 10) || 0,
+        crestUrl: normalizeCrestUrl(crest) ?? undefined
       });
     }
     if (rows.length === 0) return null;

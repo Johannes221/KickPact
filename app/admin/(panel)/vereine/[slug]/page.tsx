@@ -2,9 +2,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getVereinDetail } from "@/lib/db/queries/platform-stats";
 import { ClubActions } from "./_components/club-actions";
+import { AdminRequestsTable } from "./_components/admin-requests-table";
 import { ClubEditForm } from "@/components/admin/club-edit-form";
 import { TeamRowActions } from "@/components/admin/team-row-actions";
 import { StripeClubActions } from "@/components/admin/stripe-club-actions";
+import { Badge } from "@/components/ui/badge";
 import { isStripeConfigured } from "@/lib/stripe/client";
 import { eur } from "@/lib/utils/currency";
 
@@ -29,7 +31,7 @@ export default async function VereinDetailPage({
   const detail = await getVereinDetail(slug);
   if (!detail) notFound();
 
-  const { club, subscription, members, teams, recentCharges } = detail;
+  const { club, subscription, members, teams, recentCharges, pendingRequests } = detail;
   const stripeConfigured = isStripeConfigured();
 
   return (
@@ -131,6 +133,26 @@ export default async function VereinDetailPage({
             }}
           />
         </div>
+      </section>
+
+      <section>
+        <h3 className="font-display font-black text-base md:text-lg tracking-tight text-brand-night-navy mb-2">
+          Offene Anfragen
+          {pendingRequests.length > 0 && (
+            <Badge tone="warning" className="ml-2">{pendingRequests.length}</Badge>
+          )}
+        </h3>
+        <AdminRequestsTable
+          clubSlug={club.slug}
+          requests={pendingRequests.map((r) => ({
+            id: r.id,
+            requesterEmail: r.requesterEmail,
+            requestedRole: r.requestedRole,
+            requestedTeamName: r.requestedTeamName,
+            message: r.message,
+            createdAt: r.createdAt
+          }))}
+        />
       </section>
 
       <section>

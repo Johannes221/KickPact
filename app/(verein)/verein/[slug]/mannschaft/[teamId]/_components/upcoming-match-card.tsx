@@ -1,5 +1,7 @@
 import { CalendarClock } from "lucide-react";
 import { StoryShareButton } from "@/components/shared/story-share-button";
+import { TeamCrest } from "@/components/shared/team-crest";
+import { crestSrc } from "@/lib/utils/crest-url";
 import { kickoffLabel } from "@/lib/story/story-content";
 import { formatDate } from "@/lib/utils/date-format";
 import type { StoryMatch } from "@/lib/db/queries/story";
@@ -25,6 +27,7 @@ export function UpcomingMatchCard({
 }) {
   const heimspiel = match.ownSide === "heim";
   const gegner = heimspiel ? match.gastName : match.heimName;
+  const gegnerTeamId = heimspiel ? match.gastTeamId : match.heimTeamId;
 
   return (
     <section
@@ -51,10 +54,13 @@ export function UpcomingMatchCard({
         </span>
       </div>
 
-      <p className="mt-1 text-base font-semibold text-brand-night-navy">
-        {heimspiel ? "gegen " : "bei "}
-        {gegner}
-      </p>
+      <div className="mt-1 flex items-center gap-2">
+        <TeamCrest name={gegner} src={crestSrc(gegner, gegnerTeamId)} size={28} />
+        <span className="text-base font-semibold text-brand-night-navy">
+          {heimspiel ? "gegen " : "bei "}
+          {gegner}
+        </span>
+      </div>
 
       <div className="mt-4">
         <StoryShareButton

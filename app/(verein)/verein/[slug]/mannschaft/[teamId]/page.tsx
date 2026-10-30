@@ -1,14 +1,5 @@
 import Link from "next/link";
-import {
-  Trophy,
-  Medal,
-  ArrowUp,
-  ArrowDown,
-  StickyNote,
-  Sparkles,
-  CalendarDays,
-  Coins
-} from "lucide-react";
+import { Sparkles, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TriggerIcon } from "@/components/shared/trigger-icon";
@@ -25,13 +16,9 @@ import { listClubSeasonPledges } from "@/lib/db/queries/club-dashboard";
 import { getTeamPrognose } from "@/lib/db/queries/simulation";
 import {
   computeTeamSeasonStats,
-  getTeamSeasonChargeTotalCents,
-  getSeasonGoalChargeTotalCents
+  getTeamSeasonChargeTotalCents
 } from "@/lib/db/queries/team-dashboard";
-import {
-  getFullTeamInClub,
-  resolveSeasonResultTarget
-} from "@/lib/db/queries/team-lifecycle";
+import { getFullTeamInClub } from "@/lib/db/queries/team-lifecycle";
 import { saisonLabel } from "@/lib/utils/saison";
 import { getClubById } from "@/lib/db/queries/club-admin";
 import { getWrappedEntryInfo } from "@/lib/db/queries/wrapped";
@@ -43,6 +30,8 @@ import { getTeamLicensePlanDirect } from "@/lib/db/queries/subscriptions";
 import { TRIGGER_META } from "@/lib/triggers/labels";
 import { inngest } from "@/lib/inngest/client";
 import { isTeamCrawling } from "@/lib/crawler/crawl-status";
+import { TeamCrest } from "@/components/shared/team-crest";
+import { crestSrc } from "@/lib/utils/crest-url";
 import { abbreviateTeamName } from "@/lib/utils/team-name";
 import { markCrawlStarted } from "@/lib/db/queries/crawler";
 import { TeamSetupChecklist } from "./_components/team-setup-checklist";
@@ -92,7 +81,6 @@ export default async function TeamDetailPage({
   const [
     matchRows,
     chargesSummary,
-    seasonTarget,
     seasonPledges,
     previousSeason,
     prognose,
@@ -102,11 +90,6 @@ export default async function TeamDetailPage({
     await Promise.all([
       listMatchesForTeam(team.id, 30, { saison: selectedSaison }),
       getMatchChargesSummaryForTeam(team.id),
-      // B8 (Audit 2026-06-11): welche Saison der Endstand-Block bedient,
-      // entscheidet der Resolver — nach dem Saison-Bump (Juli) gehört das
-      // offene Ergebnis zur VORSAISON („Saison-Endstand 25/26" statt
-      // „26/27 läuft noch").
-      resolveSeasonResultTarget(team.id, team.saison),
       listClubSeasonPledges(club.id).then((rows) => rows.filter((r) => r.teamId === team.id)),
       // „Letzte Saison"-Block: nur befüllt, solange die aktuelle Saison < 3
       // gespielte Spiele hat UND Vorsaison-Historie (Backfill) existiert.
@@ -130,17 +113,12 @@ export default async function TeamDetailPage({
   // Setup-Checkliste: Daten für "Anstehende Aufgaben".
   // Dazu das nächste Spiel für die „Bevorstehendes Spiel"-Karte (#44) — null,
   // wenn nichts ansteht (Sommerpause, Saisonende) → Karte entfällt.
-  const [clubBilling, pledgeCount, licenseRow, nextMatch, seasonGoalCharges] =
-    await Promise.all([
-      getClubById(club.id),
-      countPledgesForTeam(team.id),
-      getTeamLicensePlanDirect(team.id),
-      getNextMatchForTeam(team.id),
-      // Saisonziel-Beiträge der Saison, die der Endstand-Block bedient. Das ist
-      // im Grace-Fenster (15.7.–1.10.) die VORSAISON — dort landen die Beiträge,
-      // die die Sponsor-€-Kachel (= laufende Saison) korrekterweise nicht zeigt.
-      getSeasonGoalChargeTotalCents(team.id, seasonTarget.saison)
-    ]);
+  const [clubBilling, pledgeCount, licenseRow, nextMatch] = await Promise.all([
+    getClubById(club.id),
+    countPledgesForTeam(team.id),
+    getTeamLicensePlanDirect(team.id),
+    getNextMatchForTeam(team.id)
+  ]);
   const hasIban = !!clubBilling?.iban;
   const hasSponsor = pledgeCount > 0;
   const teamBase = `/verein/${slug}/mannschaft/${team.id}`;
@@ -174,10 +152,12 @@ export default async function TeamDetailPage({
       href: `${teamBase}/einstellungen#zahlungsdaten`
     },
     {
-      done: !!team.logoUrl,
-      label: "Logo hinzufügen",
-      hint: "Euer Wappen erscheint auf dem öffentlichen Profil.",
-      href: `${teamBase}/profil#logo`
+      // „Über uns" befüllt = Kurzbeschreibung ODER Ziele gesetzt (beide werden
+      // von saveTeamPublicProfile geschrieben, getFullTeamInClub liefert sie).
+      done: !!(team.publicTagline || team.publicGoals),
+      label: "Mannschaftsinfos hinzufügen",
+      hint: "Über-uns, Ziele & Beschreibung fürs öffentliche Profil.",
+      href: `${teamBase}/profil#ueber-uns`
     },
     {
       done: hasSponsor,
@@ -292,6 +272,38 @@ export default async function TeamDetailPage({
         </div>
       )}
 
+      {/* Saison-Wrapped (W4): Story-Rückblick der Vorsaison — nur solange die
+          neue Saison noch jung ist (<5 Spiele) und Vorsaison-Daten existieren.
+          Bewusst weit oben: das ist der Hero-Moment am Saisonstart. */}
+      {wrappedEntry && (
+        <section
+          aria-label="Saison-Wrapped"
+          className="rounded-2xl bg-brand-night-navy p-4 md:p-5 shadow-ios-card"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-[#A3E635]">
+                <Sparkles className="h-[1.15rem] w-[1.15rem]" aria-hidden />
+              </span>
+              <div className="min-w-0">
+                <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-white">
+                  ✨ Euer Saison-Rückblick {saisonLabel(wrappedEntry.prevSaison)} ist da
+                </h3>
+                <p className="text-xs md:text-sm text-white/70">
+                  Tore, Comebacks, Knipser — eure Saison als durchswipebare Story.
+                </p>
+              </div>
+            </div>
+            <Link
+              href={`${teamBase}/wrapped`}
+              className="text-xs md:text-sm font-semibold text-[#A3E635] hover:underline shrink-0"
+            >
+              Story ansehen →
+            </Link>
+          </div>
+        </section>
+      )}
+
       {/* #44: Bevorstehendes Spiel + „Vorschau posten". Nur in der aktuellen
           Saison — im Archiv-Blick wäre ein „nächstes Spiel" sinnlos. */}
       {nextMatch && isCurrentSeasonView && (
@@ -393,48 +405,6 @@ export default async function TeamDetailPage({
         </section>
       )}
 
-      {/* Saison-Endstand: read-only Block, Bearbeitung in Einstellungen/Saison.
-          Spiegelt die Resolver-Saison (B8): im Juli die noch offene Vorsaison. */}
-      <SeasonStatusBlock
-        slug={slug}
-        teamId={team.id}
-        saison={seasonTarget.saison}
-        isCurrentSeason={seasonTarget.saison === team.saison}
-        result={seasonTarget.result ?? null}
-        goalChargesCents={seasonGoalCharges}
-      />
-
-      {/* Saison-Wrapped (W4): Story-Rückblick der Vorsaison — nur solange die
-          neue Saison noch jung ist (<5 Spiele) und Vorsaison-Daten existieren. */}
-      {wrappedEntry && (
-        <section
-          aria-label="Saison-Wrapped"
-          className="rounded-2xl bg-brand-night-navy p-4 md:p-5 shadow-ios-card"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-[#A3E635]">
-                <Sparkles className="h-[1.15rem] w-[1.15rem]" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-white">
-                  ✨ Euer Saison-Rückblick {saisonLabel(wrappedEntry.prevSaison)} ist da
-                </h3>
-                <p className="text-xs md:text-sm text-white/70">
-                  Tore, Comebacks, Knipser — eure Saison als durchswipebare Story.
-                </p>
-              </div>
-            </div>
-            <Link
-              href={`${teamBase}/wrapped`}
-              className="text-xs md:text-sm font-semibold text-[#A3E635] hover:underline shrink-0"
-            >
-              Story ansehen →
-            </Link>
-          </div>
-        </section>
-      )}
-
       {/* Spiele */}
       <section id="spiele">
         <div className="flex items-baseline justify-between gap-3 mb-3">
@@ -532,43 +502,63 @@ export default async function TeamDetailPage({
                 <li key={m.id}>
                   <Link
                     href={`/verein/${slug}/mannschaft/${team.id}/spiel/${m.id}`}
-                    className={`block rounded-lg border bg-white p-3 md:p-4 hover:bg-brand-off-white/60 transition-colors ${resultColor}`}
+                    className={`flex items-center gap-2.5 rounded-lg border bg-white p-3 md:p-4 hover:bg-brand-off-white/60 transition-colors ${resultColor}`}
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="hidden sm:block text-xs text-brand-night-navy/50 mb-1">
-                          {m.datum.toLocaleDateString("de-DE", {
-                            weekday: "short",
-                            day: "2-digit",
-                            month: "short",
-                            year: "2-digit"
-                          })}
-                        </div>
-                        {/* Score-Zeile: Heim (gekürzt/rechtsbündig) — Ergebnis
-                            (fix mittig, tabular-nums) — Gast (gekürzt/linksbündig).
-                            Lange Vereinsnamen werden gekürzt + truncate, das
-                            Ergebnis bleibt in seiner festen Spalte sichtbar. */}
-                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm font-semibold text-brand-night-navy">
-                          <span className="min-w-0 truncate text-right" title={m.heimName}>
-                            {abbreviateTeamName(m.heimName)}
+                    {/* Heim-Wappen ganz links, Gast-Wappen ganz rechts — die
+                        Namen füllen die Zeile (kein gekürztes „FC Spor…"). */}
+                    <TeamCrest
+                      name={m.heimName}
+                      src={crestSrc(m.heimName, m.heimTeamId)}
+                      size={26}
+                      shape="squircle"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="hidden sm:block text-xs text-brand-night-navy/50 mb-1 text-center">
+                        {m.datum.toLocaleDateString("de-DE", {
+                          weekday: "short",
+                          day: "2-digit",
+                          month: "short",
+                          year: "2-digit"
+                        })}
+                      </div>
+                      {/* Score-Zeile: Heim (rechtsbündig) — Ergebnis/„vs" (fix
+                          mittig) — Gast (linksbündig); Namen truncate erst am
+                          Rand. */}
+                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm font-semibold text-brand-night-navy">
+                        <span
+                          className="min-w-0 truncate text-right"
+                          title={m.heimName}
+                        >
+                          {abbreviateTeamName(m.heimName)}
+                        </span>
+                        {gF === null ? (
+                          <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-brand-night-navy/50 whitespace-nowrap">
+                            vs
                           </span>
+                        ) : (
                           <span className="font-mono tabular-nums text-accent whitespace-nowrap">
                             {m.ergebnisHeim ?? "—"}:{m.ergebnisGast ?? "—"}
                           </span>
-                          <span className="min-w-0 truncate text-left" title={m.gastName}>
-                            {abbreviateTeamName(m.gastName)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        {matchCharges > 0 && (
-                          <span className="font-mono tabular-nums text-xs font-semibold text-accent">
-                            {eur(matchCharges)}
-                          </span>
                         )}
-                        <span className="text-brand-night-navy/30">→</span>
+                        <span
+                          className="min-w-0 truncate text-left"
+                          title={m.gastName}
+                        >
+                          {abbreviateTeamName(m.gastName)}
+                        </span>
                       </div>
                     </div>
+                    <TeamCrest
+                      name={m.gastName}
+                      src={crestSrc(m.gastName, m.gastTeamId)}
+                      size={26}
+                      shape="squircle"
+                    />
+                    {matchCharges > 0 && (
+                      <span className="shrink-0 font-mono tabular-nums text-xs font-semibold text-accent">
+                        {eur(matchCharges)}
+                      </span>
+                    )}
                   </Link>
                 </li>
               );
@@ -641,133 +631,4 @@ function PreviousSeasonSection({
   );
 }
 
-interface SeasonStatusResult {
-  finalPosition: number | null;
-  teamsInLeague: number | null;
-  promoted: boolean;
-  relegated: boolean;
-  cupRoundReached: string | null;
-  customNotes: string | null;
-}
 
-function SeasonStatusBlock({
-  slug,
-  teamId,
-  saison,
-  isCurrentSeason,
-  result,
-  goalChargesCents
-}: {
-  slug: string;
-  teamId: string;
-  /** Saison-Code aus resolveSeasonResultTarget — kann die Vorsaison sein. */
-  saison: string;
-  /** false = Block bedient die noch offene VORSAISON (Juli-Fenster). */
-  isCurrentSeason: boolean;
-  result: SeasonStatusResult | null;
-  /** Σ ausgelöster Saisonziel-Beiträge DIESER Saison (0 = noch keine). */
-  goalChargesCents: number;
-}) {
-  const settingsHref = `/verein/${slug}/mannschaft/${teamId}/einstellungen/saison`;
-  const label = saisonLabel(saison);
-  // Bewusst hier und nicht in der Sponsor-€-Kachel: die Kachel weist die
-  // LAUFENDE Saison aus, dieser Block ist mit `label` seiner eigenen Saison
-  // beschriftet. Im Grace-Fenster sind das zwei verschiedene Saisons.
-  const goalCharges = goalChargesCents > 0 && (
-    <p className="mt-3 flex items-center gap-1.5 text-xs md:text-sm text-brand-night-navy/70">
-      <Coins className="h-4 w-4 shrink-0 text-accent" aria-hidden />
-      <span>
-        Saisonziele {label}:{" "}
-        <strong className="text-accent">{eur(goalChargesCents)}</strong> für eure
-        Mannschaft
-      </span>
-    </p>
-  );
-
-  if (!result) {
-    return (
-      <section
-        aria-label={`Saison-Endstand ${label}`}
-        className="rounded-2xl border border-brand-neutral/40 bg-brand-off-white p-4 md:p-5"
-      >
-        <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
-          Saison-Endstand {label}
-        </h3>
-        <p className="mt-1 text-xs md:text-sm text-brand-night-navy/70">
-          {isCurrentSeason
-            ? "Saison läuft noch — Endstand wird am Saisonende automatisch übernommen."
-            : `Die Saison ${label} ist vorbei — der Endstand wird automatisch übernommen, sobald die Daten vorliegen.`}{" "}
-          <Link href={settingsHref} className="text-accent hover:underline font-semibold">
-            Manuell setzen
-          </Link>
-          .
-        </p>
-        {goalCharges}
-      </section>
-    );
-  }
-
-  return (
-    <section
-      aria-label={`Saison-Endstand ${label}`}
-      className="rounded-2xl bg-white shadow-ios-card p-4 md:p-5"
-    >
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="font-display font-bold text-base md:text-lg tracking-tight text-brand-night-navy">
-            Saison-Endstand {label}
-          </h3>
-          <div className="mt-2 text-xs md:text-sm text-brand-night-navy/70 space-y-1">
-            {result.finalPosition && (
-              <div className="flex items-center gap-1.5">
-                <Medal className="h-4 w-4 shrink-0 text-brand-night-navy/40" aria-hidden />
-                <span>
-                  Endplatz: <strong>{result.finalPosition}</strong>
-                  {result.teamsInLeague && ` von ${result.teamsInLeague}`}
-                </span>
-              </div>
-            )}
-            {result.promoted && (
-              <div className="flex items-center gap-1.5">
-                <ArrowUp className="h-4 w-4 shrink-0 text-accent-dark" aria-hidden />
-                <span>Aufstieg geschafft</span>
-              </div>
-            )}
-            {result.relegated && (
-              <div className="flex items-center gap-1.5">
-                <ArrowDown className="h-4 w-4 shrink-0 text-brand-alert-red" aria-hidden />
-                <span>Abgestiegen</span>
-              </div>
-            )}
-            {result.cupRoundReached && (
-              <div className="flex items-center gap-1.5">
-                <Trophy className="h-4 w-4 shrink-0 text-brand-night-navy/40" aria-hidden />
-                <span>Pokal: {result.cupRoundReached}</span>
-              </div>
-            )}
-            {result.customNotes && (
-              <div className="flex items-center gap-1.5">
-                <StickyNote className="h-4 w-4 shrink-0 text-brand-night-navy/40" aria-hidden />
-                <span>{result.customNotes}</span>
-              </div>
-            )}
-            {!result.finalPosition &&
-              !result.promoted &&
-              !result.relegated &&
-              !result.cupRoundReached &&
-              !result.customNotes && (
-                <div className="text-brand-night-navy/50">Noch keine Details eingetragen.</div>
-              )}
-          </div>
-        </div>
-        <Link
-          href={settingsHref}
-          className="text-xs md:text-sm font-semibold text-accent hover:underline shrink-0"
-        >
-          Bearbeiten →
-        </Link>
-      </div>
-      {goalCharges}
-    </section>
-  );
-}

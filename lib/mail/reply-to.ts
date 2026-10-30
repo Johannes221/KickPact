@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { clubs, teams, teamLicenses } from "@/lib/db/schema";
+import { users } from "@/lib/db/schema/auth";
+import { clubMemberships, teams, teamLicenses } from "@/lib/db/schema";
 import type { PlanKey } from "@/lib/stripe/pricing";
 import {
   KICKPACT_REPLY_TO,
@@ -16,21 +17,35 @@ export { KICKPACT_REPLY_TO, deriveReplyTo, highestPlanFrom };
  * Logic:
  *   1. Lade alle Team-Licenses des Clubs.
  *   2. Bestimme höchstes Tier (basic < pro < verein).
- *   3. Basic → System-Adresse; sonst Club-Alias.
+ *   3. Basic → System-Adresse; sonst die Mail des Vereins-Admins.
+ *
+ * Es gibt keine `clubs.contact_email`-Spalte — der Vereins-Kontakt ist der
+ * Admin aus `club_memberships`. Bei mehreren Admins gewinnt der älteste
+ * (deterministisch, das ist in aller Regel der anlegende Vorstand).
  *
  * Wird in allen Inngest-Mail-Templates (außer magic-link) genutzt.
  */
 export async function getReplyToForClub(clubId: string): Promise<string> {
   const rows = await db
-    .select({ plan: teamLicenses.plan, slug: clubs.slug })
+    .select({ plan: teamLicenses.plan })
     .from(teamLicenses)
     .innerJoin(teams, eq(teamLicenses.teamId, teams.id))
-    .innerJoin(clubs, eq(teams.clubId, clubs.id))
-    .where(eq(clubs.id, clubId));
+    .where(eq(teams.clubId, clubId));
 
   if (rows.length === 0) return KICKPACT_REPLY_TO;
 
-  const plans = rows.map((r) => r.plan as PlanKey);
-  const top = highestPlanFrom(plans);
-  return deriveReplyTo(top, rows[0].slug);
+  const top = highestPlanFrom(rows.map((r) => r.plan as PlanKey));
+  if (top === "basic") return KICKPACT_REPLY_TO;
+
+  const [admin] = await db
+    .select({ email: users.email })
+    .from(clubMemberships)
+    .innerJoin(users, eq(clubMemberships.userId, users.id))
+    .where(
+      and(eq(clubMemberships.clubId, clubId), eq(clubMemberships.role, "admin"))
+    )
+    .orderBy(asc(clubMemberships.createdAt))
+    .limit(1);
+
+  return deriveReplyTo(top, admin?.email ?? null);
 }
